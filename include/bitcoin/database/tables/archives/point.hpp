@@ -33,31 +33,31 @@ namespace table {
 /// Each record is 32+4=36 bytes, enabling 4 byte point.hash storage.
 /// This reduces point hash storage to tx from input scale (tx/in=38%).
 /// This benefit doubles due to fp indexation by the spend table.
-struct point
-  : public hash_map<schema::point>
-{
-    using search_key = search<schema::hash>;
-    using hash_map<schema::point>::hashmap;
-
-    struct record
-      : public schema::point
-    {
-        inline bool from_data(const reader& source) NOEXCEPT
-        {
-            return source;
-        }
-
-        inline bool to_data(const finalizer& sink) const NOEXCEPT
-        {
-            return sink;
-        }
-
-        inline bool operator==(const record&) const NOEXCEPT
-        {
-            return true;
-        }
-    };
-};
+////struct point
+////  : public hash_map<schema::point>
+////{
+////    using search_key = search<schema::hash>;
+////    using hash_map<schema::point>::hashmap;
+////
+////    struct record
+////      : public schema::point
+////    {
+////        inline bool from_data(const reader& source) NOEXCEPT
+////        {
+////            return source;
+////        }
+////
+////        inline bool to_data(const finalizer& sink) const NOEXCEPT
+////        {
+////            return sink;
+////        }
+////
+////        inline bool operator==(const record&) const NOEXCEPT
+////        {
+////            return true;
+////        }
+////    };
+////};
 
 } // namespace table
 } // namespace database

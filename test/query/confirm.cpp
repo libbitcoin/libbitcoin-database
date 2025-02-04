@@ -123,6 +123,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_block__push_pop_confirmed__expe
 BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_tx__confirm__expected)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -149,6 +150,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_tx__confirm__expected)
 BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_input__confirm__expected)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -175,6 +177,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_input__confirm__expected)
 BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_output__confirm__expected)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -201,6 +204,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_confirmed_output__confirm__expected)
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent_output__genesis__false)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -213,7 +217,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent_output__genesis__false)
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent_output__strong_confirmed__true)
 {
     settings settings{};
-    settings.minimize = true;
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -242,6 +246,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent_output__strong_confirmed__true)
 BOOST_AUTO_TEST_CASE(query_confirm__is_strong_spend__strong__true)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -253,6 +258,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong_spend__strong__true)
 BOOST_AUTO_TEST_CASE(query_confirm__is_strong_spend__weak__false)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -268,6 +274,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong_spend__weak__false)
 BOOST_AUTO_TEST_CASE(query_confirm__is_strong__strong__true)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -280,6 +287,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_strong__strong__true)
 BOOST_AUTO_TEST_CASE(query_confirm__is_strong__weak__false)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -310,7 +318,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unspent__false)
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unconfirmed_double_spend__false)
 {
     settings settings{};
-    settings.minimize = true;
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -363,7 +371,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unconfirmed_double_spend__false)
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent__confirmed_double_spend__true)
 {
     settings settings{};
-    settings.minimize = true;
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -388,7 +396,11 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__spend_genesis__false)
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::tx_spend_genesis));
+
+    // Not mature because of coinbase depth and genesis output.
     BOOST_REQUIRE(!query.is_mature(query.to_spend(1, 0), 0));
+
+    // Not mature because of genesis output.
     BOOST_REQUIRE(!query.is_mature(query.to_spend(1, 0), 100));
 }
 
@@ -418,6 +430,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__null_input__true)
 BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase_strong_above__true)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -435,6 +448,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase_strong_above__true)
 BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase__true)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -449,6 +463,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_mature__non_coinbase__true)
 BOOST_AUTO_TEST_CASE(query_confirm__is_mature__coinbase__expected)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -499,6 +514,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__null_points__success)
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__missing_prevouts__integrity)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -515,6 +531,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__missing_prevouts__integri
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_gensis__coinbase_maturity)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -533,6 +550,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_gensis__coinbase_ma
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__immature_prevouts__coinbase_maturity)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -554,6 +572,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__immature_prevouts__coinba
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__mature_prevouts__success)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -575,6 +594,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__mature_prevouts__success)
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__success)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -594,10 +614,11 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
     BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
 }
 
-// These pas but test vectors need to be updated to create clear test conditions.
+// These pass but test vectors need to be updated to create clear test conditions.
 ////BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_internal_immature__coinbase_maturity)
 ////{
 ////    settings settings{};
+////    settings.prevout_buckets = 0;
 ////    settings.path = TEST_DIRECTORY;
 ////    test::chunk_store store{ settings };
 ////    test::query_accessor query{ store };
@@ -623,6 +644,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 ////BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_internal_mature__success)
 ////{
 ////    settings settings{};
+////    settings.prevout_buckets = 0;
 ////    settings.path = TEST_DIRECTORY;
 ////    test::chunk_store store{ settings };
 ////    test::query_accessor query{ store };
@@ -650,6 +672,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 ////BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__confirmed_double_spend__confirmed_double_spend)
 ////{
 ////    settings settings{};
+////    settings.prevout_buckets = 0;
 ////    settings.path = TEST_DIRECTORY;
 ////    test::chunk_store store{ settings };
 ////    test::query_accessor query{ store };
@@ -675,6 +698,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 ////BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__unconfirmed_double_spend__success)
 ////{
 ////    settings settings{};
+////    settings.prevout_buckets = 0;
 ////    settings.path = TEST_DIRECTORY;
 ////    test::chunk_store store{ settings };
 ////    test::query_accessor query{ store };
@@ -699,6 +723,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_non_coinbase__succe
 BOOST_AUTO_TEST_CASE(query_confirm__set_strong__unassociated__false)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -712,6 +737,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__set_strong__unassociated__false)
 BOOST_AUTO_TEST_CASE(query_confirm__set_strong__set_unstrong__expected)
 {
     settings settings{};
+    settings.prevout_buckets = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

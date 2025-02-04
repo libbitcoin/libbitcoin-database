@@ -37,7 +37,6 @@ using height_link = table::height::link;
 using header_link = table::header::link;
 using output_link = table::output::link;
 using input_link = table::input::link;
-using point_link = table::point::link;
 using spend_link = table::spend::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
@@ -50,7 +49,7 @@ using output_links = std::vector<output_link::integer>;
 using spend_links = std::vector<spend_link::integer>;
 
 struct strong_pair { header_link block{}; tx_link tx{}; };
-using foreign_point = table::spend::search_key;
+using spend_key = table::spend::search_key;
 using two_counts = std::pair<size_t, size_t>;
 
 struct spend_set
@@ -59,21 +58,21 @@ struct spend_set
     {
         inline table::spend::search_key prevout() const NOEXCEPT
         {
-            return table::spend::compose(point_fk, point_index);
+            return table::spend::compose(hash, index);
         }
 
         inline bool is_null() const NOEXCEPT
         {
-            return point_fk == table::spend::pt::terminal;
+            return table::spend::null_point(index);
         }
 
-        // From tx input.
-        table::spend::pt::integer point_fk{};
-        table::spend::ix::integer point_index{};
+        // From spend table.
+        hash_digest hash{};
+        table::spend::ix::integer index{};
         uint32_t sequence{};
 
         // From prevouts table.
-        table::prevout::tx::integer prevout_tx_fk{};
+        table::prevout::tx::integer tx_fk{};
         bool coinbase{};
     };
 
@@ -145,7 +144,6 @@ public:
     size_t header_size() const NOEXCEPT;
     size_t output_size() const NOEXCEPT;
     size_t input_size() const NOEXCEPT;
-    size_t point_size() const NOEXCEPT;
     size_t puts_size() const NOEXCEPT;
     size_t spend_size() const NOEXCEPT;
     size_t txs_size() const NOEXCEPT;
@@ -165,7 +163,6 @@ public:
     size_t header_body_size() const NOEXCEPT;
     size_t output_body_size() const NOEXCEPT;
     size_t input_body_size() const NOEXCEPT;
-    size_t point_body_size() const NOEXCEPT;
     size_t puts_body_size() const NOEXCEPT;
     size_t spend_body_size() const NOEXCEPT;
     size_t txs_body_size() const NOEXCEPT;
@@ -185,7 +182,6 @@ public:
     size_t header_head_size() const NOEXCEPT;
     size_t output_head_size() const NOEXCEPT;
     size_t input_head_size() const NOEXCEPT;
-    size_t point_head_size() const NOEXCEPT;
     size_t puts_head_size() const NOEXCEPT;
     size_t spend_head_size() const NOEXCEPT;
     size_t txs_head_size() const NOEXCEPT;
@@ -201,7 +197,6 @@ public:
 
     /// Buckets.
     size_t header_buckets() const NOEXCEPT;
-    size_t point_buckets() const NOEXCEPT;
     size_t spend_buckets() const NOEXCEPT;
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
@@ -214,7 +209,6 @@ public:
 
     /// Records.
     size_t header_records() const NOEXCEPT;
-    size_t point_records() const NOEXCEPT;
     size_t spend_records() const NOEXCEPT;
     size_t tx_records() const NOEXCEPT;
     size_t candidate_records() const NOEXCEPT;
@@ -267,7 +261,6 @@ public:
     inline header_link to_candidate(size_t height) const NOEXCEPT;
     inline header_link to_confirmed(size_t height) const NOEXCEPT;
     inline header_link to_header(const hash_digest& key) const NOEXCEPT;
-    inline point_link to_point(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
     inline txs_link to_txs(const header_link& key) const NOEXCEPT;
     inline filter_link to_filter(const header_link& key) const NOEXCEPT;
@@ -279,7 +272,7 @@ public:
     tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
     tx_link to_prevout_tx(const spend_link& link) const NOEXCEPT;
-    foreign_point to_spend_key(const spend_link& link) const NOEXCEPT;
+    spend_key to_spend_key(const spend_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
     spend_link to_spend(const tx_link& link,
@@ -295,8 +288,9 @@ public:
     /// output to spenders (reverse navigation)
     spend_links to_spenders(const point& prevout) const NOEXCEPT;
     spend_links to_spenders(const output_link& link) const NOEXCEPT;
-    spend_links to_spenders(const foreign_point& point) const NOEXCEPT;
     spend_links to_spenders(const tx_link& link,
+        uint32_t output_index) const NOEXCEPT;
+    spend_links to_spenders(const hash_digest& tx_hash,
         uint32_t output_index) const NOEXCEPT;
 
     /// tx to puts (forward navigation)
@@ -321,7 +315,6 @@ public:
 
     /// hashmap enumeration
     header_link top_header(size_t bucket) const NOEXCEPT;
-    point_link top_point(size_t bucket) const NOEXCEPT;
     spend_link top_spend(size_t bucket) const NOEXCEPT;
     txs_link top_txs(size_t bucket) const NOEXCEPT;
     tx_link top_tx(size_t bucket) const NOEXCEPT;
@@ -373,7 +366,6 @@ public:
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
     size_t get_tx_count(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
-    inline hash_digest get_point_key(const point_link& link) const NOEXCEPT;
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
 
     /// False implies not confirmed.
@@ -399,7 +391,6 @@ public:
     transaction::cptr get_transaction(const tx_link& link) const NOEXCEPT;
     output::cptr get_output(const output_link& link) const NOEXCEPT;
     input::cptr get_input(const spend_link& link) const NOEXCEPT;
-    point::cptr get_point(const spend_link& link) const NOEXCEPT;
     inputs_ptr get_spenders(const output_link& link) const NOEXCEPT;
 
     input::cptr get_input(const tx_link& link,
@@ -513,7 +504,7 @@ public:
     bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
     ////code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
-    code unspent_duplicates(const header_link& coinbase,
+    code unspent_duplicates(const header_link& link,
         const context& ctx) const NOEXCEPT;
 
     /// Height indexation.
@@ -554,11 +545,10 @@ protected:
     uint32_t to_output_index(const tx_link& parent_fk,
         const output_link& output_fk) const NOEXCEPT;
     spend_link to_spender(const tx_link& link,
-        const foreign_point& point) const NOEXCEPT;
+        const spend_key& point) const NOEXCEPT;
 
     // Critical path
     inline tx_links get_strong_txs(const tx_link& link) const NOEXCEPT;
-    inline tx_links get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT;
     inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
 
     /// Validate.
@@ -572,9 +562,9 @@ protected:
     /// -----------------------------------------------------------------------
 
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
-    code mature_prevout(const point_link& link,
+    code mature_prevout(const hash_digest& point_hash,
         size_t height) const NOEXCEPT;
-    code locked_prevout(const point_link& link, uint32_t sequence,
+    code locked_prevout(const hash_digest& point_hash, uint32_t sequence,
         const context& ctx) const NOEXCEPT;
 
     // Critical path
@@ -582,9 +572,9 @@ protected:
     bool populate_prevouts(spend_sets& sets, const header_link& link) const NOEXCEPT;
     bool get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT;
     bool get_spend_sets(spend_sets& set, const header_link& link) const NOEXCEPT;
-    bool is_spent_prevout(const point_link& link, index index,
+    bool is_spent_prevout(const hash_digest& point_hash, index point_index,
         const tx_link& self=tx_link::terminal) const NOEXCEPT;
-    error::error_t spent_prevout(const point_link& link, index index,
+    error::error_t spent_prevout(const hash_digest& point_hash, index point_index,
         const tx_link& self=tx_link::terminal) const NOEXCEPT;
     error::error_t unspendable_prevout(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,

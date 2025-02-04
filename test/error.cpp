@@ -511,15 +511,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__tx_input_put__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "tx_input_put");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__tx_point_put__true_exected_message)
-{
-    constexpr auto value = error::tx_point_put;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "tx_point_put");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__tx_spend_set__true_exected_message)
 {
     constexpr auto value = error::tx_spend_set;

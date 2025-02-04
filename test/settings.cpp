@@ -30,9 +30,6 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.header_buckets, 100u);
     BOOST_REQUIRE_EQUAL(configuration.header_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.header_rate, 50u);
-    BOOST_REQUIRE_EQUAL(configuration.point_buckets, 100u);
-    BOOST_REQUIRE_EQUAL(configuration.point_size, 1u);
-    BOOST_REQUIRE_EQUAL(configuration.point_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.input_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.input_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.output_size, 1u);

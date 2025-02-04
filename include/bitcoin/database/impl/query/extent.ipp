@@ -92,7 +92,6 @@ size_t CLASS::archive_body_size() const NOEXCEPT
     return header_body_size()
         + output_body_size()
         + input_body_size()
-        + point_body_size()
         + puts_body_size()
         + spend_body_size()
         + txs_body_size()
@@ -119,7 +118,6 @@ size_t CLASS::archive_head_size() const NOEXCEPT
     return header_head_size()
         + output_head_size()
         + input_head_size()
-        + point_head_size()
         + puts_head_size()
         + spend_head_size()
         + txs_head_size()
@@ -132,7 +130,6 @@ size_t CLASS::archive_head_size() const NOEXCEPT
 DEFINE_SIZES(header)
 DEFINE_SIZES(output)
 DEFINE_SIZES(input)
-DEFINE_SIZES(point)
 DEFINE_SIZES(puts)
 DEFINE_SIZES(spend)
 DEFINE_SIZES(txs)
@@ -151,7 +148,6 @@ DEFINE_SIZES(neutrino)
 // ----------------------------------------------------------------------------
 
 DEFINE_BUCKETS(header)
-DEFINE_BUCKETS(point)
 DEFINE_BUCKETS(spend)
 DEFINE_BUCKETS(txs)
 DEFINE_BUCKETS(tx)
@@ -167,7 +163,6 @@ DEFINE_BUCKETS(neutrino)
 // ----------------------------------------------------------------------------
 
 DEFINE_RECORDS(header)
-DEFINE_RECORDS(point)
 DEFINE_RECORDS(spend)
 DEFINE_RECORDS(tx)
 
