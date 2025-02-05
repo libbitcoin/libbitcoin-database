@@ -187,10 +187,12 @@ public:
     using test::query_accessor::query_accessor;
     bool get_spend_set_(spend_set& set, const tx_link& link) const NOEXCEPT
     {
+        set.spends.clear();
         return test::query_accessor::get_spend_set(set, link);
     }
     bool get_spend_sets_(spend_sets& sets, const header_link& link) const NOEXCEPT
     {
+        sets.clear();
         return test::query_accessor::get_spend_sets(sets, link);
     }
 };
@@ -247,36 +249,36 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spend_tx__to_spend__expected)
 
     spend_set set{};
     BOOST_REQUIRE(query.get_spend_set_(set, 0));
-    BOOST_REQUIRE_EQUAL(set.tx, 0u);
+    BOOST_REQUIRE_EQUAL(set.in_tx, 0u);
     BOOST_REQUIRE_EQUAL(set.spends.size(), 1u);
-    BOOST_REQUIRE(set.spends.front().is_null());
+    BOOST_REQUIRE_EQUAL(set.spends.front().hash, system::null_hash);
     BOOST_REQUIRE_EQUAL(set.version, test::genesis.transactions_ptr()->front()->version());
 
     BOOST_REQUIRE(query.get_spend_set_(set, 1));
-    BOOST_REQUIRE_EQUAL(set.tx, 1u);
+    BOOST_REQUIRE_EQUAL(set.in_tx, 1u);
     BOOST_REQUIRE_EQUAL(set.spends.size(), 1u);
-    BOOST_REQUIRE(set.spends.front().is_null());
+    BOOST_REQUIRE_EQUAL(set.spends.front().hash, system::null_hash);
     BOOST_REQUIRE_EQUAL(set.version, test::block1.transactions_ptr()->front()->version());
 
     BOOST_REQUIRE(query.get_spend_set_(set, 2));
-    BOOST_REQUIRE_EQUAL(set.tx, 2u);
+    BOOST_REQUIRE_EQUAL(set.in_tx, 2u);
     BOOST_REQUIRE_EQUAL(set.spends.size(), 1u);
-    BOOST_REQUIRE(set.spends.front().is_null());
+    BOOST_REQUIRE_EQUAL(set.spends.front().hash, system::null_hash);
     BOOST_REQUIRE_EQUAL(set.version, test::block2.transactions_ptr()->front()->version());
 
     BOOST_REQUIRE(query.get_spend_set_(set, 3));
-    BOOST_REQUIRE_EQUAL(set.tx, 3u);
+    BOOST_REQUIRE_EQUAL(set.in_tx, 3u);
     BOOST_REQUIRE_EQUAL(set.spends.size(), 1u);
-    BOOST_REQUIRE(set.spends.front().is_null());
+    BOOST_REQUIRE_EQUAL(set.spends.front().hash, system::null_hash);
     BOOST_REQUIRE_EQUAL(set.version, test::block3.transactions_ptr()->front()->version());
 
     // block1a has no first coinbase.
     BOOST_REQUIRE(query.get_spend_set_(set, 4));
-    BOOST_REQUIRE_EQUAL(set.tx, 4u);
+    BOOST_REQUIRE_EQUAL(set.in_tx, 4u);
     BOOST_REQUIRE_EQUAL(set.spends.size(), 3u);
-    BOOST_REQUIRE(!set.spends[0].is_null());
-    BOOST_REQUIRE(!set.spends[1].is_null());
-    BOOST_REQUIRE(!set.spends[2].is_null());
+    BOOST_REQUIRE_NE(set.spends[0].hash, system::null_hash);
+    BOOST_REQUIRE_NE(set.spends[1].hash, system::null_hash);
+    BOOST_REQUIRE_NE(set.spends[2].hash, system::null_hash);
     BOOST_REQUIRE_EQUAL(set.spends[0].sequence, 42u);
     BOOST_REQUIRE_EQUAL(set.spends[1].sequence, 24u);
     BOOST_REQUIRE_EQUAL(set.spends[2].sequence, 25u);
@@ -531,12 +533,12 @@ BOOST_AUTO_TEST_CASE(query_translate__get_spend_sets__prevout_populated__expecte
     // get_spend_sets keys on first-tx-ness as coinbase, so only one input despite two points.
     BOOST_REQUIRE(query.get_spend_sets_(sets, 2));
     BOOST_REQUIRE_EQUAL(sets.size(), 1u);
-    BOOST_REQUIRE_EQUAL(sets[0].tx, 3u);
+    BOOST_REQUIRE_EQUAL(sets[0].in_tx, 3u);
     BOOST_REQUIRE_EQUAL(sets[0].version, 0xb2u);
     BOOST_REQUIRE_EQUAL(sets[0].spends.size(), 1u);
 
     // Internal spend is always terminal/coinbase (defaulted, to be skipped).
-    BOOST_REQUIRE_EQUAL(sets[0].spends[0].tx_fk, tx_link::terminal);
+    BOOST_REQUIRE_EQUAL(sets[0].spends[0].out_tx, tx_link::terminal);
     BOOST_REQUIRE_EQUAL(sets[0].spends[0].coinbase, true);
     BOOST_REQUIRE_EQUAL(sets[0].spends[0].index, 0u);
     BOOST_REQUIRE_EQUAL(sets[0].spends[0].hash, test::tx2b.hash(false));
@@ -590,12 +592,12 @@ BOOST_AUTO_TEST_CASE(query_translate__get_spend_sets__no_prevout_populated__expe
     // get_spend_sets keys on first-tx-ness as coinbase, so only one input despite two points.
     BOOST_REQUIRE(query.get_spend_sets_(sets, 2));
     BOOST_REQUIRE_EQUAL(sets.size(), 1u);
-    BOOST_REQUIRE_EQUAL(sets[0].tx, 3u);
+    BOOST_REQUIRE_EQUAL(sets[0].in_tx, 3u);
     BOOST_REQUIRE_EQUAL(sets[0].version, 0xb2u);
     BOOST_REQUIRE_EQUAL(sets[0].spends.size(), 1u);
 
     // All spends are accounted for (internal spends are not skipped).
-    BOOST_REQUIRE_EQUAL(sets[0].spends[0].tx_fk, 2u);
+    BOOST_REQUIRE_EQUAL(sets[0].spends[0].out_tx, 2u);
     BOOST_REQUIRE_EQUAL(sets[0].spends[0].coinbase, false);
     BOOST_REQUIRE_EQUAL(sets[0].spends[0].index, 0u);
     BOOST_REQUIRE_EQUAL(sets[0].spends[0].hash, test::tx2b.hash(false));

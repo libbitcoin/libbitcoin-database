@@ -398,6 +398,27 @@ namespace schema
     ////};
 }
 
+struct spend_set
+{
+    // TODO: index, sequence, out_tx, in_tx not derived.
+    struct spend
+    {
+        // From spend table.
+        hash_digest hash{};
+        uint32_t index{};
+        uint32_t sequence{};
+
+        // From prevouts table.
+        uint32_t out_tx{};
+        bool coinbase{};
+    };
+
+    uint32_t in_tx{};
+    uint32_t version{};
+    std::vector<spend> spends{};
+};
+using spend_sets = std::vector<spend_set>;
+
 } // namespace database
 } // namespace libbitcoin
 

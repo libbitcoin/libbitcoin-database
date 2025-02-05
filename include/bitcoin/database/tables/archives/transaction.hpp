@@ -214,7 +214,7 @@ struct transaction
         puts::integer puts_fk{};
     };
 
-    struct get_version_puts
+    struct get_version_inputs
       : public schema::transaction
     {
         inline puts::integer outs_fk() const NOEXCEPT
@@ -226,15 +226,14 @@ struct transaction
         {
             source.skip_bytes(skip_to_version);
             version = source.read_little_endian<uint32_t>();
-            ins_count  = source.read_little_endian<ix::integer, ix::size>();
-            outs_count = source.read_little_endian<ix::integer, ix::size>();
-            puts_fk    = source.read_little_endian<puts::integer, puts::size>();
+            ins_count = source.read_little_endian<ix::integer, ix::size>();
+            source.skip_bytes(ix::size);
+            puts_fk = source.read_little_endian<puts::integer, puts::size>();
             return source;
         }
 
         uint32_t version{};
         ix::integer ins_count{};
-        ix::integer outs_count{};
         puts::integer puts_fk{};
     };
 
