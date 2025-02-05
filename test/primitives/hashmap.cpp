@@ -627,7 +627,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_first__exists__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__record_it__exists__non_terminal)
+BOOST_AUTO_TEST_CASE(hashmap__record_it__exists_copy__non_terminal)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -641,6 +641,23 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__exists__non_terminal)
 
     big_record record{};
     BOOST_REQUIRE(instance.get(instance.it(key).self(), record));
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__record_it__exists_move__non_terminal)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    hashmap<link5, key1, big_record::size, true> instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr key1 key{ 0x41 };
+    BOOST_REQUIRE(instance.it(key1{ 0x41 }).self().is_terminal());
+    BOOST_REQUIRE(!instance.put_link(key, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.it(key1{ 0x41 }).self().is_terminal());
+
+    big_record record{};
+    BOOST_REQUIRE(instance.get(instance.it(key1{ 0x41 }).self(), record));
     BOOST_REQUIRE(!instance.get_fault());
 }
 

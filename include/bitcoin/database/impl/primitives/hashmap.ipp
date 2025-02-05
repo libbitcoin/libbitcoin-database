@@ -150,6 +150,13 @@ inline Link CLASS::first(const Key& key) const NOEXCEPT
 }
 
 TEMPLATE
+inline typename CLASS::iterator CLASS::it(Key&& key) const NOEXCEPT
+{
+    const auto top = head_.top(key);
+    return { get_memory(), top, std::forward<Key>(key) };
+}
+
+TEMPLATE
 inline typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 {
     return { get_memory(), head_.top(key), key };
