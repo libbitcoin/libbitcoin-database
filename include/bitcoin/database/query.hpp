@@ -52,36 +52,6 @@ struct strong_pair { header_link block{}; tx_link tx{}; };
 using spend_key = table::spend::search_key;
 using two_counts = std::pair<size_t, size_t>;
 
-struct spend_set
-{
-    struct spend
-    {
-        inline table::spend::search_key prevout() const NOEXCEPT
-        {
-            return table::spend::compose(hash, index);
-        }
-
-        inline bool is_null() const NOEXCEPT
-        {
-            return table::spend::null_point(index);
-        }
-
-        // From spend table.
-        hash_digest hash{};
-        table::spend::ix::integer index{};
-        uint32_t sequence{};
-
-        // From prevouts table.
-        table::prevout::tx::integer tx_fk{};
-        bool coinbase{};
-    };
-
-    tx_link tx{};
-    uint32_t version{};
-    std::vector<spend> spends{};
-};
-using spend_sets = std::vector<spend_set>;
-
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>
 class query
@@ -569,7 +539,8 @@ protected:
 
     // Critical path
     bool populate_prevouts(spend_sets& sets) const NOEXCEPT;
-    bool populate_prevouts(spend_sets& sets, const header_link& link) const NOEXCEPT;
+    bool populate_prevouts(spend_sets& sets, size_t set_count,
+        const header_link& link) const NOEXCEPT;
     bool get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT;
     bool get_spend_sets(spend_sets& set, const header_link& link) const NOEXCEPT;
     bool is_spent_prevout(const hash_digest& point_hash, index point_index,

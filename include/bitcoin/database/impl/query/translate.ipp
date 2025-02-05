@@ -230,6 +230,7 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
     if (!it)
         return strong;
 
+    // TODO: deadlock risk.
     do
     {
         // Only top block (strong) association for given tx is considered.
@@ -318,8 +319,8 @@ TEMPLATE
 spend_links CLASS::to_spenders(const hash_digest& tx_hash,
     uint32_t output_index) const NOEXCEPT
 {
-    const auto point = table::spend::compose(tx_hash, output_index);
-    auto it = store_.spend.it(point);
+    // TODO: pass comparitor to iterator construct to preclude composition copy.
+    auto it = store_.spend.it(table::spend::compose(tx_hash, output_index));
     if (!it)
         return {};
 
@@ -342,7 +343,7 @@ spend_links CLASS::to_spenders(const hash_digest& tx_hash,
                 return fault;
 
             // Only one input of a given tx may spend an output.
-            if (spend.key == point)
+            if (spend.key == it.key())
             {
                 spenders.push_back(spend_fk);
                 found = true;

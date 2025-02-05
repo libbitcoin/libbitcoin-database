@@ -44,13 +44,18 @@ struct spend
         return index == system::chain::point::null_index;
     }
 
+    static constexpr bool null_point(const hash_digest& hash) NOEXCEPT
+    {
+        return hash == system::null_hash;
+    }
+
     static inline search_key compose(const hash_digest& point_hash,
         ix::integer point_index) NOEXCEPT
     {
         using namespace system;
 
         search_key key{};
-        array_cast<uint8_t, schema::hash>(key) = point_hash;
+        std::copy_n(point_hash.begin(), schema::hash, key.begin());
         key.at(schema::hash + 0) = byte<0>(point_index);
         key.at(schema::hash + 1) = byte<1>(point_index);
         key.at(schema::hash + 2) = byte<2>(point_index);
@@ -193,24 +198,22 @@ struct spend
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            point_hash = source.read_hash();
-            point_index = source.read_little_endian<ix::integer, ix::size>();
-            if (point_index == ix::terminal)
-                point_index = system::chain::point::null_index;
+            value.hash = source.read_hash();
+            value.index = source.read_little_endian<ix::integer, ix::size>();
+            if (value.index == ix::terminal)
+                value.index = system::chain::point::null_index;
 
             source.skip_bytes(tx::size);
-            sequence = source.read_little_endian<uint32_t>();
+            value.sequence = source.read_little_endian<uint32_t>();
             return source;
         }
 
         inline bool is_null() const NOEXCEPT
         {
-            return null_point(point_index);
+            return null_point(value.index);
         }
 
-        hash_digest point_hash{};
-        ix::integer point_index{};
-        uint32_t sequence{};
+        spend_set::spend value{};
     };
 
     struct get_parent

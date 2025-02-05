@@ -146,7 +146,6 @@ inline bool CLASS::exists(const Key& key) const NOEXCEPT
 TEMPLATE
 inline Link CLASS::first(const Key& key) const NOEXCEPT
 {
-    ////return it(key).self();
     return first(get_memory(), head_.top(key), key);
 }
 
