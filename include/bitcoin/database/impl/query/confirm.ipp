@@ -470,12 +470,6 @@ bool CLASS::get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT
         if (!store_.spend.get(ptr, spend_fk, spend))
             return false;
 
-        ////// HACK: verify result.
-        ////if (!store_.spend.exists(table::spend::compose(spend.value.hash,
-        ////    spend.value.index)))
-        ////    return false;
-
-        // TODO: test convert to_tx(point_hash) to reduce allocation.
         set.spends.push_back(std::move(spend.value));
     }
 
@@ -494,18 +488,33 @@ bool CLASS::get_spend_sets(spend_sets& sets,
         return true;
 
     sets.resize(txs.size());
-    auto set = sets.begin();
-    auto spend_count = zero;
-    for (const auto& tx: txs)
+    ////auto set = sets.begin();
+    ////auto spend_count = zero;
+    ////for (const auto& tx: txs)
+    ////{
+    ////    if (!get_spend_set(*set, tx))
+    ////        return false;
+    ////
+    ////    spend_count += (set++)->spends.size();
+    ////}
+
+    std::atomic<bool> success{ true };
+    std::atomic<size_t> count{ zero };
+    const auto to_set = [this, &success, &count](const auto& tx) NOEXCEPT
     {
-        if (!get_spend_set(*set, tx))
-            return false;
+        spend_set set{};
+        if (!get_spend_set(set, tx))
+            success.store(false);
 
-        spend_count += (set++)->spends.size();
-    }
+        count += set.spends.size();
+        return set;
+    };
 
-    return prevout_enabled() ? populate_prevouts(sets, spend_count, link) :
-        populate_prevouts(sets);
+    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
+    std_transform(bc::par_unseq, txs.begin(), txs.end(), sets.begin(), to_set);
+
+    return success && (prevout_enabled() ? populate_prevouts(sets, count, link) :
+        populate_prevouts(sets));
 }
 
 TEMPLATE
