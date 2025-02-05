@@ -29,15 +29,15 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::iterator(const memory_ptr& data, const Link& start, Key&& key) NOEXCEPT
-  : memory_(data), key_(std::forward<Key>(key)), link_(to_match(start))
+CLASS::iterator(memory_ptr&& data, const Link& start, Key&& key) NOEXCEPT
+  : memory_(std::move(data)), key_(std::forward<Key>(key)),
+    link_(to_match(start))
 {
 }
 
 TEMPLATE
-CLASS::iterator(const memory_ptr& data, const Link& start,
-    const Key& key) NOEXCEPT
-  : memory_(data), key_(key), link_(to_match(start))
+CLASS::iterator(memory_ptr&& data, const Link& start, const Key& key) NOEXCEPT
+  : memory_(std::move(data)), key_(key), link_(to_match(start))
 {
 }
 

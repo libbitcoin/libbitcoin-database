@@ -34,6 +34,9 @@ namespace database {
 /// THE hashmap.get(const iterator& it, ...) METHOD EXISTS TO PREVENT A CALL TO
 /// manager.get(), WHICH DESPITE BEING A READ WOULD CAUSE A DEADLOCK. THIS IS
 /// BECAUSE IT CANNOT COMPLETE ITS READ WHILE REMAP IS WAITING ON ACCESS.
+/// A SIMILAR RISK ARISES FROM HOLDING iterator WHILE READING/WRITING ANY OTHER
+/// TABLE AS A CYCLE CAUSING THE ABOVE WILL OCCUR. USE THE ITERATOR TO COLLECT
+/// A SET FROM ITS TABLE AND THEN CALL iterator.release() TO FREE THE POINTER.
 
 /// This class is not thread safe.
 /// Size non-max implies record manager (ordinal record links).
@@ -44,8 +47,8 @@ public:
     DEFAULT_COPY_MOVE_DESTRUCT(iterator);
 
     /// This advances to first match (or terminal).
-    iterator(const memory_ptr& data, const Link& start, Key&& key) NOEXCEPT;
-    iterator(const memory_ptr& data, const Link& start, const Key& key) NOEXCEPT;
+    iterator(memory_ptr&& data, const Link& start, Key&& key) NOEXCEPT;
+    iterator(memory_ptr&& data, const Link& start, const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
     inline bool advance() NOEXCEPT;
