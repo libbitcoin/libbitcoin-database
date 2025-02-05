@@ -247,30 +247,10 @@ TEMPLATE
 error::error_t CLASS::spent_prevout(const hash_digest& point_hash,
     index point_index, const tx_link& self) const NOEXCEPT
 {
-    ////if (table::spend::null_point(point_hash))
-    ////    return error::integrity6;
-    ////
-    ////if (table::spend::null_point(point_index))
-    ////    return error::integrity7;
-
     // TODO: pass comparitor to iterator construct to preclude composition copy.
     auto it = store_.spend.it(table::spend::compose(point_hash, point_index));
     if (!it)
-    {
-        if (self.is_terminal())
-            return error::success;
-
-        if (!it.get())
-            return error::integrity8;
-
-        if (it.self().is_terminal())
-            return error::integrity9;
-
-        if (!store_.spend.exists(it.key()))
-            return error::integrity10;
-        
         return error::integrity3;
-    }
 
     // Get all txs that spend the point (non-terminal self must be a spender).
     tx_links spenders{};
