@@ -686,7 +686,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     puts.out_fks.reserve(outs->size());
 
     // Declare spends buffer.
-    std::vector<foreign_point> spends{};
+    std::vector<spend_key> spends{};
     spends.reserve(ins->size());
 
     // TODO: eliminate shared memory pointer reallocations.

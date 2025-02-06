@@ -145,7 +145,7 @@ tx_link CLASS::to_spend_tx(const spend_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-foreign_point CLASS::to_spend_key(const spend_link& link) const NOEXCEPT
+spend_key CLASS::to_spend_key(const spend_link& link) const NOEXCEPT
 {
     table::spend::get_key spend{};
     if (!store_.spend.get(link, spend))
@@ -236,6 +236,7 @@ inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
     if (!it)
         return strong;
 
+    // TODO: deadlock risk.
     do
     {
         // Only top block (strong) association for given tx is considered.
@@ -286,7 +287,7 @@ uint32_t CLASS::to_output_index(const tx_link& parent_fk,
 // protected/to_spenders
 TEMPLATE
 spend_link CLASS::to_spender(const tx_link& link,
-    const foreign_point& point) const NOEXCEPT
+    const spend_key& point) const NOEXCEPT
 {
     table::spend::get_key spend{};
     for (const auto& spend_fk: to_spends(link))
@@ -308,26 +309,33 @@ spend_links CLASS::to_spenders(const output_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-spend_links CLASS::to_spenders(const tx_link& link,
-    uint32_t output_index) const NOEXCEPT
+spend_links CLASS::to_spenders(const point& point) const NOEXCEPT
 {
-    return to_spenders(point{ get_tx_key(link), output_index });
+    return to_spenders(point.hash(), point.index());
 }
 
 TEMPLATE
-spend_links CLASS::to_spenders(const point& prevout) const NOEXCEPT
+spend_links CLASS::to_spenders(const tx_link& output_tx,
+    uint32_t output_index) const NOEXCEPT
 {
-    const auto point_fk = to_point(prevout.hash());
+    return to_spenders(get_tx_key(output_tx), output_index);
+}
+
+TEMPLATE
+spend_links CLASS::to_spenders(const hash_digest& point_hash,
+    uint32_t output_index) const NOEXCEPT
+{
+    const auto point_fk = to_point(point_hash);
     if (point_fk.is_terminal())
         return {};
 
-    return to_spenders(table::spend::compose(point_fk, prevout.index()));
+    return to_spenders(table::spend::compose(point_fk, output_index));
 }
 
 TEMPLATE
-spend_links CLASS::to_spenders(const foreign_point& point) const NOEXCEPT
+spend_links CLASS::to_spenders(const spend_key& key) const NOEXCEPT
 {
-    auto it = store_.spend.it(point);
+    auto it = store_.spend.it(key);
     if (!it)
         return {};
 
@@ -350,7 +358,7 @@ spend_links CLASS::to_spenders(const foreign_point& point) const NOEXCEPT
                 return fault;
 
             // Only one input of a given tx may spend an output.
-            if (spend.key == point)
+            if (spend.key == it.key())
             {
                 spenders.push_back(spend_fk);
                 found = true;

@@ -413,6 +413,27 @@ namespace schema
     ////};
 }
 
+struct spend_set
+{
+    // TODO: values not derived.
+    struct spend
+    {
+        // From spend table.
+        uint32_t point_fk{};
+        uint32_t point_index{};
+        uint32_t sequence{};
+
+        // From prevouts table.
+        uint32_t prevout_tx_fk{};
+        bool coinbase{};
+    };
+
+    uint32_t tx{};
+    uint32_t version{};
+    std::vector<spend> spends{};
+};
+using spend_sets = std::vector<spend_set>;
+
 } // namespace database
 } // namespace libbitcoin
 

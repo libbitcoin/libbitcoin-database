@@ -99,6 +99,7 @@ public:
     inline Link first(const Key& key) const NOEXCEPT;
 
     /// Iterator holds shared lock on storage remap.
+    inline iterator it(Key&& key) const NOEXCEPT;
     inline iterator it(const Key& key) const NOEXCEPT;
 
     /// Allocate count or slab size at returned link (follow with set|put).

@@ -50,38 +50,8 @@ using output_links = std::vector<output_link::integer>;
 using spend_links = std::vector<spend_link::integer>;
 
 struct strong_pair { header_link block{}; tx_link tx{}; };
-using foreign_point = table::spend::search_key;
 using two_counts = std::pair<size_t, size_t>;
-
-struct spend_set
-{
-    struct spend
-    {
-        inline table::spend::search_key prevout() const NOEXCEPT
-        {
-            return table::spend::compose(point_fk, point_index);
-        }
-
-        inline bool is_null() const NOEXCEPT
-        {
-            return point_fk == table::spend::pt::terminal;
-        }
-
-        // From tx input.
-        table::spend::pt::integer point_fk{};
-        table::spend::ix::integer point_index{};
-        uint32_t sequence{};
-
-        // From prevouts table.
-        table::prevout::tx::integer prevout_tx_fk{};
-        bool coinbase{};
-    };
-
-    tx_link tx{};
-    uint32_t version{};
-    std::vector<spend> spends{};
-};
-using spend_sets = std::vector<spend_set>;
+using spend_key = table::spend::search_key;
 
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>
@@ -279,7 +249,7 @@ public:
     tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
     tx_link to_prevout_tx(const spend_link& link) const NOEXCEPT;
-    foreign_point to_spend_key(const spend_link& link) const NOEXCEPT;
+    spend_key to_spend_key(const spend_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
     spend_link to_spend(const tx_link& link,
@@ -295,8 +265,10 @@ public:
     /// output to spenders (reverse navigation)
     spend_links to_spenders(const point& prevout) const NOEXCEPT;
     spend_links to_spenders(const output_link& link) const NOEXCEPT;
-    spend_links to_spenders(const foreign_point& point) const NOEXCEPT;
-    spend_links to_spenders(const tx_link& link,
+    spend_links to_spenders(const spend_key& key) const NOEXCEPT;
+    spend_links to_spenders(const hash_digest& point_hash,
+        uint32_t output_index) const NOEXCEPT;
+    spend_links to_spenders(const tx_link& output_tx,
         uint32_t output_index) const NOEXCEPT;
 
     /// tx to puts (forward navigation)
@@ -554,7 +526,7 @@ protected:
     uint32_t to_output_index(const tx_link& parent_fk,
         const output_link& output_fk) const NOEXCEPT;
     spend_link to_spender(const tx_link& link,
-        const foreign_point& point) const NOEXCEPT;
+        const spend_key& point) const NOEXCEPT;
 
     // Critical path
     inline tx_links get_strong_txs(const tx_link& link) const NOEXCEPT;
@@ -579,7 +551,8 @@ protected:
 
     // Critical path
     bool populate_prevouts(spend_sets& sets) const NOEXCEPT;
-    bool populate_prevouts(spend_sets& sets, const header_link& link) const NOEXCEPT;
+    bool populate_prevouts(spend_sets& sets, size_t spends,
+        const header_link& link) const NOEXCEPT;
     bool get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT;
     bool get_spend_sets(spend_sets& set, const header_link& link) const NOEXCEPT;
     bool is_spent_prevout(const point_link& link, index index,

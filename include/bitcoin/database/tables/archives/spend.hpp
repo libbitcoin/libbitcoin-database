@@ -225,30 +225,28 @@ struct spend
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<pt::integer, pt::size>();
-            point_index = source.read_little_endian<ix::integer, ix::size>();
+            value.point_fk = source.read_little_endian<pt::integer, pt::size>();
+            value.point_index = source.read_little_endian<ix::integer, ix::size>();
 
-            if (null_point(point_fk))
-                point_index = system::chain::point::null_index;
+            if (null_point(value.point_fk))
+                value.point_index = system::chain::point::null_index;
 
             source.skip_bytes(tx::size);
-            sequence = source.read_little_endian<uint32_t>();
+            value.sequence = source.read_little_endian<uint32_t>();
             return source;
         }
 
         inline search_key prevout() const NOEXCEPT
         {
-            return table::spend::compose(point_fk, point_index);
+            return table::spend::compose(value.point_fk, value.point_index);
         }
 
         inline bool is_null() const NOEXCEPT
         {
-            return null_point(point_fk);
+            return null_point(value.point_fk);
         }
 
-        pt::integer point_fk{};
-        ix::integer point_index{};
-        uint32_t sequence{};
+        spend_set::spend value{};
     };
 
 private:

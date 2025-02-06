@@ -34,6 +34,7 @@ BOOST_AUTO_TEST_CASE(iterator__self__empty__terminal)
     const slab_iterate iterator{ file.get(), start, key0 };
     BOOST_REQUIRE(iterator.self().is_terminal());
     BOOST_REQUIRE(!iterator);
+    BOOST_REQUIRE_EQUAL(iterator.key(), key0);
 }
 
 BOOST_AUTO_TEST_CASE(iterator__self__overflow__terminal)
@@ -53,6 +54,7 @@ BOOST_AUTO_TEST_CASE(iterator__self__overflow__terminal)
     const slab_iterate iterator{ file.get(), start, key0 };
     BOOST_REQUIRE(iterator.self().is_terminal());
     BOOST_REQUIRE(!iterator);
+    BOOST_REQUIRE_EQUAL(iterator.key(), key0);
 }
 
 BOOST_AUTO_TEST_CASE(iterator__advance__record__expected)
@@ -78,6 +80,7 @@ BOOST_AUTO_TEST_CASE(iterator__advance__record__expected)
     BOOST_REQUIRE(!iterator.advance());
     BOOST_REQUIRE(!iterator);
     BOOST_REQUIRE_EQUAL(iterator.self(), link::terminal);
+    BOOST_REQUIRE_EQUAL(iterator.key(), key2);
 }
 
 BOOST_AUTO_TEST_CASE(iterator__advance__slab__expected)
@@ -104,6 +107,34 @@ BOOST_AUTO_TEST_CASE(iterator__advance__slab__expected)
     BOOST_REQUIRE(!iterator.advance());
     BOOST_REQUIRE(!iterator);
     BOOST_REQUIRE_EQUAL(iterator.self(), link::terminal);
+    BOOST_REQUIRE_EQUAL(iterator.key(), key2);
+
+    iterator.reset();
+    BOOST_REQUIRE_EQUAL(iterator.self(), link::terminal);
+}
+
+BOOST_AUTO_TEST_CASE(iterator__reset__always__sets_terminal_retains_key)
+{
+    using link = linkage<1>;
+    using key = data_array<2>;
+    using slab_iterate = iterator<link, key, max_size_t>;
+
+    constexpr auto start = 0;
+    constexpr key key2{ 0x1a, 0x2a };
+    data_chunk data
+    {
+        0x03, 0x1a, 0x2a,
+        0x07, 0x1a, 0x2a, 0xee,
+        0xff, 0xcc, 0xcc, 0xee, 0xee
+    };
+    test::chunk_storage file{ data };
+    slab_iterate iterator{ file.get(), start, key2 };
+    BOOST_REQUIRE(iterator);
+    BOOST_REQUIRE_EQUAL(iterator.self(), 0x00u);
+
+    iterator.reset();
+    BOOST_REQUIRE_EQUAL(iterator.self(), link::terminal);
+    BOOST_REQUIRE_EQUAL(iterator.key(), key2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

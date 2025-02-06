@@ -21,6 +21,7 @@
 
 #include <iterator>
 #include <cstring>
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -28,9 +29,15 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::iterator(const memory_ptr& data, const Link& start,
-    const Key& key) NOEXCEPT
-  : memory_(data), key_(key), link_(to_match(start))
+CLASS::iterator(memory_ptr&& data, const Link& start, Key&& key) NOEXCEPT
+  : memory_(std::move(data)), key_(std::forward<Key>(key)),
+    link_(to_match(start))
+{
+}
+
+TEMPLATE
+CLASS::iterator(memory_ptr&& data, const Link& start, const Key& key) NOEXCEPT
+  : memory_(std::move(data)), key_(key), link_(to_match(start))
 {
 }
 
@@ -38,6 +45,12 @@ TEMPLATE
 inline bool CLASS::advance() NOEXCEPT
 {
     return !((link_ = to_next(link_))).is_terminal();
+}
+
+TEMPLATE
+inline const Key& CLASS::key() const NOEXCEPT
+{
+    return key_;
 }
 
 TEMPLATE
@@ -50,6 +63,13 @@ TEMPLATE
 inline const memory_ptr& CLASS::get() const NOEXCEPT
 {
     return memory_;
+}
+
+TEMPLATE
+inline void CLASS::reset() NOEXCEPT
+{
+    link_ = Link::terminal;
+    memory_.reset();
 }
 
 TEMPLATE
@@ -66,14 +86,14 @@ Link CLASS::to_match(Link link) const NOEXCEPT
 {
     // Because of this !link_.is_terminal() subsequently guards both.
     if (!memory_)
-        return {};
+        return Link::terminal;
 
     while (!link.is_terminal())
     {
         // get element offset (fault)
         const auto offset = memory_->offset(manager::link_to_position(link));
         if (is_null(offset))
-            return {};
+            return Link::terminal;
 
         // element key matches (found)
         const auto key_ptr = std::next(offset, Link::size);
@@ -95,7 +115,7 @@ Link CLASS::to_next(Link link) const NOEXCEPT
         // get element offset (fault)
         auto offset = memory_->offset(manager::link_to_position(link));
         if (is_null(offset))
-            return {};
+            return Link::terminal;
 
         // set next element link (loop)
         link = { system::unsafe_array_cast<uint8_t, Link::size>(offset) };
@@ -105,7 +125,7 @@ Link CLASS::to_next(Link link) const NOEXCEPT
         // get next element offset (fault)
         offset = memory_->offset(manager::link_to_position(link));
         if (is_null(offset))
-            return {};
+            return Link::terminal;
 
         // next element key matches (found)
         const auto key_ptr = std::next(offset, Link::size);

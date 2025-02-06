@@ -247,36 +247,29 @@ TEMPLATE
 error::error_t CLASS::spent_prevout(const point_link& link, index index,
     const tx_link& self) const NOEXCEPT
 {
-    // Iterate points by point hash (of output tx) because may be conflicts.
-// Search key must be passed as an l-value as it is held by reference.
-////const auto point_sk = get_point_key(link);
-////auto point = store_.point.it(point_sk);
-////if (!point)
-////    return error::integrity;
-////
-////do
-////{
-    // Iterate all spends of the point to find double spends.
-    // Search key must be passed as an l-value as it is held by reference.
-    const auto spend_sk = table::spend::compose(link /*point.self()*/, index);
-    auto it = store_.spend.it(spend_sk);
+    auto it = store_.spend.it(table::spend::compose(link, index));
     if (!it)
         return self.is_terminal() ? error::success : error::integrity3;
 
-    table::spend::get_parent spend{};
+    tx_links spenders{};
     do
     {
+        table::spend::get_parent spend{};
         if (!store_.spend.get(it, spend))
             return error::integrity4;
 
-        // is_strong_tx (search) only called in the case of duplicate.
-        // Other parent tx of spend is strong (confirmed spent prevout).
-        if ((spend.parent_fk != self) && is_strong_tx(spend.parent_fk))
-            return error::confirmed_double_spend;
+        // Exclude self from strong_tx search.
+        if (spend.parent_fk != self)
+            spenders.push_back(spend.parent_fk);
     }
     while (it.advance());
-////}
-////while (point.advance());
+    it.reset();
+
+    // Find a confirmed spending tx.
+    for (const auto& spender: spenders)
+        if (is_strong_tx(spender))
+            return error::confirmed_double_spend;
+
     return error::success;
 }
 
@@ -359,6 +352,8 @@ inline tx_links CLASS::get_strong_txs(const tx_link& link) const NOEXCEPT
 
     }
     while (it.advance());
+    it.reset();
+
     return strong_only(pairs);
 }
 
@@ -391,57 +386,64 @@ inline tx_links CLASS::get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT
 // Duplicate cb tx instances are allowed by consensus. Apart from two bip30
 // exceptions, duplicate cb txs are allowed only if previous are fully spent.
 TEMPLATE
-code CLASS::unspent_duplicates(const header_link&,
+code CLASS::unspent_duplicates(const header_link& link,
     const context& ctx) const NOEXCEPT
 {
     // This is generally going to be disabled.
     if (!ctx.is_enabled(system::chain::flags::bip30_rule))
         return error::success;
 
-    // TODO:
-    ////// Get the block's first tx link
-    ////const auto tx = to_coinbase(link);
-    ////if (tx.is_terminal())
-    ////    return error::integrity;
-    ////
-    ////// Get the block's first tx hash.
-    ////const auto tx_hash = get_tx_key(tx);
-    ////if (tx_hash == system::null_hash)
-    ////    return error::integrity;
-    ////
-    ////// TODO: deadlock.
-    ////// Iterate all strong records for each tx link of the same hash.
-    ////// The same link may be the coinbase for more than one block.
-    ////// Distinct links may be the coinbase for independent blocks.
-    ////// Duplicate instances of a tx (including cb) may exist because of a race.
-    ////// Strong records for a link may be reorganized and again organized.
-    ////auto coinbases = get_strong_txs(tx_hash);
-    ////
-    ////if (prevout_enabled())
-    ////{
-    ////    // Current block is not set strong, so zero is expected.
-    ////    if (is_zero(coinbases.size()))
-    ////        return error::success;
-    ////}
-    ////else
-    ////{
-    ////    // Current block is set strong, so self is expected.
-    ////    if (is_one(coinbases.size()))
-    ////        return error::success;
-    ////
-    ////    // Remove self (will be not found if current block is not set_strong).
-    ////    const auto self = std::find(coinbases.begin(), coinbases.end(), link);
-    ////    if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
-    ////        return error::integrity;
-    ////}
-    /////
-    ////// bip30: all outputs of all previous duplicate coinbases must be spent.
-    ////// BUGBUG: with !prevout_enabled() this can locate spends in current block.
-    ////// BUGBUG: with multiple previous duplicates there must be same number of
-    ////// BUGBUG: spends of each coinbase output, but this will identify only one.
-    ////for (const auto coinbase: coinbases)
-    ////    if (!is_spent_coinbase(tx))
-    ////        return error::unspent_coinbase_collision;
+    // Get the block's first tx link.
+    const auto cb = to_coinbase(link);
+    if (cb.is_terminal())
+        return error::integrity;
+
+    // TODO: deadlock risk.
+    // Iterate all strong records for each tx link of the same hash.
+    // The same link may be the coinbase for more than one block.
+    // Distinct links may be the coinbase for independent blocks.
+    // Duplicate instances of a tx (including cb) may exist because of a race.
+    // Strong records for a link may be reorganized and again organized.
+    auto it = store_.tx.it(get_tx_key(cb));
+    if (!it)
+        return error::integrity;
+
+    // TODO: avoid nested iterators. accumulate set of tx_links and iterate set
+    // TODO: after releasing the initial iterator.
+    tx_links coinbases{};
+    do
+    {
+        for (const auto& tx: get_strong_txs(it.self()))
+            coinbases.push_back(tx);
+    }
+    while (it.advance());
+    it.reset();
+    
+    if (prevout_enabled())
+    {
+        // Current block is not set strong, so zero is expected.
+        if (is_zero(coinbases.size()))
+            return error::success;
+    }
+    else
+    {
+        // Current block is set strong, so self is expected.
+        if (is_one(coinbases.size()))
+            return error::success;
+    
+        // Remove self (will be not found if current block is not set_strong).
+        const auto self = std::find(coinbases.begin(), coinbases.end(), link);
+        if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
+            return error::integrity;
+    }
+    
+    // bip30: all outputs of all previous duplicate coinbases must be spent.
+    // BUGBUG: with !prevout_enabled() this can locate spends in current block.
+    // BUGBUG: with multiple previous duplicates there must be same number of
+    // BUGBUG: spends of each coinbase output, but this will identify only one.
+    for (const auto coinbase: coinbases)
+        if (!is_spent_coinbase(coinbase))
+            return error::unspent_coinbase_collision;
 
     return error::success;
 }
@@ -450,7 +452,7 @@ code CLASS::unspent_duplicates(const header_link&,
 TEMPLATE
 bool CLASS::get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT
 {
-    table::transaction::get_version_puts tx{};
+    table::transaction::get_version_inputs tx{};
     if (!store_.tx.get(link, tx))
         return false;
 
@@ -461,20 +463,17 @@ bool CLASS::get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT
 
     set.tx = link;
     set.version = tx.version;
-    set.spends.clear();
-    set.spends.reserve(tx.ins_count);
-    table::spend::get_prevout_sequence get{};
+    set.spends.reserve(puts.spend_fks.size());
     const auto ptr = store_.spend.get_memory();
 
     // This is not concurrent because get_spend_sets is (by tx).
     for (const auto& spend_fk: puts.spend_fks)
     {
-        if (!store_.spend.get(ptr, spend_fk, get))
+        table::spend::get_prevout_sequence spend{};
+        if (!store_.spend.get(ptr, spend_fk, spend))
             return false;
 
-        // Translate result set to public struct.
-        set.spends.emplace_back(get.point_fk, get.point_index, get.sequence,
-            table::prevout::tx::integer{}, bool{});
+        set.spends.push_back(std::move(spend.value));
     }
 
     return true;
@@ -485,20 +484,20 @@ TEMPLATE
 bool CLASS::get_spend_sets(spend_sets& sets,
     const header_link& link) const NOEXCEPT
 {
-    // This is the only search [txs.find].
     // Coinbase tx does not spend so is not retrieved.
     const auto txs = to_spending_transactions(link);
     if (txs.empty())
-    {
-        sets.clear();
         return true;
-    }
 
     std::atomic<bool> success{ true };
-    const auto to_set = [this, &success](const auto& tx) NOEXCEPT
+    std::atomic<size_t> spends{ zero };
+    const auto to_set = [this, &success, &spends](const auto& tx) NOEXCEPT
     {
         spend_set set{};
-        if (!get_spend_set(set, tx)) success.store(false);
+        if (!get_spend_set(set, tx))
+            success.store(false);
+
+        spends += set.spends.size();
         return set;
     };
 
@@ -507,22 +506,16 @@ bool CLASS::get_spend_sets(spend_sets& sets,
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
     std_transform(bc::par_unseq, txs.begin(), txs.end(), sets.begin(), to_set);
 
-    return success && (prevout_enabled() ? populate_prevouts(sets, link) :
-        populate_prevouts(sets));
+    return success && (prevout_enabled() ?
+        populate_prevouts(sets, spends, link) : populate_prevouts(sets));
 }
 
 TEMPLATE
-bool CLASS::populate_prevouts(spend_sets& sets,
+bool CLASS::populate_prevouts(spend_sets& sets, size_t spends,
     const header_link& link) const NOEXCEPT
 {
-    const auto sets_size = std::accumulate(sets.begin(), sets.end(), zero,
-        [](size_t total, const auto& set) NOEXCEPT
-        {
-            return system::ceilinged_add(total, set.spends.size());
-        });
-
     table::prevout::record_get prevouts{};
-    prevouts.values.resize(sets_size);
+    prevouts.values.resize(spends);
     if (!store_.prevout.at(link, prevouts))
         return false;
 
@@ -562,8 +555,8 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return error::integrity1;
 
     code ec{};
-    if ((ec = unspent_duplicates(link, ctx)))
-        return ec;
+    ////if ((ec = unspent_duplicates(link, ctx)))
+    ////    return ec;
 
     spend_sets sets{};
     if (!get_spend_sets(sets, link))
