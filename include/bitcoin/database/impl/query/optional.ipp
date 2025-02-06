@@ -39,6 +39,7 @@ bool CLASS::get_confirmed_balance(uint64_t& out,
     if (!it)
         return false;
 
+    // TODO: deadlock risk.
     out = zero;
     do
     {
@@ -69,6 +70,7 @@ bool CLASS::to_address_outputs(output_links& out,
     if (!it)
         return false;
 
+    // TODO: deadlock risk.
     out.clear();
     do
     {
@@ -94,6 +96,7 @@ bool CLASS::to_unspent_outputs(output_links& out,
     if (!it)
         return false;
 
+    // TODO: deadlock risk.
     out.clear();
     do
     {
@@ -120,6 +123,7 @@ bool CLASS::to_minimum_unspent_outputs(output_links& out,
     if (!it)
         return false;
 
+    // TODO: deadlock risk.
     out.clear();
     do
     {
