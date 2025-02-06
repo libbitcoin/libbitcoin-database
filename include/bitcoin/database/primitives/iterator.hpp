@@ -34,6 +34,9 @@ namespace database {
 /// THE hashmap.get(const iterator& it, ...) METHOD EXISTS TO PREVENT A CALL TO
 /// manager.get(), WHICH DESPITE BEING A READ WOULD CAUSE A DEADLOCK. THIS IS
 /// BECAUSE IT CANNOT COMPLETE ITS READ WHILE REMAP IS WAITING ON ACCESS.
+/// A SIMILAR RISK ARISES FROM HOLDING iterator WHILE READING/WRITING ANY OTHER
+/// TABLE AS A CYCLE CAUSING THE ABOVE WILL OCCUR. USE THE ITERATOR TO COLLECT
+/// A SET FROM ITS TABLE AND THEN CALL iterator.release() TO FREE THE POINTER.
 
 /// This class is not thread safe.
 /// Size non-max implies record manager (ordinal record links).
@@ -44,12 +47,14 @@ public:
     DEFAULT_COPY_MOVE_DESTRUCT(iterator);
 
     /// This advances to first match (or terminal).
-    /// Key must be passed as an l-value as it is held by reference.
-    iterator(const memory_ptr& data, const Link& start,
-        const Key& key) NOEXCEPT;
+    iterator(memory_ptr&& data, const Link& start, Key&& key) NOEXCEPT;
+    iterator(memory_ptr&& data, const Link& start, const Key& key) NOEXCEPT;
 
     /// Advance to and return next iterator.
     inline bool advance() NOEXCEPT;
+
+    /// Expose the search key.
+    inline const Key& key() const NOEXCEPT;
 
     /// Advance to next match and return false if terminal (not found).
     inline const Link& self() const NOEXCEPT;
@@ -57,6 +62,9 @@ public:
     /// Access the underlying memory pointer.
     // TODO: for use by hashmap, make exclusive via friend.
     inline const memory_ptr& get() const NOEXCEPT;
+
+    /// Release the memory pointer, invalidates iterator.
+    inline void reset() NOEXCEPT;
 
     /// True if the iterator is not terminal.
     inline operator bool() const NOEXCEPT;
@@ -71,7 +79,7 @@ private:
     // This is not thread safe, but it's object is not modified here and the
     // memory that it refers to is not addressable until written, and writes
     // are guarded by allocator, which is protected by mutex.
-    const memory_ptr memory_;
+    memory_ptr memory_;
 
     // This is thread safe.
     const Key key_;

@@ -146,8 +146,14 @@ inline bool CLASS::exists(const Key& key) const NOEXCEPT
 TEMPLATE
 inline Link CLASS::first(const Key& key) const NOEXCEPT
 {
-    ////return it(key).self();
     return first(get_memory(), head_.top(key), key);
+}
+
+TEMPLATE
+inline typename CLASS::iterator CLASS::it(Key&& key) const NOEXCEPT
+{
+    const auto top = head_.top(key);
+    return { get_memory(), top, std::forward<Key>(key) };
 }
 
 TEMPLATE
