@@ -250,6 +250,7 @@ bool CLASS::is_spent_prevout(const point_link& link, index index) const NOEXCEPT
         error::confirmed_double_spend;
 }
 
+// SEARCHES SPEND [37%] (small POINT read [.24%], tiny STRONG_TX search [0%]).
 // protected
 TEMPLATE
 error::error_t CLASS::spent_prevout(const point_link& link, index index,
@@ -293,6 +294,7 @@ error::error_t CLASS::spent_prevout(const point_link& link, index index,
     return error::success;
 }
 
+// SEARCHES STRONG_TX [33%] (small HEADER read [<10%]).
 // protected
 TEMPLATE
 error::error_t CLASS::unspendable_prevout(uint32_t sequence, bool coinbase,
@@ -474,6 +476,7 @@ code CLASS::unspent_duplicates(const header_link& link,
     return error::success;
 }
 
+// READS TX / PUTS / SPEND TABLES [15%]
 // protected
 TEMPLATE
 bool CLASS::get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT // 14.78%
