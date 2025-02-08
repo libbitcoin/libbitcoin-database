@@ -197,6 +197,10 @@ code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
     if (!ctx.is_enabled(system::chain::flags::bip68_rule))
         return error::success;
 
+    // BUGBUG: integrate version.
+    ////if (version < system::chain::relative_locktime_min_version)
+    ////    return error::success;
+
     // Get hash from point, search for prevout tx and get its link.
     const auto tx_fk = to_tx(get_point_key(link));
     if (tx_fk.is_terminal())
