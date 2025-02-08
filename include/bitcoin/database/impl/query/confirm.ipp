@@ -241,12 +241,12 @@ bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_spent_prevout(const point_link& link, index index) const NOEXCEPT
 {
-    table::point::get_stub get{};
-    if (!store_.point.get(link, get))
+    table::point::get_stub stub{};
+    if (!store_.point.get(link, stub))
         return false;
 
     // Prevout is spent by any confirmed transaction.
-    return spent_prevout(link, index, get.stub, tx_link::terminal) ==
+    return spent_prevout(link, index, stub.value, tx_link::terminal) ==
         error::confirmed_double_spend;
 }
 

@@ -65,11 +65,11 @@ struct point
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            stub = source.read_little_endian<stub::integer, stub::size>();
+            value = source.read_little_endian<stub::integer, stub::size>();
             return source;
         }
 
-        stub::integer stub{};
+        stub::integer value{};
     };
 };
 
