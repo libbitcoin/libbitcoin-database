@@ -273,8 +273,9 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
         "ffffffff");
     const auto expected_spend_body = system::base16_chunk(
         "ffffffff"     // terminal->
-        "ffffffff"     // fp: point_fk->
+        "00000000"     // fp: point_stub
         "ffffff"       // fp: point_index (null)
+        "ffffffff"     // point_fk->
         "00000000"     // parent_fk->
         "00000000"     // sequence
         "0000000000"); // input_fk->
@@ -396,21 +397,24 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
         "0100000000000000000000000000000000000000000000000000000000000000"); // sk (prevout.hash)
     const auto expected_spend_head = system::base16_chunk(
         "02000000"     // record count
+        "00000000"     // spend0_fk->
         "ffffffff"
         "ffffffff"
         "01000000"     // spend1_fk->
-        "ffffffff"
-        "00000000");   // spend0_fk->
+        "ffffffff");
     const auto expected_spend_body = system::base16_chunk(
         "ffffffff"     // terminal->
-        "00000000"     // fp: point_fk->
+        "01000000"     // fp: point_stub
         "180000"       // fp: point_index
+        "00000000"     // point_fk->
         "00000000"     // parent_fk->
         "2a000000"     // sequence
         "0000000000"   // input_fk->
+
         "ffffffff"     // terminal->
-        "00000000"     // fp: point_fk->
+        "01000000"     // fp: point_stub
         "2a0000"       // fp: point_index
+        "00000000"     // point_fk->
         "00000000"     // parent_fk->
         "18000000"     // sequence
         "0800000000"); // input_fk->
@@ -525,12 +529,11 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff");
-
-    // ffffffffffffffffffffff00000000ffffffff0000000000
     const auto genesis_spend_body = system::base16_chunk(
         "ffffffff"     // terminal->
-        "ffffffff"     // fp: point_fk->
+        "00000000"     // fp: point_stub
         "ffffff"       // fp: point_index (null)
+        "ffffffff"     // point_fk->
         "00000000"     // parent_fk->
         "ffffffff"     // sequence
         "0000000000"); // input_fk-> (coinbase)
@@ -675,12 +678,11 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff");
-
-    // ffffffffffffffffffffff00000000ffffffff0000000000
     const auto genesis_spend_body = system::base16_chunk(
         "ffffffff"     // terminal->
-        "ffffffff"     // fp: point_fk->
+        "00000000"     // fp: point_hash
         "ffffff"       // fp: point_index (null)
+        "ffffffff"     // point_fk->
         "00000000"     // parent_fk->
         "ffffffff"     // sequence
         "0000000000"); // input_fk-> (coinbase)

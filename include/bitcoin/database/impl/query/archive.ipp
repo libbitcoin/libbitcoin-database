@@ -727,7 +727,7 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
 
         // Create prevout hash in point table.
         point_link hash_fk{};
-        if (hash != null_hash)
+        if (prevout.index() != chain::no_previous_output)
         {
             // GUARD (tx redundancy)
             // Only fully effective if there is a single database thread.
@@ -749,13 +749,14 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
         }
 
         // Accumulate spend keys in order (terminal for any null point).
-        spends.push_back(table::spend::compose(hash_fk, prevout.index()));
+        spends.push_back(table::spend::compose(hash, prevout.index()));
 
         // Write spend record.
         // Safe allocation failure, index is deferred because invalid tx_fk.
         if (!store_.spend.set(spend_fk, table::spend::record
         {
             {},
+            hash_fk,
             out_fk,
             in->sequence(),
             input_fk

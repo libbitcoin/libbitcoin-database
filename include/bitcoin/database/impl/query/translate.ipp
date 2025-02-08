@@ -284,18 +284,19 @@ uint32_t CLASS::to_output_index(const tx_link& parent_fk,
     return system::chain::point::null_index;
 }
 
+// Assumes singular which doesn't make sense.
 // protected/to_spenders
-TEMPLATE
-spend_link CLASS::to_spender(const tx_link& link,
-    const spend_key& point) const NOEXCEPT
-{
-    table::spend::get_key spend{};
-    for (const auto& spend_fk: to_spends(link))
-        if (store_.spend.get(spend_fk, spend) && (spend.key == point))
-            return spend_fk;
-
-    return {};
-}
+////TEMPLATE
+////spend_link CLASS::to_spender(const tx_link& link,
+////    const spend_key& point) const NOEXCEPT
+////{
+////    table::spend::get_key spend{};
+////    for (const auto& spend_fk: to_spends(link))
+////        if (store_.spend.get(spend_fk, spend) && (spend.key == point))
+////            return spend_fk;
+////
+////    return {};
+////}
 
 TEMPLATE
 spend_links CLASS::to_spenders(const output_link& link) const NOEXCEPT
@@ -325,51 +326,37 @@ TEMPLATE
 spend_links CLASS::to_spenders(const hash_digest& point_hash,
     uint32_t output_index) const NOEXCEPT
 {
-    const auto point_fk = to_point(point_hash);
-    if (point_fk.is_terminal())
+    // Avoid returning spend links for coinbase inputs.
+    if (output_index == system::chain::point::null_index)
         return {};
 
-    return to_spenders(table::spend::compose(point_fk, output_index));
-}
-
-TEMPLATE
-spend_links CLASS::to_spenders(const spend_key& key) const NOEXCEPT
-{
-    auto it = store_.spend.it(key);
+    // This will find null points, as every input is spend-table-indexed.
+    // Iterates the set of possible matches to point (conflicts).
+    auto it = store_.spend.it(table::spend::compose(point_hash, output_index));
     if (!it)
         return {};
 
-    // Any terminal link in the set implies a store integrity failure.
-    static const spend_links fault{ spend_link{} };
-
-    // Iterate transactions that spend the point, saving each spender.
-    spend_links spenders{};
+    // For a null point this will obtain terminal point_fk.
+    potentials potentials{};
     do
     {
-        table::spend::get_parent spender{};
-        if (!store_.spend.get(it, spender))
-            return fault;
+        table::spend::get_point spend{};
+        if (!store_.spend.get(it, spend))
+            return {};
 
-        auto found{ false };
-        for (const auto& spend_fk: to_spends(spender.parent_fk))
-        {
-            table::spend::get_key spend{};
-            if (!store_.spend.get(it, spend_fk, spend))
-                return fault;
-
-            // Only one input of a given tx may spend an output.
-            if (spend.key == it.key())
-            {
-                spenders.push_back(spend_fk);
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) return fault;
+        potentials.emplace_back(it.self(), spend.point_fk);
     }
     while (it.advance());
-    return spenders;
+    it.reset();
+
+    // A terminal point_fk will fail get_point_key with a null_hash return.
+    // A secondary match must be made against the point table hash value.
+    spend_links links{};
+    for (const auto& potential: potentials)
+        if (get_point_key(potential.point_fk) == point_hash)
+            links.push_back(potential.spend_fk);
+
+    return links;
 }
 
 // tx to puts (forward navigation)

@@ -218,23 +218,6 @@ namespace schema
         static_assert(minrow == 10u);
     };
 
-    // moderate (sk:7) record multimap, with low multiple rate.
-    struct spend
-    {
-        static constexpr bool hash_function = false;
-        static constexpr size_t pk = schema::spend_;
-        static constexpr size_t sk = transaction::pk + schema::index;
-        static constexpr size_t minsize =
-            schema::transaction::pk +
-            sizeof(uint32_t) +
-            schema::input::pk;
-        static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 13u);
-        static_assert(minrow == 24u);
-    };
-
     // record hashmap
     struct point
     {
@@ -247,6 +230,24 @@ namespace schema
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
         static_assert(minsize == 0u);
         static_assert(minrow == 36u);
+    };
+
+    // moderate (sk:7) record multimap, with low multiple rate.
+    struct spend
+    {
+        static constexpr bool hash_function = false;
+        static constexpr size_t pk = schema::spend_;
+        static constexpr size_t sk = schema::tx + schema::index;
+        static constexpr size_t minsize =
+            schema::point::pk +         // point->hash
+            schema::transaction::pk +   // parent->tx
+            sizeof(uint32_t) +          // sequence
+            schema::input::pk;          // input->script|witness
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 17u);
+        static_assert(minrow == 28u);
     };
 
     // slab hashmap
@@ -413,21 +414,23 @@ namespace schema
     ////};
 }
 
+// TODO: types not derived from table constants.
 struct spend_set
 {
-    // TODO: values not derived.
     struct spend
     {
-        // From spend table.
-        uint32_t point_fk{};
+        // From spend table (all except input_pk).
+        uint32_t point_stub{};
         uint32_t point_index{};
+        uint32_t point_fk{};
         uint32_t sequence{};
 
         // From prevouts table.
-        uint32_t prevout_tx_fk{};
+        uint32_t prevout_tx{};
         bool coinbase{};
     };
 
+    // From block.tx.puts iteration.
     uint32_t tx{};
     uint32_t version{};
     std::vector<spend> spends{};
