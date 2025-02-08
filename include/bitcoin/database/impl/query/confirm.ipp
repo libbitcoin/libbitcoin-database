@@ -302,18 +302,24 @@ error::error_t CLASS::unspendable_prevout(uint32_t sequence, bool coinbase,
     if (strong.is_terminal())
         return error::unconfirmed_spend;
 
-    context out{};
-    if (!get_context(out, strong)) // 10.31%
-        return error::integrity5;
+    const auto bip68 = ctx.is_enabled(system::chain::flags::bip68_rule) &&
+        (version >= system::chain::relative_locktime_min_version);
 
-    // All txs with same hash must be coinbase or not.
-    if (coinbase && !transaction::is_coinbase_mature(out.height, ctx.height))
-        return error::coinbase_maturity;
+    // The bip68 condition reduces get_context in 295001-419328 to ~0%.
+    if (bip68 || coinbase)
+    {
+        context out{};
+        if (!get_context(out, strong)) // 10.31% (before above condition)
+            return error::integrity5;
 
-    if (ctx.is_enabled(system::chain::flags::bip68_rule) &&
-        (version >= system::chain::relative_locktime_min_version) &&
-        input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
-        return error::relative_time_locked;
+        if (bip68 &&
+            input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
+            return error::relative_time_locked;
+
+        if (coinbase &&
+            !transaction::is_coinbase_mature(out.height, ctx.height))
+            return error::coinbase_maturity;
+    }
 
     return error::success;
 }
