@@ -49,7 +49,7 @@ using input_links = std::vector<input_link::integer>;
 using output_links = std::vector<output_link::integer>;
 using spend_links = std::vector<spend_link::integer>;
 
-struct strong_pair { header_link block{}; tx_link tx{}; };
+////struct strong_pair { header_link block{}; tx_link tx{}; };
 using two_counts = std::pair<size_t, size_t>;
 using spend_key = table::spend::search_key;
 using point_stub = table::point::stub;
@@ -247,9 +247,9 @@ public:
         uint32_t output_index) const NOEXCEPT;
 
     /// put to tx (reverse navigation)
-    tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
     tx_link to_prevout_tx(const spend_link& link) const NOEXCEPT;
+    tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
     spend_key to_spend_key(const spend_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
@@ -298,48 +298,16 @@ public:
     txs_link top_txs(size_t bucket) const NOEXCEPT;
     tx_link top_tx(size_t bucket) const NOEXCEPT;
 
-    /// Archival (mostly natural-keyed).
+    /// Archive reads.
     /// -----------------------------------------------------------------------
 
+    // Bools.
     inline bool is_header(const hash_digest& key) const NOEXCEPT;
     inline bool is_block(const hash_digest& key) const NOEXCEPT;
     inline bool is_tx(const hash_digest& key) const NOEXCEPT;
-
-    size_t get_candidate_size() const NOEXCEPT;
-    size_t get_candidate_size(size_t top) const NOEXCEPT;
-    size_t get_confirmed_size() const NOEXCEPT;
-    size_t get_confirmed_size(size_t top) const NOEXCEPT;
-    height_link get_height(const hash_digest& key) const NOEXCEPT;
-    bool get_height(size_t& out, const hash_digest& key) const NOEXCEPT;
-
-    bool set(const header& header, const chain_context& ctx,
-        bool milestone) NOEXCEPT;
-    bool set(const header& header, const context& ctx,
-        bool milestone) NOEXCEPT;
-    bool set(const block& block, const chain_context& ctx,
-        bool milestone, bool strong) NOEXCEPT;
-    bool set(const block& block, const context& ctx,
-        bool milestone, bool strong) NOEXCEPT;
-    bool set(const transaction& tx) NOEXCEPT;
-    bool set(const block& block, bool strong) NOEXCEPT;
-
-    /// False implies missing prevouts, node input.metadata is populated.
-    bool populate(const input& input) const NOEXCEPT;
-    bool populate(const block& block) const NOEXCEPT;
-    bool populate(const transaction& tx) const NOEXCEPT;
-
-    /// For testing only.
-    /// False implies missing prevouts, input.metadata is not populated.
-    bool populate_without_metadata(const input& input) const NOEXCEPT;
-    bool populate_without_metadata(const block& block) const NOEXCEPT;
-    bool populate_without_metadata(const transaction& tx) const NOEXCEPT;
-
-    /// Archival (mostly surrogate-keyed).
-    /// -----------------------------------------------------------------------
-
     inline bool is_coinbase(const tx_link& link) const NOEXCEPT;
-    inline bool is_associated(const header_link& link) const NOEXCEPT;
     inline bool is_milestone(const header_link& link) const NOEXCEPT;
+    inline bool is_associated(const header_link& link) const NOEXCEPT;
 
     /// Empty/null_hash implies fault, zero count implies unassociated.
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
@@ -355,17 +323,22 @@ public:
         const tx_link& link) const NOEXCEPT;
 
     /// Terminal implies not found, false implies fault.
+    size_t get_block_size(const header_link& link) const NOEXCEPT;
+    height_link get_height(const hash_digest& key) const NOEXCEPT;
     height_link get_height(const header_link& link) const NOEXCEPT;
+    bool get_height(size_t& out, const hash_digest& key) const NOEXCEPT;
     bool get_height(size_t& out, const header_link& link) const NOEXCEPT;
     bool get_value(uint64_t& out, const output_link& link) const NOEXCEPT;
     bool get_unassociated(association& out,
         const header_link& link) const NOEXCEPT;
 
+    /// Objects.
+    /// -----------------------------------------------------------------------
+
     inputs_ptr get_inputs(const tx_link& link) const NOEXCEPT;
     outputs_ptr get_outputs(const tx_link& link) const NOEXCEPT;
     transactions_ptr get_transactions(const header_link& link) const NOEXCEPT;
 
-    size_t get_block_size(const header_link& link) const NOEXCEPT;
     header::cptr get_header(const header_link& link) const NOEXCEPT;
     block::cptr get_block(const header_link& link) const NOEXCEPT;
     transaction::cptr get_transaction(const tx_link& link) const NOEXCEPT;
@@ -381,8 +354,30 @@ public:
     inputs_ptr get_spenders(const tx_link& link,
         uint32_t output_index) const NOEXCEPT;
 
-    /// Archival (code-returning writers).
+    /// False implies missing prevouts, node input.metadata is populated.
+    bool populate(const input& input) const NOEXCEPT;
+    bool populate(const block& block) const NOEXCEPT;
+    bool populate(const transaction& tx) const NOEXCEPT;
+
+    /// False implies missing prevouts, input.metadata is not populated.
+    bool populate_without_metadata(const input& input) const NOEXCEPT;
+    bool populate_without_metadata(const block& block) const NOEXCEPT;
+    bool populate_without_metadata(const transaction& tx) const NOEXCEPT;
+
+    /// Archive writes.
     /// -----------------------------------------------------------------------
+
+    /// Bool returns.
+    bool set(const header& header, const chain_context& ctx,
+        bool milestone) NOEXCEPT;
+    bool set(const header& header, const context& ctx,
+        bool milestone) NOEXCEPT;
+    bool set(const block& block, const chain_context& ctx,
+        bool milestone, bool strong) NOEXCEPT;
+    bool set(const block& block, const context& ctx,
+        bool milestone, bool strong) NOEXCEPT;
+    bool set(const transaction& tx) NOEXCEPT;
+    bool set(const block& block, bool strong) NOEXCEPT;
 
     /// Set transaction.
     code set_code(const transaction& tx) NOEXCEPT;
@@ -415,8 +410,9 @@ public:
     code set_code(txs_link& out_fk, const block& block, const header_link& key,
         bool strong) NOEXCEPT;
 
-    /// Chain state.
+    /// Context.
     /// -----------------------------------------------------------------------
+
     chain_state_ptr get_chain_state(const system::settings& settings,
         const hash_digest& hash) const NOEXCEPT;
     chain_state_ptr get_candidate_chain_state(
@@ -429,9 +425,10 @@ public:
         const header& header, const header_link& link,
         size_t height) const NOEXCEPT;
 
-    /// Validation (surrogate-keyed).
+    /// Validation.
     /// -----------------------------------------------------------------------
 
+    /// States.
     code get_header_state(const header_link& link) const NOEXCEPT;
     code get_block_state(const header_link& link) const NOEXCEPT;
     code get_block_state(uint64_t& fees, const header_link& link) const NOEXCEPT;
@@ -439,16 +436,17 @@ public:
     code get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
         const context& ctx) const NOEXCEPT;
 
-    /// get_context(chain::context) sets only flags, median_time_past, height.
-    bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
+    /// Values.
+    // get_context(chain::context) sets only flags, median_time_past, height.
+    bool get_timestamp(uint32_t& timestamp, const header_link& link) const NOEXCEPT;
+    bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
     bool get_work(uint256_t& work, const header_link& link) const NOEXCEPT;
+    bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
     bool get_context(system::chain::context& ctx,
         const header_link& link) const NOEXCEPT;
-    bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
-    bool get_timestamp(uint32_t& timestamp,
-        const header_link& link) const NOEXCEPT;
 
+    /// Setters.
     bool set_block_valid(const header_link& link, uint64_t fees) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_confirmable(const header_link& link) NOEXCEPT;
@@ -456,8 +454,9 @@ public:
     bool set_tx_connected(const tx_link& link, const context& ctx,
         uint64_t fee, size_t sigops) NOEXCEPT;
 
-    /// Confirmation (surrogate-keyed).
+    /// Confirmation.
     /// -----------------------------------------------------------------------
+    /// These are not used in confirmation.
 
     /// These compare strong with height index (not for confirmation process).
     bool is_candidate_header(const header_link& link) const NOEXCEPT;
@@ -467,28 +466,36 @@ public:
     bool is_confirmed_output(const output_link& link) const NOEXCEPT;
     bool is_spent_output(const output_link& link) const NOEXCEPT;
 
-    /// These are not used in confirmation.
-    /// These rely on strong (use only for confirmation process).
+    /// Height index not used by these.
     bool is_spent(const spend_link& link) const NOEXCEPT;
-    bool is_spent_coinbase(const tx_link& link) const NOEXCEPT;
-    bool is_strong_tx(const tx_link& link) const NOEXCEPT;
     bool is_strong_block(const header_link& link) const NOEXCEPT;
     bool is_strong_spend(const spend_link& link) const NOEXCEPT;
     bool is_mature(const spend_link& link, size_t height) const NOEXCEPT;
     bool is_locked(const spend_link& link, uint32_t sequence,
         const context& ctx) const NOEXCEPT;
 
+    /// Consensus.
+    /// -----------------------------------------------------------------------
     /// These are used in confirmation.
-    /// Block association relies on strong (confirmed or pending).
-    bool set_strong(const header_link& link) NOEXCEPT;
-    bool set_unstrong(const header_link& link) NOEXCEPT;
-    bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
+
+    bool is_spent_coinbase(const tx_link& link) const NOEXCEPT;
+    bool is_strong_tx(const tx_link& link) const NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
-    ////code tx_confirmable(const tx_link& link, const context& ctx) const NOEXCEPT;
     code unspent_duplicates(const header_link& coinbase,
         const context& ctx) const NOEXCEPT;
 
+    bool set_strong(const header_link& link) NOEXCEPT;
+    bool set_unstrong(const header_link& link) NOEXCEPT;
+    bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
+
     /// Height indexation.
+    /// -----------------------------------------------------------------------
+
+    size_t get_candidate_size() const NOEXCEPT;
+    size_t get_candidate_size(size_t top) const NOEXCEPT;
+    size_t get_confirmed_size() const NOEXCEPT;
+    size_t get_confirmed_size(size_t top) const NOEXCEPT;
+
     bool initialize(const block& genesis) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
     bool push_confirmed(const header_link& link) NOEXCEPT;
@@ -525,11 +532,7 @@ protected:
         const spend_link& input_fk) const NOEXCEPT;
     uint32_t to_output_index(const tx_link& parent_fk,
         const output_link& output_fk) const NOEXCEPT;
-
-    // Critical path
-    inline tx_links get_strong_txs(const tx_link& link) const NOEXCEPT;
-    inline tx_links get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT;
-    inline strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
+    ////strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
 
     /// Validate.
     /// -----------------------------------------------------------------------
@@ -547,13 +550,17 @@ protected:
     code locked_prevout(const point_link& link, uint32_t sequence,
         const context& ctx) const NOEXCEPT;
 
-    // Critical path
+    /// Consensus.
+    /// -----------------------------------------------------------------------
+    tx_links get_strong_txs(const tx_link& link) const NOEXCEPT;
+    tx_links get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT;
     bool populate_prevouts(spend_sets& sets) const NOEXCEPT;
     bool populate_prevouts(spend_sets& sets, size_t spends,
         const header_link& link) const NOEXCEPT;
     bool get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT;
     bool get_spend_sets(spend_sets& set, const header_link& link) const NOEXCEPT;
     bool is_spent_prevout(const point_link& link, index index) const NOEXCEPT;
+
     error::error_t spent_prevout(const point_link& link,
         index index) const NOEXCEPT;
     error::error_t spent_prevout(const point_link& link, index index,
@@ -561,14 +568,14 @@ protected:
     error::error_t unspendable_prevout(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;
+
     bool set_strong(const header_link& link, const tx_links& txs,
         bool positive) NOEXCEPT;
 
-    /// context
+    /// Context.
     /// -----------------------------------------------------------------------
 
     /// any blocks
-
     bool populate_bits(chain_state::data& data,
         const chain_state::map& map, header_link link) const NOEXCEPT;
     bool populate_versions(chain_state::data& data,
@@ -586,7 +593,6 @@ protected:
         size_t height) const NOEXCEPT;
 
     /// candidate blocks
-
     bool populate_candidate_bits(chain_state::data& data,
         const chain_state::map& map, const header& header) const NOEXCEPT;
     bool populate_candidate_versions(chain_state::data& data,
@@ -602,13 +608,6 @@ protected:
         const header_link& link, size_t height) const NOEXCEPT;
 
 private:
-    struct potential
-    {
-        spend_link spend_fk{};
-        point_link point_fk{};
-    };
-    using potentials = std::vector<potential>;
-
     struct maybe_strong
     {
         header_link block{};
@@ -617,6 +616,7 @@ private:
     };
     using maybe_strongs = std::vector<maybe_strong>;
 
+    // Consensus.
     static inline tx_links strong_only(const maybe_strongs& pairs) NOEXCEPT;
     static inline bool contains(const maybe_strongs& pairs,
         const header_link& block) NOEXCEPT;
@@ -636,12 +636,16 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_USE_OF_MOVED_OBJECT)
 
 #include <bitcoin/database/impl/query/query.ipp>
-#include <bitcoin/database/impl/query/archive.ipp>
+#include <bitcoin/database/impl/query/archive_read.ipp>
+#include <bitcoin/database/impl/query/archive_write.ipp>
 #include <bitcoin/database/impl/query/confirm.ipp>
+#include <bitcoin/database/impl/query/consensus.ipp>
 #include <bitcoin/database/impl/query/context.ipp>
-#include <bitcoin/database/impl/query/initialize.ipp>
-#include <bitcoin/database/impl/query/optional.ipp>
 #include <bitcoin/database/impl/query/extent.ipp>
+#include <bitcoin/database/impl/query/height.ipp>
+#include <bitcoin/database/impl/query/initialize.ipp>
+#include <bitcoin/database/impl/query/objects.ipp>
+#include <bitcoin/database/impl/query/optional.ipp>
 #include <bitcoin/database/impl/query/translate.ipp>
 #include <bitcoin/database/impl/query/validate.ipp>
 

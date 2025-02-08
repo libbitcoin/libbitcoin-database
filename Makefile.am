@@ -170,11 +170,15 @@ include_bitcoin_database_impl_primitives_HEADERS = \
 
 include_bitcoin_database_impl_querydir = ${includedir}/bitcoin/database/impl/query
 include_bitcoin_database_impl_query_HEADERS = \
-    include/bitcoin/database/impl/query/archive.ipp \
+    include/bitcoin/database/impl/query/archive_read.ipp \
+    include/bitcoin/database/impl/query/archive_write.ipp \
     include/bitcoin/database/impl/query/confirm.ipp \
+    include/bitcoin/database/impl/query/consensus.ipp \
     include/bitcoin/database/impl/query/context.ipp \
     include/bitcoin/database/impl/query/extent.ipp \
+    include/bitcoin/database/impl/query/height.ipp \
     include/bitcoin/database/impl/query/initialize.ipp \
+    include/bitcoin/database/impl/query/objects.ipp \
     include/bitcoin/database/impl/query/optional.ipp \
     include/bitcoin/database/impl/query/query.ipp \
     include/bitcoin/database/impl/query/translate.ipp \

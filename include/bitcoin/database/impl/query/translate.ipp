@@ -223,33 +223,33 @@ header_link CLASS::to_block(const tx_link& key) const NOEXCEPT
     return strong.header_fk;
 }
 
-// protected
-// If there are no associations the link of the first tx by hash is returned,
-// which is an optimization to prevent requery to determine tx existence.
-// Return the first block-tx tuple where the tx is strong by the block.
-TEMPLATE
-inline strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
-{
-    // Iteration of tx is necessary because there may be duplicates.
-    auto it = store_.tx.it(tx_hash);
-    strong_pair strong{ {}, it.self() };
-    if (!it)
-        return strong;
-
-    // TODO: deadlock risk.
-    do
-    {
-        // Only top block (strong) association for given tx is considered.
-        strong.block = to_block(strong.tx);
-        if (!strong.block.is_terminal())
-        {
-            strong.tx = it.self();
-            return strong;
-        }
-    }
-    while (it.advance());
-    return strong;
-}
+////// protected
+////// If there are no associations the link of the first tx by hash is returned,
+////// which is an optimization to prevent requery to determine tx existence.
+////// Return the first block-tx tuple where the tx is strong by the block.
+////TEMPLATE
+////strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
+////{
+////    // Iteration of tx is necessary because there may be duplicates.
+////    auto it = store_.tx.it(tx_hash);
+////    strong_pair strong{ {}, it.self() };
+////    if (!it)
+////        return strong;
+////
+////    // TODO: deadlock risk.
+////    do
+////    {
+////        // Only top block (strong) association for given tx is considered.
+////        strong.block = to_block(strong.tx);
+////        if (!strong.block.is_terminal())
+////        {
+////            strong.tx = it.self();
+////            return strong;
+////        }
+////    }
+////    while (it.advance());
+////    return strong;
+////}
 
 // output to spenders (reverse navigation)
 // ----------------------------------------------------------------------------
@@ -326,6 +326,12 @@ TEMPLATE
 spend_links CLASS::to_spenders(const hash_digest& point_hash,
     uint32_t output_index) const NOEXCEPT
 {
+    struct potential
+    {
+        spend_link spend_fk{};
+        point_link point_fk{};
+    };
+
     // Avoid returning spend links for coinbase inputs.
     if (output_index == system::chain::point::null_index)
         return {};
@@ -337,14 +343,14 @@ spend_links CLASS::to_spenders(const hash_digest& point_hash,
         return {};
 
     // For a null point this will obtain terminal point_fk.
-    potentials potentials{};
+    std::vector<potential> spenders{};
     do
     {
         table::spend::get_point spend{};
         if (!store_.spend.get(it, spend))
             return {};
 
-        potentials.emplace_back(it.self(), spend.point_fk);
+        spenders.emplace_back(it.self(), spend.point_fk);
     }
     while (it.advance());
     it.reset();
@@ -352,9 +358,9 @@ spend_links CLASS::to_spenders(const hash_digest& point_hash,
     // A terminal point_fk will fail get_point_key with a null_hash return.
     // A secondary match must be made against the point table hash value.
     spend_links links{};
-    for (const auto& potential: potentials)
-        if (get_point_key(potential.point_fk) == point_hash)
-            links.push_back(potential.spend_fk);
+    for (const auto& spender: spenders)
+        if (get_point_key(spender.point_fk) == point_hash)
+            links.push_back(spender.spend_fk);
 
     return links;
 }

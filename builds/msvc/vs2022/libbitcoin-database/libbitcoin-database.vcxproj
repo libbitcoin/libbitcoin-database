@@ -161,11 +161,15 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomap.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive_read.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive_write.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\confirm.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\context.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\extent.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\height.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\initialize.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\objects.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\optional.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\query.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\translate.ipp" />
