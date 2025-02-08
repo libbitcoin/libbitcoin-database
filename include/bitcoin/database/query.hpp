@@ -52,6 +52,7 @@ using spend_links = std::vector<spend_link::integer>;
 struct strong_pair { header_link block{}; tx_link tx{}; };
 using two_counts = std::pair<size_t, size_t>;
 using spend_key = table::spend::search_key;
+using point_stub = table::point::stub;
 
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>
@@ -265,7 +266,6 @@ public:
     /// output to spenders (reverse navigation)
     spend_links to_spenders(const point& prevout) const NOEXCEPT;
     spend_links to_spenders(const output_link& link) const NOEXCEPT;
-    spend_links to_spenders(const spend_key& key) const NOEXCEPT;
     spend_links to_spenders(const hash_digest& point_hash,
         uint32_t output_index) const NOEXCEPT;
     spend_links to_spenders(const tx_link& output_tx,
@@ -525,8 +525,6 @@ protected:
         const spend_link& input_fk) const NOEXCEPT;
     uint32_t to_output_index(const tx_link& parent_fk,
         const output_link& output_fk) const NOEXCEPT;
-    spend_link to_spender(const tx_link& link,
-        const spend_key& point) const NOEXCEPT;
 
     // Critical path
     inline tx_links get_strong_txs(const tx_link& link) const NOEXCEPT;
@@ -555,10 +553,11 @@ protected:
         const header_link& link) const NOEXCEPT;
     bool get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT;
     bool get_spend_sets(spend_sets& set, const header_link& link) const NOEXCEPT;
-    bool is_spent_prevout(const point_link& link, index index,
-        const tx_link& self=tx_link::terminal) const NOEXCEPT;
+    bool is_spent_prevout(const point_link& link, index index) const NOEXCEPT;
+    error::error_t spent_prevout(const point_link& link,
+        index index) const NOEXCEPT;
     error::error_t spent_prevout(const point_link& link, index index,
-        const tx_link& self=tx_link::terminal) const NOEXCEPT;
+        const point_stub& stub, const tx_link& self) const NOEXCEPT;
     error::error_t unspendable_prevout(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;
@@ -603,7 +602,19 @@ protected:
         const header_link& link, size_t height) const NOEXCEPT;
 
 private:
-    struct maybe_strong { header_link block{}; tx_link tx{}; bool strong{}; };
+    struct potential
+    {
+        spend_link spend_fk{};
+        point_link point_fk{};
+    };
+    using potentials = std::vector<potential>;
+
+    struct maybe_strong
+    {
+        header_link block{};
+        tx_link tx{};
+        bool strong{};
+    };
     using maybe_strongs = std::vector<maybe_strong>;
 
     static inline tx_links strong_only(const maybe_strongs& pairs) NOEXCEPT;

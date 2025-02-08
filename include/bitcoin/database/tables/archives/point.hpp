@@ -38,6 +38,7 @@ struct point
 {
     using search_key = search<schema::hash>;
     using hash_map<schema::point>::hashmap;
+    using stub = linkage<schema::tx>;
 
     struct record
       : public schema::point
@@ -56,6 +57,19 @@ struct point
         {
             return true;
         }
+    };
+
+    struct get_stub
+      : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.rewind_bytes(sk);
+            value = source.read_little_endian<stub::integer, stub::size>();
+            return source;
+        }
+
+        stub::integer value{};
     };
 };
 

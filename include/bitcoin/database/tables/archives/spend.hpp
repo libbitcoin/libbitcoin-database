@@ -43,15 +43,30 @@ struct spend
     // Composers/decomposers do not adjust to type changes.
     static_assert(pt::size == 4 && ix::size == 3);
 
-    static constexpr search_key compose(pt::integer point_fk,
+    static constexpr search_key compose(const hash_digest& point_hash,
         ix::integer point_index) NOEXCEPT
     {
         return
         {
-            system::byte<0>(point_fk),
-            system::byte<1>(point_fk),
-            system::byte<2>(point_fk),
-            system::byte<3>(point_fk),
+            point_hash.at(0),
+            point_hash.at(1),
+            point_hash.at(2),
+            point_hash.at(3),
+            system::byte<0>(point_index),
+            system::byte<1>(point_index),
+            system::byte<2>(point_index)
+        };
+    }
+
+    static constexpr search_key compose(tx::integer point_stub,
+        ix::integer point_index) NOEXCEPT
+    {
+        return
+        {
+            system::byte<0>(point_stub),
+            system::byte<1>(point_stub),
+            system::byte<2>(point_stub),
+            system::byte<3>(point_stub),
             system::byte<0>(point_index),
             system::byte<1>(point_index),
             system::byte<2>(point_index)
@@ -63,6 +78,7 @@ struct spend
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
+            point_fk = source.read_little_endian<pt::integer, pt::size>();
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             sequence = source.read_little_endian<uint32_t>();
             input_fk = source.read_little_endian<in::integer, in::size>();
@@ -72,6 +88,7 @@ struct spend
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
+            sink.write_little_endian<pt::integer, pt::size>(point_fk);
             sink.write_little_endian<tx::integer, tx::size>(parent_fk);
             sink.write_little_endian<uint32_t>(sequence);
             sink.write_little_endian<in::integer, in::size>(input_fk);
@@ -81,11 +98,13 @@ struct spend
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return parent_fk == other.parent_fk
+            return point_fk == other.point_fk
+                && parent_fk == other.parent_fk
                 && sequence == other.sequence
                 && input_fk == other.input_fk;
         }
 
+        pt::integer point_fk{};
         tx::integer parent_fk{};
         uint32_t sequence{};
         in::integer input_fk{};
@@ -97,12 +116,13 @@ struct spend
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<pt::integer, pt::size>();
+            point_stub = source.read_little_endian<tx::integer, tx::size>();
             point_index = source.read_little_endian<ix::integer, ix::size>();
 
-            if (null_point(point_fk))
+            if (point_index == ix::terminal)
                 point_index = system::chain::point::null_index;
 
+            point_fk = source.read_little_endian<pt::integer, pt::size>();
             source.skip_bytes(tx::size);
             sequence = source.read_little_endian<uint32_t>();
             input_fk = source.read_little_endian<in::integer, in::size>();
@@ -112,11 +132,12 @@ struct spend
 
         inline bool is_null() const NOEXCEPT
         {
-            return null_point(point_fk);
+            return point_fk == pt::terminal;
         }
 
-        pt::integer point_fk{};
+        tx::integer point_stub{};
         ix::integer point_index{};
+        pt::integer point_fk{};
         uint32_t sequence{};
         in::integer input_fk{};
     };
@@ -126,6 +147,7 @@ struct spend
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
+            source.skip_bytes(pt::size);
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             return source;
         }
@@ -138,16 +160,29 @@ struct spend
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.rewind_bytes(sk);
             point_fk = source.read_little_endian<pt::integer, pt::size>();
             return source;
         }
 
         inline bool is_null() const NOEXCEPT
         {
-            return null_point(point_fk);
+            return point_fk == pt::terminal;
         }
 
+        pt::integer point_fk{};
+    };
+
+    struct get_parent_point
+        : public schema::spend
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            point_fk = source.read_little_endian<pt::integer, pt::size>();
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            return source;
+        }
+
+        tx::integer parent_fk{};
         pt::integer point_fk{};
     };
 
@@ -170,22 +205,24 @@ struct spend
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<pt::integer, pt::size>();
+            point_stub = source.read_little_endian<tx::integer, tx::size>();
             point_index = source.read_little_endian<ix::integer, ix::size>();
 
-            if (null_point(point_fk))
+            if (point_index == ix::terminal)
                 point_index = system::chain::point::null_index;
 
+            point_fk = source.read_little_endian<pt::integer, pt::size>();
             return source;
         }
 
         inline bool is_null() const NOEXCEPT
         {
-            return null_point(point_fk);
+            return point_fk == pt::terminal;
         }
 
-        pt::integer point_fk{};
+        tx::integer point_stub{};
         ix::integer point_index{};
+        pt::integer point_fk{};
     };
 
     struct get_prevout_parent
@@ -194,66 +231,63 @@ struct spend
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            point_fk = source.read_little_endian<pt::integer, pt::size>();
+            point_stub = source.read_little_endian<tx::integer, tx::size>();
             point_index = source.read_little_endian<ix::integer, ix::size>();
 
-            if (null_point(point_fk))
+            if (point_index == ix::terminal)
                 point_index = system::chain::point::null_index;
 
+            point_fk = source.read_little_endian<pt::integer, pt::size>();
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             return source;
         }
 
-        inline search_key prevout() const NOEXCEPT
+        inline search_key search() const NOEXCEPT
         {
-            return table::spend::compose(point_fk, point_index);
+            return table::spend::compose(point_stub, point_index);
         }
 
         inline bool is_null() const NOEXCEPT
         {
-            return null_point(point_fk);
+            return point_fk == pt::terminal;
         }
 
-        pt::integer point_fk{};
+        tx::integer point_stub{};
         ix::integer point_index{};
+        pt::integer point_fk{};
         tx::integer parent_fk{};
     };
 
-    struct get_prevout_sequence
+    struct get_spend_set_value
       : public schema::spend
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.rewind_bytes(sk);
-            value.point_fk = source.read_little_endian<pt::integer, pt::size>();
+            value.point_stub = source.read_little_endian<tx::integer, tx::size>();
             value.point_index = source.read_little_endian<ix::integer, ix::size>();
 
-            if (null_point(value.point_fk))
+            if (value.point_index == ix::terminal)
                 value.point_index = system::chain::point::null_index;
 
+            value.point_fk = source.read_little_endian<pt::integer, pt::size>();
             source.skip_bytes(tx::size);
             value.sequence = source.read_little_endian<uint32_t>();
             return source;
         }
 
-        inline search_key prevout() const NOEXCEPT
+        inline search_key search() const NOEXCEPT
         {
-            return table::spend::compose(value.point_fk, value.point_index);
+            return table::spend::compose(value.point_stub, value.point_index);
         }
 
         inline bool is_null() const NOEXCEPT
         {
-            return null_point(value.point_fk);
+            return value.point_index == system::chain::point::null_index;
         }
 
         spend_set::spend value{};
     };
-
-private:
-    static constexpr bool null_point(pt::integer fk) NOEXCEPT
-    {
-        return fk == pt::terminal;
-    }
 };
 
 } // namespace table
