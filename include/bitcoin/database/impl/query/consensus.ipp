@@ -150,7 +150,7 @@ code CLASS::unspent_duplicates(const header_link& link,
     // Get the block's first tx link.
     const auto cb = to_coinbase(link);
     if (cb.is_terminal())
-        return error::integrity;
+        return error::integrity1;
 
     // TODO: deadlock risk.
     // Iterate all strong records for each tx link of the same hash.
@@ -160,7 +160,7 @@ code CLASS::unspent_duplicates(const header_link& link,
     // Strong records for a link may be reorganized and again organized.
     auto it = store_.tx.it(get_tx_key(cb));
     if (!it)
-        return error::integrity;
+        return error::integrity2;
 
     // TODO: avoid nested iterators. accumulate set of tx_links and iterate set
     // TODO: after releasing the initial iterator.
@@ -188,7 +188,7 @@ code CLASS::unspent_duplicates(const header_link& link,
         // Remove self (will be not found if current block is not set_strong).
         const auto self = std::find(coinbases.begin(), coinbases.end(), link);
         if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
-            return error::integrity;
+            return error::integrity3;
     }
     
     // bip30: all outputs of all previous duplicate coinbases must be spent.
@@ -217,7 +217,7 @@ error::error_t CLASS::spent_prevout(const point_link& link, index index,
 
     auto it = store_.spend.it(table::spend::compose(stub, index));
     if (!it)
-        return self.is_terminal() ? error::success : error::integrity3;
+        return self.is_terminal() ? error::success : error::integrity4;
 
     // TODO: could just push get_parent_point struct
     std::vector<table::spend::get_parent_point> spenders{};
@@ -225,7 +225,7 @@ error::error_t CLASS::spent_prevout(const point_link& link, index index,
     {
         table::spend::get_parent_point spend{};
         if (!store_.spend.get(it, spend))
-            return error::integrity4;
+            return error::integrity5;
 
         // Exclude self from strong_tx search.
         if (spend.parent_fk != self)
@@ -275,7 +275,7 @@ error::error_t CLASS::unspendable_prevout(uint32_t sequence, bool coinbase,
     {
         context out{};
         if (!get_context(out, strong)) // 10.31% (before above condition)
-            return error::integrity5;
+            return error::integrity6;
 
         if (bip68 &&
             input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
@@ -322,37 +322,6 @@ bool CLASS::get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT //
     }
 
     return true;
-}
-
-// protected
-TEMPLATE
-bool CLASS::get_spend_sets(spend_sets& sets,
-    const header_link& link) const NOEXCEPT // 14.92%
-{
-    // Coinbase tx does not spend so is not retrieved.
-    const auto txs = to_spending_transactions(link);
-    if (txs.empty())
-        return true;
-
-    std::atomic<bool> success{ true };
-    std::atomic<size_t> spends{ zero };
-    const auto to_set = [this, &success, &spends](const auto& tx) NOEXCEPT
-    {
-        spend_set set{};
-        if (!get_spend_set(set, tx)) // 14.78%
-            success.store(false);
-
-        spends += set.spends.size();
-        return set;
-    };
-
-    sets.resize(txs.size());
-
-    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    std_transform(bc::par_unseq, txs.begin(), txs.end(), sets.begin(), to_set);
-
-    return success && (prevout_enabled() ?
-        populate_prevouts(sets, spends, link) : populate_prevouts(sets));
 }
 
 TEMPLATE
@@ -402,60 +371,84 @@ bool CLASS::populate_prevouts(spend_sets& sets) const NOEXCEPT
 
 // block_confirmable
 // ----------------------------------------------------------------------------
+// C++17 incomplete on GCC/CLang, so std fns presently parallel only on MSVC++.
 
 TEMPLATE
 code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
+    constexpr auto parallel = bc::par_unseq;
+
     context ctx{};
     if (!get_context(ctx, link))
-        return error::integrity1;
+        return error::integrity7;
 
-    code ec{};
+    // bip30 coinbase check.
+    ////code ec{};
     ////if ((ec = unspent_duplicates(link, ctx)))
     ////    return ec;
 
-    spend_sets sets{};
-    if (!get_spend_sets(sets, link)) // 14.99%
-        return error::integrity2;
-
-    if (sets.empty())
+    // Empty block is success.
+    const auto txs = to_spending_transactions(link);
+    if (txs.empty())
         return error::success;
 
-    std::atomic<error::error_t> result{ error::success };
+    // One spend set per tx.
+    spend_sets sets(txs.size());
+    std::atomic<size_t> spends{ zero };
+    std::atomic<error::error_t> failure{ error::success };
 
-    const auto is_unspendable = [this, &ctx, &result](const auto& set) NOEXCEPT
+    const auto to_set = [this, &spends, &failure](const auto& tx) NOEXCEPT
+    {
+        spend_set set{};
+        if (!get_spend_set(set, tx))
+            failure.store(error::integrity8);
+
+        spends += set.spends.size();
+        return set;
+    };
+
+    // 14.99%
+    std_transform(parallel, txs.begin(), txs.end(), sets.begin(), to_set);
+    if (failure)
+        return { failure.load() };
+
+    if (!(prevout_enabled() ? populate_prevouts(sets, spends, link) :
+        populate_prevouts(sets)))
+        return error::integrity9;
+
+    const auto is_unspendable = [this, &ctx, &failure](const auto& set) NOEXCEPT
     {
         error::error_t ec{};
         for (const auto& spend: set.spends)
             if ((spend.prevout_tx != table::prevout::tx::terminal) &&
                 ((ec = unspendable_prevout(spend.sequence, spend.coinbase,
                     spend.prevout_tx, set.version, ctx))))
-                result.store(ec);
+                failure.store(ec);
 
-        return result != error::success;
+        return failure != error::success;
     };
 
-    const auto is_spent = [this, &result](const auto& set) NOEXCEPT
+    const auto is_spent = [this, &failure](const auto& set) NOEXCEPT
     {
         error::error_t ec{};
         for (const auto& spend: set.spends)
             if ((spend.prevout_tx != table::prevout::tx::terminal) &&
                 ((ec = spent_prevout(spend.point_fk, spend.point_index,
                     spend.point_stub, set.tx))))
-                result.store(ec);
+                failure.store(ec);
 
-        return result != error::success;
+        return failure != error::success;
     };
 
-    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    if (std_any_of(bc::par_unseq, sets.begin(), sets.end(), is_unspendable)) // 43.83%
-        return { result.load() };
+    // 43.83%
+    if (std_any_of(parallel, sets.begin(), sets.end(), is_unspendable))
+        return { failure.load() };
 
-    // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    if (std_any_of(bc::par_unseq, sets.begin(), sets.end(), is_spent)) // 37.55%
-        return { result.load() };
+    // 37.55%
+    if (std_any_of(parallel, sets.begin(), sets.end(), is_spent))
+        return { failure.load() };
 
-    return ec;
+    return error::success;
 }
 
 // setters

@@ -558,7 +558,6 @@ protected:
     bool populate_prevouts(spend_sets& sets, size_t spends,
         const header_link& link) const NOEXCEPT;
     bool get_spend_set(spend_set& set, const tx_link& link) const NOEXCEPT;
-    bool get_spend_sets(spend_sets& set, const header_link& link) const NOEXCEPT;
     bool is_spent_prevout(const point_link& link, index index) const NOEXCEPT;
 
     error::error_t spent_prevout(const point_link& link,
