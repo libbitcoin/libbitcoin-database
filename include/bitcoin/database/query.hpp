@@ -238,7 +238,6 @@ public:
     inline header_link to_candidate(size_t height) const NOEXCEPT;
     inline header_link to_confirmed(size_t height) const NOEXCEPT;
     inline header_link to_header(const hash_digest& key) const NOEXCEPT;
-    inline point_link to_point(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
     inline txs_link to_txs(const header_link& key) const NOEXCEPT;
     inline filter_link to_filter(const header_link& key) const NOEXCEPT;
@@ -250,7 +249,6 @@ public:
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
     tx_link to_prevout_tx(const spend_link& link) const NOEXCEPT;
     tx_link to_spend_tx(const spend_link& link) const NOEXCEPT;
-    spend_key to_spend_key(const spend_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
     spend_link to_spend(const tx_link& link,
@@ -313,8 +311,9 @@ public:
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
     size_t get_tx_count(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
-    inline hash_digest get_point_key(const point_link& link) const NOEXCEPT;
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
+    inline hash_digest get_point_key(const point_link& link) const NOEXCEPT;
+    inline spend_key get_spend_key(const spend_link& link) const NOEXCEPT;
 
     /// False implies not confirmed.
     bool get_tx_height(size_t& out, const tx_link& link) const NOEXCEPT;
@@ -627,7 +626,6 @@ private:
 
     // These are thread safe.
     Store& store_;
-    bool minimize_;
 };
 
 } // namespace database

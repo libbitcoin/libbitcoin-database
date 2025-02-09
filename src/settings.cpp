@@ -28,7 +28,6 @@ using namespace bc::system;
 
 settings::settings() NOEXCEPT
   : path{ "bitcoin" },
-    minimize(false),
 
     // Archives.
 
@@ -42,7 +41,6 @@ settings::settings() NOEXCEPT
     output_size{ 1 },
     output_rate{ 50 },
 
-    point_buckets{ 100 },
     point_size{ 1 },
     point_rate{ 50 },
 

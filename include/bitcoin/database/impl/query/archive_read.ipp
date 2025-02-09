@@ -106,15 +106,29 @@ inline hash_digest CLASS::get_header_key(const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-inline hash_digest CLASS::get_point_key(const point_link& link) const NOEXCEPT
-{
-    return store_.point.get_key(link);
-}
-
-TEMPLATE
 inline hash_digest CLASS::get_tx_key(const tx_link& link) const NOEXCEPT
 {
     return store_.tx.get_key(link);
+}
+
+TEMPLATE
+inline hash_digest CLASS::get_point_key(const point_link& link) const NOEXCEPT
+{
+    table::point::record point{};
+    if (!store_.point.get(link, point))
+        return {};
+
+    return point.hash;
+}
+
+TEMPLATE
+inline spend_key CLASS::get_spend_key(const spend_link& link) const NOEXCEPT
+{
+    table::spend::get_key spend{};
+    if (!store_.spend.get(link, spend))
+        return {};
+
+    return spend.key;
 }
 
 // False implies not confirmed.

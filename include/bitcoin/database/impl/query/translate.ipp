@@ -71,13 +71,6 @@ inline header_link CLASS::to_header(const hash_digest& key) const NOEXCEPT
 }
 
 TEMPLATE
-inline point_link CLASS::to_point(const hash_digest& key) const NOEXCEPT
-{
-    // Use point.find(key) in place of get(to_point(key)).
-    return store_.point.first(key);
-}
-
-TEMPLATE
 inline tx_link CLASS::to_tx(const hash_digest& key) const NOEXCEPT
 {
     // Use tx.find(key) in place of get(to_tx(key)).
@@ -142,16 +135,6 @@ tx_link CLASS::to_spend_tx(const spend_link& link) const NOEXCEPT
         return {};
 
     return spend.parent_fk;
-}
-
-TEMPLATE
-spend_key CLASS::to_spend_key(const spend_link& link) const NOEXCEPT
-{
-    table::spend::get_key spend{};
-    if (!store_.spend.get(link, spend))
-        return {};
-
-    return spend.key;
 }
 
 // point to put (forward navigation)

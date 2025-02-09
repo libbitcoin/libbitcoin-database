@@ -176,30 +176,6 @@ BOOST_AUTO_TEST_CASE(query_translate__to_point__null_points__empty_points_table)
     BOOST_REQUIRE(store.point_body().empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_translate__to_point__points__expected)
-{
-    settings settings{};
-    settings.minimize = true;
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
-
-    const auto point_body = system::base16_chunk
-    (
-        "ffffffff" // point_link::terminal
-        "0100000000000000000000000000000000000000000000000000000000000000" // system::one_hash (x2)
-        "ffffffff" // point_link::terminal
-        "0200000000000000000000000000000000000000000000000000000000000000" // two_hash
-    );
-    BOOST_REQUIRE_EQUAL(store.point_body(), point_body);
-    BOOST_REQUIRE_EQUAL(query.to_point(system::null_hash), point_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_point(system::one_hash), 0u);
-    BOOST_REQUIRE_EQUAL(query.to_point(test::two_hash), 1u);
-}
-
 // to_tx
 
 BOOST_AUTO_TEST_CASE(query_translate__to_tx__txs__expected)
@@ -220,7 +196,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_tx__txs__expected)
     BOOST_REQUIRE_EQUAL(query.to_tx(test::block3.transactions_ptr()->front()->hash(true)), tx_link::terminal);
 }
 
-// to_spend_tx/to_spend/to_spends/to_spend_key/get_spend_sets
+// to_spend_tx/to_spend/to_spends/get_spend_key/get_spend_sets
 
 class accessor
   : public test::query_accessor
@@ -239,7 +215,6 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spend_tx__to_spend__expected)
     settings settings{};
     settings.path = TEST_DIRECTORY;
     settings.spend_buckets = 5;
-    settings.minimize = true;
     test::chunk_store store{ settings };
     accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
@@ -269,13 +244,13 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spend_tx__to_spend__expected)
     BOOST_REQUIRE_EQUAL(query.to_spend(4, 2), 6u);
 
     using namespace system;
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(0, 0)), base16_array("00000000ffffff"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(1, 0)), base16_array("00000000ffffff"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(2, 0)), base16_array("00000000ffffff"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(3, 0)), base16_array("00000000ffffff"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(4, 0)), base16_array("01000000180000"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(4, 1)), base16_array("010000002a0000"));
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(4, 2)), base16_array("020000002b0000"));
+    BOOST_REQUIRE_EQUAL(query.get_spend_key(query.to_spend(0, 0)), base16_array("00000000ffffff"));
+    BOOST_REQUIRE_EQUAL(query.get_spend_key(query.to_spend(1, 0)), base16_array("00000000ffffff"));
+    BOOST_REQUIRE_EQUAL(query.get_spend_key(query.to_spend(2, 0)), base16_array("00000000ffffff"));
+    BOOST_REQUIRE_EQUAL(query.get_spend_key(query.to_spend(3, 0)), base16_array("00000000ffffff"));
+    BOOST_REQUIRE_EQUAL(query.get_spend_key(query.to_spend(4, 0)), base16_array("01000000180000"));
+    BOOST_REQUIRE_EQUAL(query.get_spend_key(query.to_spend(4, 1)), base16_array("010000002a0000"));
+    BOOST_REQUIRE_EQUAL(query.get_spend_key(query.to_spend(4, 2)), base16_array("020000002b0000"));
 
     const spend_links expected_links4{ 4, 5, 6 };
     BOOST_REQUIRE_EQUAL(query.to_spends(0), spend_links{ 0 });
@@ -344,8 +319,8 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spend_tx__to_spend__expected)
     // Past end.
     BOOST_REQUIRE_EQUAL(query.to_spend_tx(7), tx_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_spend(5, 0), spend_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(spend_link::terminal), spend_key{});
-    BOOST_REQUIRE_EQUAL(query.to_spend_key(query.to_spend(5, 0)), spend_key{});
+    BOOST_REQUIRE_EQUAL(query.get_spend_key(spend_link::terminal), spend_key{});
+    BOOST_REQUIRE_EQUAL(query.get_spend_key(query.to_spend(5, 0)), spend_key{});
     BOOST_REQUIRE(query.to_spends(5).empty());
     /////BOOST_REQUIRE(query.get_spend_sets_(sets, 5));
     ////BOOST_REQUIRE_EQUAL(sets.size(), 0u);
@@ -900,9 +875,7 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
 {
     settings settings{};
     settings.tx_buckets = 5;
-    settings.point_buckets = 5;
     settings.spend_buckets = 5;
-    settings.minimize = true;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -951,20 +924,17 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
     BOOST_REQUIRE(query.to_spenders(tx_link::terminal, 0).empty());
 
     // Verify expectations.
-    const auto point_head = system::base16_chunk
-    (
-        "00000000" // size
-        "ffffffff"
-        "00000000"
-        "01000000"
-        "02000000"
-        "ffffffff"
-    );
     const auto point_body = system::base16_chunk
     (
-        "ffffffff""0100000000000000000000000000000000000000000000000000000000000000" // block1a:tx1(0,1) and block2a:tx2(0,1) invalid spends
-        "ffffffff""0200000000000000000000000000000000000000000000000000000000000000" // block1a:tx1(2) invalid spend
-        "ffffffff""d19c4584d53264e5d0f9d2f852578c4d4382b69abee853bfbd6bc580f84069cf" // block2a:tx1(0,1) valid spends of block1a:tx1(0,1)
+        "0100000000000000000000000000000000000000000000000000000000000000" // block1a:tx1(0) invalid spend
+        "0100000000000000000000000000000000000000000000000000000000000000" // block1a:tx1(1) invalid spend
+        "0200000000000000000000000000000000000000000000000000000000000000" // block1a:tx1(2) invalid spend
+        "d19c4584d53264e5d0f9d2f852578c4d4382b69abee853bfbd6bc580f84069cf" // block2a:tx1(0) valid spend of block1a:tx1(0,1)
+        "d19c4584d53264e5d0f9d2f852578c4d4382b69abee853bfbd6bc580f84069cf" // block2a:tx1(1) valid spend of block1a:tx1(0,1)
+        "0100000000000000000000000000000000000000000000000000000000000000" // block2a:tx2(0) invalid spend
+        "0100000000000000000000000000000000000000000000000000000000000000" // block2a:tx2(1) invalid spend
+        "d19c4584d53264e5d0f9d2f852578c4d4382b69abee853bfbd6bc580f84069cf" // tx4 valid spends of block1a:tx1(0,1)
+        "d19c4584d53264e5d0f9d2f852578c4d4382b69abee853bfbd6bc580f84069cf" // tx4 valid spends of block1a:tx1(0,1)
     );
     const auto spend_head = system::base16_chunk
     (
@@ -1047,7 +1017,6 @@ BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
         "00""6a0000""760000""85000000""a5000000""020000""010000""3900000000"
     );
 
-    BOOST_REQUIRE_EQUAL(store.point_head(), point_head);
     BOOST_REQUIRE_EQUAL(store.point_body(), point_body);
     BOOST_REQUIRE_EQUAL(store.spend_head(), spend_head);
     ////BOOST_REQUIRE_EQUAL(store.spend_body(), spend_body);

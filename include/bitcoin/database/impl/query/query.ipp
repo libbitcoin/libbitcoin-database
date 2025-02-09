@@ -70,7 +70,7 @@ namespace database {
 
 TEMPLATE
 CLASS::query(Store& store) NOEXCEPT
-  : store_(store), minimize_(store.minimize())
+  : store_(store)
 {
 }
 

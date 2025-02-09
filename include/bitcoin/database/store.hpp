@@ -91,9 +91,6 @@ public:
     /// Dump all error/full conditions to handler.
     void report(const error_handler& handler) const NOEXCEPT;
 
-    /// Favor minimum size over thrashing guard (requires high memory).
-    bool minimize() const NOEXCEPT;
-
     /// Tables.
     /// -----------------------------------------------------------------------
 
