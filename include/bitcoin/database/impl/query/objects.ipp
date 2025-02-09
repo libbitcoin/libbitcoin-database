@@ -26,6 +26,19 @@
 
 namespace libbitcoin {
 namespace database {
+    
+// private/static
+TEMPLATE
+template <typename Bool>
+inline bool CLASS::push_bool(std_vector<Bool>& stack,
+    const Bool& element) NOEXCEPT
+{
+    if (!element)
+        return false;
+
+    stack.push_back(element);
+    return true;
+}
 
 // Chain objects.
 // ----------------------------------------------------------------------------

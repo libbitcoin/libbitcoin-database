@@ -468,6 +468,7 @@ public:
 
     /// Height index not used by these.
     bool is_spent(const spend_link& link) const NOEXCEPT;
+    bool is_strong_tx(const tx_link& link) const NOEXCEPT;
     bool is_strong_block(const header_link& link) const NOEXCEPT;
     bool is_strong_spend(const spend_link& link) const NOEXCEPT;
     bool is_mature(const spend_link& link, size_t height) const NOEXCEPT;
@@ -479,7 +480,6 @@ public:
     /// These are used in confirmation.
 
     bool is_spent_coinbase(const tx_link& link) const NOEXCEPT;
-    bool is_strong_tx(const tx_link& link) const NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
     code unspent_duplicates(const header_link& coinbase,
         const context& ctx) const NOEXCEPT;
@@ -614,7 +614,12 @@ private:
         tx_link tx{};
         bool strong{};
     };
-    using maybe_strongs = std::vector<maybe_strong>;
+    using maybe_strongs = std_vector<maybe_strong>;
+
+    // Chain objects.
+    template <typename Bool>
+    static inline bool push_bool(std_vector<Bool>& stack,
+        const Bool& element) NOEXCEPT;
 
     // Consensus.
     static inline tx_links strong_only(const maybe_strongs& pairs) NOEXCEPT;

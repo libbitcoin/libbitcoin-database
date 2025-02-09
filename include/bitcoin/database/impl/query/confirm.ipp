@@ -119,6 +119,13 @@ bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::is_strong_tx(const tx_link& link) const NOEXCEPT
+{
+    table::strong_tx::record strong{};
+    return store_.strong_tx.find(link, strong) && strong.positive;
+}
+
+TEMPLATE
 bool CLASS::is_strong_block(const header_link& link) const NOEXCEPT
 {
     return is_strong_tx(to_coinbase(link));

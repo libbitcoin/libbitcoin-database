@@ -28,90 +28,8 @@
 namespace libbitcoin {
 namespace database {
 
-// Confirmation.
+// unspent_duplicates (bip30)
 // ----------------------------------------------------------------------------
-// Block confirmed by height is not used for confirmation (just strong tx).
-
-// SEARCHES SPEND [37%] (small POINT read [.24%], tiny STRONG_TX search [0%]).
-// protected
-TEMPLATE
-error::error_t CLASS::spent_prevout(const point_link& link, index index,
-    const point_stub& stub, const tx_link& self) const NOEXCEPT // 37.32%
-{
-    // TODO: reuse to_spenders() and check for confirmed.
-    // Prevout is spent by any confirmed transaction. "self" tx is excluded and
-    // presumed to not be confirmed (block under evaluation is not strong).
-
-    auto it = store_.spend.it(table::spend::compose(stub, index));
-    if (!it)
-        return self.is_terminal() ? error::success : error::integrity3;
-
-    // TODO: could just push get_parent_point struct
-    std::vector<table::spend::get_parent_point> spenders{};
-    do
-    {
-        table::spend::get_parent_point spend{};
-        if (!store_.spend.get(it, spend))
-            return error::integrity4;
-
-        // Exclude self from strong_tx search.
-        if (spend.parent_fk != self)
-            spenders.push_back(spend);
-    }
-    while (it.advance()); // 25.74% (iteration)
-    it.reset();
-
-    if (spenders.empty())
-        return error::success;
-
-    // link is the validated prevout, but may not be the confirmed one.
-    // Hash is only read in the case of conflict(s) or double spend.
-    const auto point_hash = get_point_key(link);  // 0.24% (total)
-
-    // Find a confirmed spending tx after excluding hashmap conflicts.
-    for (const auto& spender: spenders)
-        if ((get_point_key(spender.point_fk) == point_hash) &&  // above
-            is_strong_tx(spender.parent_fk))                    // 0% (no conflicts)
-            return error::confirmed_double_spend;
-
-    return error::success;
-}
-
-// SEARCHES STRONG_TX [33%] (small HEADER read [<10%]).
-// protected
-TEMPLATE
-error::error_t CLASS::unspendable_prevout(uint32_t sequence, bool coinbase,
-    const tx_link& prevout_tx, uint32_t version,
-    const context& ctx) const NOEXCEPT // 43.83%
-{
-    // TODO: If to_block(prevout_tx) is terminal, may be a duplicate tx, so
-    // TODO: perform search for each tx instance of same hash as prevout_tx
-    // TODO: until block associated (otherwise missing/unconfirmed prevout).
-    const auto strong = to_block(prevout_tx); // 33.29%
-    if (strong.is_terminal())
-        return error::unconfirmed_spend;
-
-    const auto bip68 = ctx.is_enabled(system::chain::flags::bip68_rule) &&
-        (version >= system::chain::relative_locktime_min_version);
-
-    // The bip68 condition reduces get_context in 295001-419328 to ~0%.
-    if (bip68 || coinbase)
-    {
-        context out{};
-        if (!get_context(out, strong)) // 10.31% (before above condition)
-            return error::integrity5;
-
-        if (bip68 &&
-            input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
-            return error::relative_time_locked;
-
-        if (coinbase &&
-            !transaction::is_coinbase_mature(out.height, ctx.height))
-            return error::coinbase_maturity;
-    }
-
-    return error::success;
-}
 
 // private/static
 TEMPLATE
@@ -193,6 +111,31 @@ tx_links CLASS::get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT
     return links;
 }
 
+// protected
+TEMPLATE
+bool CLASS::is_spent_prevout(const point_link& link, index index) const NOEXCEPT
+{
+    table::point::get_stub stub{};
+    if (!store_.point.get(link, stub))
+        return false;
+
+    // Prevout is spent by any confirmed transaction.
+    return spent_prevout(link, index, stub.value, tx_link::terminal) ==
+        error::confirmed_double_spend;
+}
+
+TEMPLATE
+bool CLASS::is_spent_coinbase(const tx_link& link) const NOEXCEPT
+{
+    // All outputs of the tx are confirmed spent.
+    const auto point_fk = to_point(get_tx_key(link));
+    for (index index{}; index < output_count(link); ++index)
+        if (!is_spent_prevout(point_fk, index))
+            return false;
+
+    return true;
+}
+
 // Duplicate tx instances (with the same hash) may result from a write race.
 // Duplicate cb tx instances are allowed by consensus. Apart from two bip30
 // exceptions, duplicate cb txs are allowed only if previous are fully spent.
@@ -258,6 +201,96 @@ code CLASS::unspent_duplicates(const header_link& link,
 
     return error::success;
 }
+
+// spent_prevout
+// ----------------------------------------------------------------------------
+
+// SEARCHES SPEND [37%] (small POINT read [.24%], tiny STRONG_TX search [0%]).
+// protected
+TEMPLATE
+error::error_t CLASS::spent_prevout(const point_link& link, index index,
+    const point_stub& stub, const tx_link& self) const NOEXCEPT // 37.32%
+{
+    // TODO: reuse to_spenders() and check for confirmed.
+    // Prevout is spent by any confirmed transaction. "self" tx is excluded and
+    // presumed to not be confirmed (block under evaluation is not strong).
+
+    auto it = store_.spend.it(table::spend::compose(stub, index));
+    if (!it)
+        return self.is_terminal() ? error::success : error::integrity3;
+
+    // TODO: could just push get_parent_point struct
+    std::vector<table::spend::get_parent_point> spenders{};
+    do
+    {
+        table::spend::get_parent_point spend{};
+        if (!store_.spend.get(it, spend))
+            return error::integrity4;
+
+        // Exclude self from strong_tx search.
+        if (spend.parent_fk != self)
+            spenders.push_back(spend);
+    }
+    while (it.advance()); // 25.74% (iteration)
+    it.reset();
+
+    if (spenders.empty())
+        return error::success;
+
+    // link is the validated prevout, but may not be the confirmed one.
+    // Hash is only read in the case of conflict(s) or double spend.
+    const auto point_hash = get_point_key(link);  // 0.24% (total)
+
+    // Find a confirmed spending tx after excluding hashmap conflicts.
+    for (const auto& spender: spenders)
+        if ((get_point_key(spender.point_fk) == point_hash) &&  // above
+            is_strong_tx(spender.parent_fk))                    // 0% (no conflicts)
+            return error::confirmed_double_spend;
+
+    return error::success;
+}
+
+// unspendable_prevout
+// ----------------------------------------------------------------------------
+
+// SEARCHES STRONG_TX [33%] (small HEADER read [<10%]).
+// protected
+TEMPLATE
+error::error_t CLASS::unspendable_prevout(uint32_t sequence, bool coinbase,
+    const tx_link& prevout_tx, uint32_t version,
+    const context& ctx) const NOEXCEPT // 43.83%
+{
+    // TODO: If to_block(prevout_tx) is terminal, may be a duplicate tx, so
+    // TODO: perform search for each tx instance of same hash as prevout_tx
+    // TODO: until block associated (otherwise missing/unconfirmed prevout).
+    const auto strong = to_block(prevout_tx); // 33.29%
+    if (strong.is_terminal())
+        return error::unconfirmed_spend;
+
+    const auto bip68 = ctx.is_enabled(system::chain::flags::bip68_rule) &&
+        (version >= system::chain::relative_locktime_min_version);
+
+    // The bip68 condition reduces get_context in 295001-419328 to ~0%.
+    if (bip68 || coinbase)
+    {
+        context out{};
+        if (!get_context(out, strong)) // 10.31% (before above condition)
+            return error::integrity5;
+
+        if (bip68 &&
+            input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
+            return error::relative_time_locked;
+
+        if (coinbase &&
+            !transaction::is_coinbase_mature(out.height, ctx.height))
+            return error::coinbase_maturity;
+    }
+
+    return error::success;
+}
+
+// get_spend_set
+// ----------------------------------------------------------------------------
 
 // READS TX / PUTS / SPEND TABLES [15%]
 // protected
@@ -367,6 +400,9 @@ bool CLASS::populate_prevouts(spend_sets& sets) const NOEXCEPT
     return true;
 }
 
+// block_confirmable
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
@@ -422,37 +458,8 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     return ec;
 }
 
-TEMPLATE
-bool CLASS::is_spent_coinbase(const tx_link& link) const NOEXCEPT
-{
-    // All outputs of the tx are confirmed spent.
-    const auto point_fk = to_point(get_tx_key(link));
-    for (index index{}; index < output_count(link); ++index)
-        if (!is_spent_prevout(point_fk, index))
-            return false;
-
-    return true;
-}
-
-// protected
-TEMPLATE
-bool CLASS::is_spent_prevout(const point_link& link, index index) const NOEXCEPT
-{
-    table::point::get_stub stub{};
-    if (!store_.point.get(link, stub))
-        return false;
-
-    // Prevout is spent by any confirmed transaction.
-    return spent_prevout(link, index, stub.value, tx_link::terminal) ==
-        error::confirmed_double_spend;
-}
-
-TEMPLATE
-bool CLASS::is_strong_tx(const tx_link& link) const NOEXCEPT
-{
-    table::strong_tx::record strong{};
-    return store_.strong_tx.find(link, strong) && strong.positive;
-}
+// setters
+// ----------------------------------------------------------------------------
 
 // protected
 // This is also invoked from block.txs archival (when checkpoint/milestone).
