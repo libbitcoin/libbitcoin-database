@@ -322,10 +322,16 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomap.ipp">
       <Filter>include\bitcoin\database\impl\primitives</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive_read.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive_write.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\confirm.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\context.ipp">
@@ -334,7 +340,13 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\extent.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\height.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\initialize.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\objects.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\optional.ipp">

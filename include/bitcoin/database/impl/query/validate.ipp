@@ -26,7 +26,7 @@
 namespace libbitcoin {
 namespace database {
 
-// Validation (surrogate-keyed).
+// States.
 // ----------------------------------------------------------------------------
 
 // protected
@@ -83,98 +83,6 @@ inline bool CLASS::is_sufficient(const context& current,
         && evaluated.height <= current.height
         && evaluated.mtp <= current.mtp;
 }
-
-TEMPLATE
-bool CLASS::get_timestamp(uint32_t& timestamp,
-    const header_link& link) const NOEXCEPT
-{
-    table::header::get_timestamp header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    timestamp = header.timestamp;
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_version(uint32_t& version,
-    const header_link& link) const NOEXCEPT
-{
-    table::header::get_version header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    version = header.version;
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT
-{
-    table::header::get_bits header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    bits = header.bits;
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_context(context& ctx, const header_link& link) const NOEXCEPT
-{
-    table::header::record_context header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    ctx = std::move(header.ctx);
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_context(system::chain::context& ctx,
-    const header_link& link) const NOEXCEPT
-{
-    table::header::record_context header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    // Context for block/header.check and header.accept are filled from
-    // chain_state, not from the store.
-    ctx =
-    {
-        header.ctx.flags,     // [block.check, block.accept & block.connect]
-        {},                   // [block.check] timestamp
-        header.ctx.mtp,       // [block.check, header.accept]
-        header.ctx.height,    // [block.check & block.accept]
-        {},                   // [header.accept] minimum_block_version
-        {}                    // [header.accept] work_required
-    };
-
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_work(uint256_t& work, const header_link& link) const NOEXCEPT
-{
-    uint32_t bits{};
-    const auto result = get_bits(bits, link);
-    work = header::proof(bits);
-    return result;
-}
-
-////TEMPLATE
-////bool CLASS::get_check_context(context& ctx, hash_digest& hash,
-////    uint32_t& timestamp, const header_link& link) const NOEXCEPT
-////{
-////    table::header::get_check_context header{};
-////    if (!store_.header.get(link, header))
-////        return false;
-////
-////    hash = std::move(header.key);
-////    ctx = std::move(header.ctx);
-////    timestamp = header.timestamp;
-////    return true;
-////}
 
 TEMPLATE
 code CLASS::get_header_state(const header_link& link) const NOEXCEPT
@@ -255,6 +163,90 @@ code CLASS::get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
     while (it.advance());
     return error::unvalidated;
 }
+
+// Values.
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::get_timestamp(uint32_t& timestamp,
+    const header_link& link) const NOEXCEPT
+{
+    table::header::get_timestamp header{};
+    if (!store_.header.get(link, header))
+        return false;
+
+    timestamp = header.timestamp;
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_version(uint32_t& version,
+    const header_link& link) const NOEXCEPT
+{
+    table::header::get_version header{};
+    if (!store_.header.get(link, header))
+        return false;
+
+    version = header.version;
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_work(uint256_t& work, const header_link& link) const NOEXCEPT
+{
+    uint32_t bits{};
+    const auto result = get_bits(bits, link);
+    work = header::proof(bits);
+    return result;
+}
+
+TEMPLATE
+bool CLASS::get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT
+{
+    table::header::get_bits header{};
+    if (!store_.header.get(link, header))
+        return false;
+
+    bits = header.bits;
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_context(context& ctx, const header_link& link) const NOEXCEPT
+{
+    table::header::record_context header{};
+    if (!store_.header.get(link, header))
+        return false;
+
+    ctx = std::move(header.ctx);
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_context(system::chain::context& ctx,
+    const header_link& link) const NOEXCEPT
+{
+    table::header::record_context header{};
+    if (!store_.header.get(link, header))
+        return false;
+
+    // Context for block/header.check and header.accept are filled from
+    // chain_state, not from the store.
+    ctx =
+    {
+        header.ctx.flags,     // [block.check, block.accept & block.connect]
+        {},                   // [block.check] timestamp
+        header.ctx.mtp,       // [block.check, header.accept]
+        header.ctx.height,    // [block.check & block.accept]
+        {},                   // [header.accept] minimum_block_version
+        {}                    // [header.accept] work_required
+    };
+
+    return true;
+}
+
+// Setters.
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 bool CLASS::set_block_valid(const header_link& link, uint64_t fees) NOEXCEPT
