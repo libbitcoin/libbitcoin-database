@@ -148,7 +148,7 @@ CLASS::store(const settings& config) NOEXCEPT
 
     point_head_(head(config.path / schema::dir::heads, schema::archive::point)),
     point_body_(body(config.path, schema::archive::point), config.point_size, config.point_rate),
-    point(point_head_, point_body_, std::max(config.point_buckets, nonzero)),
+    point(point_head_, point_body_),
 
     puts_head_(head(config.path / schema::dir::heads, schema::archive::puts)),
     puts_body_(body(config.path, schema::archive::puts), config.puts_size, config.puts_rate),
@@ -1124,12 +1124,6 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(address_body_, table_t::address_body);
     report(neutrino_body_, table_t::neutrino_body);
     ////report(bootstrap_body_, table_t::bootstrap_body);
-}
-
-TEMPLATE
-bool CLASS::minimize() const NOEXCEPT
-{
-    return configuration_.minimize;
 }
 
 BC_POP_WARNING()

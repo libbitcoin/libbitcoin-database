@@ -97,7 +97,6 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     BOOST_REQUIRE_EQUAL(query.header_buckets(), 100u);
-    BOOST_REQUIRE_EQUAL(query.point_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.spend_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.txs_buckets(), 100u);
     BOOST_REQUIRE_EQUAL(query.tx_buckets(), 100u);

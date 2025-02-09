@@ -192,7 +192,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__empty__expected)
     // data_chunk store.
     settings settings{};
     settings.tx_buckets = 5;
-    settings.point_buckets = 5;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -202,7 +201,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__empty__expected)
     BOOST_REQUIRE(!query.set(tx));
     BOOST_REQUIRE(!store.close(events_handler));
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_head4_hash);
-    BOOST_REQUIRE_EQUAL(store.point_head(), expected_head4_hash);
     BOOST_REQUIRE_EQUAL(store.input_head(), expected_head5_array);
     BOOST_REQUIRE_EQUAL(store.output_head(), expected_head5_array);
     BOOST_REQUIRE_EQUAL(store.puts_head(), expected_head5_array);
@@ -256,13 +254,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
         "00000000"     // parent_fk->
         "00"           // value
         "00");         // script
-    const auto expected_point_head = system::base16_chunk(
-        "00000000"     // record count (null point, empty)
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff");
     const auto expected_point_body = system::base16_chunk("");
     const auto expected_spend_head = system::base16_chunk(
         "01000000"     // record count
@@ -290,7 +281,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     tx_link link{};
     settings settings{};
     settings.tx_buckets = 5;
-    settings.point_buckets = 5;
     settings.spend_buckets = 5;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -301,7 +291,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     BOOST_REQUIRE(!store.close(events_handler));
 
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_tx_head);
-    BOOST_REQUIRE_EQUAL(store.point_head(), expected_point_head);
     BOOST_REQUIRE_EQUAL(store.input_head(), expected_input_head);
     BOOST_REQUIRE_EQUAL(store.output_head(), expected_output_head);
     BOOST_REQUIRE_EQUAL(store.puts_head(), expected_puts_head);
@@ -385,16 +374,9 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
         "00000000"     // parent_fk->
         "2a"           // value
         "017a");       // script
-    const auto expected_point_head = system::base16_chunk(
-        "01000000"     // record count
-        "ffffffff"     // bucket[0]...
-        "00000000"     // pk->
-        "ffffffff"
-        "ffffffff"
-        "ffffffff");
     const auto expected_point_body = system::base16_chunk(
-        "ffffffff"     // next->
-        "0100000000000000000000000000000000000000000000000000000000000000"); // sk (prevout.hash)
+        "0100000000000000000000000000000000000000000000000000000000000000"
+        "0100000000000000000000000000000000000000000000000000000000000000");
     const auto expected_spend_head = system::base16_chunk(
         "02000000"     // record count
         "00000000"     // spend0_fk->
@@ -414,7 +396,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
         "ffffffff"     // terminal->
         "01000000"     // fp: point_stub
         "2a0000"       // fp: point_index
-        "00000000"     // point_fk->
+        "01000000"     // point_fk->
         "00000000"     // parent_fk->
         "18000000"     // sequence
         "0800000000"); // input_fk->
@@ -431,9 +413,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
     // data_chunk store.
     settings settings{};
     settings.tx_buckets = 5;
-    settings.point_buckets = 5;
     settings.spend_buckets = 5;
-    settings.minimize = true;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -449,7 +429,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
     BOOST_REQUIRE(!store.close(events_handler));
 
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_tx_head);
-    BOOST_REQUIRE_EQUAL(store.point_head(), expected_point_head);
     BOOST_REQUIRE_EQUAL(store.input_head(), expected_input_head);
     BOOST_REQUIRE_EQUAL(store.output_head(), expected_output_head);
     BOOST_REQUIRE_EQUAL(store.puts_head(), expected_puts_head);
@@ -514,13 +493,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "00000000"     // parent_fk->
         "ff00f2052a01000000" // value
         "434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"); // script
-    const auto genesis_point_head = system::base16_chunk(
-        "00000000"     // record count (null point, empty)
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff");
     const auto genesis_point_body = system::base16_chunk("");
     const auto genesis_spend_head = system::base16_chunk(
         "01000000"     // record count
@@ -563,7 +535,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
     settings settings{};
     settings.header_buckets = 5;
     settings.tx_buckets = 5;
-    settings.point_buckets = 5;
     settings.spend_buckets = 5;
     settings.txs_buckets = 10;
     settings.path = TEST_DIRECTORY;
@@ -588,7 +559,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
 
     BOOST_REQUIRE_EQUAL(store.header_head(), genesis_header_head);
     BOOST_REQUIRE_EQUAL(store.tx_head(), genesis_tx_head);
-    BOOST_REQUIRE_EQUAL(store.point_head(), genesis_point_head);
     BOOST_REQUIRE_EQUAL(store.input_head(), genesis_input_head);
     BOOST_REQUIRE_EQUAL(store.output_head(), genesis_output_head);
     BOOST_REQUIRE_EQUAL(store.puts_head(), genesis_puts_head);
@@ -663,13 +633,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "00000000"     // parent_fk->
         "ff00f2052a01000000" // value
         "434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"); // script
-    const auto genesis_point_head = system::base16_chunk(
-        "00000000"     // record count (null point, empty)
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff"
-        "ffffffff");
     const auto genesis_point_body = system::base16_chunk("");
     const auto genesis_spend_head = system::base16_chunk(
         "01000000"     // record count
@@ -712,7 +675,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     settings settings{};
     settings.header_buckets = 5;
     settings.tx_buckets = 5;
-    settings.point_buckets = 5;
     settings.spend_buckets = 5;
     settings.txs_buckets = 10;
     settings.path = TEST_DIRECTORY;
@@ -740,7 +702,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
 
     BOOST_REQUIRE_EQUAL(store.header_head(), genesis_header_head);
     BOOST_REQUIRE_EQUAL(store.tx_head(), genesis_tx_head);
-    BOOST_REQUIRE_EQUAL(store.point_head(), genesis_point_head);
     BOOST_REQUIRE_EQUAL(store.input_head(), genesis_input_head);
     BOOST_REQUIRE_EQUAL(store.output_head(), genesis_output_head);
     BOOST_REQUIRE_EQUAL(store.puts_head(), genesis_puts_head);
@@ -1094,7 +1055,6 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header_key__always__expected)
 BOOST_AUTO_TEST_CASE(query_archive__get_point_key__always__expected)
 {
     settings settings{};
-    settings.minimize = true;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1102,17 +1062,20 @@ BOOST_AUTO_TEST_CASE(query_archive__get_point_key__always__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE_EQUAL(query.get_point_key(0), system::null_hash);
 
-    // tx4/5 prevouts are all block1a.tx1 (only one point archived).
+    // tx4/5 prevouts are all block1a.tx1.
     BOOST_REQUIRE(query.set(test::tx4));
     BOOST_REQUIRE(query.set(test::tx5));
     BOOST_REQUIRE_EQUAL(query.get_point_key(0), test::block1a.transactions_ptr()->front()->hash(false));
-    BOOST_REQUIRE_EQUAL(query.get_point_key(1), system::null_hash);
+    BOOST_REQUIRE_EQUAL(query.get_point_key(1), test::block1a.transactions_ptr()->front()->hash(false));
+    BOOST_REQUIRE_EQUAL(query.get_point_key(2), test::block1a.transactions_ptr()->front()->hash(false));
+    BOOST_REQUIRE_EQUAL(query.get_point_key(3), system::null_hash);
 
     // block1a adds three prevouts of two txs.
     BOOST_REQUIRE(query.set(test::block1a, context{}, false, false));
-    BOOST_REQUIRE_EQUAL(query.get_point_key(1), system::one_hash);
-    BOOST_REQUIRE_EQUAL(query.get_point_key(2), test::two_hash);
-    BOOST_REQUIRE_EQUAL(query.get_point_key(3), system::null_hash);
+    BOOST_REQUIRE_EQUAL(query.get_point_key(3), system::one_hash);
+    BOOST_REQUIRE_EQUAL(query.get_point_key(4), system::one_hash);
+    BOOST_REQUIRE_EQUAL(query.get_point_key(5), test::two_hash);
+    BOOST_REQUIRE_EQUAL(query.get_point_key(6), system::null_hash);
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_tx_key__always__expected)
@@ -1334,7 +1297,6 @@ BOOST_AUTO_TEST_CASE(query_archive__get_input__genesis__expected)
     settings settings{};
     settings.header_buckets = 5;
     settings.tx_buckets = 5;
-    settings.point_buckets = 5;
     settings.txs_buckets = 10;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -1389,7 +1351,6 @@ BOOST_AUTO_TEST_CASE(query_archive__get_output__genesis__expected)
     settings settings{};
     settings.header_buckets = 5;
     settings.tx_buckets = 5;
-    settings.point_buckets = 5;
     settings.txs_buckets = 10;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };

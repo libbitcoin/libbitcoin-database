@@ -144,22 +144,14 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
         point_link hash_fk{};
         if (prevout.index() != chain::no_previous_output)
         {
-            // GUARD (tx redundancy)
-            // Only fully effective if there is a single database thread.
-            // This reduces point store by ~45GiB, but causes thrashing.
-            if (minimize_)
-                hash_fk = to_point(hash);
-
-            if (hash_fk.is_terminal())
+            // Safe allocation failure.
+            if (!store_.point.put_link(hash_fk, table::point::record
             {
-                // Safe allocation failure, duplicates limited but expected.
-                if (!store_.point.put_link(hash_fk, hash, table::point::record
-                {
-                    // Table stores no data other than the search key.
-                }))
-                {
-                    return error::tx_point_put;
-                }
+                {},
+                hash
+            }))
+            {
+                return error::tx_point_put;
             }
         }
 

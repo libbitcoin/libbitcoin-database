@@ -213,7 +213,6 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent_output__genesis__false)
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent_output__strong_confirmed__true)
 {
     settings settings{};
-    settings.minimize = true;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -313,7 +312,6 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unspent__false)
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unconfirmed_double_spend__false)
 {
     settings settings{};
-    settings.minimize = true;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -367,7 +365,6 @@ BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unconfirmed_double_spend__false)
 BOOST_AUTO_TEST_CASE(query_confirm__is_spent__confirmed_double_spend__true)
 {
     settings settings{};
-    settings.minimize = true;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

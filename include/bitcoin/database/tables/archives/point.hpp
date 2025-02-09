@@ -34,29 +34,34 @@ namespace table {
 /// This reduces point hash storage to tx from input scale (tx/in=38%).
 /// This benefit doubles due to fp indexation by the spend table.
 struct point
-  : public hash_map<schema::point>
+  : public no_map<schema::point>
 {
-    using search_key = search<schema::hash>;
-    using hash_map<schema::point>::hashmap;
+    using no_map<schema::point>::nomap;
     using stub = linkage<schema::tx>;
 
     struct record
       : public schema::point
     {
-        inline bool from_data(const reader& source) NOEXCEPT
+        inline bool from_data(reader& source) NOEXCEPT
         {
+            hash = source.read_hash();
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
-        inline bool to_data(const finalizer& sink) const NOEXCEPT
+        inline bool to_data(flipper& sink) const NOEXCEPT
         {
+            sink.write_bytes(hash);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
-        inline bool operator==(const record&) const NOEXCEPT
+        inline bool operator==(const record& other) const NOEXCEPT
         {
-            return true;
+            return hash == other.hash;
         }
+
+        hash_digest hash{};
     };
 
     struct get_stub
@@ -64,7 +69,6 @@ struct point
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.rewind_bytes(sk);
             value = source.read_little_endian<stub::integer, stub::size>();
             return source;
         }

@@ -127,11 +127,12 @@ bool CLASS::is_spent_prevout(const point_link& link, index index) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_spent_coinbase(const tx_link& link) const NOEXCEPT
 {
-    // All outputs of the tx are confirmed spent.
-    const auto point_fk = to_point(get_tx_key(link));
-    for (index index{}; index < output_count(link); ++index)
-        if (!is_spent_prevout(point_fk, index))
-            return false;
+    // TODO: identify spends by stub.
+    ////// All outputs of the tx are confirmed spent.
+    ////const auto point_fk = to_point(get_tx_key(link));
+    ////for (index index{}; index < output_count(link); ++index)
+    ////    if (!is_spent_prevout(point_fk, index))
+    ////        return false;
 
     return true;
 }
@@ -219,7 +220,6 @@ error::error_t CLASS::spent_prevout(const point_link& link, index index,
     if (!it)
         return self.is_terminal() ? error::success : error::integrity4;
 
-    // TODO: could just push get_parent_point struct
     std::vector<table::spend::get_parent_point> spenders{};
     do
     {

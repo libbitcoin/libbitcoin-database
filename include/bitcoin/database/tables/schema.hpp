@@ -218,18 +218,17 @@ namespace schema
         static_assert(minrow == 10u);
     };
 
-    // record hashmap
+    // array
     struct point
     {
-        static constexpr bool hash_function = false;
         static constexpr size_t pk = schema::point_;
-        static constexpr size_t sk = schema::hash;
-        static constexpr size_t minsize = zero;
-        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t minsize =
+            schema::hash;
+        static constexpr size_t minrow = minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 0u);
-        static_assert(minrow == 36u);
+        static_assert(minsize == 32u);
+        static_assert(minrow == 32u);
     };
 
     // moderate (sk:7) record multimap, with low multiple rate.
