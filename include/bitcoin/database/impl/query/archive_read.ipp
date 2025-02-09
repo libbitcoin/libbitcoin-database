@@ -28,18 +28,6 @@
 namespace libbitcoin {
 namespace database {
 
-// local
-template <typename Bool>
-inline bool push_bool(std_vector<Bool>& stack, const Bool& element) NOEXCEPT
-{
-    if (!element)
-        return false;
-
-    stack.push_back(element);
-    return true;
-}
-
-
 // Bools.
 // ----------------------------------------------------------------------------
 

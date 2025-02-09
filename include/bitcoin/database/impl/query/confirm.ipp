@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_QUERY_CONFIRM_IPP
 
 #include <algorithm>
-#include <atomic>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
@@ -116,6 +115,13 @@ bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
 
     // Prevout is spent by any confirmed transaction.
     return is_spent_prevout(spend.point_fk, spend.point_index);
+}
+
+TEMPLATE
+bool CLASS::is_strong_tx(const tx_link& link) const NOEXCEPT
+{
+    table::strong_tx::record strong{};
+    return store_.strong_tx.find(link, strong) && strong.positive;
 }
 
 TEMPLATE
