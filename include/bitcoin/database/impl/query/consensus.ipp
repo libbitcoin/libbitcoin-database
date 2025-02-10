@@ -403,7 +403,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         if (!get_spend_set(set, tx))
             failure.store(error::integrity8);
 
-        spends += set.spends.size();
+        spends.fetch_add(set.spends.size(), std::memory_order_relaxed);
         return set;
     };
 
