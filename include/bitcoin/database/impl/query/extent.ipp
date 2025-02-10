@@ -216,15 +216,17 @@ two_counts CLASS::put_counts(const tx_link& link) const NOEXCEPT
 TEMPLATE
 size_t CLASS::input_count(const tx_links& txs) const NOEXCEPT
 {
+    constexpr auto parallel = poolstl::execution::par;
     const auto fn = [this](auto tx) NOEXCEPT { return input_count(tx); };
-    return std_reduce(bc::par_unseq, txs.begin(), txs.end(), zero, fn);
+    return std::reduce(parallel, txs.begin(), txs.end(), zero, fn);
 }
 
 TEMPLATE
 size_t CLASS::output_count(const tx_links& txs) const NOEXCEPT
 {
+    constexpr auto parallel = poolstl::execution::par;
     const auto fn = [this](auto tx) NOEXCEPT { return output_count(tx); };
-    return std_reduce(bc::par_unseq, txs.begin(), txs.end(), zero, fn);
+    return std::reduce(parallel, txs.begin(), txs.end(), zero, fn);
 }
 
 TEMPLATE

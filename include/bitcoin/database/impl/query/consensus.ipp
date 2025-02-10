@@ -376,7 +376,7 @@ bool CLASS::populate_prevouts(spend_sets& sets) const NOEXCEPT
 TEMPLATE
 code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 {
-    constexpr auto parallel = bc::par_unseq;
+    constexpr auto parallel = poolstl::execution::par;
 
     context ctx{};
     if (!get_context(ctx, link))
@@ -408,7 +408,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     };
 
     // 14.99%
-    std_transform(parallel, txs.begin(), txs.end(), sets.begin(), to_set);
+    std::transform(parallel, txs.begin(), txs.end(), sets.begin(), to_set);
     if (failure)
         return { failure.load() };
 
@@ -441,11 +441,11 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     };
 
     // 43.83%
-    if (std_any_of(parallel, sets.begin(), sets.end(), is_unspendable))
+    if (std::any_of(parallel, sets.begin(), sets.end(), is_unspendable))
         return { failure.load() };
 
     // 37.55%
-    if (std_any_of(parallel, sets.begin(), sets.end(), is_spent))
+    if (std::any_of(parallel, sets.begin(), sets.end(), is_spent))
         return { failure.load() };
 
     return error::success;
