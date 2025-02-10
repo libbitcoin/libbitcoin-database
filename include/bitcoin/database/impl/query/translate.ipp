@@ -428,12 +428,13 @@ output_links CLASS::to_outputs(const tx_links& txs) const NOEXCEPT
 TEMPLATE
 output_links CLASS::to_prevouts(const tx_links& txs) const NOEXCEPT
 {
+    constexpr auto parallel = poolstl::execution::par;
     const auto ins = to_spends(txs);
     output_links outs(ins.size());
     const auto fn = [this](auto spend) NOEXCEPT{ return to_prevout(spend); };
 
     // C++17 incomplete on GCC/CLang, so presently parallel only on MSVC++.
-    std_transform(bc::par_unseq, ins.begin(), ins.end(), outs.begin(), fn);
+    std::transform(parallel, ins.begin(), ins.end(), outs.begin(), fn);
     return outs;
 }
 
