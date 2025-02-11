@@ -34,9 +34,9 @@ namespace table {
 struct puts
   : public no_map<schema::puts>
 {
-    using spend = linkage<schema::spend_>;
+    using point = linkage<schema::point_>;
     using out = linkage<schema::put>;
-    using spend_links = std::vector<spend::integer>;
+    using point_links = std::vector<point::integer>;
     using output_links = std::vector<out::integer>;
     using no_map<schema::puts>::nomap;
 
@@ -50,16 +50,16 @@ struct puts
     {
         link count() const NOEXCEPT
         {
-            const auto fks = spend_fks.size() * spend::size +
+            const auto fks = point_fks.size() * point::size +
                 out_fks.size() * out::size;
             return system::possible_narrow_cast<link::integer>(fks);
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            std::for_each(spend_fks.begin(), spend_fks.end(), [&](auto& fk) NOEXCEPT
+            std::for_each(point_fks.begin(), point_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<spend::integer, spend::size>();
+                fk = source.read_little_endian<point::integer, point::size>();
             });
 
             std::for_each(out_fks.begin(), out_fks.end(), [&](auto& fk) NOEXCEPT
@@ -73,9 +73,9 @@ struct puts
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            std::for_each(spend_fks.begin(), spend_fks.end(), [&](const auto& fk) NOEXCEPT
+            std::for_each(point_fks.begin(), point_fks.end(), [&](const auto& fk) NOEXCEPT
             {
-                sink.write_little_endian<spend::integer, spend::size>(fk);
+                sink.write_little_endian<point::integer, point::size>(fk);
             });
 
             std::for_each(out_fks.begin(), out_fks.end(), [&](const auto& fk) NOEXCEPT
@@ -89,28 +89,28 @@ struct puts
 
         inline bool operator==(const slab& other) const NOEXCEPT
         {
-            return spend_fks == other.spend_fks
+            return point_fks == other.point_fks
                 && out_fks == other.out_fks;
         }
 
-        spend_links spend_fks{};
+        point_links point_fks{};
         output_links out_fks{};
     };
 
-    struct get_spends
+    struct get_points
       : public schema::puts
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            std::for_each(spend_fks.begin(), spend_fks.end(), [&](auto& fk) NOEXCEPT
+            std::for_each(point_fks.begin(), point_fks.end(), [&](auto& fk) NOEXCEPT
             {
-                fk = source.read_little_endian<spend::integer, spend::size>();
+                fk = source.read_little_endian<point::integer, point::size>();
             });
 
             return source;
         }
 
-        spend_links spend_fks{};
+        point_links point_fks{};
     };
 
     struct get_outs
@@ -129,16 +129,16 @@ struct puts
         output_links out_fks{};
     };
 
-    struct get_spend_at
+    struct get_point_at
       : public schema::puts
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            spend_fk = source.read_little_endian<spend::integer, spend::size>();
+            point_fk = source.read_little_endian<point::integer, point::size>();
             return source;
         }
 
-        spend::integer spend_fk{};
+        point::integer point_fk{};
     };
 
     struct get_output_at

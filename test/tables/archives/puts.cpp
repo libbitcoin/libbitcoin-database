@@ -90,23 +90,23 @@ BOOST_AUTO_TEST_CASE(puts__put__get__expected)
     BOOST_REQUIRE(slab0 == expected0);
 
     table::puts::slab slab1{};
-    slab1.spend_fks.resize(1);
+    slab1.point_fks.resize(1);
     BOOST_REQUIRE(instance.get(0, slab1));
-    BOOST_REQUIRE(slab1.spend_fks == expected1.spend_fks);
+    BOOST_REQUIRE(slab1.point_fks == expected1.point_fks);
     BOOST_REQUIRE(slab1.out_fks.empty());
 
     table::puts::slab slab2{};
-    slab2.spend_fks.resize(1);
+    slab2.point_fks.resize(1);
     slab2.out_fks.resize(1);
     BOOST_REQUIRE(instance.get(4, slab2));
-    BOOST_REQUIRE(slab2.spend_fks == expected2.spend_fks);
+    BOOST_REQUIRE(slab2.point_fks == expected2.point_fks);
     BOOST_REQUIRE(slab2.out_fks == expected2.out_fks);
 
     table::puts::slab slab3{};
-    slab3.spend_fks.resize(1);
+    slab3.point_fks.resize(1);
     slab3.out_fks.resize(2);
     BOOST_REQUIRE(instance.get(13, slab3));
-    BOOST_REQUIRE(slab3.spend_fks == expected3.spend_fks);
+    BOOST_REQUIRE(slab3.point_fks == expected3.point_fks);
     BOOST_REQUIRE(slab3.out_fks == expected3.out_fks);
 }
 

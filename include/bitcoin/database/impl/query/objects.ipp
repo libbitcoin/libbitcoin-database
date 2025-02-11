@@ -49,7 +49,7 @@ typename CLASS::inputs_ptr CLASS::get_inputs(
 {
     // TODO: eliminate shared memory pointer reallocations.
     using namespace system;
-    const auto fks = to_spends(link);
+    const auto fks = to_points(link);
     if (fks.empty())
         return {};
 
@@ -162,7 +162,7 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
         return {};
 
     table::puts::slab puts{};
-    puts.spend_fks.resize(tx.ins_count);
+    puts.point_fks.resize(tx.ins_count);
     puts.out_fks.resize(tx.outs_count);
     if (!store_.puts.get(tx.puts_fk, puts))
         return {};
@@ -172,7 +172,8 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
     inputs->reserve(tx.ins_count);
     outputs->reserve(tx.outs_count);
 
-    for (const auto& fk: puts.spend_fks)
+    // TODO: points could be written and therefore read sequentially.
+    for (const auto& fk: puts.point_fks)
         if (!push_bool(*inputs, get_input(fk)))
             return {};
 
@@ -204,46 +205,49 @@ typename CLASS::output::cptr CLASS::get_output(
     return out.output;
 }
 
+// static/protected
+TEMPLATE
+typename CLASS::point::cptr CLASS::make_point(hash_digest&& hash,
+    uint32_t index) NOEXCEPT
+{
+    // Share null point instances to reduce memory consumption.
+    static const auto null_point = system::to_shared<const point>();
+    if (index == point::null_index)
+        return null_point;
+
+    return system::to_shared<point>(std::move(hash), index);
+}
+
 TEMPLATE
 typename CLASS::input::cptr CLASS::get_input(
-    const spend_link& link) const NOEXCEPT
+    const point_link& link) const NOEXCEPT
 {
     using namespace system;
     table::input::get_ptrs in{};
-    table::spend::get_input spend{};
-    if (!store_.spend.get(link, spend) ||
-        !store_.input.get(spend.input_fk, in))
+    table::point::get_input point{};
+    if (!store_.point.get(link, point) ||
+        !store_.input.get(point.input_fk, in))
         return {};
-
-    // Share null point instances to reduce memory consumption.
-    static const auto null_point = to_shared<const point>();
 
     return to_shared<input>
     (
-        spend.is_null() ? null_point : to_shared<point>
-        (
-            get_point_key(spend.point_fk),
-            spend.point_index
-        ),
+        make_point(std::move(point.hash), point.index),
         in.script,
         in.witness,
-        spend.sequence
+        point.sequence
     );
 }
 
 TEMPLATE
 typename CLASS::point::cptr CLASS::get_point(
-    const spend_link& link) const NOEXCEPT
+    const point_link& link) const NOEXCEPT
 {
-    table::spend::get_prevout spend{};
-    if (!store_.spend.get(link, spend))
+    using namespace system;
+    table::point::get_point point{};
+    if (!store_.point.get(link, point))
         return {};
 
-    return system::to_shared<point>
-    (
-        get_point_key(spend.point_fk),
-        spend.point_index
-    );
+    return make_point(std::move(point.hash), point.index);
 }
 
 TEMPLATE
@@ -251,23 +255,23 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
     const output_link& link) const NOEXCEPT
 {
     using namespace system;
-    const auto spend_fks = to_spenders(link);
-    const auto spenders = to_shared<chain::input_cptrs>();
-    spenders->reserve(spend_fks.size());
+    const auto point_fks = to_spenders(link);
+    const auto inputs = to_shared<chain::input_cptrs>();
+    inputs->reserve(point_fks.size());
 
     // TODO: eliminate shared memory pointer reallocation.
-    for (const auto& spend_fk: spend_fks)
-        if (!push_bool(*spenders, get_input(spend_fk)))
+    for (const auto& point_fk: point_fks)
+        if (!push_bool(*inputs, get_input(point_fk)))
             return {};
 
-    return spenders;
+    return inputs;
 }
 
 TEMPLATE
 typename CLASS::input::cptr CLASS::get_input(const tx_link& link,
     uint32_t input_index) const NOEXCEPT
 {
-    return get_input(to_spend(link, input_index));
+    return get_input(to_point(link, input_index));
 }
 
 TEMPLATE

@@ -115,6 +115,10 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool find(const Key& key, Element& element) const NOEXCEPT;
 
+    /// Get first element matching the search key, and return its link.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    Link find_link(const Key& key, Element& element) const NOEXCEPT;
+
     /// Get element at link, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
     inline bool get(const Link& link, Element& element) const NOEXCEPT;

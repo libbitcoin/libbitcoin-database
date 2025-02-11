@@ -46,6 +46,8 @@ enum error_t : uint8_t
     integrity7,
     integrity8,
     integrity9,
+    integrity10,
+    integrity11,
 
     /// memory map
     open_open,
@@ -117,7 +119,7 @@ enum error_t : uint8_t
     tx_spend_allocate,
     tx_input_put,
     tx_point_put,
-    tx_spend_set,
+    tx_point_set,
     tx_output_put,
     tx_puts_put,
     tx_tx_set,

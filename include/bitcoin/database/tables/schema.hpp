@@ -156,7 +156,7 @@ namespace schema
         static constexpr size_t pk = schema::puts_;
         static constexpr size_t sk = zero;
         static constexpr size_t minsize =
-            schema::spend_ +
+            schema::point_ +
             schema::put;
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
@@ -223,12 +223,16 @@ namespace schema
     {
         static constexpr size_t pk = schema::point_;
         static constexpr size_t minsize =
-            schema::hash;
+            schema::hash +              // point hash
+            schema::transaction::pk +   // parent->tx
+            sizeof(uint32_t) +          // sequence
+            schema::input::pk +         // input->script|witness
+            schema::index;              // point index
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 32u);
-        static_assert(minrow == 32u);
+        static_assert(minsize == 48u);
+        static_assert(minrow == 48u);
     };
 
     // moderate (sk:7) record multimap, with low multiple rate.
@@ -238,15 +242,12 @@ namespace schema
         static constexpr size_t pk = schema::spend_;
         static constexpr size_t sk = schema::tx + schema::index;
         static constexpr size_t minsize =
-            schema::point::pk +         // point->hash
-            schema::transaction::pk +   // parent->tx
-            sizeof(uint32_t) +          // sequence
-            schema::input::pk;          // input->script|witness
+            schema::point::pk; // point->hash
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 17u);
-        static_assert(minrow == 28u);
+        static_assert(minsize == 4u);
+        static_assert(minrow == 15u);
     };
 
     // slab hashmap
@@ -384,57 +385,34 @@ namespace schema
         static_assert(minsize == 33u);
         static_assert(minrow == 41u);
     };
-
-    ////// array
-    ////struct bootstrap
-    ////{
-    ////    static constexpr size_t pk = schema::block;
-    ////    static constexpr size_t sk = zero;
-    ////    static constexpr size_t minsize = schema::hash;
-    ////    static constexpr size_t minrow = minsize;
-    ////    static constexpr size_t size = minsize;
-    ////    static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-    ////    static_assert(minsize == 32u);
-    ////    static_assert(minrow == 32u);
-    ////};
-
-    ////// slab hashmap
-    ////struct buffer
-    ////{
-    ////    static constexpr bool hash_function = false;
-    ////    static constexpr size_t pk = schema::buffer_;
-    ////    static constexpr size_t sk = schema::transaction::pk;
-    ////    static constexpr size_t minsize = zero;
-    ////    static constexpr size_t minrow = pk + sk + minsize;
-    ////    static constexpr size_t size = max_size_t;
-    ////    static inline linkage<pk> count() NOEXCEPT;
-    ////    static_assert(minsize == 0u);
-    ////    static_assert(minrow == 9u);
-    ////};
 }
 
 // TODO: types not derived from table constants.
-struct spend_set
+struct point_set
 {
-    struct spend
+    struct point
     {
-        // From spend table (all except input_pk).
-        uint32_t point_stub{};
-        uint32_t point_index{};
-        uint32_t point_fk{};
+        // From tx->puts navigation (no search).
+        uint32_t fk{};
+
+        // From puts->point navigation (no search).
+        uint32_t stub{};
+        uint32_t index{};
         uint32_t sequence{};
 
-        // From prevouts table.
-        uint32_t prevout_tx{};
+        // From header_link->prevouts navigation (no search).
         bool coinbase{};
+        uint32_t prevout_tx{};
     };
 
     // From block.tx.puts iteration.
-    uint32_t tx{};
+    uint32_t self{};
     uint32_t version{};
-    std::vector<spend> spends{};
+
+    // See struct point.
+    std::vector<point> points{};
 };
-using spend_sets = std::vector<spend_set>;
+using point_sets = std::vector<point_set>;
 
 } // namespace database
 } // namespace libbitcoin

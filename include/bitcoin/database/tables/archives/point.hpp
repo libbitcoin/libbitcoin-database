@@ -29,15 +29,18 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// Point records are empty, providing only a sk<->fk compression mapping.
-/// Each record is 32+4=36 bytes, enabling 4 byte point.hash storage.
-/// This reduces point hash storage to tx from input scale (tx/in=38%).
-/// This benefit doubles due to fp indexation by the spend table.
+/// Sequence is part of an input, denormalized here for confirmation.
 struct point
   : public no_map<schema::point>
 {
     using no_map<schema::point>::nomap;
+    using ix = linkage<schema::index>;
+    using in = linkage<schema::input::pk>;
+    using tx = linkage<schema::tx>;
     using stub = linkage<schema::tx>;
+    using search_key = search<schema::spend::sk>;
+    static constexpr auto skip_to_parent = schema::hash + ix::size +
+        sizeof(uint32_t) + in::size;
 
     struct record
       : public schema::point
@@ -45,6 +48,14 @@ struct point
         inline bool from_data(reader& source) NOEXCEPT
         {
             hash = source.read_hash();
+            index = source.read_little_endian<ix::integer, ix::size>();
+            sequence = source.read_little_endian<uint32_t>();
+            input_fk = source.read_little_endian<in::integer, in::size>();
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+
+            if (index == ix::terminal)
+                index = system::chain::point::null_index;
+
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
@@ -52,13 +63,129 @@ struct point
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             sink.write_bytes(hash);
+            sink.write_little_endian<ix::integer, ix::size>(index);
+            sink.write_little_endian<uint32_t>(sequence);
+            sink.write_little_endian<in::integer, in::size>(input_fk);
+            sink.write_little_endian<tx::integer, tx::size>(parent_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
+        inline bool is_null() const NOEXCEPT
+        {
+            return index == system::chain::point::null_index;
+        }
+
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return hash == other.hash;
+            return hash == other.hash
+                && index == other.index
+                && sequence == other.sequence
+                && input_fk == other.input_fk
+                && parent_fk == other.parent_fk;
+        }
+
+        hash_digest hash{};
+        ix::integer index{};
+        uint32_t sequence{};
+        in::integer input_fk{};
+        tx::integer parent_fk{};
+    };
+
+    struct get_parent_conditional_key
+      : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(skip_to_parent);
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+
+            // Only read key when parent is not self.
+            if (parent_fk != self)
+            {
+                source.rewind_bytes(skip_to_parent + tx::size);
+                hash = source.read_hash();
+            }
+
+            return source;
+        }
+
+        const tx::integer self{};
+        hash_digest hash{};
+        tx::integer parent_fk{};
+    };
+
+    struct get_input
+        : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            hash = source.read_hash();
+            index = source.read_little_endian<ix::integer, ix::size>();
+            sequence = source.read_little_endian<uint32_t>();
+            input_fk = source.read_little_endian<in::integer, in::size>();
+
+            if (index == ix::terminal)
+                index = system::chain::point::null_index;
+
+            return source;
+        }
+
+        inline bool is_null() const NOEXCEPT
+        {
+            return index == system::chain::point::null_index;
+        }
+
+        hash_digest hash{};
+        ix::integer index{};
+        uint32_t sequence{};
+        in::integer input_fk{};
+    };
+
+    struct get_parent
+      : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(skip_to_parent);
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            return source;
+        }
+
+        tx::integer parent_fk{};
+    };
+
+    struct get_point
+      : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            hash = source.read_hash();
+            index = source.read_little_endian<ix::integer, ix::size>();
+
+            if (index == ix::terminal)
+                index = system::chain::point::null_index;
+
+            return source;
+        }
+
+        inline bool is_null() const NOEXCEPT
+        {
+            return index == system::chain::point::null_index;
+        }
+
+        hash_digest hash{};
+        ix::integer index{};
+    };
+
+
+    struct get_key
+      : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            hash = source.read_hash();
+            return source;
         }
 
         hash_digest hash{};
@@ -69,11 +196,43 @@ struct point
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            value = source.read_little_endian<stub::integer, stub::size>();
+            stub = source.read_little_endian<stub::integer, stub::size>();
             return source;
         }
 
-        stub::integer value{};
+        stub::integer stub{};
+    };
+
+    struct get_spend_key
+      : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            stub = source.read_little_endian<stub::integer, stub::size>();
+            source.skip_bytes(schema::hash - stub::size);
+            index = source.read_little_endian<ix::integer, ix::size>();
+            return source;
+        }
+
+        stub::integer stub{};
+        ix::integer index{};
+    };
+
+    struct get_spend_key_sequence
+      : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            value.stub = source.read_little_endian<stub::integer, stub::size>();
+            source.skip_bytes(schema::hash - stub::size);
+            value.index = source.read_little_endian<ix::integer, ix::size>();
+            value.sequence = source.read_little_endian<uint32_t>();
+            return source;
+        }
+
+        point_set::point value{};
     };
 };
 

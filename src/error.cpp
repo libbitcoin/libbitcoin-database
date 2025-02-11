@@ -39,6 +39,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { integrity7, "store corrupted7" },
     { integrity8, "store corrupted8" },
     { integrity9, "store corrupted9" },
+    { integrity10, "store corrupted10" },
+    { integrity11, "store corrupted11" },
 
     // memory map
     { open_open, "opening open file" },
@@ -109,7 +111,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tx_spend_allocate, "tx_spend_allocate" },
     { tx_input_put, "tx_input_put" },
     { tx_point_put, "tx_point_put" },
-    { tx_spend_set, "tx_spend_set" },
+    { tx_point_set, "tx_point_set" },
     { tx_output_put, "tx_output_put" },
     { tx_puts_put, "tx_puts_put" },
     { tx_tx_set, "tx_tx_set" },

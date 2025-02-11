@@ -190,9 +190,20 @@ TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
 {
+    return !find_link(key, element).is_terminal();
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+Link CLASS::find_link(const Key& key, Element& element) const NOEXCEPT
+{
     // This override avoids duplicated memory_ptr construct in get(first()).
     const auto ptr = get_memory();
-    return read(ptr, first(ptr, head_.top(key), key), element);
+    const auto link = first(ptr, head_.top(key), key);
+    if (link.is_terminal())
+        return {};
+
+    return read(ptr, link, element);
 }
 
 TEMPLATE

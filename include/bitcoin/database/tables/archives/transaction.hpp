@@ -36,7 +36,7 @@ struct transaction
     using ix = linkage<schema::index>;
     using puts = linkage<schema::puts_>;
     using bytes = linkage<schema::size>;
-    using spend = linkage<schema::spend_>;
+    using point = linkage<schema::point_>;
     using out = linkage<schema::put>;
     using search_key = search<schema::hash>;
     using hash_map<schema::transaction>::hashmap;
@@ -56,7 +56,7 @@ struct transaction
     {
         inline puts::integer outs_fk() const NOEXCEPT
         {
-            return puts_fk + (ins_count * spend::size);
+            return puts_fk + (ins_count * point::size);
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -197,7 +197,7 @@ struct transaction
     {
         inline puts::integer outs_fk() const NOEXCEPT
         {
-            return puts_fk + (ins_count * spend::size);
+            return puts_fk + (ins_count * point::size);
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -214,12 +214,25 @@ struct transaction
         puts::integer puts_fk{};
     };
 
+    struct get_version
+      : public schema::transaction
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(skip_to_version);
+            version = source.read_little_endian<uint32_t>();
+            return source;
+        }
+
+        uint32_t version{};
+    };
+
     struct get_version_inputs
       : public schema::transaction
     {
         inline puts::integer outs_fk() const NOEXCEPT
         {
-            return puts_fk + (ins_count * spend::size);
+            return puts_fk + (ins_count * point::size);
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -237,7 +250,7 @@ struct transaction
         puts::integer puts_fk{};
     };
 
-    struct get_spend
+    struct get_point
       : public schema::transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -247,18 +260,18 @@ struct transaction
 
             if (index >= ins_count)
             {
-                spend_fk = puts::terminal;
+                point_fk = puts::terminal;
                 return source;
             }
 
             source.skip_bytes(ix::size);
             const auto puts_fk = source.read_little_endian<puts::integer, puts::size>();
-            spend_fk = puts_fk + (index * spend::size);
+            point_fk = puts_fk + (index * point::size);
             return source;
         }
 
         const puts::integer index{};
-        puts::integer spend_fk{};
+        puts::integer point_fk{};
     };
 
     struct get_output
@@ -277,7 +290,7 @@ struct transaction
             }
 
             const auto puts_fk = source.read_little_endian<puts::integer, puts::size>();
-            out_fk = puts_fk + (ins_count * spend::size) + (index * out::size);
+            out_fk = puts_fk + (ins_count * point::size) + (index * out::size);
             return source;
         }
 

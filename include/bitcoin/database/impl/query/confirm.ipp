@@ -76,7 +76,7 @@ TEMPLATE
 bool CLASS::is_confirmed_input(const spend_link& link) const NOEXCEPT
 {
     // The spend.tx is strong *and* its block is confirmed (by height).
-    const auto fk = to_spend_tx(link);
+    const auto fk = to_spending_tx(link);
     return !fk.is_terminal() && is_confirmed_tx(fk);
 }
 
@@ -102,20 +102,20 @@ bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 // Block confirmed by height is not used for confirmation (just strong tx).
 // ----------------------------------------------------------------------------
 
-// unused
-TEMPLATE
-bool CLASS::is_spent(const spend_link& link) const NOEXCEPT
-{
-    table::spend::get_prevout_parent spend{};
-    if (!store_.spend.get(link, spend))
-        return false;
-
-    if (spend.is_null())
-        return false;
-
-    // Prevout is spent by any confirmed transaction.
-    return is_spent_prevout(spend.point_fk, spend.point_index);
-}
+////// unused
+////TEMPLATE
+////bool CLASS::is_spent(const point_link& link) const NOEXCEPT
+////{
+////    table::point::get_prevout_parent spend{};
+////    if (!store_.spend.get(link, spend))
+////        return false;
+////
+////    if (spend.is_null())
+////        return false;
+////
+////    // Prevout is spent by any confirmed transaction.
+////    return is_spent_prevout(link, spend.point_index);
+////}
 
 TEMPLATE
 bool CLASS::is_strong_tx(const tx_link& link) const NOEXCEPT
@@ -134,39 +134,32 @@ bool CLASS::is_strong_block(const header_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_strong_spend(const spend_link& link) const NOEXCEPT
 {
-    return is_strong_tx(to_spend_tx(link));
+    return is_strong_tx(to_spending_tx(link));
 }
 
 // unused
 TEMPLATE
-bool CLASS::is_mature(const spend_link& link, size_t height) const NOEXCEPT
+bool CLASS::is_mature(const point_link& link, size_t height) const NOEXCEPT
 {
-    table::spend::get_point spend{};
-    if (!store_.spend.get(link, spend))
-        return false;
-
-    if (spend.is_null())
+    const auto key = get_point_key(link);
+    if (key == system::null_hash)
         return true;
 
-    return !mature_prevout(spend.point_fk, height);
+    return !mature_prevout(key, height);
 }
 
 // protected (only for is_mature/unused)
 TEMPLATE
-code CLASS::mature_prevout(const point_link& link,
+code CLASS::mature_prevout(const hash_digest& hash,
     size_t height) const NOEXCEPT
 {
-    // Get hash from point, search for prevout tx and get its link.
-    const auto tx_fk = to_tx(get_point_key(link));
-    if (tx_fk.is_terminal())
-        return error::integrity;
-
-    // to_block assures confirmation by strong_tx traversal so this must remain
-    // prior to is_coinbase in execution order, despite the lack of dependency.
+    // Search for prevout tx and get its link.
+    const auto tx_fk = to_tx(hash);
     const auto header_fk = to_block(tx_fk);
     if (header_fk.is_terminal())
         return error::unconfirmed_spend;
 
+    // Must also be strong (above).
     if (!is_coinbase(tx_fk))
         return error::success;
 
@@ -180,22 +173,13 @@ code CLASS::mature_prevout(const point_link& link,
     return error::success;
 }
 
-// unused
 TEMPLATE
-bool CLASS::is_locked(const spend_link& link, uint32_t sequence,
+bool CLASS::is_locked(const point_link& link, uint32_t sequence,
     const context& ctx) const NOEXCEPT
 {
-    table::spend::get_point spend{};
-    if (!store_.spend.get(link, spend))
-        return false;
-
-    if (spend.is_null())
-        return true;
-
-    return !locked_prevout(spend.point_fk, sequence, ctx);
+    return !locked_prevout(link, sequence, ctx);
 }
 
-// protected (only for is_locked/unused)
 TEMPLATE
 code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
     const context& ctx) const NOEXCEPT
@@ -203,14 +187,14 @@ code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
     if (!ctx.is_enabled(system::chain::flags::bip68_rule))
         return error::success;
 
-    // BUGBUG: integrate version.
-    ////if (version < system::chain::relative_locktime_min_version)
-    ////    return error::success;
-
     // Get hash from point, search for prevout tx and get its link.
-    const auto tx_fk = to_tx(get_point_key(link));
+    table::transaction::get_version tx{};
+    const auto tx_fk = store_.tx.find(get_point_key(link), tx);
     if (tx_fk.is_terminal())
         return error::missing_previous_output;
+
+    if (tx.version < system::chain::relative_locktime_min_version)
+        return error::success;
 
     // to_block assures confirmation by strong_tx traversal.
     const auto header_fk = to_block(tx_fk);
