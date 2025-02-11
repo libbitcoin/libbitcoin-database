@@ -236,21 +236,22 @@ error::error_t CLASS::spent(const point_link& self, const point_stub& stub,
     // self is the point of the tx currently under validation (may be dups).
     const auto self_hash = get_point_key(self);
 
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: add memory parameter to nomap get() and use here.
-    ///////////////////////////////////////////////////////////////////////////
+    // No other table reads until ptr reset.
+    auto ptr = store_.point.get_memory();
 
     // No heap allocation if no actual spends.
     std::vector<tx_link::integer> spenders{};
     for (auto point: points)
     {
         table::point::get_parent_key get{};
-        if (!store_.point.get(point, get))
+        if (!store_.point.get(ptr, point, get))
             return error::integrity6;
 
-        if (get.hash != self_hash)
+        if (get.hash == self_hash)
             spenders.push_back(get.parent_fk);
     }
+
+    ptr.reset();
 
     // Determine if any spend is confirmed.
     for (auto spender: spenders)
