@@ -124,12 +124,12 @@ struct point
         {
             hash = source.read_hash();
             source.skip_bytes(ix::size + sizeof(uint32_t) + in::size);
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            fk = source.read_little_endian<tx::integer, tx::size>();
             return source;
         }
 
         hash_digest hash{};
-        tx::integer parent_fk{};
+        tx::integer fk{};
     };
 
     struct get_parent

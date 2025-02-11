@@ -125,7 +125,7 @@ tx_links CLASS::get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT
 ////}
 
 TEMPLATE
-bool CLASS::is_spent_coinbase(const tx_link& link) const NOEXCEPT
+bool CLASS::is_spent_coinbase(const tx_link&) const NOEXCEPT
 {
     // TODO: identify spends by stub.
     ////// All outputs of the tx are confirmed spent.
@@ -209,15 +209,13 @@ code CLASS::unspent_duplicates(const header_link& link,
 
 // protected
 TEMPLATE
-error::error_t CLASS::spent(const point_link& self, const point_stub& stub,
-    index index) const NOEXCEPT
+error::error_t CLASS::get_conflicts(point_links& points,
+    const point_link& self, spend_key&& key) const NOEXCEPT
 {
-    auto it = store_.spend.it(table::spend::compose(stub, index));
+    auto it = store_.spend.it(std::move(key));
     if (!it)
         return self.is_terminal() ? error::success : error::integrity4;
 
-    // No heap allocation if no conflicts.
-    std::vector<point_link::integer> points{};
     do
     {
         table::spend::record get{};
@@ -227,33 +225,56 @@ error::error_t CLASS::spent(const point_link& self, const point_stub& stub,
         if (get.point_fk != self)
             points.push_back(get.point_fk);
     }
+    
     while (it.advance());
-    it.reset();
+    return error::success;
+}
+
+// protected
+TEMPLATE
+error::error_t CLASS::get_doubles(tx_links& spenders,
+    const point_links& points, const point_link& self) const NOEXCEPT
+{
+    const auto ptr = store_.point.get_memory();
+
+    table::point::get_key self_tx_point{};
+    if (!store_.point.get(ptr, self, self_tx_point))
+        return error::integrity6;
+
+    for (auto point: points)
+    {
+        table::point::get_parent_key parent_tx{};
+        if (!store_.point.get(ptr, point, parent_tx))
+            return error::integrity7;
+
+        if (parent_tx.hash == self_tx_point.hash)
+            spenders.push_back(parent_tx.fk);
+    }
+
+    return error::success;
+}
+
+// protected
+TEMPLATE
+error::error_t CLASS::spent(const point_link& self, const point_stub& stub,
+    index index) const NOEXCEPT
+{
+    error::error_t ec{};
+
+    // No heap allocation if no hashmap conflicts.
+    point_links points{};
+    if ((ec = get_conflicts(points, self, table::spend::compose(stub, index))))
+        return ec;
 
     if (points.empty())
         return error::success;
 
-    // self is the point of the tx currently under validation (may be dups).
-    const auto self_hash = get_point_key(self);
+    // No heap allocation if no double spends.
+    tx_links spenders{};
+    if ((ec = get_doubles(spenders, points, self)))
+        return ec;
 
-    // No other table reads until ptr reset.
-    auto ptr = store_.point.get_memory();
-
-    // No heap allocation if no actual spends.
-    std::vector<tx_link::integer> spenders{};
-    for (auto point: points)
-    {
-        table::point::get_parent_key get{};
-        if (!store_.point.get(ptr, point, get))
-            return error::integrity6;
-
-        if (get.hash == self_hash)
-            spenders.push_back(get.parent_fk);
-    }
-
-    ptr.reset();
-
-    // Determine if any spend is confirmed.
+    // Check all double spends for confirmation.
     for (auto spender: spenders)
         if (is_strong_tx(spender))
             return error::confirmed_double_spend;
@@ -285,7 +306,7 @@ error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
     {
         context out{};
         if (!get_context(out, strong))
-            return error::integrity7;
+            return error::integrity8;
 
         if (bip68 &&
             input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
@@ -393,7 +414,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     context ctx{};
     if (!get_context(ctx, link))
-        return error::integrity8;
+        return error::integrity9;
 
     // bip30 coinbase check.
     ////code ec{};
@@ -414,7 +435,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     {
         point_set set{};
         if (!get_point_set(set, tx))
-            failure.store(error::integrity9);
+            failure.store(error::integrity10);
 
         points.fetch_add(set.points.size(), std::memory_order_relaxed);
         return set;
@@ -426,7 +447,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     if (!(prevout_enabled() ? populate_prevouts(sets, points, link) :
         populate_prevouts(sets)))
-        return error::integrity10;
+        return error::integrity11;
 
     const auto is_unspendable = [this, &ctx, &failure](const auto& set) NOEXCEPT
     {
