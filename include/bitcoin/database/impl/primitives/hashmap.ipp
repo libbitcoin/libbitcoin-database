@@ -188,14 +188,14 @@ Key CLASS::get_key(const Link& link) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
+inline bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
 {
     return !find_link(key, element).is_terminal();
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-Link CLASS::find_link(const Key& key, Element& element) const NOEXCEPT
+inline Link CLASS::find_link(const Key& key, Element& element) const NOEXCEPT
 {
     // This override avoids duplicated memory_ptr construct in get(first()).
     const auto ptr = get_memory();
