@@ -306,8 +306,8 @@
 ////    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 0))); // non-existent
 ////}
 ////
-////// TODO: test spent_prevout and is_spent_prevout.
-////// spent_prevout(4) excludes self if non-terminal.
+////// TODO: test spent and is_spent_prevout.
+////// spent(4) excludes self if non-terminal.
 ////// is_spent(1) and is_spent_prevout(2) do not exclude self.
 ////BOOST_AUTO_TEST_CASE(query_confirm__is_spent__unconfirmed_double_spend__false)
 ////{

@@ -564,9 +564,9 @@ protected:
     bool get_point_set(point_set& set, const tx_link& link) const NOEXCEPT;
     ////bool is_spent_prevout(const point_link& link, index index) const NOEXCEPT;
 
-    error::error_t spent_prevout(const point_link& link, const point_stub& stub,
-        index index, const tx_link& self) const NOEXCEPT;
-    error::error_t unspendable_prevout(uint32_t sequence, bool coinbase,
+    error::error_t spent(const point_link& self, const point_stub& stub,
+        index index) const NOEXCEPT;
+    error::error_t unspendable(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;
 

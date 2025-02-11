@@ -208,7 +208,7 @@ namespace schema
         static constexpr size_t pk = schema::put;
         static constexpr size_t sk = zero;
         static constexpr size_t minsize =
-            schema::transaction::pk +
+            schema::transaction::pk +   // parent->tx
             5u + // variable_size (minimum 1, average 5)
             1u;  // variable_size (minimum 1, average 1)
         static constexpr size_t minrow = minsize;
@@ -387,26 +387,26 @@ namespace schema
     };
 }
 
-// TODO: types not derived from table constants.
 struct point_set
 {
+    // Order matters to table::point::get_spend_key_sequence.
     struct point
     {
-        // From tx->puts navigation (no search).
-        uint32_t fk{};
+        // From tx(->puts) iteration (no search).
+        linkage<schema::point_> self{};
 
-        // From puts->point navigation (no search).
+        // TODO: types not derived from table constants.
+        // From tx->(puts->)point navigation (no search).
         uint32_t stub{};
         uint32_t index{};
         uint32_t sequence{};
 
-        // From header_link->prevouts navigation (no search).
+        // From header->prevouts cache navigation (no search).
+        linkage<schema::tx> tx{};
         bool coinbase{};
-        uint32_t prevout_tx{};
     };
 
-    // From block.tx.puts iteration.
-    uint32_t self{};
+    // From block->txs->tx iteration.
     uint32_t version{};
 
     // See struct point.

@@ -39,8 +39,6 @@ struct point
     using tx = linkage<schema::tx>;
     using stub = linkage<schema::tx>;
     using search_key = search<schema::spend::sk>;
-    static constexpr auto skip_to_parent = schema::hash + ix::size +
-        sizeof(uint32_t) + in::size;
 
     struct record
       : public schema::point
@@ -92,29 +90,6 @@ struct point
         tx::integer parent_fk{};
     };
 
-    struct get_parent_conditional_key
-      : public schema::point
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.skip_bytes(skip_to_parent);
-            parent_fk = source.read_little_endian<tx::integer, tx::size>();
-
-            // Only read key when parent is not self.
-            if (parent_fk != self)
-            {
-                source.rewind_bytes(skip_to_parent + tx::size);
-                hash = source.read_hash();
-            }
-
-            return source;
-        }
-
-        const tx::integer self{};
-        hash_digest hash{};
-        tx::integer parent_fk{};
-    };
-
     struct get_input
         : public schema::point
     {
@@ -142,12 +117,27 @@ struct point
         in::integer input_fk{};
     };
 
+    struct get_parent_key
+      : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            hash = source.read_hash();
+            source.skip_bytes(ix::size + sizeof(uint32_t) + in::size);
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            return source;
+        }
+
+        hash_digest hash{};
+        tx::integer parent_fk{};
+    };
+
     struct get_parent
       : public schema::point
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_parent);
+            source.skip_bytes(schema::hash + ix::size + sizeof(uint32_t) + in::size);
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             return source;
         }
