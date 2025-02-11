@@ -128,18 +128,45 @@ code CLASS::reload() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+inline memory_ptr CLASS::get_memory() const NOEXCEPT
+{
+    return manager_.get();
+}
+
+// static
+TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
+bool CLASS::get(const memory_ptr& ptr, const Link& link,
+    Element& element) NOEXCEPT
 {
     using namespace system;
-    const auto ptr = manager_.get(link);
-    if (!ptr)
+    if (!ptr || link.is_terminal())
         return false;
 
-    iostream stream{ *ptr };
+    const auto start = manager::link_to_position(link);
+    if (is_limited<ptrdiff_t>(start))
+        return false;
+
+    const auto size = ptr->size();
+    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    if (position > size)
+        return false;
+
+    const auto offset = ptr->offset(start);
+    if (is_null(offset))
+        return false;
+
+    iostream stream{ offset, size - position };
     reader source{ stream };
     if constexpr (!is_slab) { source.set_limit(Size); }
     return element.from_data(source);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
+{
+    return get(get_memory(), link, element);
 }
 
 TEMPLATE

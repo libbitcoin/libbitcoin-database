@@ -83,9 +83,17 @@ public:
     /// Query interface.
     /// -----------------------------------------------------------------------
 
+    /// Return ptr for batch processing, holds shared lock on storage remap.
+    inline memory_ptr get_memory() const NOEXCEPT;
+
+    /// Get element at link using get_memory() ptr, false if deserialize error.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    static bool get(const memory_ptr& ptr, const Link& link,
+        Element& element) NOEXCEPT;
+
     /// Get element at link.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool get(const Link& link, Element& element) const NOEXCEPT;
+    inline bool get(const Link& link, Element& element) const NOEXCEPT;
 
     /// Put element.
     template <typename Element, if_equal<Element::size, Size> = true>
