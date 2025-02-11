@@ -71,8 +71,7 @@ struct spend
         };
     }
 
-    static constexpr search_key compose(
-        const system::chain::point& point) NOEXCEPT
+    static search_key compose(const system::chain::point& point) NOEXCEPT
     {
         return compose(point.hash(), point.index());
     }
