@@ -34,11 +34,12 @@ struct point
   : public no_map<schema::point>
 {
     using no_map<schema::point>::nomap;
+    using search_key = search<schema::spend::sk>;
+    using point_stub = linkage<schema::tx>;
+    using ps = linkage<schema::tx>;
     using ix = linkage<schema::index>;
     using in = linkage<schema::input::pk>;
     using tx = linkage<schema::tx>;
-    using stub = linkage<schema::tx>;
-    using search_key = search<schema::spend::sk>;
 
     struct record
       : public schema::point
@@ -186,11 +187,11 @@ struct point
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            stub = source.read_little_endian<stub::integer, stub::size>();
+            stub = source.read_little_endian<ps::integer, ps::size>();
             return source;
         }
 
-        stub::integer stub{};
+        ps::integer stub{};
     };
 
     struct get_spend_key
@@ -199,13 +200,13 @@ struct point
         inline bool from_data(reader& source) NOEXCEPT
         {
             using namespace system;
-            stub = source.read_little_endian<stub::integer, stub::size>();
-            source.skip_bytes(schema::hash - stub::size);
+            stub = source.read_little_endian<ps::integer, ps::size>();
+            source.skip_bytes(schema::hash - ps::size);
             index = source.read_little_endian<ix::integer, ix::size>();
             return source;
         }
 
-        stub::integer stub{};
+        ps::integer stub{};
         ix::integer index{};
     };
 
@@ -215,8 +216,8 @@ struct point
         inline bool from_data(reader& source) NOEXCEPT
         {
             using namespace system;
-            value.stub = source.read_little_endian<stub::integer, stub::size>();
-            source.skip_bytes(schema::hash - stub::size);
+            value.stub = source.read_little_endian<ps::integer, ps::size>();
+            source.skip_bytes(schema::hash - ps::size);
             value.index = source.read_little_endian<ix::integer, ix::size>();
             value.sequence = source.read_little_endian<uint32_t>();
             return source;

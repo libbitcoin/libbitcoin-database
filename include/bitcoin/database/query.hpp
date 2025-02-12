@@ -52,7 +52,7 @@ using point_links = std::vector<spend_link::integer>;
 ////struct strong_pair { header_link block{}; tx_link tx{}; };
 using two_counts = std::pair<size_t, size_t>;
 using spend_key = table::spend::search_key;
-using point_stub = table::point::stub;
+using point_stub = table::point::point_stub;
 
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>
