@@ -119,11 +119,11 @@ enum error_t : uint8_t
     tx_spend_allocate,
     tx_input_put,
     tx_point_put,
-    tx_point_set,
     tx_output_put,
     tx_puts_put,
     tx_tx_set,
-    tx_spend_commit,
+    tx_spend_put,
+    tx_address_allocate,
     tx_address_put,
     tx_tx_commit,
 

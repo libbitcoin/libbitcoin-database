@@ -82,16 +82,12 @@ code CLASS::set_code(const transaction& tx) NOEXCEPT
 }
 
 TEMPLATE
-code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
+code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
 {
     // This is the only multitable write query (except initialize/genesis).
-
     using namespace system;
     if (tx.is_empty())
         return error::tx_empty;
-
-    // tx.get_hash() assumes cached or is not thread safe.
-    const auto& key = tx.get_hash(false);
 
     // Declare puts record (includes coinbase).
     const auto& ins = tx.inputs_ptr();
@@ -100,34 +96,17 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     puts.point_fks.reserve(ins->size());
     puts.out_fks.reserve(outs->size());
 
-    // Declare spends index buffer and allocation (excludes coinbase).
-    const auto coinbase = tx.is_coinbase();
-    const auto count = coinbase ? zero : tx.inputs();
-    const auto spend_count = possible_narrow_cast<spend_link::integer>(count);
-    std::vector<spend_key> spends{};
-    spends.reserve(count);
-
-    // TODO: eliminate shared memory pointer reallocations.
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Allocate tx record.
-    // Clean single allocation failure (e.g. disk full).
-    out_fk = store_.tx.allocate(1);
-    if (out_fk.is_terminal())
+    tx_fk = store_.tx.allocate(1);
+    if (tx_fk.is_terminal())
         return error::tx_tx_allocate;
 
-    // Allocate spend index records.
-    // Clean single allocation failure (e.g. disk full).
-    auto spend_fk = store_.spend.allocate(spend_count);
-    if (spend_fk.is_terminal())
-        return error::tx_spend_allocate;
-
-    // Commit input records (spend records not indexed).
+    // Commit input and point records.
     for (const auto& in: *ins)
     {
-        // Commit input record.
-        // Safe allocation failure, blob linked by unindexed spend.
         input_link input_fk{};
         if (!store_.input.put_link(input_fk, table::input::put_ref
         {
@@ -138,58 +117,33 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
             return error::tx_input_put;
         }
 
-        // Input point aliases.
-        const auto& prevout = in->point();
-
         // TODO: points could be written and therefore read sequentially.
-        // Create point (->input) table (includes coinbases).
-        // Safe allocation failure.
         point_link point_fk{};
         if (!store_.point.put_link(point_fk, table::point::record
         {
             {},
-            prevout.hash(),
-            prevout.index(),
+            in->point().hash(),
+            in->point().index(),
             in->sequence(),
             input_fk,
-            out_fk
+            tx_fk
         }))
         {
             return error::tx_point_put;
         }
 
-        // TODO: no need to enumerate puts->points if sequenially allocated.
-        // Accumulate point (->input) links in order.
+        // Accumulate points in order.
         puts.point_fks.push_back(point_fk);
-
-        // Write spend-by-hash index for non-coinbase (->point->input|parent).
-        if (!coinbase)
-        {
-            // Safe allocation failure, index is deferred because invalid tx_fk.
-            if (!store_.spend.set(spend_fk++, table::spend::record
-            {
-                {},
-                point_fk
-            }))
-            {
-                return error::tx_point_set;
-            }
-
-            // Prevout stub is redundantly stored for indexation.
-            // Accumulate spend keys in order (terminal for any null point).
-            spends.push_back(table::spend::compose(prevout));
-        }
     }
 
     // Commit output records.
     for (const auto& out: *outs)
     {
-        // Safe allocation failure, blob unlinked.
         output_link output_fk{};
         if (!store_.output.put_link(output_fk, table::output::put_ref
         {
             {},
-            out_fk,
+            tx_fk,
             *out
         }))
         {
@@ -201,54 +155,70 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     }
 
     // Commit accumulated puts.
-    // Safe allocation failure, unlinked blob links spend/output blobs.
     const auto puts_fk = store_.puts.put_link(puts);
     if (puts_fk.is_terminal())
         return error::tx_puts_put;
 
-    // Write tx record.
-    // Safe allocation failure, index is deferred for spend index consistency.
+    // Create tx record.
+    // Index is deferred for spend/address index consistency.
     using ix = linkage<schema::index>;
-    if (!store_.tx.set(out_fk, table::transaction::record_put_ref
+    if (!store_.tx.set(tx_fk, table::transaction::record_put_ref
     {
         {},
         tx,
-        system::possible_narrow_cast<ix::integer>(ins->size()),
-        system::possible_narrow_cast<ix::integer>(outs->size()),
+        possible_narrow_cast<ix::integer>(ins->size()),
+        possible_narrow_cast<ix::integer>(outs->size()),
         puts_fk
     }))
     {
         return error::tx_tx_set;
     }
 
-    // TODO: do this all at once here in second loop over inputs.
-    // TODO: eliminates the need to accumulate spends and the two phase commit.
-    // Commit spend index to search.
-    // Safe allocation failure.
-    // A replay of committed spends without indexed tx will appear as double
-    // spends, but the spend cannot be confirmed without the indexed tx.
-    for (const auto& spend: std::views::reverse(spends))
+    // Commit spend index records.
+    if (!tx.is_coinbase())
     {
-        --spend_fk.value;
-        if (store_.spend.commit_link(spend_fk, spend).is_terminal())
-            return error::tx_spend_commit;
-    }
+        using sp = linkage<schema::spend_>;
+        const auto count = possible_narrow_cast<sp::integer>(ins->size());
+        auto fk = store_.spend.allocate(count);
+        if (fk.is_terminal())
+            return error::tx_spend_allocate;
 
-    // TODO: PREALLOCATE output AS WITH SPEND (ABOVE).
-    // Commit addresses to search if address index is enabled.
-    if (address_enabled())
-    {
-        auto output_fk = puts.out_fks.begin();
-        for (const auto& out: *outs)
+        auto in = ins->begin();
+        const auto ptr = store_.spend.get_memory();
+
+        for (auto point_fk: puts.point_fks)
         {
-            // Safe allocation failure, unindexed tx outputs linked by address,
-            // others unlinked. A replay of committed addresses without indexed
-            // tx will appear as double spends, but the spend cannot be
-            // confirmed without the indexed tx.
-            if (!store_.address.put(out->script().hash(), table::address::record
+            const auto key = table::spend::compose((*in++)->point());
+            if (!store_.spend.put(ptr, fk++, key, table::spend::record
             {
                 {},
-                *output_fk++
+                point_fk
+            }))
+            {
+                return error::tx_spend_put;
+            }
+        }
+    }
+
+    // Commit address index records.
+    if (address_enabled())
+    {
+        using sp = linkage<schema::puts_>;
+        const auto count = possible_narrow_cast<sp::integer>(outs->size());
+        auto fk = store_.address.allocate(count);
+        if (fk.is_terminal())
+            return error::tx_address_allocate;
+
+        auto out = outs->begin();
+        const auto ptr = store_.address.get_memory();
+
+        for (auto out_fk: puts.out_fks)
+        {
+            const auto key = (*out++)->script().hash();
+            if (!store_.address.put(ptr, fk++, key, table::address::record
+            {
+                {},
+                out_fk
             }))
             {
                 return error::tx_address_put;
@@ -257,8 +227,9 @@ code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
     }
 
     // Commit tx to search.
-    // Clean single allocation failure (e.g. disk full).
-    return store_.tx.commit(out_fk, key) ? error::success : error::tx_tx_commit;
+    // tx.get_hash() assumes cached or is not thread safe.
+    return store_.tx.commit(tx_fk, tx.get_hash(false)) ?
+        error::success : error::tx_tx_commit;
     // ========================================================================
 }
 
