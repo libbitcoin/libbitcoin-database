@@ -260,6 +260,7 @@ public:
     output_link to_prevout(const point_link& link) const NOEXCEPT;
 
     /// block/tx to block (reverse navigation)
+    header_link to_strong(const hash_digest& tx_hash) const NOEXCEPT;
     header_link to_parent(const header_link& link) const NOEXCEPT;
     header_link to_block(const tx_link& key) const NOEXCEPT;
 
@@ -532,7 +533,6 @@ protected:
         const point_link& point_fk) const NOEXCEPT;
     uint32_t to_output_index(const tx_link& parent_fk,
         const output_link& output_fk) const NOEXCEPT;
-    ////strong_pair to_strong(const hash_digest& tx_hash) const NOEXCEPT;
 
     /// Objectss.
     /// -----------------------------------------------------------------------

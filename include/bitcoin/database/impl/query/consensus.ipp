@@ -301,14 +301,15 @@ TEMPLATE
 error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
     const tx_link& tx, uint32_t version, const context& ctx) const NOEXCEPT
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: If to_block(tx) is terminal, may be a duplicate tx, so perform
-    // TODO: search for each tx instance of same hash as tx until block
-    // TODO: associated (otherwise missing/unconfirmed prevout).
-    ///////////////////////////////////////////////////////////////////////////
-    const auto strong = to_block(tx);
+    // Ensure prevout tx is in a strong block, first try self link.
+    auto strong = to_block(tx);
     if (strong.is_terminal())
-        return error::unconfirmed_spend;
+    {
+        // Try all txs with same hash as self (any instance will suffice).
+        strong = to_strong(get_tx_key(tx));
+        if (strong.is_terminal())
+            return error::unconfirmed_spend;
+    }
 
     const auto bip68 = ctx.is_enabled(system::chain::flags::bip68_rule) &&
         (version >= system::chain::relative_locktime_min_version);

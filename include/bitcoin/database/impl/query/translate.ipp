@@ -194,7 +194,33 @@ output_link CLASS::to_prevout(const point_link& link) const NOEXCEPT
 
 // block/tx to block (reverse navigation)
 // ----------------------------------------------------------------------------
-// Required for confirmation processing.
+
+TEMPLATE
+header_link CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
+{
+    // Required for confirmation processing.
+    // Get all tx links for tx_hash.
+    auto it = store_.tx.it(tx_hash);
+    if (!it)
+        return {};
+
+    tx_links txs{};
+    do
+    {
+        txs.push_back(it.self());
+    } while (it.advance());
+    it.reset();
+
+    // Find the first strong tx of the set and return its block.
+    for (auto tx : txs)
+    {
+        const auto block = to_block(tx);
+        if (!block.is_terminal())
+            return block;
+    }
+
+    return {};
+}
 
 TEMPLATE
 header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
@@ -210,6 +236,7 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 TEMPLATE
 header_link CLASS::to_block(const tx_link& key) const NOEXCEPT
 {
+    // Required for confirmation processing.
     table::strong_tx::record strong{};
     if (!store_.strong_tx.find(key, strong) || !strong.positive)
         return {};
@@ -217,34 +244,6 @@ header_link CLASS::to_block(const tx_link& key) const NOEXCEPT
     // Terminal implies not in strong block (reorganized).
     return strong.header_fk;
 }
-
-////// protected
-////// If there are no associations the link of the first tx by hash is returned,
-////// which is an optimization to prevent requery to determine tx existence.
-////// Return the first block-tx tuple where the tx is strong by the block.
-////TEMPLATE
-////strong_pair CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
-////{
-////    // Iteration of tx is necessary because there may be duplicates.
-////    auto it = store_.tx.it(tx_hash);
-////    strong_pair strong{ {}, it.self() };
-////    if (!it)
-////        return strong;
-////
-////    // TODO: deadlock risk.
-////    do
-////    {
-////        // Only top block (strong) association for given tx is considered.
-////        strong.block = to_block(strong.tx);
-////        if (!strong.block.is_terminal())
-////        {
-////            strong.tx = it.self();
-////            return strong;
-////        }
-////    }
-////    while (it.advance());
-////    return strong;
-////}
 
 // output to spenders (reverse navigation)
 // ----------------------------------------------------------------------------
