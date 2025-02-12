@@ -212,6 +212,15 @@ TEMPLATE
 error::error_t CLASS::get_conflicts(point_links& points,
     const point_link& self, spend_key&& key) const NOEXCEPT
 {
+    // Iterate to all matching spend table keys. Since these are stubs of the
+    // full tx hash there will be false positives at the rate of the original
+    // "foreign point" indexation. This means two sets of conflicts, first the
+    // spend table and then the stubs. But this dramatically reduces paging in
+    // the double spend search. The spend table load controls for primary but
+    // not secondary conflicts. Reducing secondary conflicts requires increase
+    // to the stub hash portion of the spend key. Given that the spend key has
+    // two parts (stub|index) there is never a secondary conflict produced by
+    // the existence of multiple spends of outputs in the same transaction.
     auto it = store_.spend.it(std::move(key));
     if (!it)
         return self.is_terminal() ? error::success : error::integrity4;
@@ -235,6 +244,8 @@ TEMPLATE
 error::error_t CLASS::get_doubles(tx_links& spenders,
     const point_links& points, const point_link& self) const NOEXCEPT
 {
+    // The expected self spend and primary conflicts are removed. This serves
+    // to remove secondary conflicts, leaving only actual additional spends.
     const auto ptr = store_.point.get_memory();
 
     table::point::get_key self_tx_point{};
