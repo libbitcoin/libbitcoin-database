@@ -50,18 +50,12 @@ struct puts
     {
         link count() const NOEXCEPT
         {
-            const auto fks = point_fks.size() * point::size +
-                out_fks.size() * out::size;
+            const auto fks = out_fks.size() * out::size;
             return system::possible_narrow_cast<link::integer>(fks);
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            std::for_each(point_fks.begin(), point_fks.end(), [&](auto& fk) NOEXCEPT
-            {
-                fk = source.read_little_endian<point::integer, point::size>();
-            });
-
             std::for_each(out_fks.begin(), out_fks.end(), [&](auto& fk) NOEXCEPT
             {
                 fk = source.read_little_endian<out::integer, out::size>();
@@ -73,11 +67,6 @@ struct puts
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            std::for_each(point_fks.begin(), point_fks.end(), [&](const auto& fk) NOEXCEPT
-            {
-                sink.write_little_endian<point::integer, point::size>(fk);
-            });
-
             std::for_each(out_fks.begin(), out_fks.end(), [&](const auto& fk) NOEXCEPT
             {
                 sink.write_little_endian<out::integer, out::size>(fk);
@@ -89,59 +78,13 @@ struct puts
 
         inline bool operator==(const slab& other) const NOEXCEPT
         {
-            return point_fks == other.point_fks
-                && out_fks == other.out_fks;
-        }
-
-        point_links point_fks{};
-        output_links out_fks{};
-    };
-
-    struct get_points
-      : public schema::puts
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            std::for_each(point_fks.begin(), point_fks.end(), [&](auto& fk) NOEXCEPT
-            {
-                fk = source.read_little_endian<point::integer, point::size>();
-            });
-
-            return source;
-        }
-
-        point_links point_fks{};
-    };
-
-    struct get_outs
-      : public schema::puts
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            std::for_each(out_fks.begin(), out_fks.end(), [&](auto& fk) NOEXCEPT
-            {
-                fk = source.read_little_endian<out::integer, out::size>();
-            });
-
-            return source;
+            return out_fks == other.out_fks;
         }
 
         output_links out_fks{};
     };
 
-    struct get_point_at
-      : public schema::puts
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            point_fk = source.read_little_endian<point::integer, point::size>();
-            return source;
-        }
-
-        point::integer point_fk{};
-    };
-
-    struct get_output_at
+    struct get_output
       : public schema::puts
     {
         inline bool from_data(reader& source) NOEXCEPT

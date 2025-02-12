@@ -128,6 +128,12 @@ code CLASS::reload() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+inline Link CLASS::allocate(const Link& size) NOEXCEPT
+{
+    return manager_.allocate(size);
+}
+
+TEMPLATE
 inline memory_ptr CLASS::get_memory() const NOEXCEPT
 {
     return manager_.get();
@@ -179,19 +185,26 @@ inline bool CLASS::put(const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
+bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
     using namespace system;
-    const auto count = element.count();
-    link = manager_.allocate(count);
     const auto ptr = manager_.get(link);
     if (!ptr)
         return false;
 
     iostream stream{ *ptr };
     flipper sink{ stream };
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
     return element.to_data(sink);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+inline bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
+{
+    const auto count = element.count();
+    link = manager_.allocate(count);
+    return put(link, element);
 }
 
 TEMPLATE

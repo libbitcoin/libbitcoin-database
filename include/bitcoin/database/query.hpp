@@ -35,8 +35,8 @@ namespace database {
 /// Database type aliases.
 using height_link = table::height::link;
 using header_link = table::header::link;
-using output_link = table::output::link;
 using input_link = table::input::link;
+using output_link = table::output::link;
 using point_link = table::point::link;
 using spend_link = table::spend::link;
 using txs_link = table::txs::link;

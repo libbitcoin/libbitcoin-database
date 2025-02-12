@@ -155,14 +155,12 @@ TEMPLATE
 typename CLASS::transaction::cptr CLASS::get_transaction(
     const tx_link& link) const NOEXCEPT
 {
-    // TODO: eliminate shared memory pointer reallocations.
     using namespace system;
     table::transaction::only_with_sk tx{};
     if (!store_.tx.get(link, tx))
         return {};
 
     table::puts::slab puts{};
-    puts.point_fks.resize(tx.ins_count);
     puts.out_fks.resize(tx.outs_count);
     if (!store_.puts.get(tx.puts_fk, puts))
         return {};
@@ -172,8 +170,8 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
     inputs->reserve(tx.ins_count);
     outputs->reserve(tx.outs_count);
 
-    // TODO: points could be written and therefore read sequentially.
-    for (const auto& fk: puts.point_fks)
+    // Points are allocated contiguously.
+    for (auto fk = tx.point_fk; fk < (tx.point_fk + tx.ins_count); ++fk)
         if (!push_bool(*inputs, get_input(fk)))
             return {};
 

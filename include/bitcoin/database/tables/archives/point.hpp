@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_POINT_HPP
 #define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_POINT_HPP
 
+#include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -36,9 +37,10 @@ struct point
     using no_map<schema::point>::nomap;
     using search_key = search<schema::spend::sk>;
     using point_stub = linkage<schema::tx>;
+    using pt = linkage<schema::point_>;
     using ps = linkage<schema::tx>;
     using ix = linkage<schema::index>;
-    using in = linkage<schema::input::pk>;
+    using in = linkage<schema::put>;
     using tx = linkage<schema::tx>;
 
     struct record
@@ -199,7 +201,6 @@ struct point
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            using namespace system;
             stub = source.read_little_endian<ps::integer, ps::size>();
             source.skip_bytes(schema::hash - ps::size);
             index = source.read_little_endian<ix::integer, ix::size>();
@@ -210,20 +211,25 @@ struct point
         ix::integer index{};
     };
 
-    struct get_spend_key_sequence
+    struct get_point_set_ref
       : public schema::point
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            using namespace system;
-            value.stub = source.read_little_endian<ps::integer, ps::size>();
-            source.skip_bytes(schema::hash - ps::size);
-            value.index = source.read_little_endian<ix::integer, ix::size>();
-            value.sequence = source.read_little_endian<uint32_t>();
+            pt::integer offset{};
+            std::for_each(set.points.begin(), set.points.end(), [&](auto& point) NOEXCEPT
+            {
+                point.self     = set.fk + offset++;
+                point.stub     = source.read_little_endian<ps::integer, ps::size>();
+                source.skip_bytes(schema::hash - ps::size);
+                point.index    = source.read_little_endian<ix::integer, ix::size>();
+                point.sequence = source.read_little_endian<uint32_t>();
+            });
+
             return source;
         }
 
-        point_set::point value{};
+        point_set& set;
     };
 };
 

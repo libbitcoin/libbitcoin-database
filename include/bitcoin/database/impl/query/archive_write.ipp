@@ -89,20 +89,30 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     if (tx.is_empty())
         return error::tx_empty;
 
-    // Declare puts record (includes coinbase).
     const auto& ins = tx.inputs_ptr();
     const auto& outs = tx.outputs_ptr();
+
+    const auto txs = possible_narrow_cast<tx_link::integer>(one);
+    const auto points = possible_narrow_cast<point_link::integer>(ins->size());
+    const auto outputs = possible_narrow_cast<output_link::integer>(outs->size());
+
+    // Declare puts record for output accumulation.
     table::puts::slab puts{};
-    puts.point_fks.reserve(ins->size());
-    puts.out_fks.reserve(outs->size());
+    puts.out_fks.reserve(outputs);
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Allocate tx record.
-    tx_fk = store_.tx.allocate(1);
+    // Allocate single tx record.
+    tx_fk = store_.tx.allocate(txs);
     if (tx_fk.is_terminal())
         return error::tx_tx_allocate;
+
+    // Allocate points records.
+    const auto point_fk = store_.point.allocate(points);
+    auto point_it = point_fk;
+    if (point_fk.is_terminal())
+        return error::tx_point_allocate;
 
     // Commit input and point records.
     for (const auto& in: *ins)
@@ -117,9 +127,7 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
             return error::tx_input_put;
         }
 
-        // TODO: points could be written and therefore read sequentially.
-        point_link point_fk{};
-        if (!store_.point.put_link(point_fk, table::point::record
+        if (!store_.point.put(point_it++, table::point::record
         {
             {},
             in->point().hash(),
@@ -131,9 +139,6 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
         {
             return error::tx_point_put;
         }
-
-        // Accumulate points in order.
-        puts.point_fks.push_back(point_fk);
     }
 
     // Commit output records.
@@ -160,14 +165,15 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
         return error::tx_puts_put;
 
     // Create tx record.
-    // Index is deferred for spend/address index consistency.
+    // Commit is deferred for spend/address index consistency.
     using ix = linkage<schema::index>;
     if (!store_.tx.set(tx_fk, table::transaction::record_put_ref
     {
         {},
         tx,
-        possible_narrow_cast<ix::integer>(ins->size()),
-        possible_narrow_cast<ix::integer>(outs->size()),
+        possible_narrow_cast<ix::integer>(points),
+        possible_narrow_cast<ix::integer>(outputs),
+        point_fk,
         puts_fk
     }))
     {
@@ -177,22 +183,20 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     // Commit spend index records.
     if (!tx.is_coinbase())
     {
-        using sp = linkage<schema::spend_>;
-        const auto count = possible_narrow_cast<sp::integer>(ins->size());
-        auto fk = store_.spend.allocate(count);
-        if (fk.is_terminal())
+        auto sp_fk = store_.spend.allocate(points);
+        if (sp_fk.is_terminal())
             return error::tx_spend_allocate;
 
         auto in = ins->begin();
         const auto ptr = store_.spend.get_memory();
 
-        for (auto point_fk: puts.point_fks)
+        for (auto pt_fk = point_fk; pt_fk < (point_fk + points); ++pt_fk)
         {
             const auto key = table::spend::compose((*in++)->point());
-            if (!store_.spend.put(ptr, fk++, key, table::spend::record
+            if (!store_.spend.put(ptr, sp_fk++, key, table::spend::record
             {
                 {},
-                point_fk
+                pt_fk
             }))
             {
                 return error::tx_spend_put;
@@ -203,10 +207,8 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     // Commit address index records.
     if (address_enabled())
     {
-        using sp = linkage<schema::puts_>;
-        const auto count = possible_narrow_cast<sp::integer>(outs->size());
-        auto fk = store_.address.allocate(count);
-        if (fk.is_terminal())
+        auto ad_fk = store_.address.allocate(outputs);
+        if (ad_fk.is_terminal())
             return error::tx_address_allocate;
 
         auto out = outs->begin();
@@ -215,7 +217,7 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
         for (auto out_fk: puts.out_fks)
         {
             const auto key = (*out++)->script().hash();
-            if (!store_.address.put(ptr, fk++, key, table::address::record
+            if (!store_.address.put(ptr, ad_fk++, key, table::address::record
             {
                 {},
                 out_fk

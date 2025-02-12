@@ -160,11 +160,7 @@ point_link CLASS::to_point(const tx_link& link,
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::get_point_at put{};
-    if (!store_.puts.get(tx.point_fk, put))
-        return {};
-
-    return put.point_fk;
+    return tx.point_fk;
 }
 
 TEMPLATE
@@ -175,8 +171,8 @@ output_link CLASS::to_output(const tx_link& link,
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::get_output_at put{};
-    if (!store_.puts.get(tx.out_fk, put))
+    table::puts::get_output put{};
+    if (!store_.puts.get(tx.puts_fk, put))
         return {};
 
     return put.out_fk;
@@ -208,7 +204,8 @@ header_link CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
     do
     {
         txs.push_back(it.self());
-    } while (it.advance());
+    }
+    while (it.advance());
     it.reset();
 
     // Find the first strong tx of the set and return its block.
@@ -362,28 +359,28 @@ point_links CLASS::to_spenders(const hash_digest& point_hash,
 TEMPLATE
 point_links CLASS::to_points(const tx_link& link) const NOEXCEPT
 {
-    table::transaction::get_puts tx{};
+    table::transaction::get_point tx{};
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::get_points puts{};
-    puts.point_fks.resize(tx.ins_count);
-    if (!store_.puts.get(tx.puts_fk, puts))
-        return {};
+    // Transaction points are stored in a contiguous array of records.
+    point_links points(tx.count);
+    for (auto& point: points)
+        point = tx.point_fk++;
 
-    return std::move(puts.point_fks);
+    return points;
 }
 
 TEMPLATE
 output_links CLASS::to_outputs(const tx_link& link) const NOEXCEPT
 {
-    table::transaction::get_puts tx{};
+    table::transaction::get_output tx{};
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::get_outs puts{};
-    puts.out_fks.resize(tx.outs_count);
-    if (!store_.puts.get(tx.outs_fk(), puts))
+    table::puts::slab puts{};
+    puts.out_fks.resize(tx.count);
+    if (!store_.puts.get(tx.puts_fk, puts))
         return {};
 
     return std::move(puts.out_fks);

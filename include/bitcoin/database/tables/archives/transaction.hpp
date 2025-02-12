@@ -34,9 +34,9 @@ struct transaction
   : public hash_map<schema::transaction>
 {
     using ix = linkage<schema::index>;
+    using pt = linkage<schema::point_>;
     using puts = linkage<schema::puts_>;
     using bytes = linkage<schema::size>;
-    using point = linkage<schema::point_>;
     using out = linkage<schema::put>;
     using search_key = search<schema::hash>;
     using hash_map<schema::transaction>::hashmap;
@@ -54,11 +54,6 @@ struct transaction
     struct record
       : public schema::transaction
     {
-        inline puts::integer outs_fk() const NOEXCEPT
-        {
-            return puts_fk + (ins_count * point::size);
-        }
-
         inline bool from_data(reader& source) NOEXCEPT
         {
             coinbase   = to_bool(source.read_byte());
@@ -68,6 +63,7 @@ struct transaction
             version    = source.read_little_endian<uint32_t>();
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
+            point_fk   = source.read_little_endian<pt::integer, pt::size>();
             puts_fk    = source.read_little_endian<puts::integer, puts::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
@@ -82,6 +78,7 @@ struct transaction
             sink.write_little_endian<uint32_t>(version);
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
             sink.write_little_endian<ix::integer, ix::size>(outs_count);
+            sink.write_little_endian<pt::integer, pt::size>(point_fk);
             sink.write_little_endian<puts::integer, puts::size>(puts_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
@@ -96,6 +93,7 @@ struct transaction
                 && version == other.version
                 && ins_count == other.ins_count
                 && outs_count == other.outs_count
+                && point_fk == other.point_fk
                 && puts_fk == other.puts_fk;
         }
 
@@ -106,6 +104,7 @@ struct transaction
         uint32_t version{};
         ix::integer ins_count{};
         ix::integer outs_count{};
+        pt::integer point_fk{};
         puts::integer puts_fk{};
     };
 
@@ -124,6 +123,7 @@ struct transaction
             version    = source.read_little_endian<uint32_t>();
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
+            point_fk   = source.read_little_endian<pt::integer, pt::size>();
             puts_fk    = source.read_little_endian<puts::integer, puts::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
@@ -133,6 +133,7 @@ struct transaction
         uint32_t version{};
         ix::integer ins_count{};
         ix::integer outs_count{};
+        pt::integer point_fk{};
         puts::integer puts_fk{};
     };
 
@@ -151,6 +152,7 @@ struct transaction
             sink.write_little_endian<uint32_t>(tx.version());
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
             sink.write_little_endian<ix::integer, ix::size>(outs_count);
+            sink.write_little_endian<pt::integer, pt::size>(point_fk);
             sink.write_little_endian<puts::integer, puts::size>(puts_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
@@ -159,6 +161,7 @@ struct transaction
         const system::chain::transaction& tx{};
         ix::integer ins_count{};
         ix::integer outs_count{};
+        pt::integer point_fk{};
         puts::integer puts_fk{};
     };
 
@@ -195,22 +198,19 @@ struct transaction
     struct get_puts
       : public schema::transaction
     {
-        inline puts::integer outs_fk() const NOEXCEPT
-        {
-            return puts_fk + (ins_count * point::size);
-        }
-
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
+            point_fk   = source.read_little_endian<pt::integer, pt::size>();
             puts_fk    = source.read_little_endian<puts::integer, puts::size>();
             return source;
         }
 
         ix::integer ins_count{};
         ix::integer outs_count{};
+        pt::integer point_fk{};
         puts::integer puts_fk{};
     };
 
@@ -227,27 +227,20 @@ struct transaction
         uint32_t version{};
     };
 
-    struct get_version_inputs
+    struct get_point_set_ref
       : public schema::transaction
     {
-        inline puts::integer outs_fk() const NOEXCEPT
-        {
-            return puts_fk + (ins_count * point::size);
-        }
-
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_version);
-            version = source.read_little_endian<uint32_t>();
-            ins_count = source.read_little_endian<ix::integer, ix::size>();
+            set.version = source.read_little_endian<uint32_t>();
+            set.points.resize(source.read_little_endian<ix::integer, ix::size>());
             source.skip_bytes(ix::size);
-            puts_fk = source.read_little_endian<puts::integer, puts::size>();
+            set.fk = source.read_little_endian<pt::integer, pt::size>();
             return source;
         }
 
-        uint32_t version{};
-        ix::integer ins_count{};
-        puts::integer puts_fk{};
+        point_set& set;
     };
 
     struct get_point
@@ -256,22 +249,24 @@ struct transaction
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);
-            const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
+            count = source.read_little_endian<ix::integer, ix::size>();
 
-            if (index >= ins_count)
+            if (index >= count)
             {
-                point_fk = puts::terminal;
+                point_fk = pt::terminal;
                 return source;
             }
 
             source.skip_bytes(ix::size);
-            const auto puts_fk = source.read_little_endian<puts::integer, puts::size>();
-            point_fk = puts_fk + (index * point::size);
+            point_fk = source.read_little_endian<pt::integer, pt::size>();
+            point_fk += index;
             return source;
         }
 
-        const puts::integer index{};
-        puts::integer point_fk{};
+        // Index provides optional offset for point_fk, count is absolute.
+        const pt::integer index{};
+        pt::integer point_fk{};
+        ix::integer count{};
     };
 
     struct get_output
@@ -279,23 +274,25 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_puts);
-            const auto ins_count = source.read_little_endian<ix::integer, ix::size>();
-            const auto outs_count = source.read_little_endian<ix::integer, ix::size>();
+            source.skip_bytes(skip_to_puts + ix::size);
+            count = source.read_little_endian<ix::integer, ix::size>();
 
-            if (index >= outs_count)
+            if (index >= count)
             {
-                out_fk = puts::terminal;
+                puts_fk = puts::terminal;
                 return source;
             }
 
-            const auto puts_fk = source.read_little_endian<puts::integer, puts::size>();
-            out_fk = puts_fk + (ins_count * point::size) + (index * out::size);
+            source.skip_bytes(pt::size);
+            puts_fk = source.read_little_endian<puts::integer, puts::size>();
+            puts_fk += (index * out::size);
             return source;
         }
 
+        // Index provides optional offset for puts_fk, count is absolute.
         const puts::integer index{};
-        puts::integer out_fk{};
+        puts::integer puts_fk{};
+        ix::integer count{};
     };
 
     struct get_coinbase
@@ -324,7 +321,6 @@ struct transaction
         size_t light{};
         size_t heavy{};
     };
-
 };
 
 } // namespace table

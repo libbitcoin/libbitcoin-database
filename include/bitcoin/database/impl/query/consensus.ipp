@@ -339,33 +339,14 @@ error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
 TEMPLATE
 bool CLASS::get_point_set(point_set& set, const tx_link& link) const NOEXCEPT
 {
-    table::transaction::get_version_inputs tx{};
+    table::transaction::get_point_set_ref tx{ {}, set };
     if (!store_.tx.get(link, tx))
         return false;
 
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: puts table does not need to be traversed for points if sequential.
-    ///////////////////////////////////////////////////////////////////////////
-    table::puts::get_points puts{};
-    puts.point_fks.resize(tx.ins_count);
-    if (!store_.puts.get(tx.puts_fk, puts))
+    // The set.points vector is sized by reader above.
+    table::point::get_point_set_ref point{ {}, set };
+    if (!store_.point.get(set.fk, point))
         return false;
-
-    set.version = tx.version;
-    set.points.reserve(puts.point_fks.size());
-
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: point rows could be allocated sequentially for the tx.
-    // TODO: so this could be changed to a single get for all values.
-    ///////////////////////////////////////////////////////////////////////////
-    for (const auto& self: puts.point_fks)
-    {
-        table::point::get_spend_key_sequence point{ {}, { self } };
-        if (!store_.point.get(self, point))
-            return false;
-
-        set.points.push_back(std::move(point.value));
-    }
 
     return true;
 }
@@ -379,8 +360,8 @@ bool CLASS::populate_prevouts(point_sets& sets, size_t points,
     if (!store_.prevout.at(link, prevouts))
         return false;
 
-    // This technique stores internal points as null points in order to
-    // maintain relative point positions.
+    // This technique stores block-internal points as null points in order to
+    // maintain relative point positions, allowing simple array dereferencing.
     size_t index{};
     for (auto& set: sets)
         for (auto& point: set.points)

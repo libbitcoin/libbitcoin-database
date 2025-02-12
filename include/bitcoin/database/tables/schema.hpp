@@ -156,13 +156,12 @@ namespace schema
         static constexpr size_t pk = schema::puts_;
         static constexpr size_t sk = zero;
         static constexpr size_t minsize =
-            schema::point_ +
             schema::put;
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
         static inline linkage<pk> count() NOEXCEPT;
-        static_assert(minsize == 9u);
-        static_assert(minrow == 9u);
+        static_assert(minsize == 5u);
+        static_assert(minrow == 5u);
     };
 
     // record hashmap
@@ -177,14 +176,15 @@ namespace schema
             schema::size +
             sizeof(uint32_t) +
             sizeof(uint32_t) +
-            schema::index +
-            schema::index +
-            schema::puts::pk;
+            schema::index +     // inputs count
+            schema::index +     // outputs count
+            schema::point_ +    // first contiguous input (point)
+            schema::puts::pk;   // first contiguous output (put)
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 26u);
-        static_assert(minrow == 62u);
+        static_assert(minsize == 30u);
+        static_assert(minrow == 66u);
     };
 
     // blob
@@ -389,25 +389,29 @@ namespace schema
 
 struct point_set
 {
+    using tx_link = linkage<schema::tx>;
+    using pt_link = linkage<schema::point_>;
+
     // Order matters to table::point::get_spend_key_sequence.
     struct point
     {
         // From tx(->puts) iteration (no search).
-        linkage<schema::point_> self{};
+        pt_link self{};
 
-        // TODO: types not derived from table constants.
+        // These types not derived from table constants.
         // From tx->(puts->)point navigation (no search).
         uint32_t stub{};
         uint32_t index{};
         uint32_t sequence{};
 
         // From header->prevouts cache navigation (no search).
-        linkage<schema::tx> tx{};
+        tx_link tx{};
         bool coinbase{};
     };
 
     // From block->txs->tx iteration.
     uint32_t version{};
+    pt_link::integer fk{};
 
     // See struct point.
     std::vector<point> points{};
