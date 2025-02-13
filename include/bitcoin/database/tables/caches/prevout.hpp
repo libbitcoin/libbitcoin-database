@@ -43,6 +43,11 @@ struct prevout
     struct record
       : public schema::prevout
     {
+        inline link count() const NOEXCEPT
+        {
+            return one;
+        }
+
         inline bool coinbase() const NOEXCEPT
         {
             return system::get_right(prevout_tx, offset);
@@ -86,20 +91,19 @@ struct prevout
     struct record_put_ref
       : public schema::prevout
     {
+        inline link count() const NOEXCEPT
+        {
+            const auto spends = block.spends();
+            BC_ASSERT(spends < link::terminal);
+            return system::possible_narrow_cast<link::integer>(spends);
+        }
+
         static constexpr tx::integer merge(bool coinbase,
             tx::integer output_tx_fk) NOEXCEPT
         {
             using namespace system;
             BC_ASSERT_MSG(!get_right(output_tx_fk, offset), "overflow");
             return system::set_right(output_tx_fk, offset, coinbase);
-        }
-
-        // This is called once by put(), and hides base count().
-        inline link count() const NOEXCEPT
-        {
-            const auto spends = block.spends();
-            BC_ASSERT(spends < link::terminal);
-            return system::possible_narrow_cast<link::integer>(spends);
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
@@ -133,7 +137,6 @@ struct prevout
     struct record_get
       : public schema::prevout
     {
-        // This is called once by assert, and hides base class count().
         inline link count() const NOEXCEPT
         {
             BC_ASSERT(values.size() < link::terminal);

@@ -230,7 +230,7 @@ namespace schema
             schema::index;              // point index
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static constexpr linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 48u);
         static_assert(minrow == 48u);
     };
@@ -327,9 +327,7 @@ namespace schema
             schema::tx;
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = minsize;
-
-        // This is hidden by derivatives, to avoid virtual methods.
-        inline linkage<pk> count() const NOEXCEPT { return one; }
+        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 4u);
         static_assert(minrow == 4u);
     };

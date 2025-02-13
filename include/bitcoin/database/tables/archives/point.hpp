@@ -46,6 +46,11 @@ struct point
     struct record
       : public schema::point
     {
+        inline link count() const NOEXCEPT
+        {
+            return one;
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             hash = source.read_hash();
@@ -96,6 +101,11 @@ struct point
     struct get_input
         : public schema::point
     {
+        inline link count() const NOEXCEPT
+        {
+            return one;
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             hash = source.read_hash();
@@ -123,6 +133,11 @@ struct point
     struct get_parent_key
       : public schema::point
     {
+        inline link count() const NOEXCEPT
+        {
+            return one;
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             hash = source.read_hash();
@@ -138,10 +153,16 @@ struct point
     struct get_parent
       : public schema::point
     {
+        inline link count() const NOEXCEPT
+        {
+            return one;
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(schema::hash + ix::size + sizeof(uint32_t) + in::size);
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
@@ -151,6 +172,11 @@ struct point
     struct get_point
       : public schema::point
     {
+        inline link count() const NOEXCEPT
+        {
+            return one;
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             hash = source.read_hash();
@@ -175,6 +201,11 @@ struct point
     struct get_key
       : public schema::point
     {
+        inline link count() const NOEXCEPT
+        {
+            return one;
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             hash = source.read_hash();
@@ -187,6 +218,12 @@ struct point
     struct get_stub
       : public schema::point
     {
+        inline link count() const NOEXCEPT
+        {
+            return one;
+        }
+
+        using ps = point_stub;
         inline bool from_data(reader& source) NOEXCEPT
         {
             stub = source.read_little_endian<ps::integer, ps::size>();
@@ -199,6 +236,12 @@ struct point
     struct get_spend_key
       : public schema::point
     {
+        inline link count() const NOEXCEPT
+        {
+            return one;
+        }
+
+        using ps = point_stub;
         inline bool from_data(reader& source) NOEXCEPT
         {
             stub = source.read_little_endian<ps::integer, ps::size>();
@@ -214,6 +257,14 @@ struct point
     struct get_point_set_ref
       : public schema::point
     {
+        inline link count() const NOEXCEPT
+        {
+            const auto points = set.points.size();
+            BC_ASSERT(points < link::terminal);
+            return system::possible_narrow_cast<link::integer>(points);
+        }
+
+        using ps = point_stub;
         inline bool from_data(reader& source) NOEXCEPT
         {
             pt::integer offset{};
@@ -224,8 +275,10 @@ struct point
                 source.skip_bytes(schema::hash - ps::size);
                 point.index    = source.read_little_endian<ix::integer, ix::size>();
                 point.sequence = source.read_little_endian<uint32_t>();
+                source.skip_bytes(ix::size + tx::size);
             });
 
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
