@@ -35,10 +35,8 @@ struct point
   : public no_map<schema::point>
 {
     using no_map<schema::point>::nomap;
-    using search_key = search<schema::spend::sk>;
     using point_stub = linkage<schema::tx>;
     using pt = linkage<schema::point_>;
-    using ps = linkage<schema::tx>;
     using ix = linkage<schema::index>;
     using in = linkage<schema::put>;
     using tx = linkage<schema::tx>;
