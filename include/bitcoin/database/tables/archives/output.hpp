@@ -89,6 +89,7 @@ struct output
         link count() const NOEXCEPT
         {
             BC_ASSERT(false);
+            return {};
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -113,6 +114,7 @@ struct output
         link count() const NOEXCEPT
         {
             BC_ASSERT(false);
+            return {};
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -130,6 +132,7 @@ struct output
         link count() const NOEXCEPT
         {
             BC_ASSERT(false);
+            return {};
         }
 
         inline bool from_data(reader& source) NOEXCEPT

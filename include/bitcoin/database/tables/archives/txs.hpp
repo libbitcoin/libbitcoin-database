@@ -94,6 +94,7 @@ struct txs
         link count() const NOEXCEPT
         {
             BC_ASSERT(false);
+            return {};
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -118,6 +119,7 @@ struct txs
         link count() const NOEXCEPT
         {
             BC_ASSERT(false);
+            return {};
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -143,6 +145,7 @@ struct txs
         link count() const NOEXCEPT
         {
             BC_ASSERT(false);
+            return {};
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -161,6 +164,7 @@ struct txs
         link count() const NOEXCEPT
         {
             BC_ASSERT(false);
+            return {};
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -178,6 +182,7 @@ struct txs
         link count() const NOEXCEPT
         {
             BC_ASSERT(false);
+            return {};
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -201,6 +206,7 @@ struct txs
         link count() const NOEXCEPT
         {
             BC_ASSERT(false);
+            return {};
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -228,6 +234,7 @@ struct txs
         link count() const NOEXCEPT
         {
             BC_ASSERT(false);
+            return {};
         }
 
         inline bool from_data(reader& source) NOEXCEPT
