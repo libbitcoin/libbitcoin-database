@@ -79,6 +79,11 @@ struct input
     struct get_ptrs
       : public schema::input
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             using namespace system;

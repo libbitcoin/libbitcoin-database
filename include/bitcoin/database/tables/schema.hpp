@@ -151,6 +151,8 @@ namespace schema
     };
 
     // blob
+    // TODO: change to record (outputs only) with 4 byte link.
+    // TODO: this will save 1 GiB in the tx table (one byte per tx).
     struct puts
     {
         static constexpr size_t pk = schema::puts_;
@@ -159,7 +161,6 @@ namespace schema
             schema::put;
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 5u);
         static_assert(minrow == 5u);
     };
@@ -197,7 +198,6 @@ namespace schema
             1u;  // variable_size (minimum 1, average 1)
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 2u);
         static_assert(minrow == 2u);
     };
@@ -213,7 +213,6 @@ namespace schema
             1u;  // variable_size (minimum 1, average 1)
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 10u);
         static_assert(minrow == 10u);
     };
@@ -262,7 +261,6 @@ namespace schema
             transaction::pk; // coinbase
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 10u);
         static_assert(minrow == 18u);
     };
@@ -327,7 +325,6 @@ namespace schema
             schema::tx;
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = minsize;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 4u);
         static_assert(minrow == 4u);
     };
@@ -343,12 +340,11 @@ namespace schema
             one;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 2u);
         static_assert(minrow == 8u);
     };
 
-    // modest (sk:4) slab multimap, with low multiple rate.
+    // slab modest (sk:4) multimap, with low multiple rate.
     struct validated_tx
     {
         static constexpr bool hash_function = false;
@@ -379,7 +375,6 @@ namespace schema
             one;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 33u);
         static_assert(minrow == 41u);
     };

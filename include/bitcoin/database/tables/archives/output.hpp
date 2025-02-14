@@ -86,6 +86,11 @@ struct output
     struct only
       : public schema::output
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             using namespace system;
@@ -105,6 +110,11 @@ struct output
     struct get_parent
       : public schema::output
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
@@ -117,6 +127,11 @@ struct output
     struct get_value
       : public schema::output
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(tx::size);

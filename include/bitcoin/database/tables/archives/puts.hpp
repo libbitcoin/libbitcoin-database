@@ -87,6 +87,11 @@ struct puts
     struct get_output
       : public schema::puts
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             out_fk = source.read_little_endian<out::integer, out::size>();

@@ -164,7 +164,8 @@ bool CLASS::get(const memory_ptr& ptr, const Link& link,
 
     iostream stream{ offset, size - position };
     reader source{ stream };
-    if constexpr (!is_slab) { source.set_limit(Size); }
+
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(Size * element.count());) }
     return element.from_data(source);
 }
 
@@ -194,6 +195,7 @@ bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 
     iostream stream{ *ptr };
     flipper sink{ stream };
+
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
     return element.to_data(sink);
 }

@@ -249,9 +249,9 @@ struct transaction
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts);
-            count = source.read_little_endian<ix::integer, ix::size>();
+            number = source.read_little_endian<ix::integer, ix::size>();
 
-            if (index >= count)
+            if (index >= number)
             {
                 point_fk = pt::terminal;
                 return source;
@@ -263,10 +263,10 @@ struct transaction
             return source;
         }
 
-        // Index provides optional offset for point_fk, count is absolute.
+        // Index provides optional offset for point_fk, number is absolute.
         const pt::integer index{};
         pt::integer point_fk{};
-        ix::integer count{};
+        ix::integer number{};
     };
 
     struct get_output
@@ -275,9 +275,9 @@ struct transaction
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_puts + ix::size);
-            count = source.read_little_endian<ix::integer, ix::size>();
+            number = source.read_little_endian<ix::integer, ix::size>();
 
-            if (index >= count)
+            if (index >= number)
             {
                 puts_fk = puts::terminal;
                 return source;
@@ -289,10 +289,10 @@ struct transaction
             return source;
         }
 
-        // Index provides optional offset for puts_fk, count is absolute.
+        // Index provides optional offset for puts_fk, number is absolute.
         const puts::integer index{};
         puts::integer puts_fk{};
-        ix::integer count{};
+        ix::integer number{};
     };
 
     struct get_coinbase

@@ -75,6 +75,11 @@ struct validated_bk
     struct slab_get_code
       : public schema::validated_bk
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             code = source.read_little_endian<coding::integer, coding::size>();

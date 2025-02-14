@@ -364,7 +364,7 @@ point_links CLASS::to_points(const tx_link& link) const NOEXCEPT
         return {};
 
     // Transaction points are stored in a contiguous array of records.
-    point_links points(tx.count);
+    point_links points(tx.number);
     for (auto& point: points)
         point = tx.point_fk++;
 
@@ -379,7 +379,7 @@ output_links CLASS::to_outputs(const tx_link& link) const NOEXCEPT
         return {};
 
     table::puts::slab puts{};
-    puts.out_fks.resize(tx.count);
+    puts.out_fks.resize(tx.number);
     if (!store_.puts.get(tx.puts_fk, puts))
         return {};
 
