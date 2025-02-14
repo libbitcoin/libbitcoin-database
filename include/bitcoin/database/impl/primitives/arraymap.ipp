@@ -159,8 +159,7 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put(size_t key, const Element& element) NOEXCEPT
 {
     using namespace system;
-    const auto count = element.count();
-    const auto link = body_.allocate(count);
+    const auto link = body_.allocate(element.count());
     const auto ptr = body_.get(link);
     if (!ptr)
         return false;
@@ -169,7 +168,7 @@ bool CLASS::put(size_t key, const Element& element) NOEXCEPT
     iostream stream{ *ptr };
     finalizer sink{ stream };
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * count);) }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
     return element.to_data(sink) && head_.push(link, head_.putter_index(key));
 }
 

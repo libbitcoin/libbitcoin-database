@@ -89,6 +89,12 @@ struct validated_tx
     struct slab_get_code
       : public schema::validated_tx
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             context::from_data(source, ctx);

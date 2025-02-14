@@ -43,33 +43,38 @@ struct prevout
     struct record
       : public schema::prevout
     {
+        inline link count() const NOEXCEPT
+        {
+            return one;
+        }
+
         inline bool coinbase() const NOEXCEPT
         {
-            return system::get_right(value, offset);
+            return system::get_right(prevout_tx, offset);
         }
 
         inline tx::integer output_tx_fk() const NOEXCEPT
         {
-            return system::set_right(value, offset, false);
+            return system::set_right(prevout_tx, offset, false);
         }
 
         inline void set(bool coinbase, tx::integer output_tx_fk) NOEXCEPT
         {
             using namespace system;
             BC_ASSERT_MSG(!get_right(output_tx_fk, offset), "overflow");
-            value = set_right(output_tx_fk, offset, coinbase);
+            prevout_tx = set_right(output_tx_fk, offset, coinbase);
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            value = source.read_little_endian<tx::integer, tx::size>();
+            prevout_tx = source.read_little_endian<tx::integer, tx::size>();
             BC_ASSERT(!source || source.get_read_position() == count() * minrow);
             return source;
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<tx::integer, tx::size>(value);
+            sink.write_little_endian<tx::integer, tx::size>(prevout_tx);
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
@@ -80,26 +85,25 @@ struct prevout
                 && output_tx_fk() == other.output_tx_fk();
         }
 
-        tx::integer value{};
+        tx::integer prevout_tx{};
     };
 
     struct record_put_ref
       : public schema::prevout
     {
+        inline link count() const NOEXCEPT
+        {
+            const auto spends = block.spends();
+            BC_ASSERT(spends < link::terminal);
+            return system::possible_narrow_cast<link::integer>(spends);
+        }
+
         static constexpr tx::integer merge(bool coinbase,
             tx::integer output_tx_fk) NOEXCEPT
         {
             using namespace system;
             BC_ASSERT_MSG(!get_right(output_tx_fk, offset), "overflow");
             return system::set_right(output_tx_fk, offset, coinbase);
-        }
-
-        // This is called once by put(), and hides base count().
-        inline link count() const NOEXCEPT
-        {
-            const auto spends = block.spends();
-            BC_ASSERT(spends < link::terminal);
-            return system::possible_narrow_cast<link::integer>(spends);
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
@@ -112,7 +116,7 @@ struct prevout
                 // Sets terminal sentinel for block-internal spends.
                 const auto value = in->metadata.inside ? tx::terminal :
                     merge(in->metadata.coinbase, in->metadata.parent);
-
+            
                 sink.write_little_endian<tx::integer, tx::size>(value);
             };
 
@@ -133,7 +137,6 @@ struct prevout
     struct record_get
       : public schema::prevout
     {
-        // This is called once by assert, and hides base class count().
         inline link count() const NOEXCEPT
         {
             BC_ASSERT(values.size() < link::terminal);
@@ -142,11 +145,6 @@ struct prevout
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            // TODO: Can be optimized using unsafe_array_cast copy, as long as
-            // TODO: endianness lines up. Should have writer methods for native
-            // TODO: endianness so that both big and little are optimal. But
-            // TODO: this would prevent store portability across endianness.
-            // Values must be set to read size (i.e. using knowledge of spends).
             std::for_each(values.begin(), values.end(), [&](auto& value) NOEXCEPT
             {
                 value = source.read_little_endian<tx::integer, tx::size>();

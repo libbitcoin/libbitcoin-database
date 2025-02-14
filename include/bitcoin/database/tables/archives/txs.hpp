@@ -91,30 +91,42 @@ struct txs
     struct get_position
       : public schema::txs
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
-            const auto count = source.read_little_endian<tx::integer, schema::count_>();
+            const auto number = source.read_little_endian<tx::integer, schema::count_>();
             source.skip_bytes(bytes::size);
-            for (position = zero; position < count; ++position)
-                if (source.read_little_endian<tx::integer, tx::size>() == link)
+            for (position = zero; position < number; ++position)
+                if (source.read_little_endian<tx::integer, tx::size>() == tx_fk)
                     return source;
 
             source.invalidate();
             return source;
         }
 
-        const tx::integer link{};
+        const tx::integer tx_fk{};
         size_t position{};
     };
 
     struct get_coinbase
       : public schema::txs
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
-            const auto count = source.read_little_endian<tx::integer, schema::count_>();
+            const auto number = source.read_little_endian<tx::integer, schema::count_>();
             source.skip_bytes(bytes::size);
-            if (is_nonzero(count))
+            if (is_nonzero(number))
             {
                 coinbase_fk = source.read_little_endian<tx::integer, tx::size>();
                 return source;
@@ -130,6 +142,12 @@ struct txs
     struct get_block_size
       : public schema::txs
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(schema::count_);
@@ -143,6 +161,12 @@ struct txs
     struct get_associated
       : public schema::txs
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             associated = to_bool(source.read_little_endian<tx::integer, schema::count_>());
@@ -155,6 +179,12 @@ struct txs
     struct get_txs
       : public schema::txs
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             tx_fks.resize(source.read_little_endian<tx::integer, schema::count_>());
@@ -173,13 +203,19 @@ struct txs
     struct get_spending_txs
       : public schema::txs
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
-            const auto count = source.read_little_endian<tx::integer, schema::count_>();
-            if (count <= one)
+            const auto number = source.read_little_endian<tx::integer, schema::count_>();
+            if (number <= one)
                 return source;
 
-            tx_fks.resize(sub1(count));
+            tx_fks.resize(sub1(number));
             source.skip_bytes(bytes::size + tx::size);
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
             {
@@ -195,6 +231,12 @@ struct txs
     struct get_tx_quantity
       : public schema::txs
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             quantity = source.read_little_endian<tx::integer, schema::count_>();

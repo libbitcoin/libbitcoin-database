@@ -83,17 +83,32 @@ public:
     /// Query interface.
     /// -----------------------------------------------------------------------
 
+    /// Allocate count or slab size at returned link (follow with set|put).
+    inline Link allocate(const Link& size) NOEXCEPT;
+
+    /// Return ptr for batch processing, holds shared lock on storage remap.
+    inline memory_ptr get_memory() const NOEXCEPT;
+
+    /// Get element at link using get_memory() ptr, false if deserialize error.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    static bool get(const memory_ptr& ptr, const Link& link,
+        Element& element) NOEXCEPT;
+
     /// Get element at link.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool get(const Link& link, Element& element) const NOEXCEPT;
+    inline bool get(const Link& link, Element& element) const NOEXCEPT;
 
     /// Put element.
     template <typename Element, if_equal<Element::size, Size> = true>
     inline bool put(const Element& element) NOEXCEPT;
 
+    /// Put previously allocated element at link.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put(const Link& link, const Element& element) NOEXCEPT;
+
     /// Put element and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool put_link(Link& link, const Element& element) NOEXCEPT;
+    inline bool put_link(Link& link, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
     inline Link put_link(const Element& element) NOEXCEPT;
 

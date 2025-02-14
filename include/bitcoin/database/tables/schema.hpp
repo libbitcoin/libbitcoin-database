@@ -151,18 +151,18 @@ namespace schema
     };
 
     // blob
+    // TODO: change to record (outputs only) with 4 byte link.
+    // TODO: this will save 1 GiB in the tx table (one byte per tx).
     struct puts
     {
         static constexpr size_t pk = schema::puts_;
         static constexpr size_t sk = zero;
         static constexpr size_t minsize =
-            schema::spend_ +
             schema::put;
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
-        static_assert(minsize == 9u);
-        static_assert(minrow == 9u);
+        static_assert(minsize == 5u);
+        static_assert(minrow == 5u);
     };
 
     // record hashmap
@@ -177,14 +177,15 @@ namespace schema
             schema::size +
             sizeof(uint32_t) +
             sizeof(uint32_t) +
-            schema::index +
-            schema::index +
-            schema::puts::pk;
+            schema::index +     // inputs count
+            schema::index +     // outputs count
+            schema::point_ +    // first contiguous input (point)
+            schema::puts::pk;   // first contiguous output (put)
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 26u);
-        static_assert(minrow == 62u);
+        static_assert(minsize == 30u);
+        static_assert(minrow == 66u);
     };
 
     // blob
@@ -197,7 +198,6 @@ namespace schema
             1u;  // variable_size (minimum 1, average 1)
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 2u);
         static_assert(minrow == 2u);
     };
@@ -208,12 +208,11 @@ namespace schema
         static constexpr size_t pk = schema::put;
         static constexpr size_t sk = zero;
         static constexpr size_t minsize =
-            schema::transaction::pk +
+            schema::transaction::pk +   // parent->tx
             5u + // variable_size (minimum 1, average 5)
             1u;  // variable_size (minimum 1, average 1)
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 10u);
         static_assert(minrow == 10u);
     };
@@ -223,12 +222,16 @@ namespace schema
     {
         static constexpr size_t pk = schema::point_;
         static constexpr size_t minsize =
-            schema::hash;
+            schema::hash +              // point hash
+            schema::transaction::pk +   // parent->tx
+            sizeof(uint32_t) +          // sequence
+            schema::input::pk +         // input->script|witness
+            schema::index;              // point index
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 32u);
-        static_assert(minrow == 32u);
+        static constexpr linkage<pk> count() NOEXCEPT;
+        static_assert(minsize == 48u);
+        static_assert(minrow == 48u);
     };
 
     // moderate (sk:7) record multimap, with low multiple rate.
@@ -238,15 +241,12 @@ namespace schema
         static constexpr size_t pk = schema::spend_;
         static constexpr size_t sk = schema::tx + schema::index;
         static constexpr size_t minsize =
-            schema::point::pk +         // point->hash
-            schema::transaction::pk +   // parent->tx
-            sizeof(uint32_t) +          // sequence
-            schema::input::pk;          // input->script|witness
+            schema::point::pk; // point->hash
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 17u);
-        static_assert(minrow == 28u);
+        static_assert(minsize == 4u);
+        static_assert(minrow == 15u);
     };
 
     // slab hashmap
@@ -261,7 +261,6 @@ namespace schema
             transaction::pk; // coinbase
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 10u);
         static_assert(minrow == 18u);
     };
@@ -326,9 +325,6 @@ namespace schema
             schema::tx;
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = minsize;
-
-        // This is hidden by derivatives, to avoid virtual methods.
-        inline linkage<pk> count() const NOEXCEPT { return one; }
         static_assert(minsize == 4u);
         static_assert(minrow == 4u);
     };
@@ -344,12 +340,11 @@ namespace schema
             one;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 2u);
         static_assert(minrow == 8u);
     };
 
-    // modest (sk:4) slab multimap, with low multiple rate.
+    // slab modest (sk:4) multimap, with low multiple rate.
     struct validated_tx
     {
         static constexpr bool hash_function = false;
@@ -380,61 +375,41 @@ namespace schema
             one;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
-        static inline linkage<pk> count() NOEXCEPT;
         static_assert(minsize == 33u);
         static_assert(minrow == 41u);
     };
-
-    ////// array
-    ////struct bootstrap
-    ////{
-    ////    static constexpr size_t pk = schema::block;
-    ////    static constexpr size_t sk = zero;
-    ////    static constexpr size_t minsize = schema::hash;
-    ////    static constexpr size_t minrow = minsize;
-    ////    static constexpr size_t size = minsize;
-    ////    static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-    ////    static_assert(minsize == 32u);
-    ////    static_assert(minrow == 32u);
-    ////};
-
-    ////// slab hashmap
-    ////struct buffer
-    ////{
-    ////    static constexpr bool hash_function = false;
-    ////    static constexpr size_t pk = schema::buffer_;
-    ////    static constexpr size_t sk = schema::transaction::pk;
-    ////    static constexpr size_t minsize = zero;
-    ////    static constexpr size_t minrow = pk + sk + minsize;
-    ////    static constexpr size_t size = max_size_t;
-    ////    static inline linkage<pk> count() NOEXCEPT;
-    ////    static_assert(minsize == 0u);
-    ////    static_assert(minrow == 9u);
-    ////};
 }
 
-// TODO: types not derived from table constants.
-struct spend_set
+struct point_set
 {
-    struct spend
+    using tx_link = linkage<schema::tx>;
+    using pt_link = linkage<schema::point_>;
+
+    // Order matters to table::point::get_spend_key_sequence.
+    struct point
     {
-        // From spend table (all except input_pk).
-        uint32_t point_stub{};
-        uint32_t point_index{};
-        uint32_t point_fk{};
+        // From tx(->puts) iteration (no search).
+        pt_link self{};
+
+        // These types not derived from table constants.
+        // From tx->(puts->)point navigation (no search).
+        uint32_t stub{};
+        uint32_t index{};
         uint32_t sequence{};
 
-        // From prevouts table.
-        uint32_t prevout_tx{};
+        // From header->prevouts cache navigation (no search).
+        tx_link tx{};
         bool coinbase{};
     };
 
-    // From block.tx.puts iteration.
-    uint32_t tx{};
+    // From block->txs->tx iteration.
     uint32_t version{};
-    std::vector<spend> spends{};
+    pt_link::integer fk{};
+
+    // See struct point.
+    std::vector<point> points{};
 };
-using spend_sets = std::vector<spend_set>;
+using point_sets = std::vector<point_set>;
 
 } // namespace database
 } // namespace libbitcoin

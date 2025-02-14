@@ -97,6 +97,12 @@ struct neutrino
     struct get_head
         : public schema::neutrino
     {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             filter_head = source.read_hash();

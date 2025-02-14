@@ -188,11 +188,22 @@ Key CLASS::get_key(const Link& link) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
+inline bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
+{
+    return !find_link(key, element).is_terminal();
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+inline Link CLASS::find_link(const Key& key, Element& element) const NOEXCEPT
 {
     // This override avoids duplicated memory_ptr construct in get(first()).
     const auto ptr = get_memory();
-    return read(ptr, first(ptr, head_.top(key), key), element);
+    const auto link = first(ptr, head_.top(key), key);
+    if (link.is_terminal())
+        return {};
+
+    return read(ptr, link, element);
 }
 
 TEMPLATE
@@ -244,7 +255,7 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
     finalizer sink{ stream };
     sink.skip_bytes(index_size);
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size);) }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
     return element.to_data(sink);
 }
 
@@ -395,7 +406,7 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
     reader source{ stream };
     source.skip_bytes(index_size);
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(Size);) }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(Size * element.count());) }
     return element.from_data(source);
 }
 
@@ -427,11 +438,7 @@ bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
 
-    if constexpr (!is_slab)
-    {
-        BC_DEBUG_ONLY(sink.set_limit(Size * element.count());)
-    }
-
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
     auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
     return element.to_data(sink) && head_.push(link, next, head_.index(key));
 }
