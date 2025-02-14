@@ -102,14 +102,14 @@ struct txs
             const auto number = source.read_little_endian<tx::integer, schema::count_>();
             source.skip_bytes(bytes::size);
             for (position = zero; position < number; ++position)
-                if (source.read_little_endian<tx::integer, tx::size>() == link)
+                if (source.read_little_endian<tx::integer, tx::size>() == tx_fk)
                     return source;
 
             source.invalidate();
             return source;
         }
 
-        const tx::integer link{};
+        const tx::integer tx_fk{};
         size_t position{};
     };
 
