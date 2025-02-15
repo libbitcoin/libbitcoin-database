@@ -313,14 +313,12 @@ bool CLASS::populate(const transaction& tx) const NOEXCEPT
 {
     BC_ASSERT(!tx.is_coinbase());
 
-    auto result = true;
     const auto& ins = tx.inputs_ptr();
-    std::for_each(ins->begin(), ins->end(), [&](const auto& in) NOEXCEPT
-    {
-        result &= populate(*in);
-    });
-
-    return result;
+    return std::all_of(ins->begin(), ins->end(),
+        [this](const auto& in) NOEXCEPT
+        {
+            return populate(*in);
+        });
 }
 
 TEMPLATE
@@ -330,18 +328,11 @@ bool CLASS::populate(const block& block) const NOEXCEPT
     if (txs->empty())
         return false;
 
-    auto result = true;
-    std::for_each(std::next(txs->begin()), txs->end(),
-        [&](const auto& tx) NOEXCEPT
+    return std::all_of(std::next(txs->begin()), txs->end(),
+        [this](const auto& tx) NOEXCEPT
         {
-            const auto& ins = tx->inputs_ptr();
-            std::for_each(ins->begin(), ins->end(), [&](const auto& in) NOEXCEPT
-            {
-                result &= populate(*in);
-            });
+            return populate(*tx);
         });
-
-    return result;
 }
 
 // populate_without_metadata
@@ -365,14 +356,12 @@ bool CLASS::populate_without_metadata(const transaction& tx) const NOEXCEPT
 {
     BC_ASSERT(!tx.is_coinbase());
 
-    auto result = true;
     const auto& ins = tx.inputs_ptr();
-    std::for_each(ins->begin(), ins->end(), [&](const auto& in) NOEXCEPT
-    {
-        result &= populate_without_metadata(*in);
-    });
-
-    return result;
+    return std::all_of(ins->begin(), ins->end(),
+        [this](const auto& in) NOEXCEPT
+        {
+            return populate_without_metadata(*in);
+        });
 }
 
 TEMPLATE
@@ -382,18 +371,11 @@ bool CLASS::populate_without_metadata(const block& block) const NOEXCEPT
     if (txs->empty())
         return false;
 
-    auto result = true;
-    std::for_each(std::next(txs->begin()), txs->end(),
-        [&](const auto& tx) NOEXCEPT
+    return std::all_of(std::next(txs->begin()), txs->end(),
+        [this](const auto& tx) NOEXCEPT
         {
-            const auto& ins = tx->inputs_ptr();
-            std::for_each(ins->begin(), ins->end(), [&](const auto& in) NOEXCEPT
-            {
-                result &= populate_without_metadata(*in);
-            });
+            return populate_without_metadata(*tx);
         });
-
-    return result;
 }
 
 } // namespace database
