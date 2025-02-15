@@ -160,7 +160,7 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::slab puts{};
+    table::puts::record puts{};
     puts.out_fks.resize(tx.outs_count);
     if (!store_.puts.get(tx.puts_fk, puts))
         return {};

@@ -285,7 +285,7 @@ struct transaction
 
             source.skip_bytes(pt::size);
             puts_fk = source.read_little_endian<puts::integer, puts::size>();
-            puts_fk += (index * out::size);
+            puts_fk += (index * puts::size);
             return source;
         }
 

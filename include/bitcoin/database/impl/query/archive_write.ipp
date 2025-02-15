@@ -92,12 +92,13 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     const auto& ins = tx.inputs_ptr();
     const auto& outs = tx.outputs_ptr();
 
+    using ix = linkage<schema::index>;
     const auto txs = possible_narrow_cast<tx_link::integer>(one);
-    const auto points = possible_narrow_cast<point_link::integer>(ins->size());
-    const auto outputs = possible_narrow_cast<output_link::integer>(outs->size());
+    const auto inputs = possible_narrow_cast<ix::integer>(ins->size());
+    const auto outputs = possible_narrow_cast<ix::integer>(outs->size());
 
     // Declare puts record for output accumulation.
-    table::puts::slab puts{};
+    table::puts::record puts{};
     puts.out_fks.reserve(outputs);
 
     // ========================================================================
@@ -109,7 +110,7 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
         return error::tx_tx_allocate;
 
     // Allocate points records.
-    const auto point_fk = store_.point.allocate(points);
+    const auto point_fk = store_.point.allocate(inputs);
     auto point_it = point_fk;
     if (point_fk.is_terminal())
         return error::tx_point_allocate;
@@ -166,13 +167,12 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
 
     // Create tx record.
     // Commit is deferred for spend/address index consistency.
-    using ix = linkage<schema::index>;
     if (!store_.tx.set(tx_fk, table::transaction::record_put_ref
     {
         {},
         tx,
-        possible_narrow_cast<ix::integer>(points),
-        possible_narrow_cast<ix::integer>(outputs),
+        inputs,
+        outputs,
         point_fk,
         puts_fk
     }))
@@ -183,14 +183,14 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     // Commit spend index records.
     if (!tx.is_coinbase())
     {
-        auto sp_fk = store_.spend.allocate(points);
+        auto sp_fk = store_.spend.allocate(inputs);
         if (sp_fk.is_terminal())
             return error::tx_spend_allocate;
 
         auto in = ins->begin();
         const auto ptr = store_.spend.get_memory();
 
-        for (auto pt_fk = point_fk; pt_fk < (point_fk + points); ++pt_fk)
+        for (auto pt_fk = point_fk; pt_fk < (point_fk + inputs); ++pt_fk)
         {
             const auto key = table::spend::compose((*in++)->point());
             if (!store_.spend.put(ptr, sp_fk++, key, table::spend::record
