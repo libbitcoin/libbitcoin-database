@@ -227,7 +227,7 @@ struct transaction
         uint32_t version{};
     };
 
-    struct get_point_set_ref
+    struct get_set_ref
       : public schema::transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
@@ -235,8 +235,6 @@ struct transaction
             source.skip_bytes(skip_to_version);
             set.version = source.read_little_endian<uint32_t>();
             set.points.resize(source.read_little_endian<ix::integer, ix::size>());
-            source.skip_bytes(ix::size);
-            set.fk = source.read_little_endian<pt::integer, pt::size>();
             return source;
         }
 
@@ -285,7 +283,7 @@ struct transaction
 
             source.skip_bytes(pt::size);
             puts_fk = source.read_little_endian<puts::integer, puts::size>();
-            puts_fk += (index * out::size);
+            puts_fk += (index * puts::size);
             return source;
         }
 

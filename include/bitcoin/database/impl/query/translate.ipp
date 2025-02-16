@@ -378,7 +378,7 @@ output_links CLASS::to_outputs(const tx_link& link) const NOEXCEPT
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::slab puts{};
+    table::puts::record puts{};
     puts.out_fks.resize(tx.number);
     if (!store_.puts.get(tx.puts_fk, puts))
         return {};

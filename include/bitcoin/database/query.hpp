@@ -205,7 +205,6 @@ public:
     /// Optional table state.
     bool address_enabled() const NOEXCEPT;
     bool neutrino_enabled() const NOEXCEPT;
-    bool prevout_enabled() const NOEXCEPT;
 
     /// Initialization (natural-keyed).
     /// -----------------------------------------------------------------------
@@ -558,18 +557,16 @@ protected:
     /// -----------------------------------------------------------------------
     tx_links get_strong_txs(const tx_link& link) const NOEXCEPT;
     tx_links get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT;
-    bool populate_prevouts(point_sets& sets) const NOEXCEPT;
-    bool populate_prevouts(point_sets& sets, size_t points,
+    code populate_prevouts(point_sets& sets, size_t points,
         const header_link& link) const NOEXCEPT;
-    bool get_point_set(point_set& set, const tx_link& link) const NOEXCEPT;
-    ////bool is_spent_prevout(const point_link& link, index index) const NOEXCEPT;
 
-    error::error_t get_conflicts(point_links& points, const point_link& self,
-        spend_key&& key) const NOEXCEPT;
-    error::error_t get_doubles(tx_links& spenders, const point_links& points,
+    bool get_conflicts(point_links& points, const point& point,
         const point_link& self) const NOEXCEPT;
-    error::error_t spent(const point_link& self, const point_stub& stub,
-        index index) const NOEXCEPT;
+    bool push_doubles(tx_links& out, const point& point,
+        const point_links& points) const NOEXCEPT;
+    bool push_spenders(tx_links& out, const point& point,
+        const point_link& self) const NOEXCEPT;
+    bool get_double_spenders(tx_links& out, const block& block) const NOEXCEPT;
 
     error::error_t unspendable(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,

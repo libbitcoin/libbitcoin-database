@@ -195,7 +195,6 @@ struct point
         ix::integer index{};
     };
 
-
     struct get_key
       : public schema::point
     {
@@ -250,37 +249,6 @@ struct point
 
         ps::integer stub{};
         ix::integer index{};
-    };
-
-    struct get_point_set_ref
-      : public schema::point
-    {
-        inline link count() const NOEXCEPT
-        {
-            const auto points = set.points.size();
-            BC_ASSERT(points < link::terminal);
-            return system::possible_narrow_cast<link::integer>(points);
-        }
-
-        using ps = point_stub;
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            pt::integer offset{};
-            std::for_each(set.points.begin(), set.points.end(), [&](auto& point) NOEXCEPT
-            {
-                point.self     = set.fk + offset++;
-                point.stub     = source.read_little_endian<ps::integer, ps::size>();
-                source.skip_bytes(schema::hash - ps::size);
-                point.index    = source.read_little_endian<ix::integer, ix::size>();
-                point.sequence = source.read_little_endian<uint32_t>();
-                source.skip_bytes(in::size + tx::size);
-            });
-
-            BC_ASSERT(!source || source.get_read_position() == count() * minrow);
-            return source;
-        }
-
-        point_set& set;
     };
 };
 

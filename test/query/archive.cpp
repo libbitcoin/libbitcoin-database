@@ -174,6 +174,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__empty__expected)
 {
     const system::chain::transaction tx{};
     const auto expected_head5_array = system::base16_chunk("0000000000");
+    const auto expected_head4_array = system::base16_chunk("00000000");
     const auto expected_head4_hash = system::base16_chunk(
         "00000000" // record count
         "ffffffff" // bucket[0]...
@@ -203,7 +204,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__empty__expected)
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_head4_hash);
     BOOST_REQUIRE_EQUAL(store.input_head(), expected_head5_array);
     BOOST_REQUIRE_EQUAL(store.output_head(), expected_head5_array);
-    BOOST_REQUIRE_EQUAL(store.puts_head(), expected_head5_array);
+    BOOST_REQUIRE_EQUAL(store.puts_head(), expected_head4_array);
     BOOST_REQUIRE(store.tx_body().empty());
     BOOST_REQUIRE(store.point_body().empty());
     BOOST_REQUIRE(store.input_body().empty());

@@ -30,7 +30,7 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// Puts is an blob of spend and output fk records.
+/// Puts is a record output fk records.
 struct puts
   : public no_map<schema::puts>
 {
@@ -40,18 +40,12 @@ struct puts
     using output_links = std::vector<out::integer>;
     using no_map<schema::puts>::nomap;
 
-    // TODO: There is a potential optimization available given that the inputs
-    // (spend puts) for a given transaction are sequential. This means that an
-    // offset with count are sufficient to store and number of spends. This is
-    // more efficient if store averages more than two spends per tx (maybe).
-
-    struct slab
+    struct record
       : public schema::puts
     {
         link count() const NOEXCEPT
         {
-            const auto fks = out_fks.size() * out::size;
-            return system::possible_narrow_cast<link::integer>(fks);
+            return system::possible_narrow_cast<link::integer>(out_fks.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -61,7 +55,7 @@ struct puts
                 fk = source.read_little_endian<out::integer, out::size>();
             });
 
-            BC_ASSERT(!source || source.get_read_position() == count());
+            BC_ASSERT(!source || source.get_read_position() == count() * out::size);
             return source;
         }
 
@@ -72,11 +66,11 @@ struct puts
                 sink.write_little_endian<out::integer, out::size>(fk);
             });
 
-            BC_ASSERT(!sink || sink.get_write_position() == count());
+            BC_ASSERT(!sink || sink.get_write_position() == count() * out::size);
             return sink;
         }
 
-        inline bool operator==(const slab& other) const NOEXCEPT
+        inline bool operator==(const record& other) const NOEXCEPT
         {
             return out_fks == other.out_fks;
         }
@@ -89,8 +83,7 @@ struct puts
     {
         link count() const NOEXCEPT
         {
-            BC_ASSERT(false);
-            return {};
+            return 1;
         }
 
         inline bool from_data(reader& source) NOEXCEPT

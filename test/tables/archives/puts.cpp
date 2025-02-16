@@ -22,8 +22,8 @@
 ////BOOST_AUTO_TEST_SUITE(puts_tests)
 ////
 ////using namespace system;
-////const table::puts::slab expected0{};
-////const table::puts::slab expected1
+////const table::puts::record expected0{};
+////const table::puts::record expected1
 ////{
 ////    {}, // schema::puts [all const static members]
 ////    std::vector<uint32_t>
@@ -34,7 +34,7 @@
 ////    {
 ////    }
 ////};
-////const table::puts::slab expected2
+////const table::puts::record expected2
 ////{
 ////    {}, // schema::puts [all const static members]
 ////    std::vector<uint32_t>
@@ -46,7 +46,7 @@
 ////        0x0000007856341222_u64
 ////    }
 ////};
-////const table::puts::slab expected3
+////const table::puts::record expected3
 ////{
 ////    {}, // schema::puts [all const static members]
 ////    std::vector<uint32_t>
@@ -85,29 +85,29 @@
 ////    BOOST_REQUIRE(!instance.put_link(expected3).is_terminal());
 ////    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 ////
-////    table::puts::slab slab0{};
-////    BOOST_REQUIRE(instance.get(0, slab0));
-////    BOOST_REQUIRE(slab0 == expected0);
+////    table::puts::record record0{};
+////    BOOST_REQUIRE(instance.get(0, record0));
+////    BOOST_REQUIRE(record0 == expected0);
 ////
-////    table::puts::slab slab1{};
-////    slab1.point_fks.resize(1);
-////    BOOST_REQUIRE(instance.get(0, slab1));
-////    BOOST_REQUIRE(slab1.point_fks == expected1.point_fks);
-////    BOOST_REQUIRE(slab1.out_fks.empty());
+////    table::puts::record record1{};
+////    record1.point_fks.resize(1);
+////    BOOST_REQUIRE(instance.get(0, record1));
+////    BOOST_REQUIRE(record1.point_fks == expected1.point_fks);
+////    BOOST_REQUIRE(record1.out_fks.empty());
 ////
-////    table::puts::slab slab2{};
-////    slab2.point_fks.resize(1);
-////    slab2.out_fks.resize(1);
-////    BOOST_REQUIRE(instance.get(4, slab2));
-////    BOOST_REQUIRE(slab2.point_fks == expected2.point_fks);
-////    BOOST_REQUIRE(slab2.out_fks == expected2.out_fks);
+////    table::puts::record record2{};
+////    record2.point_fks.resize(1);
+////    record2.out_fks.resize(1);
+////    BOOST_REQUIRE(instance.get(4, record2));
+////    BOOST_REQUIRE(record2.point_fks == expected2.point_fks);
+////    BOOST_REQUIRE(record2.out_fks == expected2.out_fks);
 ////
-////    table::puts::slab slab3{};
-////    slab3.point_fks.resize(1);
-////    slab3.out_fks.resize(2);
-////    BOOST_REQUIRE(instance.get(13, slab3));
-////    BOOST_REQUIRE(slab3.point_fks == expected3.point_fks);
-////    BOOST_REQUIRE(slab3.out_fks == expected3.out_fks);
+////    table::puts::record record3{};
+////    record3.point_fks.resize(1);
+////    record3.out_fks.resize(2);
+////    BOOST_REQUIRE(instance.get(13, record3));
+////    BOOST_REQUIRE(record3.point_fks == expected3.point_fks);
+////    BOOST_REQUIRE(record3.out_fks == expected3.out_fks);
 ////}
 ////
 ////BOOST_AUTO_TEST_SUITE_END()

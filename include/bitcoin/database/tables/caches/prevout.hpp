@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_OPTIONALS_BUFFER_HPP
 #define LIBBITCOIN_DATABASE_TABLES_OPTIONALS_BUFFER_HPP
 
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
@@ -38,6 +39,9 @@ struct prevout
     using header = linkage<schema::block>;
     using array_map<schema::prevout>::arraymap;
     static constexpr size_t offset = sub1(to_bits(tx::size));
+
+    // The below implementation overloads tx-sized record count with sequences.
+    static_assert(tx::size == sizeof(uint32_t), "sequence-tx overload error");
 
     // This supports only a single record (not too useful).
     struct record
@@ -93,9 +97,10 @@ struct prevout
     {
         inline link count() const NOEXCEPT
         {
-            const auto spends = block.spends();
-            BC_ASSERT(spends < link::terminal);
-            return system::possible_narrow_cast<link::integer>(spends);
+            // TODO: assert overflow.
+            using namespace system;
+            return add1(possible_narrow_cast<tx::integer>(conflicts.size())) +
+                two * possible_narrow_cast<tx::integer>(block.spends());
         }
 
         static constexpr tx::integer merge(bool coinbase,
@@ -103,34 +108,47 @@ struct prevout
         {
             using namespace system;
             BC_ASSERT_MSG(!get_right(output_tx_fk, offset), "overflow");
-            return system::set_right(output_tx_fk, offset, coinbase);
+            return set_right(output_tx_fk, offset, coinbase);
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            const auto txs = *block.transactions_ptr();
-            BC_ASSERT_MSG(txs.size() > one, "empty block");
-
-            const auto write_spend = [&](const auto& in) NOEXCEPT
+            const auto write_con = [&](const auto& con) NOEXCEPT
             {
-                // Sets terminal sentinel for block-internal spends.
-                const auto value = in->metadata.inside ? tx::terminal :
-                    merge(in->metadata.coinbase, in->metadata.parent);
-            
-                sink.write_little_endian<tx::integer, tx::size>(value);
+                sink.write_little_endian<tx::integer, tx::size>(con);
             };
 
             const auto write_tx = [&](const auto& tx) NOEXCEPT
             {
                 const auto& ins = tx->inputs_ptr();
-                return std::for_each(ins->begin(), ins->end(), write_spend);
+                return std::for_each(ins->begin(), ins->end(),
+                    [&](const auto& in) NOEXCEPT
+                    {
+                        // Sets terminal sentinel for block-internal spends.
+                        const auto value = in->metadata.inside ? tx::terminal :
+                            merge(in->metadata.coinbase, in->metadata.parent);
+
+                        sink.write_little_endian<tx::integer, tx::size>(value);
+                        sink.write_little_endian<uint32_t>(in->sequence());
+                    });
             };
 
+            using namespace system;
+            const auto& cons = conflicts;
+            const auto& txs = *block.transactions_ptr();
+            const auto number = possible_narrow_cast<tx::integer>(cons.size());
+            BC_ASSERT_MSG(txs.size() > one, "empty block");
+
+            // Count is written as a tx link so the table can remain an array.
+            sink.write_little_endian<tx::integer, tx::size>(number);
+            std::for_each(cons.begin(), cons.end(), write_con);
             std::for_each(std::next(txs.begin()), txs.end(), write_tx);
+
             BC_ASSERT(!sink || (sink.get_write_position() == count() * minrow));
             return sink;
         }
 
+        const std::vector<tx::integer>& conflicts{};
         const system::chain::block& block{};
     };
 
@@ -139,48 +157,47 @@ struct prevout
     {
         inline link count() const NOEXCEPT
         {
-            BC_ASSERT(values.size() < link::terminal);
-            return system::possible_narrow_cast<link::integer>(values.size());
+            // TODO: assert overflow.
+            using namespace system;
+            return possible_narrow_cast<tx::integer>(add1(conflicts.size())) +
+                two * possible_narrow_cast<tx::integer>(spends.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            std::for_each(values.begin(), values.end(), [&](auto& value) NOEXCEPT
+            auto& cons = conflicts;
+            cons.resize(source.read_little_endian<tx::integer, tx::size>());
+            std::for_each(cons.begin(), cons.end(), [&](auto& value) NOEXCEPT
             {
                 value = source.read_little_endian<tx::integer, tx::size>();
+            });
+
+            std::for_each(spends.begin(), spends.end(), [&](auto& value) NOEXCEPT
+            {
+                value.first = source.read_little_endian<tx::integer, tx::size>();
+                value.second = source.read_little_endian<uint32_t>();
             });
 
             BC_ASSERT(!source || source.get_read_position() == count() * minrow);
             return source;
         }
 
-        inline bool inside(size_t index) const NOEXCEPT
+        static inline bool coinbase(tx::integer spend) NOEXCEPT
         {
-            BC_ASSERT(index < count());
-
-            // Identifies terminal sentinel as block-internal spend.
-            return values.at(index) == tx::terminal;
-        }
-
-        inline bool coinbase(size_t index) const NOEXCEPT
-        {
-            BC_ASSERT(index < count());
-
             // Inside are always reflected as coinbase.
-            return system::get_right(values.at(index), offset);
+            return system::get_right(spend, offset);
         }
 
-        inline tx::integer output_tx_fk(size_t index) const NOEXCEPT
+        static inline tx::integer output_tx_fk(tx::integer spend) NOEXCEPT
         {
-            BC_ASSERT(index < count());
-
-            // Inside are always mapped to terminal.
-            return inside(index) ? tx::terminal :
-                system::set_right(values.at(index), offset, false);
+            // Inside spends are mapped to terminal.
+            using namespace system;
+            return spend == tx::terminal ? spend : set_right(spend, offset, false);
         }
 
-        // Spend count is derived in confirmation by summing block.txs.puts.
-        std::vector<tx::integer> values{};
+        // Spend count is derived in confirmation from block.txs.puts.
+        std::vector<tx::integer> conflicts{};
+        std::vector<std::pair<tx::integer, uint32_t>> spends{};
     };
 };
 

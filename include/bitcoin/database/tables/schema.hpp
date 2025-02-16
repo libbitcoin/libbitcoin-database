@@ -110,7 +110,7 @@ namespace schema
 
     /// Primary keys.
     constexpr size_t put = 5;       // ->input/output slab.
-    constexpr size_t puts_ = 5;     // ->puts record.
+    constexpr size_t puts_ = 4;     // ->puts record.
     constexpr size_t spend_ = 4;    // ->spend record.
     constexpr size_t point_ = 4;    // ->point record.
     constexpr size_t txs_ = 5;      // ->txs slab.
@@ -150,21 +150,6 @@ namespace schema
         static_assert(minrow == 98u);
     };
 
-    // blob
-    // TODO: change to record (outputs only) with 4 byte link.
-    // TODO: this will save 1 GiB in the tx table (one byte per tx).
-    struct puts
-    {
-        static constexpr size_t pk = schema::puts_;
-        static constexpr size_t sk = zero;
-        static constexpr size_t minsize =
-            schema::put;
-        static constexpr size_t minrow = minsize;
-        static constexpr size_t size = max_size_t;
-        static_assert(minsize == 5u);
-        static_assert(minrow == 5u);
-    };
-
     // record hashmap
     struct transaction
     {
@@ -180,12 +165,12 @@ namespace schema
             schema::index +     // inputs count
             schema::index +     // outputs count
             schema::point_ +    // first contiguous input (point)
-            schema::puts::pk;   // first contiguous output (put)
+            schema::puts_;      // first contiguous output (put)
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 30u);
-        static_assert(minrow == 66u);
+        static_assert(minsize == 29u);
+        static_assert(minrow == 65u);
     };
 
     // blob
@@ -218,6 +203,7 @@ namespace schema
     };
 
     // array
+    // TODO: rename to 'ins'.
     struct point
     {
         static constexpr size_t pk = schema::point_;
@@ -234,19 +220,18 @@ namespace schema
         static_assert(minrow == 48u);
     };
 
-    // moderate (sk:7) record multimap, with low multiple rate.
-    struct spend
+    // record
+    // TODO: rename to 'outs'.
+    struct puts
     {
-        static constexpr bool hash_function = false;
-        static constexpr size_t pk = schema::spend_;
-        static constexpr size_t sk = schema::tx + schema::index;
+        static constexpr size_t pk = schema::puts_;
         static constexpr size_t minsize =
-            schema::point::pk; // point->hash
-        static constexpr size_t minrow = pk + sk + minsize;
+            schema::output::pk;
+        static constexpr size_t minrow = minsize;
         static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 4u);
-        static_assert(minrow == 15u);
+        ////static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 5u);
+        static_assert(minrow == 5u);
     };
 
     // slab hashmap
@@ -257,7 +242,7 @@ namespace schema
         static constexpr size_t sk = schema::header::pk;
         static constexpr size_t minsize =
             count_ +         // txs
-            schema::size +   // block.serialized_size(true) (could be variable)
+            schema::size +   // block.serialized_size(true)
             transaction::pk; // coinbase
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = max_size_t;
@@ -281,21 +266,36 @@ namespace schema
         static_assert(minrow == 3u);
     };
 
+    // TODO: reorganize as index (not archive).
+    // moderate (sk:7) record multimap, with low multiple rate.
+    struct spend
+    {
+        static constexpr bool hash_function = false;
+        static constexpr size_t pk = schema::spend_;
+        static constexpr size_t sk = schema::tx + schema::index;
+        static constexpr size_t minsize =
+            schema::point::pk;              // point->hash
+        static constexpr size_t minrow = pk + sk + minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 4u);
+        static_assert(minrow == 15u);
+    };
+
     // TODO: modest (sk:4) record multimap, with high multiple rate.
     // large (sk:32) record multimap, with high multiple rate.
+    // address record count is output count.
     struct address
     {
         static constexpr bool hash_function = false;
         static constexpr size_t pk = schema::puts_;
-        ////static constexpr size_t sk = schema::point::pk;
         static constexpr size_t sk = schema::hash;
         static constexpr size_t minsize = schema::put;
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
         static_assert(minsize == 5u);
-        ////static_assert(minrow == 14u);
-        static_assert(minrow == 42u);
+        static_assert(minrow == 41u);
     };
 
     // record hashmap
@@ -319,12 +319,16 @@ namespace schema
     // record arraymap
     struct prevout
     {
-        static constexpr size_t pk = schema::spend_;
+        // Buckets are limited to header links, but links are based on the
+        // number of spends plus conflicts. Conflicts are assumed to be zero
+        // per block and conflict count is one (tx::pk) per non-empty block.
+        static constexpr size_t pk = schema::point_;
         static constexpr size_t minsize =
             ////schema::bit + // merged bit into tx.
-            schema::tx;
+            schema::transaction::pk;
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = minsize;
+        ////static constexpr linkage<pk> count() NOEXCEPT { return 1; }
         static_assert(minsize == 4u);
         static_assert(minrow == 4u);
     };
@@ -385,28 +389,16 @@ struct point_set
     using tx_link = linkage<schema::tx>;
     using pt_link = linkage<schema::point_>;
 
-    // Order matters to table::point::get_spend_key_sequence.
     struct point
     {
-        // From tx(->puts) iteration (no search).
-        pt_link self{};
-
-        // These types not derived from table constants.
-        // From tx->(puts->)point navigation (no search).
-        uint32_t stub{};
-        uint32_t index{};
-        uint32_t sequence{};
-
-        // From header->prevouts cache navigation (no search).
+        // From header->prevouts cache.
         tx_link tx{};
         bool coinbase{};
+        uint32_t sequence{};
     };
 
-    // From block->txs->tx iteration.
+    // From block->txs->tx get version and points.resize(count).
     uint32_t version{};
-    pt_link::integer fk{};
-
-    // See struct point.
     std::vector<point> points{};
 };
 using point_sets = std::vector<point_set>;
