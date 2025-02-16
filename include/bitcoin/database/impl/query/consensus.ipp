@@ -265,8 +265,13 @@ bool CLASS::push_spenders(tx_links& out, const point& point,
 TEMPLATE
 bool CLASS::get_double_spenders(tx_links& out, const block& block) const NOEXCEPT
 {
-    for (const auto& tx: *block.transactions_ptr())
-        for (const auto& in: *tx->inputs_ptr())
+    // Empty or coinbase only implies no spends.
+    const auto& txs = *block.transactions_ptr();
+    if (txs.size() <= one)
+        return true;
+
+    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+        for (const auto& in: *(*tx)->inputs_ptr())
             if (!push_spenders(out, in->point(), in->metadata.link))
                 return false;
 
@@ -470,10 +475,6 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
 {
-    // Empty or coinbase only implies no spends.
-    if (block.transactions() <= one)
-        return true;
-
     tx_links spenders{};
     if (!get_double_spenders(spenders, block))
         return false;
