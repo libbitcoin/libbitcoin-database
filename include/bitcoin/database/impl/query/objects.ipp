@@ -227,13 +227,16 @@ typename CLASS::input::cptr CLASS::get_input(
         !store_.input.get(point.input_fk, in))
         return {};
 
-    return to_shared<input>
+    const auto ptr = to_shared<input>
     (
         make_point(std::move(point.hash), point.index),
         in.script,
         in.witness,
         point.sequence
     );
+
+    ptr->metadata.link = link;
+    return ptr;
 }
 
 TEMPLATE
@@ -301,10 +304,11 @@ bool CLASS::populate(const input& input) const NOEXCEPT
         return true;
 
     const auto tx = to_tx(input.point().hash());
+    input.prevout = get_output(tx, input.point().index());
     input.metadata.parent = tx;
     input.metadata.inside = false;
     input.metadata.coinbase = is_coinbase(tx);
-    input.prevout = get_output(tx, input.point().index());
+    ////input.metadata.link is set earlier in get_input().
     return !is_null(input.prevout);
 }
 

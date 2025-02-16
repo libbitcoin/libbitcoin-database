@@ -163,7 +163,6 @@ BOOST_AUTO_TEST_CASE(query_extent__optionals_enabled__default__true)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.address_enabled());
     BOOST_REQUIRE(query.neutrino_enabled());
-    BOOST_REQUIRE(query.prevout_enabled());
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
@@ -177,7 +176,6 @@ BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(!query.address_enabled());
     BOOST_REQUIRE(query.neutrino_enabled());
-    BOOST_REQUIRE(query.prevout_enabled());
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__neutrino_enabled__disabled__false)
@@ -191,21 +189,6 @@ BOOST_AUTO_TEST_CASE(query_extent__neutrino_enabled__disabled__false)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.address_enabled());
     BOOST_REQUIRE(!query.neutrino_enabled());
-    BOOST_REQUIRE(query.prevout_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(query_extent__prevout_enabled__disabled__false)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    settings.prevout_buckets = 0;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.address_enabled());
-    BOOST_REQUIRE(query.neutrino_enabled());
-    BOOST_REQUIRE(!query.prevout_enabled());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

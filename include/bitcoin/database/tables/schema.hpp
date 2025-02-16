@@ -319,7 +319,10 @@ namespace schema
     // record arraymap
     struct prevout
     {
-        static constexpr size_t pk = schema::spend_;
+        // Buckets are limited to header links, but links are based on the
+        // number of spends plus conflicts. Conflicts are assumed to be zero
+        // per block and conflict count is one (tx::pk) per non-empty block.
+        static constexpr size_t pk = schema::point_;
         static constexpr size_t minsize =
             ////schema::bit + // merged bit into tx.
             schema::transaction::pk;
@@ -386,28 +389,16 @@ struct point_set
     using tx_link = linkage<schema::tx>;
     using pt_link = linkage<schema::point_>;
 
-    // Order matters to table::point::get_spend_key_sequence.
     struct point
     {
-        // From tx(->puts) iteration (no search).
-        pt_link self{};
-
-        // These types not derived from table constants.
-        // From tx->(puts->)point navigation (no search).
-        uint32_t stub{};
-        uint32_t index{};
-        uint32_t sequence{};
-
-        // From header->prevouts cache navigation (no search).
+        // From header->prevouts cache.
         tx_link tx{};
         bool coinbase{};
+        uint32_t sequence{};
     };
 
-    // From block->txs->tx iteration.
+    // From block->txs->tx get version and points.resize(count).
     uint32_t version{};
-    pt_link::integer fk{};
-
-    // See struct point.
     std::vector<point> points{};
 };
 using point_sets = std::vector<point_set>;

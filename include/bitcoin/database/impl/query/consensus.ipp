@@ -174,26 +174,16 @@ code CLASS::unspent_duplicates(const header_link& link,
     while (it.advance());
     it.reset();
     
-    if (prevout_enabled())
-    {
-        // Current block is not set strong, so zero is expected.
-        if (is_zero(coinbases.size()))
-            return error::success;
-    }
-    else
-    {
-        // Current block is set strong, so self is expected.
-        if (is_one(coinbases.size()))
-            return error::success;
+    // Current block is set strong, so self is expected.
+    if (is_one(coinbases.size()))
+        return error::success;
     
-        // Remove self (will be not found if current block is not set_strong).
-        const auto self = std::find(coinbases.begin(), coinbases.end(), link);
-        if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
-            return error::integrity3;
-    }
+    // Remove self (will be not found if current block is not set_strong).
+    const auto self = std::find(coinbases.begin(), coinbases.end(), link);
+    if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
+        return error::integrity3;
     
     // bip30: all outputs of all previous duplicate coinbases must be spent.
-    // BUGBUG: with !prevout_enabled() this can locate spends in current block.
     // BUGBUG: with multiple previous duplicates there must be same number of
     // BUGBUG: spends of each coinbase output, but this will identify only one.
     for (const auto coinbase: coinbases)
@@ -203,14 +193,14 @@ code CLASS::unspent_duplicates(const header_link& link,
     return error::success;
 }
 
-// spent
+// get_double_spenders
 // ----------------------------------------------------------------------------
-// TODO: reuse to_spenders() and check for confirmed.
+// called from validation to set prevout state
 
 // protected
 TEMPLATE
-error::error_t CLASS::get_conflicts(point_links& points,
-    const point_link& self, spend_key&& key) const NOEXCEPT
+bool CLASS::get_conflicts(point_links& points, const point& point,
+    const point_link& self) const NOEXCEPT
 {
     // Iterate to all matching spend table keys. Since these are stubs of the
     // full tx hash there will be false positives at the rate of the original
@@ -221,76 +211,67 @@ error::error_t CLASS::get_conflicts(point_links& points,
     // to the stub hash portion of the spend key. Given that the spend key has
     // two parts (stub|index) there is never a secondary conflict produced by
     // the existence of multiple spends of outputs in the same transaction.
-    auto it = store_.spend.it(std::move(key));
+    auto it = store_.spend.it(table::spend::compose(point));
     if (!it)
-        return self.is_terminal() ? error::success : error::integrity4;
+        return false;
 
     do
     {
         table::spend::record get{};
         if (!store_.spend.get(it, get))
-            return error::integrity5;
+            return false;
 
         if (get.point_fk != self)
             points.push_back(get.point_fk);
     }
     
     while (it.advance());
-    return error::success;
+    return true;
 }
 
 // protected
 TEMPLATE
-error::error_t CLASS::get_doubles(tx_links& spenders,
-    const point_links& points, const point_link& self) const NOEXCEPT
+bool CLASS::push_doubles(tx_links& out, const point& point,
+    const point_links& points) const NOEXCEPT
 {
+    if (points.empty())
+        return true;
+
     // The expected self spend and primary conflicts are removed. This serves
     // to remove secondary conflicts, leaving only actual additional spends.
     const auto ptr = store_.point.get_memory();
-
-    table::point::get_key self_tx_point{};
-    if (!store_.point.get(ptr, self, self_tx_point))
-        return error::integrity6;
-
-    for (auto point: points)
+    for (auto link: points)
     {
         table::point::get_parent_key parent_tx{};
-        if (!store_.point.get(ptr, point, parent_tx))
-            return error::integrity7;
+        if (!store_.point.get(ptr, link, parent_tx))
+            return false;
 
-        if (parent_tx.hash == self_tx_point.hash)
-            spenders.push_back(parent_tx.fk);
+        if (parent_tx.hash == point.hash())
+            out.push_back(parent_tx.fk);
     }
 
-    return error::success;
+    return true;
 }
 
 // protected
 TEMPLATE
-error::error_t CLASS::spent(const point_link& self, const point_stub& stub,
-    index index) const NOEXCEPT
+bool CLASS::push_spenders(tx_links& out, const point& point,
+    const point_link& self) const NOEXCEPT
 {
-    error::error_t ec{};
-
-    // No heap allocation if no hashmap conflicts.
     point_links points{};
-    if ((ec = get_conflicts(points, self, table::spend::compose(stub, index))))
-        return ec;
+    return get_conflicts(points, point, self) && 
+        push_doubles(out, point, points);
+}
 
-    if (points.empty())
-        return error::success;
+TEMPLATE
+bool CLASS::get_double_spenders(tx_links& out, const block& block) const NOEXCEPT
+{
+    for (const auto& tx: *block.transactions_ptr())
+        for (const auto& in: *tx->inputs_ptr())
+            if (!push_spenders(out, in->point(), in->metadata.link))
+                return false;
 
-    // No heap allocation if no double spends.
-    tx_links spenders{};
-    if ((ec = get_doubles(spenders, points, self)))
-        return ec;
-
-    // Check all double spends for confirmation.
-    for (auto spender: spenders)
-        if (is_strong_tx(spender))
-            return error::confirmed_double_spend;
-
-    return error::success;
+    return true;
 }
 
 // unspendable
@@ -318,7 +299,7 @@ error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
     {
         context out{};
         if (!get_context(out, strong))
-            return error::integrity8;
+            return error::integrity4;
 
         if (bip68 &&
             input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
@@ -332,69 +313,37 @@ error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
     return error::success;
 }
 
-// get_point_set
+// populate_prevouts
 // ----------------------------------------------------------------------------
 
-// protected
 TEMPLATE
-bool CLASS::get_point_set(point_set& set, const tx_link& link) const NOEXCEPT
-{
-    table::transaction::get_point_set_ref tx{ {}, set };
-    if (!store_.tx.get(link, tx))
-        return false;
-
-    // The set.points vector is sized by reader above.
-    table::point::get_point_set_ref point{ {}, set };
-    if (!store_.point.get(set.fk, point))
-        return false;
-
-    return true;
-}
-
-TEMPLATE
-bool CLASS::populate_prevouts(point_sets& sets, size_t points,
+code CLASS::populate_prevouts(point_sets& sets, size_t points,
     const header_link& link) const NOEXCEPT
 {
-    table::prevout::record_get prevouts{};
-    prevouts.values.resize(points);
-    if (!store_.prevout.at(link, prevouts))
-        return false;
+    // Don't hit prevout table for empty block.
+    if (sets.empty())
+        return error::success;
 
-    // This technique stores block-internal points as null points in order to
-    // maintain relative point positions, allowing simple array dereferencing.
-    size_t index{};
+    table::prevout::record_get cache{};
+    cache.spends.resize(points);
+    if (!store_.prevout.at(link, cache))
+        return error::integrity5;
+
+    for (const auto& spender: cache.conflicts)
+        if (is_strong_tx(spender))
+            return error::confirmed_double_spend;
+
+    auto it = cache.spends.begin();
     for (auto& set: sets)
         for (auto& point: set.points)
         {
-            // TODO: this is dereferencing vector position twice.
-            // These are generated during validation and stored into a single
-            // arraymap allocation at that time (no search).
-            point.tx = prevouts.output_tx_fk(index);
-            point.coinbase = prevouts.coinbase(index++);
+            const auto pair = *it++;
+            point.tx = table::prevout::record_get::output_tx_fk(pair.first);
+            point.coinbase = table::prevout::record_get::coinbase(pair.first);
+            point.sequence = pair.second;
         }
 
-    return true;
-}
-
-TEMPLATE
-bool CLASS::populate_prevouts(point_sets& sets) const NOEXCEPT
-{
-    // This technique does not benefit from skipping internal spends, and
-    // therefore also requires set_strong before query, and self removal.
-    for (auto& set: sets)
-        for (auto& point: set.points)
-        {
-            // TODO: is_coinbase and to_tx can be combined.
-            // These are the queries avoided by the points table.
-            point.tx = to_tx(get_point_key(point.self));
-            point.coinbase = is_coinbase(point.tx);
-
-            // Guard against because terminal is excluded in common code.
-            if (point.tx == table::prevout::tx::terminal)
-                return false;
-        }
-
-    return true;
+    return error::success;
 }
 
 // block_confirmable
@@ -407,10 +356,10 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     context ctx{};
     if (!get_context(ctx, link))
-        return error::integrity9;
+        return error::integrity6;
 
     // bip30 coinbase check.
-    ////code ec{};
+    code ec{};
     ////if ((ec = unspent_duplicates(link, ctx)))
     ////    return ec;
 
@@ -427,8 +376,9 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     const auto to_set = [this, &points, &failure](const auto& tx) NOEXCEPT
     {
         point_set set{};
-        if (!get_point_set(set, tx))
-            failure.store(error::integrity10);
+        table::transaction::get_set_ref get{ {}, set };
+        if (!store_.tx.get(tx, get))
+            failure.store(error::integrity7);
 
         points.fetch_add(set.points.size(), std::memory_order_relaxed);
         return set;
@@ -438,9 +388,9 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if (failure)
         return { failure.load() };
 
-    if (!(prevout_enabled() ? populate_prevouts(sets, points, link) :
-        populate_prevouts(sets)))
-        return error::integrity11;
+    // Checks for double spends and populates prevout parent tx/cb links.
+    if ((ec = populate_prevouts(sets, points, link)))
+        return ec;
 
     const auto is_unspendable = [this, &ctx, &failure](const auto& set) NOEXCEPT
     {
@@ -453,21 +403,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return failure != error::success;
     };
 
-    const auto is_spent = [this, &failure](const auto& set) NOEXCEPT
-    {
-        error::error_t ec{};
-        for (const auto& point: set.points)
-            if (!point.tx.is_terminal() && ((ec = spent(point.self, point.stub,
-                point.index))))
-                failure.store(ec);
-
-        return failure != error::success;
-    };
-
     if (std::any_of(parallel, sets.begin(), sets.end(), is_unspendable))
-        return { failure.load() };
-
-    if (std::any_of(parallel, sets.begin(), sets.end(), is_spent))
         return { failure.load() };
 
     return error::success;
@@ -535,18 +471,19 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
 {
-    if (!prevout_enabled())
-        return true;
-
     // Empty or coinbase only implies no spends.
     if (block.transactions() <= one)
         return true;
+
+    tx_links spenders{};
+    if (!get_double_spenders(spenders, block))
+        return false;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    const table::prevout::record_put_ref prevouts{ {}, block };
+    const table::prevout::record_put_ref prevouts{ {}, spenders, block };
     return store_.prevout.put(link, prevouts);
     // ========================================================================
 }
