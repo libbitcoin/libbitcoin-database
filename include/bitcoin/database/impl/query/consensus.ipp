@@ -224,7 +224,6 @@ bool CLASS::get_conflicts(point_links& points, const point& point,
         if (get.point_fk != self)
             points.push_back(get.point_fk);
     }
-    
     while (it.advance());
     return true;
 }
@@ -337,7 +336,7 @@ code CLASS::populate_prevouts(point_sets& sets, size_t points,
     for (auto& set: sets)
         for (auto& point: set.points)
         {
-            const auto pair = *it++;
+            const auto& pair = *it++;
             point.tx = table::prevout::record_get::output_tx_fk(pair.first);
             point.coinbase = table::prevout::record_get::coinbase(pair.first);
             point.sequence = pair.second;
