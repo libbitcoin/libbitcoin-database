@@ -115,6 +115,7 @@ namespace schema
     constexpr size_t puts_ = 4;     // ->puts record.
     constexpr size_t spend_ = 4;    // ->spend record.
     constexpr size_t point_ = 4;    // ->point record.
+    constexpr size_t prevout_ = 5;  // ->prevout slab.
     constexpr size_t txs_ = 5;      // ->txs slab.
     constexpr size_t tx = 4;        // ->tx record.
     constexpr size_t block = 3;     // ->header record.
@@ -318,21 +319,19 @@ namespace schema
     /// Cache tables.
     /// -----------------------------------------------------------------------
 
-    // record arraymap
+    // slab arraymap, one slab per block
     struct prevout
     {
-        // Buckets are limited to header links, but links are based on the
-        // number of spends plus conflicts. Conflicts are assumed to be zero
-        // per block and conflict count is one (tx::pk) per non-empty block.
-        static constexpr size_t pk = schema::point_;
+        static constexpr size_t pk = schema::prevout_;
         static constexpr size_t minsize =
             ////schema::bit + // merged bit into tx.
-            schema::transaction::pk;
+            one +                       // varint(conflict-count)
+            schema::transaction::pk +   // prevout_tx
+            one;                        // varint(sequence)
         static constexpr size_t minrow = minsize;
-        static constexpr size_t size = minsize;
-        ////static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 4u);
-        static_assert(minrow == 4u);
+        static constexpr size_t size = max_size_t;
+        static_assert(minsize == 6u);
+        static_assert(minrow == 6u);
     };
 
     // slab hashmap

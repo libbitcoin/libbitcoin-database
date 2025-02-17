@@ -301,16 +301,16 @@ error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
             return error::unconfirmed_spend;
     }
 
-    const auto bip68 = ctx.is_enabled(system::chain::flags::bip68_rule) &&
-        (version >= system::chain::relative_locktime_min_version);
+    const auto relative = ctx.is_enabled(system::chain::flags::bip68_rule) &&
+        transaction::is_relative_locktime_applied(coinbase, version, sequence);
 
-    if (bip68 || coinbase)
+    if (relative || coinbase)
     {
         context out{};
         if (!get_context(out, strong))
             return error::integrity7;
 
-        if (bip68 &&
+        if (relative &&
             input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
             return error::relative_time_locked;
 
@@ -333,7 +333,7 @@ code CLASS::populate_prevouts(point_sets& sets, size_t points,
     if (sets.empty())
         return error::success;
 
-    table::prevout::record_get cache{};
+    table::prevout::slab_get cache{};
     cache.spends.resize(points);
     if (!store_.prevout.at(link, cache))
         return error::integrity8;
@@ -347,8 +347,8 @@ code CLASS::populate_prevouts(point_sets& sets, size_t points,
         for (auto& point: set.points)
         {
             const auto& pair = *it++;
-            point.tx = table::prevout::record_get::output_tx_fk(pair.first);
-            point.coinbase = table::prevout::record_get::coinbase(pair.first);
+            point.tx = table::prevout::slab_get::output_tx_fk(pair.first);
+            point.coinbase = table::prevout::slab_get::coinbase(pair.first);
             point.sequence = pair.second;
         }
 
@@ -489,7 +489,7 @@ code CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    const table::prevout::record_put_ref prevouts{ {}, spenders, block };
+    const table::prevout::slab_put_ref prevouts{ {}, spenders, block };
     return store_.prevout.put(link, prevouts) ? error::success :
         error::integrity11;
     // ========================================================================
