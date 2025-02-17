@@ -450,6 +450,8 @@ public:
     bool set_block_valid(const header_link& link, uint64_t fees) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_confirmable(const header_link& link) NOEXCEPT;
+    bool set_block_unknown(const header_link& link) NOEXCEPT;
+    bool set_tx_unknown(const tx_link& link) NOEXCEPT;
     bool set_tx_disconnected(const tx_link& link, const context& ctx) NOEXCEPT;
     bool set_tx_connected(const tx_link& link, const context& ctx,
         uint64_t fee, size_t sigops) NOEXCEPT;

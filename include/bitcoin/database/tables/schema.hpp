@@ -90,13 +90,15 @@ namespace schema
     {
         confirmable = 0,            // final
         valid = 1,                  // transitional
-        unconfirmable = 2           // final
+        unconfirmable = 2,          // final
+        block_unknown = 42          // transitional (debug)
     };
 
     enum tx_state : uint8_t
     {
         connected = 0,              // final
-        disconnected = 1            // final
+        disconnected = 1,           // final
+        tx_unknown = 42             // transitional (debug)
     };
 
     /// Values.
