@@ -199,7 +199,7 @@ code CLASS::unspent_duplicates(const header_link& link,
 
 // protected
 TEMPLATE
-bool CLASS::get_conflicts(point_links& points, const point& point,
+code CLASS::get_conflicts(point_links& points, const point& point,
     const point_link& self) const NOEXCEPT
 {
     // Iterate to all matching spend table keys. Since these are stubs of the
@@ -213,28 +213,28 @@ bool CLASS::get_conflicts(point_links& points, const point& point,
     // the existence of multiple spends of outputs in the same transaction.
     auto it = store_.spend.it(table::spend::compose(point));
     if (!it)
-        return false;
+        return error::integrity4;
 
     do
     {
         table::spend::record get{};
         if (!store_.spend.get(it, get))
-            return false;
+            return error::integrity5;
 
         if (get.point_fk != self)
             points.push_back(get.point_fk);
     }
     while (it.advance());
-    return true;
+    return error::success;
 }
 
 // protected
 TEMPLATE
-bool CLASS::push_doubles(tx_links& out, const point& point,
+code CLASS::push_doubles(tx_links& out, const point& point,
     const point_links& points) const NOEXCEPT
 {
     if (points.empty())
-        return true;
+        return error::success;
 
     // The expected self spend and primary conflicts are removed. This serves
     // to remove secondary conflicts, leaving only actual additional spends.
@@ -243,39 +243,44 @@ bool CLASS::push_doubles(tx_links& out, const point& point,
     {
         table::point::get_parent_key parent_tx{};
         if (!store_.point.get(ptr, link, parent_tx))
-            return false;
+            return error::integrity6;
 
         if (parent_tx.hash == point.hash())
             out.push_back(parent_tx.fk);
     }
 
-    return true;
+    return error::success;
 }
 
 // protected
 TEMPLATE
-bool CLASS::push_spenders(tx_links& out, const point& point,
+code CLASS::push_spenders(tx_links& out, const point& point,
     const point_link& self) const NOEXCEPT
 {
+    code ec{};
     point_links points{};
-    return get_conflicts(points, point, self) && 
-        push_doubles(out, point, points);
+    if ((ec = get_conflicts(points, point, self)))
+        return ec;
+
+    return push_doubles(out, point, points);
 }
 
 TEMPLATE
-bool CLASS::get_double_spenders(tx_links& out, const block& block) const NOEXCEPT
+code CLASS::get_double_spenders(tx_links& out,
+    const block& block) const NOEXCEPT
 {
     // Empty or coinbase only implies no spends.
     const auto& txs = *block.transactions_ptr();
     if (txs.size() <= one)
-        return true;
+        return error::success;
 
+    code ec{};
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
         for (const auto& in: *(*tx)->inputs_ptr())
-            if (!push_spenders(out, in->point(), in->metadata.link))
-                return false;
+            if ((ec = push_spenders(out, in->point(), in->metadata.link)))
+                return ec;
 
-    return true;
+    return error::success;
 }
 
 // unspendable
@@ -296,16 +301,16 @@ error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
             return error::unconfirmed_spend;
     }
 
-    const auto bip68 = ctx.is_enabled(system::chain::flags::bip68_rule) &&
-        (version >= system::chain::relative_locktime_min_version);
+    const auto relative = ctx.is_enabled(system::chain::flags::bip68_rule) &&
+        transaction::is_relative_locktime_applied(coinbase, version, sequence);
 
-    if (bip68 || coinbase)
+    if (relative || coinbase)
     {
         context out{};
         if (!get_context(out, strong))
-            return error::integrity4;
+            return error::integrity7;
 
-        if (bip68 &&
+        if (relative &&
             input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
             return error::relative_time_locked;
 
@@ -328,10 +333,10 @@ code CLASS::populate_prevouts(point_sets& sets, size_t points,
     if (sets.empty())
         return error::success;
 
-    table::prevout::record_get cache{};
+    table::prevout::slab_get cache{};
     cache.spends.resize(points);
     if (!store_.prevout.at(link, cache))
-        return error::integrity5;
+        return error::integrity8;
 
     for (const auto& spender: cache.conflicts)
         if (is_strong_tx(spender))
@@ -342,8 +347,8 @@ code CLASS::populate_prevouts(point_sets& sets, size_t points,
         for (auto& point: set.points)
         {
             const auto& pair = *it++;
-            point.tx = table::prevout::record_get::output_tx_fk(pair.first);
-            point.coinbase = table::prevout::record_get::coinbase(pair.first);
+            point.tx = table::prevout::slab_get::output_tx_fk(pair.first);
+            point.coinbase = table::prevout::slab_get::coinbase(pair.first);
             point.sequence = pair.second;
         }
 
@@ -360,7 +365,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     context ctx{};
     if (!get_context(ctx, link))
-        return error::integrity6;
+        return error::integrity9;
 
     // bip30 coinbase check.
     code ec{};
@@ -382,7 +387,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         point_set set{};
         table::transaction::get_set_ref get{ {}, set };
         if (!store_.tx.get(tx, get))
-            failure.store(error::integrity7);
+            failure.store(error::integrity10);
 
         points.fetch_add(set.points.size(), std::memory_order_relaxed);
         return set;
@@ -473,18 +478,20 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
+code CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
 {
+    code ec{};
     tx_links spenders{};
-    if (!get_double_spenders(spenders, block))
-        return false;
+    if ((ec = get_double_spenders(spenders, block)))
+        return ec;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    const table::prevout::record_put_ref prevouts{ {}, spenders, block };
-    return store_.prevout.put(link, prevouts);
+    const table::prevout::slab_put_ref prevouts{ {}, spenders, block };
+    return store_.prevout.put(link, prevouts) ? error::success :
+        error::integrity11;
     // ========================================================================
 }
 

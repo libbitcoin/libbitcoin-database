@@ -34,7 +34,10 @@ public:
 
 using link3 = linkage<3>;
 struct record4 { static constexpr size_t size = 4; };
-using record_table = arraymap<link3, record4::size>;
+using record_table = arraymap_<link3, record4::size>;
+
+struct slab0 { static constexpr size_t size = max_size_t; };
+using slab_table = arraymap_<link3, slab0::size>;
 
 // Bucket count is one less than link count, due to header.size field.
 constexpr auto initial_buckets = 18;
@@ -45,7 +48,7 @@ static_assert(initial_links == 19u);
 ////std::cout << head_store.buffer() << std::endl << std::endl;
 ////std::cout << body_store.buffer() << std::endl << std::endl;
 
-// record hashmap
+// record arraymap_
 // ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(arraymap__record_construct__empty__expected)
@@ -65,6 +68,58 @@ BOOST_AUTO_TEST_CASE(arraymap__record_construct__non_empty__expected)
     body_store.buffer().resize(body_size);
     const record_table instance{ head_store, body_store, initial_buckets };
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), body_size);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+// slab arraymap_
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(arraymap___slab_construct__empty__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    const slab_table instance{ head_store, body_store, initial_buckets };
+    BOOST_REQUIRE(body_store.buffer().empty());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(arraymap___slab_construct__non_empty__expected_enabled)
+{
+    constexpr auto body_size = 12345u;
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    body_store.buffer().resize(body_size);
+    const slab_table instance{ head_store, body_store, initial_buckets };
+    BOOST_REQUIRE_EQUAL(body_store.buffer().size(), body_size);
+    BOOST_REQUIRE(instance.enabled());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(arraymap___enabled__non_empty_slab_zero_buckets__false)
+{
+    constexpr auto body_size = 12345u;
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    body_store.buffer().resize(body_size);
+    const slab_table instance{ head_store, body_store, 0 };
+    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(arraymap___enabled__empty_slab_one_bucket__false)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    slab_table instance{ head_store, body_store, 1 };
+    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(arraymap___enabled__empty_slab_nonzero_buckets__true)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    slab_table instance{ head_store, body_store, initial_buckets };
+    BOOST_REQUIRE(instance.enabled());
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -215,6 +270,85 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__big_end_populated__expected)
     BOOST_REQUIRE(!instance.at(16, record));
     BOOST_REQUIRE(!instance.at(17, record));
 
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+class little_slab
+{
+public:
+    static constexpr size_t size = max_size_t;
+    static constexpr link3 count() NOEXCEPT
+    {
+        return sizeof(uint32_t);
+    }
+
+    bool from_data(database::reader& source) NOEXCEPT
+    {
+        value = source.read_little_endian<uint32_t>();
+        return source;
+    }
+
+    bool to_data(database::finalizer& sink) const NOEXCEPT
+    {
+        sink.write_little_endian(value);
+        return sink;
+    }
+
+    uint32_t value{ 0 };
+};
+
+class big_slab
+{
+public:
+    static constexpr size_t size = max_size_t;
+    static constexpr link3 count() NOEXCEPT
+    {
+        return sizeof(uint32_t);
+    }
+
+    bool from_data(database::reader& source) NOEXCEPT
+    {
+        value = source.read_big_endian<uint32_t>();
+        return source;
+    }
+
+    bool to_data(database::finalizer& sink) const NOEXCEPT
+    {
+        sink.write_big_endian(value);
+        return sink;
+    }
+
+    uint32_t value{ 0 };
+};
+
+BOOST_AUTO_TEST_CASE(hashmap__slab_put__multiple__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+
+    arraymap<link3, big_slab::size> instance{ head_store, body_store, initial_buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr link3::integer key_big{ 0 };
+    constexpr link3::integer key_little{ 1 };
+    BOOST_REQUIRE(instance.put(key_big, big_slab{ 0xa1b2c3d4_u32 }));
+    BOOST_REQUIRE(instance.put(key_little, little_slab{ 0xa1b2c3d4_u32 }));
+
+    big_slab slab1{};
+    BOOST_REQUIRE(instance.get(0, slab1));
+    BOOST_REQUIRE_EQUAL(slab1.value, 0xa1b2c3d4_u32);
+
+    little_slab slab2{};
+    BOOST_REQUIRE(instance.get(big_slab::count(), slab2));
+    BOOST_REQUIRE_EQUAL(slab2.value, 0xa1b2c3d4_u32);
+
+    // This expectation relies on the fact of no hash table conflict between 0x41 and 0x42.
+    const data_chunk expected_file
+    {
+        0xa1, 0xb2, 0xc3, 0xd4,
+        0xd4, 0xc3, 0xb2, 0xa1
+    };
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
     BOOST_REQUIRE(!instance.get_fault());
 }
 

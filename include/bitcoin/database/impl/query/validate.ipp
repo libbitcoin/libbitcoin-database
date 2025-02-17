@@ -46,6 +46,8 @@ inline code CLASS::to_block_code(
         case schema::block_state::unconfirmable:
             return error::block_unconfirmable;
         // Fault: Has no state, should not happen when read from store.
+        // block_unknown also used to reset a state (debugging).
+        case schema::block_state::block_unknown:
         default:
             return error::unknown_state;
     }
@@ -68,6 +70,8 @@ inline code CLASS::to_tx_code(
         case schema::tx_state::disconnected:
             return error::tx_disconnected;
         // Fault: Has no state, should not happen when read from store.
+        // tx_unknown also used to reset a state (debugging).
+        case schema::tx_state::tx_unknown:
         default:
             return error::unknown_state;
     }
@@ -292,6 +296,40 @@ bool CLASS::set_block_unconfirmable(const header_link& link) NOEXCEPT
         {},
         schema::block_state::unconfirmable,
         0 // fees
+    });
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::set_block_unknown(const header_link& link) NOEXCEPT
+{
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    return store_.validated_bk.put(link, table::validated_bk::slab
+    {
+        {},
+        schema::block_state::block_unknown,
+        0 // fees
+    });
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::set_tx_unknown(const tx_link& link) NOEXCEPT
+{
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    return store_.validated_tx.put(link, table::validated_tx::slab
+    {
+        {},
+        {},
+        schema::tx_state::tx_unknown,
+        0, // fee
+        0  // sigops
     });
     // ========================================================================
 }

@@ -31,7 +31,7 @@ namespace table {
 
 /// prevout is an array map index of previous outputs by block link.
 /// The coinbase flag is merged into the tx field, reducing it's domain.
-/// Masking is from the right in order to accomodate non-integral domain.
+/// Masking is from the right in order to accomodate integral tx domain.
 struct prevout
   : public array_map<schema::prevout>
 {
@@ -44,12 +44,12 @@ struct prevout
     static_assert(tx::size == sizeof(uint32_t), "sequence-tx overload error");
 
     // This supports only a single record (not too useful).
-    struct record
+    struct slab
       : public schema::prevout
     {
         inline link count() const NOEXCEPT
         {
-            return one;
+            return tx::size;
         }
 
         inline bool coinbase() const NOEXCEPT
@@ -83,7 +83,7 @@ struct prevout
             return sink;
         }
 
-        inline bool operator==(const record& other) const NOEXCEPT
+        inline bool operator==(const slab& other) const NOEXCEPT
         {
             return coinbase() == other.coinbase()
                 && output_tx_fk() == other.output_tx_fk();
@@ -92,15 +92,16 @@ struct prevout
         tx::integer prevout_tx{};
     };
 
-    struct record_put_ref
+    struct slab_put_ref
       : public schema::prevout
     {
         inline link count() const NOEXCEPT
         {
             // TODO: assert overflow.
             using namespace system;
-            return add1(possible_narrow_cast<tx::integer>(conflicts.size())) +
-                two * possible_narrow_cast<tx::integer>(block.spends());
+            const auto conflicts_ = conflicts.size();
+            return variable_size(conflicts_) + (conflicts_ * tx::size) +
+                (block.spends() * (tx::size + sizeof(uint32_t)));
         }
 
         static constexpr tx::integer merge(bool coinbase,
@@ -140,7 +141,7 @@ struct prevout
             BC_ASSERT_MSG(txs.size() > one, "empty block");
 
             // Count is written as a tx link so the table can remain an array.
-            sink.write_little_endian<tx::integer, tx::size>(number);
+            sink.write_variable(number);
             std::for_each(cons.begin(), cons.end(), write_con);
             std::for_each(std::next(txs.begin()), txs.end(), write_tx);
 
@@ -152,21 +153,22 @@ struct prevout
         const system::chain::block& block{};
     };
 
-    struct record_get
+    struct slab_get
       : public schema::prevout
     {
         inline link count() const NOEXCEPT
         {
             // TODO: assert overflow.
             using namespace system;
-            return possible_narrow_cast<tx::integer>(add1(conflicts.size())) +
-                two * possible_narrow_cast<tx::integer>(spends.size());
+            const auto conflicts_ = conflicts.size();
+            return variable_size(conflicts_) + (conflicts_ * tx::size) +
+                (spends.size() * (tx::size + sizeof(uint32_t)));
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
             auto& cons = conflicts;
-            cons.resize(source.read_little_endian<tx::integer, tx::size>());
+            cons.resize(source.read_variable());
             std::for_each(cons.begin(), cons.end(), [&](auto& value) NOEXCEPT
             {
                 value = source.read_little_endian<tx::integer, tx::size>();
