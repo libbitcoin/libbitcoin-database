@@ -486,7 +486,7 @@ public:
 
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
-    bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
+    code set_prevouts(const header_link& link, const block& block) NOEXCEPT;
 
     /// Height indexation.
     /// -----------------------------------------------------------------------
@@ -560,13 +560,13 @@ protected:
     code populate_prevouts(point_sets& sets, size_t points,
         const header_link& link) const NOEXCEPT;
 
-    bool get_conflicts(point_links& points, const point& point,
+    code get_conflicts(point_links& points, const point& point,
         const point_link& self) const NOEXCEPT;
-    bool push_doubles(tx_links& out, const point& point,
+    code push_doubles(tx_links& out, const point& point,
         const point_links& points) const NOEXCEPT;
-    bool push_spenders(tx_links& out, const point& point,
+    code push_spenders(tx_links& out, const point& point,
         const point_link& self) const NOEXCEPT;
-    bool get_double_spenders(tx_links& out, const block& block) const NOEXCEPT;
+    code get_double_spenders(tx_links& out, const block& block) const NOEXCEPT;
 
     error::error_t unspendable(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,
