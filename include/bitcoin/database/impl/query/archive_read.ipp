@@ -114,7 +114,7 @@ inline hash_digest CLASS::get_tx_key(const tx_link& link) const NOEXCEPT
 TEMPLATE
 inline hash_digest CLASS::get_point_key(const point_link& link) const NOEXCEPT
 {
-    table::point::get_key point{};
+    table::point::record point{};
     if (!store_.point.get(link, point))
         return {};
 

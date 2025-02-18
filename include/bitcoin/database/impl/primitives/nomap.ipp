@@ -103,6 +103,12 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
     return manager_.truncate(count);
 }
 
+TEMPLATE
+bool CLASS::expand(const Link& count) NOEXCEPT
+{
+    return manager_.expand(count);
+}
+
 // error condition
 // ----------------------------------------------------------------------------
 

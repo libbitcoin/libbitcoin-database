@@ -90,30 +90,30 @@ struct header
         hash_digest merkle_root{};
     };
 
-    struct record_put_ptr
-      : public schema::header
-    {
-        // header->previous_block_hash() ignored.
-        inline bool to_data(finalizer& sink) const NOEXCEPT
-        {
-            BC_ASSERT(header);
-            context::to_data(sink, ctx);
-            sink.write_byte(to_int<uint8_t>(milestone));
-            sink.write_little_endian<link::integer, link::size>(parent_fk);
-            sink.write_little_endian<uint32_t>(header->version());
-            sink.write_little_endian<uint32_t>(header->timestamp());
-            sink.write_little_endian<uint32_t>(header->bits());
-            sink.write_little_endian<uint32_t>(header->nonce());
-            sink.write_bytes(header->merkle_root());
-            BC_ASSERT(!sink || sink.get_write_position() == minrow);
-            return sink;
-        }
-
-        const context ctx{};
-        const bool milestone{};
-        const link::integer parent_fk{};
-        system::chain::header::cptr header{};
-    };
+    ////struct record_put_ptr
+    ////  : public schema::header
+    ////{
+    ////    // header->previous_block_hash() ignored.
+    ////    inline bool to_data(finalizer& sink) const NOEXCEPT
+    ////    {
+    ////        BC_ASSERT(header);
+    ////        context::to_data(sink, ctx);
+    ////        sink.write_byte(to_int<uint8_t>(milestone));
+    ////        sink.write_little_endian<link::integer, link::size>(parent_fk);
+    ////        sink.write_little_endian<uint32_t>(header->version());
+    ////        sink.write_little_endian<uint32_t>(header->timestamp());
+    ////        sink.write_little_endian<uint32_t>(header->bits());
+    ////        sink.write_little_endian<uint32_t>(header->nonce());
+    ////        sink.write_bytes(header->merkle_root());
+    ////        BC_ASSERT(!sink || sink.get_write_position() == minrow);
+    ////        return sink;
+    ////    }
+    ////
+    ////    const context ctx{};
+    ////    const bool milestone{};
+    ////    const link::integer parent_fk{};
+    ////    system::chain::header::cptr header{};
+    ////};
 
     // This is redundant with record_put_ptr except this does not capture.
     struct record_put_ref

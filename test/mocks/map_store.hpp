@@ -98,6 +98,16 @@ public:
         return point_body_.file();
     }
 
+    inline const path& ins_head_file() const NOEXCEPT
+    {
+        return ins_head_.file();
+    }
+
+    inline const path& ins_body_file() const NOEXCEPT
+    {
+        return ins_body_.file();
+    }
+
     inline const path& puts_head_file() const NOEXCEPT
     {
         return puts_head_.file();

@@ -68,6 +68,9 @@ public:
     /// Reduce count as specified.
     bool truncate(const Link& count) NOEXCEPT;
 
+    /// Increase count as neccesary to specified.
+    bool expand(const Link& count) NOEXCEPT;
+
     /// Errors.
     /// -----------------------------------------------------------------------
 

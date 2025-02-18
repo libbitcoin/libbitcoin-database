@@ -120,6 +120,8 @@ enum error_t : uint8_t
     tx_input_put,
     tx_point_allocate,
     tx_point_put,
+    tx_ins_allocate,
+    tx_ins_put,
     tx_output_put,
     tx_puts_put,
     tx_tx_set,

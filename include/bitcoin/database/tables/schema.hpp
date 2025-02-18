@@ -47,6 +47,7 @@ namespace schema
         constexpr auto input = "archive_input";
         constexpr auto output = "archive_output";
         constexpr auto point = "archive_point";
+        constexpr auto ins = "archive_ins";
         constexpr auto puts = "archive_puts";
         constexpr auto spend = "archive_spend";
         constexpr auto tx = "archive_tx";
@@ -112,9 +113,9 @@ namespace schema
 
     /// Primary keys.
     constexpr size_t put = 5;       // ->input/output slab.
-    constexpr size_t puts_ = 4;     // ->puts record.
+    constexpr size_t ins_ = 4;      // ->ins|point record.
+    constexpr size_t outs_ = 4;     // ->outs (puts) record.
     constexpr size_t spend_ = 4;    // ->spend record.
-    constexpr size_t point_ = 4;    // ->point record.
     constexpr size_t prevout_ = 5;  // ->prevout slab.
     constexpr size_t txs_ = 5;      // ->txs slab.
     constexpr size_t tx = 4;        // ->tx record.
@@ -167,8 +168,8 @@ namespace schema
             sizeof(uint32_t) +
             schema::index +     // inputs count
             schema::index +     // outputs count
-            schema::point_ +    // first contiguous input (point)
-            schema::puts_;      // first contiguous output (put)
+            schema::ins_ +    // first contiguous input (point)
+            schema::outs_;      // first contiguous output (put)
         static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
@@ -196,7 +197,7 @@ namespace schema
         static constexpr size_t pk = schema::put;
         static constexpr size_t sk = zero;
         static constexpr size_t minsize =
-            schema::transaction::pk +   // parent->tx
+            schema::transaction::pk +   // parent->tx (address navigation)
             5u + // variable_size (minimum 1, average 5)
             1u;  // variable_size (minimum 1, average 1)
         static constexpr size_t minrow = minsize;
@@ -206,28 +207,39 @@ namespace schema
     };
 
     // array
-    // TODO: rename to 'ins'.
     struct point
     {
-        static constexpr size_t pk = schema::point_;
+        static constexpr size_t pk = schema::ins_;
         static constexpr size_t minsize =
-            schema::hash +              // point hash
-            schema::transaction::pk +   // parent->tx
-            sizeof(uint32_t) +          // sequence
-            schema::input::pk +         // input->script|witness
-            schema::index;              // point index
+            schema::hash;
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT;
-        static_assert(minsize == 48u);
-        static_assert(minrow == 48u);
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 32u);
+        static_assert(minrow == 32u);
     };
 
-    // record
+    // array
+    struct ins
+    {
+        static constexpr size_t pk = schema::ins_;
+        static constexpr size_t minsize =
+            schema::index +             // point index
+            sizeof(uint32_t) +          // sequence
+            schema::input::pk +         // input->script|witness
+            schema::transaction::pk;    // parent->tx (spend navigation)
+        static constexpr size_t minrow = minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 16u);
+        static_assert(minrow == 16u);
+    };
+
+    // array
     // TODO: rename to 'outs'.
     struct puts
     {
-        static constexpr size_t pk = schema::puts_;
+        static constexpr size_t pk = schema::outs_;
         static constexpr size_t minsize =
             schema::output::pk;
         static constexpr size_t minrow = minsize;
@@ -291,7 +303,7 @@ namespace schema
     struct address
     {
         static constexpr bool hash_function = false;
-        static constexpr size_t pk = schema::puts_;
+        static constexpr size_t pk = schema::outs_;
         static constexpr size_t sk = schema::hash;
         static constexpr size_t minsize = schema::put;
         static constexpr size_t minrow = pk + sk + minsize;
@@ -388,7 +400,6 @@ namespace schema
 struct point_set
 {
     using tx_link = linkage<schema::tx>;
-    using pt_link = linkage<schema::point_>;
 
     struct point
     {

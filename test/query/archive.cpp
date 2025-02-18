@@ -1417,27 +1417,6 @@ BOOST_AUTO_TEST_CASE(query_archive__get_transactions__found__expected)
     BOOST_REQUIRE_EQUAL(query.get_transactions(2)->size(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive__get_point__null_point__expected)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
-    BOOST_REQUIRE(!query.get_point(spend_link::terminal));
-    ////BOOST_REQUIRE(query.get_point(query.to_spend(0, 0))->is_null());
-    ////BOOST_REQUIRE(*query.get_point(query.to_spend(1, 0)) == test::block1a.inputs_ptr()->at(0)->point());
-    ////BOOST_REQUIRE(*query.get_point(query.to_spend(1, 1)) == test::block1a.inputs_ptr()->at(1)->point());
-    ////BOOST_REQUIRE(*query.get_point(query.to_spend(1, 2)) == test::block1a.inputs_ptr()->at(2)->point());
-    ////BOOST_REQUIRE(*query.get_point(query.to_spend(2, 0)) == test::block2a.inputs_ptr()->at(0)->point());
-    ////BOOST_REQUIRE(*query.get_point(query.to_spend(2, 1)) == test::block2a.inputs_ptr()->at(1)->point());
-    ////BOOST_REQUIRE(*query.get_point(query.to_spend(3, 0)) == test::block2a.inputs_ptr()->at(2)->point());
-    ////BOOST_REQUIRE(*query.get_point(query.to_spend(3, 1)) == test::block2a.inputs_ptr()->at(3)->point());
-}
-
 BOOST_AUTO_TEST_CASE(query_archive__get_spenders__unspent_or_not_found__expected)
 {
     settings settings{};

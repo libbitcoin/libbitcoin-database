@@ -34,10 +34,10 @@ struct transaction
   : public hash_map<schema::transaction>
 {
     using ix = linkage<schema::index>;
-    using pt = linkage<schema::point_>;
-    using pu = linkage<schema::puts_>;
-    using bytes = linkage<schema::size>;
+    using ins = linkage<schema::ins_>;
+    using outs = linkage<schema::outs_>;
     using out = linkage<schema::put>;
+    using bytes = linkage<schema::size>;
     using search_key = search<schema::hash>;
     using hash_map<schema::transaction>::hashmap;
 
@@ -63,8 +63,8 @@ struct transaction
             version    = source.read_little_endian<uint32_t>();
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
-            point_fk   = source.read_little_endian<pt::integer, pt::size>();
-            puts_fk    = source.read_little_endian<pu::integer, pu::size>();
+            point_fk   = source.read_little_endian<ins::integer, ins::size>();
+            puts_fk    = source.read_little_endian<outs::integer, outs::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
@@ -78,8 +78,8 @@ struct transaction
             sink.write_little_endian<uint32_t>(version);
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
             sink.write_little_endian<ix::integer, ix::size>(outs_count);
-            sink.write_little_endian<pt::integer, pt::size>(point_fk);
-            sink.write_little_endian<pu::integer, pu::size>(puts_fk);
+            sink.write_little_endian<ins::integer, ins::size>(point_fk);
+            sink.write_little_endian<outs::integer, outs::size>(puts_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
@@ -104,8 +104,8 @@ struct transaction
         uint32_t version{};
         ix::integer ins_count{};
         ix::integer outs_count{};
-        pt::integer point_fk{};
-        pu::integer puts_fk{};
+        ins::integer point_fk{};
+        outs::integer puts_fk{};
     };
 
     struct only
@@ -123,8 +123,8 @@ struct transaction
             version    = source.read_little_endian<uint32_t>();
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
-            point_fk   = source.read_little_endian<pt::integer, pt::size>();
-            puts_fk    = source.read_little_endian<pu::integer, pu::size>();
+            point_fk   = source.read_little_endian<ins::integer, ins::size>();
+            puts_fk    = source.read_little_endian<outs::integer, outs::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
@@ -133,8 +133,8 @@ struct transaction
         uint32_t version{};
         ix::integer ins_count{};
         ix::integer outs_count{};
-        pt::integer point_fk{};
-        pu::integer puts_fk{};
+        ins::integer point_fk{};
+        outs::integer puts_fk{};
     };
 
     struct record_put_ref
@@ -152,8 +152,8 @@ struct transaction
             sink.write_little_endian<uint32_t>(tx.version());
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
             sink.write_little_endian<ix::integer, ix::size>(outs_count);
-            sink.write_little_endian<pt::integer, pt::size>(point_fk);
-            sink.write_little_endian<pu::integer, pu::size>(puts_fk);
+            sink.write_little_endian<ins::integer, ins::size>(point_fk);
+            sink.write_little_endian<outs::integer, outs::size>(puts_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
@@ -161,8 +161,8 @@ struct transaction
         const system::chain::transaction& tx{};
         ix::integer ins_count{};
         ix::integer outs_count{};
-        pt::integer point_fk{};
-        pu::integer puts_fk{};
+        ins::integer point_fk{};
+        outs::integer puts_fk{};
     };
 
     struct only_with_sk
@@ -203,15 +203,15 @@ struct transaction
             source.skip_bytes(skip_to_puts);
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
-            point_fk   = source.read_little_endian<pt::integer, pt::size>();
-            puts_fk    = source.read_little_endian<pu::integer, pu::size>();
+            point_fk   = source.read_little_endian<ins::integer, ins::size>();
+            puts_fk    = source.read_little_endian<outs::integer, outs::size>();
             return source;
         }
 
         ix::integer ins_count{};
         ix::integer outs_count{};
-        pt::integer point_fk{};
-        pu::integer puts_fk{};
+        ins::integer point_fk{};
+        outs::integer puts_fk{};
     };
 
     struct get_version
@@ -251,18 +251,18 @@ struct transaction
 
             if (index >= number)
             {
-                point_fk = pt::terminal;
+                point_fk = ins::terminal;
                 return source;
             }
 
             source.skip_bytes(ix::size);
-            point_fk = source.read_little_endian<pt::integer, pt::size>() + index;
+            point_fk = source.read_little_endian<ins::integer, ins::size>() + index;
             return source;
         }
 
         // Index provides optional offset for point_fk, number is absolute.
-        const pt::integer index{};
-        pt::integer point_fk{};
+        const ins::integer index{};
+        ins::integer point_fk{};
         ix::integer number{};
     };
 
@@ -276,18 +276,18 @@ struct transaction
 
             if (index >= number)
             {
-                puts_fk = pu::terminal;
+                puts_fk = outs::terminal;
                 return source;
             }
 
-            source.skip_bytes(pt::size);
-            puts_fk = source.read_little_endian<pu::integer, pu::size>() + index;
+            source.skip_bytes(ins::size);
+            puts_fk = source.read_little_endian<outs::integer, outs::size>() + index;
             return source;
         }
 
         // Index provides optional offset for puts_fk, number is absolute.
-        const pu::integer index{};
-        pu::integer puts_fk{};
+        const outs::integer index{};
+        outs::integer puts_fk{};
         ix::integer number{};
     };
 

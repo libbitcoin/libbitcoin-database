@@ -115,7 +115,11 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     if (point_fk.is_terminal())
         return error::tx_point_allocate;
 
-    // Commit input and point records.
+    // Expand synchronizes keys with point allocation.
+    if (!store_.ins.expand(point_fk + inputs))
+        return error::tx_ins_allocate;
+
+    // Commit input and ins|point records.
     for (const auto& in: *ins)
     {
         input_link input_fk{};
@@ -128,14 +132,22 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
             return error::tx_input_put;
         }
 
-        if (!store_.point.put(point_it++, table::point::record
+        if (!store_.ins.put(point_it, table::ins::record
         {
             {},
-            in->point().hash(),
             in->point().index(),
             in->sequence(),
             input_fk,
             tx_fk
+        }))
+        {
+            return error::tx_ins_put;
+        }
+
+        if (!store_.point.put(point_it++, table::point::record_ref
+        {
+            {},
+            in->point().hash()
         }))
         {
             return error::tx_point_put;

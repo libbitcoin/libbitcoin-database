@@ -34,9 +34,7 @@ namespace table {
 struct puts
   : public no_map<schema::puts>
 {
-    using point = linkage<schema::point_>;
     using out = linkage<schema::put>;
-    using point_links = std::vector<point::integer>;
     using output_links = std::vector<out::integer>;
     using no_map<schema::puts>::nomap;
 

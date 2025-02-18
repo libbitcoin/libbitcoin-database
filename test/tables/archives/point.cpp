@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(point__put__get__expected)
     BOOST_REQUIRE_EQUAL(link, 0u);
     BOOST_REQUIRE(instance.put_link(link, table::point::record{ {}, hash }));
     BOOST_REQUIRE_EQUAL(link, 1u);
-////    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::point::record element{};
     BOOST_REQUIRE(instance.get(0, element));

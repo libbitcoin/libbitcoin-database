@@ -127,6 +127,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\store.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\input.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\ins.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\output.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\point.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\puts.hpp" />

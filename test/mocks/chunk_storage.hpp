@@ -48,6 +48,7 @@ public:
     size_t capacity() const NOEXCEPT override;
     size_t size() const NOEXCEPT override;
     bool truncate(size_t size) NOEXCEPT override;
+    bool expand(size_t size) NOEXCEPT override;
     size_t allocate(size_t chunk) NOEXCEPT override;
     memory_ptr set(size_t offset, size_t size,
         uint8_t backfill) NOEXCEPT override;

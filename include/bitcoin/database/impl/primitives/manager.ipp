@@ -53,6 +53,15 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::expand(const Link& count) NOEXCEPT
+{
+    if (count.is_terminal())
+        return false;
+
+    return file_.expand(link_to_position(count));
+}
+
+TEMPLATE
 Link CLASS::allocate(const Link& size) NOEXCEPT
 {
     if (size.is_terminal())
