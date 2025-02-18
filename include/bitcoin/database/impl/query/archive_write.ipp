@@ -122,6 +122,7 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     // Commit input and ins|point records.
     for (const auto& in: *ins)
     {
+        // TODO: preallocate (requires input sizes).
         input_link input_fk{};
         if (!store_.input.put_link(input_fk, table::input::put_ref
         {
@@ -154,6 +155,7 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
         }
     }
 
+    // TODO: preallocate (requires output sizes).
     // Commit output records.
     for (const auto& out: *outs)
     {
