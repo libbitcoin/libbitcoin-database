@@ -122,21 +122,22 @@ tx_link CLASS::to_prevout_tx(const point_link& link) const NOEXCEPT
 TEMPLATE
 tx_link CLASS::to_spending_tx(const point_link& link) const NOEXCEPT
 {
-    table::point::get_parent point{};
-    if (!store_.point.get(link, point))
+    table::ins::get_parent ins{};
+    if (!store_.ins.get(link, ins))
         return {};
 
-    return point.parent_fk;
+    return ins.parent_fk;
 }
 
 TEMPLATE
 spend_key CLASS::to_spend_key(const point_link& link) const NOEXCEPT
 {
-    table::point::get_spend_key point{};
-    if (!store_.point.get(link, point))
+    table::ins::get_index ins{};
+    table::point::get_stub point{};
+    if (!store_.point.get(link, point) || !store_.ins.get(link, ins))
         return {};
 
-    return table::spend::compose(point.stub, point.index);
+    return table::spend::compose(point.stub, ins.index);
 }
 
 // point to put (forward navigation)
@@ -181,11 +182,13 @@ output_link CLASS::to_output(const tx_link& link,
 TEMPLATE
 output_link CLASS::to_prevout(const point_link& link) const NOEXCEPT
 {
-    table::point::get_point point{};
-    if (!store_.point.get(link, point) || point.is_null())
+    table::ins::get_index ins{};
+    table::point::record point{};
+    if (!store_.ins.get(link, ins) || ins.is_null() ||
+        !store_.point.get(link, point))
         return {};
 
-    return to_output(to_tx(point.hash), point.index);
+    return to_output(to_tx(point.hash), ins.index);
 }
 
 // block/tx to block (reverse navigation)
@@ -393,6 +396,7 @@ output_links CLASS::to_prevouts(const tx_link& link) const NOEXCEPT
     if (points.empty())
         return {};
 
+    // TODO: to_prevout()
     output_links prevouts{};
     prevouts.reserve(points.size());
     for (const auto& point: points)
@@ -404,6 +408,7 @@ output_links CLASS::to_prevouts(const tx_link& link) const NOEXCEPT
 // txs to puts (forward navigation)
 // ----------------------------------------------------------------------------
 
+// to_ins()
 TEMPLATE
 point_links CLASS::to_points(const tx_links& txs) const NOEXCEPT
 {
@@ -434,6 +439,8 @@ TEMPLATE
 output_links CLASS::to_prevouts(const tx_links& txs) const NOEXCEPT
 {
     constexpr auto parallel = poolstl::execution::par;
+
+    // to_prevout()
     const auto ins = to_points(txs);
     output_links outs(ins.size());
     const auto fn = [this](auto spend) NOEXCEPT{ return to_prevout(spend); };

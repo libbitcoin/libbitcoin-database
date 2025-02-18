@@ -238,15 +238,24 @@ code CLASS::push_doubles(tx_links& out, const point& point,
 
     // The expected self spend and primary conflicts are removed. This serves
     // to remove secondary conflicts, leaving only actual additional spends.
-    const auto ptr = store_.point.get_memory();
+    auto ptr = store_.point.get_memory();
     for (auto link: points)
     {
-        table::point::get_parent_key parent_tx{};
-        if (!store_.point.get(ptr, link, parent_tx))
+        table::point::record get{};
+        if (!store_.point.get(ptr, link, get))
             return error::integrity6;
 
-        if (parent_tx.hash == point.hash())
-            out.push_back(parent_tx.fk);
+        // Extremely rare, normally implies a duplicate tx.
+        if (get.hash == point.hash())
+        {
+            ptr.reset();
+            table::ins::get_parent ins{};
+            if (!store_.ins.get(link, ins))
+                return error::integrity6;
+
+            out.push_back(ins.parent_fk);
+            ptr = store_.point.get_memory();
+        }
     }
 
     return error::success;
@@ -293,6 +302,8 @@ error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
 {
     // Ensure prevout tx is in a strong block, first try self link.
     auto strong = to_block(tx);
+
+    // Extremely rare, normally implies a duplicate tx.
     if (strong.is_terminal())
     {
         // Try all txs with same hash as self (any instance will suffice).

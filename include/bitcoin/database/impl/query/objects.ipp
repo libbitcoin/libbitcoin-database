@@ -222,33 +222,23 @@ typename CLASS::input::cptr CLASS::get_input(
 {
     using namespace system;
     table::input::get_ptrs in{};
-    table::point::get_input point{};
-    if (!store_.point.get(link, point) ||
-        !store_.input.get(point.input_fk, in))
+    table::ins::get_input ins{};
+    table::point::record point{};
+    if (!store_.ins.get(link, ins) ||
+        !store_.point.get(link, point) ||
+        !store_.input.get(ins.input_fk, in))
         return {};
 
     const auto ptr = to_shared<input>
     (
-        make_point(std::move(point.hash), point.index),
+        make_point(std::move(point.hash), ins.index),
         in.script,
         in.witness,
-        point.sequence
+        ins.sequence
     );
 
     ptr->metadata.link = link;
     return ptr;
-}
-
-TEMPLATE
-typename CLASS::point::cptr CLASS::get_point(
-    const point_link& link) const NOEXCEPT
-{
-    using namespace system;
-    table::point::get_point point{};
-    if (!store_.point.get(link, point))
-        return {};
-
-    return make_point(std::move(point.hash), point.index);
 }
 
 TEMPLATE

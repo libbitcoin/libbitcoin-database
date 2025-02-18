@@ -44,6 +44,9 @@ settings::settings() NOEXCEPT
     point_size{ 1 },
     point_rate{ 50 },
 
+    ins_size{ 1 },
+    ins_rate{ 50 },
+
     puts_size{ 1 },
     puts_rate{ 50 },
 

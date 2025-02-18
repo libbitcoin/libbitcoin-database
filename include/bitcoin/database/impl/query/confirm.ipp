@@ -106,7 +106,7 @@ bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 ////TEMPLATE
 ////bool CLASS::is_spent(const point_link& link) const NOEXCEPT
 ////{
-////    table::point::get_prevout_parent spend{};
+////    table::ins::get_index spend{};
 ////    if (!store_.spend.get(link, spend))
 ////        return false;
 ////
@@ -114,7 +114,7 @@ bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
 ////        return false;
 ////
 ////    // Prevout is spent by any confirmed transaction.
-////    return is_spent_prevout(link, spend.point_index);
+////    return is_spent_prevout(link, spend.index);
 ////}
 
 TEMPLATE

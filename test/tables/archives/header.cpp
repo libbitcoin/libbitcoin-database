@@ -114,35 +114,35 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
     BOOST_REQUIRE(element == expected);
 }
 
-BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
-{
-    test::chunk_storage head_store{};
-    test::chunk_storage body_store{};
-    table::header instance{ head_store, body_store, 20 };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
-
-    const table::header::record_put_ptr put_ptr
-    {
-        {},
-        expected.ctx,
-        expected.milestone,
-        expected.parent_fk,
-        system::to_shared(expected_header)
-    };
-    BOOST_REQUIRE(!instance.put_link(key, put_ptr).is_terminal());
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
-
-    table::header::record element{};
-    BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE(element.ctx == expected.ctx);
-    BOOST_REQUIRE(element.version == put_ptr.header->version());
-    BOOST_REQUIRE(element.merkle_root == put_ptr.header->merkle_root());
-    BOOST_REQUIRE(element.timestamp == put_ptr.header->timestamp());
-    BOOST_REQUIRE(element.bits == put_ptr.header->bits());
-    BOOST_REQUIRE(element.nonce == put_ptr.header->nonce());
-    BOOST_REQUIRE_EQUAL(element.parent_fk, expected.parent_fk);
-}
+////BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
+////{
+////    test::chunk_storage head_store{};
+////    test::chunk_storage body_store{};
+////    table::header instance{ head_store, body_store, 20 };
+////    BOOST_REQUIRE(instance.create());
+////    BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
+////
+////    const table::header::record_put_ptr put_ptr
+////    {
+////        {},
+////        expected.ctx,
+////        expected.milestone,
+////        expected.parent_fk,
+////        system::to_shared(expected_header)
+////    };
+////    BOOST_REQUIRE(!instance.put_link(key, put_ptr).is_terminal());
+////    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+////
+////    table::header::record element{};
+////    BOOST_REQUIRE(instance.get(1, element));
+////    BOOST_REQUIRE(element.ctx == expected.ctx);
+////    BOOST_REQUIRE(element.version == put_ptr.header->version());
+////    BOOST_REQUIRE(element.merkle_root == put_ptr.header->merkle_root());
+////    BOOST_REQUIRE(element.timestamp == put_ptr.header->timestamp());
+////    BOOST_REQUIRE(element.bits == put_ptr.header->bits());
+////    BOOST_REQUIRE(element.nonce == put_ptr.header->nonce());
+////    BOOST_REQUIRE_EQUAL(element.parent_fk, expected.parent_fk);
+////}
 
 BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
 {

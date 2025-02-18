@@ -117,6 +117,7 @@ public:
     size_t output_size() const NOEXCEPT;
     size_t input_size() const NOEXCEPT;
     size_t point_size() const NOEXCEPT;
+    size_t ins_size() const NOEXCEPT;
     size_t puts_size() const NOEXCEPT;
     size_t spend_size() const NOEXCEPT;
     size_t txs_size() const NOEXCEPT;
@@ -137,6 +138,7 @@ public:
     size_t output_body_size() const NOEXCEPT;
     size_t input_body_size() const NOEXCEPT;
     size_t point_body_size() const NOEXCEPT;
+    size_t ins_body_size() const NOEXCEPT;
     size_t puts_body_size() const NOEXCEPT;
     size_t spend_body_size() const NOEXCEPT;
     size_t txs_body_size() const NOEXCEPT;
@@ -157,6 +159,7 @@ public:
     size_t output_head_size() const NOEXCEPT;
     size_t input_head_size() const NOEXCEPT;
     size_t point_head_size() const NOEXCEPT;
+    size_t ins_head_size() const NOEXCEPT;
     size_t puts_head_size() const NOEXCEPT;
     size_t spend_head_size() const NOEXCEPT;
     size_t txs_head_size() const NOEXCEPT;
@@ -170,9 +173,21 @@ public:
     size_t address_head_size() const NOEXCEPT;
     size_t neutrino_head_size() const NOEXCEPT;
 
-    /// Buckets.
+    /// Records.
+    size_t header_records() const NOEXCEPT;
+    size_t tx_records() const NOEXCEPT;
+    size_t point_records() const NOEXCEPT;
+    size_t ins_records() const NOEXCEPT;
+    size_t puts_records() const NOEXCEPT;
+    size_t spend_records() const NOEXCEPT;
+    size_t candidate_records() const NOEXCEPT;
+    size_t confirmed_records() const NOEXCEPT;
+    size_t strong_tx_records() const NOEXCEPT;
+    size_t prevout_records() const NOEXCEPT;
+    size_t address_records() const NOEXCEPT;
+
+    /// Buckets (maps only).
     size_t header_buckets() const NOEXCEPT;
-    size_t point_buckets() const NOEXCEPT;
     size_t spend_buckets() const NOEXCEPT;
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
@@ -182,17 +197,6 @@ public:
     size_t validated_bk_buckets() const NOEXCEPT;
     size_t address_buckets() const NOEXCEPT;
     size_t neutrino_buckets() const NOEXCEPT;
-
-    /// Records.
-    size_t header_records() const NOEXCEPT;
-    size_t point_records() const NOEXCEPT;
-    size_t spend_records() const NOEXCEPT;
-    size_t tx_records() const NOEXCEPT;
-    size_t candidate_records() const NOEXCEPT;
-    size_t confirmed_records() const NOEXCEPT;
-    size_t strong_tx_records() const NOEXCEPT;
-    size_t prevout_records() const NOEXCEPT;
-    size_t address_records() const NOEXCEPT;
 
     /// Counters (archive slabs - txs/puts/neutrino can be derived).
     size_t input_count(const tx_link& link) const NOEXCEPT;
@@ -344,7 +348,6 @@ public:
     transaction::cptr get_transaction(const tx_link& link) const NOEXCEPT;
     output::cptr get_output(const output_link& link) const NOEXCEPT;
     input::cptr get_input(const point_link& link) const NOEXCEPT;
-    point::cptr get_point(const point_link& link) const NOEXCEPT;
     inputs_ptr get_spenders(const output_link& link) const NOEXCEPT;
 
     input::cptr get_input(const tx_link& link,

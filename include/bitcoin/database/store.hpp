@@ -99,6 +99,7 @@ public:
     table::input input;
     table::output output;
     table::point point;
+    table::ins ins;
     table::puts puts;
     table::spend spend;
     table::transaction tx;
@@ -144,9 +145,13 @@ protected:
     Storage output_head_;
     Storage output_body_;
 
-    // record hashmap
+    // array
     Storage point_head_;
     Storage point_body_;
+
+    // array
+    Storage ins_head_;
+    Storage ins_body_;
 
     // array
     Storage puts_head_;
@@ -182,7 +187,7 @@ protected:
     /// Caches.
     /// -----------------------------------------------------------------------
 
-    // record arraymap
+    // bloc arraymap
     Storage prevout_head_;
     Storage prevout_body_;
 
