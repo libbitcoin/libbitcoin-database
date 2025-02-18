@@ -235,7 +235,7 @@ namespace schema
         static_assert(minrow == 16u);
     };
 
-    // record
+    // array
     // TODO: rename to 'outs'.
     struct puts
     {
