@@ -115,9 +115,8 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     if (point_fk.is_terminal())
         return error::tx_point_allocate;
 
-    // Allocate ins records (links synchronized with point).
-    const auto ins_fk = store_.ins.allocate(inputs);
-    if (ins_fk != point_fk)
+    // Expand synchronizes keys with point allocation.
+    if (!store_.ins.expand(point_fk + inputs))
         return error::tx_ins_allocate;
 
     // Commit input and ins|point records.
