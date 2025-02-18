@@ -52,6 +52,9 @@ public:
     /// Reduce the number of records (false if not lesser).
     bool truncate(const Link& count) NOEXCEPT;
 
+    /// Increase the number of records as necessary (false only if fails).
+    bool expand(const Link& count) NOEXCEPT;
+
     /// Allocate records and return first logical position (eof possible).
     /// For record, size is number of records to allocate (link + data).
     /// For slab size must include bytes (link + data) [key is part of data].

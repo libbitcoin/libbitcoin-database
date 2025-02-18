@@ -229,6 +229,32 @@ bool map::truncate(size_t size) NOEXCEPT
     return true;
 }
 
+bool map::expand(size_t size) NOEXCEPT
+{
+    std::unique_lock field_lock(field_mutex_);
+
+    if (fault_ || !loaded_)
+        return false;
+
+    if (size <= logical_)
+        return true;
+
+    if (size > capacity_)
+    {
+        const auto capacity = to_capacity(size);
+
+        // TODO: Could loop over a try lock here and log deadlock warning.
+        std::unique_lock remap_lock(remap_mutex_);
+
+        // Disk full condition leaves store in valid state despite eof return.
+        if (!remap_(capacity))
+            return false;
+    }
+
+    logical_ = size;
+    return true;
+}
+
 // Waits until all access pointers are destructed. Will deadlock if any access
 // pointer is waiting on allocation. Lock safety requires that access pointers
 // are short-lived and do not block on allocation.

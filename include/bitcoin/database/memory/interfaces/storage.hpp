@@ -64,6 +64,9 @@ public:
     /// Reduce logical size to specified (false if size exceeds logical).
     virtual bool truncate(size_t size) NOEXCEPT = 0;
 
+    /// Increase logical size to specified as requried (false only if fails).
+    virtual bool expand(size_t size) NOEXCEPT = 0;
+
     /// Allocate bytes and return offset to first allocated (or eof).
     virtual size_t allocate(size_t chunk) NOEXCEPT = 0;
 

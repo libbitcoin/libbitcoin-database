@@ -74,14 +74,14 @@ public:
         return output_body_.buffer();
     }
 
-    system::data_chunk& prevout_head() NOEXCEPT
+    system::data_chunk& ins_head() NOEXCEPT
     {
-        return prevout_head_.buffer();
+        return ins_head_.buffer();
     }
 
-    system::data_chunk& prevout_body() NOEXCEPT
+    system::data_chunk& ins_body() NOEXCEPT
     {
-        return prevout_body_.buffer();
+        return ins_body_.buffer();
     }
 
     system::data_chunk& puts_head() NOEXCEPT
@@ -157,6 +157,16 @@ public:
     }
 
     // Caches.
+
+    system::data_chunk& prevout_head() NOEXCEPT
+    {
+        return prevout_head_.buffer();
+    }
+
+    system::data_chunk& prevout_body() NOEXCEPT
+    {
+        return prevout_body_.buffer();
+    }
 
     system::data_chunk& validated_bk_head() NOEXCEPT
     {

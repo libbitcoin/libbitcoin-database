@@ -87,6 +87,9 @@ public:
     /// Reduce logical size to specified (false if size exceeds logical).
     bool truncate(size_t size) NOEXCEPT override;
 
+    /// Increase logical size to specified as requried (false only if fails).
+    bool expand(size_t size) NOEXCEPT override;
+
     /// Allocate bytes and return offset to first allocated (or eof).
     size_t allocate(size_t chunk) NOEXCEPT override;
 
