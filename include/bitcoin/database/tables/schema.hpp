@@ -206,17 +206,18 @@ namespace schema
         static_assert(minrow == 10u);
     };
 
-    // array
+    // record multimap
     struct point
     {
+        static constexpr bool hash_function = false;
         static constexpr size_t pk = schema::ins_;
-        static constexpr size_t minsize =
-            schema::hash;
-        static constexpr size_t minrow = minsize;
+        static constexpr size_t sk = schema::hash + schema::index;
+        static constexpr size_t minsize = zero;
+        static constexpr size_t minrow = pk + sk + minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 32u);
-        static_assert(minrow == 32u);
+        static_assert(minsize == 0u);
+        static_assert(minrow == 39u);
     };
 
     // array
@@ -224,15 +225,14 @@ namespace schema
     {
         static constexpr size_t pk = schema::ins_;
         static constexpr size_t minsize =
-            schema::index +             // point index
             sizeof(uint32_t) +          // sequence
             schema::input::pk +         // input->script|witness
             schema::transaction::pk;    // parent->tx (spend navigation)
         static constexpr size_t minrow = minsize;
         static constexpr size_t size = minsize;
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 16u);
-        static_assert(minrow == 16u);
+        static_assert(minsize == 13u);
+        static_assert(minrow == 13u);
     };
 
     // array
@@ -279,22 +279,6 @@ namespace schema
         static constexpr linkage<pk> count() NOEXCEPT { return 1; }
         static_assert(minsize == 3u);
         static_assert(minrow == 3u);
-    };
-
-    // TODO: reorganize as index (not archive).
-    // moderate (sk:7) record multimap, with low multiple rate.
-    struct spend
-    {
-        static constexpr bool hash_function = false;
-        static constexpr size_t pk = schema::spend_;
-        static constexpr size_t sk = schema::tx + schema::index;
-        static constexpr size_t minsize =
-            schema::point::pk;              // point->hash
-        static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 4u);
-        static_assert(minrow == 15u);
     };
 
     // TODO: modest (sk:4) record multimap, with high multiple rate.

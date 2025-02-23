@@ -101,7 +101,6 @@ public:
     table::point point;
     table::ins ins;
     table::puts puts;
-    table::spend spend;
     table::transaction tx;
     table::txs txs;
 
@@ -145,7 +144,7 @@ protected:
     Storage output_head_;
     Storage output_body_;
 
-    // array
+    // record hashmap
     Storage point_head_;
     Storage point_body_;
 
@@ -156,10 +155,6 @@ protected:
     // array
     Storage puts_head_;
     Storage puts_body_;
-
-    // record hashmap
-    Storage spend_head_;
-    Storage spend_body_;
 
     // record hashmap
     Storage tx_head_;

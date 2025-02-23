@@ -52,6 +52,7 @@ struct BCD_API settings
     uint64_t output_size;
     uint16_t output_rate;
 
+    uint32_t point_buckets;
     uint64_t point_size;
     uint16_t point_rate;
 
@@ -60,10 +61,6 @@ struct BCD_API settings
 
     uint64_t puts_size;
     uint16_t puts_rate;
-
-    uint32_t spend_buckets;
-    uint64_t spend_size;
-    uint16_t spend_rate;
 
     uint32_t tx_buckets;
     uint64_t tx_size;

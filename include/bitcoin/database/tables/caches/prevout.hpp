@@ -145,7 +145,7 @@ struct prevout
             std::for_each(cons.begin(), cons.end(), write_con);
             std::for_each(std::next(txs.begin()), txs.end(), write_tx);
 
-            BC_ASSERT(!sink || (sink.get_write_position() == count() * minrow));
+            BC_ASSERT(!sink || (sink.get_write_position() == count()));
             return sink;
         }
 
@@ -180,7 +180,7 @@ struct prevout
                 value.second = source.read_little_endian<uint32_t>();
             });
 
-            BC_ASSERT(!source || source.get_read_position() == count() * minrow);
+            BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
 

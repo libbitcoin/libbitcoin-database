@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     tx_link link{};
     settings settings{};
     settings.tx_buckets = 5;
-    settings.spend_buckets = 5;
+    settings.point_buckets = 5;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
     // data_chunk store.
     settings settings{};
     settings.tx_buckets = 5;
-    settings.spend_buckets = 5;
+    settings.point_buckets = 5;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
     BOOST_REQUIRE_EQUAL(store.input_head(), expected_input_head);
     BOOST_REQUIRE_EQUAL(store.output_head(), expected_output_head);
 ////    BOOST_REQUIRE_EQUAL(store.puts_head(), expected_puts_head);
-    BOOST_REQUIRE_EQUAL(store.spend_head(), expected_spend_head);
+////    BOOST_REQUIRE_EQUAL(store.spend_head(), expected_spend_head);
 
 ////    BOOST_REQUIRE_EQUAL(store.tx_body(), expected_tx_body);
 ////    BOOST_REQUIRE_EQUAL(store.point_body(), expected_point_body);
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
     settings settings{};
     settings.header_buckets = 5;
     settings.tx_buckets = 5;
-    settings.spend_buckets = 5;
+    settings.point_buckets = 5;
     settings.txs_buckets = 10;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -676,7 +676,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     settings settings{};
     settings.header_buckets = 5;
     settings.tx_buckets = 5;
-    settings.spend_buckets = 5;
+    settings.point_buckets = 5;
     settings.txs_buckets = 10;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -1061,22 +1061,22 @@ BOOST_AUTO_TEST_CASE(query_archive__get_point_key__always__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.get_point_key(0), system::null_hash);
+    BOOST_REQUIRE_EQUAL(query.get_point_hash(0), system::null_hash);
 
     // tx4/5 prevouts are all block1a.tx1.
     BOOST_REQUIRE(query.set(test::tx4));
     BOOST_REQUIRE(query.set(test::tx5));
-////    BOOST_REQUIRE_EQUAL(query.get_point_key(0), test::block1a.transactions_ptr()->front()->hash(false));
-    BOOST_REQUIRE_EQUAL(query.get_point_key(1), test::block1a.transactions_ptr()->front()->hash(false));
-    BOOST_REQUIRE_EQUAL(query.get_point_key(2), test::block1a.transactions_ptr()->front()->hash(false));
-////    BOOST_REQUIRE_EQUAL(query.get_point_key(3), system::null_hash);
+////    BOOST_REQUIRE_EQUAL(query.get_point_hash(0), test::block1a.transactions_ptr()->front()->hash(false));
+    BOOST_REQUIRE_EQUAL(query.get_point_hash(1), test::block1a.transactions_ptr()->front()->hash(false));
+    BOOST_REQUIRE_EQUAL(query.get_point_hash(2), test::block1a.transactions_ptr()->front()->hash(false));
+////    BOOST_REQUIRE_EQUAL(query.get_point_hash(3), system::null_hash);
 
     // block1a adds three prevouts of two txs.
     BOOST_REQUIRE(query.set(test::block1a, context{}, false, false));
-////    BOOST_REQUIRE_EQUAL(query.get_point_key(3), system::one_hash);
-    BOOST_REQUIRE_EQUAL(query.get_point_key(4), system::one_hash);
-////    BOOST_REQUIRE_EQUAL(query.get_point_key(5), test::two_hash);
-////    BOOST_REQUIRE_EQUAL(query.get_point_key(6), system::null_hash);
+////    BOOST_REQUIRE_EQUAL(query.get_point_hash(3), system::one_hash);
+    BOOST_REQUIRE_EQUAL(query.get_point_hash(4), system::one_hash);
+////    BOOST_REQUIRE_EQUAL(query.get_point_hash(5), test::two_hash);
+////    BOOST_REQUIRE_EQUAL(query.get_point_hash(6), system::null_hash);
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__get_tx_key__always__expected)

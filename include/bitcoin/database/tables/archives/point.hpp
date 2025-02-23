@@ -31,63 +31,77 @@ namespace database {
 namespace table {
 
 struct point
-  : public no_map<schema::point>
+  : public hash_map<schema::point>
 {
-    using no_map<schema::point>::nomap;
-    using point_stub = linkage<schema::tx>;
+    using hash_map<schema::point>::hashmap;
+    using search_key = search<schema::point::sk>;
+    using ix = linkage<schema::index>;
+
+    static inline search_key compose(const hash_digest& point_hash,
+        ix::integer point_index) NOEXCEPT
+    {
+        search_key key{};
+        system::array_cast<uint8_t, schema::hash>(key) = point_hash;
+        key.at(schema::hash + 0) = system::byte<0>(point_index);
+        key.at(schema::hash + 1) = system::byte<1>(point_index);
+        key.at(schema::hash + 2) = system::byte<2>(point_index);
+        return key;
+    }
+
+    static search_key compose(const system::chain::point& point) NOEXCEPT
+    {
+        return compose(point.hash(), point.index());
+    }
 
     struct record
       : public schema::point
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
+            source.rewind_bytes(schema::point::sk);
             hash = source.read_hash();
+            index = source.read_little_endian<ix::integer, ix::size>();
+
+            if (index == ix::terminal)
+                index = system::chain::point::null_index;
+
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            sink.write_bytes(hash);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
         inline bool is_null() const NOEXCEPT
         {
-            return hash == system::null_hash;
+            return index == system::chain::point::null_index;
         }
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return hash == other.hash;
+            return hash == other.hash
+                && index == other.index;
         }
 
         hash_digest hash{};
+        ix::integer index{};
     };
 
-    struct record_ref
+    struct get_composed
       : public schema::point
     {
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            sink.write_bytes(hash);
-            return sink;
-        }
-
-        const hash_digest& hash{};
-    };
-
-    // point
-    struct get_stub
-      : public schema::point
-    {
-        using ps = point_stub;
         inline bool from_data(reader& source) NOEXCEPT
         {
-            stub = source.read_little_endian<ps::integer, ps::size>();
+            source.rewind_bytes(schema::point::sk);
+            key = source.read_forward<schema::point::sk>();
+            BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
-    
-        ps::integer stub{};
+
+        search_key key{};
     };
 };
 

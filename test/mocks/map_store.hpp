@@ -118,16 +118,6 @@ public:
         return puts_body_.file();
     }
 
-    inline const path& spend_head_file() const NOEXCEPT
-    {
-        return spend_head_.file();
-    }
-
-    inline const path& spend_body_file() const NOEXCEPT
-    {
-        return spend_body_.file();
-    }
-
     inline const path& tx_head_file() const NOEXCEPT
     {
         return tx_head_.file();

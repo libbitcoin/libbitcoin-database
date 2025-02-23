@@ -43,21 +43,15 @@ struct ins
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            index = source.read_little_endian<ix::integer, ix::size>();
             sequence = source.read_little_endian<uint32_t>();
             input_fk = source.read_little_endian<in::integer, in::size>();
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
-
-            if (index == ix::terminal)
-                index = system::chain::point::null_index;
-
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            sink.write_little_endian<ix::integer, ix::size>(index);
             sink.write_little_endian<uint32_t>(sequence);
             sink.write_little_endian<in::integer, in::size>(input_fk);
             sink.write_little_endian<tx::integer, tx::size>(parent_fk);
@@ -65,20 +59,13 @@ struct ins
             return sink;
         }
 
-        inline bool is_null() const NOEXCEPT
-        {
-            return index == system::chain::point::null_index;
-        }
-
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return index == other.index
-                && sequence == other.sequence
+            return sequence == other.sequence
                 && input_fk == other.input_fk
                 && parent_fk == other.parent_fk;
         }
 
-        ix::integer index{};
         uint32_t sequence{};
         in::integer input_fk{};
         tx::integer parent_fk{};
@@ -102,45 +89,13 @@ struct ins
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            index = source.read_little_endian<ix::integer, ix::size>();
             sequence = source.read_little_endian<uint32_t>();
             input_fk = source.read_little_endian<in::integer, in::size>();
-
-            if (index == ix::terminal)
-                index = system::chain::point::null_index;
-
             return source;
         }
 
-        inline bool is_null() const NOEXCEPT
-        {
-            return index == system::chain::point::null_index;
-        }
-
-        ix::integer index{};
         uint32_t sequence{};
         in::integer input_fk{};
-    };
-
-    struct get_index
-      : public schema::ins
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            index = source.read_little_endian<ix::integer, ix::size>();
-    
-            if (index == ix::terminal)
-                index = system::chain::point::null_index;
-    
-            return source;
-        }
-    
-        inline bool is_null() const NOEXCEPT
-        {
-            return index == system::chain::point::null_index;
-        }
-    
-        ix::integer index{};
     };
 };
 
