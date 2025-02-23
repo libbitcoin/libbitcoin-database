@@ -41,6 +41,7 @@ settings::settings() NOEXCEPT
     output_size{ 1 },
     output_rate{ 50 },
 
+    point_buckets{ 100 },
     point_size{ 1 },
     point_rate{ 50 },
 
@@ -49,10 +50,6 @@ settings::settings() NOEXCEPT
 
     puts_size{ 1 },
     puts_rate{ 50 },
-
-    spend_buckets{ 100 },
-    spend_size{ 1 },
-    spend_rate{ 50 },
 
     tx_buckets{ 100 },
     tx_size{ 1 },

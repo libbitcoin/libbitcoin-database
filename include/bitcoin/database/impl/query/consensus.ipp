@@ -199,79 +199,32 @@ code CLASS::unspent_duplicates(const header_link& link,
 
 // protected
 TEMPLATE
-code CLASS::get_conflicts(point_links& points, const point& point,
-    const point_link& self) const NOEXCEPT
-{
-    // Iterate to all matching spend table keys. Since these are stubs of the
-    // full tx hash there will be false positives at the rate of the original
-    // "foreign point" indexation. This means two sets of conflicts, first the
-    // spend table and then the stubs. But this dramatically reduces paging in
-    // the double spend search. The spend table load controls for primary but
-    // not secondary conflicts. Reducing secondary conflicts requires increase
-    // to the stub hash portion of the spend key. Given that the spend key has
-    // two parts (stub|index) there is never a secondary conflict produced by
-    // the existence of multiple spends of outputs in the same transaction.
-    auto it = store_.spend.it(table::spend::compose(point));
-    if (!it)
-        return error::integrity4;
-
-    do
-    {
-        table::spend::record get{};
-        if (!store_.spend.get(it, get))
-            return error::integrity5;
-
-        if (get.point_fk != self)
-            points.push_back(get.point_fk);
-    }
-    while (it.advance());
-    return error::success;
-}
-
-// protected
-TEMPLATE
-code CLASS::push_doubles(tx_links& out, const point& point,
-    const point_links& points) const NOEXCEPT
-{
-    if (points.empty())
-        return error::success;
-
-    // The expected self spend and primary conflicts are removed. This serves
-    // to remove secondary conflicts, leaving only actual additional spends.
-    auto ptr = store_.point.get_memory();
-    for (auto link: points)
-    {
-        table::point::record get{};
-        if (!store_.point.get(ptr, link, get))
-            return error::integrity6;
-
-        // Extremely rare, normally implies a duplicate tx.
-        if (get.hash == point.hash())
-        {
-            ptr.reset();
-            table::ins::get_parent ins{};
-            if (!store_.ins.get(link, ins))
-                return error::integrity6;
-
-            out.push_back(ins.parent_fk);
-            ptr = store_.point.get_memory();
-        }
-    }
-
-    return error::success;
-}
-
-// protected
-TEMPLATE
 code CLASS::push_spenders(tx_links& out, const point& point,
     const point_link& self) const NOEXCEPT
 {
-    code ec{};
-    point_links points{};
-    if ((ec = get_conflicts(points, point, self)))
-        return ec;
+    auto it = store_.point.it(table::point::compose(point));
+    if (!it)
+        return error::integrity4;
 
-    return push_doubles(out, point, points);
+    point_links points{};
+    do
+    {
+        if (it.self() != self)
+            points.push_back(it.self());
+    }
+    while (it.advance());
+    it.reset();
+
+    for (auto link: points)
+    {
+        table::ins::get_parent get{};
+        if (!store_.ins.get(link, get))
+            return error::integrity5;
+
+        out.push_back(get.parent_fk);
+    }
+
+    return error::success;
 }
 
 TEMPLATE

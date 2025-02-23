@@ -116,7 +116,7 @@ tx_link CLASS::to_output_tx(const output_link& link) const NOEXCEPT
 TEMPLATE
 tx_link CLASS::to_prevout_tx(const point_link& link) const NOEXCEPT
 {
-    return to_tx(get_point_key(link));
+    return to_tx(get_point_hash(link));
 }
 
 TEMPLATE
@@ -129,29 +129,8 @@ tx_link CLASS::to_spending_tx(const point_link& link) const NOEXCEPT
     return ins.parent_fk;
 }
 
-TEMPLATE
-spend_key CLASS::to_spend_key(const point_link& link) const NOEXCEPT
-{
-    table::ins::get_index ins{};
-    table::point::get_stub point{};
-    if (!store_.point.get(link, point) || !store_.ins.get(link, ins))
-        return {};
-
-    return table::spend::compose(point.stub, ins.index);
-}
-
 // point to put (forward navigation)
 // ----------------------------------------------------------------------------
-
-TEMPLATE
-point_link CLASS::to_point(const spend_link& link) const NOEXCEPT
-{
-    table::spend::record spend{};
-    if (!store_.spend.get(link, spend))
-        return {};
-
-    return spend.point_fk;
-}
 
 TEMPLATE
 point_link CLASS::to_point(const tx_link& link,
@@ -182,13 +161,11 @@ output_link CLASS::to_output(const tx_link& link,
 TEMPLATE
 output_link CLASS::to_prevout(const point_link& link) const NOEXCEPT
 {
-    table::ins::get_index ins{};
     table::point::record point{};
-    if (!store_.ins.get(link, ins) || ins.is_null() ||
-        !store_.point.get(link, point))
+    if (!store_.point.get(link, point))
         return {};
 
-    return to_output(to_tx(point.hash), ins.index);
+    return to_output(to_tx(point.hash), point.index);
 }
 
 // block/tx to block (reverse navigation)
@@ -320,39 +297,20 @@ TEMPLATE
 point_links CLASS::to_spenders(const hash_digest& point_hash,
     uint32_t output_index) const NOEXCEPT
 {
-    struct potential
-    {
-        spend_link spend_fk{};
-        point_link point_fk{};
-    };
-
     // Avoid returning spend links for coinbase inputs (not spenders).
     if (output_index == point::null_index)
         return {};
 
-    // Iterates the set of possible matches to point (conflicts).
-    auto it = store_.spend.it(table::spend::compose(point_hash, output_index));
+    auto it = store_.point.it(table::point::compose(point_hash, output_index));
     if (!it)
         return {};
 
-    std::vector<potential> spenders{};
+    point_links links{};
     do
     {
-        table::spend::record spend{};
-        if (!store_.spend.get(it, spend))
-            return {};
-
-        spenders.emplace_back(it.self(), spend.point_fk);
+        links.push_back(it.self());
     }
     while (it.advance());
-    it.reset();
-
-    // A secondary match must be made against the point table hash value.
-    point_links links{};
-    for (const auto& spender: spenders)
-        if (get_point_key(spender.point_fk) == point_hash)
-            links.push_back(spender.spend_fk);
-
     return links;
 }
 
@@ -513,10 +471,10 @@ header_link CLASS::top_header(size_t bucket) const NOEXCEPT
 }
 
 TEMPLATE
-spend_link CLASS::top_spend(size_t bucket) const NOEXCEPT
+point_link CLASS::top_point(size_t bucket) const NOEXCEPT
 {
     using namespace system;
-    return store_.spend.top(possible_narrow_cast<spend_link::integer>(bucket));
+    return store_.point.top(possible_narrow_cast<point_link::integer>(bucket));
 }
 
 TEMPLATE

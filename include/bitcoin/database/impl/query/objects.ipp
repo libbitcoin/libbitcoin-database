@@ -231,7 +231,7 @@ typename CLASS::input::cptr CLASS::get_input(
 
     const auto ptr = to_shared<input>
     (
-        make_point(std::move(point.hash), ins.index),
+        make_point(std::move(point.hash), point.index),
         in.script,
         in.witness,
         ins.sequence

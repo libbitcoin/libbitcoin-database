@@ -95,7 +95,6 @@ size_t CLASS::archive_body_size() const NOEXCEPT
         + point_body_size()
         + ins_body_size()
         + puts_body_size()
-        + spend_body_size()
         + txs_body_size()
         + tx_body_size();
 }
@@ -123,7 +122,6 @@ size_t CLASS::archive_head_size() const NOEXCEPT
         + point_head_size()
         + ins_head_size()
         + puts_head_size()
-        + spend_head_size()
         + txs_head_size()
         + tx_head_size();
 }
@@ -137,7 +135,6 @@ DEFINE_SIZES(input)
 DEFINE_SIZES(point)
 DEFINE_SIZES(ins)
 DEFINE_SIZES(puts)
-DEFINE_SIZES(spend)
 DEFINE_SIZES(txs)
 DEFINE_SIZES(tx)
 
@@ -154,7 +151,7 @@ DEFINE_SIZES(neutrino)
 // ----------------------------------------------------------------------------
 
 DEFINE_BUCKETS(header)
-DEFINE_BUCKETS(spend)
+DEFINE_BUCKETS(point)
 DEFINE_BUCKETS(txs)
 DEFINE_BUCKETS(tx)
 
@@ -173,7 +170,6 @@ DEFINE_RECORDS(tx)
 DEFINE_RECORDS(point)
 DEFINE_RECORDS(ins)
 DEFINE_RECORDS(puts)
-DEFINE_RECORDS(spend)
 
 DEFINE_RECORDS(candidate)
 DEFINE_RECORDS(confirmed)

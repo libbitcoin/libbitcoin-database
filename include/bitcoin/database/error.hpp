@@ -116,7 +116,6 @@ enum error_t : uint8_t
     /// tx archive
     tx_empty,
     tx_tx_allocate,
-    tx_spend_allocate,
     tx_input_put,
     tx_point_allocate,
     tx_point_put,
@@ -125,7 +124,6 @@ enum error_t : uint8_t
     tx_output_put,
     tx_puts_put,
     tx_tx_set,
-    tx_spend_put,
     tx_address_allocate,
     tx_address_put,
     tx_tx_commit,

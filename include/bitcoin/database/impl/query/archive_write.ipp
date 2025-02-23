@@ -133,25 +133,15 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
             return error::tx_input_put;
         }
 
-        if (!store_.ins.put(point_it, table::ins::record
+        if (!store_.ins.put(point_it++, table::ins::record
         {
             {},
-            in->point().index(),
             in->sequence(),
             input_fk,
             tx_fk
         }))
         {
             return error::tx_ins_put;
-        }
-
-        if (!store_.point.put(point_it++, table::point::record_ref
-        {
-            {},
-            in->point().hash()
-        }))
-        {
-            return error::tx_point_put;
         }
     }
 
@@ -179,8 +169,19 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     if (puts_fk.is_terminal())
         return error::tx_puts_put;
 
+    // Commit accumulated points.
+    point_it = point_fk;
+    for (const auto& in: *ins)
+    {
+        const auto key = table::point::compose(in->point());
+        if (!store_.point.put(point_it++, key, table::point::record{}))
+        {
+            return error::tx_point_put;
+        }
+    }
+
     // Create tx record.
-    // Commit is deferred for spend/address index consistency.
+    // Commit is deferred for point/address index consistency.
     if (!store_.tx.set(tx_fk, table::transaction::record_put_ref
     {
         {},
@@ -192,30 +193,6 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     }))
     {
         return error::tx_tx_set;
-    }
-
-    // Commit spend index records.
-    if (!tx.is_coinbase())
-    {
-        auto sp_fk = store_.spend.allocate(inputs);
-        if (sp_fk.is_terminal())
-            return error::tx_spend_allocate;
-
-        auto in = ins->begin();
-        const auto ptr = store_.spend.get_memory();
-
-        for (auto pt_fk = point_fk; pt_fk < (point_fk + inputs); ++pt_fk)
-        {
-            const auto key = table::spend::compose((*in++)->point());
-            if (!store_.spend.put(ptr, sp_fk++, key, table::spend::record
-            {
-                {},
-                pt_fk
-            }))
-            {
-                return error::tx_spend_put;
-            }
-        }
     }
 
     // Commit address index records.

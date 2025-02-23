@@ -493,15 +493,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__tx_tx_allocate__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "tx_tx_allocate");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__tx_spend_allocate__true_exected_message)
-{
-    constexpr auto value = error::tx_spend_allocate;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "tx_spend_allocate");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__tx_input_put__true_exected_message)
 {
     constexpr auto value = error::tx_input_put;
@@ -572,15 +563,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__tx_tx_set__true_exected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "tx_tx_set");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__tx_spend_put__true_exected_message)
-{
-    constexpr auto value = error::tx_spend_put;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "tx_spend_put");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__tx_address_allocate__true_exected_message)

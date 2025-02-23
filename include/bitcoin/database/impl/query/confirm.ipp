@@ -73,7 +73,7 @@ bool CLASS::is_confirmed_tx(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_confirmed_input(const spend_link& link) const NOEXCEPT
+bool CLASS::is_confirmed_input(const point_link& link) const NOEXCEPT
 {
     // The spend.tx is strong *and* its block is confirmed (by height).
     const auto fk = to_spending_tx(link);
@@ -132,7 +132,7 @@ bool CLASS::is_strong_block(const header_link& link) const NOEXCEPT
 
 // unused
 TEMPLATE
-bool CLASS::is_strong_spend(const spend_link& link) const NOEXCEPT
+bool CLASS::is_strong_spend(const point_link& link) const NOEXCEPT
 {
     return is_strong_tx(to_spending_tx(link));
 }
@@ -141,7 +141,7 @@ bool CLASS::is_strong_spend(const spend_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_mature(const point_link& link, size_t height) const NOEXCEPT
 {
-    const auto key = get_point_key(link);
+    const auto key = get_point_hash(link);
     if (key == system::null_hash)
         return true;
 
@@ -189,7 +189,7 @@ code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
 
     // Get hash from point, search for prevout tx and get its link.
     table::transaction::get_version tx{};
-    const auto tx_fk = store_.tx.find(get_point_key(link), tx);
+    const auto tx_fk = store_.tx.find(get_point_hash(link), tx);
     if (tx_fk.is_terminal())
         return error::missing_previous_output;
 
