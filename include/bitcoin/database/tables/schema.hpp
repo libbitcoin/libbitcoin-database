@@ -281,22 +281,6 @@ namespace schema
         static_assert(minrow == 3u);
     };
 
-    // TODO: reorganize as index (not archive).
-    // moderate (sk:7) record multimap, with low multiple rate.
-    struct spend
-    {
-        static constexpr bool hash_function = false;
-        static constexpr size_t pk = schema::spend_;
-        static constexpr size_t sk = schema::tx + schema::index;
-        static constexpr size_t minsize =
-            schema::point::pk;              // point->hash
-        static constexpr size_t minrow = pk + sk + minsize;
-        static constexpr size_t size = minsize;
-        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
-        static_assert(minsize == 4u);
-        static_assert(minrow == 15u);
-    };
-
     // TODO: modest (sk:4) record multimap, with high multiple rate.
     // large (sk:32) record multimap, with high multiple rate.
     // address record count is output count.
