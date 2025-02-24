@@ -129,12 +129,6 @@ code CLASS::reload() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-inline bool CLASS::exists(size_t key) const NOEXCEPT
-{
-    return !at(key).is_terminal();
-}
-
-TEMPLATE
 inline Link CLASS::at(size_t key) const NOEXCEPT
 {
     return head_.at(key);

@@ -36,13 +36,13 @@ CLASS::hashhead(storage& head, const Link& buckets) NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::size() const NOEXCEPT
+inline size_t CLASS::size() const NOEXCEPT
 {
     return link_to_position(buckets_);
 }
 
 TEMPLATE
-size_t CLASS::buckets() const NOEXCEPT
+inline size_t CLASS::buckets() const NOEXCEPT
 {
     return buckets_;
 }
@@ -64,7 +64,7 @@ bool CLASS::create() NOEXCEPT
     if (!ptr)
         return false;
 
-    BC_ASSERT_MSG(verify(), "unexpected body size");
+    BC_ASSERT_MSG(verify(), "unexpected head size");
 
     // std::memset/fill_n have identical performance (on win32).
     ////std::memset(ptr->data(), system::bit_all<uint8_t>, allocation);
@@ -105,20 +105,11 @@ inline Link CLASS::index(const Key& key) const NOEXCEPT
 {
     BC_ASSERT_MSG(is_nonzero(buckets_), "hash table requires buckets");
 
-    // TODO: for greater flexibility, inject hash function through template.
-    if constexpr (Hash)
-    {
-        // djb2_hash exhibits very poor uniqueness result for sequential keys.
-        return system::djb2_hash(key) % buckets_;
-    }
-    else
-    {
-        // unique_hash assumes sufficient uniqueness in low order key bytes.
-        return system::unique_hash(key) % buckets_;
+    // unique_hash assumes sufficient uniqueness in low order key bytes.
+    return system::unique_hash(key) % buckets_;
 
-        // TODO: restrict buckets to power of two and replace modulo above with
-        // return and(sub1(buckets), unique_hash(key)) [and() is much faster].
-    }
+    // TODO: restrict buckets to power of two and replace modulo above with
+    // return and(sub1(buckets), unique_hash(key)) [and() is much faster].
 }
 
 TEMPLATE

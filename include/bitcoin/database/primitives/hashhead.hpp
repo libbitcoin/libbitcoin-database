@@ -27,7 +27,7 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename Link, typename Key, bool Hash>
+template <typename Link, typename Key>
 class hashhead
 {
 public:
@@ -39,8 +39,8 @@ public:
     hashhead(storage& head, const Link& buckets) NOEXCEPT;
 
     /// Sizing (thread safe).
-    size_t size() const NOEXCEPT;
-    size_t buckets() const NOEXCEPT;
+    inline size_t size() const NOEXCEPT;
+    inline size_t buckets() const NOEXCEPT;
 
     /// Create from empty head file (not thread safe).
     bool create() NOEXCEPT;
@@ -86,8 +86,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Key, bool Hash>
-#define CLASS hashhead<Link, Key, Hash>
+#define TEMPLATE template <typename Link, typename Key>
+#define CLASS hashhead<Link, Key>
 
 #include <bitcoin/database/impl/primitives/hashhead.ipp>
 
