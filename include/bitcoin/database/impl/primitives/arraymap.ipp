@@ -50,6 +50,14 @@ bool CLASS::close() NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::reset() NOEXCEPT
+{
+    Link count{};
+    return head_.clear() && head_.get_body_count(count) &&
+        body_.truncate(count);
+}
+
+TEMPLATE
 bool CLASS::backup() NOEXCEPT
 {
     return head_.set_body_count(body_.count());

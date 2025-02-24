@@ -77,8 +77,10 @@ bool CLASS::clear() NOEXCEPT
     if (!ptr)
         return false;
 
-    // std::memset/fill_n have identical performance (on win32).
-    ////std::memset(ptr->data(), system::bit_all<uint8_t>, size());
+    // Retains head size, since head is array not map, and resets body logical
+    // count to zero, which is picked up in arraymap::reset(). Body file size
+    // remains unchanged and subject to initialization size at each startup. So
+    // there is no reduction until restart, which can include config change.
     std::fill_n(ptr->data(), size(), system::bit_all<uint8_t>);
     return set_body_count(zero);
 }

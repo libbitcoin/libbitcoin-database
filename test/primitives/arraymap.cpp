@@ -855,6 +855,19 @@ BOOST_AUTO_TEST_CASE(arraymap__record_body_count__nine_close__nine)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+BOOST_AUTO_TEST_CASE(arraymap__reset__nine_close__zero)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    record_table instance{ head_store, body_store, initial_buckets };
+    BOOST_REQUIRE(instance.create());
+    body_store.buffer() = base16_chunk("112233441122334411223344112233441122334411223344112233441122334411223344");
+    BOOST_REQUIRE(instance.reset());
+    BOOST_REQUIRE(instance.close());
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(arraymap__record_body_count__nine_backup__nine)
 {
     test::chunk_storage head_store{};
