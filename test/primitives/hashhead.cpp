@@ -25,19 +25,20 @@ using namespace system;
 
 constexpr auto key_size = 10_size;
 constexpr auto link_size = 5_size;
-constexpr auto head_size = 105_size;
+constexpr auto bucket_bits = 4_size;
+constexpr auto head_size = add1(system::power2(bucket_bits)) * link_size;
 
 // Key size does not factor into head byte size (for search key only).
 constexpr auto links = head_size / link_size;
-static_assert(links == 21u);
+static_assert(links == 17u);
 
 // Bucket count is one less than link count, due to head.size field.
 constexpr auto buckets = sub1(links);
-static_assert(buckets == 20u);
+static_assert(buckets == 16u);
 
 using link = linkage<link_size>;
 using key = data_array<key_size>;
-using unique_header = hashhead<link, key>;
+using hashhead_ = hashhead<link, key>;
 
 class nullptr_storage
   : public test::chunk_storage
@@ -55,7 +56,7 @@ BOOST_AUTO_TEST_CASE(hashhead__create__size__expected)
 {
     data_chunk data;
     test::chunk_storage store{ data };
-    unique_header head{ store, buckets };
+    hashhead_ head{ store, bucket_bits };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE_EQUAL(data.size(), head_size);
 }
@@ -64,7 +65,7 @@ BOOST_AUTO_TEST_CASE(hashhead__verify__uncreated__false)
 {
     data_chunk data;
     test::chunk_storage store{ data };
-    unique_header head{ store, buckets };
+    hashhead_ head{ store, bucket_bits };
     ////BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(!head.verify());
 }
@@ -73,7 +74,7 @@ BOOST_AUTO_TEST_CASE(hashhead__verify__created__false)
 {
     data_chunk data;
     test::chunk_storage store{ data };
-    unique_header head{ store, buckets };
+    hashhead_ head{ store, bucket_bits };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.verify());
 }
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(hashhead__get_body_count__created__zero)
 {
     data_chunk data;
     test::chunk_storage store{ data };
-    unique_header head{ store, buckets };
+    hashhead_ head{ store, bucket_bits };
     BOOST_REQUIRE(head.create());
 
     link count{};
@@ -94,7 +95,7 @@ BOOST_AUTO_TEST_CASE(hashhead__set_body_count__get__expected)
 {
     data_chunk data;
     test::chunk_storage store{ data };
-    unique_header head{ store, buckets };
+    hashhead_ head{ store, bucket_bits };
     BOOST_REQUIRE(head.create());
 
     constexpr auto expected = 42u;
@@ -112,14 +113,14 @@ BOOST_AUTO_TEST_CASE(hashhead__unique_hash__null_key__expected)
     BOOST_REQUIRE_EQUAL(expected, 0u);
 
     test::chunk_storage store;
-    unique_header head{ store, buckets };
+    hashhead_ head{ store, bucket_bits };
     BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
 }
 
 BOOST_AUTO_TEST_CASE(hashhead__top__link__terminal)
 {
     test::chunk_storage store;
-    unique_header head{ store, buckets };
+    hashhead_ head{ store, bucket_bits };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.top(9).is_terminal());
 }
@@ -127,7 +128,7 @@ BOOST_AUTO_TEST_CASE(hashhead__top__link__terminal)
 BOOST_AUTO_TEST_CASE(hashhead__top__nullptr__terminal)
 {
     nullptr_storage store;
-    unique_header head{ store, buckets };
+    hashhead_ head{ store, bucket_bits };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.top(9).is_terminal());
 }
@@ -137,7 +138,7 @@ BOOST_AUTO_TEST_CASE(hashhead__top__key__terminal)
     constexpr key null_key{};
 
     test::chunk_storage store;
-    unique_header head{ store, buckets };
+    hashhead_ head{ store, bucket_bits };
 
     // create() allocates and fills buckets with terminal.
     BOOST_REQUIRE(head.create());
@@ -147,7 +148,7 @@ BOOST_AUTO_TEST_CASE(hashhead__top__key__terminal)
 BOOST_AUTO_TEST_CASE(hashhead__push__link__terminal)
 {
     test::chunk_storage store;
-    unique_header head{ store, buckets };
+    hashhead_ head{ store, bucket_bits };
     BOOST_REQUIRE(head.create());
 
     constexpr auto expected = 2u;
@@ -166,7 +167,7 @@ BOOST_AUTO_TEST_CASE(hashhead__push__link__terminal)
 BOOST_AUTO_TEST_CASE(hashhead__push__key__terminal)
 {
     test::chunk_storage store;
-    unique_header head{ store, buckets };
+    hashhead_ head{ store, bucket_bits };
     BOOST_REQUIRE(head.create());
 
     constexpr auto expected = 2u;

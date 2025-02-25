@@ -31,18 +31,24 @@ const table::address::record out2{ {}, 0x0000001234567890 };
 const data_chunk expected_head = base16_chunk
 (
     "00000000"
-    "ffffffff"
-    "00000000"
     "01000000"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
     "ffffffff"
     "ffffffff"
 );
 const data_chunk closed_head = base16_chunk
 (
     "02000000"
-    "ffffffff"
-    "00000000"
     "01000000"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
     "ffffffff"
     "ffffffff"
 );
@@ -52,7 +58,7 @@ const data_chunk expected_body = base16_chunk
     "100000000000000000000000000000000000000000000000000000000000000a" // key1
     "efcdab9078" // output1 [low 5 bytes]
 
-    "ffffffff"   // next->end
+    "00000000"   // next->0
     "200000000000000000000000000000000000000000000000000000000000000b" // key2
     "9078563412" // output2 [low 5 bytes]
 );
@@ -61,7 +67,7 @@ BOOST_AUTO_TEST_CASE(address__put__two__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    table::address instance{ head_store, body_store, 5 };
+    table::address instance{ head_store, body_store, 3 };
     BOOST_REQUIRE(instance.create());
 
     table::address::link link1{};
@@ -84,7 +90,7 @@ BOOST_AUTO_TEST_CASE(address__get__two__expected)
     auto body = expected_body;
     test::chunk_storage head_store{ head };
     test::chunk_storage body_store{ body };
-    table::address instance{ head_store, body_store, 5 };
+    table::address instance{ head_store, body_store, 3 };
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 

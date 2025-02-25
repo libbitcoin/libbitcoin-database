@@ -334,7 +334,7 @@ bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
     unsafe_array_cast<uint8_t, key_size>(std::next(ptr->begin(),
         Link::size)) = key;
 
-    // Commit element to search index.
+    // Commit element to search index (terminal is a valid bucket index).
     auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
     return head_.push(link, next, head_.index(key));
 }
@@ -438,6 +438,7 @@ bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
     sink.skip_bytes(Link::size);
     sink.write_bytes(key);
 
+    // Commit element to body and search (terminal is a valid bucket index).
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
     auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
     return element.to_data(sink) && head_.push(link, next, head_.index(key));

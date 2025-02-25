@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_out_of_context__unv
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
-    settings.validated_tx_buckets = 1;
+    settings.validated_tx_bits = 1;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(query_validate__get_tx_state__connected_in_context__tx_conn
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
-    settings.validated_tx_buckets = 1;
+    settings.validated_tx_bits = 1;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);

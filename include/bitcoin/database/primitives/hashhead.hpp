@@ -23,6 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/linkage.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -35,8 +36,8 @@ public:
 
     using bytes = typename Link::bytes;
 
-    /// A hash head has zero buckets (and cannot call index()).
-    hashhead(storage& head, const Link& buckets) NOEXCEPT;
+    /// An hash head is disabled it if has one or less buckets (0 bits).
+    hashhead(storage& head, size_t bits) NOEXCEPT;
 
     /// Sizing (thread safe).
     inline size_t size() const NOEXCEPT;
@@ -52,7 +53,8 @@ public:
     bool get_body_count(Link& count) const NOEXCEPT;
     bool set_body_count(const Link& count) NOEXCEPT;
 
-    /// Convert natural key to head bucket index.
+    /// Convert natural key to head bucket index (all keys are valid).
+    /// Terminal is a valid bucket index (just not a valid bucket value).
     inline Link index(const Key& key) const NOEXCEPT;
 
     /// Unsafe if verify false.
@@ -62,6 +64,8 @@ public:
     inline bool push(const bytes& current, bytes& next, const Link& index) NOEXCEPT;
 
 private:
+    using integer = Link::integer;
+
     template <size_t Bytes>
     static auto& array_cast(memory::iterator buffer) NOEXCEPT
     {
@@ -80,6 +84,7 @@ private:
 
     storage& file_;
     const Link buckets_;
+    const Link mask_;
     mutable std::shared_mutex mutex_{};
 };
 

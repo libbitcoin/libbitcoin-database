@@ -96,18 +96,18 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    BOOST_REQUIRE_EQUAL(query.header_buckets(), 100u);
-    BOOST_REQUIRE_EQUAL(query.point_buckets(), 100u);
-    BOOST_REQUIRE_EQUAL(query.txs_buckets(), 100u);
-    BOOST_REQUIRE_EQUAL(query.tx_buckets(), 100u);
+    BOOST_REQUIRE_EQUAL(query.header_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.point_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.txs_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.tx_buckets(), 128u);
 
-    BOOST_REQUIRE_EQUAL(query.strong_tx_buckets(), 100u);
+    BOOST_REQUIRE_EQUAL(query.strong_tx_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.prevout_buckets(), 100u);
-    BOOST_REQUIRE_EQUAL(query.validated_tx_buckets(), 100u);
-    BOOST_REQUIRE_EQUAL(query.validated_bk_buckets(), 100u);
+    BOOST_REQUIRE_EQUAL(query.validated_tx_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.validated_bk_buckets(), 128u);
 
-    BOOST_REQUIRE_EQUAL(query.address_buckets(), 100u);
-    BOOST_REQUIRE_EQUAL(query.neutrino_buckets(), 100u);
+    BOOST_REQUIRE_EQUAL(query.address_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.neutrino_buckets(), 128u);
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
-    settings.address_buckets = 0;
+    settings.address_bits = 0;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(query_extent__neutrino_enabled__disabled__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
-    settings.neutrino_buckets = 0;
+    settings.neutrino_bits = 0;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);

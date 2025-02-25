@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_header__mmap_get_header__expected)
     };
 
     settings settings{};
-    settings.header_buckets = 10;
+    settings.header_bits = 4;
     settings.path = TEST_DIRECTORY;
     store<map> store{ settings };
     query<database::store<map>> query{ store };
@@ -121,6 +121,12 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
         "ffffff"
         "ffffff"
         "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
         "ffffff");
 
     const auto expected_header_body = system::base16_chunk(
@@ -139,7 +145,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
 
     header_link link{};
     settings settings{};
-    settings.header_buckets = 10;
+    settings.header_bits = 4;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -181,6 +187,9 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__empty__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
         "ffffffff");
     const auto expected_head5_hash = system::base16_chunk(
         "0000000000" // record count
@@ -192,7 +201,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__empty__expected)
 
     // data_chunk store.
     settings settings{};
-    settings.tx_buckets = 5;
+    settings.tx_bits = 3;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -230,11 +239,14 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     };
     const auto expected_tx_head = system::base16_chunk(
         "01000000"     // record count
-        "ffffffff"     // bucket[0]...
+        "00000000"     // bucket[0]... pk->
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "00000000");   // pk->
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff");
     const auto expected_tx_body = system::base16_chunk(
         "ffffffff"     // next->
         "601f0fa54d6de8362c17dc883cc047e1f3ae0523d732598a05e3010fac591f62" // sk (tx.hash(false))
@@ -281,8 +293,8 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     // data_chunk store.
     tx_link link{};
     settings settings{};
-    settings.tx_buckets = 5;
-    settings.point_buckets = 5;
+    settings.tx_bits = 3;
+    settings.point_bits = 3;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -346,6 +358,9 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
     const auto expected_tx_head = system::base16_chunk(
         "01000000"     // record count
         "00000000"     // bucket[0]... pk->
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
         "ffffffff"
         "ffffffff"
         "ffffffff"
@@ -413,8 +428,8 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
 
     // data_chunk store.
     settings settings{};
-    settings.tx_buckets = 5;
-    settings.point_buckets = 5;
+    settings.tx_bits = 3;
+    settings.point_bits = 3;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -447,12 +462,15 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
 {
     constexpr auto milestone = true;
     const auto genesis_header_head = system::base16_chunk(
-        "010000"       // record count
-        "ffffff"       // bucket[0]...
+        "010000"      // record count
+        "ffffff"      // bucket[0]...
         "ffffff"
         "ffffff"
-        "000000"       // pk->
-        "ffffff");
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "000000");     // pk->
     const auto genesis_header_body = system::base16_chunk(
         "ffffff"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
@@ -472,6 +490,9 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "ffffffff"
         "ffffffff"
         "00000000"     // pk->
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
         "ffffffff");
     const auto genesis_tx_body = system::base16_chunk(
         "ffffffff"     // next->
@@ -525,6 +546,12 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "ffffffffff"
         "ffffffffff"
         "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
         "ffffffffff");
     const auto genesis_txs_body = system::base16_chunk(
         "ffffffffff"   // next->
@@ -534,10 +561,10 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "00000000");   // transaction[0]
 
     settings settings{};
-    settings.header_buckets = 5;
-    settings.tx_buckets = 5;
-    settings.point_buckets = 5;
-    settings.txs_buckets = 10;
+    settings.header_bits = 3;
+    settings.tx_bits = 3;
+    settings.point_bits = 3;
+    settings.txs_bits = 4;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -591,8 +618,11 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "ffffff"       // bucket[0]...
         "ffffff"
         "ffffff"
-        "000000"       // pk->
-        "ffffff");
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "ffffff"
+        "000000");     // pk->
     const auto genesis_header_body = system::base16_chunk(
         "ffffff"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
@@ -612,6 +642,9 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "ffffffff"
         "ffffffff"
         "00000000"     // pk->
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
         "ffffffff");
     const auto genesis_tx_body = system::base16_chunk(
         "ffffffff"     // next->
@@ -665,6 +698,12 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "ffffffffff"
         "ffffffffff"
         "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
+        "ffffffffff"
         "ffffffffff");
     const auto genesis_txs_body = system::base16_chunk(
         "ffffffffff"   // next->
@@ -674,10 +713,10 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "00000000");   // transaction[0]
 
     settings settings{};
-    settings.header_buckets = 5;
-    settings.tx_buckets = 5;
-    settings.point_buckets = 5;
-    settings.txs_buckets = 10;
+    settings.header_bits = 3;
+    settings.tx_bits = 3;
+    settings.point_bits = 3;
+    settings.txs_bits = 4;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -961,7 +1000,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__invalid_parent__expected)
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
 
     settings settings{};
-    settings.header_buckets = 10;
+    settings.header_bits = 4;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1014,7 +1053,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
 
     settings settings{};
-    settings.header_buckets = 10;
+    settings.header_bits = 4;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1296,9 +1335,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_input__not_found__nullptr)
 BOOST_AUTO_TEST_CASE(query_archive__get_input__genesis__expected)
 {
     settings settings{};
-    settings.header_buckets = 5;
-    settings.tx_buckets = 5;
-    settings.txs_buckets = 10;
+    settings.header_bits = 3;
+    settings.tx_bits = 3;
+    settings.txs_bits = 4;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1350,9 +1389,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_output__not_found__nullptr)
 BOOST_AUTO_TEST_CASE(query_archive__get_output__genesis__expected)
 {
     settings settings{};
-    settings.header_buckets = 5;
-    settings.tx_buckets = 5;
-    settings.txs_buckets = 10;
+    settings.header_bits = 3;
+    settings.tx_bits = 3;
+    settings.txs_bits = 4;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
