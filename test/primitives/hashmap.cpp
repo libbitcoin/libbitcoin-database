@@ -36,13 +36,14 @@ using key1 = data_array<1>;
 using key10 = data_array<10>;
 
 // Key size does not factor into header byte size (for first key only).
-constexpr size_t header_size = 105;
-constexpr auto links = header_size / link5::size;
-static_assert(links == 21u);
+constexpr auto bucket_bits = 4_size;
+constexpr auto head_size = add1(system::power2(bucket_bits)) * link5::size;
+constexpr auto links = head_size / link5::size;
+static_assert(links == 17u);
 
 // Bucket count is one less than link count, due to header.size field.
 constexpr auto buckets = bc::sub1(links);
-static_assert(buckets == 20u);
+static_assert(buckets == 16u);
 
 struct slab0 { static constexpr size_t size = max_size_t; };
 struct record4 { static constexpr size_t size = 4; };
@@ -58,7 +59,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_construct__empty__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    const record_table instance{ head_store, body_store, buckets };
+    const record_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(body_store.buffer().empty());
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -69,7 +70,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_construct__non_empty__expected)
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
     body_store.buffer().resize(body_size);
-    const record_table instance{ head_store, body_store, buckets };
+    const record_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), body_size);
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -81,7 +82,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__empty__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    const slab_table instance{ head_store, body_store, buckets };
+    const slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(body_store.buffer().empty());
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -92,7 +93,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_construct__non_empty__expected_enabled)
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
     body_store.buffer().resize(body_size);
-    const slab_table instance{ head_store, body_store, buckets };
+    const slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), body_size);
     BOOST_REQUIRE(instance.enabled());
     BOOST_REQUIRE(!instance.get_fault());
@@ -109,12 +110,12 @@ BOOST_AUTO_TEST_CASE(hashmap__enabled__non_empty_slab_zero_buckets__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__enabled__empty_slab_one_bucket__false)
+BOOST_AUTO_TEST_CASE(hashmap__enabled__empty_slab_one_bucket__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
     slab_table instance{ head_store, body_store, 1 };
-    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.enabled());
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -122,7 +123,7 @@ BOOST_AUTO_TEST_CASE(hashmap__enabled__empty_slab_nonzero_buckets__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    slab_table instance{ head_store, body_store, buckets };
+    slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.enabled());
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -179,7 +180,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__terminal__invalid)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
+    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, bucket_bits };
 
     little_record record{};
     BOOST_REQUIRE(!instance.get(link5::terminal, record));
@@ -190,7 +191,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__empty__invalid)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
+    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, bucket_bits };
 
     little_record record{};
     BOOST_REQUIRE(!instance.get(0, record));
@@ -208,7 +209,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
     };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, buckets };
+    const hashmap<link5, key10, little_record::size> instance{ head_store, body_store, bucket_bits };
 
     little_record record{};
     BOOST_REQUIRE(instance.get(0, record));
@@ -220,7 +221,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key1_big{ 0x41 };
@@ -311,7 +312,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__multiple__expected)
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
 
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key_big{ 0x41 };
@@ -375,7 +376,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -390,7 +391,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get_key__exists__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -403,7 +404,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -460,7 +461,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__excess__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -477,7 +478,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get_key__exists__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -492,7 +493,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_get__file_excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -508,7 +509,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -519,7 +520,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_top__default__terminal)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.top(0).is_terminal());
     BOOST_REQUIRE(instance.top(19).is_terminal());
@@ -530,7 +531,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_top__past_end__terminal)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.top(20).is_terminal());
     BOOST_REQUIRE(instance.top(21).is_terminal());
@@ -540,20 +541,21 @@ BOOST_AUTO_TEST_CASE(hashmap__record_top__existing__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
+    // 0x40 is masked by 4 bucket bits.
     BOOST_REQUIRE(!instance.put_link({ 0x41 }, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
     BOOST_REQUIRE(!instance.put_link({ 0x42 }, big_record{ 0xa2b2c3d4_u32 }).is_terminal());
-    BOOST_REQUIRE(!instance.put_link({ 0x43 }, big_record{ 0xa3b2c3d4_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.put_link({ 0x44 }, big_record{ 0xa3b2c3d4_u32 }).is_terminal());
     BOOST_REQUIRE(instance.top(0).is_terminal());
-    BOOST_REQUIRE(instance.top(1).is_terminal());
-    BOOST_REQUIRE(instance.top(2).is_terminal());
+    BOOST_REQUIRE_EQUAL(instance.top(1), 0u);
+    BOOST_REQUIRE_EQUAL(instance.top(2), 1u);
     BOOST_REQUIRE(instance.top(3).is_terminal());
-    BOOST_REQUIRE(instance.top(4).is_terminal());
-    BOOST_REQUIRE(!instance.top(5).is_terminal());
-    BOOST_REQUIRE(!instance.top(6).is_terminal());
-    BOOST_REQUIRE(!instance.top(7).is_terminal());
+    BOOST_REQUIRE_EQUAL(instance.top(4), 2u);
+    BOOST_REQUIRE(instance.top(5).is_terminal());
+    BOOST_REQUIRE(instance.top(6).is_terminal());
+    BOOST_REQUIRE(instance.top(7).is_terminal());
     BOOST_REQUIRE(instance.top(8).is_terminal());
     BOOST_REQUIRE(instance.top(9).is_terminal());
     BOOST_REQUIRE(instance.top(10).is_terminal());
@@ -565,7 +567,6 @@ BOOST_AUTO_TEST_CASE(hashmap__record_top__existing__expected)
     BOOST_REQUIRE(instance.top(16).is_terminal());
     BOOST_REQUIRE(instance.top(17).is_terminal());
     BOOST_REQUIRE(instance.top(18).is_terminal());
-    BOOST_REQUIRE(instance.top(19).is_terminal());
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -573,7 +574,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_exists__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -587,7 +588,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_exists__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -601,7 +602,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_first__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -616,7 +617,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_first__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_slab::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -631,7 +632,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__exists_copy__non_terminal)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -648,7 +649,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__exists_move__non_terminal)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
@@ -665,7 +666,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__multiple__iterated)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    hashmap<link5, key1, big_record::size> instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key_a{ 0xaa };
@@ -880,12 +881,12 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit__record__expected)
     BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000000000000000000000004030201"));
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.commit(link, key1));
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -904,12 +905,12 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__record__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
 
     BOOST_REQUIRE(instance.set(link, flex_record{ 0x01020304_u32 }));
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000000000000000000000004030201"));
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.commit(link, key1));
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -928,7 +929,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put1__record__expected)
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.put(link, key1, flex_record{ 0x01020304_u32 }));
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -942,7 +943,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put2__record__expected)
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.put(key1, flex_record{ 0x01020304_u32 }));
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -960,12 +961,12 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit_link__slab__expected)
     BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000000000000000000000004030201"));
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(!instance.commit_link(link, key1).is_terminal());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -983,12 +984,12 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__slab__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
 
     BOOST_REQUIRE(instance.set(link, flex_slab{ 0x01020304_u32 }));
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000000000000000000000004030201"));
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.commit(link, key1));
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -1009,7 +1010,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put1__slab__expected)
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.put(link, key1, flex_slab{ 0x01020304_u32 }));
-    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000000000ffffffffff0000000000"));
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_file, base16_chunk("ffffffffff0102030405060708090a04030201"));
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -1025,7 +1026,7 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put2__slab__expected)
 
     constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.put(key1, flex_slab{ 0x01020304_u32 }));
-    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000000000ffffffffff0000000000"));
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_file, base16_chunk("ffffffffff0102030405060708090a04030201"));
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -1037,11 +1038,11 @@ BOOST_AUTO_TEST_CASE(hashmap__record_verify__empty_files__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    record_table instance{ head_store, body_store, buckets };
+    record_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
-    BOOST_REQUIRE_EQUAL(head_store.buffer().size(), header_size);
+    BOOST_REQUIRE_EQUAL(head_store.buffer().size(), head_size);
     BOOST_REQUIRE(body_store.buffer().empty());
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -1052,7 +1053,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_create__non_empty_head_file__failure)
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    record_table instance{ head_store, body_store, buckets };
+    record_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(!instance.create());
     BOOST_REQUIRE_EQUAL(head_file.size(), 1u);
@@ -1066,11 +1067,11 @@ BOOST_AUTO_TEST_CASE(hashmap__record_create__non_empty_body_file__body_zeroed)
     data_chunk body_file{ 0x42 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    record_table instance{ head_store, body_store, buckets };
+    record_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
-    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE_EQUAL(head_file.size(), head_size);
     BOOST_REQUIRE(body_file.empty());
 }
 
@@ -1078,9 +1079,9 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__create__zero)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    record_table instance{ head_store, body_store, buckets };
+    record_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -1090,7 +1091,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__empty_close__zero)
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    record_table instance{ head_store, body_store, buckets };
+    record_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.close());
     BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000000000"));
     BOOST_REQUIRE(!instance.get_fault());
@@ -1100,11 +1101,11 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_close__two)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    record_table instance{ head_store, body_store, buckets };
+    record_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1122334455667788990011223344556677889911223344556677889900112233445566778899");
     BOOST_REQUIRE(instance.close());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0200000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0200000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -1112,11 +1113,11 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_backup__two)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    record_table instance{ head_store, body_store, buckets };
+    record_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1122334455667788990011223344556677889911223344556677889900112233445566778899");
     BOOST_REQUIRE(instance.backup());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0200000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0200000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -1124,7 +1125,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__empty_restore__truncates)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    record_table instance{ head_store, body_store, buckets };
+    record_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1234567812345678");
     BOOST_REQUIRE(instance.restore());
@@ -1136,9 +1137,9 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__non_empty_restore__truncates)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    record_table instance{ head_store, body_store, buckets };
+    record_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
-    head_store.buffer() = base16_chunk("0100000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    head_store.buffer() = base16_chunk("0100000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     body_store.buffer() = base16_chunk("1122334455667788990011223344556677889911223344556677889900112233445566778899");
     BOOST_REQUIRE(instance.restore());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("11223344556677889900112233445566778899"));
@@ -1152,11 +1153,11 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_verify__empty_files__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    slab_table instance{ head_store, body_store, buckets };
+    slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
-    BOOST_REQUIRE_EQUAL(head_store.buffer().size(), header_size);
+    BOOST_REQUIRE_EQUAL(head_store.buffer().size(), head_size);
     BOOST_REQUIRE(body_store.buffer().empty());
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -1167,7 +1168,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_create__non_empty_head_file__failure)
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    slab_table instance{ head_store, body_store, buckets };
+    slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(!instance.create());
     BOOST_REQUIRE_EQUAL(head_file.size(), 1u);
@@ -1181,11 +1182,11 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_create__non_empty_body_file__body_zeroed)
     data_chunk body_file{ 0x42 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    slab_table instance{ head_store, body_store, buckets };
+    slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(!instance.verify());
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
-    BOOST_REQUIRE_EQUAL(head_file.size(), header_size);
+    BOOST_REQUIRE_EQUAL(head_file.size(), head_size);
     BOOST_REQUIRE(body_file.empty());
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -1194,9 +1195,9 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__create__zero)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    slab_table instance{ head_store, body_store, buckets };
+    slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -1206,7 +1207,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__empty_close__zero)
     data_chunk body_file;
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
-    slab_table instance{ head_store, body_store, buckets };
+    slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.close());
     BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000000000"));
     BOOST_REQUIRE(!instance.get_fault());
@@ -1216,11 +1217,11 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__two_close__two)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    slab_table instance{ head_store, body_store, buckets };
+    slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1234");
     BOOST_REQUIRE(instance.close());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0200000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0200000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -1228,11 +1229,11 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__two_backup__two)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    slab_table instance{ head_store, body_store, buckets };
+    slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1234");
     BOOST_REQUIRE(instance.backup());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0200000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0200000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -1240,7 +1241,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__empty_restore__truncates)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    slab_table instance{ head_store, body_store, buckets };
+    slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
     body_store.buffer() = base16_chunk("1234567812345678");
     BOOST_REQUIRE(instance.restore());
@@ -1252,9 +1253,9 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_body_count__non_empty_restore__truncates)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    slab_table instance{ head_store, body_store, buckets };
+    slab_table instance{ head_store, body_store, bucket_bits };
     BOOST_REQUIRE(instance.create());
-    head_store.buffer() = base16_chunk("0300000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    head_store.buffer() = base16_chunk("0300000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     body_store.buffer() = base16_chunk("1234567812345678");
     BOOST_REQUIRE(instance.restore());
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("123456"));

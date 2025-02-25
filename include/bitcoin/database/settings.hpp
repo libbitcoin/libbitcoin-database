@@ -42,7 +42,7 @@ struct BCD_API settings
     /// Archives.
     /// -----------------------------------------------------------------------
 
-    uint32_t header_buckets;
+    uint32_t header_bits;
     uint64_t header_size;
     uint16_t header_rate;
 
@@ -52,7 +52,7 @@ struct BCD_API settings
     uint64_t output_size;
     uint16_t output_rate;
 
-    uint32_t point_buckets;
+    uint32_t point_bits;
     uint64_t point_size;
     uint16_t point_rate;
 
@@ -62,11 +62,11 @@ struct BCD_API settings
     uint64_t puts_size;
     uint16_t puts_rate;
 
-    uint32_t tx_buckets;
+    uint32_t tx_bits;
     uint64_t tx_size;
     uint16_t tx_rate;
 
-    uint32_t txs_buckets;
+    uint32_t txs_bits;
     uint64_t txs_size;
     uint16_t txs_rate;
 
@@ -79,7 +79,7 @@ struct BCD_API settings
     uint64_t confirmed_size;
     uint16_t confirmed_rate;
 
-    uint32_t strong_tx_buckets;
+    uint32_t strong_tx_bits;
     uint64_t strong_tx_size;
     uint16_t strong_tx_rate;
 
@@ -90,22 +90,22 @@ struct BCD_API settings
     uint64_t prevout_size;
     uint16_t prevout_rate;
 
-    uint32_t validated_bk_buckets;
+    uint32_t validated_bk_bits;
     uint64_t validated_bk_size;
     uint16_t validated_bk_rate;
 
-    uint32_t validated_tx_buckets;
+    uint32_t validated_tx_bits;
     uint64_t validated_tx_size;
     uint16_t validated_tx_rate;
 
     /// Optionals.
     /// -----------------------------------------------------------------------
 
-    uint32_t address_buckets;
+    uint32_t address_bits;
     uint64_t address_size;
     uint16_t address_rate;
 
-    uint32_t neutrino_buckets;
+    uint32_t neutrino_bits;
     uint64_t neutrino_size;
     uint16_t neutrino_rate;
 

@@ -31,7 +31,10 @@ const table::strong_tx::record out2{ {}, 0x00223344, true };
 const data_chunk expected_head = base16_chunk
 (
     "00000000"
+    "ffffffff"
     "01000000"
+    "ffffffff"
+    "ffffffff"
     "ffffffff"
     "ffffffff"
     "ffffffff"
@@ -40,7 +43,10 @@ const data_chunk expected_head = base16_chunk
 const data_chunk closed_head = base16_chunk
 (
     "02000000"
+    "ffffffff"
     "01000000"
+    "ffffffff"
+    "ffffffff"
     "ffffffff"
     "ffffffff"
     "ffffffff"
@@ -63,7 +69,7 @@ BOOST_AUTO_TEST_CASE(strong_tx__put__two__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    table::strong_tx instance{ head_store, body_store, 5 };
+    table::strong_tx instance{ head_store, body_store, 3 };
     BOOST_REQUIRE(instance.create());
 
     table::strong_tx::link link1{};

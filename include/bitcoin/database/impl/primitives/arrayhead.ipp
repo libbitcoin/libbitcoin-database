@@ -28,7 +28,7 @@ namespace database {
 
 TEMPLATE
 CLASS::arrayhead(storage& head, const Link& buckets) NOEXCEPT
-  : file_(head), initial_buckets_(buckets)
+  : file_(head), initial_buckets_(buckets.value)
 {
 }
 
@@ -49,7 +49,7 @@ inline size_t CLASS::buckets() const NOEXCEPT
 TEMPLATE
 bool CLASS::enabled() const NOEXCEPT
 {
-    return initial_buckets_ > one;
+    return !is_zero(initial_buckets_);
 }
 
 TEMPLATE

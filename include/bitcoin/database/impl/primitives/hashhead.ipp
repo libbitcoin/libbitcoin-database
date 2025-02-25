@@ -30,8 +30,10 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::hashhead(storage& head, const Link& buckets) NOEXCEPT
-  : file_(head), buckets_(buckets)
+CLASS::hashhead(storage& head, size_t bits) NOEXCEPT
+  : file_(head),
+    buckets_(system::power2<Link::integer>(bits)),
+    mask_(system::unmask_right<Link::integer>(bits))
 {
 }
 
@@ -103,13 +105,13 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
 TEMPLATE
 inline Link CLASS::index(const Key& key) const NOEXCEPT
 {
+    using namespace system;
+    BC_ASSERT_MSG(mask_ < max_size_t, "insufficient domain");
     BC_ASSERT_MSG(is_nonzero(buckets_), "hash table requires buckets");
 
     // unique_hash assumes sufficient uniqueness in low order key bytes.
-    return system::unique_hash(key) % buckets_;
-
-    // TODO: restrict buckets to power of two and replace modulo above with
-    // return and(sub1(buckets), unique_hash(key)) [and() is much faster].
+    const auto index = possible_narrow_cast<Link::integer>(unique_hash(key));
+    return bit_and<Link::integer>(mask_, index);
 }
 
 TEMPLATE

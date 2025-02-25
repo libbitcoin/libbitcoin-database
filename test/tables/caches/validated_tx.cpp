@@ -75,7 +75,10 @@ const table::validated_tx::slab out2
 const data_chunk expected_head = base16_chunk
 (
     "0000000000"
+    "ffffffffff"
     "2300000000"
+    "ffffffffff"
+    "ffffffffff"
     "ffffffffff"
     "ffffffffff"
     "ffffffffff"
@@ -84,7 +87,10 @@ const data_chunk expected_head = base16_chunk
 const data_chunk closed_head = base16_chunk
 (
     "3a00000000"
+    "ffffffffff"
     "2300000000"
+    "ffffffffff"
+    "ffffffffff"
     "ffffffffff"
     "ffffffffff"
     "ffffffffff"
@@ -115,7 +121,7 @@ BOOST_AUTO_TEST_CASE(validated_tx__put__two__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    table::validated_tx instance{ head_store, body_store, 5 };
+    table::validated_tx instance{ head_store, body_store,3 };
     BOOST_REQUIRE(instance.create());
 
     table::validated_tx::link link1{};
@@ -138,7 +144,7 @@ BOOST_AUTO_TEST_CASE(validated_tx__get__two__expected)
     auto body = expected_body;
     test::chunk_storage head_store{ head };
     test::chunk_storage body_store{ body };
-    table::validated_tx instance{ head_store, body_store, 5 };
+    table::validated_tx instance{ head_store, body_store,3 };
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 

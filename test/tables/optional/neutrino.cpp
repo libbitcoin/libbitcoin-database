@@ -34,12 +34,18 @@ const data_chunk expected_head = base16_chunk
     "ffffffffff"
     "ffffffffff"
     "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
 );
 const data_chunk closed_head = base16_chunk
 (
     "5600000000"
     "ffffffffff"
     "2a00000000"
+    "ffffffffff"
+    "ffffffffff"
+    "ffffffffff"
     "ffffffffff"
     "ffffffffff"
     "ffffffffff"
@@ -61,7 +67,7 @@ BOOST_AUTO_TEST_CASE(neutrino__put__two__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    table::neutrino instance{ head_store, body_store, 5 };
+    table::neutrino instance{ head_store, body_store, 3 };
     BOOST_REQUIRE(instance.create());
 
     table::neutrino::link link1{};
@@ -84,7 +90,7 @@ BOOST_AUTO_TEST_CASE(neutrino__get__two__expected)
     auto body = expected_body;
     test::chunk_storage head_store{ head };
     test::chunk_storage body_store{ body };
-    table::neutrino instance{ head_store, body_store, 5 };
+    table::neutrino instance{ head_store, body_store, 3 };
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
