@@ -23,6 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/linkage.hpp>
 
 namespace libbitcoin {
 namespace database {
