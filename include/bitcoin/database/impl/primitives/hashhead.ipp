@@ -32,8 +32,8 @@ namespace database {
 TEMPLATE
 CLASS::hashhead(storage& head, size_t bits) NOEXCEPT
   : file_(head),
-    buckets_(system::power2<Link::integer>(bits)),
-    mask_(system::unmask_right<Link::integer>(bits))
+    buckets_(system::power2<integer>(bits)),
+    mask_(system::unmask_right<integer>(bits))
 {
 }
 
@@ -110,8 +110,8 @@ inline Link CLASS::index(const Key& key) const NOEXCEPT
     BC_ASSERT_MSG(is_nonzero(buckets_), "hash table requires buckets");
 
     // unique_hash assumes sufficient uniqueness in low order key bytes.
-    const auto index = possible_narrow_cast<Link::integer>(unique_hash(key));
-    return bit_and<Link::integer>(mask_, index);
+    const auto index = possible_narrow_cast<integer>(unique_hash(key));
+    return bit_and<integer>(mask_, index);
 }
 
 TEMPLATE

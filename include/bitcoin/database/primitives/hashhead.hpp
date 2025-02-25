@@ -64,6 +64,8 @@ public:
     inline bool push(const bytes& current, bytes& next, const Link& index) NOEXCEPT;
 
 private:
+    using integer = Link::integer;
+
     template <size_t Bytes>
     static auto& array_cast(memory::iterator buffer) NOEXCEPT
     {
