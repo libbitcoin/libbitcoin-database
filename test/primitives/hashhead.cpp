@@ -37,8 +37,7 @@ static_assert(buckets == 20u);
 
 using link = linkage<link_size>;
 using key = data_array<key_size>;
-using djb2_header = hashhead<link, key, true>;
-using unique_header = hashhead<link, key, false>;
+using unique_header = hashhead<link, key>;
 
 class nullptr_storage
   : public test::chunk_storage
@@ -56,7 +55,7 @@ BOOST_AUTO_TEST_CASE(hashhead__create__size__expected)
 {
     data_chunk data;
     test::chunk_storage store{ data };
-    djb2_header head{ store, buckets };
+    unique_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE_EQUAL(data.size(), head_size);
 }
@@ -65,7 +64,7 @@ BOOST_AUTO_TEST_CASE(hashhead__verify__uncreated__false)
 {
     data_chunk data;
     test::chunk_storage store{ data };
-    djb2_header head{ store, buckets };
+    unique_header head{ store, buckets };
     ////BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(!head.verify());
 }
@@ -74,7 +73,7 @@ BOOST_AUTO_TEST_CASE(hashhead__verify__created__false)
 {
     data_chunk data;
     test::chunk_storage store{ data };
-    djb2_header head{ store, buckets };
+    unique_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.verify());
 }
@@ -83,7 +82,7 @@ BOOST_AUTO_TEST_CASE(hashhead__get_body_count__created__zero)
 {
     data_chunk data;
     test::chunk_storage store{ data };
-    djb2_header head{ store, buckets };
+    unique_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
     link count{};
@@ -95,7 +94,7 @@ BOOST_AUTO_TEST_CASE(hashhead__set_body_count__get__expected)
 {
     data_chunk data;
     test::chunk_storage store{ data };
-    djb2_header head{ store, buckets };
+    unique_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
     constexpr auto expected = 42u;
@@ -117,29 +116,10 @@ BOOST_AUTO_TEST_CASE(hashhead__unique_hash__null_key__expected)
     BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
 }
 
-BOOST_AUTO_TEST_CASE(hashhead__djb2_hash__null_key__expected)
-{
-    constexpr key null_key{};
-    const auto expected = system::djb2_hash(null_key) % buckets;
-
-    if constexpr (build_x32)
-    {
-        BOOST_REQUIRE_EQUAL(expected, 13u);
-    }
-    else if constexpr (build_x64)
-    {
-        BOOST_REQUIRE_EQUAL(expected, 9u);
-    }
-
-    test::chunk_storage store;
-    djb2_header head{ store, buckets };
-    BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
-}
-
 BOOST_AUTO_TEST_CASE(hashhead__top__link__terminal)
 {
     test::chunk_storage store;
-    djb2_header head{ store, buckets };
+    unique_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.top(9).is_terminal());
 }
@@ -147,7 +127,7 @@ BOOST_AUTO_TEST_CASE(hashhead__top__link__terminal)
 BOOST_AUTO_TEST_CASE(hashhead__top__nullptr__terminal)
 {
     nullptr_storage store;
-    djb2_header head{ store, buckets };
+    unique_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.top(9).is_terminal());
 }
@@ -157,7 +137,7 @@ BOOST_AUTO_TEST_CASE(hashhead__top__key__terminal)
     constexpr key null_key{};
 
     test::chunk_storage store;
-    djb2_header head{ store, buckets };
+    unique_header head{ store, buckets };
 
     // create() allocates and fills buckets with terminal.
     BOOST_REQUIRE(head.create());
@@ -167,7 +147,7 @@ BOOST_AUTO_TEST_CASE(hashhead__top__key__terminal)
 BOOST_AUTO_TEST_CASE(hashhead__push__link__terminal)
 {
     test::chunk_storage store;
-    djb2_header head{ store, buckets };
+    unique_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
     constexpr auto expected = 2u;
@@ -186,7 +166,7 @@ BOOST_AUTO_TEST_CASE(hashhead__push__link__terminal)
 BOOST_AUTO_TEST_CASE(hashhead__push__key__terminal)
 {
     test::chunk_storage store;
-    djb2_header head{ store, buckets };
+    unique_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
     constexpr auto expected = 2u;

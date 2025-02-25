@@ -41,14 +41,17 @@ public:
     arrayhead(storage& head, const Link& buckets) NOEXCEPT;
 
     /// Sizing is dynamic (thread safe).
-    size_t size() const NOEXCEPT;
-    size_t buckets() const NOEXCEPT;
+    inline size_t size() const NOEXCEPT;
+    inline size_t buckets() const NOEXCEPT;
 
     /// Configure initial buckets to zero to disable the table.
     bool enabled() const NOEXCEPT;
 
     /// Create from empty head file (not thread safe).
     bool create() NOEXCEPT;
+
+    /// Clear the existing index of all links.
+    bool clear() NOEXCEPT;
 
     /// False if head file size incorrect (not thread safe).
     bool verify() const NOEXCEPT;
@@ -57,7 +60,7 @@ public:
     bool get_body_count(Link& count) const NOEXCEPT;
     bool set_body_count(const Link& count) NOEXCEPT;
 
-    /// Convert natural key to head bucket index (validated).
+    /// Convert natural key to head bucket index (unvalidated).
     inline Link index(size_t key) const NOEXCEPT;
 
     /// Convert natural key to head bucket index (unvalidated).

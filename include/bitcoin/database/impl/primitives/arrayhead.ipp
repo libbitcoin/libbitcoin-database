@@ -33,13 +33,13 @@ CLASS::arrayhead(storage& head, const Link& buckets) NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::size() const NOEXCEPT
+inline size_t CLASS::size() const NOEXCEPT
 {
     return file_.size();
 }
 
 TEMPLATE
-size_t CLASS::buckets() const NOEXCEPT
+inline size_t CLASS::buckets() const NOEXCEPT
 {
     const auto count = position_to_link(size()).value;
     BC_ASSERT(count < Link::terminal);
@@ -55,8 +55,9 @@ bool CLASS::enabled() const NOEXCEPT
 TEMPLATE
 inline Link CLASS::index(size_t key) const NOEXCEPT
 {
-    if (key >= buckets())
-        return {};
+    // buckets a table lock via file.size().
+    ////if (key >= buckets()) return {};
+    ////BC_ASSERT_MSG(key < buckets(), "index overflow");
 
     // Put index does not validate, allowing for head expansion.
     return putter_index(key);
@@ -70,28 +71,32 @@ inline Link CLASS::putter_index(size_t key) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::create() NOEXCEPT
+bool CLASS::clear() NOEXCEPT
 {
-    if (is_nonzero(file_.size()))
-        return false;
-
-    const auto allocation = link_to_position(initial_buckets_);
-    const auto start = file_.allocate(allocation);
-
-    // Guards addition overflow in manager_.get (start must be valid).
-    if (start == storage::eof)
-        return false;
-
-    const auto ptr = file_.get(start);
+    const auto ptr = file_.get();
     if (!ptr)
         return false;
 
-    BC_ASSERT_MSG(verify(), "unexpected body size");
-
-    // std::memset/fill_n have identical performance (on win32).
-    ////std::memset(ptr->data(), system::bit_all<uint8_t>, size());
+    // Retains head size, since head is array not map, and resets body logical
+    // count to zero, which is picked up in arraymap::reset(). Body file size
+    // remains unchanged and subject to initialization size at each startup. So
+    // there is no reduction until restart, which can include config change.
     std::fill_n(ptr->data(), size(), system::bit_all<uint8_t>);
     return set_body_count(zero);
+}
+
+TEMPLATE
+bool CLASS::create() NOEXCEPT
+{
+    if (is_nonzero(size()))
+        return false;
+
+    // Guards addition overflow in manager_.get (start must be valid).
+    if (file_.allocate(link_to_position(initial_buckets_)) == storage::eof)
+        return false;
+
+    BC_ASSERT_MSG(verify(), "unexpected head size");
+    return clear();
 }
 
 TEMPLATE
@@ -104,7 +109,7 @@ TEMPLATE
 bool CLASS::get_body_count(Link& count) const NOEXCEPT
 {
     const auto ptr = file_.get();
-    if (!ptr || Link::size > file_.size())
+    if (!ptr || Link::size > size())
         return false;
 
     count = array_cast<Link::size>(ptr->data());
@@ -115,7 +120,7 @@ TEMPLATE
 bool CLASS::set_body_count(const Link& count) NOEXCEPT
 {
     const auto ptr = file_.get();
-    if (!ptr || Link::size > file_.size())
+    if (!ptr || Link::size > size())
         return false;
 
     array_cast<Link::size>(ptr->data()) = count;

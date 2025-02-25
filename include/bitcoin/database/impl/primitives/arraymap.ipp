@@ -50,6 +50,14 @@ bool CLASS::close() NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::reset() NOEXCEPT
+{
+    Link count{};
+    return head_.clear() && head_.get_body_count(count) &&
+        body_.truncate(count);
+}
+
+TEMPLATE
 bool CLASS::backup() NOEXCEPT
 {
     return head_.set_body_count(body_.count());
@@ -127,12 +135,6 @@ code CLASS::reload() NOEXCEPT
 
 // query interface
 // ----------------------------------------------------------------------------
-
-TEMPLATE
-inline bool CLASS::exists(size_t key) const NOEXCEPT
-{
-    return !at(key).is_terminal();
-}
 
 TEMPLATE
 inline Link CLASS::at(size_t key) const NOEXCEPT

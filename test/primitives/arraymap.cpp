@@ -660,102 +660,6 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__little_end_default_expansion__expecte
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-// exists
-
-BOOST_AUTO_TEST_CASE(arraymap__record_exists__default__false)
-{
-    test::chunk_storage head_store{};
-    test::chunk_storage body_store{};
-    arraymap<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.exists(0));
-    BOOST_REQUIRE(!instance.exists(17));
-    BOOST_REQUIRE(!instance.get_fault());
-}
-
-BOOST_AUTO_TEST_CASE(arraymap__record_exists__past_end__false)
-{
-    test::chunk_storage head_store{};
-    test::chunk_storage body_store{};
-    arraymap<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.exists(18));
-    BOOST_REQUIRE(!instance.exists(19));
-}
-
-BOOST_AUTO_TEST_CASE(arraymap__record_exists__existing__expected)
-{
-    data_chunk store_head = base16_chunk
-    (
-        "000000"
-        // -----
-        "020000"
-        "010000"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "000000"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "030000"
-        "ffffff"
-        "050000"
-        "040000"
-    );
-
-    data_chunk store_body = base16_chunk
-    (
-        "d4c3b2a1"
-        "a1b2c3d4"
-        "42424242"
-        "78563412"
-        "88664422"
-        "77553311"
-    );
-
-    test::chunk_storage head_store{ store_head };
-    test::chunk_storage body_store{ store_body };
-    arraymap<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
-
-    BOOST_REQUIRE(instance.exists(0));
-    BOOST_REQUIRE(instance.exists(1));
-    BOOST_REQUIRE(!instance.exists(2));
-    BOOST_REQUIRE(!instance.exists(3));
-    BOOST_REQUIRE(!instance.exists(4));
-    BOOST_REQUIRE(instance.exists(5));
-    BOOST_REQUIRE(!instance.exists(6));
-    BOOST_REQUIRE(!instance.exists(7));
-    BOOST_REQUIRE(!instance.exists(8));
-    BOOST_REQUIRE(!instance.exists(9));
-    BOOST_REQUIRE(!instance.exists(10));
-    BOOST_REQUIRE(!instance.exists(11));
-    BOOST_REQUIRE(!instance.exists(12));
-    BOOST_REQUIRE(!instance.exists(13));
-    BOOST_REQUIRE(!instance.exists(14));
-    BOOST_REQUIRE(!instance.exists(15));
-    BOOST_REQUIRE(!instance.exists(16));
-    BOOST_REQUIRE(!instance.exists(17));
-    BOOST_REQUIRE(!instance.exists(18));
-    BOOST_REQUIRE(!instance.exists(19));
-    BOOST_REQUIRE(instance.exists(20));
-    BOOST_REQUIRE(!instance.exists(21));
-    BOOST_REQUIRE(instance.exists(22));
-    BOOST_REQUIRE(instance.exists(23));
-    BOOST_REQUIRE(!instance.get_fault());
-}
-
 BOOST_AUTO_TEST_CASE(arraymap__record_at__existing__expected)
 {
     data_chunk store_head = base16_chunk
@@ -948,6 +852,19 @@ BOOST_AUTO_TEST_CASE(arraymap__record_body_count__nine_close__nine)
     body_store.buffer() = base16_chunk("112233441122334411223344112233441122334411223344112233441122334411223344");
     BOOST_REQUIRE(instance.close());
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("090000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(arraymap__reset__nine_close__zero)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    record_table instance{ head_store, body_store, initial_buckets };
+    BOOST_REQUIRE(instance.create());
+    body_store.buffer() = base16_chunk("112233441122334411223344112233441122334411223344112233441122334411223344");
+    BOOST_REQUIRE(instance.reset());
+    BOOST_REQUIRE(instance.close());
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE(!instance.get_fault());
 }
 

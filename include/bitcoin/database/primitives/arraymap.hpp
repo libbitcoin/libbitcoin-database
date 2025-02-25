@@ -50,6 +50,7 @@ public:
 
     bool create() NOEXCEPT;
     bool close() NOEXCEPT;
+    bool reset() NOEXCEPT;
     bool backup() NOEXCEPT;
     bool restore() NOEXCEPT;
     bool verify() const NOEXCEPT;
@@ -87,13 +88,10 @@ public:
     /// Query interface, iterator is not thread safe.
     /// -----------------------------------------------------------------------
 
-    /// True if an instance of object with key exists.
-    inline bool exists(size_t key) const NOEXCEPT;
-
-    /// Return element link at key or terminal if not found/error.
+    /// Return element link at key, terminal if not found/error (unverified).
     inline Link at(size_t key) const NOEXCEPT;
 
-    /// Get first element matching the search key, false if not found/error.
+    /// Get first element matching key, false if not found/error (unverified).
     template <typename Element, if_equal<Element::size, Size> = true>
     inline bool at(size_t key, Element& element) const NOEXCEPT;
 

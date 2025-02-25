@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__get_body_count__created__zero)
     BOOST_REQUIRE_EQUAL(count, zero);
 }
 
-BOOST_AUTO_TEST_CASE(arrayhead__set_body_count__get__expected)
+BOOST_AUTO_TEST_CASE(arrayhead__set_body_count__get_body_count__expected)
 {
     data_chunk data;
     test::chunk_storage store{ data };
@@ -101,6 +101,25 @@ BOOST_AUTO_TEST_CASE(arrayhead__set_body_count__get__expected)
     link count{};
     BOOST_REQUIRE(head.get_body_count(count));
     BOOST_REQUIRE_EQUAL(count, expected);
+}
+
+BOOST_AUTO_TEST_CASE(arrayhead__clear__get_body_count__zero)
+{
+    data_chunk data;
+    test::chunk_storage store{ data };
+    test_header head{ store, buckets };
+    BOOST_REQUIRE(head.create());
+
+    constexpr auto expected = 42u;
+    BOOST_REQUIRE(head.set_body_count(expected));
+
+    link count{};
+    BOOST_REQUIRE(head.get_body_count(count));
+    BOOST_REQUIRE_EQUAL(count, expected);
+
+    BOOST_REQUIRE(head.clear());
+    BOOST_REQUIRE(head.get_body_count(count));
+    BOOST_REQUIRE_EQUAL(count, zero);
 }
 
 BOOST_AUTO_TEST_CASE(arrayhead__at__key__terminal)
