@@ -87,7 +87,7 @@ bool CLASS::get_body_count(Link& count) const NOEXCEPT
     if (!ptr)
         return false;
 
-    count = array_cast<Link::size>(ptr->data());
+    count = to_array<Link::size>(ptr->data());
     return true;
 }
 
@@ -98,7 +98,8 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     if (!ptr)
         return false;
 
-    array_cast<Link::size>(ptr->data()) = count;
+    // If head is padded then last bytes are fill (0xff).
+    to_array<Link::size>(ptr->data()) = count;
     return true;
 }
 
@@ -123,39 +124,62 @@ inline Link CLASS::top(const Key& key) const NOEXCEPT
 TEMPLATE
 inline Link CLASS::top(const Link& index) const NOEXCEPT
 {
+    using namespace system;
     const auto raw = file_.get_raw(link_to_position(index));
     if (is_null(raw))
         return {};
 
-    const auto& head = array_cast<Link::size>(raw);
-
-    mutex_.lock_shared();
-    const auto top = head;
-    mutex_.unlock_shared();
-    return top;
+    if constexpr (Align)
+    {
+        // Reads full padded word.
+        // xcode clang++16 does not support C++20 std::atomic_ref.
+        ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
+        const auto& head =* pointer_cast<std::atomic<integer>>(raw);
+        return head.load(std::memory_order_acquire);
+    }
+    else
+    {
+        const auto& head = to_array<size_>(raw);
+        mutex_.lock_shared();
+        const auto top = head;
+        mutex_.unlock_shared();
+        return top;
+    }
 }
 
 TEMPLATE
-inline bool CLASS::push(const bytes& current, bytes& next,
+inline bool CLASS::push(const Link& current, bytes& next,
     const Key& key) NOEXCEPT
 {
     return push(current, next, index(key));
 }
 
 TEMPLATE
-inline bool CLASS::push(const bytes& current, bytes& next,
+inline bool CLASS::push(const Link& current, bytes& next,
     const Link& index) NOEXCEPT
 {
+    using namespace system;
     const auto raw = file_.get_raw(link_to_position(index));
     if (is_null(raw))
         return false;
 
-    auto& head = array_cast<Link::size>(raw);
+    if constexpr (Align)
+    {
+        // Writes full padded word (0x00 fill).
+        // xcode clang++16 does not support C++20 std::atomic_ref.
+        ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
+        auto& head = *pointer_cast<std::atomic<integer>>(raw);
+        next = Link(head.exchange(current, std::memory_order_acq_rel));
+    }
+    else
+    {
+        auto& head = to_array<size_>(raw);
+        mutex_.lock();
+        next = head;
+        head = current;
+        mutex_.unlock();
+    }
 
-    mutex_.lock();
-    next = head;
-    head = current;
-    mutex_.unlock();
     return true;
 }
 

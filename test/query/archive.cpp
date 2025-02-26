@@ -111,23 +111,23 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
 
     // nosh
     const auto expected_header_head = system::base16_chunk(
-        "010000" // record count
-        "ffffff" // bucket[0]...
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "000000" // pk->
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff");
+        "010000ff" // record count
+        "ffffffff" // bucket[0]...
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "00000000" // pk->
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff");
 
     const auto expected_header_body = system::base16_chunk(
         "ffffff"   // next->
@@ -462,15 +462,15 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
 {
     constexpr auto milestone = true;
     const auto genesis_header_head = system::base16_chunk(
-        "010000"      // record count
-        "ffffff"      // bucket[0]...
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "000000");     // pk->
+        "010000ff"      // record count
+        "ffffffff"      // bucket[0]...
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "00000000");     // pk->
     const auto genesis_header_body = system::base16_chunk(
         "ffffff"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
@@ -536,23 +536,23 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
         "00");         // witness
     const auto genesis_txs_head = system::base16_chunk(
-        "1200000000"   // slabs size
-        "0000000000"   // pk->
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff");
+        "1200000000ffffff"   // slabs size
+        "0000000000000000"   // pk->
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff");
     const auto genesis_txs_body = system::base16_chunk(
         "ffffffffff"   // next->
         "000000"       // header_fk
@@ -614,15 +614,15 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
 {
     constexpr auto milestone = true;
     const auto genesis_header_head = system::base16_chunk(
-        "010000"       // record count
-        "ffffff"       // bucket[0]...
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "000000");     // pk->
+        "010000ff"       // record count
+        "ffffffff"       // bucket[0]...
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "00000000");     // pk->
     const auto genesis_header_body = system::base16_chunk(
         "ffffff"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
@@ -688,23 +688,23 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
         "00");         // witness
     const auto genesis_txs_head = system::base16_chunk(
-        "1200000000"   // slabs size
-        "0000000000"   // pk->
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff"
-        "ffffffffff");
+        "1200000000ffffff"   // slabs size
+        "0000000000000000"   // pk->
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff"
+        "ffffffffffffffff");
     const auto genesis_txs_body = system::base16_chunk(
         "ffffffffff"   // next->
         "000000"       // header_fk
@@ -1027,17 +1027,17 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
         0x61626364  // nonce
     };
     const auto expected_header_head = system::base16_chunk(
-        "010000" // record count
-        "ffffff" // bucket[0]...
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "000000" // bucket[0x45d6f6162ab0d085 % 10 => 5] pk->
-        "ffffff"
-        "ffffff"
-        "ffffff"
-        "ffffff");
+        "010000ff" // record count
+        "ffffffff" // bucket[0]...
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "00000000" // bucket[0x45d6f6162ab0d085 % 10 => 5] pk->
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff");
     const auto expected_header_body = system::base16_chunk(
         "ffffff"   // next->
         "85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2" // sk (block.hash)

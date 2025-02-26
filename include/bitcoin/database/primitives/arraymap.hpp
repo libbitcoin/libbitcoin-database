@@ -35,7 +35,7 @@ namespace database {
 /// Readers and writers are always prepositioned at data, and are limited to
 /// the extent the record/slab size is known (limit can always be removed).
 /// Streams are always initialized from first element byte up to file limit.
-template <typename Link, size_t Size>
+template <typename Link, size_t Size, bool Align>
 class arraymap
 {
 public:
@@ -113,7 +113,7 @@ protected:
 private:
     static constexpr auto is_slab = (Size == max_size_t);
 
-    using head = database::arrayhead<Link>;
+    using head = database::arrayhead<Link, Align>;
     using body = database::manager<Link, system::data_array<0>, Size>;
 
     // Thread safe (index/top/push).
@@ -125,13 +125,13 @@ private:
 };
 
 template <typename Element>
-using array_map = arraymap<linkage<Element::pk>, Element::size>;
+using array_map = arraymap<linkage<Element::pk>, Element::size, Element::align>;
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, size_t Size>
-#define CLASS arraymap<Link, Size>
+#define TEMPLATE template <typename Link, size_t Size, bool Align>
+#define CLASS arraymap<Link, Size, Align>
 
 #include <bitcoin/database/impl/primitives/arraymap.ipp>
 

@@ -38,7 +38,7 @@ static_assert(buckets == 16u);
 
 using link = linkage<link_size>;
 using key = data_array<key_size>;
-using hashhead_ = hashhead<link, key>;
+using hashhead_ = hashhead<link, key, false>;
 
 class nullptr_storage
   : public test::chunk_storage

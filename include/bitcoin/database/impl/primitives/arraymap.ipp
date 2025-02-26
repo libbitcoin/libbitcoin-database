@@ -171,7 +171,7 @@ bool CLASS::put(size_t key, const Element& element) NOEXCEPT
     finalizer sink{ stream };
 
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
-    return element.to_data(sink) && head_.push(link, head_.putter_index(key));
+    return element.to_data(sink) && head_.push(link, head_.index(key));
 }
 
 // protected

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYHEAD_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYHEAD_HPP
 
+#include <atomic>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -29,7 +30,7 @@ namespace database {
 
 /// Dynamically expanding array map header.
 /// Less efficient than a fixed-size header.
-template <typename Link>
+template <typename Link, bool Align>
 class arrayhead
 {
 public:
@@ -63,30 +64,32 @@ public:
     /// Convert natural key to head bucket index (unvalidated).
     inline Link index(size_t key) const NOEXCEPT;
 
-    /// Convert natural key to head bucket index (unvalidated).
-    inline Link putter_index(size_t key) const NOEXCEPT;
-
     /// Unsafe if verify false.
     Link at(size_t key) const NOEXCEPT;
 
-    /// Assign value to bucket index.
-    bool push(const bytes& current, const Link& index) NOEXCEPT;
+    /// Assign link value to bucket index.
+    bool push(const Link& link, const Link& index) NOEXCEPT;
 
 private:
+    using integer = Link::integer;
+    static_assert(std::atomic<integer>::is_always_lock_free);
+    static constexpr auto size_ = Align ? sizeof(integer) : Link::size;
+
+    // Body does not use padded link size.
     using body = manager<Link, system::data_array<zero>, Link::size>;
 
     template <size_t Bytes>
-    static inline auto& array_cast(memory::iterator buffer) NOEXCEPT
+    static inline auto& to_array(memory::iterator it) NOEXCEPT
     {
-        return system::unsafe_array_cast<uint8_t, Bytes>(buffer);
+        return system::unsafe_array_cast<uint8_t, Bytes>(it);
     }
 
     static constexpr Link position_to_link(size_t position) NOEXCEPT
     {
         using namespace system;
-        static_assert(is_nonzero(Link::size));
-        const auto link = floored_subtract(position / Link::size, one);
-        return possible_narrow_cast<typename Link::integer>(link);
+        static_assert(is_nonzero(size_));
+        const auto link = floored_subtract(position / size_, one);
+        return possible_narrow_cast<integer>(link);
     }
 
     // Byte offset of bucket index within head file.
@@ -94,11 +97,12 @@ private:
     static constexpr size_t link_to_position(const Link& index) NOEXCEPT
     {
         using namespace system;
-        BC_ASSERT(!is_multiply_overflow<size_t>(index, Link::size));
-        BC_ASSERT(!is_add_overflow(Link::size, index * Link::size));
-        return possible_narrow_cast<size_t>(Link::size + index * Link::size);
+        BC_ASSERT(!is_multiply_overflow<size_t>(index, size_));
+        BC_ASSERT(!is_add_overflow(size_, index * size_));
+        return possible_narrow_cast<size_t>(size_ + index * size_);
     }
 
+    // These are thread safe.
     storage& file_;
     const Link initial_buckets_;
     mutable std::shared_mutex mutex_{};
@@ -107,8 +111,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link>
-#define CLASS arrayhead<Link>
+#define TEMPLATE template <typename Link, bool Align>
+#define CLASS arrayhead<Link, Align>
 
 #include <bitcoin/database/impl/primitives/arrayhead.ipp>
 

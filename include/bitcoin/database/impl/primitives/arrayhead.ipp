@@ -55,17 +55,7 @@ bool CLASS::enabled() const NOEXCEPT
 TEMPLATE
 inline Link CLASS::index(size_t key) const NOEXCEPT
 {
-    // buckets a table lock via file.size().
-    ////if (key >= buckets()) return {};
-    ////BC_ASSERT_MSG(key < buckets(), "index overflow");
-
-    // Put index does not validate, allowing for head expansion.
-    return putter_index(key);
-}
-
-TEMPLATE
-inline Link CLASS::putter_index(size_t key) const NOEXCEPT
-{
+    // Does not validate, allowing for head expansion.
     // Key is the logical bucket index (no-hash).
     return body::cast_link(key);
 }
@@ -109,10 +99,10 @@ TEMPLATE
 bool CLASS::get_body_count(Link& count) const NOEXCEPT
 {
     const auto ptr = file_.get();
-    if (!ptr || Link::size > size())
+    if (!ptr || size_ > size())
         return false;
 
-    count = array_cast<Link::size>(ptr->data());
+    count = to_array<Link::size>(ptr->data());
     return true;
 }
 
@@ -120,16 +110,18 @@ TEMPLATE
 bool CLASS::set_body_count(const Link& count) NOEXCEPT
 {
     const auto ptr = file_.get();
-    if (!ptr || Link::size > size())
+    if (!ptr || size_ > size())
         return false;
 
-    array_cast<Link::size>(ptr->data()) = count;
+    // If head is padded then last bytes are fill (0xff).
+    to_array<Link::size>(ptr->data()) = count;
     return true;
 }
 
 TEMPLATE
 Link CLASS::at(size_t key) const NOEXCEPT
 {
+    using namespace system;
     const auto link = index(key);
     if (link.is_terminal())
         return {};
@@ -138,30 +130,55 @@ Link CLASS::at(size_t key) const NOEXCEPT
     if (is_null(ptr))
         return {};
 
-    const auto& head = array_cast<Link::size>(ptr->data());
-
-    mutex_.lock_shared();
-    const auto top = head;
-    mutex_.unlock_shared();
-    return top;
+    if constexpr (Align)
+    {
+        // Reads full padded word.
+        const auto raw = ptr->data();
+        // xcode clang++16 does not support C++20 std::atomic_ref.
+        ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
+        const auto& head = *pointer_cast<std::atomic<integer>>(raw);
+        return head.load(std::memory_order_acquire);
+    }
+    else
+    {
+        const auto& head = to_array<size_>(ptr->data());
+        mutex_.lock_shared();
+        const auto top = head;
+        mutex_.unlock_shared();
+        return top;
+    }
 }
 
 TEMPLATE
-bool CLASS::push(const bytes& current, const Link& index) NOEXCEPT
+bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
 {
-    constexpr auto fill = system::bit_all<uint8_t>;
+    using namespace system;
+    constexpr auto fill = bit_all<uint8_t>;
 
     // Allocate as necessary and fill allocations.
-    const auto ptr = file_.set(link_to_position(index), Link::size, fill);
-
+    const auto ptr = file_.set(link_to_position(index), size_, fill);
     if (is_null(ptr))
         return false;
 
-    auto& head = array_cast<Link::size>(ptr->data());
+    if constexpr (Align)
+    {
+        // Writes full padded word (0x00 fill).
+        const auto raw = ptr->data();
+        // xcode clang++16 does not support C++20 std::atomic_ref.
+        ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
+        auto& head = *pointer_cast<std::atomic<integer>>(raw);
+        head.store(link, std::memory_order_acq_rel);
+    }
+    else
+    {
+        bytes current = link;
+        auto& head = to_array<size_>(ptr->data());
 
-    mutex_.lock();
-    head = current;
-    mutex_.unlock();
+        mutex_.lock();
+        head = std::move(current);
+        mutex_.unlock();
+    }
+
     return true;
 }
 

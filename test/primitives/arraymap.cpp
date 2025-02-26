@@ -23,13 +23,13 @@ BOOST_AUTO_TEST_SUITE(arraymap_tests)
 
 using namespace system;
 
-template <typename Link, size_t Size>
+template <typename Link, size_t Size, bool Align = false>
 class arraymap_
-  : public arraymap<Link, Size>
+  : public arraymap<Link, Size, Align>
 {
 public:
-    using base = arraymap<Link, Size>;
-    using arraymap<Link, Size>::arraymap;
+    using base = arraymap<Link, Size, Align>;
+    using arraymap<Link, Size, Align>::arraymap;
 };
 
 using link3 = linkage<3>;
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__terminal__invalid)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    const arraymap<link3, little_record::size> instance{ head_store, body_store, initial_buckets };
+    const arraymap_<link3, little_record::size> instance{ head_store, body_store, initial_buckets };
 
     little_record record{};
     BOOST_REQUIRE(!instance.get(link3::terminal, record));
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__empty__invalid)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    const arraymap<link3, little_record::size> instance{ head_store, body_store, initial_buckets };
+    const arraymap_<link3, little_record::size> instance{ head_store, body_store, initial_buckets };
 
     little_record record{};
     BOOST_REQUIRE(!instance.get(0, record));
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__big_end_populated__expected)
     auto body_file_copy = body_file;
     test::chunk_storage head_store{ head_file_copy };
     test::chunk_storage body_store{ body_file_copy };
-    const arraymap<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
+    const arraymap_<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
 
     big_record record{};
 
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(hashmap__slab_put__multiple__expected)
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
 
-    arraymap<link3, big_slab::size> instance{ head_store, body_store, initial_buckets };
+    arraymap_<link3, big_slab::size> instance{ head_store, body_store, initial_buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr link3::integer key_big{ 0 };
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    arraymap<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
+    arraymap_<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.put(0, record_excess{ 0xa1b2c3d4_u32 }));
 
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_get__excess__false)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    arraymap<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
+    arraymap_<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put(0, big_record{ 0xa1b2c3d4_u32 }));
 
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__big_end_no_expansion__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    arraymap<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
+    arraymap_<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
     BOOST_REQUIRE(instance.create());
 
     const data_chunk expected_head = base16_chunk
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_put__little_end_default_expansion__expecte
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    arraymap<link3, little_record::size> instance{ head_store, body_store, initial_buckets };
+    arraymap_<link3, little_record::size> instance{ head_store, body_store, initial_buckets };
     BOOST_REQUIRE(instance.create());
 
     const data_chunk expected_head = base16_chunk
@@ -704,7 +704,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_at__existing__expected)
 
     test::chunk_storage head_store{ store_head };
     test::chunk_storage body_store{ store_body };
-    arraymap<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
+    arraymap_<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
 
     BOOST_REQUIRE_EQUAL(instance.at(0), 2u);
     BOOST_REQUIRE_EQUAL(instance.at(1), 1u);
@@ -738,7 +738,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_at__exists__true)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    arraymap<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
+    arraymap_<link3, big_record::size> instance{ head_store, body_store, initial_buckets };
     BOOST_REQUIRE(instance.create());
 
     constexpr uint32_t expected = 0xa1b2c3d4;
