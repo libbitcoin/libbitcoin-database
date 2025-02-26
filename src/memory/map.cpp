@@ -554,13 +554,43 @@ bool map::finalize_(size_t size) NOEXCEPT
         return false;
     }
 
-    // TODO: madvise with large length value fails on linux, does 0 imply all?
-    if (::madvise(memory_map_, 0, MADV_RANDOM) == fail)
-    {
-        set_first_code(error::madvise_failure);
-        unmap_();
-        return false;
-    }
+    // TODO: also, madvise only the size increase.
+    // TODO: madvise with large length value fails on linux (and zero is noop).
+    // TODO: Random may not be best since writes are sequential (for bodies).
+    // TODO: Heads are truly read/write random so could benefit.
+    // TODO: this fails with large and/or unaligned size. Align size to page,
+    // TODO: rounded up. Iterate over calls at 1GB (1_u64 << 30), sample:
+    ////// Get page size (usually 4KB)
+    ////const size_t page_size = sysconf(_SC_PAGESIZE);
+    ////if (page_size == static_cast<size_t>(-1))
+    ////{
+    ////    set_first_code(error::sysconf_failure);
+    ////    unmap_();
+    ////    return false;
+    ////}
+    ////
+    ////// Align size up to page boundary
+    ////const size_t aligned_size = (size + page_size - 1) & ~(page_size - 1);
+    ////
+    ////// Use 1GB chunks to avoid large-length issues
+    ////constexpr size_t chunk_size = 1ULL << 30; // 1GB
+    ////uint8_t* ptr = memory_map_;
+    ////for (size_t offset = 0; offset < aligned_size; offset += chunk_size)
+    ////{
+    ////    size_t len = std::min(chunk_size, aligned_size - offset);
+    ////    if (::madvise(ptr + offset, len, MADV_SEQUENTIAL) == fail)
+    ////    {
+    ////        set_first_code(error::madvise_failure);
+    ////        unmap_();
+    ////        return false;
+    ////    }
+    ////}
+    ////if (::madvise(memory_map_, size, MADV_RANDOM) == fail)
+    ////{
+    ////    set_first_code(error::madvise_failure);
+    ////    unmap_();
+    ////    return false;
+    ////}
 
     loaded_ = true;
     capacity_ = size;
