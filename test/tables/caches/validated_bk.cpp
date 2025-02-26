@@ -28,27 +28,27 @@ const table::validated_bk::slab slab1{ {}, 0x42, 0x1122334455667788 };
 const table::validated_bk::slab slab2{ {}, 0xab, 0x0000000000000042 };
 const data_chunk expected_head = base16_chunk
 (
-    "000000"
-    "ffffff"
-    "100000"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
+    "000000ff"
+    "ffffffff"
+    "10000000"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
 );
 const data_chunk closed_head = base16_chunk
 (
-    "180000"
-    "ffffff"
-    "100000"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
+    "180000ff"
+    "ffffffff"
+    "10000000"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
+    "ffffffff"
 );
 const data_chunk expected_body = base16_chunk
 (

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 
+#include <atomic>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -28,7 +29,7 @@
 namespace libbitcoin {
 namespace database {
 
-template <typename Link, typename Key>
+template <typename Link, typename Key, bool Align>
 class hashhead
 {
 public:
@@ -60,16 +61,18 @@ public:
     /// Unsafe if verify false.
     inline Link top(const Key& key) const NOEXCEPT;
     inline Link top(const Link& index) const NOEXCEPT;
-    inline bool push(const bytes& current, bytes& next, const Key& key) NOEXCEPT;
-    inline bool push(const bytes& current, bytes& next, const Link& index) NOEXCEPT;
+    inline bool push(const Link& current, bytes& next, const Key& key) NOEXCEPT;
+    inline bool push(const Link& current, bytes& next, const Link& index) NOEXCEPT;
 
 private:
+    static_assert(std::atomic<Link::integer>::is_always_lock_free);
+    static constexpr auto size_ = Align ? sizeof(Link::integer) : Link::size;
     using integer = Link::integer;
 
     template <size_t Bytes>
-    static auto& array_cast(memory::iterator buffer) NOEXCEPT
+    static inline auto& to_array(memory::iterator it) NOEXCEPT
     {
-        return system::unsafe_array_cast<uint8_t, Bytes>(buffer);
+        return system::unsafe_array_cast<uint8_t, Bytes>(it);
     }
 
     // Byte offset of bucket index within head file.
@@ -77,11 +80,12 @@ private:
     static constexpr size_t link_to_position(const Link& index) NOEXCEPT
     {
         using namespace system;
-        BC_ASSERT(!is_multiply_overflow<size_t>(index, Link::size));
-        BC_ASSERT(!is_add_overflow(Link::size, index * Link::size));
-        return possible_narrow_cast<size_t>(Link::size + index * Link::size);
+        BC_ASSERT(!is_multiply_overflow<size_t>(index, size_));
+        BC_ASSERT(!is_add_overflow(size_, index * size_));
+        return possible_narrow_cast<size_t>(size_ + index * size_);
     }
 
+    // These are thread safe.
     storage& file_;
     const Link buckets_;
     const Link mask_;
@@ -91,8 +95,8 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Key>
-#define CLASS hashhead<Link, Key>
+#define TEMPLATE template <typename Link, typename Key, bool Align>
+#define CLASS hashhead<Link, Key, Align>
 
 #include <bitcoin/database/impl/primitives/hashhead.ipp>
 

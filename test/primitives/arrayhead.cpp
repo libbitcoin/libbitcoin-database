@@ -35,7 +35,7 @@ constexpr auto buckets = sub1(links);
 static_assert(buckets == 20u);
 
 using link = linkage<link_size>;
-using test_header = arrayhead<link>;
+using test_header = arrayhead<link, false>;
 
 class nullptr_storage
   : public test::chunk_storage
