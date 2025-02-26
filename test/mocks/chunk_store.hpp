@@ -84,14 +84,14 @@ public:
         return ins_body_.buffer();
     }
 
-    system::data_chunk& puts_head() NOEXCEPT
+    system::data_chunk& outs_head() NOEXCEPT
     {
-        return puts_head_.buffer();
+        return outs_head_.buffer();
     }
 
-    system::data_chunk& puts_body() NOEXCEPT
+    system::data_chunk& outs_body() NOEXCEPT
     {
-        return puts_body_.buffer();
+        return outs_body_.buffer();
     }
 
     system::data_chunk& tx_head() NOEXCEPT

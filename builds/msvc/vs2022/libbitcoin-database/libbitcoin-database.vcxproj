@@ -129,9 +129,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\input.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\ins.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\output.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\outs.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\point.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\puts.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\spend.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\transaction.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\txs.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevout.hpp" />

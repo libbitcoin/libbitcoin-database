@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.output_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.ins_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.ins_rate, 50u);
-    BOOST_REQUIRE_EQUAL(configuration.puts_size, 1u);
-    BOOST_REQUIRE_EQUAL(configuration.puts_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.outs_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.outs_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.tx_bits, 7u);
     BOOST_REQUIRE_EQUAL(configuration.tx_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.tx_rate, 50u);

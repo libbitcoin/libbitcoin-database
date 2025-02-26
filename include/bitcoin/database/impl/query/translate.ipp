@@ -151,11 +151,11 @@ output_link CLASS::to_output(const tx_link& link,
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::get_output put{};
-    if (!store_.puts.get(tx.puts_fk, put))
+    table::outs::get_output outs{};
+    if (!store_.outs.get(tx.outs_fk, outs))
         return {};
 
-    return put.out_fk;
+    return outs.out_fk;
 }
 
 TEMPLATE
@@ -339,12 +339,12 @@ output_links CLASS::to_outputs(const tx_link& link) const NOEXCEPT
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::record puts{};
-    puts.out_fks.resize(tx.number);
-    if (!store_.puts.get(tx.puts_fk, puts))
+    table::outs::record outs{};
+    outs.out_fks.resize(tx.number);
+    if (!store_.outs.get(tx.outs_fk, outs))
         return {};
 
-    return std::move(puts.out_fks);
+    return std::move(outs.out_fks);
 }
 
 TEMPLATE

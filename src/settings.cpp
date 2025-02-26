@@ -48,8 +48,8 @@ settings::settings() NOEXCEPT
     ins_size{ 1 },
     ins_rate{ 50 },
 
-    puts_size{ 1 },
-    puts_rate{ 50 },
+    outs_size{ 1 },
+    outs_rate{ 50 },
 
     tx_bits{ 7 },
     tx_size{ 1 },

@@ -213,12 +213,12 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__empty__expected)
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_head4_hash);
     BOOST_REQUIRE_EQUAL(store.input_head(), expected_head5_array);
     BOOST_REQUIRE_EQUAL(store.output_head(), expected_head5_array);
-    BOOST_REQUIRE_EQUAL(store.puts_head(), expected_head4_array);
+    BOOST_REQUIRE_EQUAL(store.outs_head(), expected_head4_array);
     BOOST_REQUIRE(store.tx_body().empty());
     BOOST_REQUIRE(store.point_body().empty());
     BOOST_REQUIRE(store.input_body().empty());
     BOOST_REQUIRE(store.output_body().empty());
-    BOOST_REQUIRE(store.puts_body().empty());
+    BOOST_REQUIRE(store.outs_body().empty());
 }
 
 BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
@@ -257,9 +257,9 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
         "04030201"     // version
         "010000"       // ins_count
         "010000"       // outs_count
-        "0000000000"); // puts_fk->
-    const auto expected_puts_head = system::base16_chunk("0900000000");
-    const auto expected_puts_body = system::base16_chunk(
+        "0000000000"); // outs_fk->
+    const auto expected_outs_head = system::base16_chunk("0900000000");
+    const auto expected_outs_body = system::base16_chunk(
         "00000000"     // spend0_fk->
         "0000000000"); // output0_fk->
     const auto expected_output_head = system::base16_chunk("0600000000");
@@ -306,14 +306,14 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_tx_head);
     BOOST_REQUIRE_EQUAL(store.input_head(), expected_input_head);
     BOOST_REQUIRE_EQUAL(store.output_head(), expected_output_head);
-////    BOOST_REQUIRE_EQUAL(store.puts_head(), expected_puts_head);
+////    BOOST_REQUIRE_EQUAL(store.outs_head(), expected_outs_head);
 ////    BOOST_REQUIRE_EQUAL(store.spend_head(), expected_spend_head);
 
 ////    BOOST_REQUIRE_EQUAL(store.tx_body(), expected_tx_body);
 ////    BOOST_REQUIRE_EQUAL(store.point_body(), expected_point_body);
     BOOST_REQUIRE_EQUAL(store.input_body(), expected_input_body);
     BOOST_REQUIRE_EQUAL(store.output_body(), expected_output_body);
-////    BOOST_REQUIRE_EQUAL(store.puts_body(), expected_puts_body);
+////    BOOST_REQUIRE_EQUAL(store.outs_body(), expected_outs_body);
 ////    BOOST_REQUIRE_EQUAL(store.spend_body(), expected_spend_body);
 }
 
@@ -375,9 +375,9 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
         "2a000000"     // version
         "020000"       // ins_count
         "020000"       // outs_count
-        "0000000000"); // puts_fk->
-    const auto expected_puts_head = system::base16_chunk("1200000000");
-    const auto expected_puts_body = system::base16_chunk(
+        "0000000000"); // outs_fk->
+    const auto expected_outs_head = system::base16_chunk("1200000000");
+    const auto expected_outs_body = system::base16_chunk(
         "00000000"     // spend0_fk->
         "01000000"     // spend1_fk->
         "0000000000"   // output0_fk->
@@ -447,14 +447,14 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_tx_head);
     BOOST_REQUIRE_EQUAL(store.input_head(), expected_input_head);
     BOOST_REQUIRE_EQUAL(store.output_head(), expected_output_head);
-////    BOOST_REQUIRE_EQUAL(store.puts_head(), expected_puts_head);
+////    BOOST_REQUIRE_EQUAL(store.outs_head(), expected_outs_head);
 ////    BOOST_REQUIRE_EQUAL(store.spend_head(), expected_spend_head);
 
 ////    BOOST_REQUIRE_EQUAL(store.tx_body(), expected_tx_body);
 ////    BOOST_REQUIRE_EQUAL(store.point_body(), expected_point_body);
     BOOST_REQUIRE_EQUAL(store.input_body(), expected_input_body);
     BOOST_REQUIRE_EQUAL(store.output_body(), expected_output_body);
-////    BOOST_REQUIRE_EQUAL(store.puts_body(), expected_puts_body);
+////    BOOST_REQUIRE_EQUAL(store.outs_body(), expected_outs_body);
 ////    BOOST_REQUIRE_EQUAL(store.spend_body(), expected_spend_body);
 }
 
@@ -504,9 +504,9 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "01000000"     // version
         "010000"       // ins_count
         "010000"       // outs_count
-        "0000000000");   // puts_fk->
-    const auto genesis_puts_head = system::base16_chunk("0900000000");
-    const auto genesis_puts_body = system::base16_chunk(
+        "0000000000");   // outs_fk->
+    const auto genesis_outs_head = system::base16_chunk("0900000000");
+    const auto genesis_outs_body = system::base16_chunk(
         "00000000"     // spend0_fk->
         "0000000000"); // output0_fk->
 
@@ -589,7 +589,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
     BOOST_REQUIRE_EQUAL(store.tx_head(), genesis_tx_head);
     BOOST_REQUIRE_EQUAL(store.input_head(), genesis_input_head);
     BOOST_REQUIRE_EQUAL(store.output_head(), genesis_output_head);
-////    BOOST_REQUIRE_EQUAL(store.puts_head(), genesis_puts_head);
+////    BOOST_REQUIRE_EQUAL(store.outs_head(), genesis_outs_head);
 ////    BOOST_REQUIRE_EQUAL(store.spend_head(), genesis_spend_head);
     BOOST_REQUIRE_EQUAL(store.txs_head(), genesis_txs_head);
 
@@ -656,9 +656,9 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "01000000"     // version
         "010000"       // ins_count
         "010000"       // outs_count
-        "0000000000");  // puts_fk->
-    const auto genesis_puts_head = system::base16_chunk("0900000000");
-    const auto genesis_puts_body = system::base16_chunk(
+        "0000000000"); // outs_fk->
+    const auto genesis_outs_head = system::base16_chunk("0900000000");
+    const auto genesis_outs_body = system::base16_chunk(
         "00000000"     // spend0_fk->
         "0000000000"); // output0_fk->
 
@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     BOOST_REQUIRE_EQUAL(store.tx_head(), genesis_tx_head);
     BOOST_REQUIRE_EQUAL(store.input_head(), genesis_input_head);
     BOOST_REQUIRE_EQUAL(store.output_head(), genesis_output_head);
-////    BOOST_REQUIRE_EQUAL(store.puts_head(), genesis_puts_head);
+////    BOOST_REQUIRE_EQUAL(store.outs_head(), genesis_outs_head);
 ////    BOOST_REQUIRE_EQUAL(store.spend_head(), genesis_spend_head);
     BOOST_REQUIRE_EQUAL(store.txs_head(), genesis_txs_head);
 

@@ -134,7 +134,7 @@ inline Link CLASS::top(const Link& index) const NOEXCEPT
         // Reads full padded word.
         // xcode clang++16 does not support C++20 std::atomic_ref.
         ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
-        const auto& head =* pointer_cast<std::atomic<integer>>(raw);
+        const auto& head = *pointer_cast<std::atomic<integer>>(raw);
         return head.load(std::memory_order_acquire);
     }
     else

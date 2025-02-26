@@ -305,7 +305,6 @@ if (with-tests)
         "../../test/tables/archives/output.cpp"
         "../../test/tables/archives/point.cpp"
         "../../test/tables/archives/puts.cpp"
-        "../../test/tables/archives/spend.cpp"
         "../../test/tables/archives/transaction.cpp"
         "../../test/tables/archives/txs.cpp"
         "../../test/tables/caches/prevout.cpp"

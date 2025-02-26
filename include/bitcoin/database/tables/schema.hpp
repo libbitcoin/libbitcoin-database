@@ -48,7 +48,7 @@ namespace schema
         constexpr auto output = "archive_output";
         constexpr auto point = "archive_point";
         constexpr auto ins = "archive_ins";
-        constexpr auto puts = "archive_puts";
+        constexpr auto outs = "archive_outs";
         constexpr auto spend = "archive_spend";
         constexpr auto tx = "archive_tx";
         constexpr auto txs = "archive_txs";
@@ -236,8 +236,7 @@ namespace schema
     };
 
     // array
-    // TODO: rename to 'outs'.
-    struct puts
+    struct outs
     {
         static constexpr size_t pk = schema::outs_;
         static constexpr size_t minsize =

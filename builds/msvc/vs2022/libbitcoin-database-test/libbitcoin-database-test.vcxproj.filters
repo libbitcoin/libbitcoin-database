@@ -147,9 +147,6 @@
     <ClCompile Include="..\..\..\..\test\tables\archives\puts.cpp">
       <Filter>src\tables\archives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\archives\spend.cpp">
-      <Filter>src\tables\archives</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\archives\transaction.cpp">
       <Filter>src\tables\archives</Filter>
     </ClCompile>

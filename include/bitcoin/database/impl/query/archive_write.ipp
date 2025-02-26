@@ -90,16 +90,16 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
         return error::tx_empty;
 
     const auto& ins = tx.inputs_ptr();
-    const auto& outs = tx.outputs_ptr();
+    const auto& ous = tx.outputs_ptr();
 
     using ix = linkage<schema::index>;
     const auto txs = possible_narrow_cast<tx_link::integer>(one);
     const auto inputs = possible_narrow_cast<ix::integer>(ins->size());
-    const auto outputs = possible_narrow_cast<ix::integer>(outs->size());
+    const auto outputs = possible_narrow_cast<ix::integer>(ous->size());
 
-    // Declare puts record for output accumulation.
-    table::puts::record puts{};
-    puts.out_fks.reserve(outputs);
+    // Declare outs record for output accumulation.
+    table::outs::record outs{};
+    outs.out_fks.reserve(outputs);
 
     // ========================================================================
     const auto scope = store_.get_transactor();
@@ -147,7 +147,7 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
 
     // TODO: preallocate (requires output sizes).
     // Commit output records.
-    for (const auto& out: *outs)
+    for (const auto& out: *ous)
     {
         output_link output_fk{};
         if (!store_.output.put_link(output_fk, table::output::put_ref
@@ -161,13 +161,13 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
         }
 
         // Accumulate outputs in order.
-        puts.out_fks.push_back(output_fk);
+        outs.out_fks.push_back(output_fk);
     }
 
-    // Commit accumulated puts.
-    const auto puts_fk = store_.puts.put_link(puts);
-    if (puts_fk.is_terminal())
-        return error::tx_puts_put;
+    // Commit accumulated outs.
+    const auto outs_fk = store_.outs.put_link(outs);
+    if (outs_fk.is_terminal())
+        return error::tx_outs_put;
 
     // Commit accumulated points.
     point_it = point_fk;
@@ -189,7 +189,7 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
         inputs,
         outputs,
         point_fk,
-        puts_fk
+        outs_fk
     }))
     {
         return error::tx_tx_set;
@@ -202,12 +202,12 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
         if (ad_fk.is_terminal())
             return error::tx_address_allocate;
 
-        auto out = outs->begin();
+        auto output = ous->begin();
         const auto ptr = store_.address.get_memory();
 
-        for (auto out_fk: puts.out_fks)
+        for (auto out_fk: outs.out_fks)
         {
-            const auto key = (*out++)->script().hash();
+            const auto key = (*output++)->script().hash();
             if (!store_.address.put(ptr, ad_fk++, key, table::address::record
             {
                 {},

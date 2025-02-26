@@ -108,14 +108,14 @@ public:
         return ins_body_.file();
     }
 
-    inline const path& puts_head_file() const NOEXCEPT
+    inline const path& outs_head_file() const NOEXCEPT
     {
-        return puts_head_.file();
+        return outs_head_.file();
     }
 
-    inline const path& puts_body_file() const NOEXCEPT
+    inline const path& outs_body_file() const NOEXCEPT
     {
-        return puts_body_.file();
+        return outs_body_.file();
     }
 
     inline const path& tx_head_file() const NOEXCEPT
