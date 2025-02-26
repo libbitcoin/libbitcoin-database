@@ -197,7 +197,7 @@ struct prevout
             return spend == tx::terminal ? spend : set_right(spend, offset, false);
         }
 
-        // Spend count is derived in confirmation from block.txs.puts.
+        // Spend count is derived in confirmation from block.txs.ins.
         std::vector<tx::integer> conflicts{};
         std::vector<std::pair<tx::integer, uint32_t>> spends{};
     };

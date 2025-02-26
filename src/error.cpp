@@ -114,7 +114,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tx_ins_allocate, "tx_ins_allocate" },
     { tx_ins_put, "tx_ins_put" },
     { tx_output_put, "tx_output_put" },
-    { tx_puts_put, "tx_puts_put" },
+    { tx_outs_put, "tx_outs_put" },
     { tx_tx_set, "tx_tx_set" },
     { tx_address_allocate, "tx_address_allocate" },
     { tx_address_put, "tx_address_put" },

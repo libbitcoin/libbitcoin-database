@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_PUTS_HPP
-#define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_PUTS_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_OUTS_HPP
+#define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_OUTS_HPP
 
 #include <algorithm>
 #include <bitcoin/system.hpp>
@@ -30,16 +30,16 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// Puts is a record output fk records.
-struct puts
-  : public no_map<schema::puts>
+/// Outs is a record output fk records.
+struct outs
+  : public no_map<schema::outs>
 {
     using out = linkage<schema::put>;
     using output_links = std::vector<out::integer>;
-    using no_map<schema::puts>::nomap;
+    using no_map<schema::outs>::nomap;
 
     struct record
-      : public schema::puts
+      : public schema::outs
     {
         link count() const NOEXCEPT
         {
@@ -77,7 +77,7 @@ struct puts
     };
 
     struct get_output
-      : public schema::puts
+      : public schema::outs
     {
         link count() const NOEXCEPT
         {

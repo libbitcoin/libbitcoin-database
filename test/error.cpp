@@ -547,13 +547,13 @@ BOOST_AUTO_TEST_CASE(error_t__code__tx_output_put__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "tx_output_put");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__tx_puts_put__true_exected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__tx_outs_put__true_exected_message)
 {
-    constexpr auto value = error::tx_puts_put;
+    constexpr auto value = error::tx_outs_put;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "tx_puts_put");
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_outs_put");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__tx_tx_set__true_exected_message)

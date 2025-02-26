@@ -100,7 +100,7 @@ public:
     table::output output;
     table::point point;
     table::ins ins;
-    table::puts puts;
+    table::outs outs;
     table::transaction tx;
     table::txs txs;
 
@@ -153,8 +153,8 @@ protected:
     Storage ins_body_;
 
     // array
-    Storage puts_head_;
-    Storage puts_body_;
+    Storage outs_head_;
+    Storage outs_body_;
 
     // record hashmap
     Storage tx_head_;

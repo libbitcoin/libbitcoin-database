@@ -33,7 +33,7 @@
 ////    0x56341204_u32, // version
 ////    0x00341205_u32, // ins_count
 ////    0x00341206_u32, // outs_count
-////    0x0000007856341207_u64  // puts_fk (inputs)
+////    0x0000007856341207_u64  // outs_fk (inputs)
 ////};
 ////const data_chunk expected_file
 ////{
@@ -104,7 +104,7 @@
 ////    BOOST_REQUIRE_EQUAL(instance.get_key(1), key);
 ////}
 ////
-////BOOST_AUTO_TEST_CASE(transaction__put__get_puts__expected)
+////BOOST_AUTO_TEST_CASE(transaction__put__get_outs__expected)
 ////{
 ////    test::chunk_storage head_store{};
 ////    test::chunk_storage body_store{};
@@ -114,13 +114,13 @@
 ////    BOOST_REQUIRE(!instance.put_link(key, expected).is_terminal());
 ////    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 ////
-////    table::transaction::get_puts element{};
+////    table::transaction::get_outs element{};
 ////    BOOST_REQUIRE(instance.get(1, element));
 ////    BOOST_REQUIRE_EQUAL(element.ins_count, 0x00341205_u32);
 ////    BOOST_REQUIRE_EQUAL(element.outs_count, 0x00341206_u32);
-////    BOOST_REQUIRE_EQUAL(element.puts_fk, 0x0000007856341207_u64);
+////    BOOST_REQUIRE_EQUAL(element.outs_fk, 0x0000007856341207_u64);
 ////    BOOST_REQUIRE(!is_multiply_overflow<uint64_t>(element.ins_count, schema::put));
-////    BOOST_REQUIRE(!is_add_overflow<uint64_t>(element.puts_fk, element.ins_count * schema::put));
+////    BOOST_REQUIRE(!is_add_overflow<uint64_t>(element.outs_fk, element.ins_count * schema::put));
 ////}
 ////
 ////BOOST_AUTO_TEST_CASE(transaction__it__pk__expected)

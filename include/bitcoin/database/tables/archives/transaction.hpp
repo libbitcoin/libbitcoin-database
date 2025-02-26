@@ -47,7 +47,7 @@ struct transaction
         bytes::size +
         sizeof(uint32_t);
 
-    static constexpr size_t skip_to_puts =
+    static constexpr size_t skip_to_outs =
         skip_to_version +
         sizeof(uint32_t);
 
@@ -64,7 +64,7 @@ struct transaction
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
             point_fk   = source.read_little_endian<ins::integer, ins::size>();
-            puts_fk    = source.read_little_endian<outs::integer, outs::size>();
+            outs_fk    = source.read_little_endian<outs::integer, outs::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
@@ -79,7 +79,7 @@ struct transaction
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
             sink.write_little_endian<ix::integer, ix::size>(outs_count);
             sink.write_little_endian<ins::integer, ins::size>(point_fk);
-            sink.write_little_endian<outs::integer, outs::size>(puts_fk);
+            sink.write_little_endian<outs::integer, outs::size>(outs_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
@@ -94,7 +94,7 @@ struct transaction
                 && ins_count == other.ins_count
                 && outs_count == other.outs_count
                 && point_fk == other.point_fk
-                && puts_fk == other.puts_fk;
+                && outs_fk == other.outs_fk;
         }
 
         bool coinbase{};
@@ -105,7 +105,7 @@ struct transaction
         ix::integer ins_count{};
         ix::integer outs_count{};
         ins::integer point_fk{};
-        outs::integer puts_fk{};
+        outs::integer outs_fk{};
     };
 
     struct only
@@ -124,7 +124,7 @@ struct transaction
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
             point_fk   = source.read_little_endian<ins::integer, ins::size>();
-            puts_fk    = source.read_little_endian<outs::integer, outs::size>();
+            outs_fk    = source.read_little_endian<outs::integer, outs::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
@@ -134,7 +134,7 @@ struct transaction
         ix::integer ins_count{};
         ix::integer outs_count{};
         ins::integer point_fk{};
-        outs::integer puts_fk{};
+        outs::integer outs_fk{};
     };
 
     struct record_put_ref
@@ -153,7 +153,7 @@ struct transaction
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
             sink.write_little_endian<ix::integer, ix::size>(outs_count);
             sink.write_little_endian<ins::integer, ins::size>(point_fk);
-            sink.write_little_endian<outs::integer, outs::size>(puts_fk);
+            sink.write_little_endian<outs::integer, outs::size>(outs_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
@@ -162,7 +162,7 @@ struct transaction
         ix::integer ins_count{};
         ix::integer outs_count{};
         ins::integer point_fk{};
-        outs::integer puts_fk{};
+        outs::integer outs_fk{};
     };
 
     struct only_with_sk
@@ -185,7 +185,7 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_puts);
+            source.skip_bytes(skip_to_outs);
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
             return source;
@@ -195,23 +195,23 @@ struct transaction
         ix::integer outs_count{};
     };
 
-    struct get_puts
+    struct get_outs
       : public schema::transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_puts);
+            source.skip_bytes(skip_to_outs);
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
             point_fk   = source.read_little_endian<ins::integer, ins::size>();
-            puts_fk    = source.read_little_endian<outs::integer, outs::size>();
+            outs_fk    = source.read_little_endian<outs::integer, outs::size>();
             return source;
         }
 
         ix::integer ins_count{};
         ix::integer outs_count{};
         ins::integer point_fk{};
-        outs::integer puts_fk{};
+        outs::integer outs_fk{};
     };
 
     struct get_version
@@ -246,7 +246,7 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_puts);
+            source.skip_bytes(skip_to_outs);
             number = source.read_little_endian<ix::integer, ix::size>();
 
             if (index >= number)
@@ -271,23 +271,23 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_puts + ix::size);
+            source.skip_bytes(skip_to_outs + ix::size);
             number = source.read_little_endian<ix::integer, ix::size>();
 
             if (index >= number)
             {
-                puts_fk = outs::terminal;
+                outs_fk = outs::terminal;
                 return source;
             }
 
             source.skip_bytes(ins::size);
-            puts_fk = source.read_little_endian<outs::integer, outs::size>() + index;
+            outs_fk = source.read_little_endian<outs::integer, outs::size>() + index;
             return source;
         }
 
-        // Index provides optional offset for puts_fk, number is absolute.
+        // Index provides optional offset for outs_fk, number is absolute.
         const outs::integer index{};
-        outs::integer puts_fk{};
+        outs::integer outs_fk{};
         ix::integer number{};
     };
 

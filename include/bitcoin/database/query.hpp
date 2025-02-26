@@ -114,7 +114,7 @@ public:
     size_t input_size() const NOEXCEPT;
     size_t point_size() const NOEXCEPT;
     size_t ins_size() const NOEXCEPT;
-    size_t puts_size() const NOEXCEPT;
+    size_t outs_size() const NOEXCEPT;
     size_t txs_size() const NOEXCEPT;
     size_t tx_size() const NOEXCEPT;
     size_t candidate_size() const NOEXCEPT;
@@ -134,7 +134,7 @@ public:
     size_t input_body_size() const NOEXCEPT;
     size_t point_body_size() const NOEXCEPT;
     size_t ins_body_size() const NOEXCEPT;
-    size_t puts_body_size() const NOEXCEPT;
+    size_t outs_body_size() const NOEXCEPT;
     size_t txs_body_size() const NOEXCEPT;
     size_t tx_body_size() const NOEXCEPT;
     size_t candidate_body_size() const NOEXCEPT;
@@ -154,7 +154,7 @@ public:
     size_t input_head_size() const NOEXCEPT;
     size_t point_head_size() const NOEXCEPT;
     size_t ins_head_size() const NOEXCEPT;
-    size_t puts_head_size() const NOEXCEPT;
+    size_t outs_head_size() const NOEXCEPT;
     size_t txs_head_size() const NOEXCEPT;
     size_t tx_head_size() const NOEXCEPT;
     size_t candidate_head_size() const NOEXCEPT;
@@ -171,7 +171,7 @@ public:
     size_t tx_records() const NOEXCEPT;
     size_t point_records() const NOEXCEPT;
     size_t ins_records() const NOEXCEPT;
-    size_t puts_records() const NOEXCEPT;
+    size_t outs_records() const NOEXCEPT;
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;

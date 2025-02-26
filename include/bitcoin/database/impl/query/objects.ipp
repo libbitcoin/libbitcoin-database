@@ -160,9 +160,9 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
     if (!store_.tx.get(link, tx))
         return {};
 
-    table::puts::record puts{};
-    puts.out_fks.resize(tx.outs_count);
-    if (!store_.puts.get(tx.puts_fk, puts))
+    table::outs::record outs{};
+    outs.out_fks.resize(tx.outs_count);
+    if (!store_.outs.get(tx.outs_fk, outs))
         return {};
 
     const auto inputs = to_shared<chain::input_cptrs>();
@@ -175,7 +175,7 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
         if (!push_bool(*inputs, get_input(fk)))
             return {};
 
-    for (const auto& fk: puts.out_fks)
+    for (const auto& fk: outs.out_fks)
         if (!push_bool(*outputs, get_output(fk)))
             return {};
 

@@ -59,8 +59,8 @@ struct BCD_API settings
     uint64_t ins_size;
     uint16_t ins_rate;
 
-    uint64_t puts_size;
-    uint16_t puts_rate;
+    uint64_t outs_size;
+    uint16_t outs_rate;
 
     uint32_t tx_bits;
     uint64_t tx_size;
