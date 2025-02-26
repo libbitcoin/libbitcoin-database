@@ -71,9 +71,9 @@ public:
     bool push(const Link& link, const Link& index) NOEXCEPT;
 
 private:
-    static_assert(std::atomic<Link::integer>::is_always_lock_free);
-    static constexpr auto size_ = Align ? sizeof(Link::integer) : Link::size;
     using integer = Link::integer;
+    static_assert(std::atomic<integer>::is_always_lock_free);
+    static constexpr auto size_ = Align ? sizeof(integer) : Link::size;
 
     // Body does not use padded link size.
     using body = manager<Link, system::data_array<zero>, Link::size>;

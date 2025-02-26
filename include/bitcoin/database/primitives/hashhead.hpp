@@ -65,9 +65,9 @@ public:
     inline bool push(const Link& current, bytes& next, const Link& index) NOEXCEPT;
 
 private:
-    static_assert(std::atomic<Link::integer>::is_always_lock_free);
-    static constexpr auto size_ = Align ? sizeof(Link::integer) : Link::size;
     using integer = Link::integer;
+    static_assert(std::atomic<integer>::is_always_lock_free);
+    static constexpr auto size_ = Align ? sizeof(integer) : Link::size;
 
     template <size_t Bytes>
     static inline auto& to_array(memory::iterator it) NOEXCEPT
