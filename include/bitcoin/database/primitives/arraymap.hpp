@@ -73,6 +73,9 @@ public:
     /// Count of records (or body file bytes if slab).
     Link count() const NOEXCEPT;
 
+    /// Increase count as neccesary to specified.
+    bool expand(const Link& count) NOEXCEPT;
+
     /// Errors.
     /// -----------------------------------------------------------------------
 
