@@ -34,6 +34,7 @@ namespace table {
 struct outs
   : public no_map<schema::outs>
 {
+    using tx = linkage<schema::tx>;
     using out = linkage<schema::put>;
     using output_links = std::vector<out::integer>;
     using no_map<schema::outs>::nomap;
@@ -91,6 +92,41 @@ struct outs
         }
 
         out::integer out_fk{};
+    };
+
+    struct put_ref
+      : public schema::outs
+    {
+        link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(tx_.outputs());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using namespace system;
+            static_assert(tx::size <= sizeof(uint64_t));
+            static constexpr auto value_parent_difference = sizeof(uint64_t) -
+                tx::size;
+
+            auto out_fk = output_fk;
+            const auto& outs = *tx_.outputs_ptr();
+            std::for_each(outs.begin(), outs.end(), [&](const auto& out) NOEXCEPT
+            {
+                sink.write_little_endian<out::integer, out::size>(out_fk);
+
+                // Calculate next corresponding output fk from serialized size.
+                // (variable_size(value) + (value + script)) - (value - parent)
+                out_fk += (variable_size(out->value()) + out->serialized_size() -
+                    value_parent_difference);
+            });
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const out::integer output_fk{};
+        const system::chain::transaction& tx_{};
     };
 };
 

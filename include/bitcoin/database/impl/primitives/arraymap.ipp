@@ -112,6 +112,12 @@ Link CLASS::count() const NOEXCEPT
     return body_.count();
 }
 
+TEMPLATE
+bool CLASS::expand(const Link& count) NOEXCEPT
+{
+    return body_.expand(count);
+}
+
 // query interface
 // ----------------------------------------------------------------------------
 

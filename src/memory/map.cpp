@@ -401,8 +401,6 @@ constexpr auto fail = -1;
 // Never results in unmapped.
 bool map::flush_() NOEXCEPT
 {
-    // msync should not be required on modern linux, see linus et al.
-    // stackoverflow.com/questions/5902629/mmap-msync-and-linux-process-termination
 #if defined(HAVE_MSC)
     // unmap (and therefore msync) must be called before ftruncate.
     // "To flush all the dirty pages plus the metadata for the file and ensure
@@ -414,6 +412,8 @@ bool map::flush_() NOEXCEPT
     // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
     const auto success = ::fcntl(opened_, F_FULLFSYNC, 0) != fail;
 #else
+    // msync should not be required on modern linux, see linus et al.
+    // stackoverflow.com/questions/5902629/mmap-msync-and-linux-process-termination
     // Linux: fsync "transfers ("flushes") all modified in-core data of
     // (i.e., modified buffer cache pages for) the file referred to by the
     // file descriptor fd to the disk device so all changed information

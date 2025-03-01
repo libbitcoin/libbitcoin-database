@@ -502,33 +502,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__tx_input_put__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "tx_input_put");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__tx_point_allocate__true_exected_message)
-{
-    constexpr auto value = error::tx_point_allocate;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "tx_point_allocate");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__tx_point_put__true_exected_message)
-{
-    constexpr auto value = error::tx_point_put;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "tx_point_put");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__tx_ins_allocate__true_exected_message)
-{
-    constexpr auto value = error::tx_ins_allocate;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "tx_ins_allocate");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__tx_ins_put__true_exected_message)
 {
     constexpr auto value = error::tx_ins_put;
@@ -554,6 +527,24 @@ BOOST_AUTO_TEST_CASE(error_t__code__tx_outs_put__true_exected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "tx_outs_put");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_point_allocate__true_exected_message)
+{
+    constexpr auto value = error::tx_point_allocate;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_point_allocate");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tx_point_put__true_exected_message)
+{
+    constexpr auto value = error::tx_point_put;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tx_point_put");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__tx_tx_set__true_exected_message)

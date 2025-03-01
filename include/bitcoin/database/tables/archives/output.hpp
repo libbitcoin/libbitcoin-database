@@ -150,23 +150,42 @@ struct output
     {
         inline link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(
-                tx::size +
-                variable_size(output.value()) +
-                output.script().serialized_size(true));
+            using namespace system;
+            static_assert(tx::size <= sizeof(uint64_t));
+            static constexpr auto value_parent_difference = sizeof(uint64_t) -
+                tx::size;
+
+            const auto& outs = *tx_.outputs_ptr();
+            const auto other = outs.size() * value_parent_difference;
+            const auto outputs = std::accumulate(outs.begin(), outs.end(), zero,
+                [](size_t total, const auto& out) NOEXCEPT
+                {
+                    // size cached, so this is free, includes sizeof(value).
+                    return total + variable_size(out->value()) +
+                        out->serialized_size();
+                });
+
+            // Converts value from fixed size wire encoding to variable.
+            // (variable_size(value) + (value + script)) - (value - parent)
+            return possible_narrow_cast<link::integer>(outputs - other);
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-            sink.write_variable(output.value());
-            output.script().to_data(sink, true);
+            const auto& outs = *tx_.outputs_ptr();
+            std::for_each(outs.begin(), outs.end(), [&](const auto& out) NOEXCEPT
+            {
+                sink.write_little_endian<tx::integer, tx::size>(parent_fk);
+                sink.write_variable(out->value());
+                out->script().to_data(sink, true);
+            });
+
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 
-        tx::integer parent_fk{};
-        const system::chain::output& output{};
+        const tx::integer parent_fk{};
+        const system::chain::transaction& tx_{};
     };
 };
 
