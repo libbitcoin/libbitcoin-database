@@ -155,7 +155,7 @@ struct output
             static constexpr auto value_parent_difference = sizeof(uint64_t) -
                 tx::size;
 
-            const auto& outs = *tx.outputs_ptr();
+            const auto& outs = *tx_.outputs_ptr();
             const auto other = outs.size() * value_parent_difference;
             const auto outputs = std::accumulate(outs.begin(), outs.end(), zero,
                 [](size_t total, const auto& out) NOEXCEPT
@@ -172,7 +172,7 @@ struct output
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            const auto& outs = *tx.outputs_ptr();
+            const auto& outs = *tx_.outputs_ptr();
             std::for_each(outs.begin(), outs.end(), [&](const auto& out) NOEXCEPT
             {
                 sink.write_little_endian<tx::integer, tx::size>(parent_fk);
@@ -185,7 +185,7 @@ struct output
         }
 
         const tx::integer parent_fk{};
-        const system::chain::transaction& tx{};
+        const system::chain::transaction& tx_{};
     };
 };
 

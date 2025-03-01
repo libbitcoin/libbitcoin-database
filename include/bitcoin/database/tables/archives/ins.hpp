@@ -103,7 +103,7 @@ struct ins
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(tx.inputs());
+            return system::possible_narrow_cast<link::integer>(tx_.inputs());
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
@@ -113,7 +113,7 @@ struct ins
                 chain::point::serialized_size();
 
             auto in_fk = input_fk;
-            const auto& ins = *tx.inputs_ptr();
+            const auto& ins = *tx_.inputs_ptr();
             std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
             {
                 sink.write_little_endian<uint32_t>(in->sequence());
@@ -131,7 +131,7 @@ struct ins
 
         const in::integer input_fk{};
         const tx::integer parent_fk{};
-        const system::chain::transaction& tx{};
+        const system::chain::transaction& tx_{};
     };
 };
 

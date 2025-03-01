@@ -105,7 +105,7 @@ struct input
             static constexpr auto sequence_point_size = sizeof(uint32_t) +
                 chain::point::serialized_size();
 
-            const auto& ins = *tx.inputs_ptr();
+            const auto& ins = *tx_.inputs_ptr();
             const auto other = ins.size() * sequence_point_size;
             const auto inputs = std::accumulate(ins.begin(), ins.end(), zero,
                 [](size_t total, const auto& in) NOEXCEPT
@@ -120,7 +120,7 @@ struct input
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            const auto& ins = *tx.inputs_ptr();
+            const auto& ins = *tx_.inputs_ptr();
             std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
             {
                 in->script().to_data(sink, true);
@@ -131,7 +131,7 @@ struct input
             return sink;
         }
 
-        const system::chain::transaction& tx{};
+        const system::chain::transaction& tx_{};
     };
 };
 

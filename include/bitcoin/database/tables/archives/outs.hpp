@@ -99,7 +99,7 @@ struct outs
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(tx.outputs());
+            return system::possible_narrow_cast<link::integer>(tx_.outputs());
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
@@ -110,7 +110,7 @@ struct outs
                 tx::size;
 
             auto out_fk = output_fk;
-            const auto& outs = *tx.outputs_ptr();
+            const auto& outs = *tx_.outputs_ptr();
             std::for_each(outs.begin(), outs.end(), [&](const auto& out) NOEXCEPT
             {
                 sink.write_little_endian<out::integer, out::size>(out_fk);
@@ -126,7 +126,7 @@ struct outs
         }
 
         const out::integer output_fk{};
-        const system::chain::transaction& tx{};
+        const system::chain::transaction& tx_{};
     };
 };
 
