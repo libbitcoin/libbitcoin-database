@@ -97,6 +97,42 @@ struct ins
         uint32_t sequence{};
         in::integer input_fk{};
     };
+
+    struct put_ref
+      : public schema::ins
+    {
+        link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(tx.inputs());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using namespace system;
+            static constexpr auto sequence_point_size = sizeof(uint32_t) +
+                chain::point::serialized_size();
+
+            auto in_fk = input_fk;
+            const auto& ins = *tx.inputs_ptr();
+            std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+            {
+                sink.write_little_endian<uint32_t>(in->sequence());
+                sink.write_little_endian<in::integer, in::size>(in_fk);
+                sink.write_little_endian<tx::integer, tx::size>(parent_fk);
+
+                // Calculate next corresponding input fk from serialized size.
+                // (script + witness + sequence + point) - (sequence + point)
+                in_fk += (in->serialized_size(true) - sequence_point_size);
+            });
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const in::integer input_fk{};
+        const tx::integer parent_fk{};
+        const system::chain::transaction& tx{};
+    };
 };
 
 } // namespace table

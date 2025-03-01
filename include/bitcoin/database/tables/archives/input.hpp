@@ -101,20 +101,37 @@ struct input
     {
         inline link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(
-                input.script().serialized_size(true) +
-                input.witness().serialized_size(true));
+            using namespace system;
+            static constexpr auto sequence_point_size = sizeof(uint32_t) +
+                chain::point::serialized_size();
+
+            const auto& ins = *tx.inputs_ptr();
+            const auto other = ins.size() * sequence_point_size;
+            const auto inputs = std::accumulate(ins.begin(), ins.end(), zero,
+                [](size_t total, const auto& in) NOEXCEPT
+                {
+                    // sizes cached, so this is free.
+                    return total + in->serialized_size(true);
+                });
+
+            // (script + witness + sequence + point) - (sequence + point)
+            return possible_narrow_cast<link::integer>(inputs - other);
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            input.script().to_data(sink, true);
-            input.witness().to_data(sink, true);
+            const auto& ins = *tx.inputs_ptr();
+            std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+            {
+                in->script().to_data(sink, true);
+                in->witness().to_data(sink, true);
+            });
+
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 
-        const system::chain::input& input{};
+        const system::chain::transaction& tx{};
     };
 };
 

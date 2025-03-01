@@ -89,96 +89,41 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     if (tx.is_empty())
         return error::tx_empty;
 
+    using ix = linkage<schema::index>;
     const auto& ins = tx.inputs_ptr();
     const auto& ous = tx.outputs_ptr();
-
-    using ix = linkage<schema::index>;
     const auto txs = possible_narrow_cast<tx_link::integer>(one);
     const auto inputs = possible_narrow_cast<ix::integer>(ins->size());
     const auto outputs = possible_narrow_cast<ix::integer>(ous->size());
 
-    // Declare outs record for output accumulation.
-    table::outs::record outs{};
-    outs.out_fks.reserve(outputs);
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Allocate single tx record.
+    // Allocate tx record.
     tx_fk = store_.tx.allocate(txs);
     if (tx_fk.is_terminal())
         return error::tx_tx_allocate;
 
-    // Allocate points records.
-    const auto point_fk = store_.point.allocate(inputs);
-    auto point_it = point_fk;
-    if (point_fk.is_terminal())
-        return error::tx_point_allocate;
+    // Allocate contiguously and store inputs (script & witness).
+    input_link in_fk{};
+    if (!store_.input.put_link(in_fk, table::input::put_ref{ {}, tx }))
+        return error::tx_input_put;
 
-    // Expand synchronizes keys with point allocation.
-    if (!store_.ins.expand(point_fk + inputs))
-        return error::tx_ins_allocate;
+    // Allocate contiguously and store outputs (script, w/parent).
+    output_link out_fk{};
+    if (!store_.output.put_link(out_fk, table::output::put_ref{ {}, tx_fk, tx }))
+        return error::tx_output_put;
 
-    // Commit input and ins|point records.
-    for (const auto& in: *ins)
-    {
-        // TODO: preallocate (requires input sizes).
-        input_link input_fk{};
-        if (!store_.input.put_link(input_fk, table::input::put_ref
-        {
-            {},
-            *in
-        }))
-        {
-            return error::tx_input_put;
-        }
+    // Allocate and contiguously store input links (first + tx.input sizes, w/parent & seq).
+    point_link ins_fk{};
+    if (!store_.ins.put_link(ins_fk, table::ins::put_ref{ {}, in_fk, tx_fk, tx }))
+        return error::tx_ins_put;
 
-        if (!store_.ins.put(point_it++, table::ins::record
-        {
-            {},
-            in->sequence(),
-            input_fk,
-            tx_fk
-        }))
-        {
-            return error::tx_ins_put;
-        }
-    }
-
-    // TODO: preallocate (requires output sizes).
-    // Commit output records.
-    for (const auto& out: *ous)
-    {
-        output_link output_fk{};
-        if (!store_.output.put_link(output_fk, table::output::put_ref
-        {
-            {},
-            tx_fk,
-            *out
-        }))
-        {
-            return error::tx_output_put;
-        }
-
-        // Accumulate outputs in order.
-        outs.out_fks.push_back(output_fk);
-    }
-
-    // Commit accumulated outs.
-    const auto outs_fk = store_.outs.put_link(outs);
-    if (outs_fk.is_terminal())
+    // Allocate and contiguously store output links (first + tx.output sizes).
+    point_link outs_fk{};
+    if (!store_.outs.put_link(outs_fk, table::outs::put_ref{ {}, out_fk, tx }))
         return error::tx_outs_put;
-
-    // Commit accumulated points.
-    point_it = point_fk;
-    for (const auto& in: *ins)
-    {
-        const auto key = table::point::compose(in->point());
-        if (!store_.point.put(point_it++, key, table::point::record{}))
-        {
-            return error::tx_point_put;
-        }
-    }
 
     // Create tx record.
     // Commit is deferred for point/address index consistency.
@@ -188,38 +133,50 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
         tx,
         inputs,
         outputs,
-        point_fk,
+        ins_fk,
         outs_fk
     }))
     {
         return error::tx_tx_set;
     }
 
-    // Commit address index records.
+    // Commit points (hashmap).
+    {
+        // Expand synchronizes keys with ins_fk, entries dropped into same offset.
+        // Allocate contiguous points (at sequential keys matching ins_fk).
+        if (!store_.point.expand(ins_fk + inputs))
+            return error::tx_point_allocate;
+
+        // This must be set after tx.set and before tx.commit, since searchable and
+        // produces an association to tx.link, and is also an integral part of tx.
+        const auto ptr = store_.point.get_memory();
+        for (const auto& in: *ins)
+        {
+            if (!store_.point.put(ptr, ins_fk++,
+                table::point::compose(in->point()), table::point::record{}))
+                return error::tx_point_put;
+        }
+    }
+
+    // Commit address index records (hashmap).
     if (address_enabled())
     {
         auto ad_fk = store_.address.allocate(outputs);
         if (ad_fk.is_terminal())
             return error::tx_address_allocate;
 
-        auto output = ous->begin();
         const auto ptr = store_.address.get_memory();
-
-        for (auto out_fk: outs.out_fks)
+        for (const auto& output: *ous)
         {
-            const auto key = (*output++)->script().hash();
-            if (!store_.address.put(ptr, ad_fk++, key, table::address::record
-            {
-                {},
-                out_fk
-            }))
-            {
+            if (!store_.address.put(ptr, ad_fk++, output->script().hash(),
+                table::address::record{ {}, out_fk }))
                 return error::tx_address_put;
-            }
+
+            out_fk.value += output->serialized_size();
         }
     }
 
-    // Commit tx to search.
+    // Commit tx to search (hashmap).
     // tx.get_hash() assumes cached or is not thread safe.
     return store_.tx.commit(tx_fk, tx.get_hash(false)) ?
         error::success : error::tx_tx_commit;
