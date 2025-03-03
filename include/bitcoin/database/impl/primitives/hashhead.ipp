@@ -129,15 +129,15 @@ inline Link CLASS::top(const Link& index) const NOEXCEPT
     if (is_null(raw))
         return {};
 
-    if constexpr (Align)
-    {
-        // Reads full padded word.
-        // xcode clang++16 does not support C++20 std::atomic_ref.
-        ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
-        const auto& head = *pointer_cast<std::atomic<integer>>(raw);
-        return head.load(std::memory_order_acquire);
-    }
-    else
+    ////if constexpr (Align)
+    ////{
+    ////    // Reads full padded word.
+    ////    // xcode clang++16 does not support C++20 std::atomic_ref.
+    ////    ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
+    ////    const auto& head = *pointer_cast<std::atomic<integer>>(raw);
+    ////    return head.load(std::memory_order_acquire);
+    ////}
+    ////else
     {
         const auto& head = to_array<size_>(raw);
         mutex_.lock_shared();
@@ -163,15 +163,15 @@ inline bool CLASS::push(const Link& current, bytes& next,
     if (is_null(raw))
         return false;
 
-    if constexpr (Align)
-    {
-        // Writes full padded word (0x00 fill).
-        // xcode clang++16 does not support C++20 std::atomic_ref.
-        ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
-        auto& head = *pointer_cast<std::atomic<integer>>(raw);
-        next = Link(head.exchange(current, std::memory_order_acq_rel));
-    }
-    else
+    ////if constexpr (Align)
+    ////{
+    ////    // Writes full padded word (0x00 fill).
+    ////    // xcode clang++16 does not support C++20 std::atomic_ref.
+    ////    ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
+    ////    auto& head = *pointer_cast<std::atomic<integer>>(raw);
+    ////    next = Link(head.exchange(current, std::memory_order_acq_rel));
+    ////}
+    ////else
     {
         auto& head = to_array<size_>(raw);
         mutex_.lock();
