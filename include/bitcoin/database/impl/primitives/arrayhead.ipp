@@ -137,7 +137,7 @@ Link CLASS::at(size_t key) const NOEXCEPT
         // xcode clang++16 does not support C++20 std::atomic_ref.
         ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
         const auto& head = *pointer_cast<std::atomic<integer>>(raw);
-        return head.load(std::memory_order_acquire);
+        return head.load(std::memory_order_relaxed);
     }
     else
     {
@@ -167,7 +167,7 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
         // xcode clang++16 does not support C++20 std::atomic_ref.
         ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
         auto& head = *pointer_cast<std::atomic<integer>>(raw);
-        head.store(link, std::memory_order_release);
+        head.store(link, std::memory_order_relaxed);
     }
     else
     {
