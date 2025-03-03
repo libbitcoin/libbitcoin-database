@@ -204,7 +204,21 @@ code CLASS::push_spenders(tx_links& out, const point& point,
 {
     auto it = store_.point.it(table::point::compose(point));
     if (!it)
+    {
+        it.reset();
+
+        table::point::record get{};
+        if (!store_.point.get(self, get))
+            return error::integrity12;
+
+        if (get.hash != point.hash())
+            return error::integrity13;
+
+        if (get.index != point.index())
+            return error::integrity14;
+
         return error::integrity4;
+    }
 
     point_links points{};
     do
