@@ -67,7 +67,7 @@ public:
 private:
     using integer = Link::integer;
     static_assert(std::atomic<integer>::is_always_lock_free);
-    static constexpr auto size_ = /*Align ? sizeof(integer) :*/ Link::size;
+    static constexpr auto size_ = Align ? sizeof(integer) : Link::size;
 
     template <size_t Bytes>
     static inline auto& to_array(memory::iterator it) NOEXCEPT
