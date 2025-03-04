@@ -50,17 +50,16 @@ public:
     iterator(memory_ptr&& data, const Link& start, Key&& key) NOEXCEPT;
     iterator(memory_ptr&& data, const Link& start, const Key& key) NOEXCEPT;
 
-    /// Advance to and return next iterator.
+    /// Advance to next and return false if none found.
     inline bool advance() NOEXCEPT;
 
     /// Expose the search key.
     inline const Key& key() const NOEXCEPT;
 
-    /// Advance to next match and return false if terminal (not found).
+    /// Return current link, terminal if not found.
     inline const Link& self() const NOEXCEPT;
 
     /// Access the underlying memory pointer.
-    // TODO: for use by hashmap, make exclusive via friend.
     inline const memory_ptr& get() const NOEXCEPT;
 
     /// Release the memory pointer, invalidates iterator.
