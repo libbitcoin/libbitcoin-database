@@ -105,22 +105,22 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     if (tx_fk.is_terminal())
         return error::tx_tx_allocate;
 
-    // Allocate contiguously and store inputs (script & witness).
+    // Allocate contiguously and store inputs.
     input_link in_fk{};
     if (!store_.input.put_link(in_fk, table::input::put_ref{ {}, tx }))
         return error::tx_input_put;
 
-    // Allocate contiguously and store outputs (script, w/parent).
+    // Allocate contiguously and store outputs.
     output_link out_fk{};
     if (!store_.output.put_link(out_fk, table::output::put_ref{ {}, tx_fk, tx }))
         return error::tx_output_put;
 
-    // Allocate and contiguously store input links (first + tx.input sizes, w/parent & seq).
+    // Allocate and contiguously store input links.
     point_link ins_fk{};
     if (!store_.ins.put_link(ins_fk, table::ins::put_ref{ {}, in_fk, tx_fk, tx }))
         return error::tx_ins_put;
 
-    // Allocate and contiguously store output links (first + tx.output sizes).
+    // Allocate and contiguously store output links.
     point_link outs_fk{};
     if (!store_.outs.put_link(outs_fk, table::outs::put_ref{ {}, out_fk, tx }))
         return error::tx_outs_put;
