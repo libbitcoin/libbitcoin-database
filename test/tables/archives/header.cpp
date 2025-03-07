@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.put_link({}, table::header::record{}).is_terminal());
 
-    const table::header::record_put_ref put_ref
+    const table::header::put_ref put_ref
     {
         {},
         expected.ctx,

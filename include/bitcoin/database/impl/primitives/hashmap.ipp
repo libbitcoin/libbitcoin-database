@@ -144,15 +144,27 @@ inline Link CLASS::top(const Link& link) const NOEXCEPT
 }
 
 TEMPLATE
+inline bool CLASS::exists(const memory_ptr& ptr, const Key& key) const NOEXCEPT
+{
+    return !first(ptr, key).is_terminal();
+}
+
+TEMPLATE
 inline bool CLASS::exists(const Key& key) const NOEXCEPT
 {
     return !first(key).is_terminal();
 }
 
 TEMPLATE
+inline Link CLASS::first(const memory_ptr& ptr, const Key& key) const NOEXCEPT
+{
+    return first(ptr, head_.top(key), key);
+}
+
+TEMPLATE
 inline Link CLASS::first(const Key& key) const NOEXCEPT
 {
-    return first(get_memory(), head_.top(key), key);
+    return first(get_memory(), key);
 }
 
 TEMPLATE
@@ -250,14 +262,32 @@ inline bool CLASS::get(const iterator& it, const Link& link,
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
+bool CLASS::set(const memory_ptr& ptr, const Link& link, const Key& key,
+    const Element& element) NOEXCEPT
 {
     using namespace system;
-    const auto ptr = body_.get(link);
     if (!ptr)
         return false;
 
-    iostream stream{ *ptr };
+    const auto start = body::link_to_position(link);
+    if (is_limited<ptrdiff_t>(start))
+        return false;
+
+    const auto size = ptr->size();
+    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    if (position > size)
+        return false;
+
+    // Stream starts at record and the index is skipped for reader convenience.
+    const auto offset = ptr->offset(start);
+    if (is_null(offset))
+        return false;
+
+    // Set element search key.
+    unsafe_array_cast<uint8_t, key_size>(std::next(offset,
+        Link::size)) = key;
+
+    iostream stream{ offset, size - position };
     finalizer sink{ stream };
     sink.skip_bytes(index_size);
 
@@ -267,10 +297,18 @@ bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-inline Link CLASS::set_link(const Element& element) NOEXCEPT
+bool CLASS::set(const Link& link, const Key& key,
+    const Element& element) NOEXCEPT
+{
+    return set(get_memory(), link, key, element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+inline Link CLASS::set_link(const Key& key, const Element& element) NOEXCEPT
 {
     Link link{};
-    if (!set_link(link, element))
+    if (!set_link(link, key, element))
         return {};
     
     return link;
@@ -278,10 +316,11 @@ inline Link CLASS::set_link(const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-inline bool CLASS::set_link(Link& link, const Element& element) NOEXCEPT
+inline bool CLASS::set_link(Link& link, const Key& key,
+    const Element& element) NOEXCEPT
 {
     link = allocate(element.count());
-    return set(link, element);
+    return set(link, key, element);
 }
 
 TEMPLATE
@@ -329,20 +368,31 @@ inline bool CLASS::put(const memory_ptr& ptr, const Link& link, const Key& key,
 }
 
 TEMPLATE
-bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
+bool CLASS::commit(const memory_ptr& ptr, const Link& link,
+    const Key& key) NOEXCEPT
 {
     using namespace system;
-    const auto ptr = body_.get(link);
     if (!ptr)
         return false;
 
-    // Set element search key.
-    unsafe_array_cast<uint8_t, key_size>(std::next(ptr->begin(),
-        Link::size)) = key;
+    // get element offset (fault)
+    const auto offset = ptr->offset(body::link_to_position(link));
+    if (is_null(offset))
+        return false;
+
+    //// Set element search key.
+    //unsafe_array_cast<uint8_t, key_size>(std::next(offset,
+    //    Link::size)) = key;
 
     // Commit element to search index (terminal is a valid bucket index).
-    auto& next = unsafe_array_cast<uint8_t, Link::size>(ptr->begin());
+    auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
     return head_.push(link, next, head_.index(key));
+}
+
+TEMPLATE
+bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
+{
+    return commit(get_memory(), link, key);
 }
 
 TEMPLATE

@@ -127,7 +127,7 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
 
     // Create tx record.
     // Commit is deferred for point/address index consistency.
-    if (!store_.tx.set(tx_fk, table::transaction::record_put_ref
+    if (!store_.tx.set(tx_fk, tx.get_hash(false), table::transaction::put_ref
     {
         {},
         tx,
@@ -232,7 +232,7 @@ code CLASS::set_code(header_link& out_fk, const header& header,
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    out_fk = store_.header.put_link(key, table::header::record_put_ref
+    out_fk = store_.header.put_link(key, table::header::put_ref
     {
         {},
         ctx,
