@@ -77,12 +77,18 @@ bool CLASS::set(const block& block, bool strong) NOEXCEPT
 TEMPLATE
 code CLASS::set_code(const transaction& tx) NOEXCEPT
 {
-    tx_link unused{};
-    return set_code(unused, tx);
+    constexpr auto txs = system::possible_narrow_cast<tx_link::integer>(one);
+
+    // Allocate tx record.
+    const auto tx_fk = store_.tx.allocate(txs);
+    if (tx_fk.is_terminal())
+        return error::tx_tx_allocate;
+
+    return set_code(tx_fk, tx);
 }
 
 TEMPLATE
-code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
+code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
 {
     // This is the only multitable write query (except initialize/genesis).
     using namespace system;
@@ -92,18 +98,12 @@ code CLASS::set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT
     using ix = linkage<schema::index>;
     const auto& ins = tx.inputs_ptr();
     const auto& ous = tx.outputs_ptr();
-    const auto txs = possible_narrow_cast<tx_link::integer>(one);
     const auto inputs = possible_narrow_cast<ix::integer>(ins->size());
     const auto outputs = possible_narrow_cast<ix::integer>(ous->size());
 
 
     // ========================================================================
     const auto scope = store_.get_transactor();
-
-    // Allocate tx record.
-    tx_fk = store_.tx.allocate(txs);
-    if (tx_fk.is_terminal())
-        return error::tx_tx_allocate;
 
     // Allocate contiguously and store inputs.
     input_link in_fk{};
@@ -321,29 +321,30 @@ TEMPLATE
 code CLASS::set_code(txs_link& out_fk, const block& block,
     const header_link& key, bool strong) NOEXCEPT
 {
+    using namespace system;
     if (key.is_terminal())
         return error::txs_header;
 
-    const auto count = block.transactions();
-    if (is_zero(count))
+    const auto txs = block.transactions();
+    if (is_zero(txs))
         return error::txs_empty;
 
-    code ec{};
-    tx_link tx_fk{};
-    tx_links links{};
-    links.reserve(count);
-    for (const auto& tx: *block.transactions_ptr())
-    {
-        // Each tx is set under a distinct transactor.
-        if ((ec = set_code(tx_fk, *tx)))
-            return ec;
+    const auto count = possible_narrow_cast<tx_link::integer>(txs);
+    const auto tx_fks = store_.tx.allocate(count);
+    if (tx_fks.is_terminal())
+        return error::tx_tx_allocate;
 
-        links.push_back(tx_fk.value);
-    }
+    code ec{};
+    auto fk = tx_fks;
+
+    // Each tx is set under a distinct transactor.
+    for (const auto& tx: *block.transactions_ptr())
+        if ((ec = set_code(fk++, *tx)))
+            return ec;
 
     using bytes = linkage<schema::size>::integer;
     const auto size = block.serialized_size(true);
-    const auto wire = system::possible_narrow_cast<bytes>(size);
+    const auto wire = possible_narrow_cast<bytes>(size);
 
     // ========================================================================
     const auto scope = store_.get_transactor();
@@ -351,16 +352,17 @@ code CLASS::set_code(txs_link& out_fk, const block& block,
 
     // Clean allocation failure (e.g. disk full), see set_strong() comments.
     // Transactor assures cannot be restored without txs, as required to unset.
-    if (strong && !set_strong(key, links, positive))
+    if (strong && !set_strong(key, txs, tx_fks, positive))
         return error::txs_confirm;
 
     // Header link is the key for the txs table.
     // Clean single allocation failure (e.g. disk full).
-    out_fk = store_.txs.put_link(key, table::txs::slab
+    out_fk = store_.txs.put_link(key, table::txs::put_group
     {
         {},
         wire,
-        links
+        count,
+        tx_fks
     });
 
     return out_fk.is_terminal() ? error::txs_txs_put : error::success;
