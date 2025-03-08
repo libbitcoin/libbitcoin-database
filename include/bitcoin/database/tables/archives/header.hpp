@@ -116,7 +116,7 @@ struct header
     ////};
 
     // This is redundant with record_put_ptr except this does not capture.
-    struct record_put_ref
+    struct put_ref
       : public schema::header
     {
         // header.previous_block_hash() ignored.

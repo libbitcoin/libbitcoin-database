@@ -876,15 +876,15 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit__record__expected)
     hashmap_<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
+    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     constexpr auto size = link5::size + array_count<key10> + flex_record::size;
-    const auto link = instance.set_link(flex_record{ 0x01020304_u32 });
+    const auto link = instance.set_link(key1, flex_record{ 0x01020304_u32 });
     BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffff"));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000000000000000000000004030201"));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000102030405060708090a04030201"));
 
-    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.commit(link, key1));
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
@@ -899,16 +899,16 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__record__expected)
     hashmap_<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
+    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     constexpr auto size = link5::size + array_count<key10> + flex_record::size;
     const auto link = instance.allocate(1);
     BOOST_REQUIRE_EQUAL(link, 0u);
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
 
-    BOOST_REQUIRE(instance.set(link, flex_record{ 0x01020304_u32 }));
+    BOOST_REQUIRE(instance.set(link, key1, flex_record{ 0x01020304_u32 }));
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffff"));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000000000000000000000004030201"));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000102030405060708090a04030201"));
 
-    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.commit(link, key1));
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
@@ -921,13 +921,13 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_put1__record__expected)
     test::chunk_storage body_store{};
     hashmap_<link5, key10, flex_record::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
-    
+
+    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
     const auto link = instance.allocate(1);
     BOOST_REQUIRE_EQUAL(link, 0u);
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
 
-    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.put(link, key1, flex_record{ 0x01020304_u32 }));
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
@@ -955,16 +955,16 @@ BOOST_AUTO_TEST_CASE(hashmap__set_commit_link__slab__expected)
     hashmap_<link5, key10, flex_slab::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
+    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
     link5 link{};
-    BOOST_REQUIRE(instance.set_link(link, flex_slab{ 0x01020304_u32 }));
+    BOOST_REQUIRE(instance.set_link(link, key1, flex_slab{ 0x01020304_u32 }));
     BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 0u);
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffff"));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000000000000000000000004030201"));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000102030405060708090a04030201"));
 
-    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(!instance.commit_link(link, key1).is_terminal());
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));
@@ -978,16 +978,16 @@ BOOST_AUTO_TEST_CASE(hashmap__allocate_set_commit__slab__expected)
     hashmap_<link5, key10, flex_slab::size> instance{ head_store, body_store, 2 };
     BOOST_REQUIRE(instance.create());
 
+    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     constexpr auto size = link5::size + array_count<key10> + sizeof(uint32_t);
     const auto link = instance.allocate(size);
     BOOST_REQUIRE_EQUAL(link, 0u);
     BOOST_REQUIRE_EQUAL(body_store.buffer().size(), size);
 
-    BOOST_REQUIRE(instance.set(link, flex_slab{ 0x01020304_u32 }));
+    BOOST_REQUIRE(instance.set(link, key1, flex_slab{ 0x01020304_u32 }));
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffff"));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000000000000000000000004030201"));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("00000000000102030405060708090a04030201"));
 
-    constexpr key10 key1{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a };
     BOOST_REQUIRE(instance.commit(link, key1));
     BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffff0000000000ffffffffffffffffffff"));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), base16_chunk("ffffffffff0102030405060708090a04030201"));

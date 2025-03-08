@@ -96,7 +96,7 @@ size_t CLASS::get_tx_count(const header_link& link) const NOEXCEPT
     if (!store_.txs.find(link, txs))
         return {};
 
-    return txs.quantity;
+    return txs.number;
 }
 
 TEMPLATE

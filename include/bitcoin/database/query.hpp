@@ -374,7 +374,6 @@ public:
 
     /// Set transaction.
     code set_code(const transaction& tx) NOEXCEPT;
-    code set_code(tx_link& tx_fk, const transaction& tx) NOEXCEPT;
 
     /// Set header (headers-first).
     code set_code(const header& header, const context& ctx,
@@ -563,6 +562,8 @@ protected:
         const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;
 
+    bool set_strong(const header_link& link, size_t count,
+        const tx_link& first_fk, bool positive) NOEXCEPT;
     bool set_strong(const header_link& link, const tx_links& txs,
         bool positive) NOEXCEPT;
 
@@ -600,6 +601,10 @@ protected:
     bool populate_candidate_all(chain_state::data& data,
         const system::settings& settings, const header& header,
         const header_link& link, size_t height) const NOEXCEPT;
+
+    /// tx_fk must be allocated.
+    /// -----------------------------------------------------------------------
+    code set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT;
 
 private:
     struct maybe_strong

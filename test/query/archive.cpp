@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__empty__expected)
     const auto expected_head5_array = system::base16_chunk("0000000000");
     const auto expected_head4_array = system::base16_chunk("00000000");
     const auto expected_head4_hash = system::base16_chunk(
-        "00000000" // record count
+        "01000000" // record count
         "ffffffff" // bucket[0]...
         "ffffffff"
         "ffffffff"
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__empty__expected)
     BOOST_REQUIRE_EQUAL(store.input_head(), expected_head5_array);
     BOOST_REQUIRE_EQUAL(store.output_head(), expected_head5_array);
     BOOST_REQUIRE_EQUAL(store.outs_head(), expected_head4_array);
-    BOOST_REQUIRE(store.tx_body().empty());
+    BOOST_REQUIRE_EQUAL(store.tx_body().size(), schema::transaction::minrow);
     BOOST_REQUIRE(store.point_body().empty());
     BOOST_REQUIRE(store.input_body().empty());
     BOOST_REQUIRE(store.output_body().empty());
@@ -291,7 +291,6 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     BOOST_REQUIRE_EQUAL(tx_hash, tx.hash(false));
 
     // data_chunk store.
-    tx_link link{};
     settings settings{};
     settings.tx_bits = 3;
     settings.point_bits = 3;
@@ -299,8 +298,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
-    BOOST_REQUIRE(!query.set_code(link, tx));
-    BOOST_REQUIRE(!link.is_terminal());
+    BOOST_REQUIRE(!query.set_code(tx));
     BOOST_REQUIRE(!store.close(events_handler));
 
     BOOST_REQUIRE_EQUAL(store.tx_head(), expected_tx_head);

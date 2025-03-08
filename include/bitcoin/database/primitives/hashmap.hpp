@@ -96,9 +96,11 @@ public:
     inline Link top(const Link& list) const NOEXCEPT;
 
     /// True if an instance of object with key exists.
+    inline bool exists(const memory_ptr& ptr, const Key& key) const NOEXCEPT;
     inline bool exists(const Key& key) const NOEXCEPT;
 
     /// Return first element link or terminal if not found/error.
+    inline Link first(const memory_ptr& ptr, const Key& key) const NOEXCEPT;
     inline Link first(const Key& key) const NOEXCEPT;
 
     /// Iterator holds shared lock on storage remap.
@@ -143,13 +145,19 @@ public:
 
     /// Set element into previously allocated link (follow with commit).
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool set(const Link& link, const Element& element) NOEXCEPT;
+    bool set(const memory_ptr& ptr, const Link& link, const Key& key,
+        const Element& element) NOEXCEPT;
+
+    /// Set element into previously allocated link (follow with commit).
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool set(const Link& link, const Key& key, const Element& element) NOEXCEPT;
 
     /// Allocate and set element, and return link (follow with commit).
     template <typename Element, if_equal<Element::size, Size> = true>
-    inline Link set_link(const Element& element) NOEXCEPT;
+    inline Link set_link(const Key& key, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
-    inline bool set_link(Link& link, const Element& element) NOEXCEPT;
+    inline bool set_link(Link& link, const Key& key,
+        const Element& element) NOEXCEPT;
 
     /// Allocate, set, commit element to key, and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
@@ -173,6 +181,7 @@ public:
         const Element& element) NOEXCEPT;
 
     /// Commit previously set element at link to key.
+    bool commit(const memory_ptr& ptr, const Link& link, const Key& key) NOEXCEPT;
     bool commit(const Link& link, const Key& key) NOEXCEPT;
     inline Link commit_link(const Link& link, const Key& key) NOEXCEPT;
 

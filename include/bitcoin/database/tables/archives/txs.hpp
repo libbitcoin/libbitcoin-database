@@ -36,6 +36,7 @@ struct txs
   : public hash_map<schema::txs>
 {
     using tx = linkage<schema::tx>;
+    using ct = linkage<schema::count_>;
     using keys = std::vector<tx::integer>;
     using bytes = linkage<schema::size>;
     using hash_map<schema::txs>::hashmap;
@@ -46,12 +47,12 @@ struct txs
         link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(pk + sk +
-                schema::count_ + bytes::size + tx::size * tx_fks.size());
+                ct::size + bytes::size + tx::size * tx_fks.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            tx_fks.resize(source.read_little_endian<tx::integer, schema::count_>());
+            tx_fks.resize(source.read_little_endian<ct::integer, ct::size>());
             wire = source.read_little_endian<bytes::integer, bytes::size>();
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
             {
@@ -64,10 +65,10 @@ struct txs
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(schema::count_)));
-            const auto fks = system::possible_narrow_cast<tx::integer>(tx_fks.size());
+            BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(ct::size)));
+            const auto fks = system::possible_narrow_cast<ct::integer>(tx_fks.size());
 
-            sink.write_little_endian<tx::integer, schema::count_>(fks);
+            sink.write_little_endian<ct::integer, ct::size>(fks);
             sink.write_little_endian<bytes::integer, bytes::size>(wire);
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](const auto& fk) NOEXCEPT
             {
@@ -88,6 +89,37 @@ struct txs
         keys tx_fks{};
     };
 
+    // put a contiguous set of tx identifiers.
+    // TODO: this could be collapsed to a count and first using a sentinel.
+    struct put_group
+      : public schema::txs
+    {
+        link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(pk + sk +
+                ct::size + bytes::size + tx::size * number);
+        }
+
+        inline bool to_data(finalizer& sink) const NOEXCEPT
+        {
+            BC_ASSERT(number < system::power2<uint64_t>(to_bits(ct::size)));
+
+            sink.write_little_endian<ct::integer, ct::size>(number);
+            sink.write_little_endian<bytes::integer, bytes::size>(wire);
+
+            for (auto fk = tx_fk; fk < (tx_fk + number); ++fk)
+                sink.write_little_endian<tx::integer, tx::size>(fk);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count());
+            return sink;
+        }
+
+        // block.serialized_size(true)
+        bytes::integer wire{};
+        ct::integer number{};
+        tx::integer tx_fk{};
+    };
+
     struct get_position
       : public schema::txs
     {
@@ -99,7 +131,7 @@ struct txs
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            const auto number = source.read_little_endian<tx::integer, schema::count_>();
+            const auto number = source.read_little_endian<ct::integer, ct::size>();
             source.skip_bytes(bytes::size);
             for (position = zero; position < number; ++position)
                 if (source.read_little_endian<tx::integer, tx::size>() == tx_fk)
@@ -124,7 +156,7 @@ struct txs
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            const auto number = source.read_little_endian<tx::integer, schema::count_>();
+            const auto number = source.read_little_endian<ct::integer, ct::size>();
             source.skip_bytes(bytes::size);
             if (is_nonzero(number))
             {
@@ -150,7 +182,7 @@ struct txs
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(schema::count_);
+            source.skip_bytes(ct::size);
             wire = source.read_little_endian<bytes::integer, bytes::size>();
             return source;
         }
@@ -169,7 +201,7 @@ struct txs
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            associated = to_bool(source.read_little_endian<tx::integer, schema::count_>());
+            associated = to_bool(source.read_little_endian<ct::integer, ct::size>());
             return source;
         }
 
@@ -187,7 +219,7 @@ struct txs
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            tx_fks.resize(source.read_little_endian<tx::integer, schema::count_>());
+            tx_fks.resize(source.read_little_endian<ct::integer, ct::size>());
             source.skip_bytes(bytes::size);
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
             {
@@ -211,7 +243,7 @@ struct txs
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            const auto number = source.read_little_endian<tx::integer, schema::count_>();
+            const auto number = source.read_little_endian<ct::integer, ct::size>();
             if (number <= one)
                 return source;
 
@@ -239,11 +271,11 @@ struct txs
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            quantity = source.read_little_endian<tx::integer, schema::count_>();
+            number = source.read_little_endian<ct::integer, ct::size>();
             return source;
         }
 
-        size_t quantity{};
+        size_t number{};
     };
 };
 

@@ -273,7 +273,7 @@
 ////    BOOST_REQUIRE_EQUAL(element.output_tx_fk(), expected_tx);
 ////}
 ////
-////// record_put_ref
+////// put_ref
 ////
 ////BOOST_AUTO_TEST_CASE(prevout__put_ref__get_non_empty_block_with_default_metadata__inside_spend_terminals)
 ////{
@@ -284,7 +284,7 @@
 ////    table::prevout instance{ head_store, body_store, 5 };
 ////    BOOST_REQUIRE(instance.create());
 ////
-////    const auto record = table::prevout::record_put_ref{ {}, bogus_block };
+////    const auto record = table::prevout::put_ref{ {}, bogus_block };
 ////    BOOST_REQUIRE(instance.put(2, record));
 ////
 ////    table::prevout::record_get element{};
@@ -367,7 +367,7 @@
 ////    table::prevout instance{ head_store, body_store, 5 };
 ////    BOOST_REQUIRE(instance.create());
 ////
-////    const auto record = table::prevout::record_put_ref{ {}, bogus_block };
+////    const auto record = table::prevout::put_ref{ {}, bogus_block };
 ////    BOOST_REQUIRE(instance.put(2, record));
 ////
 ////    table::prevout::record_get element{};

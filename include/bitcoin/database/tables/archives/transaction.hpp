@@ -137,7 +137,7 @@ struct transaction
         outs::integer outs_fk{};
     };
 
-    struct record_put_ref
+    struct put_ref
       : public schema::transaction
     {
         inline bool to_data(finalizer& sink) const NOEXCEPT

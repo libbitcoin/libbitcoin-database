@@ -411,7 +411,6 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // protected
-// This is also invoked from block.txs archival (when checkpoint/milestone).
 TEMPLATE
 bool CLASS::set_strong(const header_link& link, const tx_links& txs,
     bool positive) NOEXCEPT
@@ -432,6 +431,34 @@ bool CLASS::set_strong(const header_link& link, const tx_links& txs,
             link,
             positive
         })) return false;
+
+    return true;
+}
+
+// protected
+// This is invoked from block.txs archival (when checkpoint/milestone).
+TEMPLATE
+bool CLASS::set_strong(const header_link& link, size_t count,
+    const tx_link& first_fk, bool positive) NOEXCEPT
+{
+    using namespace system;
+    using link_t = table::strong_tx::link;
+    using element_t = table::strong_tx::record;
+
+    // Preallocate all strong_tx records for the block and reuse memory ptr.
+    const auto records = possible_narrow_cast<link_t::integer>(count);
+    auto record = store_.strong_tx.allocate(records);
+    const auto ptr = store_.strong_tx.get_memory();
+    const auto end = first_fk + count;
+
+    // Contiguous tx links.
+    for (auto fk = first_fk; fk < end; ++fk)
+        if (!store_.strong_tx.put(ptr, record++, fk, element_t
+            {
+                {},
+                link,
+                positive
+            })) return false;
 
     return true;
 }
