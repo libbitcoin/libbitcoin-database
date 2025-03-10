@@ -99,6 +99,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/archives/puts.cpp \
     test/tables/archives/transaction.cpp \
     test/tables/archives/txs.cpp \
+    test/tables/caches/doubles.cpp \
     test/tables/caches/prevout.cpp \
     test/tables/caches/validated_bk.cpp \
     test/tables/caches/validated_tx.cpp \
@@ -240,6 +241,7 @@ include_bitcoin_database_tables_archives_HEADERS = \
 
 include_bitcoin_database_tables_cachesdir = ${includedir}/bitcoin/database/tables/caches
 include_bitcoin_database_tables_caches_HEADERS = \
+    include/bitcoin/database/tables/caches/doubles.hpp \
     include/bitcoin/database/tables/caches/prevout.hpp \
     include/bitcoin/database/tables/caches/validated_bk.hpp \
     include/bitcoin/database/tables/caches/validated_tx.hpp

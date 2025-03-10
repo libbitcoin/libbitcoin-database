@@ -90,6 +90,10 @@ struct BCD_API settings
     uint64_t prevout_size;
     uint16_t prevout_rate;
 
+    uint32_t doubles_bits;
+    uint64_t doubles_size;
+    uint16_t doubles_rate;
+
     uint32_t validated_bk_bits;
     uint64_t validated_bk_size;
     uint16_t validated_bk_rate;

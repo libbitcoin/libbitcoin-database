@@ -64,6 +64,7 @@ namespace schema
     namespace caches
     {
         constexpr auto prevout = "prevout";
+        constexpr auto duplicate = "duplicate";
         constexpr auto validated_bk = "validated_bk";
         constexpr auto validated_tx = "validated_tx";
     }
@@ -123,6 +124,7 @@ namespace schema
     constexpr size_t bk_slab = 3;   // ->validated_bk record.
     constexpr size_t tx_slab = 5;   // ->validated_tk record.
     constexpr size_t neutrino_ = 5; // ->neutrino record.
+    constexpr size_t doubles_ = 4;  // doubles bucket (no actual keys).
 
     /// Search keys.
     constexpr size_t hash = system::hash_size;
@@ -328,6 +330,26 @@ namespace schema
         static constexpr size_t size = max_size_t;
         static_assert(minsize == 6u);
         static_assert(minrow == 6u);
+    };
+
+    // hashmap array
+    // The hashmap header is a cuckoo filter, which does not link the body.
+    // The filter data is contained within the buckets. The body is unindexed
+    // array of duplicated ponts (at least two in the main table). This body
+    // itself is neither de-deduplicated nor indexed.
+    struct doubles
+    {
+        static constexpr bool align = true;
+        static constexpr size_t pk = schema::doubles_;
+        static constexpr size_t sk = schema::point::sk;
+        static constexpr size_t minsize =
+            schema::hash +
+            schema::index;
+        static constexpr size_t minrow = minsize;
+        static constexpr size_t size = minsize;
+        static constexpr linkage<pk> count() NOEXCEPT { return 1; }
+        static_assert(minsize == 35u);
+        static_assert(minrow == 35u);
     };
 
     // slab hashmap

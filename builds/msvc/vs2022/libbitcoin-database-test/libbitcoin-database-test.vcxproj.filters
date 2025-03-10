@@ -153,6 +153,9 @@
     <ClCompile Include="..\..\..\..\test\tables\archives\txs.cpp">
       <Filter>src\tables\archives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\doubles.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\prevout.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
