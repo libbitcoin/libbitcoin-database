@@ -344,6 +344,7 @@ public:
         uint32_t input_index) const NOEXCEPT;
     output::cptr get_output(const tx_link& link,
         uint32_t output_index) const NOEXCEPT;
+    point get_point(const point_link& link) const NOEXCEPT;
     inputs_ptr get_spenders(const tx_link& link,
         uint32_t output_index) const NOEXCEPT;
 

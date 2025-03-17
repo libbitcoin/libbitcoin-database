@@ -242,6 +242,17 @@ typename CLASS::input::cptr CLASS::get_input(
 }
 
 TEMPLATE
+typename CLASS::point CLASS::get_point(
+    const point_link& link) const NOEXCEPT
+{
+    table::point::record point{};
+    if (!store_.point.get(link, point))
+        return {};
+
+    return { point.hash, point.index };
+}
+
+TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_spenders(
     const output_link& link) const NOEXCEPT
 {
