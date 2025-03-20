@@ -142,6 +142,23 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
 
     // Commit points (hashmap).
     {
+        ////if (!tx.is_coinbase())
+        ////{
+        ////    const auto ptr = store_.point.get_memory();
+        ////    for (const auto& in: *ins)
+        ////    {
+        ////        // Extract integer and modulo to get % of points.
+        ////        // Simulates bloom filtering false positive duplicate confirm.
+        ////        if (to_bool(unique_hash(in->point().hash()) % 1_size))
+        ////            continue;
+        ////
+        ////        // In a normal test run it will not exist (cb excluded above).
+        ////        // Return failure to ensure this is not elided by the compiler.
+        ////        if (store_.point.exists(ptr, in->point()))
+        ////            return error::confirmed_double_spend;
+        ////    }
+        ////}
+
         // Expand synchronizes keys with ins_fk, entries dropped into same offset.
         // Allocate contiguous points (at sequential keys matching ins_fk).
         if (!store_.point.expand(ins_fk + inputs))
@@ -150,27 +167,12 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
         // This must be set after tx.set and before tx.commit, since searchable and
         // produces an association to tx.link, and is also an integral part of tx.
         const auto ptr = store_.point.get_memory();
-
-        // Collect duplicates to store in duplicate table.
-        std::vector<chain::cref_point> twins{};
         for (const auto& in: *ins)
         {
-            ///////////////////////////////////////////////////////////////////
-            // TODO: add filter to hashmap and use method here to detect and
-            // TODO: return prior existence (dup) here (insert succeeds).
-            ///////////////////////////////////////////////////////////////////
-            bool twin{};
-            if (!store_.point.put(/*twin,*/ ptr, ins_fk++, in->point(),
+            if (!store_.point.put(ptr, ins_fk++, in->point(),
                 table::point::record{}))
                 return error::tx_point_put;
-
-            if (twin)
-                twins.emplace_back(in->point().hash(), in->point().index());
         }
-
-        ///////////////////////////////////////////////////////////////////////
-        // TODO: if (!twins.empty()) ... store to duplicate table here.
-        ///////////////////////////////////////////////////////////////////////
     }
 
     // Commit address index records (hashmap).
