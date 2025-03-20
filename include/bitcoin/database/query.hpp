@@ -21,12 +21,9 @@
 
 #include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/association.hpp>
-#include <bitcoin/database/associations.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
-#include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
@@ -48,7 +45,7 @@ using input_links = std::vector<input_link::integer>;
 using output_links = std::vector<output_link::integer>;
 using point_links = std::vector<point_link::integer>;
 using two_counts = std::pair<size_t, size_t>;
-using point_key = table::point::search_key;
+using point_key = table::point::key;
 
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>

@@ -424,8 +424,8 @@ Link CLASS::first(const memory_ptr& ptr, const Link& link,
             return {};
 
         // element key matches (found)
-        if (is_zero(std::memcmp(key.data(), std::next(offset, Link::size),
-            key_size)))
+        if (keys::compare(unsafe_array_cast<uint8_t, key_size>(
+            std::next(offset, Link::size)), key))
             return next;
 
         // set next element link (loop)
@@ -492,7 +492,7 @@ bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
     iostream stream{ offset, size - position };
     finalizer sink{ stream };
     sink.skip_bytes(Link::size);
-    sink.write_bytes(key);
+    keys::write(sink, key);
 
     // Commit element to body and search (terminal is a valid bucket index).
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }

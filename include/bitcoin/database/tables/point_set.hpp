@@ -16,44 +16,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_ASSOCIATION_HPP
-#define LIBBITCOIN_DATABASE_ASSOCIATION_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_POINT_SET_HPP
+#define LIBBITCOIN_DATABASE_TABLES_POINT_SET_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/tables.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// Association between block hash and context.
-struct association
+struct point_set
 {
-    table::height::link link;
-    system::hash_digest hash;
-    system::chain::context context;
+    using tx_link = linkage<schema::tx>;
 
-    struct key{};
-    struct pos{};
-
-    struct name_extractor
+    struct point
     {
-        using result_type = size_t;
-
-        inline const result_type& operator()(
-            const association& item) const NOEXCEPT
-        {
-            return item.context.height;
-        }
-
-        inline result_type& operator()(
-            association* item) const NOEXCEPT
-        {
-            BC_ASSERT_MSG(item, "null pointer");
-            return item->context.height;
-        }
+        // From header->prevouts cache.
+        tx_link tx{};
+        bool coinbase{};
+        uint32_t sequence{};
     };
+
+    // From block->txs->tx get version and points.resize(count).
+    uint32_t version{};
+    std::vector<point> points{};
 };
+using point_sets = std::vector<point_set>;
 
 } // namespace database
 } // namespace libbitcoin

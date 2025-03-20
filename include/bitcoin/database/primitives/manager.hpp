@@ -22,6 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/keys.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -79,7 +80,7 @@ public:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    static constexpr auto key_size = array_count<Key>;
+    static constexpr auto key_size = keys::size<Key>();
 
     // Thread and remap safe.
     storage& file_;

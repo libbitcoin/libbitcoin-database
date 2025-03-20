@@ -131,8 +131,6 @@ include_bitcoin_HEADERS = \
 
 include_bitcoin_databasedir = ${includedir}/bitcoin/database
 include_bitcoin_database_HEADERS = \
-    include/bitcoin/database/association.hpp \
-    include/bitcoin/database/associations.hpp \
     include/bitcoin/database/boost.hpp \
     include/bitcoin/database/define.hpp \
     include/bitcoin/database/error.hpp \
@@ -215,6 +213,7 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/hashhead.hpp \
     include/bitcoin/database/primitives/hashmap.hpp \
     include/bitcoin/database/primitives/iterator.hpp \
+    include/bitcoin/database/primitives/keys.hpp \
     include/bitcoin/database/primitives/linkage.hpp \
     include/bitcoin/database/primitives/manager.hpp \
     include/bitcoin/database/primitives/nomap.hpp \
@@ -222,9 +221,15 @@ include_bitcoin_database_primitives_HEADERS = \
 
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
 include_bitcoin_database_tables_HEADERS = \
+    include/bitcoin/database/tables/association.hpp \
+    include/bitcoin/database/tables/associations.hpp \
     include/bitcoin/database/tables/context.hpp \
     include/bitcoin/database/tables/event.hpp \
+    include/bitcoin/database/tables/keys.hpp \
+    include/bitcoin/database/tables/names.hpp \
+    include/bitcoin/database/tables/point_set.hpp \
     include/bitcoin/database/tables/schema.hpp \
+    include/bitcoin/database/tables/states.hpp \
     include/bitcoin/database/tables/table.hpp \
     include/bitcoin/database/tables/tables.hpp
 

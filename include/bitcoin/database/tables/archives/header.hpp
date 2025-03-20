@@ -34,7 +34,6 @@ namespace table {
 struct header
   : public hash_map<schema::header>
 {
-    using search_key = search<schema::hash>;
     using hash_map<schema::header>::hashmap;
 
     struct record
@@ -153,7 +152,7 @@ struct header
         }
 
         // null_hash is the required default.
-        search_key key{};
+        key key{};
     };
 
     // This is an optimization which is otherwise redundant with get_key().
@@ -168,7 +167,7 @@ struct header
         }
 
         // null_hash is the required default.
-        search_key key{};
+        key key{};
     };
 
     struct get_version
@@ -291,7 +290,7 @@ struct header
             return source;
         }
 
-        search_key key{};
+        key key{};
         context ctx{};
         uint32_t timestamp{};
     };

@@ -1,20 +1,20 @@
 /**
-/// Copyright (c) 2011-2025 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2025 libbitcoin developers (see AUTHORS)
  *
-/// This file is part of libbitcoin.
+ * This file is part of libbitcoin.
  *
-/// This program is free software: you can redistribute it and/or modify
-/// it under the terms of the GNU Affero General Public License as published by
-/// the Free Software Foundation, either version 3 of the License, or
-/// (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
-/// This program is distributed in the hope that it will be useful,
-/// but WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/// GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
-/// You should have received a copy of the GNU Affero General Public License
-/// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HPP
@@ -24,6 +24,7 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hashhead.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
+#include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 
@@ -205,7 +206,7 @@ protected:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    static constexpr auto key_size = array_count<Key>;
+    static constexpr auto key_size = keys::size<Key>();
     static constexpr auto index_size = Link::size + key_size;
 
     using head = database::hashhead<Link, Key, Align>;
@@ -220,7 +221,7 @@ private:
 };
 
 template <typename Element>
-using hash_map = hashmap<linkage<Element::pk>, system::data_array<Element::sk>,
+using hash_map = hashmap<linkage<Element::pk>, typename Element::key,
     Element::size, Element::align>;
 
 } // namespace database

@@ -16,17 +16,45 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_STATES_HPP
+#define LIBBITCOIN_DATABASE_TABLES_STATES_HPP
 
-#include <bitcoin/database/primitives/arrayhead.hpp>
-#include <bitcoin/database/primitives/arraymap.hpp>
-#include <bitcoin/database/primitives/hashhead.hpp>
-#include <bitcoin/database/primitives/hashmap.hpp>
-#include <bitcoin/database/primitives/iterator.hpp>
-#include <bitcoin/database/primitives/keys.hpp>
-#include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
-#include <bitcoin/database/primitives/nomap.hpp>
+#include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
+
+namespace libbitcoin {
+namespace database {
+namespace schema {
+
+enum block_state : uint8_t
+{
+    /// final
+    confirmable = 0,
+
+    /// transitional
+    valid = 1,
+
+    /// final
+    unconfirmable = 2,
+
+    /// transitional (debug)
+    block_unknown = 42
+};
+
+enum tx_state : uint8_t
+{
+    /// final
+    connected = 0,
+
+    /// final
+    disconnected = 1,
+
+    /// transitional (debug)
+    tx_unknown = 42
+};
+
+} // namespace schema
+} // namespace database
+} // namespace libbitcoin
 
 #endif

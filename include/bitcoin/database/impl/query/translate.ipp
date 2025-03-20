@@ -301,7 +301,7 @@ point_links CLASS::to_spenders(const hash_digest& point_hash,
     if (output_index == point::null_index)
         return {};
 
-    auto it = store_.point.it(table::point::compose(point_hash, output_index));
+    auto it = store_.point.it({ point_hash, output_index });
     if (!it)
         return {};
 

@@ -110,8 +110,7 @@ inline Link CLASS::index(const Key& key) const NOEXCEPT
     BC_ASSERT_MSG(mask_ < max_size_t, "insufficient domain");
     BC_ASSERT_MSG(is_nonzero(buckets_), "hash table requires buckets");
 
-    // unique_hash assumes sufficient uniqueness in low order key bytes.
-    const auto index = possible_narrow_cast<integer>(unique_hash(key));
+    const auto index = possible_narrow_cast<integer>(keys::hash<Key>(key));
     return bit_and<integer>(mask_, index);
 }
 

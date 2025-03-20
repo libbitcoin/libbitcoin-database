@@ -23,6 +23,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/point_set.hpp>
 #include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
@@ -38,7 +39,6 @@ struct transaction
     using outs = linkage<schema::outs_>;
     using out = linkage<schema::put>;
     using bytes = linkage<schema::size>;
-    using search_key = search<schema::hash>;
     using hash_map<schema::transaction>::hashmap;
 
     static constexpr size_t skip_to_version =
@@ -177,7 +177,7 @@ struct transaction
             return only::from_data(source);
         }
 
-        search_key key{};
+        key key{};
     };
 
     struct get_put_counts

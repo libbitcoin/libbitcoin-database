@@ -22,6 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
@@ -74,6 +75,7 @@ protected:
 
 private:
     using manager = database::manager<Link, Key, Size>;
+    static constexpr auto key_size = keys::size<Key>();
 
     // This is not thread safe, but it's object is not modified here and the
     // memory that it refers to is not addressable until written, and writes

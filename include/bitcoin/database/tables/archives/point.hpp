@@ -34,24 +34,7 @@ struct point
   : public hash_map<schema::point>
 {
     using hash_map<schema::point>::hashmap;
-    using search_key = search<schema::point::sk>;
     using ix = linkage<schema::index>;
-
-    static inline search_key compose(const hash_digest& point_hash,
-        ix::integer point_index) NOEXCEPT
-    {
-        search_key key{};
-        system::array_cast<uint8_t, schema::hash>(key) = point_hash;
-        key.at(schema::hash + 0) = system::byte<0>(point_index);
-        key.at(schema::hash + 1) = system::byte<1>(point_index);
-        key.at(schema::hash + 2) = system::byte<2>(point_index);
-        return key;
-    }
-
-    static search_key compose(const system::chain::point& point) NOEXCEPT
-    {
-        return compose(point.hash(), point.index());
-    }
 
     struct record
       : public schema::point
@@ -96,12 +79,16 @@ struct point
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.rewind_bytes(schema::point::sk);
-            key = source.read_forward<schema::point::sk>();
+            key =
+            {
+                source.read_hash(),
+                source.read_little_endian<ix::integer, ix::size>()
+            };
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
-        search_key key{};
+        system::chain::point key{};
     };
 };
 

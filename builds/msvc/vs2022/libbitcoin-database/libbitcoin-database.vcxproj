@@ -90,8 +90,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\association.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\associations.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\error.hpp" />
@@ -118,6 +116,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashhead.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\keys.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linkage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\nomap.hpp" />
@@ -133,6 +132,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\point.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\transaction.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\txs.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\association.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\associations.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\doubles.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevout.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp" />
@@ -141,10 +142,14 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\event.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_tx.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\keys.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\names.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\bootstrap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\neutrino.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\point_set.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\states.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\tables.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />

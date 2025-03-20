@@ -424,7 +424,7 @@ code CLASS::push_spenders(tx_links& out, const point& point,
     const point_link& self) const NOEXCEPT
 {
     // This is most of the expense of confirmation.
-    auto it = store_.point.it(table::point::compose(point));
+    auto it = store_.point.it(point);
     if (!it)
         return error::integrity8;
 
