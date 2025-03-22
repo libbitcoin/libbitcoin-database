@@ -21,13 +21,13 @@
 
 BOOST_AUTO_TEST_SUITE(hashmap_tests)
 
-template <typename Link, typename Key, size_t Size, bool Align = false>
+template <typename Link, typename Key, size_t Size, size_t CellSize = Link::size>
 class hashmap_
-  : public hashmap<Link, Key, Size, Align>
+  : public hashmap<Link, Key, Size, CellSize>
 {
 public:
-    using base = hashmap_<Link, Key, Size, Align>;
-    using hashmap<Link, Key, Size, Align>::hashmap;
+    using base = hashmap_<Link, Key, Size, CellSize>;
+    using hashmap<Link, Key, Size, CellSize>::hashmap;
 };
 
 using namespace system;

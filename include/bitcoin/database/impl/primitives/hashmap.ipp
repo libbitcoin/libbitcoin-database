@@ -205,14 +205,14 @@ Key CLASS::get_key(const Link& link) NOEXCEPT
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::find(const Key& key, Element& element) const NOEXCEPT
 {
     return !find_link(key, element).is_terminal();
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline Link CLASS::find_link(const Key& key, Element& element) const NOEXCEPT
 {
     // This override avoids duplicated memory_ptr construct in get(first()).
@@ -225,7 +225,7 @@ inline Link CLASS::find_link(const Key& key, Element& element) const NOEXCEPT
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
     // This override is the normal form.
@@ -234,7 +234,7 @@ inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 // static
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::get(const memory_ptr& ptr, const Link& link,
     Element& element) NOEXCEPT
 {
@@ -243,7 +243,7 @@ inline bool CLASS::get(const memory_ptr& ptr, const Link& link,
 
 // static
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::get(const iterator& it, Element& element) NOEXCEPT
 {
     // This override avoids deadlock when holding iterator to the same table.
@@ -252,7 +252,7 @@ inline bool CLASS::get(const iterator& it, Element& element) NOEXCEPT
 
 // static
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::get(const iterator& it, const Link& link,
     Element& element) NOEXCEPT
 {
@@ -260,8 +260,9 @@ inline bool CLASS::get(const iterator& it, const Link& link,
     return read(it.get(), link, element);
 }
 
+// static
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 bool CLASS::set(const memory_ptr& ptr, const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
@@ -296,7 +297,7 @@ bool CLASS::set(const memory_ptr& ptr, const Link& link, const Key& key,
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 bool CLASS::set(const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
@@ -304,7 +305,7 @@ bool CLASS::set(const Link& link, const Key& key,
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline Link CLASS::set_link(const Key& key, const Element& element) NOEXCEPT
 {
     Link link{};
@@ -315,7 +316,7 @@ inline Link CLASS::set_link(const Key& key, const Element& element) NOEXCEPT
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::set_link(Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
@@ -324,7 +325,7 @@ inline bool CLASS::set_link(Link& link, const Key& key,
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
 {
     Link link{};
@@ -335,7 +336,7 @@ inline Link CLASS::put_link(const Key& key, const Element& element) NOEXCEPT
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::put_link(Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
@@ -344,14 +345,14 @@ inline bool CLASS::put_link(Link& link, const Key& key,
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::put(const Key& key, const Element& element) NOEXCEPT
 {
     return !put_link(key, element).is_terminal();
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::put(const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
@@ -360,11 +361,39 @@ inline bool CLASS::put(const Link& link, const Key& key,
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::put(const memory_ptr& ptr, const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
     return write(ptr, link, key, element);
+}
+
+TEMPLATE
+ELEMENT_CONSTRAINT
+inline bool CLASS::put(bool& duplicate, const memory_ptr& ptr,
+    const Link& link, const Key& key, const Element& element) NOEXCEPT
+{
+    Link previous_head{};
+    if (!write(previous_head, ptr, link, key, element))
+        return false;
+
+    duplicate = !first(ptr, previous_head, key).is_terminal();
+    return true;
+}
+
+TEMPLATE
+inline Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
+{
+    if (!commit(link, key))
+        return {};
+
+    return link;
+}
+
+TEMPLATE
+inline bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
+{
+    return commit(get_memory(), link, key);
 }
 
 TEMPLATE
@@ -380,33 +409,15 @@ bool CLASS::commit(const memory_ptr& ptr, const Link& link,
     if (is_null(offset))
         return false;
 
-    //// Set element search key.
-    //unsafe_array_cast<uint8_t, key_size>(std::next(offset,
-    //    Link::size)) = key;
-
     // Commit element to search index (terminal is a valid bucket index).
     auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
     return head_.push(link, next, head_.index(key));
 }
 
-TEMPLATE
-bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
-{
-    return commit(get_memory(), link, key);
-}
-
-TEMPLATE
-inline Link CLASS::commit_link(const Link& link, const Key& key) NOEXCEPT
-{
-    if (!commit(link, key))
-        return {};
-
-    return link;
-}
-
-// protected/static
+// protected
 // ----------------------------------------------------------------------------
 
+// static
 TEMPLATE
 Link CLASS::first(const memory_ptr& ptr, const Link& link,
     const Key& key) NOEXCEPT
@@ -435,8 +446,9 @@ Link CLASS::first(const memory_ptr& ptr, const Link& link,
     return next;
 }
 
+// static
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 bool CLASS::read(const memory_ptr& ptr, const Link& link,
     Element& element) NOEXCEPT
 {
@@ -462,12 +474,12 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
     reader source{ stream };
     source.skip_bytes(index_size);
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(Size * element.count());) }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());) }
     return element.from_data(source);
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
@@ -498,6 +510,50 @@ bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
     auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
     return element.to_data(sink) && head_.push(link, next, head_.index(key));
+}
+
+TEMPLATE
+ELEMENT_CONSTRAINT
+bool CLASS::write(Link& previous, const memory_ptr& ptr, const Link& link,
+    const Key& key, const Element& element) NOEXCEPT
+{
+    using namespace system;
+    if (!ptr || link.is_terminal())
+        return false;
+
+    const auto start = body::link_to_position(link);
+    if (is_limited<ptrdiff_t>(start))
+        return false;
+
+    const auto size = ptr->size();
+    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    if (position > size)
+        return false;
+
+    const auto offset = ptr->offset(start);
+    if (is_null(offset))
+        return false;
+
+    // iostream.flush is a nop (direct copy).
+    iostream stream{ offset, size - position };
+    finalizer sink{ stream };
+    sink.skip_bytes(Link::size);
+    keys::write(sink, key);
+
+    // Commit element to body.
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
+    auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
+    if (!element.to_data(sink))
+        return false;
+
+    // Commit element to search (terminal is a valid bucket index).
+    bool collision{};
+    if (!head_.push(collision, link, next, head_.index(key)))
+        return false;
+
+    // If filter collision set previous stack head for conflict resolution.
+    previous = collision ? next : Link::terminal;
+    return true;
 }
 
 } // namespace database

@@ -32,8 +32,8 @@ namespace database {
 TEMPLATE
 CLASS::hashhead(storage& head, size_t bits) NOEXCEPT
   : file_(head),
-    buckets_(system::power2<integer>(bits)),
-    mask_(system::unmask_right<integer>(bits))
+    buckets_(system::power2<bucket_integer>(bits)),
+    mask_(system::unmask_right<bucket_integer>(bits))
 {
 }
 
@@ -110,8 +110,8 @@ inline Link CLASS::index(const Key& key) const NOEXCEPT
     BC_ASSERT_MSG(mask_ < max_size_t, "insufficient domain");
     BC_ASSERT_MSG(is_nonzero(buckets_), "hash table requires buckets");
 
-    const auto index = possible_narrow_cast<integer>(keys::hash<Key>(key));
-    return bit_and<integer>(mask_, index);
+    const auto index = possible_narrow_cast<bucket_integer>(keys::hash<Key>(key));
+    return bit_and<bucket_integer>(mask_, index);
 }
 
 TEMPLATE
@@ -128,12 +128,12 @@ inline Link CLASS::top(const Link& index) const NOEXCEPT
     if (is_null(raw))
         return {};
 
-    if constexpr (Align)
+    if constexpr (aligned)
     {
         // Reads full padded word.
         // xcode clang++16 does not support C++20 std::atomic_ref.
-        ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
-        const auto& head = *pointer_cast<std::atomic<integer>>(raw);
+        ////const std::atomic_ref<bucket_integer> head(unsafe_byte_cast<bucket_integer>(raw));
+        const auto& head = *pointer_cast<std::atomic<bucket_integer>>(raw);
 
         // Acquire is necessary to synchronize with push release.
         // Relaxed would miss next updates, so acquire is optimal.
@@ -141,12 +141,14 @@ inline Link CLASS::top(const Link& index) const NOEXCEPT
     }
     else
     {
-        const auto& head = to_array<size_>(raw);
+        const auto& head = to_array<bucket_size>(raw);
         mutex_.lock_shared();
         const auto top = head;
         mutex_.unlock_shared();
         return top;
     }
+
+    // TODO: return terminal if filtered.
 }
 
 TEMPLATE
@@ -160,24 +162,32 @@ TEMPLATE
 inline bool CLASS::push(const Link& current, bytes& next,
     const Link& index) NOEXCEPT
 {
+    bool collision{};
+    return push(collision, current, next, index);
+}
+
+TEMPLATE
+inline bool CLASS::push(bool& collision, const Link& current, bytes& next,
+    const Link& index) NOEXCEPT
+{
     using namespace system;
     const auto raw = file_.get_raw(link_to_position(index));
     if (is_null(raw))
         return false;
 
-    if constexpr (Align)
+    if constexpr (aligned)
     {
         // Writes full padded word (0x00 fill).
         // xcode clang++16 does not support C++20 std::atomic_ref.
-        ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
-        auto& head = *pointer_cast<std::atomic<integer>>(raw);
+        ////const std::atomic_ref<bucket_integer> head(unsafe_byte_cast<bucket_integer>(raw));
+        auto& head = *pointer_cast<std::atomic<bucket_integer>>(raw);
         auto top = head.load(std::memory_order_acquire);
         do
         {
             // Compiler could order this after head.store, which would expose key
             // to search before next entry is linked. Thread fence imposes order.
             // A release fence ensures that all prior writes (like next) are
-            // completed before any subsequent atomic store. 
+            // completed before any subsequent atomic store.
             next = Link{ top };
             std::atomic_thread_fence(std::memory_order_release);
         }
@@ -186,13 +196,18 @@ inline bool CLASS::push(const Link& current, bytes& next,
     }
     else
     {
-        auto& head = to_array<size_>(raw);
+        auto& head = to_array<bucket_size>(raw);
         mutex_.lock();
         next = head;
         head = current;
         mutex_.unlock();
     }
 
+    // TODO: set collision when unfiltered or fingerprint matches filter.
+    collision = false;
+
+    // The returned next is set to prevous head, which is where collisions may
+    // be resolved to duplicate or not, when 'collision' is set to true.
     return true;
 }
 

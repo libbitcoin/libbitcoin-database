@@ -36,7 +36,7 @@ namespace database {
 /// Readers and writers are always prepositioned at data, and are limited to
 /// the extent the record/slab size is known (limit can always be removed).
 /// Streams are always initialized from first element byte up to file limit.
-template <typename Link, typename Key, size_t Size, bool Align>
+template <class Link, class Key, size_t RowSize, size_t CellSize = Link::size>
 class hashmap
 {
 public:
@@ -44,7 +44,7 @@ public:
 
     using key = Key;
     using link = Link;
-    using iterator = database::iterator<Link, Key, Size>;
+    using iterator = database::iterator<Link, Key, RowSize>;
 
     hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
 
@@ -118,73 +118,79 @@ public:
     Key get_key(const Link& link) NOEXCEPT;
 
     /// Get first element matching the search key, false if not found/error.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     inline bool find(const Key& key, Element& element) const NOEXCEPT;
 
     /// Get first element matching the search key, and return its link.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     inline Link find_link(const Key& key, Element& element) const NOEXCEPT;
 
     /// Get element at link, false if deserialize error.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     inline bool get(const Link& link, Element& element) const NOEXCEPT;
 
     /// Get element at link using get_memory() ptr, false if deserialize error.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     static inline bool get(const memory_ptr& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
     /// Get element at link, false if deserialize error.
     /// Iterator must not be terminal, must be guarded by called.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     static inline bool get(const iterator& it, Element& element) NOEXCEPT;
 
     /// Get element at link using it memory object, false if deserialize error.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     static inline bool get(const iterator& it, const Link& link,
         Element& element) NOEXCEPT;
 
     /// Set element into previously allocated link (follow with commit).
-    template <typename Element, if_equal<Element::size, Size> = true>
-    bool set(const memory_ptr& ptr, const Link& link, const Key& key,
+    template <typename Element, if_equal<Element::size, RowSize> = true>
+    static bool set(const memory_ptr& ptr, const Link& link, const Key& key,
         const Element& element) NOEXCEPT;
 
     /// Set element into previously allocated link (follow with commit).
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     bool set(const Link& link, const Key& key, const Element& element) NOEXCEPT;
 
     /// Allocate and set element, and return link (follow with commit).
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     inline Link set_link(const Key& key, const Element& element) NOEXCEPT;
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     inline bool set_link(Link& link, const Key& key,
         const Element& element) NOEXCEPT;
 
     /// Allocate, set, commit element to key, and return link.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     inline Link put_link(const Key& key, const Element& element) NOEXCEPT;
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     inline bool put_link(Link& link, const Key& key,
         const Element& element) NOEXCEPT;
 
     /// Allocate, set, commit element to key.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     inline bool put(const Key& key, const Element& element) NOEXCEPT;
 
     /// Set and commit previously allocated element at link to key.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     inline bool put(const Link& link, const Key& key,
         const Element& element) NOEXCEPT;
 
     /// Set/commit allocated element at link to key, using get_memory() ptr.
-    template <typename Element, if_equal<Element::size, Size> = true>
-    inline bool put(const memory_ptr& ptr, const Link& link, const Key& key,
-        const Element& element) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, RowSize> = true>
+    inline bool put(const memory_ptr& ptr, const Link& link,
+        const Key& key, const Element& element) NOEXCEPT;
+
+    /// Set/commit allocated element at link to key, using get_memory() ptr.
+    template <typename Element, if_equal<Element::size, RowSize> = true>
+    inline bool put(bool& duplicate, const memory_ptr& ptr,
+        const Link& link, const Key& key, const Element& element) NOEXCEPT;
 
     /// Commit previously set element at link to key.
-    bool commit(const memory_ptr& ptr, const Link& link, const Key& key) NOEXCEPT;
-    bool commit(const Link& link, const Key& key) NOEXCEPT;
     inline Link commit_link(const Link& link, const Key& key) NOEXCEPT;
+    inline bool commit(const Link& link, const Key& key) NOEXCEPT;
+    bool commit(const memory_ptr& ptr, const Link& link,
+        const Key& key) NOEXCEPT;
 
 protected:
     /// memory_ptr parameter must be from start (i.e. from get_memory()).
@@ -194,23 +200,25 @@ protected:
 
     /// memory_ptr parameter must be from start (i.e. from get_memory()).
     /// Get element at link using memory object, false if deserialize error.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     static bool read(const memory_ptr& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
     /// memory_ptr parameter must be from start (i.e. from get_memory()).
     /// Set and commit previously allocated element at link to key.
-    template <typename Element, if_equal<Element::size, Size> = true>
-    bool write(const memory_ptr& ptr, const Link& link, const Key& key,
-        const Element& element) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, RowSize> = true>
+    bool write(const memory_ptr& ptr, const Link& link,
+        const Key& key, const Element& element) NOEXCEPT;
+    template <typename Element, if_equal<Element::size, RowSize> = true>
+    bool write(Link& previous, const memory_ptr& ptr, const Link& link,
+        const Key& key, const Element& element) NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = (Size == max_size_t);
+    static constexpr auto is_slab = (RowSize == max_size_t);
     static constexpr auto key_size = keys::size<Key>();
     static constexpr auto index_size = Link::size + key_size;
-
-    using head = database::hashhead<Link, Key, Align>;
-    using body = database::manager<Link, Key, Size>;
+    using head = database::hashhead<Link, Key, CellSize>;
+    using body = database::manager<Link, Key, RowSize>;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).
@@ -222,13 +230,15 @@ private:
 
 template <typename Element>
 using hash_map = hashmap<linkage<Element::pk>, typename Element::key,
-    Element::size, Element::align>;
+    Element::size, Element::cell>;
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Key, size_t Size, bool Align>
-#define CLASS hashmap<Link, Key, Size, Align>
+#define TEMPLATE template <class Link, class Key, size_t RowSize, size_t CellSize>
+#define CLASS hashmap<Link, Key, RowSize, CellSize>
+#define ELEMENT_CONSTRAINT template <class Element, \
+    if_equal<Element::size, RowSize>>
 
 #include <bitcoin/database/impl/primitives/hashmap.ipp>
 

@@ -28,6 +28,9 @@ constexpr auto link_size = 5_size;
 constexpr auto bucket_bits = 4_size;
 constexpr auto head_size = add1(system::power2(bucket_bits)) * link_size;
 
+// TODO: test at alignment (4 or 8 bytes).
+constexpr auto cell_size = 5_size;
+
 // Key size does not factor into head byte size (for search key only).
 constexpr auto links = head_size / link_size;
 static_assert(links == 17u);
@@ -38,7 +41,7 @@ static_assert(buckets == 16u);
 
 using link = linkage<link_size>;
 using key = data_array<key_size>;
-using hashhead_ = hashhead<link, key, false>;
+using hashhead_ = hashhead<link, key, cell_size>;
 
 class nullptr_storage
   : public test::chunk_storage
