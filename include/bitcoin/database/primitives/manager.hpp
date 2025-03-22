@@ -31,7 +31,7 @@ namespace database {
 /// if slab (Size == max_size_t), count/link is bytes otherwise records.
 /// Obtaining memory object is considered const access despite the fact that
 /// memory is writeable. Non-const manager access implies memory map modify.
-template <typename Link, typename Key, size_t Size>
+template <class Link, class Key, size_t Size>
 class manager
 {
 public:
@@ -89,7 +89,7 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Key, size_t Size>
+#define TEMPLATE template <class Link, class Key, size_t Size>
 #define CLASS manager<Link, Key, Size>
 
 #include <bitcoin/database/impl/primitives/manager.ipp>

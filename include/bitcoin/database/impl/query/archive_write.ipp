@@ -147,12 +147,12 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
         if (!store_.point.expand(ins_fk + inputs))
             return error::tx_point_allocate;
 
-        // This must be set after tx.set and before tx.commit, since searchable and
-        // produces an association to tx.link, and is also an integral part of tx.
-        const auto ptr = store_.point.get_memory();
-
         // Collect duplicates to store in duplicate table.
         std::vector<chain::cref_point> twins{};
+        const auto ptr = store_.point.get_memory();
+
+        // This must be set after tx.set and before tx.commit, since searchable and
+        // produces an association to tx.link, and is also an integral part of tx.
         for (const auto& in: *ins)
         {
             ///////////////////////////////////////////////////////////////////

@@ -31,7 +31,7 @@ namespace database {
     
 /// Caution: reader/writer hold body remap lock until disposed.
 /// These handles should be used for serialization and immediately disposed.
-template <typename Link, size_t Size>
+template <class Link, size_t Size>
 class nomap
 {
 public:
@@ -128,13 +128,13 @@ private:
     manager manager_;
 };
 
-template <typename Element>
+template <class Element>
 using no_map = nomap<linkage<Element::pk>, Element::size>;
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, size_t Size>
+#define TEMPLATE template <class Link, size_t Size>
 #define CLASS nomap<Link, Size>
 
 #include <bitcoin/database/impl/primitives/nomap.ipp>

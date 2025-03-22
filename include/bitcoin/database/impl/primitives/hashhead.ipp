@@ -35,6 +35,7 @@ CLASS::hashhead(storage& head, size_t bits) NOEXCEPT
     buckets_(system::power2<bucket_integer>(bits)),
     mask_(system::unmask_right<bucket_integer>(bits))
 {
+    BC_ASSERT_MSG(mask_ < max_size_t, "insufficient domain");
 }
 
 TEMPLATE
@@ -107,9 +108,6 @@ TEMPLATE
 inline Link CLASS::index(const Key& key) const NOEXCEPT
 {
     using namespace system;
-    BC_ASSERT_MSG(mask_ < max_size_t, "insufficient domain");
-    BC_ASSERT_MSG(is_nonzero(buckets_), "hash table requires buckets");
-
     const auto index = possible_narrow_cast<bucket_integer>(keys::hash<Key>(key));
     return bit_and<bucket_integer>(mask_, index);
 }

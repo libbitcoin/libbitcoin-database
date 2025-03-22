@@ -75,9 +75,10 @@ private:
     using bucket_integer = Link::integer;
     using cell_integer = unsigned_type<CellSize>;
     static_assert(std::atomic<cell_integer>::is_always_lock_free);
-    static constexpr auto aligned = (CellSize == sizeof(cell_integer));
+    static_assert(is_nonzero(Link::size));
     static constexpr auto bucket_size = Link::size;
     static constexpr auto filter_size = CellSize - bucket_size;
+    static constexpr auto aligned = (CellSize == sizeof(cell_integer));
 
     template <size_t Bytes>
     static inline auto& to_array(memory::iterator it) NOEXCEPT
@@ -91,8 +92,8 @@ private:
     {
         using namespace system;
         BC_ASSERT(!is_multiply_overflow<size_t>(index, CellSize));
-        BC_ASSERT(!is_add_overflow(size_, index * CellSize));
-        return possible_narrow_cast<size_t>(CellSize + index * CellSize);
+        BC_ASSERT(!is_add_overflow(CellSize, index * CellSize));
+        return possible_narrow_cast<size_t>(add1(index) * CellSize);
     }
 
     // These are thread safe.

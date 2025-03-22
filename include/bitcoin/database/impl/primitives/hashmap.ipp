@@ -292,7 +292,7 @@ bool CLASS::set(const memory_ptr& ptr, const Link& link, const Key& key,
     finalizer sink{ stream };
     sink.skip_bytes(index_size);
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
     return element.to_data(sink);
 }
 
@@ -507,7 +507,7 @@ bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
     keys::write(sink, key);
 
     // Commit element to body and search (terminal is a valid bucket index).
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
     auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
     return element.to_data(sink) && head_.push(link, next, head_.index(key));
 }

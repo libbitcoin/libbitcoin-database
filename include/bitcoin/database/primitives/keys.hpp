@@ -25,7 +25,7 @@ namespace libbitcoin {
 namespace database {
 namespace keys {
 
-template <typename Key>
+template <class Key>
 constexpr size_t size() NOEXCEPT
 {
     if constexpr (is_same_type<Key, system::chain::point>)
@@ -39,7 +39,7 @@ constexpr size_t size() NOEXCEPT
     }
 }
 
-template <typename Key>
+template <class Key>
 inline size_t hash(const Key& value) NOEXCEPT
 {
     if constexpr (is_same_type<Key, system::chain::point>)
@@ -56,7 +56,7 @@ inline size_t hash(const Key& value) NOEXCEPT
     }
 }
 
-template <typename Key>
+template <class Key>
 inline void write(writer& sink, const Key& key) NOEXCEPT
 {
     if constexpr (is_same_type<Key, system::chain::point>)
@@ -70,7 +70,7 @@ inline void write(writer& sink, const Key& key) NOEXCEPT
     }
 }
 
-template <typename Array, typename Key>
+template <class Array, class Key>
 inline bool compare(const Array& bytes, const Key& key) NOEXCEPT
 {
     using namespace system;

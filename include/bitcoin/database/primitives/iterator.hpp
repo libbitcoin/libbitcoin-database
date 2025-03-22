@@ -41,7 +41,7 @@ namespace database {
 
 /// This class is not thread safe.
 /// Size non-max implies record manager (ordinal record links).
-template <typename Link, typename Key, size_t Size = max_size_t>
+template <class Link, class Key, size_t Size = max_size_t>
 class iterator
 {
 public:
@@ -93,7 +93,7 @@ private:
 } // namespace libbitcoin
 
 #define TEMPLATE \
-template <typename Link, typename Key, size_t Size>
+template <class Link, class Key, size_t Size>
 #define CLASS iterator<Link, Key, Size>
 
 #include <bitcoin/database/impl/primitives/iterator.ipp>
