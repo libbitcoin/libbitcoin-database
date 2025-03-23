@@ -55,7 +55,7 @@ inline CLASS& CLASS::operator=(const bytes& other) NOEXCEPT
 {
     value = 0;
     system::unsafe_array_cast<uint8_t, Size>(&value) = other;
-    value = system::native_from_little_end(value);
+    ////value = system::native_from_little_end(value);
     return *this;
 }
 
@@ -89,8 +89,8 @@ constexpr CLASS::operator CLASS::integer() const NOEXCEPT
 TEMPLATE
 inline CLASS::operator CLASS::bytes() const NOEXCEPT
 {
-    const auto little = system::native_to_little_end(value);
-    return system::unsafe_array_cast<uint8_t, Size>(&little);
+    ////const auto little = system::native_to_little_end(value);
+    return system::unsafe_array_cast<uint8_t, Size>(&value);
 }
 
 TEMPLATE
