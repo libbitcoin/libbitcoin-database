@@ -42,7 +42,7 @@ public:
 
     using bytes = typename Link::bytes;
 
-    /// An hash head is disabled it if has one or less buckets (0 bits).
+    /// A hash head is disabled it if has one or less buckets (0 bits).
     hashhead(storage& head, size_t bits) NOEXCEPT;
 
     /// Sizing (thread safe).
