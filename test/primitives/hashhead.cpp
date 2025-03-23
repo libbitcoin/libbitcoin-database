@@ -19,7 +19,7 @@
 #include "../test.hpp"
 #include "../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(head_tests)
+BOOST_AUTO_TEST_SUITE(hashhead_tests)
 
 using namespace system;
 
