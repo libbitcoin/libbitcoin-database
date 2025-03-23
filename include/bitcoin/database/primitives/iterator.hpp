@@ -22,6 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
@@ -40,7 +41,7 @@ namespace database {
 
 /// This class is not thread safe.
 /// Size non-max implies record manager (ordinal record links).
-template <typename Link, typename Key, size_t Size = max_size_t>
+template <class Link, class Key, size_t Size = max_size_t>
 class iterator
 {
 public:
@@ -74,6 +75,7 @@ protected:
 
 private:
     using manager = database::manager<Link, Key, Size>;
+    static constexpr auto key_size = keys::size<Key>();
 
     // This is not thread safe, but it's object is not modified here and the
     // memory that it refers to is not addressable until written, and writes
@@ -91,7 +93,7 @@ private:
 } // namespace libbitcoin
 
 #define TEMPLATE \
-template <typename Link, typename Key, size_t Size>
+template <class Link, class Key, size_t Size>
 #define CLASS iterator<Link, Key, Size>
 
 #include <bitcoin/database/impl/primitives/iterator.ipp>

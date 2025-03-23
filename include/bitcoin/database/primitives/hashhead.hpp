@@ -24,12 +24,17 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-template <typename Link, typename Key, bool Align>
+// TODO: Link::terminal is byte aligned, which now wastes bits.
+// TODO: change to bitwise link domain and sentinal as max value.
+// TODO: Add unused link bits in filter size.
+template <class Link, class Key, size_t CellSize = Link::size,
+    if_not_greater<Link::size, CellSize> = true>
 class hashhead
 {
 public:
@@ -63,11 +68,17 @@ public:
     inline Link top(const Link& index) const NOEXCEPT;
     inline bool push(const Link& current, bytes& next, const Key& key) NOEXCEPT;
     inline bool push(const Link& current, bytes& next, const Link& index) NOEXCEPT;
+    inline bool push(bool& collision, const Link& current, bytes& next,
+        const Link& index) NOEXCEPT;
 
 private:
-    using integer = Link::integer;
-    static_assert(std::atomic<integer>::is_always_lock_free);
-    static constexpr auto size_ = Align ? sizeof(integer) : Link::size;
+    using bucket_integer = Link::integer;
+    using cell_integer = unsigned_type<CellSize>;
+    static_assert(std::atomic<cell_integer>::is_always_lock_free);
+    static_assert(is_nonzero(Link::size));
+    static constexpr auto bucket_size = Link::size;
+    static constexpr auto filter_size = CellSize - bucket_size;
+    static constexpr auto aligned = (CellSize == sizeof(cell_integer));
 
     template <size_t Bytes>
     static inline auto& to_array(memory::iterator it) NOEXCEPT
@@ -80,9 +91,9 @@ private:
     static constexpr size_t link_to_position(const Link& index) NOEXCEPT
     {
         using namespace system;
-        BC_ASSERT(!is_multiply_overflow<size_t>(index, size_));
-        BC_ASSERT(!is_add_overflow(size_, index * size_));
-        return possible_narrow_cast<size_t>(size_ + index * size_);
+        BC_ASSERT(!is_multiply_overflow<size_t>(index, CellSize));
+        BC_ASSERT(!is_add_overflow(CellSize, index * CellSize));
+        return possible_narrow_cast<size_t>(add1(index) * CellSize);
     }
 
     // These are thread safe.
@@ -95,8 +106,9 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Key, bool Align>
-#define CLASS hashhead<Link, Key, Align>
+#define TEMPLATE template <class Link, class Key, size_t CellSize, \
+    if_not_greater<Link::size, CellSize> If>
+#define CLASS hashhead<Link, Key, CellSize, If>
 
 #include <bitcoin/database/impl/primitives/hashhead.ipp>
 

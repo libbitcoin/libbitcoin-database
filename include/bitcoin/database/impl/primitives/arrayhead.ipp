@@ -41,9 +41,8 @@ inline size_t CLASS::size() const NOEXCEPT
 TEMPLATE
 inline size_t CLASS::buckets() const NOEXCEPT
 {
-    const auto count = position_to_link(size()).value;
-    BC_ASSERT(count < Link::terminal);
-    return system::possible_narrow_cast<size_t>(count);
+    using namespace system;
+    return possible_narrow_cast<size_t>(position_to_link(size()).value);
 }
 
 TEMPLATE
@@ -99,7 +98,7 @@ TEMPLATE
 bool CLASS::get_body_count(Link& count) const NOEXCEPT
 {
     const auto ptr = file_.get();
-    if (!ptr || size_ > size())
+    if (!ptr || bucket_size > size())
         return false;
 
     count = to_array<Link::size>(ptr->data());
@@ -110,7 +109,7 @@ TEMPLATE
 bool CLASS::set_body_count(const Link& count) NOEXCEPT
 {
     const auto ptr = file_.get();
-    if (!ptr || size_ > size())
+    if (!ptr || bucket_size > size())
         return false;
 
     // If head is padded then last bytes are fill (0xff).
@@ -141,7 +140,7 @@ Link CLASS::at(size_t key) const NOEXCEPT
     }
     else
     {
-        const auto& head = to_array<size_>(ptr->data());
+        const auto& head = to_array<bucket_size>(ptr->data());
         mutex_.lock_shared();
         const auto top = head;
         mutex_.unlock_shared();
@@ -156,7 +155,7 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
     constexpr auto fill = bit_all<uint8_t>;
 
     // Allocate as necessary and fill allocations.
-    const auto ptr = file_.set(link_to_position(index), size_, fill);
+    const auto ptr = file_.set(link_to_position(index), bucket_size, fill);
     if (is_null(ptr))
         return false;
 
@@ -172,7 +171,7 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
     else
     {
         bytes current = link;
-        auto& head = to_array<size_>(ptr->data());
+        auto& head = to_array<bucket_size>(ptr->data());
 
         mutex_.lock();
         head = std::move(current);

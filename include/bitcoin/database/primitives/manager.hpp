@@ -22,6 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/primitives/keys.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -30,13 +31,14 @@ namespace database {
 /// if slab (Size == max_size_t), count/link is bytes otherwise records.
 /// Obtaining memory object is considered const access despite the fact that
 /// memory is writeable. Non-const manager access implies memory map modify.
-template <typename Link, typename Key, size_t Size>
+template <class Link, class Key, size_t Size>
 class manager
 {
 public:
+    using integer = typename Link::integer;
     static constexpr Link position_to_link(size_t position) NOEXCEPT;
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
-    static constexpr typename Link::integer cast_link(size_t link) NOEXCEPT;
+    static constexpr integer cast_link(size_t link) NOEXCEPT;
 
     DEFAULT_COPY_MOVE_DESTRUCT(manager);
 
@@ -79,7 +81,7 @@ public:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    static constexpr auto key_size = array_count<Key>;
+    static constexpr auto key_size = keys::size<Key>();
 
     // Thread and remap safe.
     storage& file_;
@@ -88,7 +90,7 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, typename Key, size_t Size>
+#define TEMPLATE template <class Link, class Key, size_t Size>
 #define CLASS manager<Link, Key, Size>
 
 #include <bitcoin/database/impl/primitives/manager.ipp>

@@ -1,20 +1,20 @@
 /**
-/// Copyright (c) 2011-2025 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2025 libbitcoin developers (see AUTHORS)
  *
-/// This file is part of libbitcoin.
+ * This file is part of libbitcoin.
  *
-/// This program is free software: you can redistribute it and/or modify
-/// it under the terms of the GNU Affero General Public License as published by
-/// the Free Software Foundation, either version 3 of the License, or
-/// (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
-/// This program is distributed in the hope that it will be useful,
-/// but WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/// GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
-/// You should have received a copy of the GNU Affero General Public License
-/// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYMAP_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYMAP_HPP
@@ -29,13 +29,13 @@
 
 namespace libbitcoin {
 namespace database {
-
+    
 /// Caution: iterator/reader/finalizer hold body remap lock until disposed.
 /// These handles should be used for serialization and immediately disposed.
 /// Readers and writers are always prepositioned at data, and are limited to
 /// the extent the record/slab size is known (limit can always be removed).
 /// Streams are always initialized from first element byte up to file limit.
-template <typename Link, size_t Size, bool Align>
+template <class Link, size_t RowSize, bool Align>
 class arraymap
 {
 public:
@@ -95,29 +95,28 @@ public:
     inline Link at(size_t key) const NOEXCEPT;
 
     /// Get first element matching key, false if not found/error (unverified).
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     inline bool at(size_t key, Element& element) const NOEXCEPT;
 
     /// Get element at link, false if deserialize error.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     inline bool get(const Link& link, Element& element) const NOEXCEPT;
 
     /// Allocate, set, commit element to key.
     /// Expands table AND HEADER as necessary.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     bool put(size_t key, const Element& element) NOEXCEPT;
 
 protected:
     /// Get element at link using memory object, false if deserialize error.
-    template <typename Element, if_equal<Element::size, Size> = true>
+    template <typename Element, if_equal<Element::size, RowSize> = true>
     static bool read(const memory_ptr& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = (Size == max_size_t);
-
+    static constexpr auto is_slab = (RowSize == max_size_t);
     using head = database::arrayhead<Link, Align>;
-    using body = database::manager<Link, system::data_array<0>, Size>;
+    using body = database::manager<Link, system::data_array<0>, RowSize>;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).
@@ -133,8 +132,10 @@ using array_map = arraymap<linkage<Element::pk>, Element::size, Element::align>;
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, size_t Size, bool Align>
-#define CLASS arraymap<Link, Size, Align>
+#define TEMPLATE template <class Link, size_t RowSize, bool Align>
+#define CLASS arraymap<Link, RowSize, Align>
+#define ELEMENT_CONSTRAINT template <class Element, \
+    if_equal<Element::size, RowSize>>
 
 #include <bitcoin/database/impl/primitives/arraymap.ipp>
 

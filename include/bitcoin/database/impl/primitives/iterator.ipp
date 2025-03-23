@@ -96,8 +96,8 @@ Link CLASS::to_match(Link link) const NOEXCEPT
             return Link::terminal;
 
         // element key matches (found)
-        const auto key_ptr = std::next(offset, Link::size);
-        if (is_zero(std::memcmp(key_.data(), key_ptr, array_count<Key>)))
+        if (keys::compare(system::unsafe_array_cast<uint8_t, key_size>(
+            std::next(offset, Link::size)), key_))
             return link;
 
         // set next element link (loop)
@@ -128,8 +128,8 @@ Link CLASS::to_next(Link link) const NOEXCEPT
             return Link::terminal;
 
         // next element key matches (found)
-        const auto key_ptr = std::next(offset, Link::size);
-        if (is_zero(std::memcmp(key_.data(), key_ptr, array_count<Key>)))
+        if (keys::compare(system::unsafe_array_cast<uint8_t, key_size>(
+            std::next(offset, Link::size)), key_))
             return link;
     }
 

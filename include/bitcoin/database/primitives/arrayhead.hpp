@@ -30,7 +30,7 @@ namespace database {
 
 /// Dynamically expanding array map header.
 /// Less efficient than a fixed-size header.
-template <typename Link, bool Align>
+template <class Link, bool Align>
 class arrayhead
 {
 public:
@@ -38,7 +38,7 @@ public:
 
     using bytes = typename Link::bytes;
 
-    /// An array head is disabled it if has one or less buckets.
+    /// An array head is disabled if it has one or less buckets.
     arrayhead(storage& head, const Link& buckets) NOEXCEPT;
 
     /// Sizing is dynamic (thread safe).
@@ -72,11 +72,10 @@ public:
 
 private:
     using integer = Link::integer;
-    static_assert(std::atomic<integer>::is_always_lock_free);
-    static constexpr auto size_ = Align ? sizeof(integer) : Link::size;
-
-    // Body does not use padded link size.
     using body = manager<Link, system::data_array<zero>, Link::size>;
+    static_assert(std::atomic<integer>::is_always_lock_free);
+    static_assert(is_nonzero(Link::size));
+    static constexpr auto bucket_size = Align ? sizeof(integer) : Link::size;
 
     template <size_t Bytes>
     static inline auto& to_array(memory::iterator it) NOEXCEPT
@@ -87,8 +86,8 @@ private:
     static constexpr Link position_to_link(size_t position) NOEXCEPT
     {
         using namespace system;
-        static_assert(is_nonzero(size_));
-        const auto link = floored_subtract(position / size_, one);
+        const auto offset = floored_divide(position, bucket_size);
+        const auto link = floored_subtract(offset, one);
         return possible_narrow_cast<integer>(link);
     }
 
@@ -97,9 +96,9 @@ private:
     static constexpr size_t link_to_position(const Link& index) NOEXCEPT
     {
         using namespace system;
-        BC_ASSERT(!is_multiply_overflow<size_t>(index, size_));
-        BC_ASSERT(!is_add_overflow(size_, index * size_));
-        return possible_narrow_cast<size_t>(size_ + index * size_);
+        BC_ASSERT(!is_multiply_overflow<size_t>(index, bucket_size));
+        BC_ASSERT(!is_add_overflow(bucket_size, index * bucket_size));
+        return possible_narrow_cast<size_t>(add1(index) * bucket_size);
     }
 
     // These are thread safe.
@@ -111,7 +110,7 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, bool Align>
+#define TEMPLATE template <class Link, bool Align>
 #define CLASS arrayhead<Link, Align>
 
 #include <bitcoin/database/impl/primitives/arrayhead.ipp>

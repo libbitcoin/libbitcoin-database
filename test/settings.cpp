@@ -60,6 +60,9 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.prevout_buckets, 100u);
     BOOST_REQUIRE_EQUAL(configuration.prevout_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.prevout_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.doubles_bits, 7u);
+    BOOST_REQUIRE_EQUAL(configuration.doubles_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.doubles_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.validated_bk_bits, 7u);
     BOOST_REQUIRE_EQUAL(configuration.validated_bk_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.validated_bk_rate, 50u);

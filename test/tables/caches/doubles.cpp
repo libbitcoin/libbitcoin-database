@@ -16,17 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
+#include "../../test.hpp"
+#include "../../mocks/chunk_storage.hpp"
 
-#include <bitcoin/database/primitives/arrayhead.hpp>
-#include <bitcoin/database/primitives/arraymap.hpp>
-#include <bitcoin/database/primitives/hashhead.hpp>
-#include <bitcoin/database/primitives/hashmap.hpp>
-#include <bitcoin/database/primitives/iterator.hpp>
-#include <bitcoin/database/primitives/keys.hpp>
-#include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
-#include <bitcoin/database/primitives/nomap.hpp>
+BOOST_AUTO_TEST_SUITE(doubles_tests)
 
-#endif
+BOOST_AUTO_TEST_CASE(doubles_test)
+{
+    BOOST_REQUIRE(true);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -16,13 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_POINT_HPP
-#define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_POINT_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_DOUBLES_HPP
+#define LIBBITCOIN_DATABASE_TABLES_CACHES_DOUBLES_HPP
 
-#include <algorithm>
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/tables/schema.hpp>
 
@@ -30,37 +29,31 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-struct point
-  : public hash_map<schema::point>
+// TODO: this table isn't actually mapped.
+struct doubles
+  : public hash_map<schema::doubles>
 {
-    using hash_map<schema::point>::hashmap;
+    using hash_map<schema::doubles>::hashmap;
     using ix = linkage<schema::index>;
 
+    // This supports only a single record (not too useful).
     struct record
-      : public schema::point
+      : public schema::doubles
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.rewind_bytes(schema::point::sk);
             hash = source.read_hash();
             index = source.read_little_endian<ix::integer, ix::size>();
-
-            if (index == ix::terminal)
-                index = system::chain::point::null_index;
-
-            BC_ASSERT(!source || source.get_read_position() == minrow);
+            BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
 
-        inline bool to_data(flipper& sink) const NOEXCEPT
+        inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            sink.write_bytes(hash);
+            sink.write_little_endian<ix::integer, ix::size>(index);
+            BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
-        }
-
-        inline bool is_null() const NOEXCEPT
-        {
-            return index == system::chain::point::null_index;
         }
 
         inline bool operator==(const record& other) const NOEXCEPT
@@ -71,24 +64,6 @@ struct point
 
         hash_digest hash{};
         ix::integer index{};
-    };
-
-    struct get_composed
-      : public schema::point
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.rewind_bytes(schema::point::sk);
-            key =
-            {
-                source.read_hash(),
-                source.read_little_endian<ix::integer, ix::size>()
-            };
-            BC_ASSERT(!source || source.get_read_position() == minrow);
-            return source;
-        }
-
-        system::chain::point key{};
     };
 };
 

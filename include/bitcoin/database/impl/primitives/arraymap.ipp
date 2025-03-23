@@ -149,21 +149,21 @@ inline Link CLASS::at(size_t key) const NOEXCEPT
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::at(size_t key, Element& element) const NOEXCEPT
 {
     return get(at(key), element);
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
     return read(body_.get(), link, element);
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 bool CLASS::put(size_t key, const Element& element) NOEXCEPT
 {
     using namespace system;
@@ -176,15 +176,16 @@ bool CLASS::put(size_t key, const Element& element) NOEXCEPT
     iostream stream{ *ptr };
     finalizer sink{ stream };
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
     return element.to_data(sink) && head_.push(link, head_.index(key));
 }
 
 // protected
 // ----------------------------------------------------------------------------
 
+// static
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+ELEMENT_CONSTRAINT
 bool CLASS::read(const memory_ptr& ptr, const Link& link,
     Element& element) NOEXCEPT
 {
@@ -209,7 +210,7 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
     iostream stream{ offset, size - position };
     reader source{ stream };
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(Size * element.count());) }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());) }
     return element.from_data(source);
 }
 

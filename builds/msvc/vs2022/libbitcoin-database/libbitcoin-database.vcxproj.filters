@@ -113,12 +113,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp">
       <Filter>include\bitcoin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\association.hpp">
-      <Filter>include\bitcoin\database</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\associations.hpp">
-      <Filter>include\bitcoin\database</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\boost.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
@@ -197,6 +191,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\keys.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\linkage.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
@@ -242,6 +239,15 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\txs.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\association.hpp">
+      <Filter>include\bitcoin\database\tables</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\associations.hpp">
+      <Filter>include\bitcoin\database\tables</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\doubles.hpp">
+      <Filter>include\bitcoin\database\tables\caches</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevout.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
@@ -263,6 +269,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_tx.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\keys.hpp">
+      <Filter>include\bitcoin\database\tables</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\names.hpp">
+      <Filter>include\bitcoin\database\tables</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\address.hpp">
       <Filter>include\bitcoin\database\tables\optionals</Filter>
     </ClInclude>
@@ -272,7 +284,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\neutrino.hpp">
       <Filter>include\bitcoin\database\tables\optionals</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\point_set.hpp">
+      <Filter>include\bitcoin\database\tables</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp">
+      <Filter>include\bitcoin\database\tables</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\states.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\table.hpp">

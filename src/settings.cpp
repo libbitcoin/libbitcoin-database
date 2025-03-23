@@ -77,6 +77,10 @@ settings::settings() NOEXCEPT
     prevout_size{ 1 },
     prevout_rate{ 50 },
 
+    doubles_bits{ 7 },
+    doubles_size{ 1 },
+    doubles_rate{ 50 },
+
     validated_bk_bits{ 7 },
     validated_bk_size{ 1 },
     validated_bk_rate{ 50 },

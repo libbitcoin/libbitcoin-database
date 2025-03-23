@@ -48,6 +48,8 @@ static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 namespace libbitcoin {
 namespace database {
 
+using hash_digest = system::hash_digest;
+using hashes = system::hashes;
 using code = system::code;
 
 } // namespace database

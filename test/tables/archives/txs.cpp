@@ -22,7 +22,7 @@
 BOOST_AUTO_TEST_SUITE(txs_tests)
 
 using namespace system;
-constexpr search<schema::txs::sk> key = base16_array("112233");
+constexpr table::txs::key key = base16_array("112233");
 const table::txs::slab expected0{};
 const table::txs::slab expected1
 {

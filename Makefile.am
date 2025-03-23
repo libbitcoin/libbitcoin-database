@@ -99,6 +99,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/archives/puts.cpp \
     test/tables/archives/transaction.cpp \
     test/tables/archives/txs.cpp \
+    test/tables/caches/doubles.cpp \
     test/tables/caches/prevout.cpp \
     test/tables/caches/validated_bk.cpp \
     test/tables/caches/validated_tx.cpp \
@@ -130,8 +131,6 @@ include_bitcoin_HEADERS = \
 
 include_bitcoin_databasedir = ${includedir}/bitcoin/database
 include_bitcoin_database_HEADERS = \
-    include/bitcoin/database/association.hpp \
-    include/bitcoin/database/associations.hpp \
     include/bitcoin/database/boost.hpp \
     include/bitcoin/database/define.hpp \
     include/bitcoin/database/error.hpp \
@@ -214,6 +213,7 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/hashhead.hpp \
     include/bitcoin/database/primitives/hashmap.hpp \
     include/bitcoin/database/primitives/iterator.hpp \
+    include/bitcoin/database/primitives/keys.hpp \
     include/bitcoin/database/primitives/linkage.hpp \
     include/bitcoin/database/primitives/manager.hpp \
     include/bitcoin/database/primitives/nomap.hpp \
@@ -221,9 +221,15 @@ include_bitcoin_database_primitives_HEADERS = \
 
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
 include_bitcoin_database_tables_HEADERS = \
+    include/bitcoin/database/tables/association.hpp \
+    include/bitcoin/database/tables/associations.hpp \
     include/bitcoin/database/tables/context.hpp \
     include/bitcoin/database/tables/event.hpp \
+    include/bitcoin/database/tables/keys.hpp \
+    include/bitcoin/database/tables/names.hpp \
+    include/bitcoin/database/tables/point_set.hpp \
     include/bitcoin/database/tables/schema.hpp \
+    include/bitcoin/database/tables/states.hpp \
     include/bitcoin/database/tables/table.hpp \
     include/bitcoin/database/tables/tables.hpp
 
@@ -240,6 +246,7 @@ include_bitcoin_database_tables_archives_HEADERS = \
 
 include_bitcoin_database_tables_cachesdir = ${includedir}/bitcoin/database/tables/caches
 include_bitcoin_database_tables_caches_HEADERS = \
+    include/bitcoin/database/tables/caches/doubles.hpp \
     include/bitcoin/database/tables/caches/prevout.hpp \
     include/bitcoin/database/tables/caches/validated_bk.hpp \
     include/bitcoin/database/tables/caches/validated_tx.hpp

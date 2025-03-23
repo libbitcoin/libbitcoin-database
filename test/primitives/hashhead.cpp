@@ -28,6 +28,9 @@ constexpr auto link_size = 5_size;
 constexpr auto bucket_bits = 4_size;
 constexpr auto head_size = add1(system::power2(bucket_bits)) * link_size;
 
+// TODO: test at alignment (4 or 8 bytes).
+constexpr auto cell_size = 5_size;
+
 // Key size does not factor into head byte size (for search key only).
 constexpr auto links = head_size / link_size;
 static_assert(links == 17u);
@@ -38,7 +41,7 @@ static_assert(buckets == 16u);
 
 using link = linkage<link_size>;
 using key = data_array<key_size>;
-using hashhead_ = hashhead<link, key, false>;
+using hashhead_ = hashhead<link, key, cell_size>;
 
 class nullptr_storage
   : public test::chunk_storage
@@ -115,6 +118,16 @@ BOOST_AUTO_TEST_CASE(hashhead__unique_hash__null_key__expected)
     test::chunk_storage store;
     hashhead_ head{ store, bucket_bits };
     BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
+}
+
+BOOST_AUTO_TEST_CASE(hashhead__key_hash__null_point__expected)
+{
+    const system::chain::point null_point{};
+    const auto expected = keys::hash(null_point);
+
+    // Unique hash vs. std::hash<point>().
+    ////BOOST_REQUIRE_EQUAL(expected, system::possible_narrow_cast<size_t>(0x0000000000000000_u64));
+    BOOST_REQUIRE_EQUAL(expected, system::possible_narrow_cast<size_t>(0x00000000ffffffff_u64));
 }
 
 BOOST_AUTO_TEST_CASE(hashhead__top__link__terminal)

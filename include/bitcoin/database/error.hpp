@@ -47,13 +47,6 @@ enum error_t : uint8_t
     integrity8,
     integrity9,
     integrity10,
-    integrity11,
-    integrity12,
-    integrity13,
-    integrity14,
-    integrity15,
-    integrity16,
-    integrity17,
 
     /// memory map
     open_open,

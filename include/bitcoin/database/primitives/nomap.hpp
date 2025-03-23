@@ -1,20 +1,20 @@
 /**
-/// Copyright (c) 2011-2025 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2025 libbitcoin developers (see AUTHORS)
  *
-/// This file is part of libbitcoin.
+ * This file is part of libbitcoin.
  *
-/// This program is free software: you can redistribute it and/or modify
-/// it under the terms of the GNU Affero General Public License as published by
-/// the Free Software Foundation, either version 3 of the License, or
-/// (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
-/// This program is distributed in the hope that it will be useful,
-/// but WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-/// GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
-/// You should have received a copy of the GNU Affero General Public License
-/// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_NOMAP_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_NOMAP_HPP
@@ -31,7 +31,7 @@ namespace database {
     
 /// Caution: reader/writer hold body remap lock until disposed.
 /// These handles should be used for serialization and immediately disposed.
-template <typename Link, size_t Size>
+template <class Link, size_t Size>
 class nomap
 {
 public:
@@ -128,13 +128,13 @@ private:
     manager manager_;
 };
 
-template <typename Element>
+template <class Element>
 using no_map = nomap<linkage<Element::pk>, Element::size>;
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Link, size_t Size>
+#define TEMPLATE template <class Link, size_t Size>
 #define CLASS nomap<Link, Size>
 
 #include <bitcoin/database/impl/primitives/nomap.ipp>

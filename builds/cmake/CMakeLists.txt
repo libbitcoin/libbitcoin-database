@@ -309,6 +309,7 @@ if (with-tests)
         "../../test/tables/archives/puts.cpp"
         "../../test/tables/archives/transaction.cpp"
         "../../test/tables/archives/txs.cpp"
+        "../../test/tables/caches/doubles.cpp"
         "../../test/tables/caches/prevout.cpp"
         "../../test/tables/caches/validated_bk.cpp"
         "../../test/tables/caches/validated_tx.cpp"
