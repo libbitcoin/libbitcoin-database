@@ -29,11 +29,14 @@
 namespace libbitcoin {
 namespace database {
 
+// configuration
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 CLASS::hashhead(storage& head, size_t bits) NOEXCEPT
   : file_(head),
-    buckets_(system::power2<bucket_integer>(bits)),
-    mask_(system::unmask_right<bucket_integer>(bits))
+    buckets_(system::power2<link>(bits)),
+    mask_(system::unmask_right<link>(bits))
 {
     BC_ASSERT_MSG(mask_ < max_size_t, "insufficient domain");
 }
@@ -88,7 +91,7 @@ bool CLASS::get_body_count(Link& count) const NOEXCEPT
     if (!ptr)
         return false;
 
-    count = to_array<Link::size>(ptr->data());
+    link_array(count.value) = link_array(ptr->data());
     return true;
 }
 
@@ -100,53 +103,36 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
         return false;
 
     // If head is padded then last bytes are fill (0xff).
-    to_array<Link::size>(ptr->data()) = count;
+    auto value = count.value;
+    link_array(ptr->data()) = link_array(value);
     return true;
 }
+
+// operation
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 inline Link CLASS::index(const Key& key) const NOEXCEPT
 {
     using namespace system;
-    const auto index = possible_narrow_cast<bucket_integer>(keys::hash<Key>(key));
-    return bit_and<bucket_integer>(mask_, index);
-}
-
-TEMPLATE
-inline Link CLASS::top(const Key& key) const NOEXCEPT
-{
-    return top(index(key));
+    const auto index = possible_narrow_cast<link>(keys::hash<Key>(key));
+    return bit_and<link>(mask_, index);
 }
 
 TEMPLATE
 inline Link CLASS::top(const Link& index) const NOEXCEPT
 {
-    using namespace system;
-    const auto raw = file_.get_raw(link_to_position(index));
-    if (is_null(raw))
-        return {};
+    return to_link(get_cell(index));
+}
 
-    if constexpr (aligned)
-    {
-        // Reads full padded word.
-        // xcode clang++16 does not support C++20 std::atomic_ref.
-        ////const std::atomic_ref<bucket_integer> head(unsafe_byte_cast<bucket_integer>(raw));
-        const auto& head = *pointer_cast<std::atomic<bucket_integer>>(raw);
-
-        // Acquire is necessary to synchronize with push release.
-        // Relaxed would miss next updates, so acquire is optimal.
-        return head.load(std::memory_order_acquire);
-    }
-    else
-    {
-        const auto& head = to_array<bucket_size>(raw);
-        mutex_.lock_shared();
-        const auto top = head;
-        mutex_.unlock_shared();
-        return top;
-    }
-
-    // TODO: return terminal if filtered.
+TEMPLATE
+inline Link CLASS::top(const Key& key) const NOEXCEPT
+{
+    const auto value = get_cell(index(key));
+    if (is_collision(value, key))
+        return to_link(value);
+    
+    return {};
 }
 
 TEMPLATE
@@ -160,52 +146,138 @@ TEMPLATE
 inline bool CLASS::push(const Link& current, bytes& next,
     const Link& index) NOEXCEPT
 {
-    bool collision{};
-    return push(collision, current, next, index);
+    return set_cell(next, current, index) != fault_cell;
 }
 
 TEMPLATE
 inline bool CLASS::push(bool& collision, const Link& current, bytes& next,
+    const Key& key) NOEXCEPT
+{
+    const auto previous = set_cell(next, current, index(key));
+    if (previous == fault_cell)
+        return false;
+
+    // Caller searches Link{ next } for duplicate in case of filter collision.
+    collision = is_collision(previous, key);
+    return true;
+}
+
+// protected
+// ----------------------------------------------------------------------------
+// read/write
+
+TEMPLATE
+inline CLASS::cell CLASS::get_cell(const Link& index) const NOEXCEPT
+{
+    using namespace system;
+    const auto raw = file_.get_raw(link_to_position(index));
+    if (is_null(raw))
+        return fault_cell;
+
+    if constexpr (aligned)
+    {
+        // Reads full padded word.
+        // xcode clang++16 does not support C++20 std::atomic_ref.
+        ////const std::atomic_ref<cell> top(unsafe_byte_cast<cell>(raw));
+        const auto& top = *pointer_cast<std::atomic<cell>>(raw);
+
+        // Acquire is necessary to synchronize with push release.
+        // Relaxed would miss next updates, so acquire is optimal.
+        return top.load(std::memory_order_acquire);
+    }
+    else
+    {
+        cell top{};
+        const auto& head = cell_array(raw);
+
+        mutex_.lock_shared();
+        cell_array(top) = head;
+        mutex_.unlock_shared();
+
+        return top;
+    }
+}
+
+TEMPLATE
+inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
     const Link& index) NOEXCEPT
 {
     using namespace system;
     const auto raw = file_.get_raw(link_to_position(index));
     if (is_null(raw))
-        return false;
+        return fault_cell;
 
     if constexpr (aligned)
     {
         // Writes full padded word (0x00 fill).
         // xcode clang++16 does not support C++20 std::atomic_ref.
-        ////const std::atomic_ref<bucket_integer> head(unsafe_byte_cast<bucket_integer>(raw));
-        auto& head = *pointer_cast<std::atomic<bucket_integer>>(raw);
-        auto top = head.load(std::memory_order_acquire);
+        ////const std::atomic_ref<cell> head(unsafe_byte_cast<cell>(raw));
+        auto& top = *pointer_cast<std::atomic<cell>>(raw);
+        auto head = top.load(std::memory_order_acquire);
         do
         {
-            // Compiler could order this after head.store, which would expose key
+            // Compiler could order this after top.store, which would expose key
             // to search before next entry is linked. Thread fence imposes order.
             // A release fence ensures that all prior writes (like next) are
             // completed before any subsequent atomic store.
-            next = Link{ top };
+            next = link_array(head);
             std::atomic_thread_fence(std::memory_order_release);
         }
-        while (!head.compare_exchange_weak(top, current,
+        while (!top.compare_exchange_weak(head, to_cell(head, current),
             std::memory_order_release, std::memory_order_acquire));
     }
     else
     {
-        auto& head = to_array<bucket_size>(raw);
+        cell top{};
+        auto& head = cell_array(raw);
+
         mutex_.lock();
-        next = head;
-        head = current;
+        cell_array(top) = head;
+        next = link_array(top);
+        auto bytes = to_cell(top, current);
+        head = cell_array(bytes);
         mutex_.unlock();
     }
 
-    // TODO: set collision when unfiltered or fingerprint matches filter.
-    collision = false;
+    return true;
+}
 
-    // The returned next is set to prevous head, which is where collisions may
-    // be resolved to duplicate or not, when 'collision' is set to true.
+// protected
+// ----------------------------------------------------------------------------
+// filters
+
+TEMPLATE
+constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
+{
+    if (value == fault_cell)
+        return {};
+
+    using namespace system;
+    constexpr auto mask = unmask_right<cell>(link_bits);
+    return possible_narrow_cast<link>(bit_and(value, mask));
+}
+
+TEMPLATE
+constexpr CLASS::cell CLASS::to_filter(cell value) NOEXCEPT
+{
+    // TODO: mask link bits and return cell (private use).
+    return value;
+}
+
+TEMPLATE
+constexpr CLASS::cell CLASS::to_cell(cell /*previous*/, link current) NOEXCEPT
+{
+    // TODO: merge link into previous cell and update fingers.
+    return current;
+}
+
+TEMPLATE
+constexpr bool CLASS::is_collision(cell value, const Key& /*key*/) NOEXCEPT
+{
+    if (value == fault_cell)
+        return false;
+
+    // TODO: true if overflow sentinel or any matching finger.
     return true;
 }
 
