@@ -71,11 +71,11 @@ public:
     bool push(const Link& link, const Link& index) NOEXCEPT;
 
 private:
+    using integer = Link::integer;
     using body = manager<Link, system::data_array<zero>, Link::size>;
-    static_assert(std::atomic<Link::integer>::is_always_lock_free);
+    static_assert(std::atomic<integer>::is_always_lock_free);
     static_assert(is_nonzero(Link::size));
-    static constexpr auto bucket_size = Align ? sizeof(Link::integer) :
-        Link::size;
+    static constexpr auto bucket_size = Align ? sizeof(integer) : Link::size;
 
     template <size_t Bytes>
     static inline auto& to_array(memory::iterator it) NOEXCEPT
@@ -88,7 +88,7 @@ private:
         using namespace system;
         const auto offset = floored_divide(position, bucket_size);
         const auto link = floored_subtract(offset, one);
-        return possible_narrow_cast<Link::integer>(link);
+        return possible_narrow_cast<integer>(link);
     }
 
     // Byte offset of bucket index within head file.

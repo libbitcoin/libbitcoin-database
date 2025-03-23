@@ -35,9 +35,10 @@ template <class Link, class Key, size_t Size>
 class manager
 {
 public:
+    using integer = typename Link::integer;
     static constexpr Link position_to_link(size_t position) NOEXCEPT;
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
-    static constexpr typename Link::integer cast_link(size_t link) NOEXCEPT;
+    static constexpr integer cast_link(size_t link) NOEXCEPT;
 
     DEFAULT_COPY_MOVE_DESTRUCT(manager);
 

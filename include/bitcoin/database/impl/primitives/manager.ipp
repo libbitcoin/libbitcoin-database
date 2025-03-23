@@ -168,10 +168,9 @@ constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
 }
 
 TEMPLATE
-constexpr typename Link::integer CLASS::cast_link(size_t link) NOEXCEPT
+constexpr CLASS::integer CLASS::cast_link(size_t link) NOEXCEPT
 {
     using namespace system;
-    using integer = typename Link::integer;
     constexpr auto terminal = Link::terminal;
 
     // link limit is sub1(terminal), where terminal is 2^((8*Link::bytes)-1).
