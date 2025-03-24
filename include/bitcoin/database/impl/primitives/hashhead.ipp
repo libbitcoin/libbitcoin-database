@@ -146,7 +146,7 @@ TEMPLATE
 inline bool CLASS::push(const Link& current, bytes& next,
     const Link& index) NOEXCEPT
 {
-    return set_cell(next, current, index) != fault_cell;
+    return set_cell(next, current, index) != terminal;
 }
 
 TEMPLATE
@@ -154,7 +154,7 @@ inline bool CLASS::push(bool& collision, const Link& current, bytes& next,
     const Key& key) NOEXCEPT
 {
     const auto previous = set_cell(next, current, index(key));
-    if (previous == fault_cell)
+    if (previous == terminal)
         return false;
 
     // Caller searches Link{ next } for duplicate in case of filter collision.
@@ -172,7 +172,7 @@ inline CLASS::cell CLASS::get_cell(const Link& index) const NOEXCEPT
     using namespace system;
     const auto raw = file_.get_raw(link_to_position(index));
     if (is_null(raw))
-        return fault_cell;
+        return terminal;
 
     if constexpr (aligned)
     {
@@ -205,7 +205,7 @@ inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
     using namespace system;
     const auto raw = file_.get_raw(link_to_position(index));
     if (is_null(raw))
-        return fault_cell;
+        return terminal;
 
     if constexpr (aligned)
     {
@@ -249,7 +249,7 @@ inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
 TEMPLATE
 constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
 {
-    if (value == fault_cell)
+    if (value == terminal)
         return {};
 
     using namespace system;
@@ -258,26 +258,30 @@ constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
 }
 
 TEMPLATE
-constexpr CLASS::cell CLASS::to_filter(cell value) NOEXCEPT
+constexpr CLASS::cell CLASS::to_cell(cell previous, link current) NOEXCEPT
 {
-    // TODO: mask link bits and return cell (private use).
-    return value;
-}
+    // [--------------filter---------------][--------------link--------------]
+    // [[sen][--------fingerprints--------]][--------------link--------------]
 
-TEMPLATE
-constexpr CLASS::cell CLASS::to_cell(cell /*previous*/, link current) NOEXCEPT
-{
-    // TODO: merge link into previous cell and update fingers.
+    // [[111][1111111111111111111111111111]] terminal (empty/default)
+    // [[000][1111111111111111111111111111]] 1 FPs
+    // [[001][2222222222222211111111111111]] 2 FPs
+    // [[010][3333333333222222222111111111]] 3 FPs
+    // [[011][4444444333333322222221111111]] 4 FPs
+    // [[100][5555554444443333332222211111]] 5 FPs
+    // [[101][6666655555444443333322221111]] 6 FPs
+    // [[110][7777666655554444333322221111]] 7 FPs
+    // [[111][0000000000000000000000000000]] overflow
     return current;
 }
 
 TEMPLATE
-constexpr bool CLASS::is_collision(cell value, const Key& /*key*/) NOEXCEPT
+constexpr bool CLASS::is_collision(cell value, const Key& key) NOEXCEPT
 {
-    if (value == fault_cell)
+    if (value == terminal)
         return false;
 
-    // TODO: true if overflow sentinel or any matching finger.
+    // TODO: true if overflow sentinel or any matching FP.
     return true;
 }
 

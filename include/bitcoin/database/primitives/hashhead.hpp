@@ -88,14 +88,14 @@ protected:
     using link = Link::integer;
     using cell = unsigned_type<cell_size>;
     using filter = unsigned_type<filter_size>;
-    static constexpr cell fault_cell = system::bit_all<cell>;
+    static constexpr cell terminal = system::bit_all<cell>;
     static constexpr bool aligned = (cell_size == sizeof(cell));
     static_assert(link_bits + filter_bits == to_bits(cell_size));
     static_assert(std::atomic<cell>::is_always_lock_free);
     static_assert(is_nonzero(Link::size));
 
     static constexpr link to_link(cell value) NOEXCEPT;
-    static constexpr cell to_filter(cell value) NOEXCEPT;
+    ////static constexpr cell to_filter(cell value) NOEXCEPT;
     static constexpr cell to_cell(cell previous, link current) NOEXCEPT;
     static constexpr bool is_collision(cell value, const Key& key) NOEXCEPT;
     inline cell get_cell(const Link& index) const NOEXCEPT;
