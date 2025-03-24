@@ -258,30 +258,19 @@ constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
 }
 
 TEMPLATE
-constexpr CLASS::cell CLASS::to_cell(cell previous, link current) NOEXCEPT
+constexpr CLASS::cell CLASS::to_cell(cell, link current) NOEXCEPT
 {
-    // [--------------filter---------------][--------------link--------------]
-    // [[sen][--------fingerprints--------]][--------------link--------------]
-
-    // [[111][1111111111111111111111111111]] terminal (empty/default)
-    // [[000][1111111111111111111111111111]] 1 FPs
-    // [[001][2222222222222211111111111111]] 2 FPs
-    // [[010][3333333333222222222111111111]] 3 FPs
-    // [[011][4444444333333322222221111111]] 4 FPs
-    // [[100][5555554444443333332222211111]] 5 FPs
-    // [[101][6666655555444443333322221111]] 6 FPs
-    // [[110][7777666655554444333322221111]] 7 FPs
-    // [[111][0000000000000000000000000000]] overflow
+    // TODO:
     return current;
 }
 
 TEMPLATE
-constexpr bool CLASS::is_collision(cell value, const Key& key) NOEXCEPT
+constexpr bool CLASS::is_collision(cell value, const Key&) NOEXCEPT
 {
     if (value == terminal)
         return false;
 
-    // TODO: true if overflow sentinel or any matching FP.
+    // TODO:
     return true;
 }
 
