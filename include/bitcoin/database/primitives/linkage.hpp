@@ -25,7 +25,7 @@
 namespace libbitcoin {
 namespace database {
 
-/// Link serialization is always little-endian.
+/// Link serialization is non-endian.
 template <size_t Size>
 struct linkage
 {
