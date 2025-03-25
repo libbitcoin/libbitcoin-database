@@ -33,8 +33,6 @@ else ()
   set( libdir "\${exec_prefix}/lib" )
   set( includedir "\${exec_prefix}/include" )
 
-  set( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" )
-
   set( PACKAGE_VERSION "4.0.0" )
   set( VERSION "${PACKAGE_VERSION}" )
 endif ()
@@ -291,9 +289,11 @@ if (with-tests)
         "../../test/primitives/hashhead.cpp"
         "../../test/primitives/hashmap.cpp"
         "../../test/primitives/iterator.cpp"
+        "../../test/primitives/keys.cpp"
         "../../test/primitives/linkage.cpp"
         "../../test/primitives/manager.cpp"
         "../../test/primitives/nomap.cpp"
+        "../../test/primitives/sieve.cpp"
         "../../test/query/archive.cpp"
         "../../test/query/confirm.cpp"
         "../../test/query/context.cpp"

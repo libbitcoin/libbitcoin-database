@@ -134,8 +134,8 @@ Link CLASS::at(size_t key) const NOEXCEPT
         // Reads full padded word.
         const auto raw = ptr->data();
         // xcode clang++16 does not support C++20 std::atomic_ref.
-        ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
-        const auto& head = *pointer_cast<std::atomic<integer>>(raw);
+        ////const std::atomic_ref<link> head(unsafe_byte_cast<link>(raw));
+        const auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
         return head.load(std::memory_order_relaxed);
     }
     else
@@ -164,8 +164,8 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
         // Writes full padded word (0x00 fill).
         const auto raw = ptr->data();
         // xcode clang++16 does not support C++20 std::atomic_ref.
-        ////const std::atomic_ref<integer> head(unsafe_byte_cast<integer>(raw));
-        auto& head = *pointer_cast<std::atomic<integer>>(raw);
+        ////const std::atomic_ref<link> head(unsafe_byte_cast<link>(raw));
+        auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
         head.store(link, std::memory_order_relaxed);
     }
     else

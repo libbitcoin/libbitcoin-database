@@ -42,7 +42,7 @@ public:
 
     using bytes = typename Link::bytes;
 
-    /// An hash head is disabled it if has one or less buckets (0 bits).
+    /// A hash head is disabled it if has one or less buckets (0 bits).
     hashhead(storage& head, size_t bits) NOEXCEPT;
 
     /// Sizing (thread safe).
@@ -66,24 +66,63 @@ public:
     /// Unsafe if verify false.
     inline Link top(const Key& key) const NOEXCEPT;
     inline Link top(const Link& index) const NOEXCEPT;
-    inline bool push(const Link& current, bytes& next, const Key& key) NOEXCEPT;
     inline bool push(const Link& current, bytes& next, const Link& index) NOEXCEPT;
+    inline bool push(const Link& current, bytes& next, const Key& key) NOEXCEPT;
     inline bool push(bool& collision, const Link& current, bytes& next,
+        const Key& key) NOEXCEPT;
+
+protected:
+    /// One sentinel bit per sentinel byte but no less than three.
+    /// This is optimal based on a load factor of 1.5, approximate otherwise.
+    static constexpr size_t min_sentinal = 3;
+    static constexpr size_t cell_size = CellSize;
+    static constexpr size_t link_size = Link::size;
+    static constexpr size_t link_bits = to_bits(link_size);
+    static constexpr size_t filter_size = cell_size - link_size;
+    static constexpr size_t filter_bits = to_bits(filter_size);
+    static constexpr size_t sentinel_bits = std::max(filter_size, min_sentinal);
+    static constexpr size_t finger_bits = filter_bits - sentinel_bits;
+    static constexpr size_t fingers = sub1(system::power2(sentinel_bits));
+    static constexpr size_t overflow = zero;
+
+    using link = Link::integer;
+    using cell = unsigned_type<cell_size>;
+    using filter = unsigned_type<filter_size>;
+    static constexpr cell terminal = system::bit_all<cell>;
+    static constexpr bool aligned = (cell_size == sizeof(cell));
+    static_assert(link_bits + filter_bits == to_bits(cell_size));
+    static_assert(std::atomic<cell>::is_always_lock_free);
+    static_assert(is_nonzero(Link::size));
+
+    static constexpr link to_link(cell value) NOEXCEPT;
+    ////static constexpr cell to_filter(cell value) NOEXCEPT;
+    static constexpr cell to_cell(cell previous, link current) NOEXCEPT;
+    static constexpr bool is_collision(cell value, const Key& key) NOEXCEPT;
+    inline cell get_cell(const Link& index) const NOEXCEPT;
+    inline cell set_cell(bytes& next, const Link& current,
         const Link& index) NOEXCEPT;
 
 private:
-    using bucket_integer = Link::integer;
-    using cell_integer = unsigned_type<CellSize>;
-    static_assert(std::atomic<cell_integer>::is_always_lock_free);
-    static_assert(is_nonzero(Link::size));
-    static constexpr auto bucket_size = Link::size;
-    static constexpr auto filter_size = CellSize - bucket_size;
-    static constexpr auto aligned = (CellSize == sizeof(cell_integer));
-
-    template <size_t Bytes>
-    static inline auto& to_array(memory::iterator it) NOEXCEPT
+    static INLINE auto& cell_array(memory::iterator it) NOEXCEPT
     {
-        return system::unsafe_array_cast<uint8_t, Bytes>(it);
+        return system::unsafe_array_cast<uint8_t, cell_size>(it);
+    }
+
+    template <typename Integral, if_integral<Integral> = true>
+    static INLINE auto& cell_array(Integral& value) NOEXCEPT
+    {
+        return cell_array(system::pointer_cast<uint8_t>(&value));
+    }
+
+    static INLINE auto& link_array(memory::iterator it) NOEXCEPT
+    {
+        return system::unsafe_array_cast<uint8_t, link_size>(it);
+    }
+
+    template <typename Integral, if_integral<Integral> = true>
+    static INLINE auto& link_array(Integral& value) NOEXCEPT
+    {
+        return link_array(system::pointer_cast<uint8_t>(&value));
     }
 
     // Byte offset of bucket index within head file.
@@ -91,9 +130,9 @@ private:
     static constexpr size_t link_to_position(const Link& index) NOEXCEPT
     {
         using namespace system;
-        BC_ASSERT(!is_multiply_overflow<size_t>(index, CellSize));
-        BC_ASSERT(!is_add_overflow(CellSize, index * CellSize));
-        return possible_narrow_cast<size_t>(add1(index) * CellSize);
+        BC_ASSERT(!is_multiply_overflow<size_t>(index, cell_size));
+        BC_ASSERT(!is_add_overflow(cell_size, index * cell_size));
+        return possible_narrow_cast<size_t>(add1(index) * cell_size);
     }
 
     // These are thread safe.
