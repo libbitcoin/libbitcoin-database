@@ -121,6 +121,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\nomap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\sieve.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\query.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\store.hpp" />
@@ -167,6 +168,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomap.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\sieve.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive_read.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive_write.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\confirm.ipp" />

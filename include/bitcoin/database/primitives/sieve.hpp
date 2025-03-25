@@ -16,18 +16,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_SIEVE_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_SIEVE_HPP
 
-#include <bitcoin/database/primitives/arrayhead.hpp>
-#include <bitcoin/database/primitives/arraymap.hpp>
-#include <bitcoin/database/primitives/hashhead.hpp>
-#include <bitcoin/database/primitives/hashmap.hpp>
-#include <bitcoin/database/primitives/iterator.hpp>
-#include <bitcoin/database/primitives/keys.hpp>
-#include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
-#include <bitcoin/database/primitives/nomap.hpp>
-#include <bitcoin/database/primitives/sieve.hpp>
+#include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
+
+namespace libbitcoin {
+namespace database {
+
+template <size_t Size>
+struct sieve
+{
+    constexpr sieve() NOEXCEPT;
+};
+
+} // namespace database
+} // namespace libbitcoin
+
+#define TEMPLATE template <size_t Size>
+#define CLASS sieve<Size>
+
+#include <bitcoin/database/impl/primitives/sieve.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

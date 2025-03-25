@@ -93,6 +93,9 @@
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\keys.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
@@ -100,6 +103,9 @@
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\nomap.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\sieve.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\archive.cpp">
