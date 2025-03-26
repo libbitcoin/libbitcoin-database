@@ -530,7 +530,6 @@ BOOST_AUTO_TEST_CASE(nomap__record_get__excess__false)
     test::chunk_storage body_store{ body_file };
     const nomap<link5, record_excess::size> instance{ head_store, body_store };
 
-    record_excess record{};
     BC_DEBUG_ONLY(BOOST_REQUIRE(!instance.get(zero, record));)
     BOOST_REQUIRE(!instance.get_fault());
 }

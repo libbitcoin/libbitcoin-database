@@ -322,7 +322,8 @@ bool CLASS::populate(const transaction& tx) const NOEXCEPT
     return std::all_of(ins->begin(), ins->end(),
         [this](const auto& in) NOEXCEPT
         {
-            return populate(*in);
+            // Work around bogus clang warning.
+            return this->populate(*in);
         });
 }
 
@@ -336,7 +337,8 @@ bool CLASS::populate(const block& block) const NOEXCEPT
     return std::all_of(std::next(txs->begin()), txs->end(),
         [this](const auto& tx) NOEXCEPT
         {
-            return populate(*tx);
+            // Work around bogus clang warning.
+            return this->populate(*tx);
         });
 }
 
