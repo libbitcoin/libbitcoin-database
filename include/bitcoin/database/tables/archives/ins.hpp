@@ -109,7 +109,7 @@ struct ins
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             using namespace system;
-            static constexpr auto sequence_point_size = sizeof(uint32_t) +
+            constexpr auto sequence_point_size = sizeof(uint32_t) +
                 chain::point::serialized_size();
 
             auto in_fk = input_fk;

@@ -106,7 +106,7 @@ struct outs
         {
             using namespace system;
             static_assert(tx::size <= sizeof(uint64_t));
-            static constexpr auto value_parent_difference = sizeof(uint64_t) -
+            constexpr auto value_parent_difference = sizeof(uint64_t) -
                 tx::size;
 
             auto out_fk = output_fk;

@@ -152,7 +152,7 @@ struct output
         {
             using namespace system;
             static_assert(tx::size <= sizeof(uint64_t));
-            static constexpr auto value_parent_difference = sizeof(uint64_t) -
+            constexpr auto value_parent_difference = sizeof(uint64_t) -
                 tx::size;
 
             const auto& outs = *tx_.outputs_ptr();
