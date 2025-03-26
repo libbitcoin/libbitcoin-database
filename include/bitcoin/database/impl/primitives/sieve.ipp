@@ -90,7 +90,7 @@ constexpr bool CLASS::screened(sieve_t fingerprint) const NOEXCEPT
     // Compare masked fingerprint to masked sieve, for all masks of the screen.
     for (sieve_t segment{}; segment <= row; ++segment)
     {
-        const auto mask = matrix_[row][segment];
+        const auto mask = masks(row, segment);
         if (bit_and(fingerprint, mask) == bit_and(sieve_, mask))
             return true;
     }
@@ -133,7 +133,7 @@ constexpr bool CLASS::screen(sieve_t fingerprint) NOEXCEPT
     }
 
     // Both indexes are screen selector, as each new screen adds one mask.
-    const auto mask = matrix_[row][row];
+    const auto mask = masks(row, row);
 
     // Merge incremented selector, current sieve, and new fingerprint.
     sieve_ = bit_or
