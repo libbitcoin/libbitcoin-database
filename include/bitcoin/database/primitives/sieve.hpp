@@ -70,9 +70,10 @@ protected:
     template <size_t Size>
     static CONSTEVAL auto offsets() NOEXCEPT
     {
+        using namespace system;
         std_array<uint16_t, Size> offset{};
-        for (auto index = zero; index < Size; ++index)
-            offset[index] = to_half(index * add1(index));
+        for (uint16_t index{}; index < Size; ++index)
+            offset[index] = to_half(ceilinged_multiply(index, add1(index)));
         return offset;
     }
 
