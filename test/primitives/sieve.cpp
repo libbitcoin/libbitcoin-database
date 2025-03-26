@@ -22,6 +22,26 @@ BOOST_AUTO_TEST_SUITE(sieve_tests)
 
 using namespace system;
 
+BOOST_AUTO_TEST_CASE(sieve__screen__zeroed__always_screened)
+{
+    // Ensure default/nop behavior.
+    static_assert(sieve<0, 0>{}.screened(42));
+    static_assert(sieve<1, 0>{}.screened(42));
+    static_assert(!sieve<1, 1>{}.screened(42));
+
+    sieve<0, 0> sieve0{};
+    BOOST_REQUIRE(sieve0.screened(42));
+    BOOST_REQUIRE(!sieve0.screen(42));
+
+    sieve<1, 0> sieve1{};
+    BOOST_REQUIRE(sieve1.screened(42));
+    BOOST_REQUIRE(!sieve1.screen(42));
+
+    sieve<1, 1> sieve2{};
+    BOOST_REQUIRE(!sieve2.screened(42));
+    BOOST_REQUIRE(sieve2.screen(42));
+}
+
 #if defined(HAVE_SLOW_TESTS)
 
 BOOST_AUTO_TEST_CASE(sieve__screen__4_bits_forward__16_screens)

@@ -88,6 +88,9 @@ TEMPLATE
 constexpr bool CLASS::screened(sieve_t fingerprint) const NOEXCEPT
 {
     using namespace system;
+    if constexpr (is_zero(limit))
+        return true;
+
     const auto row = shift_right(sieve_, screen_bits);
     if (row == limit)
     {
@@ -114,6 +117,9 @@ TEMPLATE
 constexpr bool CLASS::screen(sieve_t fingerprint) NOEXCEPT
 {
     using namespace system;
+    if constexpr (is_zero(limit))
+        return false;
+
     auto row = shift_right(sieve_, screen_bits);
     if (row == limit)
     {
