@@ -102,7 +102,7 @@ struct input
         inline link count() const NOEXCEPT
         {
             using namespace system;
-            static constexpr auto sequence_point_size = sizeof(uint32_t) +
+            constexpr auto sequence_point_size = sizeof(uint32_t) +
                 chain::point::serialized_size();
 
             const auto& ins = *tx_.inputs_ptr();
