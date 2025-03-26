@@ -37,7 +37,7 @@
 // [[111][1000000000000000000000000000]] saturated
 
 // To minimize computation in alignment the sieve is defined as two dimensional
-// matrix of precomputed masks. One dimension is determined by the screen
+// table of precomputed masks. One dimension is determined by the screen
 // selector and other is used to iterate through masks for the selected screen.
 // A single screen requires one mask, a double two, and so on. The max selector
 // value indicates that the first bit of the screen is a sentinel. This is set
@@ -71,6 +71,17 @@ TEMPLATE
 constexpr CLASS::operator CLASS::sieve_t() const NOEXCEPT
 {
     return sieve_;
+}
+
+// protected
+TEMPLATE
+constexpr CLASS::sieve_t CLASS::masks(size_t row, size_t column) const NOEXCEPT
+{
+    BC_ASSERT(column <= row);
+
+    // Read/write member compressed array as if it was a two-dimesional array.
+    constexpr auto get_offset = generate_offsets();
+    return masks_[get_offset[row] + column];
 }
 
 TEMPLATE
@@ -151,6 +162,72 @@ constexpr bool CLASS::screen(sieve_t fingerprint) NOEXCEPT
     );
 
     return true;
+}
+
+// protected/static
+TEMPLATE
+CONSTEVAL CLASS::offsets_t CLASS::generate_offsets() NOEXCEPT
+{
+    using namespace system;
+
+    // Generate compression offsets at compile, generally 16 or 32 elements.
+    offsets_t offsets{};
+    for (size_t index{}; index < screens; ++index)
+        offsets[index] = to_half(ceilinged_multiply(index, add1(index)));
+
+    return offsets;
+}
+
+// protected/static
+TEMPLATE
+CONSTEVAL CLASS::masks_t CLASS::generate_masks() NOEXCEPT
+{
+    using namespace system;
+    masks_t out{};
+
+    // Read/write compressed array as if it was a two-dimesional array.
+    const auto masks = [&out](auto row, auto column) NOEXCEPT -> sieve_t&
+    {
+        BC_ASSERT(column <= row);
+        constexpr auto get_offset = generate_offsets();
+        return out[get_offset[row] + column];
+    };
+
+    // Determine the count of mask bits for a given table element.
+    const auto mask_bits = [](auto row, auto column) NOEXCEPT -> size_t
+    {
+        BC_ASSERT(column <= row);
+        const auto div = floored_divide(screen_bits, add1(row));
+        const auto mod = floored_modulo(screen_bits, add1(row));
+        return div + to_int(column < mod);
+    };
+
+    masks(0, 0) = first_mask;
+    for (sieve_t row = 1; row < screens; ++row)
+    {
+        for (sieve_t col = 0; col < row; ++col)
+            masks(row, col) = masks(sub1(row), col);
+
+        for (auto mask = row; !is_zero(mask); --mask)
+        {
+            const auto col = sub1(mask);
+            auto excess = floored_subtract(ones_count(masks(row, col)),
+                mask_bits(row, col));
+
+            while (!is_zero(excess))
+            {
+                const auto bit = right_zeros(masks(row, col));
+                if (bit < screen_bits)
+                {
+                    set_right_into(masks(row, col), bit, false);
+                    set_right_into(masks(row, row), bit, true);
+                    --excess;
+                }
+            }
+        }
+    }
+
+    return out;
 }
 
 } // namespace database
