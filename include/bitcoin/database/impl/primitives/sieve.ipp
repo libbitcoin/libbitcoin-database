@@ -56,26 +56,26 @@ constexpr CLASS::sieve() NOEXCEPT
 }
 
 TEMPLATE
-constexpr CLASS::sieve(sieve_t value) NOEXCEPT
+constexpr CLASS::sieve(type value) NOEXCEPT
   : sieve_{ value }
 {
 }
 
 TEMPLATE
-constexpr CLASS::sieve_t CLASS::value() const NOEXCEPT
+constexpr CLASS::type CLASS::value() const NOEXCEPT
 {
     return sieve_;
 }
 
 TEMPLATE
-constexpr CLASS::operator CLASS::sieve_t() const NOEXCEPT
+constexpr CLASS::operator CLASS::type() const NOEXCEPT
 {
     return sieve_;
 }
 
 // protected
 TEMPLATE
-constexpr CLASS::sieve_t CLASS::masks(size_t row, size_t column) const NOEXCEPT
+constexpr CLASS::type CLASS::masks(size_t row, size_t column) const NOEXCEPT
 {
     BC_ASSERT(column <= row);
 
@@ -85,7 +85,7 @@ constexpr CLASS::sieve_t CLASS::masks(size_t row, size_t column) const NOEXCEPT
 }
 
 TEMPLATE
-constexpr bool CLASS::screened(sieve_t fingerprint) const NOEXCEPT
+constexpr bool CLASS::screened(type fingerprint) const NOEXCEPT
 {
     using namespace system;
     if constexpr (is_zero(limit))
@@ -102,7 +102,7 @@ constexpr bool CLASS::screened(sieve_t fingerprint) const NOEXCEPT
     }
 
     // Compare masked fingerprint to masked sieve, for all masks of the screen.
-    for (sieve_t segment{}; segment <= row; ++segment)
+    for (type segment{}; segment <= row; ++segment)
     {
         const auto mask = masks(row, segment);
         if (bit_and(fingerprint, mask) == bit_and(sieve_, mask))
@@ -114,7 +114,7 @@ constexpr bool CLASS::screened(sieve_t fingerprint) const NOEXCEPT
 }
 
 TEMPLATE
-constexpr bool CLASS::screen(sieve_t fingerprint) NOEXCEPT
+constexpr bool CLASS::screen(type fingerprint) NOEXCEPT
 {
     using namespace system;
     if constexpr (is_zero(limit))
@@ -192,7 +192,7 @@ CONSTEVAL CLASS::masks_t CLASS::generate_masks() NOEXCEPT
     masks_t out{};
 
     // Read/write compressed array as if it was a two-dimesional array.
-    const auto masks = [&out](auto row, auto column) NOEXCEPT -> sieve_t&
+    const auto masks = [&out](auto row, auto column) NOEXCEPT -> type&
     {
         BC_ASSERT(column <= row);
         constexpr auto get_offset = generate_offsets();
@@ -209,9 +209,9 @@ CONSTEVAL CLASS::masks_t CLASS::generate_masks() NOEXCEPT
     };
 
     masks(0, 0) = first_mask;
-    for (sieve_t row = 1; row < screens; ++row)
+    for (type row = 1; row < screens; ++row)
     {
-        for (sieve_t col = 0; col < row; ++col)
+        for (type col = 0; col < row; ++col)
             masks(row, col) = masks(sub1(row), col);
 
         for (auto mask = row; !is_zero(mask); --mask)
