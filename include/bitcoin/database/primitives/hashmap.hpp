@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HPP
 
+#include <atomic>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -77,6 +78,12 @@ public:
 
     /// Increase count as neccesary to specified.
     bool expand(const Link& count) NOEXCEPT;
+
+    /// Count of puts resulting in table body search to detect duplication.
+    size_t search_count() const NOEXCEPT
+    {
+        return counter_.load(std::memory_order_relaxed);
+    }
 
     /// Errors.
     /// -----------------------------------------------------------------------
@@ -226,6 +233,7 @@ private:
 
     // Thread safe.
     body body_;
+    std::atomic<size_t> counter_{};
 };
 
 template <typename Element>

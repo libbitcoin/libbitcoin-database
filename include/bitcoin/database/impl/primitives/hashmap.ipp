@@ -377,6 +377,9 @@ inline bool CLASS::put(bool& duplicate, const memory_ptr& ptr,
     if (!write(previous_head, ptr, link, key, element))
         return false;
 
+    if (!previous_head.is_terminal())
+        counter_.fetch_add(one, std::memory_order_relaxed);
+
     duplicate = !first(ptr, previous_head, key).is_terminal();
     return true;
 }
@@ -552,7 +555,11 @@ bool CLASS::write(Link& previous, const memory_ptr& ptr, const Link& link,
         return false;
 
     // If filter collision set previous stack head for conflict resolution.
-    previous = collision ? next : Link::terminal;
+    if (collision)
+        previous = next;
+    else
+        previous = Link::terminal;
+
     return true;
 }
 
