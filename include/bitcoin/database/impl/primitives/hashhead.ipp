@@ -247,13 +247,13 @@ inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
 TEMPLATE
 INLINE constexpr bool CLASS::screened(cell value, const Key& key) NOEXCEPT
 {
-    if constexpr (sieve::disabled)
+    if constexpr (sieve_filter::disabled)
     {
         return true;
     }
     else
     {
-        return sieve{ to_filter(value) }.screened(fingerprint(key));
+        return sieve_filter{ to_filter(value) }.screened(fingerprint(key));
     }
 }
 
@@ -274,7 +274,7 @@ INLINE constexpr CLASS::filter CLASS::to_filter(cell value) NOEXCEPT
 TEMPLATE
 INLINE constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
 {
-    if constexpr (sieve::disabled)
+    if constexpr (sieve_filter::disabled)
     {
         return system::possible_narrow_cast<link>(value);
     }
@@ -293,7 +293,7 @@ TEMPLATE
 INLINE constexpr CLASS::cell CLASS::to_cell(cell previous, link current,
     const Key& key) NOEXCEPT
 {
-    if constexpr (sieve::disabled)
+    if constexpr (sieve_filter::disabled)
     {
         return current;
     }
@@ -301,7 +301,7 @@ INLINE constexpr CLASS::cell CLASS::to_cell(cell previous, link current,
     {
         using namespace system;
         static_assert(sizeof(filter) <= sizeof(cell));
-        sieve filter{ to_filter(previous) };
+        sieve_filter filter{ to_filter(previous) };
         filter.screen(fingerprint(key));
         const auto shifted = shift_left<cell>(filter.value(), link_bits);
         return bit_or<cell>(shifted, current);
