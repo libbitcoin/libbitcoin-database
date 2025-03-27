@@ -26,6 +26,7 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
+#include <bitcoin/database/primitives/sieve.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -66,41 +67,43 @@ public:
     /// Unsafe if verify false.
     inline Link top(const Key& key) const NOEXCEPT;
     inline Link top(const Link& index) const NOEXCEPT;
-    inline bool push(const Link& current, bytes& next, const Link& index) NOEXCEPT;
     inline bool push(const Link& current, bytes& next, const Key& key) NOEXCEPT;
     inline bool push(bool& collision, const Link& current, bytes& next,
         const Key& key) NOEXCEPT;
 
 protected:
-    /// One sentinel bit per sentinel byte but no less than three.
-    /// This is optimal based on a load factor of 1.5, approximate otherwise.
-    static constexpr size_t min_sentinal = 3;
+    /// TODO: derive selector bits.
+    /// Currently link and sieve are independently byte-aligned.
+    /// Tables with byte-padding for thread fence alignment also have a sieve.
     static constexpr size_t cell_size = CellSize;
     static constexpr size_t link_size = Link::size;
     static constexpr size_t link_bits = to_bits(link_size);
-    static constexpr size_t filter_size = cell_size - link_size;
-    static constexpr size_t filter_bits = to_bits(filter_size);
-    static constexpr size_t sentinel_bits = std::max(filter_size, min_sentinal);
-    static constexpr size_t finger_bits = filter_bits - sentinel_bits;
-    static constexpr size_t fingers = sub1(system::power2(sentinel_bits));
-    static constexpr size_t overflow = zero;
+    static constexpr size_t sieve_size = cell_size - link_size;
+    static constexpr size_t sieve_bits = to_bits(sieve_size);
+    static constexpr size_t select_bits = is_zero(sieve_bits) ? zero : 4u;
+    static constexpr size_t screen_bits = sieve_bits - select_bits;
 
+    using sieve = sieve<sieve_bits, select_bits>;
+    using filter = sieve::type;
     using link = Link::integer;
     using cell = unsigned_type<cell_size>;
-    using filter = unsigned_type<filter_size>;
+
     static constexpr cell terminal = system::bit_all<cell>;
     static constexpr bool aligned = (cell_size == sizeof(cell));
-    static_assert(link_bits + filter_bits == to_bits(cell_size));
+    static_assert(link_bits + sieve_bits == to_bits(cell_size));
     static_assert(std::atomic<cell>::is_always_lock_free);
     static_assert(is_nonzero(Link::size));
 
-    static constexpr link to_link(cell value) NOEXCEPT;
-    ////static constexpr cell to_filter(cell value) NOEXCEPT;
-    static constexpr cell to_cell(cell previous, link current) NOEXCEPT;
-    static constexpr bool is_collision(cell value, const Key& key) NOEXCEPT;
+    static INLINE constexpr bool screened(cell value, const Key& key) NOEXCEPT;
+    static INLINE constexpr filter fingerprint(const Key& key) NOEXCEPT;
+    static INLINE constexpr filter to_filter(cell value) NOEXCEPT;
+    static INLINE constexpr link to_link(cell value) NOEXCEPT;
+    static INLINE constexpr cell to_cell(cell previous, link current,
+        const Key& key) NOEXCEPT;
+
     inline cell get_cell(const Link& index) const NOEXCEPT;
     inline cell set_cell(bytes& next, const Link& current,
-        const Link& index) NOEXCEPT;
+        const Key& key) NOEXCEPT;
 
 private:
     static INLINE auto& cell_array(memory::iterator it) NOEXCEPT

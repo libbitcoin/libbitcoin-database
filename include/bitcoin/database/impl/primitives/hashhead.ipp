@@ -129,9 +129,11 @@ TEMPLATE
 inline Link CLASS::top(const Key& key) const NOEXCEPT
 {
     const auto value = get_cell(index(key));
-    if (is_collision(value, key))
+    if (screened(value, key))
         return to_link(value);
-    
+
+    // Conflict (body) search is bypassed by filter when key is not screened.
+    // If terminal here it is assured that table does not contain the key.
     return {};
 }
 
@@ -139,26 +141,21 @@ TEMPLATE
 inline bool CLASS::push(const Link& current, bytes& next,
     const Key& key) NOEXCEPT
 {
-    return push(current, next, index(key));
-}
-
-TEMPLATE
-inline bool CLASS::push(const Link& current, bytes& next,
-    const Link& index) NOEXCEPT
-{
-    return set_cell(next, current, index) != terminal;
+    bool unused{};
+    return push(unused, current, next, key);
 }
 
 TEMPLATE
 inline bool CLASS::push(bool& collision, const Link& current, bytes& next,
     const Key& key) NOEXCEPT
 {
-    const auto previous = set_cell(next, current, index(key));
+    const auto previous = set_cell(next, current, key);
     if (previous == terminal)
         return false;
 
-    // Caller searches Link{ next } for duplicate in case of filter collision.
-    collision = is_collision(previous, key);
+    // Conflict (body) search is bypassed by filter when key is not screened.
+    // If collision false it is assured that table does not contain the key.
+    collision = screened(previous, key);
     return true;
 }
 
@@ -200,10 +197,10 @@ inline CLASS::cell CLASS::get_cell(const Link& index) const NOEXCEPT
 
 TEMPLATE
 inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
-    const Link& index) NOEXCEPT
+    const Key& key) NOEXCEPT
 {
     using namespace system;
-    const auto raw = file_.get_raw(link_to_position(index));
+    const auto raw = file_.get_raw(link_to_position(index(key)));
     if (is_null(raw))
         return terminal;
 
@@ -223,7 +220,8 @@ inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
             next = link_array(head);
             std::atomic_thread_fence(std::memory_order_release);
         }
-        while (!top.compare_exchange_weak(head, to_cell(head, current),
+        while (!top.compare_exchange_weak(head,
+            to_cell(head, current, key),
             std::memory_order_release, std::memory_order_acquire));
     }
     else
@@ -234,7 +232,7 @@ inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
         mutex_.lock();
         cell_array(top) = head;
         next = link_array(top);
-        auto bytes = to_cell(top, current);
+        auto bytes = to_cell(top, current, key);
         head = cell_array(bytes);
         mutex_.unlock();
     }
@@ -247,31 +245,67 @@ inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
 // filters
 
 TEMPLATE
-constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
+INLINE constexpr bool CLASS::screened(cell value, const Key& key) NOEXCEPT
 {
-    if (value == terminal)
-        return {};
+    if constexpr (sieve::disabled)
+    {
+        return true;
+    }
+    else
+    {
+        return sieve{ to_filter(value) }.screened(fingerprint(key));
+    }
+}
 
+TEMPLATE
+INLINE constexpr CLASS::filter CLASS::fingerprint(const Key& key) NOEXCEPT
+{
     using namespace system;
-    constexpr auto mask = unmask_right<cell>(link_bits);
-    return possible_narrow_cast<link>(bit_and(value, mask));
+    return possible_narrow_cast<filter>(keys::thumb<Key>(key));
 }
 
 TEMPLATE
-constexpr CLASS::cell CLASS::to_cell(cell, link current) NOEXCEPT
+INLINE constexpr CLASS::filter CLASS::to_filter(cell value) NOEXCEPT
 {
-    // TODO:
-    return current;
+    using namespace system;
+    return possible_narrow_cast<filter>(shift_right(value, link_bits));
 }
 
 TEMPLATE
-constexpr bool CLASS::is_collision(cell value, const Key&) NOEXCEPT
+INLINE constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
 {
-    if (value == terminal)
-        return false;
+    if constexpr (sieve::disabled)
+    {
+        return system::possible_narrow_cast<link>(value);
+    }
+    else
+    {
+        using namespace system;
+        if (value == terminal)
+            return {};
 
-    // TODO:
-    return true;
+        constexpr auto mask = unmask_right<cell>(link_bits);
+        return possible_narrow_cast<link>(bit_and(value, mask));
+    }
+}
+
+TEMPLATE
+INLINE constexpr CLASS::cell CLASS::to_cell(cell previous, link current,
+    const Key& key) NOEXCEPT
+{
+    if constexpr (sieve::disabled)
+    {
+        return current;
+    }
+    else
+    {
+        using namespace system;
+        static_assert(sizeof(filter) <= sizeof(cell));
+        sieve filter{ to_filter(previous) };
+        filter.screen(fingerprint(key));
+        const auto shifted = shift_left<cell>(filter.value(), link_bits);
+        return bit_or<cell>(shifted, current);
+    }
 }
 
 } // namespace database

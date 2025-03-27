@@ -42,194 +42,11 @@ BOOST_AUTO_TEST_CASE(sieve__screen__zeroed__always_screened)
     BOOST_REQUIRE(sieve2.screen(42));
 }
 
-#if defined(HAVE_SLOW_TESTS)
-
-BOOST_AUTO_TEST_CASE(sieve__screen__4_bits_forward__16_screens)
-{
-    constexpr size_t sieve_bits = 32;
-    constexpr size_t selector_bits = 4;
-    constexpr size_t selector_max = power2(selector_bits);
-
-    sieve<sieve_bits, selector_bits> sieve{};
-    size_t count{};
-
-    // This exhausts the full uint32_t domain and returns exactly selector_max values.
-    // The count < selector_max condition just speeds up the test, still slow though.
-    for (uint32_t value{}; count < selector_max; ++value)
-    {
-        if (sieve.screen(value))
-        {
-            ////std::cout << "0b" << binary{ sieve_bits, to_big(value) }
-            ////    << "_u32, // " << count << std::endl;
-            count++;
-        }
-
-        if (value == max_uint32)
-            break;
-    }
-
-    BOOST_CHECK_EQUAL(count, selector_max);
-}
-
-BOOST_AUTO_TEST_CASE(sieve__screen__4_bits_reverse__16_screens)
-{
-    constexpr size_t sieve_bits = 32;
-    constexpr size_t selector_bits = 4;
-    constexpr size_t selector_max = power2(selector_bits);
-    sieve<sieve_bits, selector_bits> sieve{};
-    size_t count{};
-
-    // This exhausts the full uint32_t domain and returns exactly selector_max values.
-    // The count < selector_max condition just speeds up the test, still slow though.
-    for (auto value = max_uint32; count < selector_max; --value)
-    {
-        if (sieve.screen(value))
-        {
-            ////std::cout << "0b" << binary{ sieve_bits, to_big(value) }
-            ////    << "_u32, // " << count << std::endl;
-            count++;
-        }
-
-        if (is_zero(value))
-            break;
-    }
-
-    BOOST_CHECK_EQUAL(count, selector_max);
-}
-
-#endif // HAVE_SLOW_TESTS
-
-BOOST_AUTO_TEST_CASE(sieve__screen__full_unsaturated__fully_screened)
-{
-    constexpr size_t sieve_bits = 32;
-    constexpr size_t selector_bits = 4;
-    constexpr size_t selector_max = power2(selector_bits);
-
-    // This generation is based on the manually-generated matrix.
-    constexpr std_array<uint32_t, selector_max> forward
-    {
-        0b00000000000000000000000000000000_u32, // 0
-        0b00000000000000000000000000000001_u32, // 1
-        0b00000000000000000100000000000000_u32, // 2
-        0b00000000000001000000000000100000_u32, // 3
-        0b00000000001000000000000010000000_u32, // 4
-        0b00000000010000000000000100000000_u32, // 5
-        0b00000000100000000000001000000000_u32, // 6
-        0b00000001000000000000010000000000_u32, // 7
-        0b00000001000000000000010000000001_u32, // 8
-        0b00000001000000001000100000000001_u32, // 9
-        0b00000010000000001000100000000001_u32, // 10
-        0b00000010000000001000100000000010_u32, // 11
-        0b00000010000000001000100000000110_u32, // 12
-        0b00000010000010010000100000000110_u32, // 13
-        0b00000100000010010001000000000110_u32, // 14
-        0b00000100000010010001100000000110_u32  // 15
-    };
-
-    sieve<sieve_bits, selector_bits> sieve{};
-    BOOST_CHECK(sieve.screen(forward[0]));
-    BOOST_CHECK(sieve.screen(forward[1]));
-    BOOST_CHECK(sieve.screen(forward[2]));
-    BOOST_CHECK(sieve.screen(forward[3]));
-    BOOST_CHECK(sieve.screen(forward[4]));
-    BOOST_CHECK(sieve.screen(forward[5]));
-    BOOST_CHECK(sieve.screen(forward[6]));
-    BOOST_CHECK(sieve.screen(forward[7]));
-    BOOST_CHECK(sieve.screen(forward[8]));
-    BOOST_CHECK(sieve.screen(forward[9]));
-    BOOST_CHECK(sieve.screen(forward[10]));
-    BOOST_CHECK(sieve.screen(forward[11]));
-    BOOST_CHECK(sieve.screen(forward[12]));
-    BOOST_CHECK(sieve.screen(forward[13]));
-    BOOST_CHECK(sieve.screen(forward[14]));
-    BOOST_CHECK(sieve.screen(forward[15]));
-
-    // All values must be screened once saturated.
-    BOOST_CHECK(sieve.screened(42));
-
-    // Add after already full saturates the sieve.
-    BOOST_CHECK(!sieve.screen(0b00001111111111111111111111111111_u32));
-
-#if !defined(HAVE_SLOW_TESTS)
-    // All values must be screened once saturated.
-    for (uint32_t value{}; value < max_uint32; ++value)
-    {
-        if (!sieve.screened(value))
-        {
-            BOOST_CHECK(false);
-        }
-    }
-#endif // HAVE_SLOW_TESTS
-}
-
-BOOST_AUTO_TEST_CASE(sieve__screen__full_saturated__fully_screened)
-{
-    constexpr size_t sieve_bits = 32;
-    constexpr size_t selector_bits = 4;
-    constexpr size_t selector_max = power2(selector_bits);
-
-    // This generation is based on the manually-generated matrix.
-    constexpr std_array<uint32_t, selector_max> forward
-    {
-        0b00000000000000000000000000000000_u32, // 0
-        0b00000000000000000000000000000001_u32, // 1
-        0b00000000000000000100000000000000_u32, // 2
-        0b00000000000001000000000000100000_u32, // 3
-        0b00000000001000000000000010000000_u32, // 4
-        0b00000000010000000000000100000000_u32, // 5
-        0b00000000100000000000001000000000_u32, // 6
-        0b00000001000000000000010000000000_u32, // 7
-        0b00000001000000000000010000000001_u32, // 8
-        0b00000001000000001000100000000001_u32, // 9
-        0b00000010000000001000100000000001_u32, // 10
-        0b00000010000000001000100000000010_u32, // 11
-        0b00000010000000001000100000000110_u32, // 12
-        0b00000010000010010000100000000110_u32, // 13
-        0b00000100000010010001000000000110_u32, // 14
-        0b00000100000010010001100000000110_u32  // 15
-    };
-
-    sieve<sieve_bits, selector_bits> sieve{};
-    BOOST_CHECK(sieve.screen(forward[0]));
-    BOOST_CHECK(sieve.screen(forward[1]));
-    BOOST_CHECK(sieve.screen(forward[2]));
-    BOOST_CHECK(sieve.screen(forward[3]));
-    BOOST_CHECK(sieve.screen(forward[4]));
-    BOOST_CHECK(sieve.screen(forward[5]));
-    BOOST_CHECK(sieve.screen(forward[6]));
-    BOOST_CHECK(sieve.screen(forward[7]));
-    BOOST_CHECK(sieve.screen(forward[8]));
-    BOOST_CHECK(sieve.screen(forward[9]));
-    BOOST_CHECK(sieve.screen(forward[10]));
-    BOOST_CHECK(sieve.screen(forward[11]));
-    BOOST_CHECK(sieve.screen(forward[12]));
-    BOOST_CHECK(sieve.screen(forward[13]));
-    BOOST_CHECK(sieve.screen(forward[14]));
-    BOOST_CHECK(sieve.screen(forward[15]));
-
-    // Add after already full saturates the sieve.
-    BOOST_CHECK(!sieve.screen(0b00001111111111111111111111111111_u32));
-
-    // All values must be screened once saturated.
-    BOOST_CHECK(sieve.screened(42));
-
-#if defined(HAVE_SLOW_TESTS)
-    // All values must be screened once saturated.
-    for (uint32_t value{}; value < max_uint32; ++value)
-    {
-        if (!sieve.screened(value))
-        {
-            BOOST_CHECK(false);
-        }
-    }
-#endif // HAVE_SLOW_TESTS
-}
-
 BOOST_AUTO_TEST_CASE(sieve__screened__forward__expected)
 {
     constexpr size_t sieve_bits = 32;
-    constexpr size_t selector_bits = 4;
-    constexpr size_t selector_max = power2(selector_bits);
+    constexpr size_t select_bits = 4;
+    constexpr size_t selector_max = power2(select_bits);
 
     // This generation is based on the manually-generated matrix.
     constexpr std_array<uint32_t, selector_max> forward
@@ -252,7 +69,7 @@ BOOST_AUTO_TEST_CASE(sieve__screened__forward__expected)
         0b00000100000010010001100000000110_u32  // 15
     };
 
-    sieve<sieve_bits, selector_bits> sieve{};
+    sieve<sieve_bits, select_bits> sieve{};
 
     // none screened
     BOOST_CHECK(!sieve.screened(forward[0]));
@@ -580,8 +397,8 @@ BOOST_AUTO_TEST_CASE(sieve__screened__forward__expected)
 BOOST_AUTO_TEST_CASE(sieve__screened__reverse__expected)
 {
     constexpr size_t sieve_bits = 32;
-    constexpr size_t selector_bits = 4;
-    constexpr size_t selector_max = power2(selector_bits);
+    constexpr size_t select_bits = 4;
+    constexpr size_t selector_max = power2(select_bits);
 
     // This generation is based on the manually-generated matrix.
     constexpr std_array<uint32_t, selector_max> reverse
@@ -604,7 +421,7 @@ BOOST_AUTO_TEST_CASE(sieve__screened__reverse__expected)
         0b11111011111101101110011111111001_u32  // 15
     };
 
-    sieve<sieve_bits, selector_bits> sieve{};
+    sieve<sieve_bits, select_bits> sieve{};
 
     // none screened
     BOOST_CHECK(!sieve.screened(reverse[0]));
@@ -929,6 +746,189 @@ BOOST_AUTO_TEST_CASE(sieve__screened__reverse__expected)
     BOOST_CHECK( sieve.screened(reverse[15]));
 }
 
+BOOST_AUTO_TEST_CASE(sieve__screen__full_unsaturated__fully_screened)
+{
+    constexpr size_t sieve_bits = 32;
+    constexpr size_t select_bits = 4;
+    constexpr size_t selector_max = power2(select_bits);
+
+    // This generation is based on the manually-generated matrix.
+    constexpr std_array<uint32_t, selector_max> forward
+    {
+        0b00000000000000000000000000000000_u32, // 0
+        0b00000000000000000000000000000001_u32, // 1
+        0b00000000000000000100000000000000_u32, // 2
+        0b00000000000001000000000000100000_u32, // 3
+        0b00000000001000000000000010000000_u32, // 4
+        0b00000000010000000000000100000000_u32, // 5
+        0b00000000100000000000001000000000_u32, // 6
+        0b00000001000000000000010000000000_u32, // 7
+        0b00000001000000000000010000000001_u32, // 8
+        0b00000001000000001000100000000001_u32, // 9
+        0b00000010000000001000100000000001_u32, // 10
+        0b00000010000000001000100000000010_u32, // 11
+        0b00000010000000001000100000000110_u32, // 12
+        0b00000010000010010000100000000110_u32, // 13
+        0b00000100000010010001000000000110_u32, // 14
+        0b00000100000010010001100000000110_u32  // 15
+    };
+
+    sieve<sieve_bits, select_bits> sieve{};
+    BOOST_CHECK(sieve.screen(forward[0]));
+    BOOST_CHECK(sieve.screen(forward[1]));
+    BOOST_CHECK(sieve.screen(forward[2]));
+    BOOST_CHECK(sieve.screen(forward[3]));
+    BOOST_CHECK(sieve.screen(forward[4]));
+    BOOST_CHECK(sieve.screen(forward[5]));
+    BOOST_CHECK(sieve.screen(forward[6]));
+    BOOST_CHECK(sieve.screen(forward[7]));
+    BOOST_CHECK(sieve.screen(forward[8]));
+    BOOST_CHECK(sieve.screen(forward[9]));
+    BOOST_CHECK(sieve.screen(forward[10]));
+    BOOST_CHECK(sieve.screen(forward[11]));
+    BOOST_CHECK(sieve.screen(forward[12]));
+    BOOST_CHECK(sieve.screen(forward[13]));
+    BOOST_CHECK(sieve.screen(forward[14]));
+    BOOST_CHECK(sieve.screen(forward[15]));
+
+    // All values must be screened once saturated.
+    BOOST_CHECK(sieve.screened(42));
+
+    // Add after already full saturates the sieve.
+    BOOST_CHECK(!sieve.screen(0b00001111111111111111111111111111_u32));
+
+#if defined(HAVE_SLOW_TESTS)
+    // All values must be screened once saturated.
+    for (uint32_t value{}; value < max_uint32; ++value)
+    {
+        if (!sieve.screened(value))
+        {
+            BOOST_CHECK(false);
+        }
+    }
+#endif // HAVE_SLOW_TESTS
+}
+
+BOOST_AUTO_TEST_CASE(sieve__screen__full_saturated__fully_screened)
+{
+    constexpr size_t sieve_bits = 32;
+    constexpr size_t select_bits = 4;
+    constexpr size_t selector_max = power2(select_bits);
+
+    // This generation is based on the manually-generated matrix.
+    constexpr std_array<uint32_t, selector_max> forward
+    {
+        0b00000000000000000000000000000000_u32, // 0
+        0b00000000000000000000000000000001_u32, // 1
+        0b00000000000000000100000000000000_u32, // 2
+        0b00000000000001000000000000100000_u32, // 3
+        0b00000000001000000000000010000000_u32, // 4
+        0b00000000010000000000000100000000_u32, // 5
+        0b00000000100000000000001000000000_u32, // 6
+        0b00000001000000000000010000000000_u32, // 7
+        0b00000001000000000000010000000001_u32, // 8
+        0b00000001000000001000100000000001_u32, // 9
+        0b00000010000000001000100000000001_u32, // 10
+        0b00000010000000001000100000000010_u32, // 11
+        0b00000010000000001000100000000110_u32, // 12
+        0b00000010000010010000100000000110_u32, // 13
+        0b00000100000010010001000000000110_u32, // 14
+        0b00000100000010010001100000000110_u32  // 15
+    };
+
+    sieve<sieve_bits, select_bits> sieve{};
+    BOOST_CHECK(sieve.screen(forward[0]));
+    BOOST_CHECK(sieve.screen(forward[1]));
+    BOOST_CHECK(sieve.screen(forward[2]));
+    BOOST_CHECK(sieve.screen(forward[3]));
+    BOOST_CHECK(sieve.screen(forward[4]));
+    BOOST_CHECK(sieve.screen(forward[5]));
+    BOOST_CHECK(sieve.screen(forward[6]));
+    BOOST_CHECK(sieve.screen(forward[7]));
+    BOOST_CHECK(sieve.screen(forward[8]));
+    BOOST_CHECK(sieve.screen(forward[9]));
+    BOOST_CHECK(sieve.screen(forward[10]));
+    BOOST_CHECK(sieve.screen(forward[11]));
+    BOOST_CHECK(sieve.screen(forward[12]));
+    BOOST_CHECK(sieve.screen(forward[13]));
+    BOOST_CHECK(sieve.screen(forward[14]));
+    BOOST_CHECK(sieve.screen(forward[15]));
+
+    // Add after already full saturates the sieve.
+    BOOST_CHECK(!sieve.screen(0b00001111111111111111111111111111_u32));
+
+    // All values must be screened once saturated.
+    BOOST_CHECK(sieve.screened(42));
+
+#if defined(HAVE_SLOW_TESTS)
+    // All values must be screened once saturated.
+    for (uint32_t value{}; value < max_uint32; ++value)
+    {
+        if (!sieve.screened(value))
+        {
+            BOOST_CHECK(false);
+        }
+    }
+#endif // HAVE_SLOW_TESTS
+}
+
+#if defined(HAVE_SLOW_TESTS)
+
+BOOST_AUTO_TEST_CASE(sieve__screen__4_bits_forward__16_screens)
+{
+    constexpr size_t sieve_bits = 32;
+    constexpr size_t select_bits = 4;
+    constexpr size_t selector_max = power2(select_bits);
+
+    sieve<sieve_bits, select_bits> sieve{};
+    size_t count{};
+
+    // This exhausts the full uint32_t domain and returns exactly selector_max values.
+    // The count < selector_max condition just speeds up the test, still slow though.
+    for (uint32_t value{}; count < selector_max; ++value)
+    {
+        if (sieve.screen(value))
+        {
+            ////std::cout << "0b" << binary{ sieve_bits, to_big(value) }
+            ////    << "_u32, // " << count << std::endl;
+            count++;
+        }
+
+        if (value == max_uint32)
+            break;
+    }
+
+    BOOST_CHECK_EQUAL(count, selector_max);
+}
+
+BOOST_AUTO_TEST_CASE(sieve__screen__4_bits_reverse__16_screens)
+{
+    constexpr size_t sieve_bits = 32;
+    constexpr size_t select_bits = 4;
+    constexpr size_t selector_max = power2(select_bits);
+    sieve<sieve_bits, select_bits> sieve{};
+    size_t count{};
+
+    // This exhausts the full uint32_t domain and returns exactly selector_max values.
+    // The count < selector_max condition just speeds up the test, still slow though.
+    for (auto value = max_uint32; count < selector_max; --value)
+    {
+        if (sieve.screen(value))
+        {
+            ////std::cout << "0b" << binary{ sieve_bits, to_big(value) }
+            ////    << "_u32, // " << count << std::endl;
+            count++;
+        }
+
+        if (is_zero(value))
+            break;
+    }
+
+    BOOST_CHECK_EQUAL(count, selector_max);
+}
+
+#endif // HAVE_SLOW_TESTS
+
 BOOST_AUTO_TEST_SUITE_END()
 
 #if defined(DISABLED)
@@ -1105,8 +1105,8 @@ static constexpr masks_t masks1_
     0b0000'0000000000000000100000000000,
 
     // 16
-    // first row first bit sacrificed for sentinel.
-    0b0000'0'100000000000000000000000000,
+    // High order screen bit must be zero to avoid saturated sentinel conflict.
+    0b0000'0100000000000000000000000000,
     0b0000'0000000000000011000000000000,
     0b0000'0000000000110000000000000000,
     0b0000'0000000110000000000000000000,

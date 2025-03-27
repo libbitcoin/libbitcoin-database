@@ -411,7 +411,7 @@ bool CLASS::commit(const memory_ptr& ptr, const Link& link,
 
     // Commit element to search index (terminal is a valid bucket index).
     auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
-    return head_.push(link, next, head_.index(key));
+    return head_.push(link, next, key);
 }
 
 // protected
@@ -509,7 +509,7 @@ bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
     // Commit element to body and search (terminal is a valid bucket index).
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
     auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
-    return element.to_data(sink) && head_.push(link, next, head_.index(key));
+    return element.to_data(sink) && head_.push(link, next, key);
 }
 
 TEMPLATE
@@ -548,7 +548,7 @@ bool CLASS::write(Link& previous, const memory_ptr& ptr, const Link& link,
 
     // Commit element to search (terminal is a valid bucket index).
     bool collision{};
-    if (!head_.push(collision, link, next, head_.index(key)))
+    if (!head_.push(collision, link, next, key))
         return false;
 
     // If filter collision set previous stack head for conflict resolution.

@@ -26,12 +26,16 @@ namespace libbitcoin {
 namespace database {
 
 /// Sieve is limited to integral types.
-template <size_t SieveBits, size_t SelectorBits,
-    if_not_greater<SelectorBits, SieveBits> = true,
+template <size_t SieveBits, size_t SelectBits,
+    if_not_greater<SelectBits, SieveBits> = true,
     if_not_greater<SieveBits, bits<uint64_t>> = true>
 class sieve
 {
 public:
+    /// Functionality is bypassed.
+    static constexpr bool disabled = is_zero(SieveBits) || is_zero(SelectBits);
+
+    /// This produces type of size_t when disabled.
     using type = unsigned_type<system::to_ceilinged_bytes(SieveBits)>;
 
     /// Initialize empty sieve.
@@ -54,15 +58,16 @@ public:
 
 protected:
     static constexpr auto sieve_bits = SieveBits;
-    static constexpr auto selector_bits = SelectorBits;
-    static constexpr auto screen_bits = sieve_bits - selector_bits;
+    static constexpr auto select_bits = SelectBits;
+    static constexpr auto screen_bits = sieve_bits - select_bits;
 
+    static constexpr auto sentinel = sub1(screen_bits);
     static constexpr auto empty = system::unmask_right<type>(sieve_bits);
-    static constexpr auto saturated = system::mask_right(empty, sub1(screen_bits));
+    static constexpr auto saturated = system::mask_right(empty, sentinel);
     static constexpr auto first_mask = system::unmask_right<type>(screen_bits);
     static constexpr auto selector_mask = first_mask;
 
-    static constexpr auto screens = system::power2(selector_bits);
+    static constexpr auto screens = system::power2(select_bits);
     static constexpr auto mask_count = to_half(screens * add1(screens));
     static constexpr auto limit = sub1(screens);
     using masks_t = std_array<type, mask_count>;
@@ -87,11 +92,11 @@ private:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <size_t SieveBits, size_t SelectorBits, \
-    if_not_greater<SelectorBits, SieveBits> If1, \
+#define TEMPLATE template <size_t SieveBits, size_t SelectBits, \
+    if_not_greater<SelectBits, SieveBits> If1, \
     if_not_greater<SieveBits, bits<uint64_t>> If2>
 
-#define CLASS sieve<SieveBits, SelectorBits, If1, If2>
+#define CLASS sieve<SieveBits, SelectBits, If1, If2>
 
 #include <bitcoin/database/impl/primitives/sieve.ipp>
 

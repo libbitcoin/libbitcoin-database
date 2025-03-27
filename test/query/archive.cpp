@@ -117,7 +117,8 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "00000000" // pk->
+        "000000"   // pk->
+        "05"       // sieve[0]
         "ffffffff"
         "ffffffff"
         "ffffffff"
@@ -460,15 +461,16 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
 {
     constexpr auto milestone = true;
     const auto genesis_header_head = system::base16_chunk(
-        "010000ff"      // record count
-        "ffffffff"      // bucket[0]...
+        "010000ff"     // record count
+        "ffffffff"     // bucket[0]...
         "ffffffff"
         "ffffffff"
         "ffffffff"
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "00000000");     // pk->
+        "000000"       // pk->
+        "0f");         // sieve[0]
     const auto genesis_header_body = system::base16_chunk(
         "ffffff"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
@@ -612,15 +614,16 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
 {
     constexpr auto milestone = true;
     const auto genesis_header_head = system::base16_chunk(
-        "010000ff"       // record count
-        "ffffffff"       // bucket[0]...
+        "010000ff"     // record count
+        "ffffffff"     // bucket[0]...
         "ffffffff"
         "ffffffff"
         "ffffffff"
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "00000000");     // pk->
+        "000000"       // pk->
+        "0f");         // sieve[0]
     const auto genesis_header_body = system::base16_chunk(
         "ffffff"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
@@ -1024,6 +1027,8 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
         0x51525354, // bits
         0x61626364  // nonce
     };
+
+    // TODO: heads may be undersized due to the change to base2 sizing.
     const auto expected_header_head = system::base16_chunk(
         "010000ff" // record count
         "ffffffff" // bucket[0]...
@@ -1031,11 +1036,12 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "00000000" // bucket[0x45d6f6162ab0d085 % 10 => 5] pk->
+        "000000""05" // bucket[0x45d6f6162ab0d085 % 10 => 5] pk->
         "ffffffff"
         "ffffffff"
         "ffffffff"
         "ffffffff");
+
     const auto expected_header_body = system::base16_chunk(
         "ffffff"   // next->
         "85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2" // sk (block.hash)
@@ -1059,7 +1065,11 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
 
     store.header_head() = expected_header_head;
     store.header_body() = expected_header_body;
-    const auto pointer1 = query.get_header(query.to_header(block_hash));
+    ////BOOST_REQUIRE(query.set(header, context{ 0, 1, 0 }, false));
+    ////BOOST_REQUIRE_EQUAL(store.header_head(), expected_header_head);
+
+    const auto foo = query.to_header(block_hash);
+    const auto pointer1 = query.get_header(foo);
     BOOST_REQUIRE(pointer1);
     BOOST_REQUIRE(*pointer1 == header);
 
