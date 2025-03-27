@@ -61,20 +61,20 @@ constexpr CLASS::sieve() NOEXCEPT
 
 TEMPLATE
 constexpr CLASS::sieve(type value) NOEXCEPT
-  : sieve_{ value }
+  : value_{ value }
 {
 }
 
 TEMPLATE
 constexpr CLASS::type CLASS::value() const NOEXCEPT
 {
-    return sieve_;
+    return value_;
 }
 
 TEMPLATE
 constexpr CLASS::operator CLASS::type() const NOEXCEPT
 {
-    return sieve_;
+    return value_;
 }
 
 // protected
@@ -98,13 +98,13 @@ constexpr bool CLASS::screened(type fingerprint) const NOEXCEPT
     else
     {
         using namespace system;
-        const auto row = shift_right(sieve_, screen_bits);
+        const auto row = shift_right(value_, screen_bits);
         if (row == limit)
         {
-            if (sieve_ == empty)
+            if (value_ == empty)
                 return false;
 
-            if (sieve_ == saturated)
+            if (value_ == saturated)
                 return true;
         }
 
@@ -112,7 +112,7 @@ constexpr bool CLASS::screened(type fingerprint) const NOEXCEPT
         for (type segment{}; segment <= row; ++segment)
         {
             const auto mask = masks(row, segment);
-            if (bit_and(fingerprint, mask) == bit_and(sieve_, mask))
+            if (bit_and(fingerprint, mask) == bit_and(value_, mask))
                 return true;
         }
 
@@ -131,10 +131,10 @@ constexpr bool CLASS::screen(type fingerprint) NOEXCEPT
     else
     {
         using namespace system;
-        auto row = shift_right(sieve_, screen_bits);
+        auto row = shift_right(value_, screen_bits);
         if (row == limit)
         {
-            if (sieve_ == empty)
+            if (value_ == empty)
             {
                 // Reset empty sentinel (not screened) for first screen.
                 zeroize(row);
@@ -142,7 +142,7 @@ constexpr bool CLASS::screen(type fingerprint) NOEXCEPT
             else
             {
                 // Sieve was full, now saturated (all screened).
-                sieve_ = saturated;
+                value_ = saturated;
                 return false;
             }
         }
@@ -164,7 +164,7 @@ constexpr bool CLASS::screen(type fingerprint) NOEXCEPT
         const auto mask = masks(row, row);
 
         // Merge incremented selector, current sieve, and new fingerprint.
-        sieve_ = bit_or
+        value_ = bit_or
         (
             shift_left(row, screen_bits),
             bit_and
@@ -173,7 +173,7 @@ constexpr bool CLASS::screen(type fingerprint) NOEXCEPT
                 bit_or
                 (
                     bit_and(fingerprint, mask),
-                    bit_and(sieve_, bit_not(mask))
+                    bit_and(value_, bit_not(mask))
                 )
             )
         );

@@ -86,7 +86,7 @@ private:
     // Logically sparse, e.g. 16 x 16 = 256 table of uint32_t (1024 bytes).
     // Compressed to one-dimensional 136 element array of uint32_t (544 bytes).
     static constexpr masks_t masks_ = generate_masks();
-    type sieve_;
+    type value_;
 };
 
 } // namespace database
