@@ -148,24 +148,22 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
             return error::tx_point_allocate;
 
         // Collect duplicates to store in duplicate table.
-        std::vector<chain::cref_point> twins{};
+        ////std::vector<chain::cref_point> twins{};
         const auto ptr = store_.point.get_memory();
+        bool duplicate{};
 
         // This must be set after tx.set and before tx.commit, since searchable and
         // produces an association to tx.link, and is also an integral part of tx.
         for (const auto& in: *ins)
         {
-            ///////////////////////////////////////////////////////////////////
-            // TODO: add filter to hashmap and use method here to detect and
-            // TODO: return prior existence (dup) here (insert succeeds).
-            ///////////////////////////////////////////////////////////////////
-            bool twin{};
-            if (!store_.point.put(/*twin,*/ ptr, ins_fk++, in->point(),
+            if (!store_.point.put(duplicate, ptr, ins_fk++, in->point(),
                 table::point::record{}))
                 return error::tx_point_put;
 
-            if (twin)
-                twins.emplace_back(in->point().hash(), in->point().index());
+            if (duplicate)
+                return error::confirmed_double_spend;
+
+            ////twins.emplace_back(in->point().hash(), in->point().index());
         }
 
         ///////////////////////////////////////////////////////////////////////
