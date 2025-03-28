@@ -98,11 +98,11 @@ protected:
     static INLINE constexpr filter fingerprint(const Key& key) NOEXCEPT;
     static INLINE constexpr filter to_filter(cell value) NOEXCEPT;
     static INLINE constexpr link to_link(cell value) NOEXCEPT;
-    static INLINE constexpr cell to_cell(cell previous, link current,
-        const Key& key) NOEXCEPT;
+    static INLINE constexpr cell to_cell(bool& collision, cell previous,
+        link current, const Key& key) NOEXCEPT;
 
     inline cell get_cell(const Link& index) const NOEXCEPT;
-    inline cell set_cell(bytes& next, const Link& current,
+    inline bool set_cell(bool& collision, bytes& next, const Link& current,
         const Key& key) NOEXCEPT;
 
 private:

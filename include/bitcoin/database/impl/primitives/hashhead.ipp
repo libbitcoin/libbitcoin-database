@@ -149,15 +149,8 @@ TEMPLATE
 inline bool CLASS::push(bool& collision, const Link& current, bytes& next,
     const Key& key) NOEXCEPT
 {
-    // TODO: need independent error sentinel.
-    const auto previous = set_cell(next, current, key);
-    ////if (previous == terminal)
-    ////    return false;
-
-    // Conflict (body) search is bypassed by filter when key is not screened.
-    // If collision false it is assured that table does not contain the key.
-    collision = screened(previous, key);
-    return true;
+    // next holds previous top and can searched for dups if collision is true.
+    return set_cell(collision, next, current, key);
 }
 
 // protected
@@ -185,25 +178,25 @@ inline CLASS::cell CLASS::get_cell(const Link& index) const NOEXCEPT
     }
     else
     {
-        cell top{};
-        const auto& head = cell_array(raw);
+        const auto& top = cell_array(raw);
+        cell head{};
 
         mutex_.lock_shared();
-        cell_array(top) = head;
+        cell_array(head) = top;
         mutex_.unlock_shared();
 
-        return top;
+        return head;
     }
 }
 
 TEMPLATE
-inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
+inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
     const Key& key) NOEXCEPT
 {
     using namespace system;
     const auto raw = file_.get_raw(link_to_position(index(key)));
     if (is_null(raw))
-        return terminal;
+        return false;
 
     if constexpr (aligned)
     {
@@ -212,35 +205,34 @@ inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
         ////const std::atomic_ref<cell> head(unsafe_byte_cast<cell>(raw));
         auto& top = *pointer_cast<std::atomic<cell>>(raw);
         auto head = top.load(std::memory_order_acquire);
+        cell update{};
         do
         {
-            next = link_array(head);
-
             // Compiler could order this after top.store, which would expose key
             // to search before next entry is linked. Thread fence imposes order.
             // A release fence ensures that all prior writes (like next) are
             // completed before any subsequent atomic store.
+            next = link_array(head);
+            update = to_cell(collision, head, current, key);
             std::atomic_thread_fence(std::memory_order_release);
         }
-        while (!top.compare_exchange_weak(head, to_cell(head, current, key),
+        while (!top.compare_exchange_weak(head, update,
             std::memory_order_release, std::memory_order_acquire));
-
-        return top;
     }
     else
     {
-        cell top{};
-        auto& head = cell_array(raw);
+        auto& top = cell_array(raw);
+        cell head{};
 
         mutex_.lock();
-        cell_array(top) = head;
-        next = link_array(top);
-        auto bytes = to_cell(top, current, key);
-        head = cell_array(bytes);
+        cell_array(head) = top;
+        next = link_array(head);
+        auto update = to_cell(collision, head, current, key);
+        top = cell_array(update);
         mutex_.unlock();
-
-        return top;
     }
+
+    return true;
 }
 
 // protected
@@ -293,18 +285,21 @@ INLINE constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
 }
 
 TEMPLATE
-INLINE constexpr CLASS::cell CLASS::to_cell(cell previous, link current,
-    const Key& key) NOEXCEPT
+INLINE constexpr CLASS::cell CLASS::to_cell(bool& collision, cell previous,
+    link current, const Key& key) NOEXCEPT
 {
     if constexpr (sieve_t::disabled)
     {
+        collision = true;
         return current;
     }
     else
     {
         using namespace system;
-        const auto value = sieve_t::screen(to_filter(previous), fingerprint(key));
-        return bit_or<cell>(shift_left<cell>(value, link_bits), current);
+        const auto sieve = to_filter(previous);
+        const auto next = sieve_t::screen(sieve, fingerprint(key));
+        collision = (next == sieve || sieve_t::is_saturated(next));
+        return bit_or<cell>(shift_left<cell>(next, link_bits), current);
     }
 }
 
