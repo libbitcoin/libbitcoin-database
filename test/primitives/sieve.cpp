@@ -903,6 +903,10 @@ BOOST_AUTO_TEST_CASE(sieve__screen__full__exptected_saturation)
     value = sieve_t::screen(previous = value, forward[15]);
     BOOST_CHECK(value != previous);
 
+    // Already screened, not sieve change.
+    value = sieve_t::screen(previous = value, forward[15]);
+    BOOST_CHECK(value == previous);
+
     // Full but not saturated.
     BOOST_CHECK(!sieve_t::is_empty(value));
     BOOST_CHECK(!sieve_t::is_saturated(value));
