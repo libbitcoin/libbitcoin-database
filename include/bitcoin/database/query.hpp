@@ -85,6 +85,9 @@ public:
     /// Get first fault code.
     code get_fault() const NOEXCEPT;
 
+    // TESTING
+    uint64_t get_point_rate() const NOEXCEPT;
+
     /// True if there is a fault condition (disk full is not a fault).
     bool is_fault() const NOEXCEPT;
 
