@@ -94,7 +94,7 @@ struct transaction
         sizeof(uint32_t) +
         schema::index +     // inputs count
         schema::index +     // outputs count
-        schema::ins_ +    // first contiguous input (point)
+        schema::ins_ +      // first contiguous input (point)
         schema::outs_;      // first contiguous output (put)
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
