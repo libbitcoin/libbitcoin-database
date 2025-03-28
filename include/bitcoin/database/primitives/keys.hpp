@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_KEYS_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_KEYS_HPP
 
+#include <algorithm>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {
@@ -59,26 +60,21 @@ inline size_t hash(const Key& value) NOEXCEPT
 template <class Key>
 inline size_t thumb(const Key& value) NOEXCEPT
 {
-    ////using namespace system;
-    ////constexpr auto hash = sizeof(size_t);
-    ////constexpr auto print = sizeof(filter);
-    ////constexpr auto offset = floored_subtract(keys::size<Key>(), print + hash);
-    ////unique_hash(array_cast<uint8_t, print, offset>(key)));
+    // TODO: this should pull from lowest order bytes above size_t.
+    if constexpr (is_same_type<Key, system::chain::point>)
+    {
+        using namespace system;
+        constexpr auto size = sizeof(size_t);
+        size_t hash{};
 
-    ////if constexpr (is_same_type<Key, system::chain::point>)
-    ////{
-    ////    // std::hash<system::chain::point> implemented in system.
-    ////    // Use of unique_hash over the concat results in zero because index is
-    ////    // concatenated to the high order bytes.
-    ////    return std::hash<system::chain::point>()(value);
-    ////}
-    ////else if constexpr (is_std_array<Key>)
-    ////{
-    ////    // unique_hash assumes sufficient uniqueness in low order key bytes.
-    ////    return system::unique_hash(value);
-    ////}
-
-    return hash<Key>(value);
+        // This assumes sufficient uniqueness in high order key bytes.
+        std::copy_n(value.hash().rbegin(), size, byte_cast(hash).begin());
+        return hash;
+    }
+    else if constexpr (is_std_array<Key>)
+    {
+        return system::unique_hash(value);
+    }
 }
 
 template <class Key>

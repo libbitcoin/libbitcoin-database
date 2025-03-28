@@ -83,8 +83,8 @@ protected:
     static constexpr size_t select_bits = is_zero(sieve_bits) ? zero : 4u;
     static constexpr size_t screen_bits = sieve_bits - select_bits;
 
-    using sieve_filter = sieve<sieve_bits, select_bits>;
-    using filter = sieve_filter::type;
+    using sieve_t = sieve<sieve_bits, select_bits>;
+    using filter = sieve_t::type;
     using link = Link::integer;
     using cell = unsigned_type<cell_size>;
 

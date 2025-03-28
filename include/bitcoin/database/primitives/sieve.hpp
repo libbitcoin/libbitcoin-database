@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_SIEVE_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_SIEVE_HPP
 
+#include <bitset>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -26,67 +27,60 @@ namespace libbitcoin {
 namespace database {
 
 /// Sieve is limited to integral types.
+/// There are no false negatives, with the goal of minimizing false positives.
 template <size_t SieveBits, size_t SelectBits,
     if_not_greater<SelectBits, SieveBits> = true,
     if_not_greater<SieveBits, bits<uint64_t>> = true>
 class sieve
 {
 public:
-    /// Functionality is bypassed.
+    /// This produces size_t when disabled.
+    using type = unsigned_type<system::to_ceilinged_bytes(SieveBits)>;
+    static constexpr auto empty = system::unmask_right<type>(SieveBits);
+
+    /// Sieve is bypassed.
     static constexpr bool disabled = is_zero(SieveBits) || is_zero(SelectBits);
 
-    /// This produces type of size_t when disabled.
-    using type = unsigned_type<system::to_ceilinged_bytes(SieveBits)>;
+    /// Is sentinel value for empty sieve.
+    static constexpr bool is_empty(type value) NOEXCEPT;
 
-    /// Initialize empty sieve.
-    constexpr sieve() NOEXCEPT;
+    /// Is sentinel value for saturated sieve.
+    static constexpr bool is_saturated(type value) NOEXCEPT;
 
-    /// Initialize existing sieve.
-    constexpr sieve(type value) NOEXCEPT;
+    /// Is potential duplicate (saturated or screened).
+    static constexpr bool is_screened(type value, type fingerprint) NOEXCEPT;
 
-    /// The fingerprint value.
-    constexpr type value() const NOEXCEPT;
-
-    /// True if fingerprint aligns with sieve screen(s), bucket may contain.
-    constexpr bool screened(type fingerprint) const NOEXCEPT;
-
-    /// Add fingerprint to sieve, false if already screened.
-    constexpr bool screen(type fingerprint) NOEXCEPT;
-
-    /// The fingerprint value.
-    constexpr operator type() const NOEXCEPT;
+    /// Add fingerprint to sieve. Changes determined by return/value.
+    /// Only "value added to sieve" implies a negative result.
+    /// All other results imply a positive result (potential existence).
+    /// return == value && return == saturated: sieve was saturated.
+    /// return != value && return == saturated: sieve now saturated
+    /// return == value && return != saturated: value was screened.
+    /// return != value && return != saturated: value added to sieve.
+    static constexpr type screen(type value, type fingerprint) NOEXCEPT;
 
 protected:
-    static constexpr auto sieve_bits = SieveBits;
-    static constexpr auto select_bits = SelectBits;
-    static constexpr auto screen_bits = sieve_bits - select_bits;
-
+    static constexpr auto screen_bits = SieveBits - SelectBits;
+    static constexpr auto screens = system::power2(SelectBits);
+    static constexpr auto limit = sub1(screens);
     static constexpr auto sentinel = sub1(screen_bits);
-    static constexpr auto empty = system::unmask_right<type>(sieve_bits);
     static constexpr auto saturated = system::mask_right(empty, sentinel);
     static constexpr auto first_mask = system::unmask_right<type>(screen_bits);
-    static constexpr auto selector_mask = first_mask;
+    static constexpr auto select_mask = first_mask;
+    static constexpr auto mask_count = to_half(system::safe_multiply(screens,
+        add1(screens)));
 
-    static constexpr auto screens = system::power2(select_bits);
-    static constexpr auto mask_count = to_half(screens * add1(screens));
-    static constexpr auto limit = sub1(screens);
     using masks_t = std_array<type, mask_count>;
     using offsets_t = std_array<type, screens>;
 
-    /// Generate compression offsets at compile.
+    /// Generate compression offsets at compile time.
     static CONSTEVAL offsets_t generate_offsets() NOEXCEPT;
 
-    /// Compile-time mask table generator.
+    /// Generate compressed mask table at compile time.
     static CONSTEVAL masks_t generate_masks() NOEXCEPT;
 
     /// Read member compressed mask array as if it was a two-dimesional array.
-    constexpr type masks(size_t row, size_t column) const NOEXCEPT;
-
-private:
-    // Logically sparse, e.g. 16 x 16 = 256 table of uint32_t (1024 bytes).
-    // Compressed to one-dimensional 136 element array of uint32_t (544 bytes).
-    static constexpr masks_t masks_ = generate_masks();
-    type value_;
+    static constexpr type masks(size_t row, size_t column) NOEXCEPT;
 };
 
 } // namespace database

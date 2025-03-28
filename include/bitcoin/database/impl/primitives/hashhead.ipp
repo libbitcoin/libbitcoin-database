@@ -115,7 +115,7 @@ TEMPLATE
 inline Link CLASS::index(const Key& key) const NOEXCEPT
 {
     using namespace system;
-    const auto index = possible_narrow_cast<link>(keys::hash<Key>(key));
+    const auto index = possible_narrow_cast<link>(keys::hash(key));
     return bit_and<link>(mask_, index);
 }
 
@@ -149,9 +149,10 @@ TEMPLATE
 inline bool CLASS::push(bool& collision, const Link& current, bytes& next,
     const Key& key) NOEXCEPT
 {
+    // TODO: need independent error sentinel.
     const auto previous = set_cell(next, current, key);
-    if (previous == terminal)
-        return false;
+    ////if (previous == terminal)
+    ////    return false;
 
     // Conflict (body) search is bypassed by filter when key is not screened.
     // If collision false it is assured that table does not contain the key.
@@ -178,7 +179,7 @@ inline CLASS::cell CLASS::get_cell(const Link& index) const NOEXCEPT
         ////const std::atomic_ref<cell> top(unsafe_byte_cast<cell>(raw));
         const auto& top = *pointer_cast<std::atomic<cell>>(raw);
 
-        // Acquire is necessary to synchronize with push release.
+        // Acquire is necessary to synchronize with set_cell release.
         // Relaxed would miss next updates, so acquire is optimal.
         return top.load(std::memory_order_acquire);
     }
@@ -213,16 +214,18 @@ inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
         auto head = top.load(std::memory_order_acquire);
         do
         {
+            next = link_array(head);
+
             // Compiler could order this after top.store, which would expose key
             // to search before next entry is linked. Thread fence imposes order.
             // A release fence ensures that all prior writes (like next) are
             // completed before any subsequent atomic store.
-            next = link_array(head);
             std::atomic_thread_fence(std::memory_order_release);
         }
-        while (!top.compare_exchange_weak(head,
-            to_cell(head, current, key),
+        while (!top.compare_exchange_weak(head, to_cell(head, current, key),
             std::memory_order_release, std::memory_order_acquire));
+
+        return top;
     }
     else
     {
@@ -235,9 +238,9 @@ inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
         auto bytes = to_cell(top, current, key);
         head = cell_array(bytes);
         mutex_.unlock();
-    }
 
-    return true;
+        return top;
+    }
 }
 
 // protected
@@ -247,13 +250,13 @@ inline CLASS::cell CLASS::set_cell(bytes& next, const Link& current,
 TEMPLATE
 INLINE constexpr bool CLASS::screened(cell value, const Key& key) NOEXCEPT
 {
-    if constexpr (sieve_filter::disabled)
+    if constexpr (sieve_t::disabled)
     {
         return true;
     }
     else
     {
-        return sieve_filter{ to_filter(value) }.screened(fingerprint(key));
+        return sieve_t::is_screened(to_filter(value), fingerprint(key));
     }
 }
 
@@ -261,7 +264,7 @@ TEMPLATE
 INLINE constexpr CLASS::filter CLASS::fingerprint(const Key& key) NOEXCEPT
 {
     using namespace system;
-    return possible_narrow_cast<filter>(keys::thumb<Key>(key));
+    return possible_narrow_cast<filter>(keys::thumb(key));
 }
 
 TEMPLATE
@@ -274,7 +277,7 @@ INLINE constexpr CLASS::filter CLASS::to_filter(cell value) NOEXCEPT
 TEMPLATE
 INLINE constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
 {
-    if constexpr (sieve_filter::disabled)
+    if constexpr (sieve_t::disabled)
     {
         return system::possible_narrow_cast<link>(value);
     }
@@ -293,18 +296,15 @@ TEMPLATE
 INLINE constexpr CLASS::cell CLASS::to_cell(cell previous, link current,
     const Key& key) NOEXCEPT
 {
-    if constexpr (sieve_filter::disabled)
+    if constexpr (sieve_t::disabled)
     {
         return current;
     }
     else
     {
         using namespace system;
-        static_assert(sizeof(filter) <= sizeof(cell));
-        sieve_filter filter{ to_filter(previous) };
-        filter.screen(fingerprint(key));
-        const auto shifted = shift_left<cell>(filter.value(), link_bits);
-        return bit_or<cell>(shifted, current);
+        const auto value = sieve_t::screen(to_filter(previous), fingerprint(key));
+        return bit_or<cell>(shift_left<cell>(value, link_bits), current);
     }
 }
 

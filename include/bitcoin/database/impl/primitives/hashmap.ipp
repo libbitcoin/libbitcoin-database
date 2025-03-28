@@ -377,8 +377,10 @@ inline bool CLASS::put(bool& duplicate, const memory_ptr& ptr,
     if (!write(previous_head, ptr, link, key, element))
         return false;
 
-    if (!previous_head.is_terminal())
-        counter_.fetch_add(one, std::memory_order_relaxed);
+    if (previous_head.is_terminal())
+        ncounter_.fetch_add(one, std::memory_order_relaxed);
+    else
+        pcounter_.fetch_add(one, std::memory_order_relaxed);
 
     duplicate = !first(ptr, previous_head, key).is_terminal();
     return true;

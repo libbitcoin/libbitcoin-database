@@ -142,7 +142,7 @@ struct point
     static constexpr size_t minsize = zero;
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
-    static constexpr size_t cell = linkage<pk>::size;
+    static constexpr size_t cell = sizeof(uint64_t); //// linkage<pk>::size;
     static constexpr linkage<pk> count() NOEXCEPT { return 1; }
     static_assert(minsize == 0u);
     static_assert(minrow == 39u);
