@@ -373,16 +373,16 @@ ELEMENT_CONSTRAINT
 inline bool CLASS::put(bool& duplicate, const memory_ptr& ptr,
     const Link& link, const Key& key, const Element& element) NOEXCEPT
 {
-    Link previous_head{};
-    if (!write(previous_head, ptr, link, key, element))
+    Link previous{};
+    if (!write(previous, ptr, link, key, element))
         return false;
 
-    if (previous_head.is_terminal())
+    if (previous.is_terminal())
         ncounter_.fetch_add(one, std::memory_order_relaxed);
     else
         pcounter_.fetch_add(one, std::memory_order_relaxed);
 
-    duplicate = !first(ptr, previous_head, key).is_terminal();
+    duplicate = !first(ptr, previous, key).is_terminal();
     return true;
 }
 
