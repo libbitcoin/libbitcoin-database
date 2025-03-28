@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_HPP
 
+#include <atomic>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -47,6 +48,18 @@ public:
     using iterator = database::iterator<Link, Key, RowSize>;
 
     hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
+
+    /// Count of puts resulting in table body search to detect duplication.
+    size_t positive_search_count() const NOEXCEPT
+    {
+        return pcounter_.load(std::memory_order_relaxed);
+    }
+
+    /// Count of puts not resulting in table body search to detect duplication.
+    size_t negative_search_count() const NOEXCEPT
+    {
+        return ncounter_.load(std::memory_order_relaxed);
+    }
 
     /// Setup, not thread safe.
     /// -----------------------------------------------------------------------
@@ -226,6 +239,8 @@ private:
 
     // Thread safe.
     body body_;
+    std::atomic<size_t> ncounter_{};
+    std::atomic<size_t> pcounter_{};
 };
 
 template <typename Element>

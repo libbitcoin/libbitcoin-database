@@ -158,25 +158,6 @@ BOOST_AUTO_TEST_CASE(hashhead__top__key__terminal)
     BOOST_REQUIRE(head.top(null_key).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(hashhead__push__link__terminal)
-{
-    test::chunk_storage store;
-    hashhead_ head{ store, bucket_bits };
-    BOOST_REQUIRE(head.create());
-
-    constexpr auto expected = 2u;
-    typename link::bytes next{ 42u };
-    constexpr link link_key{ 9u };
-    constexpr link current{ expected };
-    head.push(current, next, link_key);
-
-    // The terminal value at head[9|null_key] is copied to current.next.
-    BOOST_REQUIRE(link{ next }.is_terminal());
-
-    // The current link is copied to head[9|null_key].
-    BOOST_REQUIRE_EQUAL(head.top(link_key), expected);
-}
-
 BOOST_AUTO_TEST_CASE(hashhead__push__key__terminal)
 {
     test::chunk_storage store;

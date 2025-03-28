@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_KEYS_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_KEYS_HPP
 
+#include <algorithm>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {
@@ -52,6 +53,26 @@ inline size_t hash(const Key& value) NOEXCEPT
     else if constexpr (is_std_array<Key>)
     {
         // unique_hash assumes sufficient uniqueness in low order key bytes.
+        return system::unique_hash(value);
+    }
+}
+
+template <class Key>
+inline size_t thumb(const Key& value) NOEXCEPT
+{
+    // TODO: this should pull from lowest order bytes above size_t.
+    if constexpr (is_same_type<Key, system::chain::point>)
+    {
+        using namespace system;
+        constexpr auto size = sizeof(size_t);
+        size_t hash{};
+
+        // This assumes sufficient uniqueness in high order key bytes.
+        std::copy_n(value.hash().rbegin(), size, byte_cast(hash).begin());
+        return hash;
+    }
+    else if constexpr (is_std_array<Key>)
+    {
         return system::unique_hash(value);
     }
 }

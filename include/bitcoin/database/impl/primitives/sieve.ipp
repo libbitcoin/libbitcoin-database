@@ -22,19 +22,8 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
-// [--------------------sieve-----------][--------------link--------------]
-// [[selector][--------screens---------]][--------------link--------------]
-
-// [[111][1111111111111111111111111111]] empty/default
-// [[000][1111111111111111111111111111]] 1 screen
-// [[001][2222222222222211111111111111]] 2 screens
-// [[010][3333333333222222222111111111]] 3 screens
-// [[011][4444444333333322222221111111]] 4 screens
-// [[100][5555554444443333332222211111]] 5 screens
-// [[101][6666655555444443333322221111]] 6 screens
-// [[110][7777666655554444333322221111]] 7 screens
-// [[111][-888777766665555444333222111]] 8 screens (high order sentinel bit)
-// [[111][1000000000000000000000000000]] saturated
+// [------------------sieve-----------][--------------link--------------]
+// [[select][--------screens---------]][--------------link--------------]
 
 // To minimize computation in alignment the sieve is defined as two dimensional
 // table of precomputed masks. One dimension is determined by the screen
@@ -49,122 +38,127 @@
 namespace libbitcoin {
 namespace database {
 
+// Suppress bogus warnings to use constexpr when function is consteval.
+BC_PUSH_WARNING(USE_CONSTEXPR_FOR_FUNCTION)
+BC_PUSH_WARNING(NO_DYNAMIC_ARRAY_INDEXING)
+BC_PUSH_WARNING(NO_ARRAY_INDEXING)
+
 TEMPLATE
-constexpr CLASS::sieve() NOEXCEPT
-  : sieve(empty)
+constexpr bool CLASS::is_empty(type value) NOEXCEPT
 {
+    return value == empty;
 }
 
 TEMPLATE
-constexpr CLASS::sieve(sieve_t value) NOEXCEPT
-  : sieve_{ value }
+constexpr bool CLASS::is_saturated(type value) NOEXCEPT
 {
+    return value == saturated;
 }
 
 TEMPLATE
-constexpr CLASS::sieve_t CLASS::value() const NOEXCEPT
+constexpr bool CLASS::is_screened(type value, type fingerprint) NOEXCEPT
 {
-    return sieve_;
-}
-
-TEMPLATE
-constexpr CLASS::operator CLASS::sieve_t() const NOEXCEPT
-{
-    return sieve_;
-}
-
-// protected
-TEMPLATE
-constexpr CLASS::sieve_t CLASS::masks(size_t row, size_t column) const NOEXCEPT
-{
-    BC_ASSERT(column <= row);
-
-    // Read/write member compressed array as if it was a two-dimesional array.
-    constexpr auto get_offset = generate_offsets();
-    return masks_[get_offset[row] + column];
-}
-
-TEMPLATE
-constexpr bool CLASS::screened(sieve_t fingerprint) const NOEXCEPT
-{
-    using namespace system;
-    const auto row = shift_right(sieve_, screen_bits);
-    if (row == limit)
+    if constexpr (disabled)
     {
-        if (sieve_ == empty)
-            return false;
-
-        if (sieve_ == saturated)
-            return true;
-    }
-
-    // Compare masked fingerprint to masked sieve, for all masks of the screen.
-    for (sieve_t segment{}; segment <= row; ++segment)
-    {
-        const auto mask = masks(row, segment);
-        if (bit_and(fingerprint, mask) == bit_and(sieve_, mask))
-            return true;
-    }
-
-    // Not empty, not saturated, not aligned with active screen (full if max).
-    return false;
-}
-
-TEMPLATE
-constexpr bool CLASS::screen(sieve_t fingerprint) NOEXCEPT
-{
-    using namespace system;
-    auto row = shift_right(sieve_, screen_bits);
-    if (row == limit)
-    {
-        if (sieve_ == empty)
-        {
-            // Reset empty sentinel (not screened) for first screen.
-            zeroize(row);
-        }
-        else
-        {
-            // Sieve was full, now saturated (all screened).
-            sieve_ = saturated;
-            return false;
-        }
+        return true;
     }
     else
     {
-        if (screened(fingerprint))
+        using namespace system;
+        const auto row = shift_right(value, screen_bits);
+
+        if (row == limit)
         {
-            // Screened, bucket may contain element.
-            return false;
+            if (is_empty(value))
+                return false;
+
+            if (is_saturated(value))
+                return true;
+        }
+
+        for (type column{}; column <= row; ++column)
+        {
+            const auto mask = masks(row, column);
+            if (bit_and(fingerprint, mask) == bit_and(value, mask))
+                return true;
+        }
+
+        return false;
+    }
+}
+
+TEMPLATE
+constexpr CLASS::type CLASS::screen(type value, type fingerprint) NOEXCEPT
+{
+    if constexpr (disabled)
+    {
+        return value;
+    }
+    else
+    {
+        using namespace system;
+        auto row = shift_right(value, screen_bits);
+
+        if (row == limit)
+        {
+            if (is_empty(value))
+            {
+                zeroize(row);
+            }
+            else
+            {
+                if (!is_screened(value, fingerprint))
+                {
+                    value = saturated;
+                }
+
+                return value;
+            }
         }
         else
         {
-            // Not screened, empty, or full - add screen.
-            ++row;
+            if (is_screened(value, fingerprint))
+            {
+                return value;
+            }
+            else
+            {
+                ++row;
+            }
         }
-    }
 
-    // Both indexes are screen selector, as each new screen adds one mask.
-    const auto mask = masks(row, row);
+        // Both indexes are screen selector, as each new screen adds one mask.
+        const auto mask = masks(row, row);
 
-    // Merge incremented selector, current sieve, and new fingerprint.
-    sieve_ = bit_or
-    (
-        shift_left(row, screen_bits),
-        bit_and
+        // Mask inversion requires clearing the selector bits (and above).
+        const auto unmask = bit_and(bit_not(mask), select_mask);
+
+        value = bit_or
         (
-            selector_mask,
+            shift_left(row, screen_bits),
             bit_or
             (
                 bit_and(fingerprint, mask),
-                bit_and(sieve_, bit_not(mask))
+                bit_and(value, unmask)
             )
-        )
-    );
+        );
 
-    return true;
+        return value;
+    }
 }
 
-// protected/static
+// protected
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+constexpr CLASS::type CLASS::masks(size_t row, size_t column) NOEXCEPT
+{
+    BC_ASSERT(column <= row);
+    constexpr auto offsets = generate_offsets();
+    constexpr auto masks = generate_masks();
+    return masks[offsets[row] + column];
+}
+
 TEMPLATE
 CONSTEVAL CLASS::offsets_t CLASS::generate_offsets() NOEXCEPT
 {
@@ -172,63 +166,62 @@ CONSTEVAL CLASS::offsets_t CLASS::generate_offsets() NOEXCEPT
 
     // Generate compression offsets at compile, generally 16 or 32 elements.
     offsets_t offsets{};
-    for (size_t index{}; index < screens; ++index)
+    for (type index{}; index < screens; ++index)
         offsets[index] = to_half(ceilinged_multiply(index, add1(index)));
 
     return offsets;
 }
 
-// protected/static
+// Logically sparse, e.g. 16 x 16 = 256 table of uint32_t (1024 bytes).
+// Compressed to one-dimensional 136 element array of uint32_t (544 bytes).
 TEMPLATE
 CONSTEVAL CLASS::masks_t CLASS::generate_masks() NOEXCEPT
 {
     using namespace system;
-    masks_t out{};
+    constexpr auto off = generate_offsets();
 
-    // Read/write compressed array as if it was a two-dimesional array.
-    const auto masks = [&out](auto row, auto column) NOEXCEPT -> sieve_t&
-    {
-        BC_ASSERT(column <= row);
-        constexpr auto get_offset = generate_offsets();
-        return out[get_offset[row] + column];
-    };
+    // Start with all screen bits set.
+    masks_t table{ first_mask };
 
-    // Determine the count of mask bits for a given table element.
-    const auto mask_bits = [](auto row, auto column) NOEXCEPT -> size_t
+    // Progressively divide previous row masks into subsequent row.
+    // Each row adds one mask, with previous row masks sacrificing bits for it.
+    for (type row = 1; row < screens; ++row)
     {
-        BC_ASSERT(column <= row);
-        const auto div = floored_divide(screen_bits, add1(row));
-        const auto mod = floored_modulo(screen_bits, add1(row));
-        return div + to_int(column < mod);
-    };
-
-    masks(0, 0) = first_mask;
-    for (sieve_t row = 1; row < screens; ++row)
-    {
-        for (sieve_t col = 0; col < row; ++col)
-            masks(row, col) = masks(sub1(row), col);
+        for (type col = 0; col < row; ++col)
+            table[off[row] + col] = table[off[sub1(row)] + col];
 
         for (auto mask = row; !is_zero(mask); --mask)
         {
             const auto col = sub1(mask);
-            auto excess = floored_subtract(ones_count(masks(row, col)),
-                mask_bits(row, col));
-
-            while (!is_zero(excess))
+            const auto div = floored_divide(screen_bits, add1(row));
+            const auto mod = floored_modulo(screen_bits, add1(row));
+            const auto target = div + to_int(col < mod);
+            const auto prior = table[off[row] + col];
+            auto bits = floored_subtract(ones_count(prior), target);
+            while (!is_zero(bits))
             {
-                const auto bit = right_zeros(masks(row, col));
+                const auto bit = right_zeros(table[off[row] + col]);
                 if (bit < screen_bits)
                 {
-                    set_right_into(masks(row, col), bit, false);
-                    set_right_into(masks(row, row), bit, true);
-                    --excess;
+                    set_right_into(table[off[row] + col], bit, false);
+                    set_right_into(table[off[row] + row], bit, true);
+                    --bits;
                 }
             }
         }
     }
 
-    return out;
+    // Unset last row high order screen bit to avoid sentinel conflict.
+    // This may result in one empty mask, and therefore a false positive.
+    for (type col = 0; col < screens; ++col)
+        set_right_into(table[off[sub1(screens)] + col], sentinel, false);
+
+    return table;
 }
+
+BC_POP_WARNING()
+BC_POP_WARNING()
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin
