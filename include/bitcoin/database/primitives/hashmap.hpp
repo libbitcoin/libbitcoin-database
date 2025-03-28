@@ -49,6 +49,18 @@ public:
 
     hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
 
+    /// Count of puts resulting in table body search to detect duplication.
+    size_t positive_search_count() const NOEXCEPT
+    {
+        return pcounter_.load(std::memory_order_relaxed);
+    }
+
+    /// Count of puts not resulting in table body search to detect duplication.
+    size_t negative_search_count() const NOEXCEPT
+    {
+        return ncounter_.load(std::memory_order_relaxed);
+    }
+
     /// Setup, not thread safe.
     /// -----------------------------------------------------------------------
 
@@ -78,16 +90,6 @@ public:
 
     /// Increase count as neccesary to specified.
     bool expand(const Link& count) NOEXCEPT;
-
-    /// Count of puts resulting in table body search to detect duplication.
-    size_t negative_search_count() const NOEXCEPT
-    {
-        return ncounter_.load(std::memory_order_relaxed);
-    }
-    size_t positive_search_count() const NOEXCEPT
-    {
-        return pcounter_.load(std::memory_order_relaxed);
-    }
 
     /// Errors.
     /// -----------------------------------------------------------------------

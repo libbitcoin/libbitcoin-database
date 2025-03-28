@@ -75,14 +75,6 @@ CLASS::query(Store& store) NOEXCEPT
 }
 
 TEMPLATE
-uint64_t CLASS::get_point_rate() const NOEXCEPT
-{
-    const auto negative = (double)store_.point.negative_search_count();
-    const auto positive = (double)store_.point.positive_search_count();
-    return static_cast<uint64_t>(10'000.0 * (positive / (positive + negative)));
-}
-
-TEMPLATE
 code CLASS::get_code() const NOEXCEPT
 {
     auto ec = get_fault();

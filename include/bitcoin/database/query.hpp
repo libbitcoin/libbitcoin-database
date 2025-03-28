@@ -76,6 +76,18 @@ public:
 
     query(Store& store) NOEXCEPT;
 
+    /// Count of puts resulting in table body search to detect duplication.
+    size_t positive_search_count() const NOEXCEPT
+    {
+        return store_.point.positive_search_count();
+    }
+
+    /// Count of puts not resulting in table body search to detect duplication.
+    size_t negative_search_count() const NOEXCEPT
+    {
+        return store_.point.negative_search_count();
+    }
+
     /// Store management from query-holder (not store owner) context.
     /// -----------------------------------------------------------------------
 
@@ -84,9 +96,6 @@ public:
 
     /// Get first fault code.
     code get_fault() const NOEXCEPT;
-
-    // TESTING
-    uint64_t get_point_rate() const NOEXCEPT;
 
     /// True if there is a fault condition (disk full is not a fault).
     bool is_fault() const NOEXCEPT;
