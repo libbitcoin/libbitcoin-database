@@ -472,8 +472,8 @@ code CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
 {
     code ec{};
     tx_links spenders{};
-    if ((ec = get_double_spenders(spenders, block)))
-        return ec;
+    ////if ((ec = get_double_spenders(spenders, block)))
+    ////    return ec;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
