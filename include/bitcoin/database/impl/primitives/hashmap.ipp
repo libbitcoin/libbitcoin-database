@@ -378,11 +378,16 @@ inline bool CLASS::put(bool& duplicate, const memory_ptr& ptr,
         return false;
 
     if (previous.is_terminal())
+    {
+        duplicate = false;
         ncounter_.fetch_add(one, std::memory_order_relaxed);
+    }
     else
+    {
+        duplicate = !first(ptr, previous, key).is_terminal();
         pcounter_.fetch_add(one, std::memory_order_relaxed);
+    }
 
-    duplicate = !first(ptr, previous, key).is_terminal();
     return true;
 }
 
