@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(strong_tx__put__two__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    table::strong_tx instance{ head_store, body_store, 3 };
+    table::strong_tx instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());
 
     table::strong_tx::link link1{};
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(strong_tx__get__two__expected)
     auto body = expected_body;
     test::chunk_storage head_store{ head };
     test::chunk_storage body_store{ body };
-    table::strong_tx instance{ head_store, body_store, 5 };
+    table::strong_tx instance{ head_store, body_store, 32 };
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 

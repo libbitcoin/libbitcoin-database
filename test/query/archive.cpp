@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_header__mmap_get_header__expected)
     };
 
     settings settings{};
-    settings.header_bits = 4;
+    settings.header_buckets = 16;
     settings.path = TEST_DIRECTORY;
     store<map> store{ settings };
     query<database::store<map>> query{ store };
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
 
     header_link link{};
     settings settings{};
-    settings.header_bits = 4;
+    settings.header_buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__empty__expected)
 
     // data_chunk store.
     settings settings{};
-    settings.tx_bits = 3;
+    settings.tx_buckets = 8;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -293,8 +293,8 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_tx__null_input__expected)
 
     // data_chunk store.
     settings settings{};
-    settings.tx_bits = 3;
-    settings.point_bits = 3;
+    settings.tx_buckets = 8;
+    settings.point_buckets = 8;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -427,8 +427,8 @@ BOOST_AUTO_TEST_CASE(query_archive__set_tx__get_tx__expected)
 
     // data_chunk store.
     settings settings{};
-    settings.tx_bits = 3;
-    settings.point_bits = 3;
+    settings.tx_buckets = 8;
+    settings.point_buckets = 8;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -561,10 +561,10 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "00000000");   // transaction[0]
 
     settings settings{};
-    settings.header_bits = 3;
-    settings.tx_bits = 3;
-    settings.point_bits = 3;
-    settings.txs_bits = 4;
+    settings.header_buckets = 8;
+    settings.tx_buckets = 8;
+    settings.point_buckets = 8;
+    settings.txs_buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -714,10 +714,10 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "00000000");   // transaction[0]
 
     settings settings{};
-    settings.header_bits = 3;
-    settings.tx_bits = 3;
-    settings.point_bits = 3;
-    settings.txs_bits = 4;
+    settings.header_buckets = 8;
+    settings.tx_buckets = 8;
+    settings.point_buckets = 8;
+    settings.txs_buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1001,7 +1001,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__invalid_parent__expected)
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
 
     settings settings{};
-    settings.header_bits = 4;
+    settings.header_buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1057,7 +1057,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
 
     settings settings{};
-    settings.header_bits = 4;
+    settings.header_buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1343,9 +1343,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_input__not_found__nullptr)
 BOOST_AUTO_TEST_CASE(query_archive__get_input__genesis__expected)
 {
     settings settings{};
-    settings.header_bits = 3;
-    settings.tx_bits = 3;
-    settings.txs_bits = 4;
+    settings.header_buckets = 8;
+    settings.tx_buckets = 8;
+    settings.txs_buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1397,9 +1397,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_output__not_found__nullptr)
 BOOST_AUTO_TEST_CASE(query_archive__get_output__genesis__expected)
 {
     settings settings{};
-    settings.header_bits = 3;
-    settings.tx_bits = 3;
-    settings.txs_bits = 4;
+    settings.header_buckets = 8;
+    settings.tx_buckets = 8;
+    settings.txs_buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

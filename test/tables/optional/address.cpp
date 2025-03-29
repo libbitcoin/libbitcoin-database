@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(address__put__two__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    table::address instance{ head_store, body_store, 3 };
+    table::address instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());
 
     table::address::link link1{};
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(address__get__two__expected)
     auto body = expected_body;
     test::chunk_storage head_store{ head };
     test::chunk_storage body_store{ body };
-    table::address instance{ head_store, body_store, 3 };
+    table::address instance{ head_store, body_store, 8 };
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 

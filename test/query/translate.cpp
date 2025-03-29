@@ -591,7 +591,7 @@
 ////BOOST_AUTO_TEST_CASE(query_translate__to_prevout_tx__to_prevout__expected)
 ////{
 ////    settings settings{};
-////    settings.tx_bits = 3;
+////    settings.tx_buckets = 3;
 ////    settings.path = TEST_DIRECTORY;
 ////    test::chunk_store store{ settings };
 ////    test::query_accessor query{ store };
@@ -874,7 +874,7 @@
 ////BOOST_AUTO_TEST_CASE(query_translate__to_spenders__point__expected)
 ////{
 ////    settings settings{};
-////    settings.tx_bits = 3;
+////    settings.tx_buckets = 3;
 ////    settings.spend_buckets = 3;
 ////    settings.path = TEST_DIRECTORY;
 ////    test::chunk_store store{ settings };

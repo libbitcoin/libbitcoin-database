@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(neutrino__put__two__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    table::neutrino instance{ head_store, body_store, 3 };
+    table::neutrino instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());
 
     table::neutrino::link link1{};
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(neutrino__get__two__expected)
     auto body = expected_body;
     test::chunk_storage head_store{ head };
     test::chunk_storage body_store{ body };
-    table::neutrino instance{ head_store, body_store, 3 };
+    table::neutrino instance{ head_store, body_store, 8 };
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
