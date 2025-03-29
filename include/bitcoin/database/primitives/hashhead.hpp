@@ -43,8 +43,8 @@ public:
 
     using bytes = typename Link::bytes;
 
-    /// A hash head is disabled it if has one or less buckets (0 bits).
-    hashhead(storage& head, size_t bits) NOEXCEPT;
+    /// A hash head is disabled it if has one or less buckets.
+    hashhead(storage& head, size_t buckets) NOEXCEPT;
 
     /// Sizing (thread safe).
     inline size_t size() const NOEXCEPT;
@@ -84,9 +84,9 @@ protected:
     static constexpr size_t screen_bits = sieve_bits - select_bits;
 
     using sieve_t = sieve<sieve_bits, select_bits>;
+    using cell = unsigned_type<cell_size>;
     using filter = sieve_t::type;
     using link = Link::integer;
-    using cell = unsigned_type<cell_size>;
 
     static constexpr cell terminal = system::bit_all<cell>;
     static constexpr bool aligned = (cell_size == sizeof(cell));
@@ -141,7 +141,6 @@ private:
     // These are thread safe.
     storage& file_;
     const Link buckets_;
-    const Link mask_;
     mutable std::shared_mutex mutex_{};
 };
 

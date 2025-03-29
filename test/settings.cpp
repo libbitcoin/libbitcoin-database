@@ -26,10 +26,10 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.path, "bitcoin");
 
     // Archives.
-    BOOST_REQUIRE_EQUAL(configuration.header_bits, 7u);
+    BOOST_REQUIRE_EQUAL(configuration.header_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.header_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.header_rate, 50u);
-    BOOST_REQUIRE_EQUAL(configuration.point_bits, 7u);
+    BOOST_REQUIRE_EQUAL(configuration.point_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.point_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.point_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.input_size, 1u);
@@ -40,10 +40,10 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.ins_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.outs_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.outs_rate, 50u);
-    BOOST_REQUIRE_EQUAL(configuration.tx_bits, 7u);
+    BOOST_REQUIRE_EQUAL(configuration.tx_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.tx_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.tx_rate, 50u);
-    BOOST_REQUIRE_EQUAL(configuration.txs_bits, 7u);
+    BOOST_REQUIRE_EQUAL(configuration.txs_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.txs_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.txs_rate, 50u);
 
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.candidate_rate, 50u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed_rate, 50u);
-    BOOST_REQUIRE_EQUAL(configuration.strong_tx_bits, 7u);
+    BOOST_REQUIRE_EQUAL(configuration.strong_tx_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.strong_tx_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.strong_tx_rate, 50u);
 
@@ -60,25 +60,23 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.prevout_buckets, 100u);
     BOOST_REQUIRE_EQUAL(configuration.prevout_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.prevout_rate, 50u);
-    BOOST_REQUIRE_EQUAL(configuration.doubles_bits, 7u);
+    BOOST_REQUIRE_EQUAL(configuration.doubles_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.doubles_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.doubles_rate, 50u);
-    BOOST_REQUIRE_EQUAL(configuration.validated_bk_bits, 7u);
+    BOOST_REQUIRE_EQUAL(configuration.validated_bk_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.validated_bk_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.validated_bk_rate, 50u);
-    BOOST_REQUIRE_EQUAL(configuration.validated_tx_bits, 7u);
+    BOOST_REQUIRE_EQUAL(configuration.validated_tx_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.validated_tx_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.validated_tx_rate, 50u);
 
     // Optionals.
-    BOOST_REQUIRE_EQUAL(configuration.address_bits, 7u);
+    BOOST_REQUIRE_EQUAL(configuration.address_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.address_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.address_rate, 50u);
-    BOOST_REQUIRE_EQUAL(configuration.neutrino_bits, 7u);
+    BOOST_REQUIRE_EQUAL(configuration.neutrino_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.neutrino_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.neutrino_rate, 50u);
-    ////BOOST_REQUIRE_EQUAL(configuration.bootstrap_size, 1u);
-    ////BOOST_REQUIRE_EQUAL(configuration.bootstrap_rate, 50u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

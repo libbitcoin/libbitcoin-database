@@ -33,12 +33,10 @@ namespace database {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-CLASS::hashhead(storage& head, size_t bits) NOEXCEPT
+CLASS::hashhead(storage& head, size_t buckets) NOEXCEPT
   : file_(head),
-    buckets_(system::power2<link>(bits)),
-    mask_(system::unmask_right<link>(bits))
+    buckets_(system::possible_narrow_cast<link>(buckets))
 {
-    BC_ASSERT_MSG(mask_ < max_size_t, "insufficient domain");
 }
 
 TEMPLATE
@@ -114,9 +112,7 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
 TEMPLATE
 inline Link CLASS::index(const Key& key) const NOEXCEPT
 {
-    using namespace system;
-    const auto index = possible_narrow_cast<link>(keys::hash(key));
-    return bit_and<link>(mask_, index);
+    return system::possible_narrow_cast<link>(keys::hash(key)) % buckets_;
 }
 
 TEMPLATE

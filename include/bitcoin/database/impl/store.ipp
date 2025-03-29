@@ -131,7 +131,7 @@ CLASS::store(const settings& config) NOEXCEPT
 
     header_head_(head(config.path / schema::dir::heads, schema::archive::header)),
     header_body_(body(config.path, schema::archive::header), config.header_size, config.header_rate),
-    header(header_head_, header_body_, config.header_bits),
+    header(header_head_, header_body_, config.header_buckets),
 
     input_head_(head(config.path / schema::dir::heads, schema::archive::input)),
     input_body_(body(config.path, schema::archive::input), config.input_size, config.input_rate),
@@ -143,7 +143,7 @@ CLASS::store(const settings& config) NOEXCEPT
 
     point_head_(head(config.path / schema::dir::heads, schema::archive::point)),
     point_body_(body(config.path, schema::archive::point), config.point_size, config.point_rate),
-    point(point_head_, point_body_, config.point_bits),
+    point(point_head_, point_body_, config.point_buckets),
 
     ins_head_(head(config.path / schema::dir::heads, schema::archive::ins)),
     ins_body_(body(config.path, schema::archive::ins), config.ins_size, config.ins_rate),
@@ -155,11 +155,11 @@ CLASS::store(const settings& config) NOEXCEPT
 
     tx_head_(head(config.path / schema::dir::heads, schema::archive::tx)),
     tx_body_(body(config.path, schema::archive::tx), config.tx_size, config.tx_rate),
-    tx(tx_head_, tx_body_, config.tx_bits),
+    tx(tx_head_, tx_body_, config.tx_buckets),
 
     txs_head_(head(config.path / schema::dir::heads, schema::archive::txs)),
     txs_body_(body(config.path, schema::archive::txs), config.txs_size, config.txs_rate),
-    txs(txs_head_, txs_body_, config.txs_bits),
+    txs(txs_head_, txs_body_, config.txs_buckets),
 
     // Indexes.
     // ------------------------------------------------------------------------
@@ -174,7 +174,7 @@ CLASS::store(const settings& config) NOEXCEPT
 
     strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx)),
     strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx_size, config.strong_tx_rate),
-    strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_bits),
+    strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_buckets),
 
     // Caches.
     // ------------------------------------------------------------------------
@@ -185,22 +185,22 @@ CLASS::store(const settings& config) NOEXCEPT
 
     validated_bk_head_(head(config.path / schema::dir::heads, schema::caches::validated_bk)),
     validated_bk_body_(body(config.path, schema::caches::validated_bk), config.validated_bk_size, config.validated_bk_rate),
-    validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_bits),
+    validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),
 
     validated_tx_head_(head(config.path / schema::dir::heads, schema::caches::validated_tx)),
     validated_tx_body_(body(config.path, schema::caches::validated_tx), config.validated_tx_size, config.validated_tx_rate),
-    validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx_bits),
+    validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx_buckets),
 
     // Optionals.
     // ------------------------------------------------------------------------
 
     address_head_(head(config.path / schema::dir::heads, schema::optionals::address)),
     address_body_(body(config.path, schema::optionals::address), config.address_size, config.address_rate),
-    address(address_head_, address_body_, config.address_bits),
+    address(address_head_, address_body_, config.address_buckets),
 
     neutrino_head_(head(config.path / schema::dir::heads, schema::optionals::neutrino)),
     neutrino_body_(body(config.path, schema::optionals::neutrino), config.neutrino_size, config.neutrino_rate),
-    neutrino(neutrino_head_, neutrino_body_, config.neutrino_bits),
+    neutrino(neutrino_head_, neutrino_body_, config.neutrino_buckets),
 
     // Locks.
     // ------------------------------------------------------------------------

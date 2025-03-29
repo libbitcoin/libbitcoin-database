@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(validated_bk__put__two__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    table::validated_bk instance{ head_store, body_store, 3 };
+    table::validated_bk instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());
 
     table::validated_bk::link link1{};
