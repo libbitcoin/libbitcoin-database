@@ -237,6 +237,7 @@ typename CLASS::input::cptr CLASS::get_input(
         ins.sequence
     );
 
+    // Internally-populated points will have default link.
     ptr->metadata.link = link;
     return ptr;
 }
@@ -309,7 +310,11 @@ bool CLASS::populate_with_metadata(const input& input) const NOEXCEPT
     input.metadata.parent = tx;
     input.metadata.inside = false;
     input.metadata.coinbase = is_coinbase(tx);
-    ////input.metadata.link is set earlier in get_input().
+
+    // input.metadata.link is set earlier in get_input(). Internally-populated
+    // inputs will have the default metadata.link (max_uint32). This must map
+    // onto Link::terminal, indicating an internal spend.
+
     return !is_null(input.prevout);
 }
 
