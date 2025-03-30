@@ -237,6 +237,7 @@ typename CLASS::input::cptr CLASS::get_input(
         ins.sequence
     );
 
+    // Internally-populated points will have default link.
     ptr->metadata.link = link;
     return ptr;
 }
@@ -293,10 +294,10 @@ typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
 // Populate prevout objects.
 // ----------------------------------------------------------------------------
 
-// populate (with node metadata)
+// populate_with_metadata
 
 TEMPLATE
-bool CLASS::populate(const input& input) const NOEXCEPT
+bool CLASS::populate_with_metadata(const input& input) const NOEXCEPT
 {
     // Null point would return nullptr and be interpreted as missing.
     BC_ASSERT(!input.point().is_null());
@@ -309,12 +310,16 @@ bool CLASS::populate(const input& input) const NOEXCEPT
     input.metadata.parent = tx;
     input.metadata.inside = false;
     input.metadata.coinbase = is_coinbase(tx);
-    ////input.metadata.link is set earlier in get_input().
+
+    // input.metadata.link is set earlier in get_input(). Internally-populated
+    // inputs will have the default metadata.link (max_uint32). This must map
+    // onto Link::terminal, indicating an internal spend.
+
     return !is_null(input.prevout);
 }
 
 TEMPLATE
-bool CLASS::populate(const transaction& tx) const NOEXCEPT
+bool CLASS::populate_with_metadata(const transaction& tx) const NOEXCEPT
 {
     BC_ASSERT(!tx.is_coinbase());
 
@@ -323,12 +328,12 @@ bool CLASS::populate(const transaction& tx) const NOEXCEPT
         [this](const auto& in) NOEXCEPT
         {
             // Work around bogus clang warning.
-            return this->populate(*in);
+            return this->populate_with_metadata(*in);
         });
 }
 
 TEMPLATE
-bool CLASS::populate(const block& block) const NOEXCEPT
+bool CLASS::populate_with_metadata(const block& block) const NOEXCEPT
 {
     const auto& txs = block.transactions_ptr();
     if (txs->empty())
@@ -338,7 +343,7 @@ bool CLASS::populate(const block& block) const NOEXCEPT
         [this](const auto& tx) NOEXCEPT
         {
             // Work around bogus clang warning.
-            return this->populate(*tx);
+            return this->populate_with_metadata(*tx);
         });
 }
 

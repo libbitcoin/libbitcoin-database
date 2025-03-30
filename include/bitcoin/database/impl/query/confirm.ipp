@@ -205,8 +205,8 @@ code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
     if (!get_context(prevout_ctx, header_fk))
         return error::integrity;
 
-    if (input::is_locked(sequence, ctx.height, ctx.mtp, prevout_ctx.height,
-        prevout_ctx.mtp))
+    if (input::is_relative_locked(sequence, ctx.height, ctx.mtp,
+        prevout_ctx.height, prevout_ctx.mtp))
         return error::relative_time_locked;
 
     return error::success;
