@@ -490,7 +490,7 @@ public:
 
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
-    code set_prevouts(const header_link& link, const block& block) NOEXCEPT;
+    bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
 
     /// Height indexation.
     /// -----------------------------------------------------------------------

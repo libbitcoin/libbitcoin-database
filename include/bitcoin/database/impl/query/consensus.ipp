@@ -469,20 +469,19 @@ code CLASS::get_double_spenders(tx_links& out,
 }
 
 TEMPLATE
-code CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
+bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
 {
-    code ec{};
-    tx_links spenders{};
-    ////if ((ec = get_double_spenders(spenders, block)))
-    ////    return ec;
+    tx_links doubles{};
+    // TODO: populate this blocks potential double spenders from doubles table.
+    ////if (!get_doubles(doubles, block))
+    ////    return false;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    const table::prevout::slab_put_ref prevouts{ {}, spenders, block };
-    return store_.prevout.put(link, prevouts) ? error::success :
-        error::integrity10;
+    const table::prevout::slab_put_ref prevouts{ {}, doubles, block };
+    return store_.prevout.put(link, prevouts);
     // ========================================================================
 }
 
