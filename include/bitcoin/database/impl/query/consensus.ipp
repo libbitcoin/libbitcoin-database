@@ -217,7 +217,8 @@ error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
             return error::integrity4;
 
         if (relative &&
-            input::is_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
+            input::is_relative_locked(sequence, ctx.height, ctx.mtp,
+                out.height, out.mtp))
             return error::relative_time_locked;
 
         if (coinbase &&
