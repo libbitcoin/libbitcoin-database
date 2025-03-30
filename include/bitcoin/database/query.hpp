@@ -358,9 +358,9 @@ public:
         uint32_t output_index) const NOEXCEPT;
 
     /// False implies missing prevouts, node input.metadata is populated.
-    bool populate(const input& input) const NOEXCEPT;
-    bool populate(const block& block) const NOEXCEPT;
-    bool populate(const transaction& tx) const NOEXCEPT;
+    bool populate_with_metadata(const input& input) const NOEXCEPT;
+    bool populate_with_metadata(const block& block) const NOEXCEPT;
+    bool populate_with_metadata(const transaction& tx) const NOEXCEPT;
 
     /// False implies missing prevouts, input.metadata is not populated.
     bool populate_without_metadata(const input& input) const NOEXCEPT;

@@ -766,7 +766,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
     BOOST_REQUIRE_EQUAL(hashes, test::genesis.transaction_hashes(false));
 }
 
-// populate
+// populate_with_metadata
 // ----------------------------------------------------------------------------
 
 // METADATA IS SETTABLE ON CONST TEST OBJECTS.
@@ -785,7 +785,7 @@ const auto& clean_(const auto& block_or_tx) NOEXCEPT
 }
 
 // First four blocks have only coinbase txs.
-BOOST_AUTO_TEST_CASE(query_archive__populate__null_prevouts__true)
+BOOST_AUTO_TEST_CASE(query_archive__populate_with_metadata__null_prevouts__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -802,13 +802,13 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__null_prevouts__true)
     const auto& copy2 = clean_(test::block2);
     const auto& copy3 = clean_(test::block3);
 
-    BOOST_REQUIRE(query.populate(copy));
-    BOOST_REQUIRE(query.populate(copy1));
-    BOOST_REQUIRE(query.populate(copy2));
-    BOOST_REQUIRE(query.populate(copy3));
+    BOOST_REQUIRE(query.populate_with_metadata(copy));
+    BOOST_REQUIRE(query.populate_with_metadata(copy1));
+    BOOST_REQUIRE(query.populate_with_metadata(copy2));
+    BOOST_REQUIRE(query.populate_with_metadata(copy3));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive__populate__partial_prevouts__false)
+BOOST_AUTO_TEST_CASE(query_archive__populate_with_metadata__partial_prevouts__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -823,26 +823,26 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__partial_prevouts__false)
     const auto& block1a = clean_(test::block1a);
 
     // Block populate treates first tx as null point.
-    BOOST_REQUIRE( query.populate(block1a));
-    BOOST_REQUIRE(!query.populate(*block1a.transactions_ptr()->at(0)));
-    BOOST_REQUIRE(!query.populate(*block1a.inputs_ptr()->at(0)));
-    BOOST_REQUIRE(!query.populate(*block1a.inputs_ptr()->at(2)));
+    BOOST_REQUIRE( query.populate_with_metadata(block1a));
+    BOOST_REQUIRE(!query.populate_with_metadata(*block1a.transactions_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate_with_metadata(*block1a.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate_with_metadata(*block1a.inputs_ptr()->at(2)));
 
     // Block populate treates first tx as null point and other has missing prevouts.
     const auto& block2a = clean_(test::block2a);
-    BOOST_REQUIRE(!query.populate(block2a));
-    BOOST_REQUIRE( query.populate(*block2a.transactions_ptr()->at(0)));
-    BOOST_REQUIRE(!query.populate(*block2a.transactions_ptr()->at(1)));
-    BOOST_REQUIRE( query.populate(*block2a.inputs_ptr()->at(0)));
-    BOOST_REQUIRE(!query.populate(*block2a.inputs_ptr()->at(3)));
+    BOOST_REQUIRE(!query.populate_with_metadata(block2a));
+    BOOST_REQUIRE( query.populate_with_metadata(*block2a.transactions_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate_with_metadata(*block2a.transactions_ptr()->at(1)));
+    BOOST_REQUIRE( query.populate_with_metadata(*block2a.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate_with_metadata(*block2a.inputs_ptr()->at(3)));
 
     const auto& tx4 = clean_(test::tx4);
-    BOOST_REQUIRE(query.populate(tx4));
-    BOOST_REQUIRE(query.populate(*tx4.inputs_ptr()->at(0)));
-    BOOST_REQUIRE(query.populate(*tx4.inputs_ptr()->at(1)));
+    BOOST_REQUIRE(query.populate_with_metadata(tx4));
+    BOOST_REQUIRE(query.populate_with_metadata(*tx4.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(query.populate_with_metadata(*tx4.inputs_ptr()->at(1)));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive__populate__metadata__expected)
+BOOST_AUTO_TEST_CASE(query_archive__populate_with_metadata__metadata__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -863,7 +863,7 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__metadata__expected)
     BOOST_REQUIRE( genesis.inputs_ptr()->at(0)->metadata.coinbase);
     BOOST_REQUIRE_EQUAL(genesis.inputs_ptr()->at(0)->metadata.parent, 0u);
 
-    BOOST_REQUIRE(query.populate(genesis));
+    BOOST_REQUIRE(query.populate_with_metadata(genesis));
 
     BOOST_REQUIRE(!genesis.inputs_ptr()->at(0)->prevout);
     BOOST_REQUIRE( genesis.inputs_ptr()->at(0)->metadata.inside);
@@ -882,7 +882,7 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__metadata__expected)
     BOOST_REQUIRE( tx4.inputs_ptr()->at(1)->metadata.coinbase);
     BOOST_REQUIRE_EQUAL(tx4.inputs_ptr()->at(1)->metadata.parent, 0u);
 
-    BOOST_REQUIRE(query.populate(tx4));
+    BOOST_REQUIRE(query.populate_with_metadata(tx4));
 
     // TODO: test non-coinbase and other parent.
     // spent/mtp are defaults, coinbase/parent are set (to non-default values).
@@ -894,6 +894,57 @@ BOOST_AUTO_TEST_CASE(query_archive__populate__metadata__expected)
     BOOST_REQUIRE(!tx4.inputs_ptr()->at(1)->metadata.inside);
     BOOST_REQUIRE(!tx4.inputs_ptr()->at(1)->metadata.coinbase);
     BOOST_REQUIRE_EQUAL(tx4.inputs_ptr()->at(1)->metadata.parent, 1u);
+}
+
+// populate_without_metadata
+// ----------------------------------------------------------------------------
+
+// First four blocks have only coinbase txs.
+BOOST_AUTO_TEST_CASE(query_archive__populate_without_metadata__null_prevouts__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block3, test::context, false, false));
+    BOOST_REQUIRE(query.populate_without_metadata(test::genesis));
+    BOOST_REQUIRE(query.populate_without_metadata(test::block1));
+    BOOST_REQUIRE(query.populate_without_metadata(test::block2));
+    BOOST_REQUIRE(query.populate_without_metadata(test::block3));
+}
+
+BOOST_AUTO_TEST_CASE(query_archive__populate_without_metadata__partial_prevouts__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::tx4));
+
+    // Block populate treates first tx as null point.
+    BOOST_REQUIRE( query.populate_without_metadata(test::block1a));
+    BOOST_REQUIRE(!query.populate_without_metadata(*test::block1a.transactions_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate_without_metadata(*test::block1a.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate_without_metadata(*test::block1a.inputs_ptr()->at(2)));
+
+    // Block populate treates first tx as null point and other has missing prevouts.
+    BOOST_REQUIRE(!query.populate_without_metadata(test::block2a));
+    BOOST_REQUIRE( query.populate_without_metadata(*test::block2a.transactions_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate_without_metadata(*test::block2a.transactions_ptr()->at(1)));
+    BOOST_REQUIRE( query.populate_without_metadata(*test::block2a.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(!query.populate_without_metadata(*test::block2a.inputs_ptr()->at(3)));
+
+    BOOST_REQUIRE(query.populate_without_metadata(test::tx4));
+    BOOST_REQUIRE(query.populate_without_metadata(*test::tx4.inputs_ptr()->at(0)));
+    BOOST_REQUIRE(query.populate_without_metadata(*test::tx4.inputs_ptr()->at(1)));
 }
 
 // ----------------------------------------------------------------------------
