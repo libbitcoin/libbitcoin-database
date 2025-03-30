@@ -188,7 +188,8 @@ struct txs
         transaction::pk; // coinbase
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = max_size_t;
-    static constexpr size_t cell = sizeof(unsigned_type<linkage<pk>::size>);
+    ////static constexpr size_t cell = sizeof(unsigned_type<linkage<pk>::size>);
+    static constexpr size_t cell = linkage<pk>::size;
     static_assert(minsize == 10u);
     static_assert(minrow == 18u);
 };
