@@ -72,10 +72,40 @@ inline void CLASS::reset() NOEXCEPT
     memory_.reset();
 }
 
+// operators
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 inline CLASS::operator bool() const NOEXCEPT
 {
     return !link_.is_terminal();
+}
+
+TEMPLATE
+inline const Link& CLASS::operator*() const NOEXCEPT
+{
+    return link_;
+}
+
+TEMPLATE
+inline const Link* CLASS::operator->() const NOEXCEPT
+{
+    return &link_;
+}
+
+TEMPLATE
+inline CLASS& CLASS::operator++() NOEXCEPT
+{
+    advance();
+    return *this;
+}
+
+TEMPLATE
+inline CLASS CLASS::operator++(int) NOEXCEPT
+{
+    auto previous = *this;
+    ++(*this);
+    return previous;
 }
 
 // protected

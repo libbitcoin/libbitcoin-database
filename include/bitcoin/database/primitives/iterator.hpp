@@ -47,6 +47,9 @@ class iterator
 public:
     DEFAULT_COPY_MOVE_DESTRUCT(iterator);
 
+    /// Value of (bool)iterator when terminal.
+    static constexpr bool end() NOEXCEPT { return false; }
+
     /// This advances to first match (or terminal).
     iterator(memory_ptr&& data, const Link& start, Key&& key) NOEXCEPT;
     iterator(memory_ptr&& data, const Link& start, const Key& key) NOEXCEPT;
@@ -68,6 +71,16 @@ public:
 
     /// True if the iterator is not terminal.
     inline operator bool() const NOEXCEPT;
+
+    /// Get a reference to the iterator's value.
+    inline const Link& operator*() const NOEXCEPT;
+
+    /// Get a pointer to the iterator's value.
+    inline const Link* operator->() const NOEXCEPT;
+
+    /// Increment operators.
+    inline iterator<Link, Key, Size>& operator++() NOEXCEPT;
+    inline iterator<Link, Key, Size> operator++(int) NOEXCEPT;
 
 protected:
     Link to_match(Link link) const NOEXCEPT;
