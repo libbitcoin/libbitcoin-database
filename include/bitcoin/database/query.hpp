@@ -548,7 +548,6 @@ protected:
     /// -----------------------------------------------------------------------
 
     // Called by block_confirmable (check bip30)
-    bool is_spent_prevout(const point_link& link, index index) const NOEXCEPT;
     bool is_spent_coinbase(const tx_link& link) const NOEXCEPT;
     code unspent_duplicates(const header_link& coinbase,
         const context& ctx) const NOEXCEPT;
