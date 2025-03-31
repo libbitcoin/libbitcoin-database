@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
@@ -31,108 +32,23 @@ namespace database {
 // unspent_duplicates (bip30)
 // ----------------------------------------------------------------------------
 
-// private/static
-TEMPLATE
-inline bool CLASS::contains(const maybe_strongs& pairs,
-    const header_link& block) NOEXCEPT
-{
-    return std::any_of(pairs.begin(), pairs.end(), [&](const auto& pair) NOEXCEPT
-    {
-        return block == pair.block;
-    });
-}
-
-// private/static
-TEMPLATE
-inline tx_links CLASS::strong_only(const maybe_strongs& pairs) NOEXCEPT
-{
-    tx_links links{};
-    for (const auto& pair: pairs)
-        if (pair.strong)
-            links.push_back(pair.tx);
-
-    // Reduced to the subset of strong duplicate (by hash) tx records.
-    return links;
-}
-
 // protected
-// Required for bip30 processing.
-// The top of the strong_tx table will reflect the current state of only one
-// block association. This scans the multimap for the first instance of each
-// block that is associated by the tx.link and returns that set of block links.
-// Return distinct set of txs by link where each is strong by block.
 TEMPLATE
-tx_links CLASS::get_strong_txs(const tx_link& link) const NOEXCEPT
+bool CLASS::is_spent_prevout(const point_link&, index) const NOEXCEPT
 {
-    auto it = store_.strong_tx.it(link);
-    if (!it)
-        return {};
-
-    // Obtain all first (by block) duplicate (by link) tx records.
-    maybe_strongs pairs{};
-    do
-    {
-        table::strong_tx::record strong{};
-        if (store_.strong_tx.get(it, strong) &&
-            !contains(pairs, strong.header_fk))
-        {
-            pairs.emplace_back(strong.header_fk, it.self(), strong.positive);
-        }
-
-    }
-    while (it.advance());
-    it.reset();
-
-    return strong_only(pairs);
+    // TODO: with multiple previous duplicates there must be same number of
+    // TODO: spends of each coinbase output, but this will identify only one.
+    return false;
 }
 
-// protected
-// Required for bip30 processing.
-// Return distinct set of txs by link for hash where each is strong by block.
 TEMPLATE
-tx_links CLASS::get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT
+bool CLASS::is_spent_coinbase(const tx_link& link) const NOEXCEPT
 {
-    // TODO: avoid nested iterators. accumulate set of tx_links and iterate set
-    // TODO: after releasing the initial iterator.
-
-    // TODO: deadlock.
-    auto it = store_.tx.it(tx_hash);
-    if (!it)
-        return {};
-
-    tx_links links{};
-    do
-    {
-        // TODO: deadlock.
-        for (const auto& tx: get_strong_txs(it.self()))
-            links.push_back(tx);
-    }
-    while (it.advance());
-    return links;
-}
-
-////// protected
-////TEMPLATE
-////bool CLASS::is_spent_prevout(const point_link& link, index index) const NOEXCEPT
-////{
-////    table::point::get_stub get{};
-////    if (!store_.point.get(link, get))
-////        return false;
-////
-////    // Prevout is spent by any confirmed transaction.
-////    return spent(link, index, get.stub, spend_link::terminal) ==
-////        error::confirmed_double_spend;
-////}
-
-TEMPLATE
-bool CLASS::is_spent_coinbase(const tx_link&) const NOEXCEPT
-{
-    // TODO: identify spends by stub.
-    ////// All outputs of the tx are confirmed spent.
-    ////const auto point_fk = to_point(get_tx_key(link));
-    ////for (index index{}; index < output_count(link); ++index)
-    ////    if (!is_spent_prevout(point_fk, index))
-    ////        return false;
+    // All outputs of the tx are confirmed spent.
+    const auto point_fk = to_point(get_tx_key(link));
+    for (index index{}; index < output_count(link); ++index)
+        if (!is_spent_prevout(point_fk, index))
+            return false;
 
     return true;
 }
@@ -153,33 +69,42 @@ code CLASS::unspent_duplicates(const header_link& link,
     if (cb.is_terminal())
         return error::integrity1;
 
-    // Get all coinbases (must be at least one, because self).
+    // Get all coinbases of the same hash (must be at least one, because self).
+    // ........................................................................
     auto it = store_.tx.it(get_tx_key(cb));
     if (!it)
         return error::integrity2;
 
     tx_links coinbases{};
     coinbases.reserve(one);
-    do { coinbases.push_back(it.self()); } while (it.advance());
+    do
+    {
+        // Optimal for very short or empty sets.
+        if (!system::contains(coinbases, it.self()))
+            coinbases.push_back(it.self());
+    }
+    while (it.advance());
     it.reset();
 
-    // Get all strong coinbases.
-    tx_links strong_coinbases{};
-    strong_coinbases.reserve(one);
-    for (const auto& tx: coinbases)
-        if (is_strong_tx(tx))
-            strong_coinbases.push_back(tx);
+    // remove non-strong cbs (usually empty, self not strong w/prevout table).
+    // strong_tx records are always populated by the associating block header.
+    // Coinbase txs are always set strong in assocition with the associating
+    // header, both for block associations and compact. The compact block cb
+    // may be archived only when it is also associated via txs to the header.
+    // ........................................................................
+    std::erase_if(coinbases, [this](const auto& tx) NOEXCEPT
+    {
+        table::strong_tx::record strong{};
+        return store_.strong_tx.find(tx, strong) && strong.positive;
+    });
 
-    // Strong must be other blocks, dis/re-orged blocks are not strong.
-    
-    // Remove self (will be not found if current block is not set_strong).
-    const auto self = std::find(coinbases.begin(), coinbases.end(), link);
-    if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
-        return error::integrity3;
+    ////// Strong must be other blocks, dis/re-orged blocks are not strong.
+    ////// Remove self (will be not found if current block is not set_strong).
+    ////const auto self = std::find(coinbases.begin(), coinbases.end(), link);
+    ////if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
+    ////    return error::integrity3;
     
     // bip30: all outputs of all previous duplicate coinbases must be spent.
-    // BUGBUG: with multiple previous duplicates there must be same number of
-    // BUGBUG: spends of each coinbase output, but this will identify only one.
     for (const auto coinbase: coinbases)
         if (!is_spent_coinbase(coinbase))
             return error::unspent_coinbase_collision;
@@ -245,7 +170,7 @@ code CLASS::populate_prevouts(point_sets& sets, size_t points,
     if (!store_.prevout.at(link, cache))
         return error::integrity5;
 
-    // The conflicts list is generally empty.
+    // Is any duplicated point in the block is confirmed (generally empty).
     for (const auto& spender: cache.conflicts)
         if (is_strong_tx(spender))
             return error::confirmed_double_spend;
@@ -327,6 +252,60 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return { failure.load() };
 
     return error::success;
+}
+
+// compact blocks methods (full query, no doubles table)
+// ----------------------------------------------------------------------------
+// TODO: currently unused (apply in compacy blocks).
+
+// protected
+TEMPLATE
+bool CLASS::get_double_spenders(tx_links& out, const point& point,
+    const point_link& self) const NOEXCEPT
+{
+    // This is most of the expense of confirmation, and is not mitigated by the
+    // point table sieve, since self always exists.
+    auto it = store_.point.it(point);
+    if (!it)
+        return false;
+
+    point_links points{};
+    do
+    {
+        if (it.self() != self)
+            points.push_back(it.self());
+    }
+    while (it.advance());
+    it.reset();
+
+    for (auto link: points)
+    {
+        table::ins::get_parent get{};
+        if (!store_.ins.get(link, get))
+            return false;
+
+        out.push_back(get.parent_fk);
+    }
+
+    return true;
+}
+
+// protected
+TEMPLATE
+bool CLASS::get_double_spenders(tx_links& out,
+    const block& block) const NOEXCEPT
+{
+    // Empty or coinbase only implies no spends.
+    const auto& txs = *block.transactions_ptr();
+    if (txs.size() <= one)
+        return true;
+
+    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+        for (const auto& in: *(*tx)->inputs_ptr())
+            if (!get_double_spenders(out, in->point(), in->metadata.link))
+                return false;
+
+    return true;
 }
 
 // set_strong
@@ -419,62 +398,35 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 // ----------------------------------------------------------------------------
 // called from validation to set prevout state
 
-// protected
 TEMPLATE
-code CLASS::push_spenders(tx_links& out, const point& point,
-    const point_link& self) const NOEXCEPT
+bool CLASS::get_doubles(tx_links&, const point&) const NOEXCEPT
 {
-    // This is most of the expense of confirmation.
-    auto it = store_.point.it(point);
-    if (!it)
-        return error::integrity8;
-
-    point_links points{};
-    do
-    {
-        if (it.self() != self)
-            points.push_back(it.self());
-    }
-    while (it.advance());
-    it.reset();
-
-    for (auto link: points)
-    {
-        table::ins::get_parent get{};
-        if (!store_.ins.get(link, get))
-            return error::integrity9;
-
-        out.push_back(get.parent_fk);
-    }
-
-    return error::success;
+    // TODO: Get all parent tx links for any point of block in doubles table.
+    return true;
 }
 
 TEMPLATE
-code CLASS::get_double_spenders(tx_links& out,
-    const block& block) const NOEXCEPT
+bool CLASS::get_doubles(tx_links& out, const block& block) const NOEXCEPT
 {
     // Empty or coinbase only implies no spends.
     const auto& txs = *block.transactions_ptr();
     if (txs.size() <= one)
-        return error::success;
+        return true;
 
-    code ec{};
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
         for (const auto& in: *(*tx)->inputs_ptr())
-            if ((ec = push_spenders(out, in->point(), in->metadata.link)))
-                return ec;
+            if (!get_doubles(out, in->point()))
+                return false;
 
-    return error::success;
+    return true;
 }
 
 TEMPLATE
 bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
 {
     tx_links doubles{};
-    // TODO: populate this blocks potential double spenders from doubles table.
-    ////if (!get_doubles(doubles, block))
-    ////    return false;
+    if (!get_doubles(doubles, block))
+        return false;
 
     // ========================================================================
     const auto scope = store_.get_transactor();

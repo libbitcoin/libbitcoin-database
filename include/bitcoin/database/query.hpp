@@ -478,10 +478,7 @@ public:
     /// -----------------------------------------------------------------------
     /// These are used in confirmation.
 
-    bool is_spent_coinbase(const tx_link& link) const NOEXCEPT;
     code block_confirmable(const header_link& link) const NOEXCEPT;
-    code unspent_duplicates(const header_link& coinbase,
-        const context& ctx) const NOEXCEPT;
 
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
@@ -549,23 +546,38 @@ protected:
 
     /// Consensus.
     /// -----------------------------------------------------------------------
-    tx_links get_strong_txs(const tx_link& link) const NOEXCEPT;
-    tx_links get_strong_txs(const hash_digest& tx_hash) const NOEXCEPT;
-    code populate_prevouts(point_sets& sets, size_t points,
-        const header_link& link) const NOEXCEPT;
 
-    code push_spenders(tx_links& out, const point& point,
-        const point_link& self) const NOEXCEPT;
-    code get_double_spenders(tx_links& out, const block& block) const NOEXCEPT;
+    // Called by block_confirmable (check bip30)
+    bool is_spent_prevout(const point_link& link, index index) const NOEXCEPT;
+    bool is_spent_coinbase(const tx_link& link) const NOEXCEPT;
+    code unspent_duplicates(const header_link& coinbase,
+        const context& ctx) const NOEXCEPT;
 
+    // Called by block_confirmable (populate and check double spends).
     error::error_t unspendable(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;
 
+    // Called by block_confirmable (populate and check double spends).
+    code populate_prevouts(point_sets& sets, size_t points,
+        const header_link& link) const NOEXCEPT;
+
+    /// TODO: apply these to compact block confirmation, as the block will
+    /// TODO: associate existing txs, making it impossible to reply on the
+    /// TODO: duplicates table. The full query approach is used instead.
+    bool get_double_spenders(tx_links& out, const block& block) const NOEXCEPT;
+    bool get_double_spenders(tx_links& out, const point& point,
+        const point_link& self) const NOEXCEPT;
+
+    /// Support set_strong and set_unstrong writers.
     bool set_strong(const header_link& link, size_t count,
         const tx_link& first_fk, bool positive) NOEXCEPT;
     bool set_strong(const header_link& link, const tx_links& txs,
         bool positive) NOEXCEPT;
+
+    /// Get all tx links for any point of block that is also in doubles table.
+    bool get_doubles(tx_links& out, const block& block) const NOEXCEPT;
+    bool get_doubles(tx_links& out, const point& point) const NOEXCEPT;
 
     /// Context.
     /// -----------------------------------------------------------------------
@@ -607,23 +619,10 @@ protected:
     code set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT;
 
 private:
-    struct maybe_strong
-    {
-        header_link block{};
-        tx_link tx{};
-        bool strong{};
-    };
-    using maybe_strongs = std_vector<maybe_strong>;
-
     // Chain objects.
     template <typename Bool>
     static inline bool push_bool(std_vector<Bool>& stack,
         const Bool& element) NOEXCEPT;
-
-    // Consensus.
-    static inline tx_links strong_only(const maybe_strongs& pairs) NOEXCEPT;
-    static inline bool contains(const maybe_strongs& pairs,
-        const header_link& block) NOEXCEPT;
 
     // These are thread safe.
     Store& store_;
