@@ -34,22 +34,10 @@ namespace database {
 
 // protected
 TEMPLATE
-bool CLASS::is_spent_prevout(const point_link&, index) const NOEXCEPT
+bool CLASS::is_spent_coinbase(const tx_link&) const NOEXCEPT
 {
     // TODO: with multiple previous duplicates there must be same number of
-    // TODO: spends of each coinbase output, but this will identify only one.
-    return false;
-}
-
-TEMPLATE
-bool CLASS::is_spent_coinbase(const tx_link& link) const NOEXCEPT
-{
-    // All outputs of the tx are confirmed spent.
-    const auto point_fk = to_point(get_tx_key(link));
-    for (index index{}; index < output_count(link); ++index)
-        if (!is_spent_prevout(point_fk, index))
-            return false;
-
+    // TODO: spends of each coinbase output.
     return true;
 }
 
@@ -65,13 +53,13 @@ code CLASS::unspent_duplicates(const header_link& link,
         return error::success;
 
     // Get coinbase (block's first tx link).
-    const auto cb = to_coinbase(link);
-    if (cb.is_terminal())
+    const auto coinbase = to_coinbase(link);
+    if (coinbase.is_terminal())
         return error::integrity1;
 
     // Get all coinbases of the same hash (must be at least one, because self).
     // ........................................................................
-    auto it = store_.tx.it(get_tx_key(cb));
+    auto it = store_.tx.it(get_tx_key(coinbase));
     if (!it)
         return error::integrity2;
 
