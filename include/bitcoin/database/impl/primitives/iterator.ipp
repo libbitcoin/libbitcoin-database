@@ -31,13 +31,13 @@ namespace database {
 TEMPLATE
 CLASS::iterator(memory_ptr&& data, const Link& start, Key&& key) NOEXCEPT
   : memory_(std::move(data)), key_(std::forward<Key>(key)),
-    link_(to_match(start))
+    link_(to_first(start))
 {
 }
 
 TEMPLATE
 CLASS::iterator(memory_ptr&& data, const Link& start, const Key& key) NOEXCEPT
-  : memory_(std::move(data)), key_(key), link_(to_match(start))
+  : memory_(std::move(data)), key_(key), link_(to_first(start))
 {
 }
 
@@ -112,7 +112,7 @@ inline CLASS CLASS::operator++(int) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-Link CLASS::to_match(Link link) const NOEXCEPT
+Link CLASS::to_first(Link link) const NOEXCEPT
 {
     // Because of this !link_.is_terminal() subsequently guards both.
     if (!memory_)

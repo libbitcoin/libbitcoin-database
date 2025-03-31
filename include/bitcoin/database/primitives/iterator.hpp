@@ -83,7 +83,7 @@ public:
     inline iterator<Link, Key, Size> operator++(int) NOEXCEPT;
 
 protected:
-    Link to_match(Link link) const NOEXCEPT;
+    Link to_first(Link link) const NOEXCEPT;
     Link to_next(Link link) const NOEXCEPT;
 
 private:
