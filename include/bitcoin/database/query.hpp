@@ -471,13 +471,8 @@ public:
     bool is_spent_output(const output_link& link) const NOEXCEPT;
 
     /// Height index not used by these.
-   //// bool is_spent(const point_link& link) const NOEXCEPT;
     bool is_strong_tx(const tx_link& link) const NOEXCEPT;
     bool is_strong_block(const header_link& link) const NOEXCEPT;
-    bool is_strong_spend(const point_link& link) const NOEXCEPT;
-    bool is_mature(const point_link& link, size_t height) const NOEXCEPT;
-    bool is_locked(const point_link& link, uint32_t sequence,
-        const context& ctx) const NOEXCEPT;
 
     /// Consensus.
     /// -----------------------------------------------------------------------
@@ -531,13 +526,12 @@ public:
 protected:
     /// Translate.
     /// -----------------------------------------------------------------------
-
     uint32_t to_input_index(const tx_link& parent_fk,
         const point_link& point_fk) const NOEXCEPT;
     uint32_t to_output_index(const tx_link& parent_fk,
         const output_link& output_fk) const NOEXCEPT;
 
-    /// Objectss.
+    /// Objects.
     /// -----------------------------------------------------------------------
     static inline point::cptr make_point(hash_digest&& hash,
         uint32_t index) NOEXCEPT;
@@ -551,11 +545,7 @@ protected:
 
     /// Confirm.
     /// -----------------------------------------------------------------------
-
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
-    code mature_prevout(const hash_digest& hash, size_t height) const NOEXCEPT;
-    code locked_prevout(const point_link& link, uint32_t sequence,
-        const context& ctx) const NOEXCEPT;
 
     /// Consensus.
     /// -----------------------------------------------------------------------
