@@ -134,7 +134,7 @@
 ////    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 ////
 ////    auto it = instance.it(key);
-////    BOOST_REQUIRE_EQUAL(it.self(), 1u);
+////    BOOST_REQUIRE_EQUAL(it.get(), 1u);
 ////    BOOST_REQUIRE(!it.advance());
 ////}
 ////

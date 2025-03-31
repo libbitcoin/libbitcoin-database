@@ -646,12 +646,12 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__exists_copy__non_terminal)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(instance.it(key).self().is_terminal());
+    BOOST_REQUIRE(instance.it(key).get().is_terminal());
     BOOST_REQUIRE(!instance.put_link(key, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
-    BOOST_REQUIRE(!instance.it(key).self().is_terminal());
+    BOOST_REQUIRE(!instance.it(key).get().is_terminal());
 
     big_record record{};
-    BOOST_REQUIRE(instance.get(instance.it(key).self(), record));
+    BOOST_REQUIRE(instance.get(instance.it(key).get(), record));
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -663,12 +663,12 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__exists_move__non_terminal)
     BOOST_REQUIRE(instance.create());
 
     constexpr key1 key{ 0x41 };
-    BOOST_REQUIRE(instance.it(key1{ 0x41 }).self().is_terminal());
+    BOOST_REQUIRE(instance.it(key1{ 0x41 }).get().is_terminal());
     BOOST_REQUIRE(!instance.put_link(key, big_record{ 0xa1b2c3d4_u32 }).is_terminal());
-    BOOST_REQUIRE(!instance.it(key1{ 0x41 }).self().is_terminal());
+    BOOST_REQUIRE(!instance.it(key1{ 0x41 }).get().is_terminal());
 
     big_record record{};
-    BOOST_REQUIRE(instance.get(instance.it(key1{ 0x41 }).self(), record));
+    BOOST_REQUIRE(instance.get(instance.it(key1{ 0x41 }).get(), record));
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -696,42 +696,42 @@ BOOST_AUTO_TEST_CASE(hashmap__record_it__multiple__iterated)
     auto it_a = instance.it(key_a);
 
     big_record record{};
-    BOOST_REQUIRE(instance.get(it_a.self(), record));
+    BOOST_REQUIRE(instance.get(it_a.get(), record));
     BOOST_REQUIRE_EQUAL(record.value, 0x000000a3_u32);
     BOOST_REQUIRE(it_a.advance());
-    BOOST_REQUIRE(instance.get(it_a.self(), record));
+    BOOST_REQUIRE(instance.get(it_a.get(), record));
     BOOST_REQUIRE_EQUAL(record.value, 0x000000a2_u32);
     BOOST_REQUIRE(it_a.advance());
-    BOOST_REQUIRE(instance.get(it_a.self(), record));
+    BOOST_REQUIRE(instance.get(it_a.get(), record));
     BOOST_REQUIRE_EQUAL(record.value, 0x000000a1_u32);
     BOOST_REQUIRE(!it_a.advance());
-    BOOST_REQUIRE(!instance.get(it_a.self(), record));
+    BOOST_REQUIRE(!instance.get(it_a.get(), record));
 
     auto it_b = instance.it(key_b);
 
-    BOOST_REQUIRE(instance.get(it_b.self(), record));
+    BOOST_REQUIRE(instance.get(it_b.get(), record));
     BOOST_REQUIRE_EQUAL(record.value, 0x000000b3_u32);
     BOOST_REQUIRE(it_b.advance());
-    BOOST_REQUIRE(instance.get(it_b.self(), record));
+    BOOST_REQUIRE(instance.get(it_b.get(), record));
     BOOST_REQUIRE_EQUAL(record.value, 0x000000b2_u32);
     BOOST_REQUIRE(it_b.advance());
-    BOOST_REQUIRE(instance.get(it_b.self(), record));
+    BOOST_REQUIRE(instance.get(it_b.get(), record));
     BOOST_REQUIRE_EQUAL(record.value, 0x000000b1_u32);
     BOOST_REQUIRE(!it_b.advance());
-    BOOST_REQUIRE(!instance.get(it_b.self(), record));
+    BOOST_REQUIRE(!instance.get(it_b.get(), record));
 
     auto it_c = instance.it(key_c);
 
-    BOOST_REQUIRE(instance.get(it_c.self(), record));
+    BOOST_REQUIRE(instance.get(it_c.get(), record));
     BOOST_REQUIRE_EQUAL(record.value, 0x000000c3_u32);
     BOOST_REQUIRE(it_c.advance());
-    BOOST_REQUIRE(instance.get(it_c.self(), record));
+    BOOST_REQUIRE(instance.get(it_c.get(), record));
     BOOST_REQUIRE_EQUAL(record.value, 0x000000c2_u32);
     BOOST_REQUIRE(it_c.advance());
-    BOOST_REQUIRE(instance.get(it_c.self(), record));
+    BOOST_REQUIRE(instance.get(it_c.get(), record));
     BOOST_REQUIRE_EQUAL(record.value, 0x000000c1_u32);
     BOOST_REQUIRE(!it_c.advance());
-    BOOST_REQUIRE(!instance.get(it_c.self(), record));
+    BOOST_REQUIRE(!instance.get(it_c.get(), record));
     BOOST_REQUIRE(!instance.get_fault());
 
     //   [0000000000]

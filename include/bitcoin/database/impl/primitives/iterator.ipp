@@ -54,13 +54,13 @@ inline const Key& CLASS::key() const NOEXCEPT
 }
 
 TEMPLATE
-inline const Link& CLASS::self() const NOEXCEPT
+inline const Link& CLASS::get() const NOEXCEPT
 {
     return link_;
 }
 
 TEMPLATE
-inline const memory_ptr& CLASS::get() const NOEXCEPT
+inline const memory_ptr& CLASS::ptr() const NOEXCEPT
 {
     return memory_;
 }

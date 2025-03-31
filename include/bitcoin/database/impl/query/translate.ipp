@@ -183,7 +183,7 @@ header_link CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
     tx_links txs{};
     do
     {
-        txs.push_back(it.self());
+        txs.push_back(it.get());
     }
     while (it.advance());
     it.reset();
@@ -308,7 +308,7 @@ point_links CLASS::to_spenders(const hash_digest& point_hash,
     point_links links{};
     do
     {
-        links.push_back(it.self());
+        links.push_back(it.get());
     }
     while (it.advance());
     return links;

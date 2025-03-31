@@ -61,10 +61,10 @@ public:
     inline const Key& key() const NOEXCEPT;
 
     /// Return current link, terminal if not found.
-    inline const Link& self() const NOEXCEPT;
+    inline const Link& get() const NOEXCEPT;
 
     /// Access the underlying memory pointer.
-    inline const memory_ptr& get() const NOEXCEPT;
+    inline const memory_ptr& ptr() const NOEXCEPT;
 
     /// Release the memory pointer, invalidates iterator.
     inline void reset() NOEXCEPT;
