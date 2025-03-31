@@ -39,7 +39,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { integrity7, "store corrupted7" },
     { integrity8, "store corrupted8" },
     { integrity9, "store corrupted9" },
-    { integrity10, "store corrupted10" },
+    ////{ integrity10, "store corrupted10" },
 
     // memory map
     { open_open, "opening open file" },
