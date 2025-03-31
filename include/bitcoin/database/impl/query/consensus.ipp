@@ -75,7 +75,7 @@ code CLASS::unspent_duplicates(const header_link& link,
     if (!it)
         return error::integrity2;
 
-    tx_links coinbases{};
+    std::vector<tx_link> coinbases{};
     coinbases.reserve(one);
     do
     {
@@ -92,10 +92,10 @@ code CLASS::unspent_duplicates(const header_link& link,
     // header, both for block associations and compact. The compact block cb
     // may be archived only when it is also associated via txs to the header.
     // ........................................................................
-    std::erase_if(coinbases, [this](const auto& tx) NOEXCEPT
+    std::erase_if(coinbases, [this](const auto& cb) NOEXCEPT
     {
         table::strong_tx::record strong{};
-        return store_.strong_tx.find(tx, strong) && strong.positive;
+        return store_.strong_tx.find(cb, strong) && strong.positive;
     });
 
     ////// Strong must be other blocks, dis/re-orged blocks are not strong.
@@ -105,8 +105,8 @@ code CLASS::unspent_duplicates(const header_link& link,
     ////    return error::integrity3;
     
     // bip30: all outputs of all previous duplicate coinbases must be spent.
-    for (const auto coinbase: coinbases)
-        if (!is_spent_coinbase(coinbase))
+    for (const auto& cb: coinbases)
+        if (!is_spent_coinbase(cb))
             return error::unspent_coinbase_collision;
 
     return error::success;
