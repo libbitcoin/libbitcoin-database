@@ -47,6 +47,8 @@ class iterator
 public:
     DEFAULT_COPY_MOVE_DESTRUCT(iterator);
 
+    using self = iterator<Link, Key, Size>;
+
     /// Value of (bool)iterator when terminal.
     static constexpr bool end() NOEXCEPT { return false; }
 
@@ -79,8 +81,8 @@ public:
     inline const Link* operator->() const NOEXCEPT;
 
     /// Increment operators.
-    inline iterator<Link, Key, Size>& operator++() NOEXCEPT;
-    inline iterator<Link, Key, Size> operator++(int) NOEXCEPT;
+    inline self& operator++() NOEXCEPT;
+    inline self operator++(int) NOEXCEPT;
 
 protected:
     Link to_first(Link link) const NOEXCEPT;
