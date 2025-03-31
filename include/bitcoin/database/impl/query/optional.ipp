@@ -32,85 +32,42 @@ namespace database {
 
 // TODO: test more.
 TEMPLATE
-bool CLASS::get_confirmed_balance(uint64_t& out,
-    const hash_digest& key) const NOEXCEPT
-{
-    auto it = store_.address.it(key);
-    if (!it)
-        return false;
-
-    // TODO: deadlock risk.
-    out = zero;
-    do
-    {
-        table::address::record address{};
-        if (!store_.address.get(it, address))
-            return false;
-
-        // Failure or overflow returns maximum value.
-        if (is_confirmed_unspent(address.output_fk))
-        {
-            uint64_t value{};
-            if (!get_value(value, address.output_fk))
-                return false;
-
-            out = system::ceilinged_add(value, out);
-        }
-    }
-    while (it.advance());
-    return true;
-}
-
-// TODO: test more.
-TEMPLATE
 bool CLASS::to_address_outputs(output_links& out,
     const hash_digest& key) const NOEXCEPT
 {
-    auto it = store_.address.it(key);
-    if (!it)
-        return false;
-
-    // TODO: deadlock risk.
     out.clear();
-    do
+    for (auto it = store_.address.it(key); it; ++it)
     {
         table::address::record address{};
         if (!store_.address.get(it, address))
         {
             out.clear();
+            out.shrink_to_fit();
             return false;
         }
 
         out.push_back(address.output_fk);
     }
-    while (it.advance());
+
     return true;
 }
 
 // TODO: test more.
 TEMPLATE
-bool CLASS::to_unspent_outputs(output_links& out,
+bool CLASS::to_confirmed_unspent_outputs(output_links& out,
     const hash_digest& key) const NOEXCEPT
 {
-    auto it = store_.address.it(key);
-    if (!it)
+    output_links output_fks{};
+    if (!to_address_outputs(output_fks, key))
         return false;
 
-    // TODO: deadlock risk.
     out.clear();
-    do
-    {
-        table::address::record address{};
-        if (!store_.address.get(it, address))
-        {
-            out.clear();
-            return false;
-        }
+    out.reserve(output_fks.size());
+    for (auto output_fk: output_fks)
+        if (is_confirmed_unspent(output_fk))
+            out.push_back(output_fk);
 
-        if (is_confirmed_unspent(address.output_fk))
-            out.push_back(address.output_fk);
-    }
-    while (it.advance());
+    out.shrink_to_fit();
     return true;
 }
 
@@ -119,34 +76,50 @@ TEMPLATE
 bool CLASS::to_minimum_unspent_outputs(output_links& out,
     const hash_digest& key, uint64_t minimum) const NOEXCEPT
 {
-    auto it = store_.address.it(key);
-    if (!it)
+    output_links unspent_fks{};
+    if (!to_confirmed_unspent_outputs(unspent_fks, key))
         return false;
 
-    // TODO: deadlock risk.
     out.clear();
-    do
+    out.reserve(unspent_fks.size());
+    for (auto unspent_fk: unspent_fks)
     {
-        table::address::record address{};
-        if (!store_.address.get(it, address))
+        uint64_t value{};
+        if (!get_value(value, unspent_fk))
+        {
+            out.clear();
+            out.shrink_to_fit();
+            return false;
+        }
+
+        if (value >= minimum)
+            out.push_back(unspent_fk);
+    }
+
+    out.shrink_to_fit();
+    return true;
+}
+
+// TODO: test more.
+TEMPLATE
+bool CLASS::get_confirmed_balance(uint64_t& out,
+    const hash_digest& key) const NOEXCEPT
+{
+    out = zero;
+    output_links unspent_fks{};
+    if (!to_confirmed_unspent_outputs(unspent_fks, key))
+        return false;
+
+    for (auto unspent_fk: unspent_fks)
+    {
+        uint64_t value{};
+        if (!get_value(value, unspent_fk))
             return false;
 
-        // Confirmed and not spent, but possibly immature.
-        if (is_confirmed_output(address.output_fk) &&
-            !is_spent_output(address.output_fk))
-        {
-            uint64_t value{};
-            if (!get_value(value, address.output_fk))
-            {
-                out.clear();
-                return false;
-            }
-
-            if (value >= minimum)
-                out.push_back(address.output_fk);
-        }
+        // max if overflowed.
+        out = system::ceilinged_add(value, out);
     }
-    while (it.advance());
+
     return true;
 }
 

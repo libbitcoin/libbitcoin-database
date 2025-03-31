@@ -31,13 +31,13 @@ namespace database {
 TEMPLATE
 CLASS::iterator(memory_ptr&& data, const Link& start, Key&& key) NOEXCEPT
   : memory_(std::move(data)), key_(std::forward<Key>(key)),
-    link_(to_match(start))
+    link_(to_first(start))
 {
 }
 
 TEMPLATE
 CLASS::iterator(memory_ptr&& data, const Link& start, const Key& key) NOEXCEPT
-  : memory_(std::move(data)), key_(key), link_(to_match(start))
+  : memory_(std::move(data)), key_(key), link_(to_first(start))
 {
 }
 
@@ -54,13 +54,13 @@ inline const Key& CLASS::key() const NOEXCEPT
 }
 
 TEMPLATE
-inline const Link& CLASS::self() const NOEXCEPT
+inline const Link& CLASS::get() const NOEXCEPT
 {
     return link_;
 }
 
 TEMPLATE
-inline const memory_ptr& CLASS::get() const NOEXCEPT
+inline const memory_ptr& CLASS::ptr() const NOEXCEPT
 {
     return memory_;
 }
@@ -72,17 +72,47 @@ inline void CLASS::reset() NOEXCEPT
     memory_.reset();
 }
 
+// operators
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 inline CLASS::operator bool() const NOEXCEPT
 {
     return !link_.is_terminal();
 }
 
+TEMPLATE
+inline const Link& CLASS::operator*() const NOEXCEPT
+{
+    return link_;
+}
+
+TEMPLATE
+inline const Link* CLASS::operator->() const NOEXCEPT
+{
+    return &link_;
+}
+
+TEMPLATE
+inline CLASS& CLASS::operator++() NOEXCEPT
+{
+    advance();
+    return *this;
+}
+
+TEMPLATE
+inline CLASS CLASS::operator++(int) NOEXCEPT
+{
+    auto previous = *this;
+    ++(*this);
+    return previous;
+}
+
 // protected
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-Link CLASS::to_match(Link link) const NOEXCEPT
+Link CLASS::to_first(Link link) const NOEXCEPT
 {
     // Because of this !link_.is_terminal() subsequently guards both.
     if (!memory_)

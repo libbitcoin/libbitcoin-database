@@ -502,14 +502,14 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Address, set internal to tx (natural-keyed).
-    bool get_confirmed_balance(uint64_t& out,
-        const hash_digest& key) const NOEXCEPT;
     bool to_address_outputs(output_links& out,
         const hash_digest& key) const NOEXCEPT;
-    bool to_unspent_outputs(output_links& out,
+    bool to_confirmed_unspent_outputs(output_links& out,
         const hash_digest& key) const NOEXCEPT;
     bool to_minimum_unspent_outputs(output_links& out, const hash_digest& key,
         uint64_t value) const NOEXCEPT;
+    bool get_confirmed_balance(uint64_t& out,
+        const hash_digest& key) const NOEXCEPT;
 
     /// Neutrino, set during validation with prevouts (surrogate-keyed).
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;

@@ -171,25 +171,17 @@ output_link CLASS::to_prevout(const point_link& link) const NOEXCEPT
 // block/tx to block (reverse navigation)
 // ----------------------------------------------------------------------------
 
+// Required for confirmation processing.
 TEMPLATE
 header_link CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 {
-    // Required for confirmation processing.
     // Get all tx links for tx_hash.
-    auto it = store_.tx.it(tx_hash);
-    if (!it)
-        return {};
-
     tx_links txs{};
-    do
-    {
-        txs.push_back(it.self());
-    }
-    while (it.advance());
-    it.reset();
+    for (auto it = store_.tx.it(tx_hash); it; ++it)
+        txs.push_back(*it);
 
     // Find the first strong tx of the set and return its block.
-    for (auto tx : txs)
+    for (auto tx: txs)
     {
         const auto block = to_block(tx);
         if (!block.is_terminal())
@@ -301,17 +293,11 @@ point_links CLASS::to_spenders(const hash_digest& point_hash,
     if (output_index == point::null_index)
         return {};
 
-    auto it = store_.point.it({ point_hash, output_index });
-    if (!it)
-        return {};
+    point_links points{};
+    for (auto it = store_.point.it({ point_hash, output_index }); it; ++it)
+        points.push_back(*it);
 
-    point_links links{};
-    do
-    {
-        links.push_back(it.self());
-    }
-    while (it.advance());
-    return links;
+    return points;
 }
 
 // tx to puts (forward navigation)
