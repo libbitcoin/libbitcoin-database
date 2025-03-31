@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(query_optional__to_address_outputs__genesis__expected)
     BOOST_REQUIRE_EQUAL(out.front(), query.to_output(0, 0));
 }
 
-BOOST_AUTO_TEST_CASE(query_optional__to_unspent_outputs__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_optional__to_confirmed_unspent_outputs__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(query_optional__to_unspent_outputs__genesis__expected)
     ////BOOST_REQUIRE(query.set_address_output(genesis_address, query.to_output(0, 0)));
 
     output_links out{};
-    BOOST_REQUIRE(query.to_unspent_outputs(out, genesis_address));
+    BOOST_REQUIRE(query.to_confirmed_unspent_outputs(out, genesis_address));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
     BOOST_REQUIRE_EQUAL(out.front(), 0);
 }

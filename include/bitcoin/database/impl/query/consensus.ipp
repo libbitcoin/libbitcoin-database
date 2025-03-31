@@ -59,20 +59,10 @@ code CLASS::unspent_duplicates(const header_link& link,
 
     // Get all coinbases of the same hash (must be at least one, because self).
     // ........................................................................
-    auto it = store_.tx.it(get_tx_key(coinbase));
-    if (!it)
-        return error::integrity2;
-
     std::vector<tx_link> coinbases{};
-    coinbases.reserve(one);
-    do
-    {
-        // Optimal for very short or empty sets.
-        if (!system::contains(coinbases, it.self()))
-            coinbases.push_back(it.self());
-    }
-    while (it.advance());
-    it.reset();
+    for (auto it = store_.tx.it(get_tx_key(coinbase)); it != it.end(); ++it)
+        if (!system::contains(coinbases, *it))
+            coinbases.push_back(*it);
 
     // remove non-strong cbs (usually empty, self not strong w/prevout table).
     // strong_tx records are always populated by the associating block header.
@@ -253,23 +243,16 @@ bool CLASS::get_double_spenders(tx_links& out, const point& point,
 {
     // This is most of the expense of confirmation, and is not mitigated by the
     // point table sieve, since self always exists.
-    auto it = store_.point.it(point);
-    if (!it)
-        return false;
 
     point_links points{};
-    do
-    {
-        if (it.self() != self)
-            points.push_back(it.self());
-    }
-    while (it.advance());
-    it.reset();
+    for (auto it = store_.point.it(point); it; ++it)
+        if (*it != self)
+            points.push_back(*it);
 
-    for (auto link: points)
+    for (auto point: points)
     {
         table::ins::get_parent get{};
-        if (!store_.ins.get(link, get))
+        if (!store_.ins.get(point, get))
             return false;
 
         out.push_back(get.parent_fk);

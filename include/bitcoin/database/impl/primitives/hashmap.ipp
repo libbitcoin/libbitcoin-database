@@ -247,7 +247,7 @@ ELEMENT_CONSTRAINT
 inline bool CLASS::get(const iterator& it, Element& element) NOEXCEPT
 {
     // This override avoids deadlock when holding iterator to the same table.
-    return read(it.ptr(), it.get(), element);
+    return read(it.ptr(), *it, element);
 }
 
 // static
