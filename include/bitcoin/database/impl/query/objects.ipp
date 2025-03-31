@@ -372,7 +372,8 @@ bool CLASS::populate_without_metadata(const transaction& tx) const NOEXCEPT
     return std::all_of(ins->begin(), ins->end(),
         [this](const auto& in) NOEXCEPT
         {
-            return populate_without_metadata(*in);
+            // Work around bogus clang warning.
+            return this->populate_without_metadata(*in);
         });
 }
 
@@ -386,7 +387,8 @@ bool CLASS::populate_without_metadata(const block& block) const NOEXCEPT
     return std::all_of(std::next(txs->begin()), txs->end(),
         [this](const auto& tx) NOEXCEPT
         {
-            return populate_without_metadata(*tx);
+            // Work around bogus clang warning.
+            return this->populate_without_metadata(*tx);
         });
 }
 
