@@ -60,7 +60,7 @@ struct header
 {
     static constexpr size_t sk = schema::hash;
     static constexpr size_t pk = schema::block;
-    using link = linkage<pk, to_bits(pk)>;
+    using link = linkage<pk, sub1(to_bits(pk))>; // reduced for strong_tx merge.
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
         schema::flags +
@@ -86,7 +86,7 @@ struct transaction
 {
     static constexpr size_t sk = schema::hash;
     static constexpr size_t pk = schema::tx;
-    using link = linkage<pk, to_bits(pk)>;
+    using link = linkage<pk, sub1(to_bits(pk))>; // reduced for prevout merge.
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
         schema::bit +
@@ -247,9 +247,8 @@ struct strong_tx
     using link = linkage<pk, to_bits(pk)>;
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
-        schema::header::pk +
-        schema::bit;
-        ////schema::bit +           // TODO: merge bit into header::pk.
+        schema::bit +           // merged bit into header::pk.
+        schema::header::pk;
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = link::size;
@@ -279,10 +278,6 @@ struct prevout
 };
 
 // hashmap array
-// The hashmap header is a cuckoo filter, which does not link the body.
-// The filter data is contained within the buckets. The body is unindexed
-// array of duplicated ponts (at least two in the main table). This body
-// itself is neither de-deduplicated nor indexed.
 struct doubles
 {
     static constexpr size_t pk = schema::doubles_;

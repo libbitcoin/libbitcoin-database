@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_header__mmap_get_header__expected)
     BOOST_REQUIRE_EQUAL(element1.ctx.mtp, test::context.mtp);
     BOOST_REQUIRE_EQUAL(element1.milestone, milestone);
     BOOST_REQUIRE_EQUAL(element1.version, header.version());
-    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
+    BOOST_REQUIRE_EQUAL(element1.parent_fk, schema::header::link::terminal);
     BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
     BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
     BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
@@ -117,8 +117,8 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "000000"   // pk->
-        "05"       // sieve[0]
+        "000080"   // pk->
+        "02"       // sieve[0]
         "ffffffff"
         "ffffffff"
         "ffffffff"
@@ -131,13 +131,13 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
         "ffffffff");
 
     const auto expected_header_body = system::base16_chunk(
-        "ffffff"   // next->
+        "ffff7f"   // next->
         "85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2" // sk (block.hash)
         "04030201" // flags
         "141312"   // height
         "24232221" // mtp
         "01"       // milestone
-        "ffffff"   // previous_block_hash (header_fk - not found)
+        "ffff7f"   // previous_block_hash (header_fk - not found)
         "34333231" // version
         "44434241" // timestamp
         "54535251" // bits
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
     BOOST_REQUIRE_EQUAL(element1.ctx.mtp, test::context.mtp);
     BOOST_REQUIRE_EQUAL(element1.milestone, milestone);
     BOOST_REQUIRE_EQUAL(element1.version, header.version());
-    BOOST_REQUIRE_EQUAL(element1.parent_fk, linkage<schema::header::pk>::terminal);
+    BOOST_REQUIRE_EQUAL(element1.parent_fk, schema::header::link::terminal);
     BOOST_REQUIRE_EQUAL(element1.merkle_root, header.merkle_root());
     BOOST_REQUIRE_EQUAL(element1.timestamp, header.timestamp());
     BOOST_REQUIRE_EQUAL(element1.bits, header.bits());
@@ -469,16 +469,16 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "000000"       // pk->
-        "0f");         // sieve[0]
+        "000080"       // pk->
+        "37");         // sieve[0]
     const auto genesis_header_body = system::base16_chunk(
-        "ffffff"       // next->
+        "ffff7f"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
         "04030201"     // flags
         "141312"       // height
         "24232221"     // mtp
         "01"           // milestone
-        "ffffff"       // previous_block_hash (header_fk - not found)
+        "ffff7f"       // previous_block_hash (header_fk - not found)
         "01000000"     // version
         "29ab5f49"     // timestamp
         "ffff001d"     // bits
@@ -622,16 +622,16 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "000000"       // pk->
-        "0f");         // sieve[0]
+        "000080"       // pk->
+        "37");         // sieve[0]
     const auto genesis_header_body = system::base16_chunk(
-        "ffffff"       // next->
+        "ffff7f"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
         "04030201"     // flags
         "141312"       // height
         "24232221"     // mtp
         "01"           // milestone
-        "ffffff"       // previous_block_hash (header_fk - not found)
+        "ffff7f"       // previous_block_hash (header_fk - not found)
         "01000000"     // version
         "29ab5f49"     // timestamp
         "ffff001d"     // bits
@@ -1081,26 +1081,32 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
 
     // TODO: heads may be undersized due to the change to base2 sizing.
     const auto expected_header_head = system::base16_chunk(
-        "010000ff" // record count
+        "000000ff" // record count
         "ffffffff" // bucket[0]...
         "ffffffff"
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "000000""05" // bucket[0x45d6f6162ab0d085 % 10 => 5] pk->
+        "000080""02" // bucket[0x45d6f6162ab0d085 % 10 => 5] pk->
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
+        "ffffffff"
         "ffffffff"
         "ffffffff"
         "ffffffff"
         "ffffffff");
 
     const auto expected_header_body = system::base16_chunk(
-        "ffffff"   // next->
+        "ffff7f"   // next->
         "85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2" // sk (block.hash)
         "14131211" // flags
         "040302"   // height
         "24232221" // mtp
         "01"       // milestone
-        "ffffff"   // previous_block_hash (header_fk - terminal)
+        "ffff7f"   // previous_block_hash (header_fk - terminal)
         "34333231" // version
         "44434241" // timestamp
         "54535251" // bits
@@ -1114,10 +1120,11 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
 
-    store.header_head() = expected_header_head;
-    store.header_body() = expected_header_body;
-    ////BOOST_REQUIRE(query.set(header, context{ 0, 1, 0 }, false));
-    ////BOOST_REQUIRE_EQUAL(store.header_head(), expected_header_head);
+    ////store.header_head() = expected_header_head;
+    ////store.header_body() = expected_header_body;
+    BOOST_REQUIRE(query.set(header, context{ 0x11121314, 0x01020304, 0x21222324 }, true));
+    BOOST_REQUIRE_EQUAL(store.header_head(), expected_header_head);
+    BOOST_REQUIRE_EQUAL(store.header_body(), expected_header_body);
 
     const auto foo = query.to_header(block_hash);
     const auto pointer1 = query.get_header(foo);
