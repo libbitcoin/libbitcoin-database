@@ -66,7 +66,7 @@ struct header
         schema::flags +
         schema::block +
         sizeof(uint32_t) +
-        bit +
+        schema::bit +
         pk +
         sizeof(uint32_t) +
         sizeof(uint32_t) +
@@ -141,7 +141,7 @@ struct output
 struct point
 {
     static constexpr size_t pk = schema::point_;
-    using link = linkage<pk, sub1(to_bits(pk))>;        // shared link|sieve byte.
+    using link = linkage<pk, to_bits(pk)>;
     using key = system::chain::point;
     static constexpr size_t sk = schema::hash + schema::index;
     static constexpr size_t minsize = zero;
@@ -193,7 +193,7 @@ struct txs
     static constexpr size_t minsize =
         count_ +         // txs
         schema::size +   // block.serialized_size(true)
-        transaction::pk; // coinbase
+        schema::transaction::pk; // coinbase
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = max_size_t;
     ////static constexpr size_t cell = sizeof(unsigned_type<link::size>);
@@ -209,9 +209,10 @@ struct txs
 struct height
 {
     static constexpr size_t sk = zero;
-    static constexpr size_t pk = schema::block;
+    static constexpr size_t pk = schema::header::pk;
     using link = linkage<pk, to_bits(pk)>;
-    static constexpr size_t minsize = schema::block;
+    static constexpr size_t minsize =
+        schema::header::pk;
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
     static constexpr link count() NOEXCEPT { return 1; }
@@ -225,10 +226,11 @@ struct height
 struct address
 {
     static constexpr size_t sk = schema::hash;
-    static constexpr size_t pk = schema::outs_;
+    static constexpr size_t pk = schema::outs::pk;
     using link = linkage<pk, to_bits(pk)>;
     using key = system::data_array<sk>;
-    static constexpr size_t minsize = schema::put;
+    static constexpr size_t minsize =
+        schema::output::pk;
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = link::size;
@@ -245,7 +247,9 @@ struct strong_tx
     using link = linkage<pk, to_bits(pk)>;
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
-        schema::header::pk + bit;
+        schema::header::pk +
+        schema::bit;
+        ////schema::bit +           // TODO: merge bit into header::pk.
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = link::size;
@@ -264,7 +268,7 @@ struct prevout
     static constexpr size_t pk = schema::prevout_;
     using link = linkage<pk, to_bits(pk)>;
     static constexpr size_t minsize =
-        ////schema::bit + // merged bit into tx.
+        ////schema::bit +           // merged bit into transaction::pk.
         one +                       // varint(conflict-count)
         schema::transaction::pk +   // prevout_tx
         one;                        // varint(sequence)
@@ -322,7 +326,7 @@ struct validated_tx
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
         schema::flags +
-        schema::block +
+        schema::header::pk +
         sizeof(uint32_t) +
         schema::code +
         one +
