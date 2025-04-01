@@ -208,7 +208,8 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
             // to search before next entry is linked. Thread fence imposes order.
             // A release fence ensures that all prior writes (like next) are
             // completed before any subsequent atomic store.
-            next = link_array(head);
+            auto masked = bit_and<cell>(Link::terminal, head);
+            next = link_array(masked);
             update = to_cell(collision, head, current, key);
             std::atomic_thread_fence(std::memory_order_release);
         }
@@ -222,7 +223,8 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
 
         mutex_.lock();
         cell_array(head) = top;
-        next = link_array(head);
+        auto masked = bit_and<cell>(Link::terminal, head);
+        next = link_array(masked);
         auto update = to_cell(collision, head, current, key);
         top = cell_array(update);
         mutex_.unlock();

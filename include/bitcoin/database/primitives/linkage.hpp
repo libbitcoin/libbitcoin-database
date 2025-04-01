@@ -26,6 +26,7 @@ namespace libbitcoin {
 namespace database {
 
 /// Link serialization is non-endian.
+/// TODO: phase out the Size argument in favor of just Bits.
 template <size_t Size, size_t Bits = to_bits(Size),
     if_not_greater<Bits, to_bits(Size)> If = true>
 struct linkage
@@ -37,6 +38,7 @@ struct linkage
     // Terminal is also a mask to read Bits from Bytes.
     static constexpr auto terminal = system::unmask_right<integer>(Bits);
     static constexpr auto size = Size;
+    static constexpr auto bits = Bits;
 
     /// Construct a terminal link.
     constexpr linkage() NOEXCEPT;

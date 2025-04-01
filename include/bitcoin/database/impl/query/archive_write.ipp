@@ -116,12 +116,12 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
         return error::tx_output_put;
 
     // Allocate and contiguously store input links.
-    point_link ins_fk{};
+    ins_link ins_fk{};
     if (!store_.ins.put_link(ins_fk, table::ins::put_ref{ {}, in_fk, tx_fk, tx }))
         return error::tx_ins_put;
 
     // Allocate and contiguously store output links.
-    point_link outs_fk{};
+    outs_link outs_fk{};
     if (!store_.outs.put_link(outs_fk, table::outs::put_ref{ {}, out_fk, tx }))
         return error::tx_outs_put;
 
