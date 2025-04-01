@@ -129,7 +129,7 @@ private:
 };
 
 template <class Element>
-using no_map = nomap<linkage<Element::pk>, Element::size>;
+using no_map = nomap<typename Element::link, Element::size>;
 
 } // namespace database
 } // namespace libbitcoin

@@ -127,7 +127,7 @@ private:
 };
 
 template <typename Element>
-using array_map = arraymap<linkage<Element::pk>, Element::size, Element::align>;
+using array_map = arraymap<typename Element::link, Element::size, Element::align>;
 
 } // namespace database
 } // namespace libbitcoin

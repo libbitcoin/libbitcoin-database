@@ -244,7 +244,7 @@ private:
 };
 
 template <typename Element>
-using hash_map = hashmap<linkage<Element::pk>, typename Element::key,
+using hash_map = hashmap<typename Element::link, typename Element::key,
     Element::size, Element::cell>;
 
 } // namespace database

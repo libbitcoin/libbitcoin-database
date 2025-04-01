@@ -35,7 +35,7 @@ struct transaction
   : public hash_map<schema::transaction>
 {
     using ix = linkage<schema::index>;
-    using ins = linkage<schema::ins_>;
+    using ins = linkage<schema::point_>;
     using outs = linkage<schema::outs_>;
     using out = linkage<schema::put>;
     using bytes = linkage<schema::size>;
