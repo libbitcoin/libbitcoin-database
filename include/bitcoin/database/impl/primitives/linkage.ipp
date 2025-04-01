@@ -74,12 +74,6 @@ inline CLASS CLASS::operator++(int) NOEXCEPT
     return self;
 }
 
-////TEMPLATE
-////constexpr CLASS::operator bool() const NOEXCEPT
-////{
-////    return !is_terminal();
-////}
-
 TEMPLATE
 constexpr CLASS::operator CLASS::integer() const NOEXCEPT
 {

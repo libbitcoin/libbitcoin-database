@@ -34,8 +34,9 @@ struct linkage
     using bytes = std_array<uint8_t, Size>;
     using self = linkage<Size, Bits, If>;
 
-    static constexpr auto size = Size;
+    // Terminal is also a mask to read Bits from Bytes.
     static constexpr auto terminal = system::unmask_right<integer>(Bits);
+    static constexpr auto size = Size;
 
     /// Construct a terminal link.
     constexpr linkage() NOEXCEPT;
@@ -53,7 +54,6 @@ struct linkage
     inline self operator++(int) NOEXCEPT;
 
     /// Integral and array cast operators.
-    ////constexpr operator bool() const NOEXCEPT;
     constexpr operator integer() const NOEXCEPT;
     inline operator bytes() const NOEXCEPT;
 
