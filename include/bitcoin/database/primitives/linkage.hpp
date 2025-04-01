@@ -26,13 +26,17 @@ namespace libbitcoin {
 namespace database {
 
 /// Link serialization is non-endian.
-template <size_t Size>
+template <size_t Size, size_t Bits = to_bits(Size),
+    if_not_greater<Bits, to_bits(Size)> If = true>
 struct linkage
 {
     using integer = unsigned_type<Size>;
     using bytes = std_array<uint8_t, Size>;
+    using self = linkage<Size, Bits, If>;
+
+    // Terminal is also a mask to read Bits from Bytes.
+    static constexpr auto terminal = system::unmask_right<integer>(Bits);
     static constexpr auto size = Size;
-    static constexpr auto terminal = system::unmask_right<integer>(to_bits(Size));
 
     /// Construct a terminal link.
     constexpr linkage() NOEXCEPT;
@@ -42,15 +46,14 @@ struct linkage
     inline linkage(const bytes& other) NOEXCEPT;
 
     /// Integral and array assignment operators.
-    constexpr linkage<Size>& operator=(integer other) NOEXCEPT;
-    inline linkage<Size>& operator=(const bytes& other) NOEXCEPT;
+    constexpr self& operator=(integer other) NOEXCEPT;
+    inline self& operator=(const bytes& other) NOEXCEPT;
 
     /// Increment operators (not for use with slab links).
-    inline linkage<Size>& operator++() NOEXCEPT;
-    inline linkage<Size> operator++(int) NOEXCEPT;
+    inline self& operator++() NOEXCEPT;
+    inline self operator++(int) NOEXCEPT;
 
     /// Integral and array cast operators.
-    ////constexpr operator bool() const NOEXCEPT;
     constexpr operator integer() const NOEXCEPT;
     inline operator bytes() const NOEXCEPT;
 
@@ -60,14 +63,18 @@ struct linkage
     integer value;
 };
 
-template <size_t Size>
-bool operator==(const linkage<Size>& left, const linkage<Size>& right) NOEXCEPT
+template <size_t Size, size_t Bits = to_bits(Size),
+    if_not_greater<Bits, to_bits(Size)> If = true>
+bool operator==(const linkage<Size, Bits, If>& left,
+    const linkage<Size, Bits, If>& right) NOEXCEPT
 {
     return left.value == right.value;
 }
 
-template <size_t Size>
-bool operator!=(const linkage<Size>& left, const linkage<Size>& right) NOEXCEPT
+template <size_t Size, size_t Bits = to_bits(Size),
+    if_not_greater<Bits, to_bits(Size)> If = true>
+bool operator!=(const linkage<Size, Bits, If>& left,
+    const linkage<Size, Bits, If>& right) NOEXCEPT
 {
     return !(left == right);
 }
@@ -75,8 +82,9 @@ bool operator!=(const linkage<Size>& left, const linkage<Size>& right) NOEXCEPT
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <size_t Size>
-#define CLASS linkage<Size>
+#define TEMPLATE template <size_t Size, size_t Bits, \
+    if_not_greater<Bits, to_bits(Size)> If>
+#define CLASS linkage<Size, Bits, If>
 
 #include <bitcoin/database/impl/primitives/linkage.ipp>
 
