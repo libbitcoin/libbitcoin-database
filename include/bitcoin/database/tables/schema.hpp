@@ -141,7 +141,7 @@ struct output
 struct point
 {
     static constexpr size_t pk = schema::point_;
-    using link = linkage<pk, sub1(to_bits(pk))>;        // shared link|sieve byte.
+    using link = linkage<pk, to_bits(pk)>;
     using key = system::chain::point;
     static constexpr size_t sk = schema::hash + schema::index;
     static constexpr size_t minsize = zero;
