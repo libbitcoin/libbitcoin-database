@@ -60,7 +60,9 @@ inline size_t hash(const Key& value) NOEXCEPT
 template <class Key>
 inline size_t thumb(const Key& value) NOEXCEPT
 {
-    // TODO: this should pull from lowest order bytes above size_t.
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: pull from lowest order bytes above size_t (block hash leading 0s).
+    ///////////////////////////////////////////////////////////////////////////
     if constexpr (is_same_type<Key, system::chain::point>)
     {
         using namespace system;
