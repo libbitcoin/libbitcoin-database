@@ -30,7 +30,7 @@ namespace database {
 /// Association between block hash and context.
 struct association
 {
-    linkage<schema::height::pk>::integer link;
+    schema::height::link::integer link;
     system::hash_digest hash;
     system::chain::context context;
 

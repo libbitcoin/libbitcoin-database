@@ -32,36 +32,53 @@ namespace table {
 struct strong_tx
   : public hash_map<schema::strong_tx>
 {
-    using block = linkage<schema::block>;
+    using header = schema::header::link;
     using hash_map<schema::strong_tx>::hashmap;
+    static constexpr auto offset = header::bits;
+    static_assert(offset < to_bits(header::size));
+
+    static constexpr header::integer merge(bool positive,
+        header::integer header_fk) NOEXCEPT
+    {
+        using namespace system;
+        BC_ASSERT_MSG(!get_right(header_fk, offset), "overflow");
+        return set_right(header_fk, offset, positive);
+    }
 
     struct record
       : public schema::strong_tx
     {
+        inline bool positive() const NOEXCEPT
+        {
+            return system::get_right(block_fk, offset);
+        }
+
+        inline header::integer header_fk() const NOEXCEPT
+        {
+            return system::set_right(block_fk, offset, false);
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
-            header_fk = source.read_little_endian<block::integer, block::size>();
-            positive = to_bool(source.read_byte());
+            block_fk = source.read_little_endian<header::integer, header::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<block::integer, block::size>(header_fk);
-            sink.write_byte(to_int<uint8_t>(positive));
+            sink.write_little_endian<header::integer, header::size>(block_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return header_fk == other.header_fk
-                && positive == other.positive;
+            return positive() == other.positive()
+                && header_fk() == other.header_fk();
         }
 
-        block::integer header_fk{};
-        bool positive{};
+        header::integer block_fk{};
     };
 };
 

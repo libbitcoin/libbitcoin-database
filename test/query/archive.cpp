@@ -41,7 +41,7 @@ struct query_archive_setup_fixture
 BOOST_FIXTURE_TEST_SUITE(query_archive_tests, query_archive_setup_fixture)
 
 // ensure context::flags is same size as chain_context::flags.
-static_assert(is_same_type<database::context::flag::integer, decltype(system::chain::context{}.flags)>);
+static_assert(is_same_type<database::context::flag_t::integer, decltype(system::chain::context{}.flags)>);
 
 // nop event handler.
 const auto events_handler = [](auto, auto) {};
@@ -1291,7 +1291,8 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_position__confirmed__expected)
     BOOST_REQUIRE(query.set_strong(3));
 
     size_t out{};
-    BOOST_REQUIRE(query.get_tx_position(out, 0));
+    const auto foo = query.get_tx_position(out, 0);
+    BOOST_REQUIRE(foo);
     BOOST_REQUIRE_EQUAL(out, 0u);
 
     BOOST_REQUIRE(!query.get_tx_position(out, 1));

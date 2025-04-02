@@ -34,10 +34,10 @@ namespace table {
 struct transaction
   : public hash_map<schema::transaction>
 {
+    using ins = schema::ins::link;
+    using outs = schema::outs::link;
+    using out = schema::output::link;
     using ix = linkage<schema::index>;
-    using ins = linkage<schema::point_>;
-    using outs = linkage<schema::outs_>;
-    using out = linkage<schema::put>;
     using bytes = linkage<schema::size>;
     using hash_map<schema::transaction>::hashmap;
 

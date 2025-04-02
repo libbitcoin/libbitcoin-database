@@ -34,8 +34,8 @@ struct ins
   : public no_map<schema::ins>
 {
     using ix = linkage<schema::index>;
-    using in = linkage<schema::put>;
-    using tx = linkage<schema::tx>;
+    using in = schema::input::link;
+    using tx = schema::transaction::link;
     using no_map<schema::ins>::nomap;
 
     struct record

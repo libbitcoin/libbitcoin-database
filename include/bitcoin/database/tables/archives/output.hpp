@@ -37,7 +37,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 struct output
   : public no_map<schema::output>
 {
-    using tx = linkage<schema::tx>;
+    using tx = schema::transaction::link;
     using no_map<schema::output>::nomap;
 
     struct slab

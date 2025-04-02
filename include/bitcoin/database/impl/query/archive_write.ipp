@@ -232,8 +232,8 @@ code CLASS::set_code(header_link& out_fk, const header& header,
     // Map chain context into database context.
     return set_code(out_fk, header, context
     {
-        system::possible_narrow_cast<context::flag::integer>(ctx.flags),
-        system::possible_narrow_cast<context::block::integer>(ctx.height),
+        system::possible_narrow_cast<context::flag_t::integer>(ctx.flags),
+        system::possible_narrow_cast<context::height_t::integer>(ctx.height),
         ctx.median_time_past
     }, milestone);
 }
@@ -294,8 +294,8 @@ code CLASS::set_code(header_link& out_fk, const block& block,
     // Map chain context into database context.
     return set_code(out_fk, block, context
     {
-        system::possible_narrow_cast<context::flag::integer>(ctx.flags),
-        system::possible_narrow_cast<context::block::integer>(ctx.height),
+        system::possible_narrow_cast<context::flag_t::integer>(ctx.flags),
+        system::possible_narrow_cast<context::height_t::integer>(ctx.height),
         ctx.median_time_past
     }, milestone, strong);
 }

@@ -35,8 +35,8 @@ namespace table {
 struct txs
   : public hash_map<schema::txs>
 {
-    using tx = linkage<schema::tx>;
     using ct = linkage<schema::count_>;
+    using tx = schema::transaction::link;
     using keys = std::vector<tx::integer>;
     using bytes = linkage<schema::size>;
     using hash_map<schema::txs>::hashmap;

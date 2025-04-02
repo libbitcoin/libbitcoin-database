@@ -133,7 +133,7 @@
 ////
 ////using namespace system;
 ////using namespace system::chain;
-////constexpr auto terminal = linkage<schema::tx>::terminal;
+////constexpr auto terminal = schema::transaction::link::terminal;
 ////constexpr table::prevout::record record1{ {}, 0x01020304_u32 };
 ////constexpr table::prevout::record record2{ {}, 0xbaadf00d_u32 };
 ////
@@ -226,7 +226,7 @@
 ////
 ////BOOST_AUTO_TEST_CASE(prevout__put__isolated_values__expected)
 ////{
-////    constexpr auto bits = sub1(to_bits(linkage<schema::tx>::size));
+////    constexpr auto bits = sub1(to_bits(schema::transaction::link::size));
 ////
 ////    test::chunk_storage head_store{};
 ////    test::chunk_storage body_store{};

@@ -106,7 +106,7 @@ TEMPLATE
 bool CLASS::is_strong_tx(const tx_link& link) const NOEXCEPT
 {
     table::strong_tx::record strong{};
-    return store_.strong_tx.find(link, strong) && strong.positive;
+    return store_.strong_tx.find(link, strong) && strong.positive();
 }
 
 TEMPLATE

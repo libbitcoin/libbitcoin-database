@@ -32,7 +32,7 @@ namespace table {
 struct height
   : public no_map<schema::height>
 {
-    using block = linkage<schema::block>;
+    using header = schema::header::link;
     using no_map<schema::height>::nomap;
 
     struct record
@@ -40,14 +40,14 @@ struct height
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            header_fk = source.read_little_endian<block::integer, block::size>();
+            header_fk = source.read_little_endian<header::integer, header::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            sink.write_little_endian<block::integer, block::size>(header_fk);
+            sink.write_little_endian<header::integer, header::size>(header_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
@@ -57,7 +57,7 @@ struct height
             return header_fk == other.header_fk;
         }
 
-        block::integer header_fk{};
+        header::integer header_fk{};
     };
 };
 
