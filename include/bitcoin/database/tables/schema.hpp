@@ -31,6 +31,7 @@ namespace schema {
 constexpr size_t bit = 1;       // single bit flag.
 constexpr size_t code = 1;      // validation state.
 constexpr size_t size = 3;      // tx/block size/weight.
+constexpr size_t height_ = 3;   // height record.
 constexpr size_t count_ = 3;    // txs count.
 constexpr size_t index = 3;     // input/output index.
 constexpr size_t sigops = 3;    // signature op count.
@@ -40,7 +41,7 @@ constexpr size_t hash = system::hash_size;
 /// Primary keys.
 /// -----------------------------------------------------------------------
 constexpr size_t put = 5;       // ->input/output slab.
-constexpr size_t point_ = 4;    // ->point|ins record.
+constexpr size_t ins_ = 4;      // ->point|ins record.
 constexpr size_t outs_ = 4;     // ->outs (puts) record.
 constexpr size_t spend_ = 4;    // ->spend record.
 constexpr size_t prevout_ = 5;  // ->prevout slab.
@@ -48,7 +49,7 @@ constexpr size_t txs_ = 5;      // ->txs slab.
 constexpr size_t tx = 4;        // ->tx record.
 constexpr size_t block = 3;     // ->header record.
 constexpr size_t bk_slab = 3;   // ->validated_bk record.
-constexpr size_t tx_slab = 5;   // ->validated_tk record.
+constexpr size_t tx_slab = 5;   // ->validated_tx record.
 constexpr size_t neutrino_ = 5; // ->neutrino record.
 constexpr size_t doubles_ = 4;  // doubles bucket (no actual keys).
 
@@ -58,21 +59,22 @@ constexpr size_t doubles_ = 4;  // doubles bucket (no actual keys).
 // record hashmap
 struct header
 {
+    // TODO: merge milestone with parent.pk.
     static constexpr size_t sk = schema::hash;
     static constexpr size_t pk = schema::block;
-    using link = linkage<pk, to_bits(pk)>;
+    using link = linkage<pk, sub1(to_bits(pk))>; // reduced for strong_tx merge.
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
-        schema::flags +
-        schema::block +
-        sizeof(uint32_t) +
-        schema::bit +
-        pk +
-        sizeof(uint32_t) +
-        sizeof(uint32_t) +
-        sizeof(uint32_t) +
-        sizeof(uint32_t) +
-        schema::hash;
+        schema::flags +         // context.flags
+        schema::height_ +       // context.height
+        sizeof(uint32_t) +      // context.mtp
+        schema::bit +           // milestone
+        pk +                    // parent.pk
+        sizeof(uint32_t) +      // version
+        sizeof(uint32_t) +      // timestamp
+        sizeof(uint32_t) +      // bits
+        sizeof(uint32_t) +      // nonce
+        schema::hash;           // merkle root
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = sizeof(unsigned_type<link::size>);
@@ -84,20 +86,21 @@ struct header
 // record hashmap
 struct transaction
 {
+    // TODO: merge coinbase with something.
     static constexpr size_t sk = schema::hash;
     static constexpr size_t pk = schema::tx;
-    using link = linkage<pk, to_bits(pk)>;
+    using link = linkage<pk, sub1(to_bits(pk))>; // reduced for prevout merge.
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
-        schema::bit +
-        schema::size +
-        schema::size +
-        sizeof(uint32_t) +
-        sizeof(uint32_t) +
-        schema::index +     // inputs count
-        schema::index +     // outputs count
-        schema::point_ +    // first contiguous input (point)
-        schema::outs_;      // first contiguous output (put)
+        schema::bit +           // coinbase
+        schema::size +          // light
+        schema::size +          // heavy
+        sizeof(uint32_t) +      // locktime
+        sizeof(uint32_t) +      // version
+        schema::index +         // inputs count
+        schema::index +         // outputs count
+        schema::ins_ +          // first contiguous input (same link as point)
+        schema::outs_;          // first contiguous output
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = link::size;
@@ -113,8 +116,8 @@ struct input
     static constexpr size_t pk = schema::put;
     using link = linkage<pk, to_bits(pk)>;
     static constexpr size_t minsize =
-        1u + // variable_size (minimum 1, average 1)
-        1u;  // variable_size (minimum 1, average 1)
+        1u +                    // variable_size (minimum 1, average 1)
+        1u;                     // variable_size (minimum 1, average 1)
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;
     static_assert(minsize == 2u);
@@ -129,8 +132,8 @@ struct output
     using link = linkage<pk, to_bits(pk)>;
     static constexpr size_t minsize =
         schema::transaction::pk +   // parent->tx (address navigation)
-        5u + // variable_size (minimum 1, average 5)
-        1u;  // variable_size (minimum 1, average 1)
+        5u +                    // variable_size (minimum 1, average 5)
+        1u;                     // variable_size (minimum 1, average 1)
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;
     static_assert(minsize == 10u);
@@ -140,11 +143,12 @@ struct output
 // record multimap
 struct point
 {
-    static constexpr size_t pk = schema::point_;
+    static constexpr size_t pk = schema::ins_;
     using link = linkage<pk, to_bits(pk)>;
     using key = system::chain::point;
     static constexpr size_t sk = schema::hash + schema::index;
-    static constexpr size_t minsize = zero;
+    static constexpr size_t minsize =
+        zero;                   // empty row
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = sizeof(uint64_t);    // oversized for sieve.
@@ -159,9 +163,9 @@ struct ins
     static constexpr size_t pk = point::pk;
     using link = point::link;                           // aligned with point.
     static constexpr size_t minsize =
-        sizeof(uint32_t) +          // sequence
-        schema::input::pk +         // input->script|witness
-        schema::transaction::pk;    // parent->tx (spend navigation)
+        sizeof(uint32_t) +      // sequence
+        schema::input::pk +     // input->script|witness
+        schema::transaction::pk;// parent->tx (spend navigation)
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
     static constexpr link count() NOEXCEPT { return 1; }
@@ -191,9 +195,9 @@ struct txs
     using link = linkage<pk, to_bits(pk)>;
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
-        count_ +         // txs
-        schema::size +   // block.serialized_size(true)
-        schema::transaction::pk; // coinbase
+        count_ +                // txs
+        schema::size +          // block.serialized_size(true)
+        schema::transaction::pk;// coinbase
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = max_size_t;
     ////static constexpr size_t cell = sizeof(unsigned_type<link::size>);
@@ -210,7 +214,7 @@ struct height
 {
     static constexpr size_t sk = zero;
     static constexpr size_t pk = schema::header::pk;
-    using link = linkage<pk, to_bits(pk)>;
+    using link = schema::header::link;
     static constexpr size_t minsize =
         schema::header::pk;
     static constexpr size_t minrow = minsize;
@@ -243,19 +247,18 @@ struct address
 struct strong_tx
 {
     static constexpr size_t sk = schema::transaction::pk;
-    static constexpr size_t pk = schema::tx;
+    static constexpr size_t pk = schema::transaction::pk;
     using link = linkage<pk, to_bits(pk)>;
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
-        schema::header::pk +
-        schema::bit;
-        ////schema::bit +           // TODO: merge bit into header::pk.
+        ////schema::bit +           // merged bit into header::pk.
+        schema::header::pk;
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = link::size;
     static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 4u);
-    static_assert(minrow == 12u);
+    static_assert(minsize == 3u);
+    static_assert(minrow == 11u);
 };
 
 /// Cache tables.
@@ -279,10 +282,6 @@ struct prevout
 };
 
 // hashmap array
-// The hashmap header is a cuckoo filter, which does not link the body.
-// The filter data is contained within the buckets. The body is unindexed
-// array of duplicated ponts (at least two in the main table). This body
-// itself is neither de-deduplicated nor indexed.
 struct doubles
 {
     static constexpr size_t pk = schema::doubles_;

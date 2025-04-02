@@ -89,31 +89,6 @@ struct header
         hash_digest merkle_root{};
     };
 
-    ////struct record_put_ptr
-    ////  : public schema::header
-    ////{
-    ////    // header->previous_block_hash() ignored.
-    ////    inline bool to_data(finalizer& sink) const NOEXCEPT
-    ////    {
-    ////        BC_ASSERT(header);
-    ////        context::to_data(sink, ctx);
-    ////        sink.write_byte(to_int<uint8_t>(milestone));
-    ////        sink.write_little_endian<link::integer, link::size>(parent_fk);
-    ////        sink.write_little_endian<uint32_t>(header->version());
-    ////        sink.write_little_endian<uint32_t>(header->timestamp());
-    ////        sink.write_little_endian<uint32_t>(header->bits());
-    ////        sink.write_little_endian<uint32_t>(header->nonce());
-    ////        sink.write_bytes(header->merkle_root());
-    ////        BC_ASSERT(!sink || sink.get_write_position() == minrow);
-    ////        return sink;
-    ////    }
-    ////
-    ////    const context ctx{};
-    ////    const bool milestone{};
-    ////    const link::integer parent_fk{};
-    ////    system::chain::header::cptr header{};
-    ////};
-
     // This is redundant with record_put_ptr except this does not capture.
     struct put_ref
       : public schema::header
@@ -227,28 +202,30 @@ struct header
     struct get_flags
       : public schema::header
     {
+        using flag_t = context::flag_t;
+
         inline bool from_data(reader& source) NOEXCEPT
         {
-            using flag = context::flag;
-            flags = source.read_little_endian<flag::integer, flag::size>();
+            flags = source.read_little_endian<flag_t::integer, flag_t::size>();
             return source;
         }
 
-        context::flag::integer flags{};
+        flag_t::integer flags{};
     };
 
     struct get_height
       : public schema::header
     {
+        using height_t = context::height_t;
+
         inline bool from_data(reader& source) NOEXCEPT
         {
-            using block = context::block;
-            source.skip_bytes(context::flag::size);
-            height = source.read_little_endian<block::integer, block::size>();
+            source.skip_bytes(context::flag_t::size);
+            height = source.read_little_endian<height_t::integer, height_t::size>();
             return source;
         }
 
-        context::block::integer height{};
+        height_t::integer height{};
     };
 
     struct get_mtp
@@ -256,12 +233,12 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(context::flag::size + context::block::size);
+            source.skip_bytes(context::flag_t::size + context::height_t::size);
             mtp = source.read_little_endian<uint32_t>();
             return source;
         }
 
-        uint32_t mtp{};
+        context::mtp_t mtp{};
     };
 
     struct get_milestone

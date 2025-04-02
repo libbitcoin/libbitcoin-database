@@ -35,62 +35,22 @@ namespace table {
 struct prevout
   : public array_map<schema::prevout>
 {
-    using tx = linkage<schema::tx>;
-    using header = linkage<schema::block>;
+    using tx = schema::transaction::link;
+    using header = schema::header::link;
     using array_map<schema::prevout>::arraymap;
-    static constexpr size_t offset = sub1(to_bits(tx::size));
+    static constexpr size_t offset = tx::bits;
+    static_assert(offset < to_bits(tx::size));
 
     // The below implementation overloads tx-sized record count with sequences.
     static_assert(tx::size == sizeof(uint32_t), "sequence-tx overload error");
 
-    // This supports only a single record (not too useful).
-    struct slab
-      : public schema::prevout
+    static constexpr tx::integer merge(bool coinbase,
+        tx::integer output_tx_fk) NOEXCEPT
     {
-        inline link count() const NOEXCEPT
-        {
-            return tx::size;
-        }
-
-        inline bool coinbase() const NOEXCEPT
-        {
-            return system::get_right(prevout_tx, offset);
-        }
-
-        inline tx::integer output_tx_fk() const NOEXCEPT
-        {
-            return system::set_right(prevout_tx, offset, false);
-        }
-
-        inline void set(bool coinbase, tx::integer output_tx_fk) NOEXCEPT
-        {
-            using namespace system;
-            BC_ASSERT_MSG(!get_right(output_tx_fk, offset), "overflow");
-            prevout_tx = set_right(output_tx_fk, offset, coinbase);
-        }
-
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            prevout_tx = source.read_little_endian<tx::integer, tx::size>();
-            BC_ASSERT(!source || source.get_read_position() == count() * minrow);
-            return source;
-        }
-
-        inline bool to_data(finalizer& sink) const NOEXCEPT
-        {
-            sink.write_little_endian<tx::integer, tx::size>(prevout_tx);
-            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
-            return sink;
-        }
-
-        inline bool operator==(const slab& other) const NOEXCEPT
-        {
-            return coinbase() == other.coinbase()
-                && output_tx_fk() == other.output_tx_fk();
-        }
-
-        tx::integer prevout_tx{};
-    };
+        using namespace system;
+        BC_ASSERT_MSG(!get_right(output_tx_fk, offset), "overflow");
+        return set_right(output_tx_fk, offset, coinbase);
+    }
 
     struct slab_put_ref
       : public schema::prevout
@@ -102,14 +62,6 @@ struct prevout
             const auto conflicts_ = conflicts.size();
             return variable_size(conflicts_) + (conflicts_ * tx::size) +
                 (block.spends() * (tx::size + sizeof(uint32_t)));
-        }
-
-        static constexpr tx::integer merge(bool coinbase,
-            tx::integer output_tx_fk) NOEXCEPT
-        {
-            using namespace system;
-            BC_ASSERT_MSG(!get_right(output_tx_fk, offset), "overflow");
-            return set_right(output_tx_fk, offset, coinbase);
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT

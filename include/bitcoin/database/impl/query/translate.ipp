@@ -37,7 +37,7 @@ TEMPLATE
 inline header_link CLASS::to_candidate(size_t height) const NOEXCEPT
 {
     using namespace system;
-    using link = table::height::block::integer;
+    using link = table::height::header::integer;
     if (height >= store_.candidate.count())
         return {};
 
@@ -52,7 +52,7 @@ TEMPLATE
 inline header_link CLASS::to_confirmed(size_t height) const NOEXCEPT
 {
     using namespace system;
-    using link = table::height::block::integer;
+    using link = table::height::header::integer;
     if (height >= store_.confirmed.count())
         return {};
 
@@ -207,11 +207,11 @@ header_link CLASS::to_block(const tx_link& key) const NOEXCEPT
 {
     // Required for confirmation processing.
     table::strong_tx::record strong{};
-    if (!store_.strong_tx.find(key, strong) || !strong.positive)
+    if (!store_.strong_tx.find(key, strong) || !strong.positive())
         return {};
 
     // Terminal implies not in strong block (reorganized).
-    return strong.header_fk;
+    return strong.header_fk();
 }
 
 // output to spenders (reverse navigation)

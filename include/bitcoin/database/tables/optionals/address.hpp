@@ -32,7 +32,7 @@ namespace table {
 struct address
   : public hash_map<schema::address>
 {
-    using out = linkage<schema::put>;
+    using out = schema::output::link;
     using hash_map<schema::address>::hashmap;
 
     struct record

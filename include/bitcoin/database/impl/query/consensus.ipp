@@ -73,7 +73,7 @@ code CLASS::unspent_duplicates(const header_link& link,
     std::erase_if(coinbases, [this](const auto& cb) NOEXCEPT
     {
         table::strong_tx::record strong{};
-        return store_.strong_tx.find(cb, strong) && strong.positive;
+        return store_.strong_tx.find(cb, strong) && strong.positive();
     });
 
     ////// Strong must be other blocks, dis/re-orged blocks are not strong.
@@ -300,8 +300,7 @@ bool CLASS::set_strong(const header_link& link, const tx_links& txs,
         if (!store_.strong_tx.put(ptr, record++, link_t{ tx }, element_t
         {
             {},
-            link,
-            positive
+            table::strong_tx::merge(positive, link)
         })) return false;
 
     return true;
@@ -328,8 +327,7 @@ bool CLASS::set_strong(const header_link& link, size_t count,
         if (!store_.strong_tx.put(ptr, record++, fk, element_t
             {
                 {},
-                link,
-                positive
+                table::strong_tx::merge(positive, link)
             })) return false;
 
     return true;

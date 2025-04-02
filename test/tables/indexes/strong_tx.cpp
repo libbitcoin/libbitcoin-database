@@ -24,10 +24,9 @@ BOOST_AUTO_TEST_SUITE(strong_tx_tests)
 using namespace system;
 const table::strong_tx::key key1{ 0x01, 0x02, 0x03, 0x04 };
 const table::strong_tx::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
-const table::strong_tx::record in1{ {}, 0xaabbccdd, true };
-const table::strong_tx::record in2{ {}, 0x11223344, true };
-const table::strong_tx::record out1{ {}, 0x00bbccdd, true };
-const table::strong_tx::record out2{ {}, 0x00223344, true };
+const table::strong_tx::record strong1{ {}, table::strong_tx::merge(true, 0x0078f87f) };
+const table::strong_tx::record strong2{ {}, table::strong_tx::merge(false, 0x0078f87f) };
+
 const data_chunk expected_head = base16_chunk
 (
     "00000000"
@@ -56,13 +55,11 @@ const data_chunk expected_body = base16_chunk
 (
     "ffffffff" // next->end
     "01020304" // key1
-    "ddccbb"   // header_fk1
-    "01"       // positive
+    "7ff8f8"   // 0x0078f87f | 0x00800000
 
     "00000000" // next->
     "a1a2a3a4" // key2
-    "443322"   // header_fk2
-    "01"       // positive
+    "7ff878"   // 0x0078f87f | 0x00000000
 );
 
 BOOST_AUTO_TEST_CASE(strong_tx__put__two__expected)
@@ -73,11 +70,11 @@ BOOST_AUTO_TEST_CASE(strong_tx__put__two__expected)
     BOOST_REQUIRE(instance.create());
 
     table::strong_tx::link link1{};
-    BOOST_REQUIRE(instance.put_link(link1, key1, in1));
+    BOOST_REQUIRE(instance.put_link(link1, key1, strong1));
     BOOST_REQUIRE_EQUAL(link1, 0u);
 
     table::strong_tx::link link2{};
-    BOOST_REQUIRE(instance.put_link(link2, key2, in2));
+    BOOST_REQUIRE(instance.put_link(link2, key2, strong2));
     BOOST_REQUIRE_EQUAL(link2, 1u);
 
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
@@ -98,9 +95,14 @@ BOOST_AUTO_TEST_CASE(strong_tx__get__two__expected)
 
     table::strong_tx::record out{};
     BOOST_REQUIRE(instance.get(0u, out));
-    BOOST_REQUIRE(out == out1);
+    BOOST_REQUIRE_EQUAL(out.header_fk(), strong1.header_fk());
+    BOOST_REQUIRE_EQUAL(out.positive(), strong1.positive());
+    BOOST_REQUIRE_EQUAL(out.block_fk, bit_or(0x0078f87fu, 0x00800000u));
+
     BOOST_REQUIRE(instance.get(1u, out));
-    BOOST_REQUIRE(out == out2);
+    BOOST_REQUIRE_EQUAL(out.header_fk(), strong2.header_fk());
+    BOOST_REQUIRE_EQUAL(out.positive(), strong2.positive());
+    BOOST_REQUIRE_EQUAL(out.block_fk, bit_or(0x0078f87fu, 0x00000000u));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

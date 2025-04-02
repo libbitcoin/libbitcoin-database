@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HEAD_HPP
 
+#include <algorithm>
 #include <atomic>
 #include <shared_mutex>
 #include <bitcoin/system.hpp>
@@ -72,21 +73,28 @@ public:
         const Key& key) NOEXCEPT;
 
 protected:
-    /// TODO: derive selector bits.
     /// Currently link and sieve are independently byte-aligned.
     /// Tables with byte-padding for thread fence alignment also have a sieve.
     static constexpr size_t cell_size = CellSize;
     static constexpr size_t link_size = Link::size;
     static constexpr size_t link_bits = Link::bits;
     static constexpr size_t sieve_bits = to_bits(cell_size) - link_bits;
-    static constexpr size_t select_bits = is_zero(sieve_bits) ? zero : 4u;
-    static constexpr size_t screen_bits = sieve_bits - select_bits;
+
+    /// Assumes load factor >= 2.0, but still reasonable for LF 1-1.5.
+    /// A two bit sentinel allows 00 and 01 unsaturated filters (50%).
+    /// A single bit sieve is not possible because lack of overflow sentinel.
+    static constexpr size_t select_bits =
+        (sieve_bits >= 24_size ? 4_size :
+            (sieve_bits >= 16_size ? 3_size :
+                (sieve_bits >= 8_size ? 2_size :
+                    (sieve_bits >= 2_size ? 1_size : zero))));
 
     using sieve_t = sieve<sieve_bits, select_bits>;
     using cell = unsigned_type<cell_size>;
     using filter = sieve_t::type;
     using link = Link::integer;
 
+    static constexpr size_t screen_bits = sieve_bits - select_bits;
     static constexpr cell terminal = system::bit_all<cell>;
     static constexpr bool aligned = (cell_size == sizeof(cell));
     static_assert(link_bits + sieve_bits == to_bits(cell_size));

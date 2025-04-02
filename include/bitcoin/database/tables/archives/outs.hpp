@@ -34,8 +34,8 @@ namespace table {
 struct outs
   : public no_map<schema::outs>
 {
-    using tx = linkage<schema::tx>;
-    using out = linkage<schema::put>;
+    using out = schema::output::link;
+    using tx = schema::transaction::link;
     using output_links = std::vector<out::integer>;
     using no_map<schema::outs>::nomap;
 

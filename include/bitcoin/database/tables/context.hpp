@@ -29,23 +29,23 @@ namespace database {
 
 struct context
 {
-    using flag = linkage<schema::flags>;
-    using block = linkage<schema::block>;
-    static constexpr size_t size = schema::flags + schema::block +
-        sizeof(uint32_t);
+    using height_t = linkage<schema::height_>;
+    using flag_t = linkage<schema::flags>;
+    using mtp_t = uint32_t;
+    static constexpr auto size = flag_t::size + height_t::size + sizeof(mtp_t);
 
     static inline void from_data(reader& source, context& context) NOEXCEPT
     {
-        context.flags  = source.template read_little_endian<flag::integer, flag::size>();
-        context.height = source.template read_little_endian<block::integer, block::size>();
+        context.flags  = source.template read_little_endian<flag_t::integer, flag_t::size>();
+        context.height = source.template read_little_endian<height_t::integer, height_t::size>();
         context.mtp    = source.template read_little_endian<uint32_t>();
     };
 
     static inline void to_data(finalizer& sink, const context& context) NOEXCEPT
     {
-        sink.template write_little_endian<flag::integer, flag::size>(context.flags);
-        sink.template write_little_endian<block::integer, block::size>(context.height);
-        sink.template write_little_endian<uint32_t>(context.mtp);
+        sink.template write_little_endian<flag_t::integer, flag_t::size>(context.flags);
+        sink.template write_little_endian<height_t::integer, height_t::size>(context.height);
+        sink.template write_little_endian<mtp_t>(context.mtp);
     };
 
     constexpr bool is_enabled(system::chain::flags rule) const NOEXCEPT
@@ -60,9 +60,9 @@ struct context
             && mtp    == other.mtp;
     }
 
-    flag::integer flags{};
-    block::integer height{};
-    uint32_t mtp{};
+    height_t::integer flags{};
+    flag_t::integer height{};
+    mtp_t mtp{};
 };
 
 } // namespace database

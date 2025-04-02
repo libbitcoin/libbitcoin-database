@@ -28,7 +28,7 @@ namespace database {
 
 struct point_set
 {
-    using tx_link = linkage<schema::tx>;
+    using tx_link = schema::transaction::link;
 
     struct point
     {

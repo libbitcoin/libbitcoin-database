@@ -33,8 +33,8 @@ namespace table {
 struct doubles
   : public hash_map<schema::doubles>
 {
-    using hash_map<schema::doubles>::hashmap;
     using ix = linkage<schema::index>;
+    using hash_map<schema::doubles>::hashmap;
 
     // This supports only a single record (not too useful).
     struct record

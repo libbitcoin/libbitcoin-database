@@ -79,8 +79,12 @@ constexpr bool CLASS::is_screened(type value, type fingerprint) NOEXCEPT
         for (type column{}; column <= row; ++column)
         {
             const auto mask = masks(row, column);
-            if (bit_and(fingerprint, mask) == bit_and(value, mask))
-                return true;
+
+            if (is_zero(bit_xor
+                (
+                    bit_and(value, mask),
+                    bit_and(fingerprint, mask)
+                ))) return true;
         }
 
         return false;
@@ -112,6 +116,7 @@ constexpr CLASS::type CLASS::screen(type value, type fingerprint) NOEXCEPT
                     value = saturated;
                 }
 
+                BC_ASSERT(!is_empty(value));
                 return value;
             }
         }
@@ -119,6 +124,7 @@ constexpr CLASS::type CLASS::screen(type value, type fingerprint) NOEXCEPT
         {
             if (is_screened(value, fingerprint))
             {
+                BC_ASSERT(!is_empty(value));
                 return value;
             }
             else
@@ -131,18 +137,22 @@ constexpr CLASS::type CLASS::screen(type value, type fingerprint) NOEXCEPT
         const auto mask = masks(row, row);
 
         // Mask inversion requires clearing the selector bits (and above).
-        const auto unmask = bit_and(bit_not(mask), select_mask);
+        auto unmask = bit_and(bit_not(mask), select_mask);
+
+        // Mask sentinel bit for limit screen (also excluded by limit masks).
+        if (row == limit) set_right_into(unmask, sentinel, false);
 
         value = bit_or
         (
             shift_left(row, screen_bits),
             bit_or
             (
-                bit_and(fingerprint, mask),
-                bit_and(value, unmask)
+                bit_and(value, unmask),
+                bit_and(fingerprint, mask)
             )
         );
 
+        BC_ASSERT(!is_empty(value));
         return value;
     }
 }

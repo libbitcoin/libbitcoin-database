@@ -30,7 +30,7 @@ const data_chunk expected_head = base16_chunk
 (
     "000000ff"
     "ffffffff"
-    "10000001"
+    "10000041"
     "ffffffff"
     "ffffffff"
     "ffffffff"
@@ -42,7 +42,7 @@ const data_chunk closed_head = base16_chunk
 (
     "180000ff"
     "ffffffff"
-    "10000001"
+    "10000041"
     "ffffffff"
     "ffffffff"
     "ffffffff"
