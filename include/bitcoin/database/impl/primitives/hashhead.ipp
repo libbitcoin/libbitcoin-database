@@ -37,6 +37,7 @@ CLASS::hashhead(storage& head, size_t buckets) NOEXCEPT
   : file_(head),
     buckets_(system::possible_narrow_cast<link>(buckets))
 {
+    BC_ASSERT(buckets <= Link::terminal);
 }
 
 TEMPLATE
@@ -267,19 +268,9 @@ INLINE constexpr CLASS::filter CLASS::to_filter(cell value) NOEXCEPT
 TEMPLATE
 INLINE constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
 {
-    if constexpr (sieve_t::disabled)
-    {
-        return system::possible_narrow_cast<link>(value);
-    }
-    else
-    {
-        using namespace system;
-        if (value == terminal)
-            return {};
-
-        constexpr auto mask = unmask_right<cell>(link_bits);
-        return possible_narrow_cast<link>(bit_and(value, mask));
-    }
+    using namespace system;
+    constexpr auto mask = unmask_right<cell>(link_bits);
+    return possible_narrow_cast<link>(bit_and(value, mask));
 }
 
 TEMPLATE
