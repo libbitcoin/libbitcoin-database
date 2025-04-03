@@ -46,13 +46,12 @@ inline size_t hash(const Key& value) NOEXCEPT
     if constexpr (is_same_type<Key, system::chain::point>)
     {
         // std::hash<system::chain::point> implemented in system.
-        // Use of unique_hash over the concat results in zero because index is
-        // concatenated to the high order bytes.
         return std::hash<system::chain::point>()(value);
     }
     else if constexpr (is_std_array<Key>)
     {
-        // unique_hash assumes sufficient uniqueness in low order key bytes.
+        // Assumes sufficient uniqueness in low order bytes (ok for all).
+        // sequentially-valued keys should have no more buckets than values.
         return system::unique_hash(value);
     }
 }
@@ -60,22 +59,27 @@ inline size_t hash(const Key& value) NOEXCEPT
 template <class Key>
 inline size_t thumb(const Key& value) NOEXCEPT
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: pull from lowest order bytes above size_t (block hash leading 0s).
-    ///////////////////////////////////////////////////////////////////////////
+
     if constexpr (is_same_type<Key, system::chain::point>)
     {
-        using namespace system;
-        constexpr auto size = sizeof(size_t);
-        size_t hash{};
-
-        // This assumes sufficient uniqueness in high order key bytes.
-        std::copy_n(value.hash().rbegin(), size, byte_cast(hash).begin());
-        return hash;
+        // Ignores index as that is already hashed in primary hash.
+        return thumb(value.hash());
     }
     else if constexpr (is_std_array<Key>)
     {
-        return system::unique_hash(value);
+        // Assumes sufficient uniqueness in second-low order bytes (ok for all).
+        // The thumb(value) starts at the next byte following hash(value).
+        // If key is to short then thumb aligns to the end of the key.
+        // This is intended to minimize overlap to the extent possible, while
+        // also avoiding the high order bits in the case of block hashes.
+        constexpr auto key = size<Key>();
+        constexpr auto bytes = std::min(key, sizeof(size_t));
+        constexpr auto offset = std::min(key - bytes, bytes);
+
+        size_t hash{};
+        const auto start = std::next(value.begin(), offset);
+        std::copy_n(start, bytes, system::byte_cast(hash).begin());
+        return hash;
     }
 }
 

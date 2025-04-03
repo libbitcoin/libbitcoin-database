@@ -48,43 +48,57 @@ BOOST_AUTO_TEST_CASE(keys__thumb__points__expected)
 {
     const chain::point instance0{ hash0, 0x01234567_u32 };
     const auto hash0 = keys::thumb(instance0);
-    BOOST_REQUIRE_EQUAL(hash0, static_cast<size_t>(0x68d6190000000000_u64));
+    BOOST_REQUIRE_EQUAL(hash0, static_cast<size_t>(0x4ff763ae46a2a6c1_u64));
 
     const chain::point instance1{ hash1, 0x12345678_u32 };
     const auto hash1 = keys::thumb(instance1);
-    BOOST_REQUIRE_EQUAL(hash1, static_cast<size_t>(0x3a9fb8aa4b1e5e4a_u64));
+    BOOST_REQUIRE_EQUAL(hash1, static_cast<size_t>(0x618f76673e2cc77a_u64));
 
     const chain::point instance2{ hash2, 0x23456789_u32 };
     const auto hash2 = keys::thumb(instance2);
-    BOOST_REQUIRE_EQUAL(hash2, static_cast<size_t>(0xdd8ea7695a3f7cbf_u64));
+    BOOST_REQUIRE_EQUAL(hash2, static_cast<size_t>(0x2d7da394d48db4d8_u64));
 }
 
-////BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
-////{
-////    const chain::point instance0{ hash0, 0x01234567_u32 };
-////    const chain::point instance1{ hash1, 0x12345678_u32 };
-////    const chain::point instance2{ hash2, 0x23456789_u32 };
-////    const auto xor0 = bit_xor(keys::hash(instance0), keys::thumb(instance0));
-////    const auto xor1 = bit_xor(keys::hash(instance1), keys::thumb(instance1));
-////    const auto xor2 = bit_xor(keys::hash(instance2), keys::thumb(instance2));
-////
-////    std::cout << std::endl;
-////    std::cout << std::bitset<bits<size_t>>(keys::hash(instance0)) << std::endl;
-////    std::cout << std::bitset<bits<size_t>>(keys::thumb(instance0)) << std::endl;
-////    std::cout << std::bitset<bits<size_t>>(xor0) << std::endl;
-////    std::cout << system::ones_count(xor0);
-////
-////    std::cout << std::endl;
-////    std::cout << std::bitset<bits<size_t>>(keys::hash(instance1)) << std::endl;
-////    std::cout << std::bitset<bits<size_t>>(keys::thumb(instance1)) << std::endl;
-////    std::cout << std::bitset<bits<size_t>>(xor1) << std::endl;
-////    std::cout << system::ones_count(xor1);
-////
-////    std::cout << std::endl;
-////    std::cout << std::bitset<bits<size_t>>(keys::hash(instance2)) << std::endl;
-////    std::cout << std::bitset<bits<size_t>>(keys::thumb(instance2)) << std::endl;
-////    std::cout << std::bitset<bits<size_t>>(xor2) << std::endl;
-////    std::cout << system::ones_count(xor2);
-////}
+BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
+{
+    const chain::point instance0{ hash0, 0x01234567_u32 };
+    const chain::point instance1{ hash1, 0x12345678_u32 };
+    const chain::point instance2{ hash2, 0x23456789_u32 };
+    const auto xor0 = bit_xor(keys::hash(instance0), keys::thumb(instance0));
+    const auto xor1 = bit_xor(keys::hash(instance1), keys::thumb(instance1));
+    const auto xor2 = bit_xor(keys::hash(instance2), keys::thumb(instance2));
+
+    // Independence hash and thumb derived from sha256 hashes (avoiding mined bits).
+    // With a 2/4 chance of any bit pair matching, the total number of expected
+    // matches in a given pair of random 64 bit values is (2/4)*64 = 32. These
+    // hit 24, 31, and 26 (out of 64), with an ideal rate of 50% (Poisson).
+
+    ////std::cout << std::endl;
+    ////std::cout << std::bitset<bits<size_t>>(keys::hash(instance0)) << std::endl;
+    ////std::cout << std::bitset<bits<size_t>>(keys::thumb(instance0)) << std::endl;
+    ////std::cout << std::bitset<bits<size_t>>(xor0) << std::endl;
+    ////std::cout << system::ones_count(xor0);
+
+    // 24/64 == 37.5%
+    BOOST_REQUIRE_EQUAL(system::ones_count(xor0), 24u);
+
+    ////std::cout << std::endl;
+    ////std::cout << std::bitset<bits<size_t>>(keys::hash(instance1)) << std::endl;
+    ////std::cout << std::bitset<bits<size_t>>(keys::thumb(instance1)) << std::endl;
+    ////std::cout << std::bitset<bits<size_t>>(xor1) << std::endl;
+    ////std::cout << system::ones_count(xor1);
+
+    // 31/64 == 48.4375%
+    BOOST_REQUIRE_EQUAL(system::ones_count(xor1), 31u);
+
+    ////std::cout << std::endl;
+    ////std::cout << std::bitset<bits<size_t>>(keys::hash(instance2)) << std::endl;
+    ////std::cout << std::bitset<bits<size_t>>(keys::thumb(instance2)) << std::endl;
+    ////std::cout << std::bitset<bits<size_t>>(xor2) << std::endl;
+    ////std::cout << system::ones_count(xor2);
+
+    // 26/64 == 40.625
+    BOOST_REQUIRE_EQUAL(system::ones_count(xor2), 26u);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
