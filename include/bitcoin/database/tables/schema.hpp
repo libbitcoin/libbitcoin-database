@@ -261,7 +261,7 @@ struct strong_tx
 /// Cache tables.
 /// -----------------------------------------------------------------------
 
-// hashmap array
+// record hashmap
 struct duplicate
 {
     static constexpr size_t pk = schema::dup;
@@ -280,10 +280,11 @@ struct duplicate
     static_assert(cell == 4u);
 };
 
-// slab arraymap, one slab per block
+// slab arraymap
 struct prevout
 {
-    static constexpr size_t align = true;
+    // align imposes word alignment for arraymap (redundant is already).
+    static constexpr size_t align = false;
     static constexpr size_t pk = schema::prevout_;
     using link = linkage<pk, to_bits(pk)>;
     static constexpr size_t minsize =

@@ -77,7 +77,7 @@ settings::settings() NOEXCEPT
     duplicate_size{ 1 },
     duplicate_rate{ 50 },
 
-    prevout_buckets{ 100 },
+    prevout_buckets{ 128 },
     prevout_size{ 1 },
     prevout_rate{ 50 },
 
