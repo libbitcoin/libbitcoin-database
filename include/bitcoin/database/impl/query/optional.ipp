@@ -149,17 +149,17 @@ bool CLASS::get_confirmed_balance(uint64_t& out,
 ////    // ========================================================================
 ////}
 
-// Neutrino (surrogate-keyed).
+// filter_tx (surrogate-keyed).
 // ----------------------------------------------------------------------------
 
 TEMPLATE
 bool CLASS::get_filter_body(filter& out, const header_link& link) const NOEXCEPT
 {
-    table::neutrino::get_filter neutrino{};
-    if (!store_.neutrino.find(link, neutrino))
+    table::filter_tx::get_filter filter_tx{};
+    if (!store_.filter_tx.at(link, filter_tx))
         return false;
 
-    out = std::move(neutrino.filter);
+    out = std::move(filter_tx.filter);
     return true;
 }
 
@@ -167,18 +167,18 @@ TEMPLATE
 bool CLASS::get_filter_head(hash_digest& out,
     const header_link& link) const NOEXCEPT
 {
-    table::neutrino::get_head neutrino{};
-    if (!store_.neutrino.find(link, neutrino))
+    table::filter_bk::get_head filter_bk{};
+    if (!store_.filter_bk.at(link, filter_bk))
         return false;
-
-    out = std::move(neutrino.filter_head);
+    
+    out = std::move(filter_bk.filter_head);
     return true;
 }
 
 TEMPLATE
 bool CLASS::set_filter_head(const header_link& link) NOEXCEPT
 {
-    if (!neutrino_enabled())
+    if (!filter_enabled())
         return true;
 
     // The filter body must have been previously stored under the block link.
@@ -202,7 +202,7 @@ TEMPLATE
 bool CLASS::set_filter_body(const header_link& link,
     const block& block) NOEXCEPT
 {
-    if (!neutrino_enabled())
+    if (!filter_enabled())
         return true;
 
     // Compute the current filter from the block and store under the link.
@@ -215,14 +215,14 @@ TEMPLATE
 bool CLASS::set_filter_body(const header_link&,
     const filter&) NOEXCEPT
 {
-    if (!neutrino_enabled())
+    if (!filter_enabled())
         return true;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     ////// Clean single allocation failure (e.g. disk full).
-    ////return store_.neutrino.put(link, table::neutrino::put_ref
+    ////return store_.filter_tx.put(link, table::filter_tx::put_ref
     ////{
     ////    {},
     ////    filter_head,
@@ -237,14 +237,14 @@ TEMPLATE
 bool CLASS::set_filter_head(const header_link&,
     const hash_digest&) NOEXCEPT
 {
-    if (!neutrino_enabled())
+    if (!filter_enabled())
         return true;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     ////// Clean single allocation failure (e.g. disk full).
-    ////return store_.neutrino.put(link, table::neutrino::put_ref
+    ////return store_.filter_tx.put(link, table::filter_tx::put_ref
     ////{
     ////    {},
     ////    filter_head,

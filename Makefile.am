@@ -101,15 +101,15 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/archives/puts.cpp \
     test/tables/archives/transaction.cpp \
     test/tables/archives/txs.cpp \
-    test/tables/caches/doubles.cpp \
+    test/tables/caches/duplicate.cpp \
     test/tables/caches/prevout.cpp \
     test/tables/caches/validated_bk.cpp \
     test/tables/caches/validated_tx.cpp \
     test/tables/indexes/height.cpp \
     test/tables/indexes/strong_tx.cpp \
     test/tables/optional/address.cpp \
-    test/tables/optional/bootstrap.cpp \
-    test/tables/optional/neutrino.cpp
+    test/tables/optional/filter_bk.cpp \
+    test/tables/optional/filter_tx.cpp
 
 endif WITH_TESTS
 
@@ -250,7 +250,7 @@ include_bitcoin_database_tables_archives_HEADERS = \
 
 include_bitcoin_database_tables_cachesdir = ${includedir}/bitcoin/database/tables/caches
 include_bitcoin_database_tables_caches_HEADERS = \
-    include/bitcoin/database/tables/caches/doubles.hpp \
+    include/bitcoin/database/tables/caches/duplicate.hpp \
     include/bitcoin/database/tables/caches/prevout.hpp \
     include/bitcoin/database/tables/caches/validated_bk.hpp \
     include/bitcoin/database/tables/caches/validated_tx.hpp
@@ -263,8 +263,8 @@ include_bitcoin_database_tables_indexes_HEADERS = \
 include_bitcoin_database_tables_optionalsdir = ${includedir}/bitcoin/database/tables/optionals
 include_bitcoin_database_tables_optionals_HEADERS = \
     include/bitcoin/database/tables/optionals/address.hpp \
-    include/bitcoin/database/tables/optionals/bootstrap.hpp \
-    include/bitcoin/database/tables/optionals/neutrino.hpp
+    include/bitcoin/database/tables/optionals/filter_bk.hpp \
+    include/bitcoin/database/tables/optionals/filter_tx.hpp
 
 
 # Custom make targets.

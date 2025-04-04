@@ -100,6 +100,9 @@ const std::unordered_map<table_t, std::string> CLASS::tables
     { table_t::strong_tx_body, "strong_tx_body" },
 
     // Caches.
+    { table_t::duplicate_table, "duplicate_table" },
+    { table_t::duplicate_head, "duplicate_head" },
+    { table_t::duplicate_body, "duplicate_body" },
     { table_t::prevout_table, "prevout_table" },
     { table_t::prevout_head, "prevout_head" },
     { table_t::prevout_body, "prevout_body" },
@@ -114,12 +117,12 @@ const std::unordered_map<table_t, std::string> CLASS::tables
     { table_t::address_table, "address_table" },
     { table_t::address_head, "address_head" },
     { table_t::address_body, "address_body" },
-    { table_t::neutrino_table, "neutrino_table" },
-    { table_t::neutrino_head, "neutrino_head" },
-    { table_t::neutrino_body, "neutrino_body" }
-    ////{ table_t::bootstrap_table, "bootstrap_table" },
-    ////{ table_t::bootstrap_head, "bootstrap_head" },
-    ////{ table_t::bootstrap_body, "bootstrap_body" },
+    { table_t::filter_bk_table, "filter_bk_table" },
+    { table_t::filter_bk_head, "filter_bk_head" },
+    { table_t::filter_bk_body, "filter_bk_body" },
+    { table_t::filter_tx_table, "filter_tx_table" },
+    { table_t::filter_tx_head, "filter_tx_head" },
+    { table_t::filter_tx_body, "filter_tx_body" }
 };
 
 TEMPLATE
@@ -179,6 +182,10 @@ CLASS::store(const settings& config) NOEXCEPT
     // Caches.
     // ------------------------------------------------------------------------
 
+    duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate)),
+    duplicate_body_(body(config.path, schema::caches::duplicate), config.duplicate_size, config.duplicate_rate),
+    duplicate(duplicate_head_, duplicate_body_, config.duplicate_buckets),
+
     prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout)),
     prevout_body_(body(config.path, schema::caches::prevout), config.prevout_size, config.prevout_rate),
     prevout(prevout_head_, prevout_body_, config.prevout_buckets),
@@ -198,9 +205,13 @@ CLASS::store(const settings& config) NOEXCEPT
     address_body_(body(config.path, schema::optionals::address), config.address_size, config.address_rate),
     address(address_head_, address_body_, config.address_buckets),
 
-    neutrino_head_(head(config.path / schema::dir::heads, schema::optionals::neutrino)),
-    neutrino_body_(body(config.path, schema::optionals::neutrino), config.neutrino_size, config.neutrino_rate),
-    neutrino(neutrino_head_, neutrino_body_, config.neutrino_buckets),
+    filter_bk_head_(head(config.path / schema::dir::heads, schema::optionals::filter_bk)),
+    filter_bk_body_(body(config.path, schema::optionals::filter_bk), config.filter_bk_size, config.filter_bk_rate),
+    filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk_buckets),
+
+    filter_tx_head_(head(config.path / schema::dir::heads, schema::optionals::filter_tx)),
+    filter_tx_body_(body(config.path, schema::optionals::filter_tx), config.filter_tx_size, config.filter_tx_rate),
+    filter_tx(filter_tx_head_, filter_tx_body_, config.filter_tx_buckets),
 
     // Locks.
     // ------------------------------------------------------------------------
@@ -266,6 +277,8 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     create(ec, strong_tx_head_, table_t::strong_tx_head);
     create(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    create(ec, duplicate_head_, table_t::duplicate_head);
+    create(ec, duplicate_body_, table_t::duplicate_body);
     create(ec, prevout_head_, table_t::prevout_head);
     create(ec, prevout_body_, table_t::prevout_body);
     create(ec, validated_bk_head_, table_t::validated_bk_head);
@@ -275,10 +288,10 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
 
     create(ec, address_head_, table_t::address_head);
     create(ec, address_body_, table_t::address_body);
-    create(ec, neutrino_head_, table_t::neutrino_head);
-    create(ec, neutrino_body_, table_t::neutrino_body);
-    ////create(ec, bootstrap_head_, table_t::bootstrap_head);
-    ////create(ec, bootstrap_body_, table_t::bootstrap_body);
+    create(ec, filter_bk_head_, table_t::filter_bk_head);
+    create(ec, filter_bk_body_, table_t::filter_bk_body);
+    create(ec, filter_tx_head_, table_t::filter_tx_head);
+    create(ec, filter_tx_body_, table_t::filter_tx_body);
 
     const auto populate = [&handler](code& ec, auto& storage,
         table_t table) NOEXCEPT
@@ -307,13 +320,14 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     populate(ec, confirmed, table_t::confirmed_table);
     populate(ec, strong_tx, table_t::strong_tx_table);
 
+    populate(ec, duplicate, table_t::duplicate_table);
     populate(ec, prevout, table_t::prevout_table);
     populate(ec, validated_bk, table_t::validated_bk_table);
     populate(ec, validated_tx, table_t::validated_tx_table);
 
     populate(ec, address, table_t::address_table);
-    populate(ec, neutrino, table_t::neutrino_table);
-    ////populate(ec, bootstrap, table_t::bootstrap_table);
+    populate(ec, filter_bk, table_t::filter_bk_table);
+    populate(ec, filter_tx, table_t::filter_tx_table);
 
     if (ec)
     {
@@ -379,13 +393,14 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, confirmed, table_t::confirmed_table);
     verify(ec, strong_tx, table_t::strong_tx_table);
 
+    verify(ec, duplicate, table_t::duplicate_table);
     verify(ec, prevout, table_t::prevout_table);
     verify(ec, validated_bk, table_t::validated_bk_table);
     verify(ec, validated_tx, table_t::validated_tx_table);
 
     verify(ec, address, table_t::address_table);
-    verify(ec, neutrino, table_t::neutrino_table);
-    ////verify(ec, bootstrap, table_t::bootstrap_table);
+    verify(ec, filter_bk, table_t::filter_bk_table);
+    verify(ec, filter_tx, table_t::filter_tx_table);
 
     if (ec)
     {
@@ -433,13 +448,14 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
     flush(ec, confirmed_body_, table_t::confirmed_body);
     flush(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    flush(ec, duplicate_body_, table_t::duplicate_body);
     flush(ec, prevout_body_, table_t::prevout_body);
     flush(ec, validated_bk_body_, table_t::validated_bk_body);
     flush(ec, validated_tx_body_, table_t::validated_tx_body);
 
     flush(ec, address_body_, table_t::address_body);
-    flush(ec, neutrino_body_, table_t::neutrino_body);
-    ////flush(ec, bootstrap_body_, table_t::bootstrap_body);
+    flush(ec, filter_bk_body_, table_t::filter_bk_body);
+    flush(ec, filter_tx_body_, table_t::filter_tx_body);
 
     if (!ec) ec = backup(handler);
     transactor_mutex_.unlock();
@@ -493,6 +509,8 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, strong_tx_head_, table_t::strong_tx_head);
     reload(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    reload(ec, duplicate_head_, table_t::duplicate_head);
+    reload(ec, duplicate_body_, table_t::duplicate_body);
     reload(ec, prevout_head_, table_t::prevout_head);
     reload(ec, prevout_body_, table_t::prevout_body);
     reload(ec, validated_bk_head_, table_t::validated_bk_head);
@@ -502,10 +520,10 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
 
     reload(ec, address_head_, table_t::address_head);
     reload(ec, address_body_, table_t::address_body);
-    reload(ec, neutrino_head_, table_t::neutrino_head);
-    reload(ec, neutrino_body_, table_t::neutrino_body);
-    ////reload(ec, bootstrap_head_, table_t::bootstrap_head);
-    ////reload(ec, bootstrap_body_, table_t::bootstrap_body);
+    reload(ec, filter_bk_head_, table_t::filter_bk_head);
+    reload(ec, filter_bk_body_, table_t::filter_bk_body);
+    reload(ec, filter_tx_head_, table_t::filter_tx_head);
+    reload(ec, filter_tx_body_, table_t::filter_tx_body);
 
     transactor_mutex_.unlock();
     return ec;
@@ -544,13 +562,14 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     close(ec, confirmed, table_t::confirmed_table);
     close(ec, strong_tx, table_t::strong_tx_table);
 
+    close(ec, duplicate, table_t::duplicate_table);
     close(ec, prevout, table_t::prevout_table);
     close(ec, validated_bk, table_t::validated_bk_table);
     close(ec, validated_tx, table_t::validated_tx_table);
 
     close(ec, address, table_t::address_table);
-    close(ec, neutrino, table_t::neutrino_table);
-    ////close(ec, bootstrap, table_t::bootstrap_table);
+    close(ec, filter_bk, table_t::filter_bk_table);
+    close(ec, filter_tx, table_t::filter_tx_table);
 
     if (!ec) ec = unload_close(handler);
 
@@ -608,6 +627,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, strong_tx_head_, table_t::strong_tx_head);
     open(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    open(ec, duplicate_head_, table_t::duplicate_head);
+    open(ec, duplicate_body_, table_t::duplicate_body);
     open(ec, prevout_head_, table_t::prevout_head);
     open(ec, prevout_body_, table_t::prevout_body);
     open(ec, validated_bk_head_, table_t::validated_bk_head);
@@ -617,10 +638,10 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
 
     open(ec, address_head_, table_t::address_head);
     open(ec, address_body_, table_t::address_body);
-    open(ec, neutrino_head_, table_t::neutrino_head);
-    open(ec, neutrino_body_, table_t::neutrino_body);
-    ////open(ec, bootstrap_head_, table_t::bootstrap_head);
-    ////open(ec, bootstrap_body_, table_t::bootstrap_body);
+    open(ec, filter_bk_head_, table_t::filter_bk_head);
+    open(ec, filter_bk_body_, table_t::filter_bk_body);
+    open(ec, filter_tx_head_, table_t::filter_tx_head);
+    open(ec, filter_tx_body_, table_t::filter_tx_body);
 
     const auto load = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
@@ -655,6 +676,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, strong_tx_head_, table_t::strong_tx_head);
     load(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    load(ec, duplicate_head_, table_t::duplicate_head);
+    load(ec, duplicate_body_, table_t::duplicate_body);
     load(ec, prevout_head_, table_t::prevout_head);
     load(ec, prevout_body_, table_t::prevout_body);
     load(ec, validated_bk_head_, table_t::validated_bk_head);
@@ -664,10 +687,10 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
 
     load(ec, address_head_, table_t::address_head);
     load(ec, address_body_, table_t::address_body);
-    load(ec, neutrino_head_, table_t::neutrino_head);
-    load(ec, neutrino_body_, table_t::neutrino_body);
-    ////load(ec, bootstrap_head_, table_t::bootstrap_head);
-    ////load(ec, bootstrap_body_, table_t::bootstrap_body);
+    load(ec, filter_bk_head_, table_t::filter_bk_head);
+    load(ec, filter_bk_body_, table_t::filter_bk_body);
+    load(ec, filter_tx_head_, table_t::filter_tx_head);
+    load(ec, filter_tx_body_, table_t::filter_tx_body);
 
     return ec;
 }
@@ -709,6 +732,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, strong_tx_head_, table_t::strong_tx_head);
     unload(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    unload(ec, duplicate_head_, table_t::duplicate_head);
+    unload(ec, duplicate_body_, table_t::duplicate_body);
     unload(ec, prevout_head_, table_t::prevout_head);
     unload(ec, prevout_body_, table_t::prevout_body);
     unload(ec, validated_bk_head_, table_t::validated_bk_head);
@@ -718,10 +743,10 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
 
     unload(ec, address_head_, table_t::address_head);
     unload(ec, address_body_, table_t::address_body);
-    unload(ec, neutrino_head_, table_t::neutrino_head);
-    unload(ec, neutrino_body_, table_t::neutrino_body);
-    ////unload(ec, bootstrap_head_, table_t::bootstrap_head);
-    ////unload(ec, bootstrap_body_, table_t::bootstrap_body);
+    unload(ec, filter_bk_head_, table_t::filter_bk_head);
+    unload(ec, filter_bk_body_, table_t::filter_bk_body);
+    unload(ec, filter_tx_head_, table_t::filter_tx_head);
+    unload(ec, filter_tx_body_, table_t::filter_tx_body);
 
     const auto close = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
@@ -756,6 +781,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, strong_tx_head_, table_t::strong_tx_head);
     close(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    close(ec, duplicate_head_, table_t::duplicate_head);
+    close(ec, duplicate_body_, table_t::duplicate_body);
     close(ec, prevout_head_, table_t::prevout_head);
     close(ec, prevout_body_, table_t::prevout_body);
     close(ec, validated_bk_head_, table_t::validated_bk_head);
@@ -765,10 +792,10 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
 
     close(ec, address_head_, table_t::address_head);
     close(ec, address_body_, table_t::address_body);
-    close(ec, neutrino_head_, table_t::neutrino_head);
-    close(ec, neutrino_body_, table_t::neutrino_body);
-    ////close(ec, bootstrap_head_, table_t::bootstrap_head);
-    ////close(ec, bootstrap_body_, table_t::bootstrap_body);
+    close(ec, filter_bk_head_, table_t::filter_bk_head);
+    close(ec, filter_bk_body_, table_t::filter_bk_body);
+    close(ec, filter_tx_head_, table_t::filter_tx_head);
+    close(ec, filter_tx_body_, table_t::filter_tx_body);
 
     return ec;
 }
@@ -801,13 +828,14 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
     backup(ec, confirmed, table_t::confirmed_table);
     backup(ec, strong_tx, table_t::strong_tx_table);
 
+    backup(ec, duplicate, table_t::duplicate_table);
     backup(ec, prevout, table_t::prevout_table);
     backup(ec, validated_bk, table_t::validated_bk_table);
     backup(ec, validated_tx, table_t::validated_tx_table);
 
     backup(ec, address, table_t::address_table);
-    backup(ec, neutrino, table_t::neutrino_table);
-    ////backup(ec, bootstrap, table_t::bootstrap_table);
+    backup(ec, filter_bk, table_t::filter_bk_table);
+    backup(ec, filter_tx, table_t::filter_tx_table);
 
     if (ec) return ec;
 
@@ -854,13 +882,14 @@ code CLASS::dump(const path& folder,
     auto confirmed_buffer = confirmed_head_.get();
     auto strong_tx_buffer = strong_tx_head_.get();
 
+    auto duplicate_buffer = duplicate_head_.get();
     auto prevout_buffer = prevout_head_.get();
     auto validated_bk_buffer = validated_bk_head_.get();
     auto validated_tx_buffer = validated_tx_head_.get();
 
     auto address_buffer = address_head_.get();
-    auto neutrino_buffer = neutrino_head_.get();
-    ////auto bootstrap_buffer = bootstrap_head_.get();
+    auto filter_bk_buffer = filter_bk_head_.get();
+    auto filter_tx_buffer = filter_tx_head_.get();
 
     if (!header_buffer) return error::unloaded_file;
     if (!input_buffer) return error::unloaded_file;
@@ -875,13 +904,14 @@ code CLASS::dump(const path& folder,
     if (!confirmed_buffer) return error::unloaded_file;
     if (!strong_tx_buffer) return error::unloaded_file;
 
+    if (!duplicate_buffer) return error::unloaded_file;
     if (!prevout_buffer) return error::unloaded_file;
     if (!validated_bk_buffer) return error::unloaded_file;
     if (!validated_tx_buffer) return error::unloaded_file;
 
     if (!address_buffer) return error::unloaded_file;
-    if (!neutrino_buffer) return error::unloaded_file;
-    ////if (!bootstrap_buffer) return error::unloaded_file;
+    if (!filter_bk_buffer) return error::unloaded_file;
+    if (!filter_tx_buffer) return error::unloaded_file;
 
     code ec{ error::success };
     const auto dump = [&handler, &folder](code& ec, const auto& storage,
@@ -908,13 +938,14 @@ code CLASS::dump(const path& folder,
     dump(ec, confirmed_buffer, schema::indexes::confirmed, table_t::confirmed_head);
     dump(ec, strong_tx_buffer, schema::indexes::strong_tx, table_t::strong_tx_head);
 
+    dump(ec, duplicate_buffer, schema::caches::duplicate, table_t::duplicate_head);
     dump(ec, prevout_buffer, schema::caches::prevout, table_t::prevout_head);
     dump(ec, validated_bk_buffer, schema::caches::validated_bk, table_t::validated_bk_head);
     dump(ec, validated_tx_buffer, schema::caches::validated_tx, table_t::validated_tx_head);
 
     dump(ec, address_buffer, schema::optionals::address, table_t::address_head);
-    dump(ec, neutrino_buffer, schema::optionals::neutrino, table_t::neutrino_head);
-    ////dump(ec, bootstrap_buffer, schema::optionals::bootstrap, table_t::bootstrap_head);
+    dump(ec, filter_bk_buffer, schema::optionals::filter_bk, table_t::filter_bk_head);
+    dump(ec, filter_tx_buffer, schema::optionals::filter_tx, table_t::filter_tx_head);
 
     return ec;
 }
@@ -997,13 +1028,14 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, confirmed, table_t::confirmed_table);
         restore(ec, strong_tx, table_t::strong_tx_table);
 
+        restore(ec, duplicate, table_t::duplicate_table);
         restore(ec, prevout, table_t::prevout_table);
         restore(ec, validated_bk, table_t::validated_bk_table);
         restore(ec, validated_tx, table_t::validated_tx_table);
 
         restore(ec, address, table_t::address_table);
-        restore(ec, neutrino, table_t::neutrino_table);
-        ////restore(ec, bootstrap, table_t::bootstrap_table);
+        restore(ec, filter_bk, table_t::filter_bk_table);
+        restore(ec, filter_tx, table_t::filter_tx_table);
 
         if (ec)
             /* code */ unload_close(handler);
@@ -1047,12 +1079,13 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = candidate_body_.get_fault())) return ec;
     if ((ec = confirmed_body_.get_fault())) return ec;
     if ((ec = strong_tx_body_.get_fault())) return ec;
+    if ((ec = duplicate_body_.get_fault())) return ec;
     if ((ec = prevout_body_.get_fault())) return ec;
     if ((ec = validated_bk_body_.get_fault())) return ec;
     if ((ec = validated_tx_body_.get_fault())) return ec;
     if ((ec = address_body_.get_fault())) return ec;
-    if ((ec = neutrino_body_.get_fault())) return ec;
-    ////if ((ec = bootstrap_body_.get_fault())) return ec;
+    if ((ec = filter_bk_body_.get_fault())) return ec;
+    if ((ec = filter_tx_body_.get_fault())) return ec;
     return ec;
 }
 
@@ -1076,12 +1109,13 @@ size_t CLASS::get_space() const NOEXCEPT
     space(candidate_body_);
     space(confirmed_body_);
     space(strong_tx_body_);
+    space(duplicate_body_);
     space(prevout_body_);
     space(validated_bk_body_);
     space(validated_tx_body_);
     space(address_body_);
-    space(neutrino_body_);
-    ////space(bootstrap_body_);
+    space(filter_bk_body_);
+    space(filter_tx_body_);
 
     return total;
 }
@@ -1109,12 +1143,13 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(candidate_body_, table_t::candidate_body);
     report(confirmed_body_, table_t::confirmed_body);
     report(strong_tx_body_, table_t::strong_tx_body);
+    report(duplicate_body_, table_t::duplicate_body);
     report(prevout_body_, table_t::prevout_body);
     report(validated_bk_body_, table_t::validated_bk_body);
     report(validated_tx_body_, table_t::validated_tx_body);
     report(address_body_, table_t::address_body);
-    report(neutrino_body_, table_t::neutrino_body);
-    ////report(bootstrap_body_, table_t::bootstrap_body);
+    report(filter_bk_body_, table_t::filter_bk_body);
+    report(filter_tx_body_, table_t::filter_tx_body);
 }
 
 BC_POP_WARNING()

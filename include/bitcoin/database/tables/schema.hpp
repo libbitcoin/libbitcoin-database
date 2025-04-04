@@ -40,6 +40,7 @@ constexpr size_t hash = system::hash_size;
 
 /// Primary keys.
 /// -----------------------------------------------------------------------
+constexpr size_t dup = 2;       // ->duplicate
 constexpr size_t put = 5;       // ->input/output slab.
 constexpr size_t ins_ = 4;      // ->point|ins record.
 constexpr size_t outs_ = 4;     // ->outs (puts) record.
@@ -48,9 +49,9 @@ constexpr size_t prevout_ = 5;  // ->prevout slab.
 constexpr size_t txs_ = 5;      // ->txs slab.
 constexpr size_t tx = 4;        // ->tx record.
 constexpr size_t block = 3;     // ->header record.
-constexpr size_t bk_slab = 3;   // ->validated_bk record.
+constexpr size_t bk_slab = 4;   // ->validated_bk record.
 constexpr size_t tx_slab = 5;   // ->validated_tx record.
-constexpr size_t neutrino_ = 5; // ->neutrino record.
+constexpr size_t filter_ = 4;   // ->filter record.
 constexpr size_t doubles_ = 4;  // doubles bucket (no actual keys).
 
 /// Archive tables.
@@ -81,6 +82,8 @@ struct header
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 63u);
     static_assert(minrow == 98u);
+    static_assert(link::size == 3u);
+    static_assert(cell == 4u);
 };
 
 // record hashmap
@@ -107,6 +110,8 @@ struct transaction
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 29u);
     static_assert(minrow == 65u);
+    static_assert(link::size == 4u);
+    static_assert(cell == 4u);
 };
 
 // blob
@@ -122,6 +127,7 @@ struct input
     static constexpr size_t size = max_size_t;
     static_assert(minsize == 2u);
     static_assert(minrow == 2u);
+    static_assert(link::size == 5u);
 };
 
 // blob
@@ -138,6 +144,7 @@ struct output
     static constexpr size_t size = max_size_t;
     static_assert(minsize == 10u);
     static_assert(minrow == 10u);
+    static_assert(link::size == 5u);
 };
 
 // record multimap
@@ -155,6 +162,8 @@ struct point
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 0u);
     static_assert(minrow == 39u);
+    static_assert(link::size == 4u);
+    static_assert(cell == 8u);
 };
 
 // array
@@ -171,6 +180,7 @@ struct ins
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 13u);
     static_assert(minrow == 13u);
+    static_assert(link::size == 4u);
 };
 
 // array
@@ -185,6 +195,7 @@ struct outs
     ////static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 5u);
     static_assert(minrow == 5u);
+    static_assert(link::size == 4u);
 };
 
 // slab hashmap
@@ -204,6 +215,8 @@ struct txs
     static constexpr size_t cell = link::size;
     static_assert(minsize == 10u);
     static_assert(minrow == 18u);
+    static_assert(link::size == 5u);
+    static_assert(cell == 5u);
 };
 
 /// Index tables.
@@ -222,25 +235,7 @@ struct height
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 3u);
     static_assert(minrow == 3u);
-};
-
-// TODO: modest (sk:4) record multimap, with high multiple rate.
-// large (sk:32) record multimap, with high multiple rate.
-// address record count is output count.
-struct address
-{
-    static constexpr size_t sk = schema::hash;
-    static constexpr size_t pk = schema::outs::pk;
-    using link = linkage<pk, to_bits(pk)>;
-    using key = system::data_array<sk>;
-    static constexpr size_t minsize =
-        schema::output::pk;
-    static constexpr size_t minrow = pk + sk + minsize;
-    static constexpr size_t size = minsize;
-    static constexpr size_t cell = link::size;
-    static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 5u);
-    static_assert(minrow == 41u);
+    static_assert(link::size == 3u);
 };
 
 // record hashmap
@@ -259,15 +254,37 @@ struct strong_tx
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 3u);
     static_assert(minrow == 11u);
+    static_assert(link::size == 4u);
+    static_assert(cell == 4u);
 };
 
 /// Cache tables.
 /// -----------------------------------------------------------------------
 
-// slab arraymap, one slab per block
+// record hashmap
+struct duplicate
+{
+    static constexpr size_t pk = schema::dup;
+    using link = linkage<pk, to_bits(pk)>;
+    using key = system::chain::point;   // One point vs. all pont.fks?
+    static constexpr size_t sk = schema::hash + schema::index;
+    static constexpr size_t minsize =
+        zero;
+    static constexpr size_t minrow = pk + sk + minsize;
+    static constexpr size_t size = minsize;
+    static constexpr size_t cell = sizeof(uint32_t);
+    static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 0u);
+    static_assert(minrow == 37u);
+    static_assert(link::size == 2u);
+    static_assert(cell == 4u);
+};
+
+// slab arraymap
 struct prevout
 {
-    static constexpr size_t align = true;
+    // align imposes word alignment for arraymap (redundant is already).
+    static constexpr size_t align = false;
     static constexpr size_t pk = schema::prevout_;
     using link = linkage<pk, to_bits(pk)>;
     static constexpr size_t minsize =
@@ -279,24 +296,7 @@ struct prevout
     static constexpr size_t size = max_size_t;
     static_assert(minsize == 6u);
     static_assert(minrow == 6u);
-};
-
-// hashmap array
-struct doubles
-{
-    static constexpr size_t pk = schema::doubles_;
-    using link = linkage<pk, to_bits(pk)>;
-    using key = system::chain::point;
-    static constexpr size_t sk = schema::hash + schema::index;
-    static constexpr size_t minsize =
-        schema::hash +
-        schema::index;
-    static constexpr size_t minrow = minsize;
-    static constexpr size_t size = minsize;
-    static constexpr size_t cell = link::size;
-    static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 35u);
-    static_assert(minrow == 35u);
+    static_assert(link::size == 5u);
 };
 
 // slab hashmap
@@ -307,13 +307,13 @@ struct validated_bk
     using link = linkage<pk, to_bits(pk)>;
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
-        schema::code + 
+        schema::code +  // TODO: change code to variable.
         one;
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = max_size_t;
-    static constexpr size_t cell = sizeof(unsigned_type<link::size>);
+    static constexpr size_t cell = link::size;
     static_assert(minsize == 2u);
-    static_assert(minrow == 8u);
+    static_assert(minrow == 9u);
 };
 
 // slab modest (sk:4) multimap, with low multiple rate.
@@ -327,7 +327,7 @@ struct validated_tx
         schema::flags +
         schema::header::pk +
         sizeof(uint32_t) +
-        schema::code +
+        schema::code +  // TODO: change code to variable.
         one +
         one;
     static constexpr size_t minrow = pk + sk + minsize;
@@ -338,22 +338,63 @@ struct validated_tx
     static_assert(minrow == 23u);
 };
 
-// slab hashmap
-struct neutrino
+/// Optional tables.
+/// -----------------------------------------------------------------------
+
+// TODO: modest (sk:4) record multimap, with high multiple rate.
+// large (sk:32) record multimap, with high multiple rate.
+// address record count is output count.
+struct address
 {
-    static constexpr size_t sk = schema::header::pk;
-    static constexpr size_t pk = schema::neutrino_;
+    static constexpr size_t sk = schema::hash;
+    static constexpr size_t pk = schema::outs::pk;
     using link = linkage<pk, to_bits(pk)>;
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
+        schema::output::pk;
+    static constexpr size_t minrow = pk + sk + minsize;
+    static constexpr size_t size = minsize;
+    static constexpr size_t cell = link::size;
+    static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 5u);
+    static_assert(minrow == 41u);
+    static_assert(link::size == 4u);
+    static_assert(cell == 4u);
+};
+
+// record arraymap
+struct filter_bk
+{
+    // align imposes word alignment for arraymap (redundant is already).
+    static constexpr size_t align = false;
+    static constexpr size_t pk = schema::header::pk;
+    using link = linkage<pk, to_bits(pk)>;
+    static constexpr size_t minsize =
+        schema::hash;
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 32u);
+    static_assert(minrow == 32u);
+    static_assert(link::size == 3u);
+};
+
+// slab arraymap
+struct filter_tx
+{
+    // align imposes word alignment for arraymap (redundant is already).
+    static constexpr size_t align = true;
+    static constexpr size_t pk = schema::filter_;
+    using link = linkage<pk, to_bits(pk)>;
+    static constexpr size_t minsize =
         schema::hash +
         one;
-    static constexpr size_t minrow = pk + sk + minsize;
+    static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;
-    static constexpr size_t cell = link::size;
     static inline link count() NOEXCEPT;
     static_assert(minsize == 33u);
-    static_assert(minrow == 41u);
+    static_assert(minrow == 33u);
+    static_assert(link::size == 4u);
 };
 
 } // namespace schema

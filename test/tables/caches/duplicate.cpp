@@ -19,9 +19,9 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(doubles_tests)
+BOOST_AUTO_TEST_SUITE(duplicate_tests)
 
-BOOST_AUTO_TEST_CASE(doubles_test)
+BOOST_AUTO_TEST_CASE(duplicate_test)
 {
     BOOST_REQUIRE(true);
 }

@@ -90,6 +90,9 @@ bool CLASS::get_body_count(Link& count) const NOEXCEPT
     if (!ptr)
         return false;
 
+    // Body count is written as the first value in link size, but since
+    // offsetting is a multiple of sell size, a full cell is consumed for it.
+    // In case of disabled there are no cells, so file is link size.
     link_array(count.value) = link_array(ptr->data());
     return true;
 }
@@ -101,7 +104,9 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     if (!ptr)
         return false;
 
-    // If head is padded then last bytes are fill (0xff).
+    // Body count is written as the first value in link size, but since
+    // offsetting is a multiple of sell size, a full cell is consumed for it.
+    // In case of disabled there are no cells, so file is link size.
     auto value = count.value;
     link_array(ptr->data()) = link_array(value);
     return true;

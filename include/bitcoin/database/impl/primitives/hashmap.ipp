@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAP_IPP
 
+#include <atomic>
 #include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -108,6 +109,21 @@ TEMPLATE
 bool CLASS::expand(const Link& count) NOEXCEPT
 {
     return body_.expand(count);
+}
+
+// diagnostic counters
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+size_t CLASS::positive_search_count() const NOEXCEPT
+{
+    return positive_.load(std::memory_order_relaxed);
+}
+
+TEMPLATE
+size_t CLASS::negative_search_count() const NOEXCEPT
+{
+    return negative_.load(std::memory_order_relaxed);
 }
 
 // query interface
@@ -380,12 +396,12 @@ inline bool CLASS::put(bool& duplicate, const memory_ptr& ptr,
     if (previous.is_terminal())
     {
         duplicate = false;
-        ncounter_.fetch_add(one, std::memory_order_relaxed);
+        negative_.fetch_add(one, std::memory_order_relaxed);
     }
     else
     {
         duplicate = !first(ptr, previous, key).is_terminal();
-        pcounter_.fetch_add(one, std::memory_order_relaxed);
+        positive_.fetch_add(one, std::memory_order_relaxed);
     }
 
     return true;

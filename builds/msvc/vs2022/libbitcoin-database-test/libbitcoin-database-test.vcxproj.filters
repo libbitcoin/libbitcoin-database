@@ -159,7 +159,7 @@
     <ClCompile Include="..\..\..\..\test\tables\archives\txs.cpp">
       <Filter>src\tables\archives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\caches\doubles.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\caches\duplicate.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\prevout.cpp">
@@ -180,10 +180,10 @@
     <ClCompile Include="..\..\..\..\test\tables\optional\address.cpp">
       <Filter>src\tables\optional</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\optional\bootstrap.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\optional\filter_bk.cpp">
       <Filter>src\tables\optional</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\optional\neutrino.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\optional\filter_tx.cpp">
       <Filter>src\tables\optional</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">

@@ -84,7 +84,7 @@ inline txs_link CLASS::to_txs(const header_link& key) const NOEXCEPT
 TEMPLATE
 inline filter_link CLASS::to_filter(const header_link& key) const NOEXCEPT
 {
-    return store_.neutrino.first(key);
+    return store_.filter_tx.first(key);
 }
 
 TEMPLATE

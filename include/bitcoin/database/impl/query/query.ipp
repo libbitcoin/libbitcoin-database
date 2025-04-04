@@ -117,6 +117,18 @@ code CLASS::snapshot(const typename Store::event_handler& handler) const NOEXCEP
     return store_.snapshot(handler);
 }
 
+TEMPLATE
+size_t CLASS::positive_search_count() const NOEXCEPT
+{
+    return store_.point.positive_search_count();
+}
+
+TEMPLATE
+size_t CLASS::negative_search_count() const NOEXCEPT
+{
+    return store_.point.negative_search_count();
+}
+
 } // namespace database
 } // namespace libbitcoin
 

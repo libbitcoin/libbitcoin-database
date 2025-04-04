@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_OPTIONALS_NEUTRINO_HPP
-#define LIBBITCOIN_DATABASE_TABLES_OPTIONALS_NEUTRINO_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_OPTIONALS_FILTER_TX_HPP
+#define LIBBITCOIN_DATABASE_TABLES_OPTIONALS_FILTER_TX_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -27,19 +27,19 @@
 namespace libbitcoin {
 namespace database {
 namespace table {
-
-/// neutrino is a slab hashmap of neutrino filters.
-struct neutrino
-  : public hash_map<schema::neutrino>
+    
+/// filter_tx is a slab of neutrino filters.
+struct filter_tx
+  : public array_map<schema::filter_tx>
 {
-    using hash_map<schema::neutrino>::hashmap;
+    using array_map<schema::filter_tx>::arraymap;
 
     struct slab
-      : public schema::neutrino
+      : public schema::filter_tx
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
+            return system::possible_narrow_cast<link::integer>(pk +
                 schema::hash +
                 variable_size(filter.size()) +
                 filter.size());
@@ -73,11 +73,11 @@ struct neutrino
     };
 
     struct get_filter
-      : public schema::neutrino
+      : public schema::filter_tx
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
+            return system::possible_narrow_cast<link::integer>(pk +
                 schema::hash +
                 variable_size(filter.size()) +
                 filter.size());
@@ -95,7 +95,7 @@ struct neutrino
     };
 
     struct get_head
-        : public schema::neutrino
+        : public schema::filter_tx
     {
         link count() const NOEXCEPT
         {
@@ -113,11 +113,11 @@ struct neutrino
     };
 
     struct put_ref
-      : public schema::neutrino
+      : public schema::filter_tx
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
+            return system::possible_narrow_cast<link::integer>(pk +
                 schema::hash +
                 variable_size(filter.size()) +
                 filter.size());

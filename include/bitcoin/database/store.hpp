@@ -110,14 +110,15 @@ public:
     table::strong_tx strong_tx;
 
     /// Caches.
+    table::duplicate duplicate;
     table::prevout prevout;
     table::validated_bk validated_bk;
     table::validated_tx validated_tx;
 
     /// Optionals.
     table::address address;
-    table::neutrino neutrino;
-    ////table::bootstrap bootstrap;
+    table::filter_bk filter_bk;
+    table::filter_tx filter_tx;
 
 protected:
     code open_load(const event_handler& handler) NOEXCEPT;
@@ -183,6 +184,10 @@ protected:
     /// -----------------------------------------------------------------------
 
     // bloc arraymap
+    Storage duplicate_head_;
+    Storage duplicate_body_;
+
+    // bloc arraymap
     Storage prevout_head_;
     Storage prevout_body_;
 
@@ -201,13 +206,13 @@ protected:
     Storage address_head_;
     Storage address_body_;
 
-    // slab hashmap
-    Storage neutrino_head_;
-    Storage neutrino_body_;
+    // record arraymap
+    Storage filter_bk_head_;
+    Storage filter_bk_body_;
 
-    ////// array
-    ////Storage bootstrap_head_;
-    ////Storage bootstrap_body_;
+    // slab
+    Storage filter_tx_head_;
+    Storage filter_tx_body_;
 
     /// Locks.
     /// -----------------------------------------------------------------------
