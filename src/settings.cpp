@@ -73,13 +73,13 @@ settings::settings() NOEXCEPT
 
     // Caches.
 
+    duplicate_buckets{ 128 },
+    duplicate_size{ 1 },
+    duplicate_rate{ 50 },
+
     prevout_buckets{ 100 },
     prevout_size{ 1 },
     prevout_rate{ 50 },
-
-    doubles_buckets{ 128 },
-    doubles_size{ 1 },
-    doubles_rate{ 50 },
 
     validated_bk_buckets{ 128 },
     validated_bk_size{ 1 },
@@ -95,9 +95,13 @@ settings::settings() NOEXCEPT
     address_size{ 1 },
     address_rate{ 50 },
 
-    neutrino_buckets{ 128 },
-    neutrino_size{ 1 },
-    neutrino_rate{ 50 }
+    filter_bk_buckets{ 128 },
+    filter_bk_size{ 1 },
+    filter_bk_rate{ 50 },
+
+    filter_tx_buckets{ 128 },
+    filter_tx_size{ 1 },
+    filter_tx_rate{ 50 }
 {
 }
 

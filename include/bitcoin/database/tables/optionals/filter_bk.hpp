@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_OPTIONALS_NEUTRINO_HPP
-#define LIBBITCOIN_DATABASE_TABLES_OPTIONALS_NEUTRINO_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_OPTIONALS_FILTER_BK_HPP
+#define LIBBITCOIN_DATABASE_TABLES_OPTIONALS_FILTER_BK_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -28,18 +28,18 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// neutrino is a slab hashmap of neutrino filters.
-struct neutrino
-  : public hash_map<schema::neutrino>
+/// filter_bk is a slab hashmap of neutrino filter headers.
+struct filter_bk
+  : public array_map<schema::filter_bk>
 {
-    using hash_map<schema::neutrino>::hashmap;
+    using array_map<schema::filter_bk>::arraymap;
 
     struct slab
-      : public schema::neutrino
+      : public schema::filter_bk
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
+            return system::possible_narrow_cast<link::integer>(pk +
                 schema::hash +
                 variable_size(filter.size()) +
                 filter.size());
@@ -73,11 +73,11 @@ struct neutrino
     };
 
     struct get_filter
-      : public schema::neutrino
+      : public schema::filter_bk
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
+            return system::possible_narrow_cast<link::integer>(pk +
                 schema::hash +
                 variable_size(filter.size()) +
                 filter.size());
@@ -95,7 +95,7 @@ struct neutrino
     };
 
     struct get_head
-        : public schema::neutrino
+        : public schema::filter_bk
     {
         link count() const NOEXCEPT
         {
@@ -113,11 +113,11 @@ struct neutrino
     };
 
     struct put_ref
-      : public schema::neutrino
+      : public schema::filter_bk
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
+            return system::possible_narrow_cast<link::integer>(pk +
                 schema::hash +
                 variable_size(filter.size()) +
                 filter.size());

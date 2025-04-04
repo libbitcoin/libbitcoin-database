@@ -55,8 +55,8 @@ namespace indexes
 
 namespace caches
 {
-    constexpr auto prevout = "prevout";
     constexpr auto duplicate = "duplicate";
+    constexpr auto prevout = "prevout";
     constexpr auto validated_bk = "validated_bk";
     constexpr auto validated_tx = "validated_tx";
 }
@@ -64,7 +64,8 @@ namespace caches
 namespace optionals
 {
     constexpr auto address = "address";
-    constexpr auto neutrino = "neutrino";
+    constexpr auto filter_bk = "filter_bk";
+    constexpr auto filter_tx = "filter_tx";
 }
 
 namespace locks

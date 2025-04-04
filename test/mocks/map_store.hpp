@@ -172,6 +172,16 @@ public:
 
     // Caches.
 
+    inline const path& duplicate_head_file() const NOEXCEPT
+    {
+        return duplicate_head_.file();
+    }
+
+    inline const path& duplicate_body_file() const NOEXCEPT
+    {
+        return duplicate_body_.file();
+    }
+
     inline const path& prevout_head_file() const NOEXCEPT
     {
         return prevout_head_.file();
@@ -214,25 +224,25 @@ public:
         return address_body_.file();
     }
 
-    inline const path& neutrino_head_file() const NOEXCEPT
+    inline const path& filter_bk_head_file() const NOEXCEPT
     {
-        return neutrino_head_.file();
+        return filter_bk_head_.file();
     }
 
-    inline const path& neutrino_body_file() const NOEXCEPT
+    inline const path& filter_bk_body_file() const NOEXCEPT
     {
-        return neutrino_body_.file();
+        return filter_bk_body_.file();
     }
 
-    ////inline const path& bootstrap_head_file() const NOEXCEPT
-    ////{
-    ////    return bootstrap_head_.file();
-    ////}
+    inline const path& filter_tx_head_file() const NOEXCEPT
+    {
+        return filter_tx_head_.file();
+    }
 
-    ////inline const path& bootstrap_body_file() const NOEXCEPT
-    ////{
-    ////    return bootstrap_body_.file();
-    ////}
+    inline const path& filter_tx_body_file() const NOEXCEPT
+    {
+        return filter_tx_body_.file();
+    }
 
     // Locks.
 

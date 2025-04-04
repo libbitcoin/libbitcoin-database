@@ -86,13 +86,14 @@ struct BCD_API settings
     /// Caches.
     /// -----------------------------------------------------------------------
 
+    // This one is 16 bit (could use table link::integer) for these.
+    uint16_t duplicate_buckets;
+    uint64_t duplicate_size;
+    uint16_t duplicate_rate;
+
     uint32_t prevout_buckets;
     uint64_t prevout_size;
     uint16_t prevout_rate;
-
-    uint32_t doubles_buckets;
-    uint64_t doubles_size;
-    uint16_t doubles_rate;
 
     uint32_t validated_bk_buckets;
     uint64_t validated_bk_size;
@@ -109,9 +110,13 @@ struct BCD_API settings
     uint64_t address_size;
     uint16_t address_rate;
 
-    uint32_t neutrino_buckets;
-    uint64_t neutrino_size;
-    uint16_t neutrino_rate;
+    uint32_t filter_bk_buckets;
+    uint64_t filter_bk_size;
+    uint16_t filter_bk_rate;
+
+    uint32_t filter_tx_buckets;
+    uint64_t filter_tx_size;
+    uint16_t filter_tx_rate;
 };
 
 } // namespace database

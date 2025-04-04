@@ -79,11 +79,13 @@ size_t CLASS::store_body_size() const NOEXCEPT
         + candidate_body_size()
         + confirmed_body_size()
         + strong_tx_body_size()
+        + duplicate_body_size()
         + prevout_body_size()
         + validated_tx_body_size()
         + validated_bk_body_size()
         + address_body_size()
-        + neutrino_body_size();
+        + filter_bk_body_size()
+        + filter_tx_body_size();
 }
 
 TEMPLATE
@@ -106,11 +108,13 @@ size_t CLASS::store_head_size() const NOEXCEPT
         + candidate_head_size()
         + confirmed_head_size()
         + strong_tx_head_size()
+        + duplicate_head_size()
         + prevout_head_size()
         + validated_tx_head_size()
         + validated_bk_head_size()
         + address_head_size()
-        + neutrino_head_size();
+        + filter_bk_head_size()
+        + filter_tx_head_size();
 }
 
 TEMPLATE
@@ -141,11 +145,15 @@ DEFINE_SIZES(tx)
 DEFINE_SIZES(candidate)
 DEFINE_SIZES(confirmed)
 DEFINE_SIZES(strong_tx)
+
+DEFINE_SIZES(duplicate)
 DEFINE_SIZES(prevout)
 DEFINE_SIZES(validated_tx)
 DEFINE_SIZES(validated_bk)
+
 DEFINE_SIZES(address)
-DEFINE_SIZES(neutrino)
+DEFINE_SIZES(filter_bk)
+DEFINE_SIZES(filter_tx)
 
 // Buckets.
 // ----------------------------------------------------------------------------
@@ -156,11 +164,14 @@ DEFINE_BUCKETS(txs)
 DEFINE_BUCKETS(tx)
 
 DEFINE_BUCKETS(strong_tx)
+
 DEFINE_BUCKETS(prevout)
 DEFINE_BUCKETS(validated_tx)
 DEFINE_BUCKETS(validated_bk)
+
 DEFINE_BUCKETS(address)
-DEFINE_BUCKETS(neutrino)
+DEFINE_BUCKETS(filter_bk)
+DEFINE_BUCKETS(filter_tx)
 
 // Records.
 // ----------------------------------------------------------------------------
@@ -174,8 +185,13 @@ DEFINE_RECORDS(outs)
 DEFINE_RECORDS(candidate)
 DEFINE_RECORDS(confirmed)
 DEFINE_RECORDS(strong_tx)
+
+DEFINE_RECORDS(duplicate)
 DEFINE_RECORDS(prevout)
+
 DEFINE_RECORDS(address)
+DEFINE_RECORDS(filter_bk)
+DEFINE_RECORDS(filter_tx)
 
 // Counters (archive slabs).
 // ----------------------------------------------------------------------------
@@ -242,9 +258,10 @@ bool CLASS::address_enabled() const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::neutrino_enabled() const NOEXCEPT
+bool CLASS::filter_enabled() const NOEXCEPT
 {
-    return store_.neutrino.enabled();
+    // TODO: use just one?
+    return store_.filter_bk.enabled() && store_.filter_tx.enabled();
 }
 
 } // namespace database

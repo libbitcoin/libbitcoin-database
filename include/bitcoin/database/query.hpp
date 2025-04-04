@@ -39,7 +39,7 @@ using ins_link = table::ins::link;
 using point_link = table::point::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
-using filter_link = table::neutrino::link;
+using filter_link = table::filter_tx::link;
 
 using header_links = std::vector<header_link::integer>;
 using tx_links = std::vector<tx_link::integer>;
@@ -131,11 +131,13 @@ public:
     size_t candidate_size() const NOEXCEPT;
     size_t confirmed_size() const NOEXCEPT;
     size_t strong_tx_size() const NOEXCEPT;
+    size_t duplicate_size() const NOEXCEPT;
     size_t prevout_size() const NOEXCEPT;
     size_t validated_tx_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
     size_t address_size() const NOEXCEPT;
-    size_t neutrino_size() const NOEXCEPT;
+    size_t filter_bk_size() const NOEXCEPT;
+    size_t filter_tx_size() const NOEXCEPT;
 
     /// Body logical byte sizes.
     size_t store_body_size() const NOEXCEPT;
@@ -151,11 +153,13 @@ public:
     size_t candidate_body_size() const NOEXCEPT;
     size_t confirmed_body_size() const NOEXCEPT;
     size_t strong_tx_body_size() const NOEXCEPT;
+    size_t duplicate_body_size() const NOEXCEPT;
     size_t prevout_body_size() const NOEXCEPT;
     size_t validated_tx_body_size() const NOEXCEPT;
     size_t validated_bk_body_size() const NOEXCEPT;
     size_t address_body_size() const NOEXCEPT;
-    size_t neutrino_body_size() const NOEXCEPT;
+    size_t filter_bk_body_size() const NOEXCEPT;
+    size_t filter_tx_body_size() const NOEXCEPT;
 
     /// Head logical byte sizes.
     size_t store_head_size() const NOEXCEPT;
@@ -171,11 +175,13 @@ public:
     size_t candidate_head_size() const NOEXCEPT;
     size_t confirmed_head_size() const NOEXCEPT;
     size_t strong_tx_head_size() const NOEXCEPT;
+    size_t duplicate_head_size() const NOEXCEPT;
     size_t prevout_head_size() const NOEXCEPT;
     size_t validated_tx_head_size() const NOEXCEPT;
     size_t validated_bk_head_size() const NOEXCEPT;
     size_t address_head_size() const NOEXCEPT;
-    size_t neutrino_head_size() const NOEXCEPT;
+    size_t filter_bk_head_size() const NOEXCEPT;
+    size_t filter_tx_head_size() const NOEXCEPT;
 
     /// Records.
     size_t header_records() const NOEXCEPT;
@@ -186,8 +192,11 @@ public:
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;
+    size_t duplicate_records() const NOEXCEPT;
     size_t prevout_records() const NOEXCEPT;
     size_t address_records() const NOEXCEPT;
+    size_t filter_bk_records() const NOEXCEPT;
+    size_t filter_tx_records() const NOEXCEPT;
 
     /// Buckets (maps only).
     size_t header_buckets() const NOEXCEPT;
@@ -195,13 +204,15 @@ public:
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
     size_t strong_tx_buckets() const NOEXCEPT;
+    size_t duplicate_buckets() const NOEXCEPT;
     size_t prevout_buckets() const NOEXCEPT;
     size_t validated_tx_buckets() const NOEXCEPT;
     size_t validated_bk_buckets() const NOEXCEPT;
     size_t address_buckets() const NOEXCEPT;
-    size_t neutrino_buckets() const NOEXCEPT;
+    size_t filter_bk_buckets() const NOEXCEPT;
+    size_t filter_tx_buckets() const NOEXCEPT;
 
-    /// Counters (archive slabs - txs/puts/neutrino can be derived).
+    /// Counters (archive slabs - txs/puts/filter_tx can be derived).
     size_t input_count(const tx_link& link) const NOEXCEPT;
     size_t output_count(const tx_link& link) const NOEXCEPT;
     two_counts put_counts(const tx_link& link) const NOEXCEPT;
@@ -211,7 +222,7 @@ public:
 
     /// Optional table state.
     bool address_enabled() const NOEXCEPT;
-    bool neutrino_enabled() const NOEXCEPT;
+    bool filter_enabled() const NOEXCEPT;
 
     /// Initialization (natural-keyed).
     /// -----------------------------------------------------------------------
@@ -513,7 +524,7 @@ public:
     bool get_confirmed_balance(uint64_t& out,
         const hash_digest& key) const NOEXCEPT;
 
-    /// Neutrino, set during validation with prevouts (surrogate-keyed).
+    /// filter_tx, set during validation with prevouts (surrogate-keyed).
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
     bool get_filter_head(hash_digest& out, const header_link& link) const NOEXCEPT;
     bool set_filter_body(const header_link& link, const block& block) NOEXCEPT;

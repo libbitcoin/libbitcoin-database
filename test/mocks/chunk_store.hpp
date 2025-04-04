@@ -148,6 +148,16 @@ public:
 
     // Caches.
 
+    system::data_chunk& duplicate_head() NOEXCEPT
+    {
+        return duplicate_head_.buffer();
+    }
+
+    system::data_chunk& duplicate_body() NOEXCEPT
+    {
+        return duplicate_body_.buffer();
+    }
+
     system::data_chunk& prevout_head() NOEXCEPT
     {
         return prevout_head_.buffer();
@@ -190,14 +200,24 @@ public:
         return address_body_.buffer();
     }
 
-    system::data_chunk& neutrino_head() NOEXCEPT
+    system::data_chunk& filter_bk_head() NOEXCEPT
     {
-        return neutrino_head_.buffer();
+        return filter_bk_head_.buffer();
     }
 
-    system::data_chunk& neutrino_body() NOEXCEPT
+    system::data_chunk& filter_bk_body() NOEXCEPT
     {
-        return neutrino_body_.buffer();
+        return filter_bk_body_.buffer();
+    }
+
+    system::data_chunk& filter_tx_head() NOEXCEPT
+    {
+        return filter_tx_head_.buffer();
+    }
+
+    system::data_chunk& filter_tx_body() NOEXCEPT
+    {
+        return filter_tx_body_.buffer();
     }
 };
 

@@ -65,7 +65,7 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
     BC_ASSERT(!is_initialized());
     BC_ASSERT(is_one(genesis.transactions_ptr()->size()));
 
-    // TODO: add genesis block neutrino head and body when neutrino is enabled.
+    // TODO: add genesis block filter_tx head and body when filter_tx is enabled.
 
     // ========================================================================
     const auto scope = store_.get_transactor();

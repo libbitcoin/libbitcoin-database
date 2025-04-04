@@ -19,39 +19,64 @@
 ////#include "../../test.hpp"
 ////#include "../../mocks/chunk_storage.hpp"
 ////
-////BOOST_AUTO_TEST_SUITE(bootstrap_tests)
+////BOOST_AUTO_TEST_SUITE(filter_tx_tests)
 ////
 ////using namespace system;
-////const table::bootstrap::record record1{ {}, { { 0x42 } } };
-////const table::bootstrap::record record2{ {}, { one_hash } };
+////const table::filter_tx::key key1{ 0x01, 0x02, 0x03 };
+////const table::filter_tx::key key2{ 0xa1, 0xa2, 0xa3 };
+////const table::filter_tx::slab slab1{ {}, null_hash, { 0x42 } };
+////const table::filter_tx::slab slab2{ {}, one_hash,  { 0xab, 0xcd, 0xef } };
 ////const data_chunk expected_head = base16_chunk
 ////(
-////    "000000"
+////    "0000000000"
+////    "ffffffffff"
+////    "2a00000000"
+////    "ffffffffff"
+////    "ffffffffff"
+////    "ffffffffff"
+////    "ffffffffff"
+////    "ffffffffff"
+////    "ffffffffff"
 ////);
 ////const data_chunk closed_head = base16_chunk
 ////(
-////    "020000"
+////    "5600000000"
+////    "ffffffffff"
+////    "2a00000000"
+////    "ffffffffff"
+////    "ffffffffff"
+////    "ffffffffff"
+////    "ffffffffff"
+////    "ffffffffff"
+////    "ffffffffff"
 ////);
 ////const data_chunk expected_body = base16_chunk
 ////(
-////    "4200000000000000000000000000000000000000000000000000000000000000" // block_hash1
-////    "0100000000000000000000000000000000000000000000000000000000000000" // block_hash2
+////    "ffffffffff"
+////    "010203"     // key1
+////    "0000000000000000000000000000000000000000000000000000000000000000" // null_hash
+////    "0142"       // size/bytes
+////
+////    "0000000000" // next->
+////    "a1a2a3"     // key2
+////    "0100000000000000000000000000000000000000000000000000000000000000" // one_hash
+////    "03abcdef"   // size/bytes
 ////);
 ////
-////BOOST_AUTO_TEST_CASE(bootstrap__put__two__expected)
+////BOOST_AUTO_TEST_CASE(filter_tx__put__two__expected)
 ////{
 ////    test::chunk_storage head_store{};
 ////    test::chunk_storage body_store{};
-////    table::bootstrap instance{ head_store, body_store };
+////    table::filter_tx instance{ head_store, body_store, 8 };
 ////    BOOST_REQUIRE(instance.create());
 ////
-////    table::bootstrap::link link1{};
-////    BOOST_REQUIRE(instance.put_link(link1, record1));
+////    table::filter_tx::link link1{};
+////    BOOST_REQUIRE(instance.put_link(link1, key1, slab1));
 ////    BOOST_REQUIRE_EQUAL(link1, 0u);
 ////
-////    table::bootstrap::link link2{};
-////    BOOST_REQUIRE(instance.put_link(link2, record2));
-////    BOOST_REQUIRE_EQUAL(link2, 1u);
+////    table::filter_tx::link link2{};
+////    BOOST_REQUIRE(instance.put_link(link2, key2, slab2));
+////    BOOST_REQUIRE_EQUAL(link2, 0x2a);
 ////
 ////    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
 ////    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
@@ -59,22 +84,21 @@
 ////    BOOST_REQUIRE_EQUAL(head_store.buffer(), closed_head);
 ////}
 ////
-////BOOST_AUTO_TEST_CASE(bootstrap__get__two__expected)
+////BOOST_AUTO_TEST_CASE(filter_tx__get__two__expected)
 ////{
 ////    auto head = expected_head;
 ////    auto body = expected_body;
 ////    test::chunk_storage head_store{ head };
 ////    test::chunk_storage body_store{ body };
-////    table::bootstrap instance{ head_store, body_store };
+////    table::filter_tx instance{ head_store, body_store, 8 };
 ////    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
 ////    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 ////
-////    table::bootstrap::record out{};
-////    out.block_hashes.resize(1);
+////    table::filter_tx::slab out{};
 ////    BOOST_REQUIRE(instance.get(0u, out));
-////    BOOST_REQUIRE(out == record1);
-////    BOOST_REQUIRE(instance.get(1u, out));
-////    BOOST_REQUIRE(out == record2);
+////    BOOST_REQUIRE(out == slab1);
+////    BOOST_REQUIRE(instance.get(0x2a, out));
+////    BOOST_REQUIRE(out == slab2);
 ////}
 ////
 ////BOOST_AUTO_TEST_SUITE_END()

@@ -30,15 +30,15 @@ namespace database {
 namespace table {
 
 // TODO: this table isn't actually mapped.
-struct doubles
-  : public hash_map<schema::doubles>
+struct duplicate
+  : public hash_map<schema::duplicate>
 {
     using ix = linkage<schema::index>;
-    using hash_map<schema::doubles>::hashmap;
+    using hash_map<schema::duplicate>::hashmap;
 
     // This supports only a single record (not too useful).
     struct record
-      : public schema::doubles
+      : public schema::duplicate
     {
         inline bool from_data(reader& source) NOEXCEPT
         {

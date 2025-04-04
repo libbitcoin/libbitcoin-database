@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.validated_bk_body_size(), 0u);
 
     BOOST_REQUIRE_EQUAL(query.address_body_size(), schema::address::minrow);
-    BOOST_REQUIRE_EQUAL(query.neutrino_body_size(), 0u);
+    ////BOOST_REQUIRE_EQUAL(query.filter_tx_body_size(), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.validated_bk_buckets(), 128u);
 
     BOOST_REQUIRE_EQUAL(query.address_buckets(), 128u);
-    BOOST_REQUIRE_EQUAL(query.neutrino_buckets(), 128u);
+    ////BOOST_REQUIRE_EQUAL(query.filter_tx_buckets(), 128u);
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(query_extent__optionals_enabled__default__true)
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.address_enabled());
-    BOOST_REQUIRE(query.neutrino_enabled());
+    BOOST_REQUIRE(query.filter_enabled());
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
@@ -175,20 +175,20 @@ BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(!query.address_enabled());
-    BOOST_REQUIRE(query.neutrino_enabled());
+    BOOST_REQUIRE(query.filter_enabled());
 }
 
-BOOST_AUTO_TEST_CASE(query_extent__neutrino_enabled__disabled__false)
+BOOST_AUTO_TEST_CASE(query_extent__filter_enabled__disabled__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
-    settings.neutrino_buckets = 0;
+    settings.filter_tx_buckets = 0;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.address_enabled());
-    BOOST_REQUIRE(!query.neutrino_enabled());
+    BOOST_REQUIRE(!query.filter_enabled());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

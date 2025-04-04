@@ -33,6 +33,8 @@ else ()
   set( libdir "\${exec_prefix}/lib" )
   set( includedir "\${exec_prefix}/include" )
 
+  set( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" )
+
   set( PACKAGE_VERSION "4.0.0" )
   set( VERSION "${PACKAGE_VERSION}" )
 endif ()
@@ -309,15 +311,15 @@ if (with-tests)
         "../../test/tables/archives/puts.cpp"
         "../../test/tables/archives/transaction.cpp"
         "../../test/tables/archives/txs.cpp"
-        "../../test/tables/caches/doubles.cpp"
+        "../../test/tables/caches/duplicate.cpp"
         "../../test/tables/caches/prevout.cpp"
         "../../test/tables/caches/validated_bk.cpp"
         "../../test/tables/caches/validated_tx.cpp"
         "../../test/tables/indexes/height.cpp"
         "../../test/tables/indexes/strong_tx.cpp"
         "../../test/tables/optional/address.cpp"
-        "../../test/tables/optional/bootstrap.cpp"
-        "../../test/tables/optional/neutrino.cpp" )
+        "../../test/tables/optional/filter_bk.cpp"
+        "../../test/tables/optional/filter_tx.cpp" )
 
     add_test( NAME libbitcoin-database-test COMMAND libbitcoin-database-test
             --run_test=*

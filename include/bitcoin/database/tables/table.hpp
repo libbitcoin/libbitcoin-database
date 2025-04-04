@@ -67,6 +67,9 @@ enum class table_t
     strong_tx_body,
 
     /// Caches.
+    duplicate_table,
+    duplicate_head,
+    duplicate_body,
     prevout_table,
     prevout_head,
     prevout_body,
@@ -81,12 +84,12 @@ enum class table_t
     address_table,
     address_head,
     address_body,
-    neutrino_table,
-    neutrino_head,
-    neutrino_body
-    ////bootstrap_table,
-    ////bootstrap_head,
-    ////bootstrap_body
+    filter_bk_table,
+    filter_bk_head,
+    filter_bk_body,
+    filter_tx_table,
+    filter_tx_head,
+    filter_tx_body
 };
 
 } // namespace database
