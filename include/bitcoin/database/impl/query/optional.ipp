@@ -168,9 +168,9 @@ bool CLASS::get_filter_head(hash_digest& out,
     const header_link& link) const NOEXCEPT
 {
     table::filter_bk::get_head filter_bk{};
-    if (!store_.filter_bk.find(link, filter_bk))
+    if (!store_.filter_bk.at(link, filter_bk))
         return false;
-
+    
     out = std::move(filter_bk.filter_head);
     return true;
 }

@@ -30,16 +30,16 @@ namespace table {
     
 /// filter_tx is a slab of neutrino filters.
 struct filter_tx
-  : public hash_map<schema::filter_tx>
+  : public array_map<schema::filter_tx>
 {
-    using hash_map<schema::filter_tx>::hashmap;
+    using array_map<schema::filter_tx>::arraymap;
 
     struct slab
       : public schema::filter_tx
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
+            return system::possible_narrow_cast<link::integer>(pk +
                 schema::hash +
                 variable_size(filter.size()) +
                 filter.size());
@@ -77,7 +77,7 @@ struct filter_tx
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
+            return system::possible_narrow_cast<link::integer>(pk +
                 schema::hash +
                 variable_size(filter.size()) +
                 filter.size());
@@ -117,7 +117,7 @@ struct filter_tx
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
+            return system::possible_narrow_cast<link::integer>(pk +
                 schema::hash +
                 variable_size(filter.size()) +
                 filter.size());
