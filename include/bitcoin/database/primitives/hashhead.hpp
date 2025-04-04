@@ -32,9 +32,7 @@
 namespace libbitcoin {
 namespace database {
 
-// TODO: Link::terminal is byte aligned, which now wastes bits.
-// TODO: change to bitwise link domain and sentinal as max value.
-// TODO: Add unused link bits in filter size.
+/// Fixed size hashmap header.
 template <class Link, class Key, size_t CellSize = Link::size,
     if_not_greater<Link::size, CellSize> = true>
 class hashhead
