@@ -211,7 +211,6 @@ public:
     size_t strong_tx_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
-    size_t filter_tx_records() const NOEXCEPT;
     size_t address_records() const NOEXCEPT;
 
     /// Counters (archive slabs - txs/puts/filter_tx can be derived).
