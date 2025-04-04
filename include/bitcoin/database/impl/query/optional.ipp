@@ -156,7 +156,7 @@ TEMPLATE
 bool CLASS::get_filter_body(filter& out, const header_link& link) const NOEXCEPT
 {
     table::filter_tx::get_filter filter_tx{};
-    if (!store_.filter_tx.find(link, filter_tx))
+    if (!store_.filter_tx.at(link, filter_tx))
         return false;
 
     out = std::move(filter_tx.filter);
