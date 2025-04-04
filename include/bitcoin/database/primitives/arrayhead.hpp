@@ -76,6 +76,7 @@ private:
     static_assert(std::atomic<link>::is_always_lock_free);
     static_assert(is_nonzero(Link::size));
     static constexpr auto bucket_size = Align ? sizeof(link) : Link::size;
+    static constexpr bool aligned = (bucket_size == sizeof(link));
 
     template <size_t Bytes>
     static inline auto& to_array(memory::iterator it) NOEXCEPT

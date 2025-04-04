@@ -134,7 +134,7 @@ Link CLASS::at(size_t key) const NOEXCEPT
     if (is_null(ptr))
         return {};
 
-    if constexpr (Align)
+    if constexpr (aligned)
     {
         // Reads full padded word.
         const auto raw = ptr->data();
@@ -164,7 +164,7 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
     if (is_null(ptr))
         return false;
 
-    if constexpr (Align)
+    if constexpr (aligned)
     {
         // Writes full padded word (0x00 fill).
         const auto raw = ptr->data();
