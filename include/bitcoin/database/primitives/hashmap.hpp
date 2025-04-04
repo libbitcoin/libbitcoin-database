@@ -49,18 +49,6 @@ public:
 
     hashmap(storage& header, storage& body, const Link& buckets) NOEXCEPT;
 
-    /// Count of puts resulting in table body search to detect duplication.
-    size_t positive_search_count() const NOEXCEPT
-    {
-        return pcounter_.load(std::memory_order_relaxed);
-    }
-
-    /// Count of puts not resulting in table body search to detect duplication.
-    size_t negative_search_count() const NOEXCEPT
-    {
-        return ncounter_.load(std::memory_order_relaxed);
-    }
-
     /// Setup, not thread safe.
     /// -----------------------------------------------------------------------
 
@@ -90,6 +78,15 @@ public:
 
     /// Increase count as neccesary to specified.
     bool expand(const Link& count) NOEXCEPT;
+
+    /// Diagnostic counters.
+    /// -----------------------------------------------------------------------
+
+    /// Count of puts resulting in table body search to detect duplication.
+    size_t positive_search_count() const NOEXCEPT;
+
+    /// Count of puts not resulting in table body search to detect duplication.
+    size_t negative_search_count() const NOEXCEPT;
 
     /// Errors.
     /// -----------------------------------------------------------------------
@@ -239,8 +236,8 @@ private:
 
     // Thread safe.
     body body_;
-    std::atomic<size_t> ncounter_{};
-    std::atomic<size_t> pcounter_{};
+    std::atomic<size_t> negative_{};
+    std::atomic<size_t> positive_{};
 };
 
 template <typename Element>

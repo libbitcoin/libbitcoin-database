@@ -78,18 +78,6 @@ public:
 
     query(Store& store) NOEXCEPT;
 
-    /// Count of puts resulting in table body search to detect duplication.
-    size_t positive_search_count() const NOEXCEPT
-    {
-        return store_.point.positive_search_count();
-    }
-
-    /// Count of puts not resulting in table body search to detect duplication.
-    size_t negative_search_count() const NOEXCEPT
-    {
-        return store_.point.negative_search_count();
-    }
-
     /// Store management from query-holder (not store owner) context.
     /// -----------------------------------------------------------------------
 
@@ -114,56 +102,26 @@ public:
     /// Snapshot the store while running.
     code snapshot(const typename Store::event_handler& handler) const NOEXCEPT;
 
+    /// Count of puts resulting in table body search to detect duplication.
+    size_t positive_search_count() const NOEXCEPT;
+
+    /// Count of puts not resulting in table body search to detect duplication.
+    size_t negative_search_count() const NOEXCEPT;
+
     /// Store extent.
     /// -----------------------------------------------------------------------
 
-    /// Body + head logical byte sizes.
+    /// Full store (all data) logical byte sizes.
     size_t store_size() const NOEXCEPT;
-    size_t archive_size() const NOEXCEPT;
-    size_t header_size() const NOEXCEPT;
-    size_t output_size() const NOEXCEPT;
-    size_t input_size() const NOEXCEPT;
-    size_t point_size() const NOEXCEPT;
-    size_t ins_size() const NOEXCEPT;
-    size_t outs_size() const NOEXCEPT;
-    size_t txs_size() const NOEXCEPT;
-    size_t tx_size() const NOEXCEPT;
-    size_t candidate_size() const NOEXCEPT;
-    size_t confirmed_size() const NOEXCEPT;
-    size_t strong_tx_size() const NOEXCEPT;
-    size_t duplicate_size() const NOEXCEPT;
-    size_t prevout_size() const NOEXCEPT;
-    size_t validated_tx_size() const NOEXCEPT;
-    size_t validated_bk_size() const NOEXCEPT;
-    size_t address_size() const NOEXCEPT;
-    size_t filter_bk_size() const NOEXCEPT;
-    size_t filter_tx_size() const NOEXCEPT;
-
-    /// Body logical byte sizes.
-    size_t store_body_size() const NOEXCEPT;
-    size_t archive_body_size() const NOEXCEPT;
-    size_t header_body_size() const NOEXCEPT;
-    size_t output_body_size() const NOEXCEPT;
-    size_t input_body_size() const NOEXCEPT;
-    size_t point_body_size() const NOEXCEPT;
-    size_t ins_body_size() const NOEXCEPT;
-    size_t outs_body_size() const NOEXCEPT;
-    size_t txs_body_size() const NOEXCEPT;
-    size_t tx_body_size() const NOEXCEPT;
-    size_t candidate_body_size() const NOEXCEPT;
-    size_t confirmed_body_size() const NOEXCEPT;
-    size_t strong_tx_body_size() const NOEXCEPT;
-    size_t duplicate_body_size() const NOEXCEPT;
-    size_t prevout_body_size() const NOEXCEPT;
-    size_t validated_tx_body_size() const NOEXCEPT;
-    size_t validated_bk_body_size() const NOEXCEPT;
-    size_t address_body_size() const NOEXCEPT;
-    size_t filter_bk_body_size() const NOEXCEPT;
-    size_t filter_tx_body_size() const NOEXCEPT;
-
-    /// Head logical byte sizes.
     size_t store_head_size() const NOEXCEPT;
+    size_t store_body_size() const NOEXCEPT;
+
+    /// Full archive (primary data) logical byte sizes.
+    size_t archive_size() const NOEXCEPT;
     size_t archive_head_size() const NOEXCEPT;
+    size_t archive_body_size() const NOEXCEPT;
+
+    /// Table head logical byte sizes.
     size_t header_head_size() const NOEXCEPT;
     size_t output_head_size() const NOEXCEPT;
     size_t input_head_size() const NOEXCEPT;
@@ -172,45 +130,89 @@ public:
     size_t outs_head_size() const NOEXCEPT;
     size_t txs_head_size() const NOEXCEPT;
     size_t tx_head_size() const NOEXCEPT;
+
     size_t candidate_head_size() const NOEXCEPT;
     size_t confirmed_head_size() const NOEXCEPT;
     size_t strong_tx_head_size() const NOEXCEPT;
     size_t duplicate_head_size() const NOEXCEPT;
     size_t prevout_head_size() const NOEXCEPT;
-    size_t validated_tx_head_size() const NOEXCEPT;
     size_t validated_bk_head_size() const NOEXCEPT;
-    size_t address_head_size() const NOEXCEPT;
+    size_t validated_tx_head_size() const NOEXCEPT;
     size_t filter_bk_head_size() const NOEXCEPT;
     size_t filter_tx_head_size() const NOEXCEPT;
+    size_t address_head_size() const NOEXCEPT;
 
-    /// Records.
-    size_t header_records() const NOEXCEPT;
-    size_t tx_records() const NOEXCEPT;
-    size_t point_records() const NOEXCEPT;
-    size_t ins_records() const NOEXCEPT;
-    size_t outs_records() const NOEXCEPT;
-    size_t candidate_records() const NOEXCEPT;
-    size_t confirmed_records() const NOEXCEPT;
-    size_t strong_tx_records() const NOEXCEPT;
-    size_t duplicate_records() const NOEXCEPT;
-    size_t prevout_records() const NOEXCEPT;
-    size_t address_records() const NOEXCEPT;
-    size_t filter_bk_records() const NOEXCEPT;
-    size_t filter_tx_records() const NOEXCEPT;
+    /// Table body logical byte sizes.
+    size_t header_body_size() const NOEXCEPT;
+    size_t output_body_size() const NOEXCEPT;
+    size_t input_body_size() const NOEXCEPT;
+    size_t point_body_size() const NOEXCEPT;
+    size_t ins_body_size() const NOEXCEPT;
+    size_t outs_body_size() const NOEXCEPT;
+    size_t txs_body_size() const NOEXCEPT;
+    size_t tx_body_size() const NOEXCEPT;
 
-    /// Buckets (maps only).
+    size_t candidate_body_size() const NOEXCEPT;
+    size_t confirmed_body_size() const NOEXCEPT;
+    size_t strong_tx_body_size() const NOEXCEPT;
+    size_t duplicate_body_size() const NOEXCEPT;
+    size_t prevout_body_size() const NOEXCEPT;
+    size_t validated_bk_body_size() const NOEXCEPT;
+    size_t validated_tx_body_size() const NOEXCEPT;
+    size_t filter_bk_body_size() const NOEXCEPT;
+    size_t filter_tx_body_size() const NOEXCEPT;
+    size_t address_body_size() const NOEXCEPT;
+
+    /// Table (head + body) logical byte sizes.
+    size_t header_size() const NOEXCEPT;
+    size_t output_size() const NOEXCEPT;
+    size_t input_size() const NOEXCEPT;
+    size_t point_size() const NOEXCEPT;
+    size_t ins_size() const NOEXCEPT;
+    size_t outs_size() const NOEXCEPT;
+    size_t txs_size() const NOEXCEPT;
+    size_t tx_size() const NOEXCEPT;
+
+    size_t candidate_size() const NOEXCEPT;
+    size_t confirmed_size() const NOEXCEPT;
+    size_t strong_tx_size() const NOEXCEPT;
+    size_t duplicate_size() const NOEXCEPT;
+    size_t prevout_size() const NOEXCEPT;
+    size_t validated_bk_size() const NOEXCEPT;
+    size_t validated_tx_size() const NOEXCEPT;
+    size_t filter_bk_size() const NOEXCEPT;
+    size_t filter_tx_size() const NOEXCEPT;
+    size_t address_size() const NOEXCEPT;
+
+    /// Buckets (hashmap + arraymap).
     size_t header_buckets() const NOEXCEPT;
     size_t point_buckets() const NOEXCEPT;
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
+
     size_t strong_tx_buckets() const NOEXCEPT;
     size_t duplicate_buckets() const NOEXCEPT;
     size_t prevout_buckets() const NOEXCEPT;
-    size_t validated_tx_buckets() const NOEXCEPT;
     size_t validated_bk_buckets() const NOEXCEPT;
-    size_t address_buckets() const NOEXCEPT;
+    size_t validated_tx_buckets() const NOEXCEPT;
     size_t filter_bk_buckets() const NOEXCEPT;
     size_t filter_tx_buckets() const NOEXCEPT;
+    size_t address_buckets() const NOEXCEPT;
+
+    /// Records.
+    size_t header_records() const NOEXCEPT;
+    size_t point_records() const NOEXCEPT;
+    size_t ins_records() const NOEXCEPT;
+    size_t outs_records() const NOEXCEPT;
+    size_t tx_records() const NOEXCEPT;
+
+    size_t candidate_records() const NOEXCEPT;
+    size_t confirmed_records() const NOEXCEPT;
+    size_t strong_tx_records() const NOEXCEPT;
+    size_t duplicate_records() const NOEXCEPT;
+    size_t filter_bk_records() const NOEXCEPT;
+    size_t filter_tx_records() const NOEXCEPT;
+    size_t address_records() const NOEXCEPT;
 
     /// Counters (archive slabs - txs/puts/filter_tx can be derived).
     size_t input_count(const tx_link& link) const NOEXCEPT;
