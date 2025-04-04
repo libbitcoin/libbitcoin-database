@@ -28,9 +28,9 @@ const table::validated_bk::slab slab1{ {}, 0x42, 0x1122334455667788 };
 const table::validated_bk::slab slab2{ {}, 0xab, 0x0000000000000042 };
 const data_chunk expected_head = base16_chunk
 (
-    "000000ff"
+    "00000000"
     "ffffffff"
-    "10000041"
+    "11000000"
     "ffffffff"
     "ffffffff"
     "ffffffff"
@@ -40,9 +40,9 @@ const data_chunk expected_head = base16_chunk
 );
 const data_chunk closed_head = base16_chunk
 (
-    "180000ff"
+    "1a000000"
     "ffffffff"
-    "10000041"
+    "11000000"
     "ffffffff"
     "ffffffff"
     "ffffffff"
@@ -52,12 +52,12 @@ const data_chunk closed_head = base16_chunk
 );
 const data_chunk expected_body = base16_chunk
 (
-    "ffffff"  // next->end
+    "ffffffff"// next->end
     "010203"  // key1
     "42"      // code1
     "ff8877665544332211" // fees1
 
-    "000000"  // next->
+    "00000000"// next->
     "a1a2a3"  // key2
     "ab"      // code2
     "42"      // fees2
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(validated_bk__put__two__expected)
 
     table::validated_bk::link link2{};
     BOOST_REQUIRE(instance.put_link(link2, key2, slab2));
-    BOOST_REQUIRE_EQUAL(link2, 16u);
+    BOOST_REQUIRE_EQUAL(link2, 17u);
 
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(validated_bk__get__two__expected)
     table::validated_bk::slab out{};
     BOOST_REQUIRE(instance.get(0u, out));
     BOOST_REQUIRE(out == slab1);
-    BOOST_REQUIRE(instance.get(16u, out));
+    BOOST_REQUIRE(instance.get(17u, out));
     BOOST_REQUIRE(out == slab2);
 }
 

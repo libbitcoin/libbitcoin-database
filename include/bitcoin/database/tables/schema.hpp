@@ -49,7 +49,7 @@ constexpr size_t prevout_ = 5;  // ->prevout slab.
 constexpr size_t txs_ = 5;      // ->txs slab.
 constexpr size_t tx = 4;        // ->tx record.
 constexpr size_t block = 3;     // ->header record.
-constexpr size_t bk_slab = 3;   // ->validated_bk record.
+constexpr size_t bk_slab = 4;   // ->validated_bk record.
 constexpr size_t tx_slab = 5;   // ->validated_tx record.
 constexpr size_t filter_ = 4;   // ->filter record.
 constexpr size_t doubles_ = 4;  // doubles bucket (no actual keys).
@@ -310,9 +310,9 @@ struct validated_bk
         one;
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = max_size_t;
-    static constexpr size_t cell = sizeof(unsigned_type<link::size>);
+    static constexpr size_t cell = link::size;
     static_assert(minsize == 2u);
-    static_assert(minrow == 8u);
+    static_assert(minrow == 9u);
 };
 
 // slab modest (sk:4) multimap, with low multiple rate.
