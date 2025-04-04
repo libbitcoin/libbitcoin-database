@@ -73,8 +73,6 @@ public:
         const Key& key) NOEXCEPT;
 
 protected:
-    /// Currently link and sieve are independently byte-aligned.
-    /// Tables with byte-padding for thread fence alignment also have a sieve.
     static constexpr size_t cell_size = CellSize;
     static constexpr size_t link_size = Link::size;
     static constexpr size_t link_bits = Link::bits;
