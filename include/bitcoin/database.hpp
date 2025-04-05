@@ -42,6 +42,7 @@
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/primitives/arrayhead.hpp>
 #include <bitcoin/database/primitives/arraymap.hpp>
+#include <bitcoin/database/primitives/bloom.hpp>
 #include <bitcoin/database/primitives/hashhead.hpp>
 #include <bitcoin/database/primitives/hashmap.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
