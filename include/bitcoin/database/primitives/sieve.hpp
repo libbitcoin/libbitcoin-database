@@ -78,10 +78,10 @@ protected:
     /// Read member compressed mask array as if it was a two-dimesional array.
     static constexpr type masks(size_t row, size_t column) NOEXCEPT;
 
-    /// Is sentinel value for empty sieve.
+    /// Is sentinel value for empty filter.
     static constexpr bool is_empty(type value) NOEXCEPT;
 
-    /// Is sentinel value for saturated sieve.
+    /// Is sentinel value for saturated filter.
     static constexpr bool is_saturated(type value) NOEXCEPT;
 };
 
