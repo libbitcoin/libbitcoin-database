@@ -20,21 +20,34 @@
 
 BOOST_AUTO_TEST_SUITE(sieve_tests)
 
-////#define HAVE_SLOW_TESTS
+#define HAVE_SLOW_TESTS
 
 using namespace system;
 
+template <size_t m, size_t k>
+class accessor
+  : public sieve<m, k>
+{
+public:
+    using base = sieve<m, k>;
+    using type = base::type;
+
+    using base::empty;
+    using base::is_empty;
+    using base::is_saturated;
+};
+
 // Ensure default/nop behavior.
-static_assert( sieve<0, 0>::is_screened(sieve<0, 0>::empty, 42));
-static_assert( sieve<1, 0>::is_screened(sieve<1, 0>::empty, 42));
-static_assert(!sieve<1, 1>::is_screened(sieve<1, 1>::empty, 42));
+static_assert( accessor<0, 0>::is_screened(accessor<0, 0>::empty, 42));
+static_assert( accessor<1, 0>::is_screened(accessor<1, 0>::empty, 42));
+static_assert(!accessor<1, 1>::is_screened(accessor<1, 1>::empty, 42));
 
 BOOST_AUTO_TEST_CASE(sieve__screened__forward__expected)
 {
     constexpr size_t sieve_bits = 32;
     constexpr size_t select_bits = 4;
     constexpr size_t limit = power2(select_bits);
-    using sieve_t = sieve<sieve_bits, select_bits>;
+    using sieve_t = accessor<sieve_bits, select_bits>;
 
     // This generation is based on the manually-generated matrix.
     constexpr std_array<uint32_t, limit> forward
@@ -430,7 +443,7 @@ BOOST_AUTO_TEST_CASE(sieve__screened__reverse__expected)
     constexpr size_t sieve_bits = 32;
     constexpr size_t select_bits = 4;
     constexpr size_t limit = power2(select_bits);
-    using sieve_t = sieve<sieve_bits, select_bits>;
+    using sieve_t = accessor<sieve_bits, select_bits>;
 
     // This generation is based on the manually-generated matrix.
     constexpr std_array<uint32_t, limit> reverse
@@ -826,7 +839,7 @@ BOOST_AUTO_TEST_CASE(sieve__screen__full__exptected_saturation)
     constexpr size_t sieve_bits = 32;
     constexpr size_t select_bits = 4;
     constexpr size_t limit = power2(select_bits);
-    using sieve_t = sieve<sieve_bits, select_bits>;
+    using sieve_t = accessor<sieve_bits, select_bits>;
 
     // This generation is based on the manually-generated matrix.
     constexpr std_array<uint32_t, limit> forward
@@ -935,7 +948,7 @@ BOOST_AUTO_TEST_CASE(sieve__screen__4_bits_forward__16_screens)
     constexpr size_t sieve_bits = 32;
     constexpr size_t select_bits = 4;
     constexpr size_t limit = power2(select_bits);
-    using sieve_t = sieve<sieve_bits, select_bits>;
+    using sieve_t = accessor<sieve_bits, select_bits>;
     auto value = sieve_t::empty;
     size_t count{};
 
@@ -964,7 +977,7 @@ BOOST_AUTO_TEST_CASE(sieve__screen__4_bits_reverse__16_screens)
     constexpr size_t sieve_bits = 32;
     constexpr size_t select_bits = 4;
     constexpr size_t limit = power2(select_bits);
-    using sieve_t = sieve<sieve_bits, select_bits>;
+    using sieve_t = accessor<sieve_bits, select_bits>;
     auto value = sieve_t::empty;
     size_t count{};
 
@@ -1013,7 +1026,7 @@ void print_table() const NOEXCEPT
     }
 }
 
-static constexpr masks_t masks1_
+static constexpr masks_t masks_
 {
     // 1
     0b0000'1111111111111111111111111111,

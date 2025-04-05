@@ -41,7 +41,7 @@ constexpr size_t size() NOEXCEPT
 }
 
 template <class Key>
-inline size_t hash(const Key& value) NOEXCEPT
+inline uint64_t hash(const Key& value) NOEXCEPT
 {
     if constexpr (is_same_type<Key, system::chain::point>)
     {
@@ -52,12 +52,17 @@ inline size_t hash(const Key& value) NOEXCEPT
     {
         // Assumes sufficient uniqueness in low order bytes (ok for all).
         // sequentially-valued keys should have no more buckets than values.
-        return system::unique_hash(value);
+        constexpr auto key = size<Key>();
+        constexpr auto bytes = std::min(key, sizeof(uint64_t));
+
+        uint64_t hash{};
+        std::copy_n(value.begin(), bytes, system::byte_cast(hash).begin());
+        return hash;
     }
 }
 
 template <class Key>
-inline size_t thumb(const Key& value) NOEXCEPT
+inline uint64_t thumb(const Key& value) NOEXCEPT
 {
 
     if constexpr (is_same_type<Key, system::chain::point>)
@@ -73,10 +78,10 @@ inline size_t thumb(const Key& value) NOEXCEPT
         // This is intended to minimize overlap to the extent possible, while
         // also avoiding the high order bits in the case of block hashes.
         constexpr auto key = size<Key>();
-        constexpr auto bytes = std::min(key, sizeof(size_t));
+        constexpr auto bytes = std::min(key, sizeof(uint64_t));
         constexpr auto offset = std::min(key - bytes, bytes);
 
-        size_t hash{};
+        uint64_t hash{};
         const auto start = std::next(value.begin(), offset);
         std::copy_n(start, bytes, system::byte_cast(hash).begin());
         return hash;

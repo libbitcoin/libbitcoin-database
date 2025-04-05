@@ -44,15 +44,9 @@ BC_PUSH_WARNING(NO_DYNAMIC_ARRAY_INDEXING)
 BC_PUSH_WARNING(NO_ARRAY_INDEXING)
 
 TEMPLATE
-constexpr bool CLASS::is_empty(type value) NOEXCEPT
+constexpr bool CLASS::is_collision(type previous, type next) NOEXCEPT
 {
-    return value == empty;
-}
-
-TEMPLATE
-constexpr bool CLASS::is_saturated(type value) NOEXCEPT
-{
-    return value == saturated;
+    return next == previous || is_saturated(next);
 }
 
 TEMPLATE
@@ -159,6 +153,18 @@ constexpr CLASS::type CLASS::screen(type value, type fingerprint) NOEXCEPT
 
 // protected
 // ----------------------------------------------------------------------------
+
+TEMPLATE
+constexpr bool CLASS::is_empty(type value) NOEXCEPT
+{
+    return value == empty;
+}
+
+TEMPLATE
+constexpr bool CLASS::is_saturated(type value) NOEXCEPT
+{
+    return value == saturated;
+}
 
 TEMPLATE
 constexpr CLASS::type CLASS::masks(size_t row, size_t column) NOEXCEPT
