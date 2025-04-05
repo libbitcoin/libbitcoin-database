@@ -26,36 +26,53 @@ namespace libbitcoin {
 namespace database {
 
 /// Bloom is limited to integral types.
-template <size_t m, size_t k,
-    if_not_greater<k, m> = true,
-    if_not_greater<m, bits<uint64_t>> = true>
+template <size_t M, size_t K,
+    if_not_greater<K, M> = true,
+    if_not_greater<M, bits<uint64_t>> = true>
 class bloom
 {
 public:
     /// This produces size_t when disabled.
-    using type = unsigned_type<system::to_ceilinged_bytes(m)>;
+    using type = unsigned_type<system::to_ceilinged_bytes(M)>;
 
     /// Bloom is bypassed.
-    static constexpr bool disabled = is_zero(m) || is_zero(k);
+    static constexpr bool disabled = is_zero(M) || is_zero(K);
 
     /// Did fingerprint collide.
     static constexpr bool is_collision(type previous, type next) NOEXCEPT;
 
     /// Is potential collision.
-    static constexpr bool is_screened(type value, type fingerprint) NOEXCEPT;
+    static constexpr bool is_screened(type value, type entropy) NOEXCEPT;
 
     /// Add fingerprint to bloom.
-    static constexpr type screen(type value, type fingerprint) NOEXCEPT;
+    static constexpr type screen(type value, type entropy) NOEXCEPT;
+
+protected:
+    static constexpr type saturated = 0;
+    static constexpr type empty = system::unmask_right<type>(M);
+    static constexpr size_t select = system::floored_log2(M);
+    static constexpr size_t minimum_entropy = system::safe_multiply(select, K);
+    static constexpr size_t expected_entropy = bits<type>;
+    static_assert(expected_entropy >= minimum_entropy);
+
+    /// Return the k bit selection for the entropy.
+    static constexpr size_t get_bit(size_t k, type entropy) NOEXCEPT;
+
+    /// Is sentinel value for empty filter.
+    static constexpr bool is_empty(type value) NOEXCEPT;
+
+    /// Is sentinel value for saturated filter.
+    static constexpr bool is_saturated(type value) NOEXCEPT;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <size_t m, size_t k, \
-    if_not_greater<k, m> If1, \
-    if_not_greater<m, bits<uint64_t>> If2>
+#define TEMPLATE template <size_t M, size_t K, \
+    if_not_greater<K, M> If1, \
+    if_not_greater<M, bits<uint64_t>> If2>
 
-#define CLASS bloom<m, k, If1, If2>
+#define CLASS bloom<M, K, If1, If2>
 
 #include <bitcoin/database/impl/primitives/bloom.ipp>
 

@@ -32,7 +32,7 @@ constexpr bool CLASS::is_collision(type previous, type next) NOEXCEPT
 }
 
 TEMPLATE
-constexpr bool CLASS::is_screened(type value, type fingerprint) NOEXCEPT
+constexpr bool CLASS::is_screened(type value, type entropy) NOEXCEPT
 {
     if constexpr (disabled)
     {
@@ -40,12 +40,20 @@ constexpr bool CLASS::is_screened(type value, type fingerprint) NOEXCEPT
     }
     else
     {
-        return false;
+        if (is_empty(value))
+            return false;
+
+        auto screened = true;
+        for (auto k = zero; k < K; ++k)
+            screened &= !system::get_right(value, get_bit(k, entropy));
+
+        // All selected bits are set (to zero, default is one).
+        return screened;
     }
 }
 
 TEMPLATE
-constexpr CLASS::type CLASS::screen(type value, type fingerprint) NOEXCEPT
+constexpr CLASS::type CLASS::screen(type value, type entropy) NOEXCEPT
 {
     if constexpr (disabled)
     {
@@ -53,8 +61,39 @@ constexpr CLASS::type CLASS::screen(type value, type fingerprint) NOEXCEPT
     }
     else
     {
+        for (auto k = zero; k < K; ++k)
+            system::set_right_into(value, get_bit(k, entropy), false);
+
+        // All selected bits have been set (to zero, default is one).
         return value;
     }
+}
+
+// protected
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+constexpr bool CLASS::is_empty(type value) NOEXCEPT
+{
+    return value == empty;
+}
+
+TEMPLATE
+constexpr bool CLASS::is_saturated(type value) NOEXCEPT
+{
+    return value == saturated;
+}
+
+TEMPLATE
+constexpr size_t CLASS::get_bit(size_t k, type entropy) NOEXCEPT
+{
+    using namespace system;
+    constexpr auto mask = unmask_right<type>(select);
+    const auto shited = shift_right(entropy, k * select);
+    const auto bit = bit_and(shited, mask);
+
+    BC_ASSERT(bit < M);
+    return bit;
 }
 
 } // namespace database
