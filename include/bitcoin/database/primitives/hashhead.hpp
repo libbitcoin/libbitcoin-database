@@ -86,9 +86,9 @@ protected:
                     (sieve_bits >= 2_size ? 1_size : zero))));
 
     /// m = sieve_bits, k = select_bits.
-    using sieve_t = sieve<sieve_bits, select_bits>;
+    using filter_t = sieve<sieve_bits, select_bits>;
     using cell = unsigned_type<cell_size>;
-    using filter = sieve_t::type;
+    using filter = filter_t::type;
     using link = Link::integer;
 
     static constexpr cell terminal = system::bit_all<cell>;
