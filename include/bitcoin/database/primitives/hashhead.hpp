@@ -32,9 +32,7 @@
 namespace libbitcoin {
 namespace database {
 
-// TODO: Link::terminal is byte aligned, which now wastes bits.
-// TODO: change to bitwise link domain and sentinal as max value.
-// TODO: Add unused link bits in filter size.
+/// Fixed size hashmap header.
 template <class Link, class Key, size_t CellSize = Link::size,
     if_not_greater<Link::size, CellSize> = true>
 class hashhead
@@ -87,23 +85,23 @@ protected:
                 (sieve_bits >= 8_size ? 2_size :
                     (sieve_bits >= 2_size ? 1_size : zero))));
 
-    using sieve_t = sieve<sieve_bits, select_bits>;
+    /// m = sieve_bits, k = select_bits.
+    using filter_t = sieve<sieve_bits, select_bits>;
     using cell = unsigned_type<cell_size>;
-    using filter = sieve_t::type;
+    using filter = filter_t::type;
     using link = Link::integer;
 
-    static constexpr size_t screen_bits = sieve_bits - select_bits;
     static constexpr cell terminal = system::bit_all<cell>;
     static constexpr bool aligned = (cell_size == sizeof(cell));
     static_assert(link_bits + sieve_bits == to_bits(cell_size));
     static_assert(std::atomic<cell>::is_always_lock_free);
     static_assert(is_nonzero(Link::size));
 
-    static INLINE constexpr bool screened(cell value, const Key& key) NOEXCEPT;
-    static INLINE constexpr filter fingerprint(const Key& key) NOEXCEPT;
     static INLINE constexpr filter to_filter(cell value) NOEXCEPT;
     static INLINE constexpr link to_link(cell value) NOEXCEPT;
-    static INLINE constexpr cell to_cell(bool& collision, cell previous,
+    static INLINE constexpr filter fingerprint(const Key& key) NOEXCEPT;
+    static INLINE constexpr bool screened(cell value, const Key& key) NOEXCEPT;
+    static INLINE constexpr cell next_cell(bool& collision, cell previous,
         link current, const Key& key) NOEXCEPT;
 
     inline cell get_cell(const Link& index) const NOEXCEPT;

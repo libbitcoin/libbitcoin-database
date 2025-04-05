@@ -216,7 +216,7 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
             // completed before any subsequent atomic store.
             auto masked = bit_and<cell>(Link::terminal, head);
             next = link_array(masked);
-            update = to_cell(collision, head, current, key);
+            update = next_cell(collision, head, current, key);
             std::atomic_thread_fence(std::memory_order_release);
         }
         while (!top.compare_exchange_weak(head, update,
@@ -231,7 +231,7 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
         cell_array(head) = top;
         auto masked = bit_and<cell>(Link::terminal, head);
         next = link_array(masked);
-        auto update = to_cell(collision, head, current, key);
+        auto update = next_cell(collision, head, current, key);
         top = cell_array(update);
         mutex_.unlock();
     }
@@ -242,26 +242,6 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
 // protected
 // ----------------------------------------------------------------------------
 // filters
-
-TEMPLATE
-INLINE constexpr bool CLASS::screened(cell value, const Key& key) NOEXCEPT
-{
-    if constexpr (sieve_t::disabled)
-    {
-        return true;
-    }
-    else
-    {
-        return sieve_t::is_screened(to_filter(value), fingerprint(key));
-    }
-}
-
-TEMPLATE
-INLINE constexpr CLASS::filter CLASS::fingerprint(const Key& key) NOEXCEPT
-{
-    using namespace system;
-    return possible_narrow_cast<filter>(keys::thumb(key));
-}
 
 TEMPLATE
 INLINE constexpr CLASS::filter CLASS::to_filter(cell value) NOEXCEPT
@@ -279,10 +259,10 @@ INLINE constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
 }
 
 TEMPLATE
-INLINE constexpr CLASS::cell CLASS::to_cell(bool& collision, cell previous,
+INLINE constexpr CLASS::cell CLASS::next_cell(bool& collision, cell previous,
     link current, const Key& key) NOEXCEPT
 {
-    if constexpr (sieve_t::disabled)
+    if constexpr (filter_t::disabled)
     {
         collision = true;
         return current;
@@ -290,11 +270,31 @@ INLINE constexpr CLASS::cell CLASS::to_cell(bool& collision, cell previous,
     else
     {
         using namespace system;
-        const auto sieve = to_filter(previous);
-        const auto next = sieve_t::screen(sieve, fingerprint(key));
-        collision = (next == sieve || sieve_t::is_saturated(next));
+        const auto prev = to_filter(previous);
+        const auto next = filter_t::screen(prev, fingerprint(key));
+        collision = filter_t::is_collision(prev, next);
         return bit_or<cell>(shift_left<cell>(next, link_bits), current);
     }
+}
+
+TEMPLATE
+INLINE constexpr bool CLASS::screened(cell value, const Key& key) NOEXCEPT
+{
+    if constexpr (filter_t::disabled)
+    {
+        return true;
+    }
+    else
+    {
+        return filter_t::is_screened(to_filter(value), fingerprint(key));
+    }
+}
+
+TEMPLATE
+INLINE constexpr CLASS::filter CLASS::fingerprint(const Key& key) NOEXCEPT
+{
+    using namespace system;
+    return possible_narrow_cast<filter>(keys::thumb(key));
 }
 
 } // namespace database

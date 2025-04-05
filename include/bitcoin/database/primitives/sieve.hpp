@@ -36,16 +36,12 @@ class sieve
 public:
     /// This produces size_t when disabled.
     using type = unsigned_type<system::to_ceilinged_bytes(SieveBits)>;
-    static constexpr auto empty = system::unmask_right<type>(SieveBits);
 
     /// Sieve is bypassed.
     static constexpr bool disabled = is_zero(SieveBits) || is_zero(SelectBits);
 
-    /// Is sentinel value for empty sieve.
-    static constexpr bool is_empty(type value) NOEXCEPT;
-
-    /// Is sentinel value for saturated sieve.
-    static constexpr bool is_saturated(type value) NOEXCEPT;
+    /// Is sieve saturated did fingerprint collide with it.
+    static constexpr bool is_collision(type previous, type next) NOEXCEPT;
 
     /// Is potential duplicate (saturated or screened).
     static constexpr bool is_screened(type value, type fingerprint) NOEXCEPT;
@@ -64,6 +60,7 @@ protected:
     static constexpr auto screens = system::power2(SelectBits);
     static constexpr auto limit = sub1(screens);
     static constexpr auto sentinel = sub1(screen_bits);
+    static constexpr auto empty = system::unmask_right<type>(SieveBits);
     static constexpr auto saturated = system::mask_right(empty, sentinel);
     static constexpr auto first_mask = system::unmask_right<type>(screen_bits);
     static constexpr auto select_mask = first_mask;
@@ -81,6 +78,12 @@ protected:
 
     /// Read member compressed mask array as if it was a two-dimesional array.
     static constexpr type masks(size_t row, size_t column) NOEXCEPT;
+
+    /// Is sentinel value for empty sieve.
+    static constexpr bool is_empty(type value) NOEXCEPT;
+
+    /// Is sentinel value for saturated sieve.
+    static constexpr bool is_saturated(type value) NOEXCEPT;
 };
 
 } // namespace database

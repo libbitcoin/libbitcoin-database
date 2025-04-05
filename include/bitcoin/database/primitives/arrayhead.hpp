@@ -29,7 +29,6 @@ namespace libbitcoin {
 namespace database {
 
 /// Dynamically expanding array map header.
-/// Less efficient than a fixed-size header.
 template <class Link, bool Align>
 class arrayhead
 {
