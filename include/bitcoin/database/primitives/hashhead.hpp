@@ -27,7 +27,7 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/sieve.hpp>
+#include <bitcoin/database/primitives/bloom.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -74,26 +74,24 @@ protected:
     static constexpr size_t cell_size = CellSize;
     static constexpr size_t link_size = Link::size;
     static constexpr size_t link_bits = Link::bits;
-    static constexpr size_t sieve_bits = to_bits(cell_size) - link_bits;
+    static constexpr size_t filter_bits = to_bits(cell_size) - link_bits;
 
-    /// Assumes load factor >= 2.0, but still reasonable for LF 1-1.5.
-    /// A two bit sentinel allows 00 and 01 unsaturated filters (50%).
-    /// A single bit sieve is not possible because lack of overflow sentinel.
+    /// log2(filter_bits) or zero if 0.
     static constexpr size_t select_bits =
-        (sieve_bits >= 24_size ? 4_size :
-            (sieve_bits >= 16_size ? 3_size :
-                (sieve_bits >= 8_size ? 2_size :
-                    (sieve_bits >= 2_size ? 1_size : zero))));
+        (filter_bits >= 32_size ? 5_size :
+            (filter_bits >= 16_size ? 4_size :
+                (filter_bits >= 8_size ? 3_size :
+                    (filter_bits >= 2_size ? 1_size : zero))));
 
-    /// m = sieve_bits, k = select_bits.
-    using filter_t = sieve<sieve_bits, select_bits>;
+    /// m = filter_bits, k = select_bits.
+    using filter_t = bloom<filter_bits, select_bits>;
     using cell = unsigned_type<cell_size>;
     using filter = filter_t::type;
     using link = Link::integer;
 
     static constexpr cell terminal = system::bit_all<cell>;
     static constexpr bool aligned = (cell_size == sizeof(cell));
-    static_assert(link_bits + sieve_bits == to_bits(cell_size));
+    static_assert(link_bits + filter_bits == to_bits(cell_size));
     static_assert(std::atomic<cell>::is_always_lock_free);
     static_assert(is_nonzero(Link::size));
 
