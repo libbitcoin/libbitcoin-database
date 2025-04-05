@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(sieve_tests)
 
-#define HAVE_SLOW_TESTS
+////#define HAVE_SLOW_TESTS
 
 using namespace system;
 
