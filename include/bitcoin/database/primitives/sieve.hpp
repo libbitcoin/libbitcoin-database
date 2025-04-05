@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_SIEVE_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_SIEVE_HPP
 
-#include <bitset>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 

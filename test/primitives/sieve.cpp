@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include <bitset>
 
 BOOST_AUTO_TEST_SUITE(sieve_tests)
 
@@ -1007,7 +1008,6 @@ BOOST_AUTO_TEST_SUITE_END()
 
 #if defined(DISABLED)
 
-#include <bitset>
 void print_table() const NOEXCEPT
 {
     for (size_t r = 0; r < screens; ++r)
