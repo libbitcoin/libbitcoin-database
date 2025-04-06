@@ -76,12 +76,8 @@ protected:
     static constexpr size_t link_bits = Link::bits;
     static constexpr size_t filter_bits = to_bits(cell_size) - link_bits;
 
-    /// log2(filter_bits) or zero if 0.
-    static constexpr size_t select_bits =
-        (filter_bits >= 32_size ? 5_size :
-            (filter_bits >= 16_size ? 4_size :
-                (filter_bits >= 8_size ? 3_size :
-                    (filter_bits >= 2_size ? 1_size : zero))));
+    /// ceilinged_log2(0) returns zero.
+    static constexpr size_t select_bits = system::floored_log2(filter_bits);
 
     /// m = filter_bits, k = select_bits.
     using filter_t = bloom<filter_bits, select_bits>;
