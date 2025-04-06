@@ -32,7 +32,7 @@ constexpr bool CLASS::is_collision(type previous, type next) NOEXCEPT
 }
 
 TEMPLATE
-constexpr bool CLASS::is_screened(type value, type entropy) NOEXCEPT
+constexpr bool CLASS::is_screened(type value, uint64_t entropy) NOEXCEPT
 {
     if constexpr (disabled)
     {
@@ -53,7 +53,7 @@ constexpr bool CLASS::is_screened(type value, type entropy) NOEXCEPT
 }
 
 TEMPLATE
-constexpr CLASS::type CLASS::screen(type value, type entropy) NOEXCEPT
+constexpr CLASS::type CLASS::screen(type value, uint64_t entropy) NOEXCEPT
 {
     if constexpr (disabled)
     {
@@ -61,6 +61,9 @@ constexpr CLASS::type CLASS::screen(type value, type entropy) NOEXCEPT
     }
     else
     {
+        if (is_saturated(value))
+            return value;
+
         for (auto k = zero; k < K; ++k)
             system::set_right_into(value, get_bit(k, entropy), false);
 
@@ -85,15 +88,21 @@ constexpr bool CLASS::is_saturated(type value) NOEXCEPT
 }
 
 TEMPLATE
-constexpr size_t CLASS::get_bit(size_t k, type entropy) NOEXCEPT
+constexpr size_t CLASS::get_bit(size_t k, uint64_t entropy) NOEXCEPT
 {
     using namespace system;
     constexpr auto mask = unmask_right<type>(select);
-    const auto shited = shift_right(entropy, k * select);
-    const auto bit = bit_and(shited, mask);
+    const auto shifted = shift_right(entropy, k * select);
+    const auto bit = bit_and(possible_narrow_cast<type>(shifted), mask);
 
-    BC_ASSERT(bit < M);
-    return bit;
+    if constexpr (mask >= M)
+    {
+        return bit % M;
+    }
+    else
+    {
+        return bit;
+    }
 }
 
 } // namespace database
