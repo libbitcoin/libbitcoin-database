@@ -43,12 +43,12 @@ constexpr bool CLASS::is_screened(type value, type entropy) NOEXCEPT
         if (is_empty(value))
             return false;
 
-        auto screened = true;
         for (auto k = zero; k < K; ++k)
-            screened &= !system::get_right(value, get_bit(k, entropy));
+            if (system::get_right(value, get_bit(k, entropy)))
+                return false;
 
         // All selected bits are set (to zero, default is one).
-        return screened;
+        return true;
     }
 }
 
