@@ -43,7 +43,7 @@ public:
     static constexpr bool is_collision(type previous, type next) NOEXCEPT;
 
     /// Is potential duplicate (saturated or screened).
-    static constexpr bool is_screened(type value, type entropy) NOEXCEPT;
+    static constexpr bool is_screened(type value, uint64_t entropy) NOEXCEPT;
 
     /// Add fingerprint to sieve. Changes determined by return/value.
     /// Only "value added to sieve" implies a negative result.
@@ -52,7 +52,7 @@ public:
     /// return != value && return == saturated: sieve now saturated
     /// return == value && return != saturated: value was screened.
     /// return != value && return != saturated: value added to sieve.
-    static constexpr type screen(type value, type entropy) NOEXCEPT;
+    static constexpr type screen(type value, uint64_t entropy) NOEXCEPT;
 
 protected:
     static constexpr auto screen_bits = SieveBits - SelectBits;

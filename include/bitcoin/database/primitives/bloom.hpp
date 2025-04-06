@@ -42,21 +42,25 @@ public:
     static constexpr bool is_collision(type previous, type next) NOEXCEPT;
 
     /// Is potential collision.
-    static constexpr bool is_screened(type value, type entropy) NOEXCEPT;
+    static constexpr bool is_screened(type value, uint64_t entropy) NOEXCEPT;
 
     /// Add fingerprint to bloom.
-    static constexpr type screen(type value, type entropy) NOEXCEPT;
+    static constexpr type screen(type value, uint64_t entropy) NOEXCEPT;
 
 protected:
+    /// Effectively sentinel values.
     static constexpr type saturated = 0;
     static constexpr type empty = system::unmask_right<type>(M);
-    static constexpr size_t select = system::floored_log2(M);
-    static constexpr size_t minimum_entropy = system::safe_multiply(select, K);
-    static constexpr size_t expected_entropy = bits<type>;
-    static_assert(expected_entropy >= minimum_entropy);
+
+    /// 2^select must be >= M to address all bits in M (modulo if over).
+    static constexpr size_t select = system::ceilinged_log2(M);
+
+    /// For each K, select unique bits of entropy are required.
+    static constexpr size_t min_entropy = system::safe_multiply(select, K);
+    static_assert(min_entropy <= bits<uint64_t>);
 
     /// Return the k bit selection for the entropy.
-    static constexpr size_t get_bit(size_t k, type entropy) NOEXCEPT;
+    static constexpr size_t get_bit(size_t k, uint64_t entropy) NOEXCEPT;
 
     /// Is sentinel value for empty filter.
     static constexpr bool is_empty(type value) NOEXCEPT;

@@ -50,7 +50,7 @@ constexpr bool CLASS::is_collision(type previous, type next) NOEXCEPT
 }
 
 TEMPLATE
-constexpr bool CLASS::is_screened(type value, type entropy) NOEXCEPT
+constexpr bool CLASS::is_screened(type value, uint64_t entropy) NOEXCEPT
 {
     if constexpr (disabled)
     {
@@ -77,7 +77,7 @@ constexpr bool CLASS::is_screened(type value, type entropy) NOEXCEPT
             if (is_zero(bit_xor
                 (
                     bit_and(value, mask),
-                    bit_and(entropy, mask)
+                    bit_and(possible_narrow_cast<type>(entropy), mask)
                 ))) return true;
         }
 
@@ -86,7 +86,7 @@ constexpr bool CLASS::is_screened(type value, type entropy) NOEXCEPT
 }
 
 TEMPLATE
-constexpr CLASS::type CLASS::screen(type value, type entropy) NOEXCEPT
+constexpr CLASS::type CLASS::screen(type value, uint64_t entropy) NOEXCEPT
 {
     if constexpr (disabled)
     {
@@ -142,7 +142,7 @@ constexpr CLASS::type CLASS::screen(type value, type entropy) NOEXCEPT
             bit_or
             (
                 bit_and(value, unmask),
-                bit_and(entropy, mask)
+                bit_and(possible_narrow_cast<type>(entropy), mask)
             )
         );
 
