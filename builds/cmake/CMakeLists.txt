@@ -288,6 +288,7 @@ if (with-tests)
         "../../test/mocks/map_store.hpp"
         "../../test/primitives/arrayhead.cpp"
         "../../test/primitives/arraymap.cpp"
+        "../../test/primitives/bloom.cpp"
         "../../test/primitives/hashhead.cpp"
         "../../test/primitives/hashmap.cpp"
         "../../test/primitives/iterator.cpp"

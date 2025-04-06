@@ -84,6 +84,9 @@
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\bloom.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\hashhead.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>

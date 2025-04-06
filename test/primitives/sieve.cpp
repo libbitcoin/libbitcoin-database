@@ -17,10 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include <bitset>
 
 BOOST_AUTO_TEST_SUITE(sieve_tests)
 
-#define HAVE_SLOW_TESTS
+////#define HAVE_SLOW_TESTS
 
 using namespace system;
 
@@ -834,7 +835,7 @@ BOOST_AUTO_TEST_CASE(sieve__screened__reverse__expected)
     BOOST_CHECK( sieve_t::is_saturated(value));
 }
 
-BOOST_AUTO_TEST_CASE(sieve__screen__full__exptected_saturation)
+BOOST_AUTO_TEST_CASE(sieve__screen__full__expected_saturation)
 {
     constexpr size_t sieve_bits = 32;
     constexpr size_t select_bits = 4;
@@ -941,32 +942,27 @@ BOOST_AUTO_TEST_CASE(sieve__screen__full__exptected_saturation)
 #endif
 }
 
-#if !defined(HAVE_SLOW_TESTS)
+#if defined(HAVE_SLOW_TESTS)
 
 BOOST_AUTO_TEST_CASE(sieve__screen__4_bits_forward__16_screens)
 {
     constexpr size_t sieve_bits = 32;
     constexpr size_t select_bits = 4;
-    constexpr size_t limit = power2(select_bits);
+    constexpr size_t limit = power2(sieve_bits);
     using sieve_t = accessor<sieve_bits, select_bits>;
-    auto value = sieve_t::empty;
+    auto next = sieve_t::empty;
     size_t count{};
 
-    // This exhausts the full uint32_t domain and returns exactly limit values.
-    // The count < limit condition just speeds up the test, still slow though.
-    for (uint32_t finger{}; count < limit /*true*/; ++finger)
+    for (uint32_t finger{}; count < limit; ++finger)
     {
-        const auto previous = value;
-        value = sieve_t::screen(value, finger);
-        if (value != previous && !sieve_t::is_saturated(value))
+        const auto previous = next;
+        next = sieve_t::screen(next, finger);
+        if (!sieve_t::is_collision(previous, next))
         {
-            ////std::cout << "0b" << std::bitset<sieve_bits>(finger)
-            ////    << "_u32, // " << count << std::endl;
+            std::cout << "0b" << std::bitset<sieve_bits>(finger)
+                << "_u32, // " << count << std::endl;
             count++;
         }
-
-        if (finger == max_uint32)
-            break;
     }
 
     BOOST_CHECK_EQUAL(count, limit);
@@ -976,21 +972,19 @@ BOOST_AUTO_TEST_CASE(sieve__screen__4_bits_reverse__16_screens)
 {
     constexpr size_t sieve_bits = 32;
     constexpr size_t select_bits = 4;
-    constexpr size_t limit = power2(select_bits);
+    constexpr size_t limit = power2(sieve_bits);
     using sieve_t = accessor<sieve_bits, select_bits>;
-    auto value = sieve_t::empty;
+    auto next = sieve_t::empty;
     size_t count{};
 
-    // This exhausts the full uint32_t domain and returns exactly limit values.
-    // The count < limit condition just speeds up the test, still slow though.
-    for (auto finger = max_uint32; count < limit /*true*/; --finger)
+    for (auto finger = max_uint32; count < limit; --finger)
     {
-        const auto previous = value;
-        value = sieve_t::screen(value, finger);
-        if (value != previous && !sieve_t::is_saturated(value))
+        const auto previous = next;
+        next = sieve_t::screen(next, finger);
+        if (!sieve_t::is_collision(previous, next))
         {
-            ////std::cout << "0b" << std::bitset<sieve_bits>(finger)
-            ////    << "_u32, // " << count << std::endl;
+            std::cout << "0b" << std::bitset<sieve_bits>(finger)
+                << "_u32, // " << count << std::endl;
             count++;
         }
 
@@ -1007,7 +1001,6 @@ BOOST_AUTO_TEST_SUITE_END()
 
 #if defined(DISABLED)
 
-#include <bitset>
 void print_table() const NOEXCEPT
 {
     for (size_t r = 0; r < screens; ++r)
@@ -1197,4 +1190,5 @@ static constexpr masks_t masks_
     0b0000'0000000000000000100000000000,
     0b0000'0000000000001000000000000000
 };
+
 #endif // DISABLED

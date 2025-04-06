@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_SIEVE_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_SIEVE_HPP
 
-#include <bitset>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -44,7 +43,7 @@ public:
     static constexpr bool is_collision(type previous, type next) NOEXCEPT;
 
     /// Is potential duplicate (saturated or screened).
-    static constexpr bool is_screened(type value, type fingerprint) NOEXCEPT;
+    static constexpr bool is_screened(type value, type entropy) NOEXCEPT;
 
     /// Add fingerprint to sieve. Changes determined by return/value.
     /// Only "value added to sieve" implies a negative result.
@@ -53,7 +52,7 @@ public:
     /// return != value && return == saturated: sieve now saturated
     /// return == value && return != saturated: value was screened.
     /// return != value && return != saturated: value added to sieve.
-    static constexpr type screen(type value, type fingerprint) NOEXCEPT;
+    static constexpr type screen(type value, type entropy) NOEXCEPT;
 
 protected:
     static constexpr auto screen_bits = SieveBits - SelectBits;
@@ -79,10 +78,10 @@ protected:
     /// Read member compressed mask array as if it was a two-dimesional array.
     static constexpr type masks(size_t row, size_t column) NOEXCEPT;
 
-    /// Is sentinel value for empty sieve.
+    /// Is sentinel value for empty filter.
     static constexpr bool is_empty(type value) NOEXCEPT;
 
-    /// Is sentinel value for saturated sieve.
+    /// Is sentinel value for saturated filter.
     static constexpr bool is_saturated(type value) NOEXCEPT;
 };
 

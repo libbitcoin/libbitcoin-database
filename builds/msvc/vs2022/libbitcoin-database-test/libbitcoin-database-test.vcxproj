@@ -87,6 +87,7 @@
     <ClCompile Include="..\..\..\..\test\mocks\chunk_storage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arrayhead.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\bloom.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashhead.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
