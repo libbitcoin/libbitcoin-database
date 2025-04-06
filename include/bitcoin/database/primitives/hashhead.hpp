@@ -71,23 +71,20 @@ public:
         const Key& key) NOEXCEPT;
 
 protected:
+    // floored_log2(0) returns zero.
     static constexpr size_t cell_size = CellSize;
     static constexpr size_t link_size = Link::size;
     static constexpr size_t link_bits = Link::bits;
-    static constexpr size_t filter_bits = to_bits(cell_size) - link_bits;
-
-    /// ceilinged_log2(0) returns zero.
-    static constexpr size_t select_bits = system::floored_log2(filter_bits);
-
-    /// m = filter_bits, k = select_bits.
-    using filter_t = bloom<filter_bits, select_bits>;
+    static constexpr size_t m = to_bits(cell_size) - link_bits;
+    static constexpr size_t k = system::floored_log2(m);
+    using filter_t = bloom<m, k>;
     using cell = unsigned_type<cell_size>;
     using filter = filter_t::type;
     using link = Link::integer;
 
     static constexpr cell terminal = system::bit_all<cell>;
     static constexpr bool aligned = (cell_size == sizeof(cell));
-    static_assert(link_bits + filter_bits == to_bits(cell_size));
+    static_assert(link_bits + m == to_bits(cell_size));
     static_assert(std::atomic<cell>::is_always_lock_free);
     static_assert(is_nonzero(Link::size));
 
