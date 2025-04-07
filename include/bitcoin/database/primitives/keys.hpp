@@ -61,6 +61,7 @@ inline uint64_t hash(const Key& value) NOEXCEPT
     if constexpr (is_same_type<Key, chain::point>)
     {
         // Simple combine is sufficient for bucket selection.
+        // Given the uniformity of sha256 this produces a Poisson distribution.
         return bit_xor(hash(value.hash()),
             shift_left<uint64_t>(value.index()));
     }
@@ -83,8 +84,12 @@ inline uint64_t thumb(const Key& value) NOEXCEPT
     using namespace system;
     if constexpr (is_same_type<Key, system::chain::point>)
     {
-        // point.index must be spread across point.hash extraction.
+        // spread point.index across point.hash extraction, as otherwise the
+        // unlikely bucket collisions of points of the same hash will not be
+        // differentiated by filters. This has a very small impact on false
+        // positives (-5,789 out of ~2.6B) but w/o material computational cost.
         return fnv1a_combine(thumb(value.hash()), value.index());
+        ////return thumb(value.hash());
     }
     else if constexpr (is_std_array<Key>)
     {
