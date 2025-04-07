@@ -33,30 +33,30 @@ BOOST_AUTO_TEST_CASE(keys__hash__points__expected)
 {
     const chain::point instance0{ hash0, 0x01234567_u32 };
     const auto hash0 = keys::hash(instance0);
-    BOOST_REQUIRE_EQUAL(hash0, static_cast<size_t>(0xe567e36c143a81b9_u64));
+    BOOST_REQUIRE_EQUAL(hash0, static_cast<size_t>(0x72b3f1b608ca68a1_u64));
 
     const chain::point instance1{ hash1, 0x12345678_u32 };
     const auto hash1 = keys::hash(instance1);
-    BOOST_REQUIRE_EQUAL(hash1, static_cast<size_t>(0x6424f6f5e9ef100e_u64));
+    BOOST_CHECK_EQUAL(hash1, static_cast<size_t>(0xb2127b7ad9850fcb_u64));
 
     const chain::point instance2{ hash2, 0x23456789_u32 };
     const auto hash2 = keys::hash(instance2);
-    BOOST_REQUIRE_EQUAL(hash2, static_cast<size_t>(0xbcfca6a75034a369_u64));
+    BOOST_CHECK_EQUAL(hash2, static_cast<size_t>(0x5e7e5353ff322d62_u64));
 }
 
 BOOST_AUTO_TEST_CASE(keys__thumb__points__expected)
 {
     const chain::point instance0{ hash0, 0x01234567_u32 };
     const auto hash0 = keys::thumb(instance0);
-    BOOST_REQUIRE_EQUAL(hash0, static_cast<size_t>(0x4ff763ae46a2a6c1_u64));
+    BOOST_CHECK_EQUAL(hash0, static_cast<size_t>(0x19342973a11237b1_u64));
 
     const chain::point instance1{ hash1, 0x12345678_u32 };
     const auto hash1 = keys::thumb(instance1);
-    BOOST_REQUIRE_EQUAL(hash1, static_cast<size_t>(0x618f76673e2cc77a_u64));
+    BOOST_CHECK_EQUAL(hash1, static_cast<size_t>(0x928d5349dee8c4af_u64));
 
     const chain::point instance2{ hash2, 0x23456789_u32 };
     const auto hash2 = keys::thumb(instance2);
-    BOOST_REQUIRE_EQUAL(hash2, static_cast<size_t>(0x2d7da394d48db4d8_u64));
+    BOOST_CHECK_EQUAL(hash2, static_cast<size_t>(0xea7ab71c076d99ea_u64));
 }
 
 BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
     // Independence hash and thumb derived from sha256 hashes (avoiding mined bits).
     // With a 2/4 chance of any bit pair matching, the total number of expected
     // matches in a given pair of random 64 bit values is (2/4)*64 = 32. These
-    // hit 24, 31, and 26 (out of 64), with an ideal rate of 50% (Poisson).
+    // hit 32, 29, and 31 (out of 64), with an ideal rate of 50% (Poisson).
 
     ////std::cout << std::endl;
     ////std::cout << std::bitset<bits<size_t>>(keys::hash(instance0)) << std::endl;
@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
     ////std::cout << std::bitset<bits<size_t>>(xor0) << std::endl;
     ////std::cout << system::ones_count(xor0);
 
-    // 24/64 == 37.5%
-    BOOST_REQUIRE_EQUAL(system::ones_count(xor0), 24u);
+    // 32/64 == 50%
+    BOOST_REQUIRE_EQUAL(system::ones_count(xor0), 32u);
 
     ////std::cout << std::endl;
     ////std::cout << std::bitset<bits<size_t>>(keys::hash(instance1)) << std::endl;
@@ -88,8 +88,8 @@ BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
     ////std::cout << std::bitset<bits<size_t>>(xor1) << std::endl;
     ////std::cout << system::ones_count(xor1);
 
-    // 31/64 == 48.4375%
-    BOOST_REQUIRE_EQUAL(system::ones_count(xor1), 31u);
+    // 29/64 == 45%
+    BOOST_REQUIRE_EQUAL(system::ones_count(xor1), 29u);
 
     ////std::cout << std::endl;
     ////std::cout << std::bitset<bits<size_t>>(keys::hash(instance2)) << std::endl;
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
     ////std::cout << std::bitset<bits<size_t>>(xor2) << std::endl;
     ////std::cout << system::ones_count(xor2);
 
-    // 26/64 == 40.625
-    BOOST_REQUIRE_EQUAL(system::ones_count(xor2), 26u);
+    // 31/64 == 48%
+    BOOST_REQUIRE_EQUAL(system::ones_count(xor2), 31u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

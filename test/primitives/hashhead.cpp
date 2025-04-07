@@ -123,10 +123,7 @@ BOOST_AUTO_TEST_CASE(hashhead__key_hash__null_point__expected)
 {
     const system::chain::point null_point{};
     const auto expected = keys::hash(null_point);
-
-    // Unique hash vs. std::hash<point>().
-    ////BOOST_REQUIRE_EQUAL(expected, system::possible_narrow_cast<size_t>(0x0000000000000000_u64));
-    BOOST_REQUIRE_EQUAL(expected, system::possible_narrow_cast<size_t>(0x00000000ffffffff_u64));
+    BOOST_REQUIRE_EQUAL(expected, system::possible_narrow_cast<size_t>(0x00000001fffffffe_u64));
 }
 
 BOOST_AUTO_TEST_CASE(hashhead__top__link__terminal)

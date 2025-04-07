@@ -26,13 +26,27 @@ namespace libbitcoin {
 namespace database {
 namespace keys {
 
+constexpr uint64_t fnv1a_combine(uint64_t left, uint64_t right)
+{
+    constexpr uint64_t fnv_prime = 0x100000001b3;
+    constexpr uint64_t fnv_offset = 0xcbf29ce484222325;
+
+    auto hash = fnv_offset;
+    hash ^= left;
+    hash *= fnv_prime;
+    hash ^= right;
+    hash *= fnv_prime;
+    return hash;
+}
+
 template <class Key>
 constexpr size_t size() NOEXCEPT
 {
-    if constexpr (is_same_type<Key, system::chain::point>)
+    using namespace system;
+    if constexpr (is_same_type<Key, chain::point>)
     {
         // Index is truncated to three bytes.
-        return sub1(system::chain::point::serialized_size());
+        return sub1(chain::point::serialized_size());
     }
     else if constexpr (is_std_array<Key>)
     {
@@ -43,10 +57,13 @@ constexpr size_t size() NOEXCEPT
 template <class Key>
 inline uint64_t hash(const Key& value) NOEXCEPT
 {
-    if constexpr (is_same_type<Key, system::chain::point>)
+    using namespace system;
+    if constexpr (is_same_type<Key, chain::point>)
     {
-        // std::hash<system::chain::point> implemented in system.
-        return std::hash<system::chain::point>()(value);
+        // Simple combine is sufficient for bucket selection.
+        // Given the uniformity of sha256 this produces a Poisson distribution.
+        return bit_xor(hash(value.hash()),
+            shift_left<uint64_t>(value.index()));
     }
     else if constexpr (is_std_array<Key>)
     {
@@ -56,7 +73,7 @@ inline uint64_t hash(const Key& value) NOEXCEPT
         constexpr auto bytes = std::min(key, sizeof(uint64_t));
 
         uint64_t hash{};
-        std::copy_n(value.begin(), bytes, system::byte_cast(hash).begin());
+        std::copy_n(value.begin(), bytes, byte_cast(hash).begin());
         return hash;
     }
 }
@@ -64,11 +81,15 @@ inline uint64_t hash(const Key& value) NOEXCEPT
 template <class Key>
 inline uint64_t thumb(const Key& value) NOEXCEPT
 {
-
+    using namespace system;
     if constexpr (is_same_type<Key, system::chain::point>)
     {
-        // Ignores index as that is already hashed in primary hash.
-        return thumb(value.hash());
+        // spread point.index across point.hash extraction, as otherwise the
+        // unlikely bucket collisions of points of the same hash will not be
+        // differentiated by filters. This has a very small impact on false
+        // positives (-5,789 out of ~2.6B) but w/o material computational cost.
+        return fnv1a_combine(thumb(value.hash()), value.index());
+        ////return thumb(value.hash());
     }
     else if constexpr (is_std_array<Key>)
     {
@@ -83,7 +104,7 @@ inline uint64_t thumb(const Key& value) NOEXCEPT
 
         uint64_t hash{};
         const auto start = std::next(value.begin(), offset);
-        std::copy_n(start, bytes, system::byte_cast(hash).begin());
+        std::copy_n(start, bytes, byte_cast(hash).begin());
         return hash;
     }
 }
@@ -91,7 +112,8 @@ inline uint64_t thumb(const Key& value) NOEXCEPT
 template <class Key>
 inline void write(writer& sink, const Key& key) NOEXCEPT
 {
-    if constexpr (is_same_type<Key, system::chain::point>)
+    using namespace system;
+    if constexpr (is_same_type<Key, chain::point>)
     {
         sink.write_bytes(key.hash());
         sink.write_3_bytes_little_endian(key.index());

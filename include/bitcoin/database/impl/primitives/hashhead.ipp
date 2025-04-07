@@ -131,7 +131,7 @@ TEMPLATE
 inline Link CLASS::top(const Key& key) const NOEXCEPT
 {
     const auto value = get_cell(index(key));
-    if (screened(value, key))
+    if (screened(value, keys::thumb(key)))
         return to_link(value);
 
     // Conflict (body) search is bypassed by filter when key is not screened.
@@ -200,6 +200,7 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
     if (is_null(raw))
         return false;
 
+    const auto entropy = keys::thumb(key);
     if constexpr (aligned)
     {
         // Writes full padded word (0x00 fill).
@@ -216,7 +217,7 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
             // completed before any subsequent atomic store.
             auto masked = bit_and<cell>(Link::terminal, head);
             next = link_array(masked);
-            update = next_cell(collision, head, current, key);
+            update = next_cell(collision, head, current, entropy);
             std::atomic_thread_fence(std::memory_order_release);
         }
         while (!top.compare_exchange_weak(head, update,
@@ -231,7 +232,7 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
         cell_array(head) = top;
         auto masked = bit_and<cell>(Link::terminal, head);
         next = link_array(masked);
-        auto update = next_cell(collision, head, current, key);
+        auto update = next_cell(collision, head, current, entropy);
         top = cell_array(update);
         mutex_.unlock();
     }
@@ -260,7 +261,7 @@ INLINE constexpr CLASS::link CLASS::to_link(cell value) NOEXCEPT
 
 TEMPLATE
 INLINE constexpr CLASS::cell CLASS::next_cell(bool& collision, cell previous,
-    link current, const Key& key) NOEXCEPT
+    link current, uint64_t entropy) NOEXCEPT
 {
     if constexpr (filter_t::disabled)
     {
@@ -271,14 +272,14 @@ INLINE constexpr CLASS::cell CLASS::next_cell(bool& collision, cell previous,
     {
         using namespace system;
         const auto prev = to_filter(previous);
-        const auto next = filter_t::screen(prev, fingerprint(key));
+        const auto next = filter_t::screen(prev, entropy);
         collision = filter_t::is_collision(prev, next);
         return bit_or<cell>(shift_left<cell>(next, link_bits), current);
     }
 }
 
 TEMPLATE
-INLINE constexpr bool CLASS::screened(cell value, const Key& key) NOEXCEPT
+INLINE constexpr bool CLASS::screened(cell value, uint64_t entropy) NOEXCEPT
 {
     if constexpr (filter_t::disabled)
     {
@@ -286,15 +287,8 @@ INLINE constexpr bool CLASS::screened(cell value, const Key& key) NOEXCEPT
     }
     else
     {
-        return filter_t::is_screened(to_filter(value), fingerprint(key));
+        return filter_t::is_screened(to_filter(value), entropy);
     }
-}
-
-TEMPLATE
-INLINE constexpr CLASS::filter CLASS::fingerprint(const Key& key) NOEXCEPT
-{
-    using namespace system;
-    return possible_narrow_cast<filter>(keys::thumb(key));
 }
 
 } // namespace database
