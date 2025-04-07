@@ -509,33 +509,8 @@ ELEMENT_CONSTRAINT
 bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
-    using namespace system;
-    if (!ptr || link.is_terminal())
-        return false;
-
-    const auto start = body::link_to_position(link);
-    if (is_limited<ptrdiff_t>(start))
-        return false;
-
-    const auto size = ptr->size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
-    if (position > size)
-        return false;
-
-    const auto offset = ptr->offset(start);
-    if (is_null(offset))
-        return false;
-
-    // iostream.flush is a nop (direct copy).
-    iostream stream{ offset, size - position };
-    finalizer sink{ stream };
-    sink.skip_bytes(Link::size);
-    keys::write(sink, key);
-
-    // Commit element to body and search (terminal is a valid bucket index).
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
-    auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
-    return element.to_data(sink) && head_.push(link, next, key);
+    Link unused{};
+    return write(unused, ptr, link, key, element);
 }
 
 TEMPLATE
