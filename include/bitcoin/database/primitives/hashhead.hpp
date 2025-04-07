@@ -90,7 +90,6 @@ protected:
 
     static INLINE constexpr filter to_filter(cell value) NOEXCEPT;
     static INLINE constexpr link to_link(cell value) NOEXCEPT;
-    static INLINE constexpr filter fingerprint(const Key& key) NOEXCEPT;
     static INLINE constexpr bool screened(cell value, const Key& key) NOEXCEPT;
     static INLINE constexpr cell next_cell(bool& collision, cell previous,
         link current, const Key& key) NOEXCEPT;

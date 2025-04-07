@@ -95,6 +95,7 @@ constexpr size_t CLASS::get_bit(size_t k, uint64_t entropy) NOEXCEPT
     const auto shifted = shift_right(entropy, k * select);
     const auto bit = bit_and(possible_narrow_cast<type>(shifted), mask);
 
+    // When 2^clog2(M) > M must modulo selection to remain within M.
     if constexpr (mask >= M)
     {
         return bit % M;

@@ -271,7 +271,7 @@ INLINE constexpr CLASS::cell CLASS::next_cell(bool& collision, cell previous,
     {
         using namespace system;
         const auto prev = to_filter(previous);
-        const auto next = filter_t::screen(prev, fingerprint(key));
+        const auto next = filter_t::screen(prev, keys::thumb(key));
         collision = filter_t::is_collision(prev, next);
         return bit_or<cell>(shift_left<cell>(next, link_bits), current);
     }
@@ -286,15 +286,8 @@ INLINE constexpr bool CLASS::screened(cell value, const Key& key) NOEXCEPT
     }
     else
     {
-        return filter_t::is_screened(to_filter(value), fingerprint(key));
+        return filter_t::is_screened(to_filter(value), keys::thumb(key));
     }
-}
-
-TEMPLATE
-INLINE constexpr CLASS::filter CLASS::fingerprint(const Key& key) NOEXCEPT
-{
-    using namespace system;
-    return possible_narrow_cast<filter>(keys::thumb(key));
 }
 
 } // namespace database
