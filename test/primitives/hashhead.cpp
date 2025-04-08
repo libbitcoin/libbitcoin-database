@@ -119,11 +119,10 @@ BOOST_AUTO_TEST_CASE(hashhead__unique_hash__null_key__expected)
     BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
 }
 
-BOOST_AUTO_TEST_CASE(hashhead__key_hash__null_point__expected)
+BOOST_AUTO_TEST_CASE(hashhead__key_hash__null_point__zero)
 {
     const system::chain::point null_point{};
-    const auto expected = keys::hash(null_point);
-    BOOST_REQUIRE_EQUAL(expected, system::possible_narrow_cast<size_t>(0x00000001fffffffe_u64));
+    BOOST_REQUIRE(is_zero(keys::hash(null_point)));
 }
 
 BOOST_AUTO_TEST_CASE(hashhead__top__link__terminal)

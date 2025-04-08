@@ -65,7 +65,7 @@ struct outs
                 sink.write_little_endian<out::integer, out::size>(fk);
             });
 
-            BC_ASSERT(!sink || sink.get_write_position() == count() * out::size);
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
 

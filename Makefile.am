@@ -166,6 +166,7 @@ include_bitcoin_database_impl_primitives_HEADERS = \
     include/bitcoin/database/impl/primitives/hashhead.ipp \
     include/bitcoin/database/impl/primitives/hashmap.ipp \
     include/bitcoin/database/impl/primitives/iterator.ipp \
+    include/bitcoin/database/impl/primitives/keys.ipp \
     include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp \
     include/bitcoin/database/impl/primitives/nomap.ipp \
@@ -232,7 +233,6 @@ include_bitcoin_database_tables_HEADERS = \
     include/bitcoin/database/tables/associations.hpp \
     include/bitcoin/database/tables/context.hpp \
     include/bitcoin/database/tables/event.hpp \
-    include/bitcoin/database/tables/keys.hpp \
     include/bitcoin/database/tables/names.hpp \
     include/bitcoin/database/tables/point_set.hpp \
     include/bitcoin/database/tables/schema.hpp \

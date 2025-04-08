@@ -264,9 +264,10 @@ struct strong_tx
 // record hashmap
 struct duplicate
 {
+    // This could be compressed to store fks once we start tx relay.
     static constexpr size_t pk = schema::dup;
     using link = linkage<pk, to_bits(pk)>;
-    using key = system::chain::point;   // One point vs. all pont.fks?
+    using key = system::chain::point;
     static constexpr size_t sk = schema::hash + schema::index;
     static constexpr size_t minsize =
         zero;

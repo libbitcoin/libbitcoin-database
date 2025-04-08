@@ -44,7 +44,6 @@
 #include <bitcoin/database/tables/associations.hpp>
 #include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/event.hpp>
-#include <bitcoin/database/tables/keys.hpp>
 #include <bitcoin/database/tables/names.hpp>
 #include <bitcoin/database/tables/point_set.hpp>
 #include <bitcoin/database/tables/schema.hpp>

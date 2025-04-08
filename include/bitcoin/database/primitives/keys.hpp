@@ -19,132 +19,39 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_KEYS_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_KEYS_HPP
 
-#include <algorithm>
-#include <bitcoin/system.hpp>
+#include <bitcoin/database.hpp>
 
 namespace libbitcoin {
 namespace database {
 namespace keys {
 
-constexpr uint64_t fnv1a_combine(uint64_t left, uint64_t right)
-{
-    constexpr uint64_t fnv_prime = 0x100000001b3;
-    constexpr uint64_t fnv_offset = 0xcbf29ce484222325;
+/// en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
+constexpr uint64_t fnv1a_combine(uint64_t left, uint64_t right);
 
-    auto hash = fnv_offset;
-    hash ^= left;
-    hash *= fnv_prime;
-    hash ^= right;
-    hash *= fnv_prime;
-    return hash;
-}
-
+/// Key size in bytes.
 template <class Key>
-constexpr size_t size() NOEXCEPT
-{
-    using namespace system;
-    if constexpr (is_same_type<Key, chain::point>)
-    {
-        // Index is truncated to three bytes.
-        return sub1(chain::point::serialized_size());
-    }
-    else if constexpr (is_std_array<Key>)
-    {
-        return array_count<Key>;
-    }
-}
+constexpr size_t size() NOEXCEPT;
 
+/// Hash of Key for hashmap bucket selection.
 template <class Key>
-inline uint64_t hash(const Key& value) NOEXCEPT
-{
-    using namespace system;
-    if constexpr (is_same_type<Key, chain::point>)
-    {
-        // Simple combine is sufficient for bucket selection.
-        // Given the uniformity of sha256 this produces a Poisson distribution.
-        return bit_xor(hash(value.hash()),
-            shift_left<uint64_t>(value.index()));
-    }
-    else if constexpr (is_std_array<Key>)
-    {
-        // Assumes sufficient uniqueness in low order bytes (ok for all).
-        // sequentially-valued keys should have no more buckets than values.
-        constexpr auto key = size<Key>();
-        constexpr auto bytes = std::min(key, sizeof(uint64_t));
+inline uint64_t hash(const Key& value) NOEXCEPT;
 
-        uint64_t hash{};
-        std::copy_n(value.begin(), bytes, byte_cast(hash).begin());
-        return hash;
-    }
-}
-
+/// Hash of Key for hashmap filter entropy.
 template <class Key>
-inline uint64_t thumb(const Key& value) NOEXCEPT
-{
-    using namespace system;
-    if constexpr (is_same_type<Key, system::chain::point>)
-    {
-        // spread point.index across point.hash extraction, as otherwise the
-        // unlikely bucket collisions of points of the same hash will not be
-        // differentiated by filters. This has a very small impact on false
-        // positives (-5,789 out of ~2.6B) but w/o material computational cost.
-        return fnv1a_combine(thumb(value.hash()), value.index());
-        ////return thumb(value.hash());
-    }
-    else if constexpr (is_std_array<Key>)
-    {
-        // Assumes sufficient uniqueness in second-low order bytes (ok for all).
-        // The thumb(value) starts at the next byte following hash(value).
-        // If key is to short then thumb aligns to the end of the key.
-        // This is intended to minimize overlap to the extent possible, while
-        // also avoiding the high order bits in the case of block hashes.
-        constexpr auto key = size<Key>();
-        constexpr auto bytes = std::min(key, sizeof(uint64_t));
-        constexpr auto offset = std::min(key - bytes, bytes);
+inline uint64_t thumb(const Key& value) NOEXCEPT;
 
-        uint64_t hash{};
-        const auto start = std::next(value.begin(), offset);
-        std::copy_n(start, bytes, byte_cast(hash).begin());
-        return hash;
-    }
-}
-
+/// Write size() bytes of key to current sink location.
 template <class Key>
-inline void write(writer& sink, const Key& key) NOEXCEPT
-{
-    using namespace system;
-    if constexpr (is_same_type<Key, chain::point>)
-    {
-        sink.write_bytes(key.hash());
-        sink.write_3_bytes_little_endian(key.index());
-    }
-    else if constexpr (is_std_array<Key>)
-    {
-        sink.write_bytes(key);
-    }
-}
+inline void write(writer& sink, const Key& key) NOEXCEPT;
 
+/// Compare size() bytes of key to bytes.
 template <class Array, class Key>
-inline bool compare(const Array& bytes, const Key& key) NOEXCEPT
-{
-    using namespace system;
-    if constexpr (is_same_type<Key, chain::point>)
-    {
-        // Index is truncated to three bytes.
-        const auto index = key.index();
-        return compare(array_cast<uint8_t, hash_size>(bytes), key.hash())
-            && bytes.at(hash_size + 0) == byte<0>(index)
-            && bytes.at(hash_size + 1) == byte<1>(index)
-            && bytes.at(hash_size + 2) == byte<2>(index);
-    }
-    else if constexpr (is_std_array<Key>)
-    {
-        return std::equal(bytes.begin(), bytes.end(), key.begin());
-    }
-}
+inline bool compare(const Array& bytes, const Key& key) NOEXCEPT;
 
 } // namespace keys
 } // namespace database
 } // namespace libbitcoin
+
+#include <bitcoin/database/impl/primitives/keys.ipp>
 
 #endif

@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
         "ffffffff"
         "ffffffff"
         "000080"   // sieve[8], pk->
-        "de"       // sieve[0-7]
+        "5e"       // sieve[0-7]
         "ffffffff"
         "ffffffff"
         "ffffffff"
@@ -1088,7 +1088,7 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
         "ffffffff"
         "ffffffff"
         "000080"   // sieve[8], pk->
-        "de"       // sieve[0-7]
+        "5e"       // sieve[0-7]
         "ffffffff"
         "ffffffff"
         "ffffffff"

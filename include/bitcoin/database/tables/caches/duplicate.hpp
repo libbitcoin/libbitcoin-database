@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_DOUBLES_HPP
 #define LIBBITCOIN_DATABASE_TABLES_CACHES_DOUBLES_HPP
 
-#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
@@ -29,41 +28,24 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-// TODO: this table isn't actually mapped.
 struct duplicate
   : public hash_map<schema::duplicate>
 {
-    using ix = linkage<schema::index>;
     using hash_map<schema::duplicate>::hashmap;
 
-    // This supports only a single record (not too useful).
     struct record
       : public schema::duplicate
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            hash = source.read_hash();
-            index = source.read_little_endian<ix::integer, ix::size>();
-            BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            sink.write_bytes(hash);
-            sink.write_little_endian<ix::integer, ix::size>(index);
-            BC_ASSERT(!sink || sink.get_write_position() == count());
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
-
-        inline bool operator==(const record& other) const NOEXCEPT
-        {
-            return hash == other.hash
-                && index == other.index;
-        }
-
-        hash_digest hash{};
-        ix::integer index{};
     };
 };
 
