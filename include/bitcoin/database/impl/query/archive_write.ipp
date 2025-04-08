@@ -149,7 +149,7 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
 
         for (const auto& in: *ins)
             if (!store_.point.put(ins_fk++, in->point(), table::point::record{}))
-                return error::tx_point_put;
+                return error::tx_null_point_put;
     }
     else
     {
@@ -159,26 +159,26 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
             return error::tx_point_allocate;
 
         // Collect duplicates to store in duplicate table.
-        std::vector<chain::cref_point> twins{};
-        const auto ptr = store_.point.get_memory();
-        bool duplicate{};
+        std::vector<chain::point> twins{};
+        auto ptr = store_.point.get_memory();
 
         // This must be set after tx.set and before tx.commit, since searchable and
         // produces an association to tx.link, and is also an integral part of tx.
         for (const auto& in: *ins)
         {
+            bool duplicate{};
             if (!store_.point.put(duplicate, ptr, ins_fk++, in->point(),
                 table::point::record{}))
                 return error::tx_point_put;
 
             if (duplicate)
-                twins.emplace_back(in->point().hash(), in->point().index());
-            ////return error::confirmed_double_spend;
+                twins.push_back(in->point());
         }
 
-        ///////////////////////////////////////////////////////////////////////
-        // TODO: if (!twins.empty()) ... store to duplicate table here.
-        ///////////////////////////////////////////////////////////////////////
+        ptr.reset();
+        for (const auto& twin: twins)
+            if (!store_.duplicate.put(twin, table::duplicate::record{}))
+                return error::tx_duplicate_put;
     }
 
     // Commit address index records (hashmap).
