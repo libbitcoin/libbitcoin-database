@@ -177,8 +177,9 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
 
         ptr.reset();
         for (const auto& twin: twins)
-            if (!store_.duplicate.put(twin, table::duplicate::record{}))
-                return error::tx_duplicate_put;
+            if (!store_.duplicate.exists(twin))
+                if (!store_.duplicate.put(twin, table::duplicate::record{}))
+                    return error::tx_duplicate_put;
     }
 
     // Commit address index records (hashmap).

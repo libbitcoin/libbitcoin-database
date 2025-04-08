@@ -118,7 +118,7 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
 TEMPLATE
 inline Link CLASS::index(const Key& key) const NOEXCEPT
 {
-    return system::possible_narrow_cast<link>(keys::hash(key)) % buckets_;
+    return keys::bucket(key, buckets_.value);
 }
 
 TEMPLATE

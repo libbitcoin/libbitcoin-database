@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(hashhead__unique_hash__null_key__expected)
 BOOST_AUTO_TEST_CASE(hashhead__key_hash__null_point__zero)
 {
     const system::chain::point null_point{};
-    BOOST_REQUIRE(is_zero(keys::hash(null_point)));
+    BOOST_REQUIRE(is_zero(keys::bucket(null_point, 42u)));
 }
 
 BOOST_AUTO_TEST_CASE(hashhead__top__link__terminal)
