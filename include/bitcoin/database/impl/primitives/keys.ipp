@@ -55,40 +55,51 @@ constexpr size_t size() NOEXCEPT
     }
 }
 
-template <class Key>
-inline uint64_t hash(const Key& value) NOEXCEPT
+template <class Key, class Integral>
+inline Integral bucket(const Key& key, Integral buckets) NOEXCEPT
 {
     using namespace system;
     if constexpr (is_same_type<Key, chain::point>)
     {
-        // Simplify the null point test for performance.
-        // Ensure bucket zero if and only if coinbase tx.
-        if (value.index() == chain::point::null_index)
-            return zero;
+        // If and only if coinbase the bucket is zero.
+        if (key.index() == chain::point::null_index)
+            return { 0 };
 
+        // Push other zeros into bucket one.
+        // Cast after modulo to avoid amplifying index weakness in lower bits.
+        const auto bucket = possible_narrow_cast<Integral>(hash(key) % buckets);
+        return is_zero(bucket) ? Integral{ 1 } : bucket;
+    }
+    else
+    {
+        return possible_narrow_cast<Integral>(hash(key)) % buckets;
+    }
+}
+
+template <class Key>
+inline uint64_t hash(const Key& key) NOEXCEPT
+{
+    using namespace system;
+    if constexpr (is_same_type<Key, chain::point>)
+    {
         // Simple combine is sufficient for bucket selection.
         // Given the uniformity of sha256 this produces a Poisson distribution.
-        const auto result = bit_xor(hash(value.hash()),
-            shift_left<uint64_t>(value.index()));
-
-        // Bump any zero hash result into bucket one to avoid coinbase bucket.
-        return is_zero(result) ? one : result;
+        return bit_xor(hash(key.hash()), shift_left<uint64_t>(key.index()));
     }
     else if constexpr (is_std_array<Key>)
     {
         // Assumes sufficient uniqueness in low order bytes (ok for all).
         // sequentially-valued keys should have no more buckets than values.
-        constexpr auto key = size<Key>();
-        constexpr auto bytes = std::min(key, sizeof(uint64_t));
+        constexpr auto bytes = std::min(size<Key>(), sizeof(uint64_t));
 
         uint64_t hash{};
-        std::copy_n(value.begin(), bytes, byte_cast(hash).begin());
+        std::copy_n(key.begin(), bytes, byte_cast(hash).begin());
         return hash;
     }
 }
 
 template <class Key>
-inline uint64_t thumb(const Key& value) NOEXCEPT
+inline uint64_t thumb(const Key& key) NOEXCEPT
 {
     using namespace system;
     if constexpr (is_same_type<Key, system::chain::point>)
@@ -97,22 +108,21 @@ inline uint64_t thumb(const Key& value) NOEXCEPT
         // unlikely bucket collisions of points of the same hash will not be
         // differentiated by filters. This has a very small impact on false
         // positives (-5,789 out of ~2.6B) but w/o material computational cost.
-        return fnv1a_combine(thumb(value.hash()), value.index());
-        ////return thumb(value.hash());
+        return fnv1a_combine(thumb(key.hash()), key.index());
+        ////return thumb(key.hash());
     }
     else if constexpr (is_std_array<Key>)
     {
         // Assumes sufficient uniqueness in second-low order bytes (ok for all).
-        // The thumb(value) starts at the next byte following hash(value).
+        // The thumb(key) starts at the next byte following hash(key).
         // If key is to short then thumb aligns to the end of the key.
         // This is intended to minimize overlap to the extent possible, while
         // also avoiding the high order bits in the case of block hashes.
-        constexpr auto key = size<Key>();
-        constexpr auto bytes = std::min(key, sizeof(uint64_t));
-        constexpr auto offset = std::min(key - bytes, bytes);
+        constexpr auto bytes = std::min(size<Key>(), sizeof(uint64_t));
+        constexpr auto offset = std::min(size<Key>() - bytes, bytes);
 
         uint64_t hash{};
-        const auto start = std::next(value.begin(), offset);
+        const auto start = std::next(key.begin(), offset);
         std::copy_n(start, bytes, byte_cast(hash).begin());
         return hash;
     }
@@ -137,7 +147,7 @@ template <class Array, class Key>
 inline bool compare(const Array& bytes, const Key& key) NOEXCEPT
 {
     using namespace system;
-    static_assert(keys::size<Key>() <= array_count<Array>);
+    static_assert(size<Key>() <= array_count<Array>);
     if constexpr (is_same_type<Key, chain::point>)
     {
         // Index is truncated to three bytes.

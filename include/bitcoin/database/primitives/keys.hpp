@@ -32,6 +32,10 @@ constexpr uint64_t fnv1a_combine(uint64_t left, uint64_t right);
 template <class Key>
 constexpr size_t size() NOEXCEPT;
 
+/// The hashmap bucket of the key.
+template <class Key, class Integral>
+inline Integral bucket(const Key& key, Integral buckets) NOEXCEPT;
+
 /// Hash of Key for hashmap bucket selection.
 template <class Key>
 inline uint64_t hash(const Key& value) NOEXCEPT;
