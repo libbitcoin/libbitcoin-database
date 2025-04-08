@@ -60,10 +60,18 @@ inline uint64_t hash(const Key& value) NOEXCEPT
     using namespace system;
     if constexpr (is_same_type<Key, chain::point>)
     {
+        // Simplify the null point test for performance.
+        // Ensure bucket zero if and only if coinbase tx.
+        if (value.index() == chain::point::null_index)
+            return zero;
+
         // Simple combine is sufficient for bucket selection.
         // Given the uniformity of sha256 this produces a Poisson distribution.
-        return bit_xor(hash(value.hash()),
+        const auto result = bit_xor(hash(value.hash()),
             shift_left<uint64_t>(value.index()));
+
+        // Bump any zero hash result into bucket one to avoid coinbase bucket.
+        return is_zero(result) ? one : result;
     }
     else if constexpr (is_std_array<Key>)
     {
