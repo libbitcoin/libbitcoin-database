@@ -234,7 +234,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
 // compact blocks methods (full query, no doubles table)
 // ----------------------------------------------------------------------------
-// TODO: currently unused (apply in compacy blocks).
+// TODO: currently unused (apply in compact blocks).
 
 // protected
 TEMPLATE
