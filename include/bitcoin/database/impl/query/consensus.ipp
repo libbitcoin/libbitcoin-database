@@ -368,10 +368,19 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 // called from validation to set prevout state
 
 TEMPLATE
-bool CLASS::get_doubles(tx_links&, const point&) const NOEXCEPT
+bool CLASS::get_doubles(tx_links& out, const point& point) const NOEXCEPT
 {
-    // TODO: Get all parent tx links for any point of block in doubles table.
-    return true;
+    if (!store_.duplicate.exists(point))
+        return true;
+
+    auto success = false;
+    for (auto it = store_.tx.it(point.hash()); it != it.end(); ++it)
+    {
+        success = true;
+        out.push_back(*it);
+    }
+
+    return success;
 }
 
 TEMPLATE
