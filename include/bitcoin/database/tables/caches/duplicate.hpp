@@ -43,7 +43,7 @@ struct duplicate
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            BC_ASSERT(!sink || sink.get_write_position() == count());
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
     };
