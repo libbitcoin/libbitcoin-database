@@ -474,9 +474,9 @@ public:
 
     /// Confirmation.
     /// -----------------------------------------------------------------------
-    /// These are not used in confirmation.
+    /// These are not used in consensus confirmation.
 
-    /// These compare strong with height index (not for confirmation process).
+    /// These compare strong with height index.
     bool is_candidate_header(const header_link& link) const NOEXCEPT;
     bool is_confirmed_block(const header_link& link) const NOEXCEPT;
     bool is_confirmed_tx(const tx_link& link) const NOEXCEPT;
@@ -490,7 +490,7 @@ public:
 
     /// Consensus.
     /// -----------------------------------------------------------------------
-    /// These are used in confirmation.
+    /// These are used in consensus confirmation.
 
     code block_confirmable(const header_link& link) const NOEXCEPT;
 
@@ -576,7 +576,7 @@ protected:
         const header_link& link) const NOEXCEPT;
 
     /// TODO: apply these to compact block confirmation, as the block will
-    /// TODO: associate existing txs, making it impossible to reply on the
+    /// TODO: associate existing txs, making it impossible to rely on the
     /// TODO: duplicates table. The full query approach is used instead.
     bool get_double_spenders(tx_links& out, const block& block) const NOEXCEPT;
     bool get_double_spenders(tx_links& out, const point& point,
@@ -588,7 +588,7 @@ protected:
     bool set_strong(const header_link& link, const tx_links& txs,
         bool positive) NOEXCEPT;
 
-    /// Get all tx links for any point of block that is also in doubles table.
+    /// Get all tx links for any point of block that is also in duplicate table.
     bool get_doubles(tx_links& out, const block& block) const NOEXCEPT;
     bool get_doubles(tx_links& out, const point& point) const NOEXCEPT;
 
