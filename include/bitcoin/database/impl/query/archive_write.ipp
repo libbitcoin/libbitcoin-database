@@ -143,7 +143,7 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
     // Commit points (hashmap).
     if (coinbase)
     {
-        // Should only be one, but generalized anyway.
+        // Should only be one input, but generalized anyway.
         if (!store_.point.expand(ins_fk + inputs))
             return error::tx_point_allocate;
 
@@ -176,6 +176,9 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
         }
 
         ptr.reset();
+
+        // As few duplicates are expected, the duplicate domain is only 2^16.
+        // Return of tx_duplicate_put implies that the link domain has overflowed.
         for (const auto& twin: twins)
             if (!store_.duplicate.exists(twin))
                 if (!store_.duplicate.put(twin, table::duplicate::record{}))
