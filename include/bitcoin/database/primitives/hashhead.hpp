@@ -76,8 +76,7 @@ protected:
     static constexpr size_t link_size = Link::size;
     static constexpr size_t link_bits = Link::bits;
     static constexpr size_t m = to_bits(cell_size) - link_bits;
-    static constexpr size_t log = system::floored_log2(m);
-    static constexpr size_t k = (is_zero(log) ? zero : add1(log));
+    static constexpr size_t k = system::floored_log2(m);
     using filter_t = bloom<m, k>;
     using cell = unsigned_type<cell_size>;
     using filter = filter_t::type;

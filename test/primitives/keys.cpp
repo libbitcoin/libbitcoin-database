@@ -33,15 +33,15 @@ BOOST_AUTO_TEST_CASE(keys__hash__points__expected)
 {
     const chain::point instance0{ hash0, 0x01234567_u32 };
     const auto hash0 = keys::hash(instance0);
-    BOOST_REQUIRE_EQUAL(hash0, static_cast<size_t>(0x72b3f1b608ca68a1_u64));
+    BOOST_CHECK_EQUAL(hash0, static_cast<size_t>(0x4db66b1ccc7e7fbb_u64));
 
     const chain::point instance1{ hash1, 0x12345678_u32 };
     const auto hash1 = keys::hash(instance1);
-    BOOST_CHECK_EQUAL(hash1, static_cast<size_t>(0xb2127b7ad9850fcb_u64));
+    BOOST_CHECK_EQUAL(hash1, static_cast<size_t>(0xfb3b0de4ffca48e6_u64));
 
     const chain::point instance2{ hash2, 0x23456789_u32 };
     const auto hash2 = keys::hash(instance2);
-    BOOST_CHECK_EQUAL(hash2, static_cast<size_t>(0x5e7e5353ff322d62_u64));
+    BOOST_CHECK_EQUAL(hash2, static_cast<size_t>(0x19938ff97badf2d2_u64));
 }
 
 BOOST_AUTO_TEST_CASE(keys__thumb__points__expected)
@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
     ////std::cout << std::bitset<bits<size_t>>(xor0) << std::endl;
     ////std::cout << system::ones_count(xor0);
 
-    // 32/64 == 50%
-    BOOST_REQUIRE_EQUAL(system::ones_count(xor0), 32u);
+    // 26/64 == 41%
+    BOOST_REQUIRE_EQUAL(system::ones_count(xor0), 26u);
 
     ////std::cout << std::endl;
     ////std::cout << std::bitset<bits<size_t>>(keys::hash(instance1)) << std::endl;
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
     ////std::cout << std::bitset<bits<size_t>>(xor2) << std::endl;
     ////std::cout << system::ones_count(xor2);
 
-    // 31/64 == 48%
-    BOOST_REQUIRE_EQUAL(system::ones_count(xor2), 31u);
+    // 34/64 == 53%
+    BOOST_REQUIRE_EQUAL(system::ones_count(xor2), 34u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
