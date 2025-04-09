@@ -26,31 +26,31 @@ namespace database {
 namespace keys {
 
 /// en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
-constexpr uint64_t fnv1a_combine(uint64_t left, uint64_t right);
+INLINE constexpr uint64_t fnv1a_combine(uint64_t left, uint64_t right);
 
 /// Key size in bytes.
 template <class Key>
-constexpr size_t size() NOEXCEPT;
+INLINE constexpr size_t size() NOEXCEPT;
 
 /// The hashmap bucket of the key.
 template <class Key, class Integral>
-inline Integral bucket(const Key& key, Integral buckets) NOEXCEPT;
+INLINE Integral bucket(const Key& key, Integral buckets) NOEXCEPT;
 
 /// Hash of Key for hashmap bucket selection.
 template <class Key>
-inline uint64_t hash(const Key& value) NOEXCEPT;
+INLINE uint64_t hash(const Key& value) NOEXCEPT;
 
 /// Hash of Key for hashmap filter entropy.
 template <class Key>
-inline uint64_t thumb(const Key& value) NOEXCEPT;
+INLINE uint64_t thumb(const Key& value) NOEXCEPT;
 
 /// Write size() bytes of key to current sink location.
 template <class Key>
-inline void write(writer& sink, const Key& key) NOEXCEPT;
+INLINE void write(writer& sink, const Key& key) NOEXCEPT;
 
 /// Compare size() bytes of key to bytes.
 template <class Array, class Key>
-inline bool compare(const Array& bytes, const Key& key) NOEXCEPT;
+INLINE bool compare(const Array& bytes, const Key& key) NOEXCEPT;
 
 } // namespace keys
 } // namespace database

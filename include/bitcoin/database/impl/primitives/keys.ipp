@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace database {
 namespace keys {
 
-constexpr uint64_t fnv1a_combine(uint64_t left, uint64_t right)
+INLINE constexpr uint64_t fnv1a_combine(uint64_t left, uint64_t right)
 {
     using namespace system;
     constexpr uint64_t fnv_prime = 0x100000001b3;
@@ -41,7 +41,7 @@ constexpr uint64_t fnv1a_combine(uint64_t left, uint64_t right)
 }
 
 template <class Key>
-constexpr size_t size() NOEXCEPT
+INLINE constexpr size_t size() NOEXCEPT
 {
     using namespace system;
     if constexpr (is_same_type<Key, chain::point>)
@@ -56,7 +56,7 @@ constexpr size_t size() NOEXCEPT
 }
 
 template <class Key, class Integral>
-inline Integral bucket(const Key& key, Integral buckets) NOEXCEPT
+INLINE Integral bucket(const Key& key, Integral buckets) NOEXCEPT
 {
     using namespace system;
     if constexpr (is_same_type<Key, chain::point>)
@@ -77,17 +77,18 @@ inline Integral bucket(const Key& key, Integral buckets) NOEXCEPT
 }
 
 template <class Key>
-inline uint64_t hash(const Key& key) NOEXCEPT
+INLINE uint64_t hash(const Key& key) NOEXCEPT
 {
     using namespace system;
     if constexpr (is_same_type<Key, chain::point>)
     {
-        // Simple combine is sufficient for bucket selection.
-        // Given the uniformity of sha256 this produces a Poisson distribution.
-        return bit_xor(hash(key.hash()), shift_left<uint64_t>(key.index()));
+        // Both produce an 85% Poisson distribution.
+        return fnv1a_combine(hash(key.hash()), key.index());
+        ////return bit_xor(hash(key.hash()), shift_left<uint64_t>(key.index()));
     }
     else if constexpr (is_std_array<Key>)
     {
+        // Produces an almost perfect 100% Poisson distribution for sha256.
         // Assumes sufficient uniqueness in low order bytes (ok for all).
         // sequentially-valued keys should have no more buckets than values.
         constexpr auto bytes = std::min(size<Key>(), sizeof(uint64_t));
@@ -99,7 +100,7 @@ inline uint64_t hash(const Key& key) NOEXCEPT
 }
 
 template <class Key>
-inline uint64_t thumb(const Key& key) NOEXCEPT
+INLINE uint64_t thumb(const Key& key) NOEXCEPT
 {
     using namespace system;
     if constexpr (is_same_type<Key, system::chain::point>)
@@ -129,7 +130,7 @@ inline uint64_t thumb(const Key& key) NOEXCEPT
 }
 
 template <class Key>
-inline void write(writer& sink, const Key& key) NOEXCEPT
+INLINE void write(writer& sink, const Key& key) NOEXCEPT
 {
     using namespace system;
     if constexpr (is_same_type<Key, chain::point>)
@@ -144,7 +145,7 @@ inline void write(writer& sink, const Key& key) NOEXCEPT
 }
 
 template <class Array, class Key>
-inline bool compare(const Array& bytes, const Key& key) NOEXCEPT
+INLINE bool compare(const Array& bytes, const Key& key) NOEXCEPT
 {
     using namespace system;
     static_assert(size<Key>() <= array_count<Array>);
