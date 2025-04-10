@@ -77,6 +77,8 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
 
     // Unsafe for allocation failure, but only used in store creation.
     return set_strong(link)
+        && set_filter_body(link, genesis)
+        && set_filter_head(link)
         && push_candidate(link)
         && push_confirmed(link);
     // ========================================================================

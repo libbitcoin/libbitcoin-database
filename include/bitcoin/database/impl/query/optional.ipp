@@ -171,13 +171,62 @@ bool CLASS::get_filter_head(hash_digest& out,
     if (!store_.filter_bk.at(link, filter_bk))
         return false;
     
-    out = std::move(filter_bk.filter_head);
+    out = std::move(filter_bk.head);
     return true;
+}
+
+// set_filter_body
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::set_filter_body(const header_link& link,
+    const block& block) NOEXCEPT
+{
+    using namespace system::neutrino;
+    if (!filter_enabled())
+        return true;
+
+    // Compute the current filter from the block and store under the link.
+    filter bytes{};
+    return compute_filter(bytes, block) && set_filter_body(link, bytes);
+}
+
+TEMPLATE
+bool CLASS::set_filter_body(const header_link& link,
+    const filter& filter) NOEXCEPT
+{
+    if (!filter_enabled())
+        return true;
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    return store_.filter_tx.put(link, table::filter_tx::put_ref
+    {
+        {},
+        filter
+    });
+    // ========================================================================
+}
+
+// set_filter_head
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::is_filtereable(const header_link& link) NOEXCEPT
+{
+    // This is used in confirmation, only when under bypass, to remove order.
+    return filter_enabled()
+        && !store_.filter_bk.exists(link)
+        && store_.filter_bk.exists(to_parent(link))
+        && store_.filter_tx.exists(link);
 }
 
 TEMPLATE
 bool CLASS::set_filter_head(const header_link& link) NOEXCEPT
 {
+    using namespace system::neutrino;
     if (!filter_enabled())
         return true;
 
@@ -186,34 +235,20 @@ bool CLASS::set_filter_head(const header_link& link) NOEXCEPT
     if (!get_filter_body(bytes, link))
         return false;
 
-    // If genesis then previous is null_hash otherwise get by confirmed height.
+    // If genesis then parent is terminal (returns null_hash).
     hash_digest previous{};
-    const auto height = get_height(link);
-    if (!is_zero(height))
-        if (!get_filter_head(previous, to_confirmed(sub1(height))))
+    const auto parent = to_parent(link);
+    if (!parent.is_terminal())
+        if (!get_filter_head(previous, parent))
             return false;
 
     // Use the previous head and current body to compute the current head.
-    return set_filter_head(link,
-        system::neutrino::compute_filter_header(previous, bytes));
+    return set_filter_head(link, compute_filter_header(previous, bytes));
 }
 
 TEMPLATE
-bool CLASS::set_filter_body(const header_link& link,
-    const block& block) NOEXCEPT
-{
-    if (!filter_enabled())
-        return true;
-
-    // Compute the current filter from the block and store under the link.
-    filter bytes{};
-    return system::neutrino::compute_filter(bytes, block) &&
-        set_filter_body(link, bytes);
-}
-
-TEMPLATE
-bool CLASS::set_filter_body(const header_link&,
-    const filter&) NOEXCEPT
+bool CLASS::set_filter_head(const header_link& link,
+    const hash_digest& head) NOEXCEPT
 {
     if (!filter_enabled())
         return true;
@@ -221,38 +256,13 @@ bool CLASS::set_filter_body(const header_link&,
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    ////// Clean single allocation failure (e.g. disk full).
-    ////return store_.filter_tx.put(link, table::filter_tx::put_ref
-    ////{
-    ////    {},
-    ////    filter_head,
-    ////    filter
-    ////});
+    // Clean single allocation failure (e.g. disk full).
+    return store_.filter_bk.put(link, table::filter_bk::put_ref
+    {
+        {},
+        head
+    });
     // ========================================================================
-
-    return false;
-}
-
-TEMPLATE
-bool CLASS::set_filter_head(const header_link&,
-    const hash_digest&) NOEXCEPT
-{
-    if (!filter_enabled())
-        return true;
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    ////// Clean single allocation failure (e.g. disk full).
-    ////return store_.filter_tx.put(link, table::filter_tx::put_ref
-    ////{
-    ////    {},
-    ////    filter_head,
-    ////    filter
-    ////});
-    // ========================================================================
-
-    return false;
 }
 
 } // namespace database

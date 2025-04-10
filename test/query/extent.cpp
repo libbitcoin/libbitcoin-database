@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.prevout_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.validated_bk_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.validated_tx_body_size(), zero);
-    BOOST_REQUIRE_EQUAL(query.filter_bk_body_size(), zero);
-    BOOST_REQUIRE_EQUAL(query.filter_tx_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query.filter_bk_body_size(), schema::filter_bk::minrow);
+    BOOST_REQUIRE_EQUAL(query.filter_tx_body_size(), 5u);
     BOOST_REQUIRE_EQUAL(query.address_body_size(), schema::address::minrow);
 }
 
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.confirmed_records(), one);
     BOOST_REQUIRE_EQUAL(query.strong_tx_records(), one);
     BOOST_REQUIRE_EQUAL(query.duplicate_records(), zero);
-    BOOST_REQUIRE_EQUAL(query.filter_bk_records(), zero);
+    BOOST_REQUIRE_EQUAL(query.filter_bk_records(), one);
     BOOST_REQUIRE_EQUAL(query.address_records(), one);
 }
 
