@@ -156,7 +156,7 @@ TEMPLATE
 bool CLASS::get_filter_body(filter& out, const header_link& link) const NOEXCEPT
 {
     table::filter_tx::get_filter filter_tx{};
-    if (!store_.filter_tx.at(link, filter_tx))
+    if (!store_.filter_tx.at(to_filter_tx(link), filter_tx))
         return false;
 
     out = std::move(filter_tx.filter);
@@ -168,7 +168,7 @@ bool CLASS::get_filter_head(hash_digest& out,
     const header_link& link) const NOEXCEPT
 {
     table::filter_bk::get_head filter_bk{};
-    if (!store_.filter_bk.at(link, filter_bk))
+    if (!store_.filter_bk.at(to_filter_bk(link), filter_bk))
         return false;
     
     out = std::move(filter_bk.head);
@@ -202,7 +202,7 @@ bool CLASS::set_filter_body(const header_link& link,
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.filter_tx.put(link, table::filter_tx::put_ref
+    return store_.filter_tx.put(to_filter_tx(link), table::filter_tx::put_ref
     {
         {},
         filter
@@ -218,9 +218,9 @@ bool CLASS::is_filtereable(const header_link& link) NOEXCEPT
 {
     // This is used in confirmation, only when under bypass, to remove order.
     return filter_enabled()
-        && !store_.filter_bk.exists(link)
-        && store_.filter_bk.exists(to_parent(link))
-        && store_.filter_tx.exists(link);
+        && !store_.filter_bk.exists(to_filter_bk(link))
+        && store_.filter_bk.exists(to_filter_bk(to_parent(link)))
+        && store_.filter_tx.exists(to_filter_tx(link));
 }
 
 TEMPLATE
@@ -257,7 +257,7 @@ bool CLASS::set_filter_head(const header_link& link,
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.filter_bk.put(link, table::filter_bk::put_ref
+    return store_.filter_bk.put(to_filter_bk(link), table::filter_bk::put_ref
     {
         {},
         head

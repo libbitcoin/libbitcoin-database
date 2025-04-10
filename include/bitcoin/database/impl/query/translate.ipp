@@ -446,6 +446,30 @@ tx_links CLASS::to_spending_txs(const header_link& link) const NOEXCEPT
     return std::move(txs.tx_fks);
 }
 
+// header to arraymap tables (guard domain transitions)
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+constexpr size_t CLASS::to_filter_bk(const header_link& link) const NOEXCEPT
+{
+    static_assert(header_link::terminal <= table::filter_bk::link::terminal);
+    return link.is_terminal() ? table::filter_bk::link::terminal : link.value;
+}
+
+TEMPLATE
+constexpr size_t CLASS::to_filter_tx(const header_link& link) const NOEXCEPT
+{
+    static_assert(header_link::terminal <= table::filter_tx::link::terminal);
+    return link.is_terminal() ? table::filter_tx::link::terminal : link.value;
+}
+
+TEMPLATE
+constexpr size_t CLASS::to_prevout(const header_link& link) const NOEXCEPT
+{
+    static_assert(header_link::terminal <= table::prevout::link::terminal);
+    return link.is_terminal() ? table::prevout::link::terminal : link.value;
+}
+
 // hashmap enumeration
 // ----------------------------------------------------------------------------
 

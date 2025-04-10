@@ -308,6 +308,11 @@ public:
     tx_links to_transactions(const header_link& link) const NOEXCEPT;
     tx_links to_spending_txs(const header_link& link) const NOEXCEPT;
 
+    /// header to arraymap tables (guard domain transitions)
+    constexpr size_t to_filter_bk(const header_link& link) const NOEXCEPT;
+    constexpr size_t to_filter_tx(const header_link& link) const NOEXCEPT;
+    constexpr size_t to_prevout(const header_link& link) const NOEXCEPT;
+
     /// hashmap enumeration
     header_link top_header(size_t bucket) const NOEXCEPT;
     point_link top_point(size_t bucket) const NOEXCEPT;
