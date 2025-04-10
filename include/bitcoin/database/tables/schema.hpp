@@ -383,8 +383,7 @@ struct filter_bk
 // slab arraymap
 struct filter_tx
 {
-    // align imposes word alignment for arraymap (redundant is already).
-    static constexpr size_t align = true;
+    static constexpr size_t align = false;
     static constexpr size_t pk = schema::filter_;
     using link = linkage<pk, to_bits(pk)>;
     static constexpr size_t minsize =
