@@ -34,82 +34,23 @@ struct filter_tx
 {
     using array_map<schema::filter_tx>::arraymap;
 
-    struct slab
-      : public schema::filter_tx
-    {
-        link count() const NOEXCEPT
-        {
-            return system::possible_narrow_cast<link::integer>(pk +
-                schema::hash +
-                variable_size(filter.size()) +
-                filter.size());
-        }
-
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            filter_head = source.read_hash();
-            filter = source.read_bytes(source.read_size());
-            BC_ASSERT(!source || source.get_read_position() == count());
-            return source;
-        }
-
-        inline bool to_data(finalizer& sink) const NOEXCEPT
-        {
-            sink.write_bytes(filter_head);
-            sink.write_variable(filter.size());
-            sink.write_bytes(filter);
-            BC_ASSERT(!sink || sink.get_write_position() == count());
-            return sink;
-        }
-
-        inline bool operator==(const slab& other) const NOEXCEPT
-        {
-            return filter_head == other.filter_head
-                && filter      == other.filter;
-        }
-
-        hash_digest filter_head{};
-        system::data_chunk filter{};
-    };
-
     struct get_filter
       : public schema::filter_tx
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk +
-                schema::hash +
-                variable_size(filter.size()) +
-                filter.size());
+            return system::possible_narrow_cast<link::integer>(
+                variable_size(filter.size()) + filter.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(schema::hash);
             filter = source.read_bytes(source.read_size());
             BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
 
         system::data_chunk filter{};
-    };
-
-    struct get_head
-        : public schema::filter_tx
-    {
-        link count() const NOEXCEPT
-        {
-            BC_ASSERT(false);
-            return {};
-        }
-
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            filter_head = source.read_hash();
-            return source;
-        }
-
-        hash_digest filter_head{};
     };
 
     struct put_ref
@@ -117,22 +58,18 @@ struct filter_tx
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk +
-                schema::hash +
-                variable_size(filter.size()) +
-                filter.size());
+            return system::possible_narrow_cast<link::integer>(
+                variable_size(filter.size()) + filter.size());
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            sink.write_bytes(filter_head);
             sink.write_variable(filter.size());
             sink.write_bytes(filter);
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 
-        const hash_digest& filter_head{};
         const system::data_chunk& filter{};
     };
 };

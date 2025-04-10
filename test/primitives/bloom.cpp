@@ -39,8 +39,8 @@ public:
 };
 
 // Ensure default/nop behavior.
-static_assert(accessor<0, 0>::is_screened(accessor<0, 0>::empty, 42));
-static_assert(accessor<1, 0>::is_screened(accessor<1, 0>::empty, 42));
+static_assert( accessor<0, 0>::is_screened(accessor<0, 0>::empty, 42));
+static_assert( accessor<1, 0>::is_screened(accessor<1, 0>::empty, 42));
 static_assert(!accessor<1, 1>::is_screened(accessor<1, 1>::empty, 42));
 
 BOOST_AUTO_TEST_CASE(bloom__collision__probability__expected)
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(bloom__collision__probability__expected)
         if (bloom_t::is_collision(next, previous))
             ++count;
 
-        const auto bits = std::bitset<m>(entropy);
+        ////const auto bits = std::bitset<m>(entropy);
         ////std::cout
         ////    << key << ":" << bits << ":" << count
         ////    << ":" << previous << ":" << next << std::endl;

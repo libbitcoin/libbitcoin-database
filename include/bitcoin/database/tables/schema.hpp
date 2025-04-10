@@ -388,13 +388,12 @@ struct filter_tx
     static constexpr size_t pk = schema::filter_;
     using link = linkage<pk, to_bits(pk)>;
     static constexpr size_t minsize =
-        schema::hash +
         one;
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;
     static inline link count() NOEXCEPT;
-    static_assert(minsize == 33u);
-    static_assert(minrow == 33u);
+    static_assert(minsize == 1u);
+    static_assert(minrow == 1u);
     static_assert(link::size == 4u);
 };
 
