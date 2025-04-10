@@ -231,8 +231,8 @@ bool CLASS::set_filter_head(const header_link& link) NOEXCEPT
         return true;
 
     // The filter body must have been previously stored under the block link.
-    filter bytes{};
-    if (!get_filter_body(bytes, link))
+    filter body{};
+    if (!get_filter_body(body, link))
         return false;
 
     // If genesis then parent is terminal (returns null_hash).
@@ -243,7 +243,7 @@ bool CLASS::set_filter_head(const header_link& link) NOEXCEPT
             return false;
 
     // Use the previous head and current body to compute the current head.
-    return set_filter_head(link, compute_filter_header(previous, bytes));
+    return set_filter_head(link, compute_filter_header(previous, body));
 }
 
 TEMPLATE
