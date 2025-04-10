@@ -71,7 +71,10 @@ public:
         const Key& key) NOEXCEPT;
 
 protected:
-    // floored_log2(0) returns zero.
+
+    // filtering
+    // ------------------------------------------------------------------------
+
     static constexpr size_t cell_size = CellSize;
     static constexpr size_t link_size = Link::size;
     static constexpr size_t link_bits = Link::bits;
@@ -88,35 +91,37 @@ protected:
     static_assert(std::atomic<cell>::is_always_lock_free);
     static_assert(is_nonzero(Link::size));
 
-    static INLINE constexpr filter to_filter(cell value) NOEXCEPT;
-    static INLINE constexpr link to_link(cell value) NOEXCEPT;
-    static INLINE constexpr bool screened(cell value, uint64_t entropy) NOEXCEPT;
-    static INLINE constexpr cell next_cell(bool& collision, cell previous,
+    INLINE static constexpr filter to_filter(cell value) NOEXCEPT;
+    INLINE static constexpr link to_link(cell value) NOEXCEPT;
+    INLINE static constexpr bool screened(cell value, uint64_t entropy) NOEXCEPT;
+    INLINE static constexpr cell next_cell(bool& collision, cell previous,
         link current, uint64_t entropy) NOEXCEPT;
 
     inline cell get_cell(const Link& index) const NOEXCEPT;
     inline bool set_cell(bool& collision, bytes& next, const Link& current,
         const Key& key) NOEXCEPT;
 
+    // ------------------------------------------------------------------------
+
 private:
-    static INLINE auto& cell_array(memory::iterator it) NOEXCEPT
+    INLINE static auto& cell_array(memory::iterator it) NOEXCEPT
     {
         return system::unsafe_array_cast<uint8_t, cell_size>(it);
     }
 
     template <typename Integral, if_integral<Integral> = true>
-    static INLINE auto& cell_array(Integral& value) NOEXCEPT
+    INLINE static auto& cell_array(Integral& value) NOEXCEPT
     {
         return cell_array(system::pointer_cast<uint8_t>(&value));
     }
 
-    static INLINE auto& link_array(memory::iterator it) NOEXCEPT
+    INLINE static auto& link_array(memory::iterator it) NOEXCEPT
     {
         return system::unsafe_array_cast<uint8_t, link_size>(it);
     }
 
     template <typename Integral, if_integral<Integral> = true>
-    static INLINE auto& link_array(Integral& value) NOEXCEPT
+    INLINE static auto& link_array(Integral& value) NOEXCEPT
     {
         return link_array(system::pointer_cast<uint8_t>(&value));
     }

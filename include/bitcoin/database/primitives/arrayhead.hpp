@@ -78,12 +78,12 @@ private:
     static constexpr bool aligned = (bucket_size == sizeof(link));
 
     template <size_t Bytes>
-    static inline auto& to_array(memory::iterator it) NOEXCEPT
+    INLINE static auto& to_array(memory::iterator it) NOEXCEPT
     {
         return system::unsafe_array_cast<uint8_t, Bytes>(it);
     }
 
-    static constexpr Link position_to_link(size_t position) NOEXCEPT
+    INLINE static constexpr Link position_to_link(size_t position) NOEXCEPT
     {
         using namespace system;
         const auto offset = floored_divide(position, bucket_size);
@@ -92,7 +92,7 @@ private:
 
     // Byte offset of bucket index within head file.
     // [body_size][[bucket[0]...bucket[buckets-1]]]
-    static constexpr size_t link_to_position(const Link& index) NOEXCEPT
+    INLINE static constexpr size_t link_to_position(const Link& index) NOEXCEPT
     {
         using namespace system;
         BC_ASSERT(!is_multiply_overflow<size_t>(index, bucket_size));

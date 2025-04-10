@@ -51,7 +51,7 @@ constexpr size_t tx = 4;        // ->tx record.
 constexpr size_t block = 3;     // ->header record.
 constexpr size_t bk_slab = 4;   // ->validated_bk record.
 constexpr size_t tx_slab = 5;   // ->validated_tx record.
-constexpr size_t filter_ = 4;   // ->filter record.
+constexpr size_t filter_ = 5;   // ->filter record.
 constexpr size_t doubles_ = 4;  // doubles bucket (no actual keys).
 
 /// Archive tables.
@@ -394,7 +394,7 @@ struct filter_tx
     static inline link count() NOEXCEPT;
     static_assert(minsize == 1u);
     static_assert(minrow == 1u);
-    static_assert(link::size == 4u);
+    static_assert(link::size == 5u);
 };
 
 } // namespace schema

@@ -141,7 +141,9 @@ Link CLASS::at(size_t key) const NOEXCEPT
         // xcode clang++16 does not support C++20 std::atomic_ref.
         ////const std::atomic_ref<link> head(unsafe_byte_cast<link>(raw));
         const auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
-        return head.load(std::memory_order_relaxed);
+
+        // Aligned values must be masked to match terminal.
+        return bit_and(Link::terminal, head.load(std::memory_order_relaxed));
     }
     else
     {

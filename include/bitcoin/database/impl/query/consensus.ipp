@@ -145,7 +145,7 @@ code CLASS::populate_prevouts(point_sets& sets, size_t points,
 
     table::prevout::slab_get cache{};
     cache.spends.resize(points);
-    if (!store_.prevout.at(link, cache))
+    if (!store_.prevout.at(to_prevout(link), cache))
         return error::integrity5;
 
     // Is any duplicated point in the block is confirmed (generally empty).
@@ -411,7 +411,7 @@ bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
 
     // Clean single allocation failure (e.g. disk full).
     const table::prevout::slab_put_ref prevouts{ {}, doubles, block };
-    return store_.prevout.put(link, prevouts);
+    return store_.prevout.put(to_prevout(link), prevouts);
     // ========================================================================
 }
 
