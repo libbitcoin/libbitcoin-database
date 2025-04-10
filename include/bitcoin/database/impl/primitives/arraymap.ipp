@@ -156,6 +156,12 @@ inline bool CLASS::at(size_t key, Element& element) const NOEXCEPT
 }
 
 TEMPLATE
+inline Link CLASS::exists(size_t key) const NOEXCEPT
+{
+    return !at(key).is_terminal();
+}
+
+TEMPLATE
 ELEMENT_CONSTRAINT
 inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
