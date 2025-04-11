@@ -23,6 +23,8 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
+// TODO: xcode clang++16 does not support C++20 std::atomic_ref.
+////const std::atomic_ref<link> head(unsafe_byte_cast<link>(raw));
 namespace libbitcoin {
 namespace database {
 
@@ -98,11 +100,11 @@ TEMPLATE
 bool CLASS::get_body_count(Link& count) const NOEXCEPT
 {
     const auto ptr = file_.get();
-    if (!ptr || bucket_size > size())
+    if (!ptr || Link::size > size())
         return false;
 
     // Body count is written as the first value in link size, but since
-    // offsetting is a multiple of sell size, a full cell is consumed for it.
+    // offsetting is a multiple of cell size, a full cell is consumed for it.
     // In case of nomap or disabled there are no cells, so file is link size.
     count = to_array<Link::size>(ptr->data());
     return true;
@@ -112,11 +114,11 @@ TEMPLATE
 bool CLASS::set_body_count(const Link& count) NOEXCEPT
 {
     const auto ptr = file_.get();
-    if (!ptr || bucket_size > size())
+    if (!ptr || Link::size > size())
         return false;
 
     // Body count is written as the first value in link size, but since
-    // offsetting is a multiple of sell size, a full cell is consumed for it.
+    // offsetting is a multiple of cell size, a full cell is consumed for it.
     // In case of nomap or disabled there are no cells, so file is link size.
     to_array<Link::size>(ptr->data()) = count;
     return true;
@@ -138,8 +140,6 @@ Link CLASS::at(size_t key) const NOEXCEPT
     {
         // Reads full padded word.
         const auto raw = ptr->data();
-        // xcode clang++16 does not support C++20 std::atomic_ref.
-        ////const std::atomic_ref<link> head(unsafe_byte_cast<link>(raw));
         const auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
 
         // Aligned values must be masked to match terminal.
@@ -170,18 +170,15 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
     {
         // Writes full padded word (0x00 fill).
         const auto raw = ptr->data();
-        // xcode clang++16 does not support C++20 std::atomic_ref.
-        ////const std::atomic_ref<link> head(unsafe_byte_cast<link>(raw));
         auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
         head.store(link, std::memory_order_relaxed);
     }
     else
     {
-        bytes current = link;
         auto& head = to_array<bucket_size>(ptr->data());
 
         mutex_.lock();
-        head = std::move(current);
+        head = link;
         mutex_.unlock();
     }
 

@@ -165,63 +165,38 @@ TEMPLATE
 ELEMENT_CONSTRAINT
 inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
-    return read(body_.get(), link, element);
+    const auto ptr = body_.get(link);
+    if (!ptr)
+        return false;
+
+    using namespace system;
+    iostream stream{ *ptr };
+    reader source{ stream };
+
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());) }
+    return element.from_data(source);
 }
 
 TEMPLATE
 ELEMENT_CONSTRAINT
 bool CLASS::put(size_t key, const Element& element) NOEXCEPT
 {
-    // Avoid setting terminal sentinel into a bucket position.
-    if (key == Link::terminal)
+    // Avoid setting at/above terminal sentinel into a bucket position.
+    if (key >= Link::terminal)
         return false;
 
-    using namespace system;
     const auto link = body_.allocate(element.count());
     const auto ptr = body_.get(link);
     if (!ptr)
         return false;
 
     // iostream.flush is a nop (direct copy).
+    using namespace system;
     iostream stream{ *ptr };
     finalizer sink{ stream };
 
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
     return element.to_data(sink) && head_.push(link, head_.index(key));
-}
-
-// protected
-// ----------------------------------------------------------------------------
-
-// static
-TEMPLATE
-ELEMENT_CONSTRAINT
-bool CLASS::read(const memory_ptr& ptr, const Link& link,
-    Element& element) NOEXCEPT
-{
-    using namespace system;
-    if (!ptr || link.is_terminal())
-        return false;
-
-    const auto start = body::link_to_position(link);
-    if (is_limited<ptrdiff_t>(start))
-        return false;
-
-    const auto size = ptr->size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
-    if (position > size)
-        return false;
-
-    const auto offset = ptr->offset(position);
-    if (is_null(offset))
-        return false;
-
-    // Stream starts at record and the index is skipped for reader convenience.
-    iostream stream{ offset, size - position };
-    reader source{ stream };
-
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());) }
-    return element.from_data(source);
 }
 
 } // namespace database

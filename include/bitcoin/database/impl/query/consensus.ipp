@@ -402,6 +402,10 @@ bool CLASS::get_doubles(tx_links& out, const block& block) const NOEXCEPT
 TEMPLATE
 bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
 {
+    // Empty or coinbase only implies no spends.
+    if (block.transactions() <= one)
+        return true;
+
     tx_links doubles{};
     if (!get_doubles(doubles, block))
         return false;

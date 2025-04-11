@@ -187,8 +187,8 @@ bool CLASS::set_filter_body(const header_link& link,
         return true;
 
     // Compute the current filter from the block and store under the link.
-    filter bytes{};
-    return compute_filter(bytes, block) && set_filter_body(link, bytes);
+    filter body{};
+    return compute_filter(body, block) && set_filter_body(link, body);
 }
 
 TEMPLATE
