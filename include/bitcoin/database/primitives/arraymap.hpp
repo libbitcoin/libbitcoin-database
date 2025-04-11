@@ -110,12 +110,6 @@ public:
     template <typename Element, if_equal<Element::size, RowSize> = true>
     bool put(size_t key, const Element& element) NOEXCEPT;
 
-protected:
-    /// Get element at link using memory object, false if deserialize error.
-    template <typename Element, if_equal<Element::size, RowSize> = true>
-    static bool read(const memory_ptr& ptr, const Link& link,
-        Element& element) NOEXCEPT;
-
 private:
     static constexpr auto is_slab = (RowSize == max_size_t);
     using head = database::arrayhead<Link, Align>;
