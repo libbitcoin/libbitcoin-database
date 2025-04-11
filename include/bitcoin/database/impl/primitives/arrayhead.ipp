@@ -98,7 +98,7 @@ TEMPLATE
 bool CLASS::get_body_count(Link& count) const NOEXCEPT
 {
     const auto ptr = file_.get();
-    if (!ptr || bucket_size > size())
+    if (!ptr || Link::size > size())
         return false;
 
     // Body count is written as the first value in link size, but since
@@ -112,7 +112,7 @@ TEMPLATE
 bool CLASS::set_body_count(const Link& count) NOEXCEPT
 {
     const auto ptr = file_.get();
-    if (!ptr || bucket_size > size())
+    if (!ptr || Link::size > size())
         return false;
 
     // Body count is written as the first value in link size, but since
@@ -177,11 +177,10 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
     }
     else
     {
-        bytes current = link;
         auto& head = to_array<bucket_size>(ptr->data());
 
         mutex_.lock();
-        head = std::move(current);
+        head = link;
         mutex_.unlock();
     }
 
