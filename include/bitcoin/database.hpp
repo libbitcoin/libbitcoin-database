@@ -42,7 +42,6 @@
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/primitives/arrayhead.hpp>
 #include <bitcoin/database/primitives/arraymap.hpp>
-#include <bitcoin/database/primitives/bloom.hpp>
 #include <bitcoin/database/primitives/hashhead.hpp>
 #include <bitcoin/database/primitives/hashmap.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
@@ -51,7 +50,6 @@
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/primitives/nomap.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
-#include <bitcoin/database/primitives/sieve.hpp>
 #include <bitcoin/database/tables/association.hpp>
 #include <bitcoin/database/tables/associations.hpp>
 #include <bitcoin/database/tables/context.hpp>
