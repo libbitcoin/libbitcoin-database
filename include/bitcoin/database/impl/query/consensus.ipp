@@ -143,17 +143,18 @@ code CLASS::populate_prevouts(point_sets& sets, size_t points,
     if (sets.empty())
         return error::success;
 
+    // An empty block will fail here as no prevout element is populated.
     table::prevout::slab_get cache{};
     cache.spends.resize(points);
     if (!store_.prevout.at(to_prevout(link), cache))
         return error::integrity5;
 
-    // Is any duplicated point in the block is confirmed (generally empty).
+    // Is any duplicated point in the block confirmed (generally empty).
     for (const auto& spender: cache.conflicts)
         if (is_strong_tx(spender))
             return error::confirmed_double_spend;
 
-    // Augments spend.points with metadata.
+    // Augment spend.points with metadata.
     auto it = cache.spends.begin();
     for (auto& set: sets)
         for (auto& point: set.points)
@@ -184,7 +185,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     if ((ec = unspent_duplicates(link, ctx)))
         return ec;
 
-    // Empty block is success.
+    // Coinbase txs are not populated, and empty blocks have no prevout entry.
     const auto txs = to_spending_txs(link);
     if (txs.empty())
         return error::success;
@@ -370,7 +371,9 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::get_doubles(tx_links& out, const point& point) const NOEXCEPT
 {
-    if (!store_.duplicate.exists(point))
+    // Body size check avoids a header hit when no duplicates (common).
+    if (is_zero(store_.duplicate.body_size()) ||
+        !store_.duplicate.exists(point))
         return true;
 
     auto success = false;
