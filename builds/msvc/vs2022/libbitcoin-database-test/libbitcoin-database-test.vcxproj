@@ -87,7 +87,6 @@
     <ClCompile Include="..\..\..\..\test\mocks\chunk_storage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arrayhead.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\bloom.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashhead.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
@@ -95,7 +94,6 @@
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\nomap.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\sieve.cpp" />
     <ClCompile Include="..\..\..\..\test\query\archive.cpp" />
     <ClCompile Include="..\..\..\..\test\query\confirm.cpp" />
     <ClCompile Include="..\..\..\..\test\query\context.cpp" />

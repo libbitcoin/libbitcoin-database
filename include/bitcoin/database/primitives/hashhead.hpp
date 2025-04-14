@@ -27,7 +27,6 @@
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/bloom.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -80,7 +79,7 @@ protected:
     static constexpr size_t link_bits = Link::bits;
     static constexpr size_t m = to_bits(cell_size) - link_bits;
     static constexpr size_t k = system::floored_log2(m);
-    using filter_t = bloom<m, k>;
+    using filter_t = system::bloom<m, k>;
     using cell = unsigned_type<cell_size>;
     using filter = filter_t::type;
     using link = Link::integer;

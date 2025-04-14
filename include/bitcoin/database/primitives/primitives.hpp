@@ -28,6 +28,5 @@
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/primitives/nomap.hpp>
-#include <bitcoin/database/primitives/sieve.hpp>
 
 #endif
