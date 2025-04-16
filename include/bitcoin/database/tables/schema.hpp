@@ -158,7 +158,7 @@ struct point
         zero;                   // empty row
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
-    static constexpr size_t cell = sizeof(uint64_t);    // oversized for sieve.
+    static constexpr size_t cell = sizeof(uint64_t);
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 0u);
     static_assert(minrow == 39u);
@@ -170,7 +170,7 @@ struct point
 struct ins
 {
     static constexpr size_t pk = point::pk;
-    using link = point::link;                           // aligned with point.
+    using link = point::link;   // aligned with point.
     static constexpr size_t minsize =
         sizeof(uint32_t) +      // sequence
         schema::input::pk +     // input->script|witness
@@ -208,7 +208,7 @@ struct txs
     static constexpr size_t minsize =
         count_ +                // txs
         schema::size +          // block.serialized_size(true)
-        schema::transaction::pk;// coinbase
+        schema::transaction::pk;// coinbase tx
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = max_size_t;
     ////static constexpr size_t cell = sizeof(unsigned_type<link::size>);
