@@ -213,15 +213,15 @@ bool CLASS::set_filter_body(const header_link& link,
 // set_filter_head
 // ----------------------------------------------------------------------------
 
-TEMPLATE
-bool CLASS::is_filtereable(const header_link& link) NOEXCEPT
-{
-    // This is used in confirmation, only when under bypass, to remove order.
-    return filter_enabled()
-        && !store_.filter_bk.exists(to_filter_bk(link))
-        && store_.filter_bk.exists(to_filter_bk(to_parent(link)))
-        && store_.filter_tx.exists(to_filter_tx(link));
-}
+////TEMPLATE
+////bool CLASS::is_filtereable(const header_link& link) NOEXCEPT
+////{
+////    // This is used in confirmation, only when under bypass, to remove order.
+////    return filter_enabled()
+////        && !store_.filter_bk.exists(to_filter_bk(link))
+////        && store_.filter_bk.exists(to_filter_bk(to_parent(link)))
+////        && store_.filter_tx.exists(to_filter_tx(link));
+////}
 
 TEMPLATE
 bool CLASS::set_filter_head(const header_link& link) NOEXCEPT
