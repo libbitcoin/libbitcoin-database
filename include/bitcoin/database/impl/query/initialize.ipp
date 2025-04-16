@@ -36,6 +36,7 @@ inline bool CLASS::is_initialized() const NOEXCEPT
     return is_nonzero(store_.confirmed.count()) &&
         is_nonzero(store_.candidate.count());
 }
+
 TEMPLATE
 inline size_t CLASS::get_top_candidate() const NOEXCEPT
 {
@@ -49,7 +50,6 @@ inline size_t CLASS::get_top_confirmed() const NOEXCEPT
     BC_ASSERT_MSG(is_nonzero(store_.confirmed.count()), "empty");
     return sub1(store_.confirmed.count());
 }
-
 
 TEMPLATE
 size_t CLASS::get_fork() const NOEXCEPT
