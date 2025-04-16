@@ -233,6 +233,7 @@ public:
     inline size_t get_top_candidate() const NOEXCEPT;
     inline size_t get_top_confirmed() const NOEXCEPT;
     size_t get_fork() const NOEXCEPT;
+    size_t get_top_valid_from(size_t height) const NOEXCEPT;
     size_t get_top_associated() const NOEXCEPT;
     size_t get_top_associated_from(size_t height) const NOEXCEPT;
     associations get_all_unassociated() const NOEXCEPT;

@@ -62,6 +62,25 @@ size_t CLASS::get_fork() const NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::get_top_valid_from(size_t height) const NOEXCEPT
+{
+    // initial height must be at least the top checkpoint, as checkpointed
+    // headers are not discoverable as valid (and cannot be invalid).
+    // milestone alone is insufficient, block must also be associated.
+    for (; height < height_link::terminal; ++height)
+    {
+        const auto link = to_candidate(add1(height));
+        const auto ec = get_block_state(link);
+        if ((ec != error::block_valid) &&
+            (ec != error::block_confirmable) &&
+            (ec == error::unassociated || !is_milestone(link)))
+            return height;
+    }
+
+    return height;
+}
+
+TEMPLATE
 size_t CLASS::get_top_associated() const NOEXCEPT
 {
     return get_top_associated_from(get_fork());
