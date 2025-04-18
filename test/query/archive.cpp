@@ -117,8 +117,8 @@ BOOST_AUTO_TEST_CASE(query_archive__set_link_header__is_header__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "000080"   // sieve[8], pk->
-        "de"       // sieve[0-7]
+        "000080"   // filter[8], pk->
+        "de"       // filter[0-7]
         "ffffffff"
         "ffffffff"
         "ffffffff"
@@ -469,8 +469,8 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block__get_block__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "000080"       // sieve[8], pk->
-        "da");         // sieve[0-7]
+        "000080"       // filter[8], pk->
+        "da");         // filter[0-7]
     const auto genesis_header_body = system::base16_chunk(
         "ffff7f"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
@@ -622,8 +622,8 @@ BOOST_AUTO_TEST_CASE(query_archive__set_block_txs__get_block__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "000080"       // sieve[8], pk->
-        "da");         // sieve[0-7]
+        "000080"       // filter[8], pk->
+        "da");         // filter[0-7]
     const auto genesis_header_body = system::base16_chunk(
         "ffff7f"       // next->
         "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000" // sk (block.hash)
@@ -1087,8 +1087,8 @@ BOOST_AUTO_TEST_CASE(query_archive__get_header__default__expected)
         "ffffffff"
         "ffffffff"
         "ffffffff"
-        "000080"   // sieve[8], pk->
-        "de"       // sieve[0-7]
+        "000080"   // filter[8], pk->
+        "de"       // filter[0-7]
         "ffffffff"
         "ffffffff"
         "ffffffff"
