@@ -532,7 +532,7 @@ public:
     bool get_confirmed_balance(uint64_t& out,
         const hash_digest& key) const NOEXCEPT;
 
-    ////bool is_filtereable(const header_link& link) NOEXCEPT;
+    bool is_filtered(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
     bool get_filter_head(hash_digest& out, const header_link& link) const NOEXCEPT;
     bool set_filter_body(const header_link& link, const block& block) NOEXCEPT;
