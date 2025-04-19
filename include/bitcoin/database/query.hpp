@@ -330,6 +330,8 @@ public:
     inline bool is_coinbase(const tx_link& link) const NOEXCEPT;
     inline bool is_milestone(const header_link& link) const NOEXCEPT;
     inline bool is_associated(const header_link& link) const NOEXCEPT;
+    inline bool is_confirmable(const header_link& link) const NOEXCEPT;
+    inline bool is_valid(const header_link& link) const NOEXCEPT;
 
     /// Empty/null_hash implies fault, zero count implies unassociated.
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
