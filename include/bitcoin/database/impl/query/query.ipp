@@ -77,8 +77,7 @@ CLASS::query(Store& store) NOEXCEPT
 TEMPLATE
 code CLASS::get_code() const NOEXCEPT
 {
-    auto ec = get_fault();
-    return !ec && is_full() ? error::disk_full : error::success;
+    return is_full() ? error::disk_full : get_fault();
 }
 
 TEMPLATE

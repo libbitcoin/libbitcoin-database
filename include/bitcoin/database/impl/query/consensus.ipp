@@ -243,7 +243,7 @@ bool CLASS::get_double_spenders(tx_links& out, const point& point,
     const point_link& self) const NOEXCEPT
 {
     // This is most of the expense of confirmation, and is not mitigated by the
-    // point table sieve, since self always exists.
+    // point table filter, since self always exists.
 
     point_links points{};
     for (auto it = store_.point.it(point); it; ++it)

@@ -274,6 +274,7 @@ code CLASS::set_code(header_link& out_fk, const header& header,
 
 // set full block
 // ----------------------------------------------------------------------------
+// strong is set for checkpointed blocks only, as they are always strong chain.
 
 TEMPLATE
 code CLASS::set_code(const block& block, const context& ctx, bool milestone,
@@ -377,7 +378,6 @@ code CLASS::set_code(txs_link& out_fk, const block& block,
     const auto scope = store_.get_transactor();
     constexpr auto positive = true;
 
-    // Clean allocation failure (e.g. disk full), see set_strong() comments.
     // Transactor assures cannot be restored without txs, as required to unset.
     if (strong && !set_strong(key, txs, tx_fks, positive))
         return error::txs_confirm;
