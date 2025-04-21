@@ -88,6 +88,10 @@ inline bool CLASS::is_sufficient(const context& current,
         && evaluated.mtp <= current.mtp;
 }
 
+// unvalidated
+// block_valid
+// block_confirmable
+// block_unconfirmable
 TEMPLATE
 code CLASS::get_header_state(const header_link& link) const NOEXCEPT
 {
@@ -98,6 +102,11 @@ code CLASS::get_header_state(const header_link& link) const NOEXCEPT
     return to_block_code(valid.code);
 }
 
+// unassociated
+// unvalidated
+// block_valid
+// block_confirmable
+// block_unconfirmable
 TEMPLATE
 code CLASS::get_block_state(const header_link& link) const NOEXCEPT
 {
