@@ -592,8 +592,6 @@ protected:
     /// Support set_strong and set_unstrong writers.
     bool set_strong(const header_link& link, size_t count,
         const tx_link& first_fk, bool positive) NOEXCEPT;
-    bool set_strong(const header_link& link, const tx_links& txs,
-        bool positive) NOEXCEPT;
 
     /// Get all tx links for any point of block that is also in duplicate table.
     bool get_doubles(tx_links& out, const block& block) const NOEXCEPT;
