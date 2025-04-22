@@ -242,16 +242,32 @@ bool map::expand(size_t size) NOEXCEPT
     if (size > capacity_)
     {
         const auto capacity = to_capacity(size);
-
-        // TODO: Could loop over a try lock here and log deadlock warning.
         std::unique_lock remap_lock(remap_mutex_);
-
-        // Disk full condition leaves store in valid state despite eof return.
         if (!remap_(capacity))
             return false;
     }
 
     logical_ = size;
+    return true;
+}
+
+bool map::reserve(size_t chunk) NOEXCEPT
+{
+    std::unique_lock field_lock(field_mutex_);
+
+    if (fault_ || !loaded_ || is_add_overflow(logical_, chunk))
+        return false;
+
+    const auto end = logical_ + chunk;
+    if (end > capacity_)
+    {
+        const auto capacity = to_capacity(end);
+        std::unique_lock remap_lock(remap_mutex_);
+        if (!remap_(capacity))
+            return false;
+    }
+
+    // Same as allocate except logical does not change.
     return true;
 }
 

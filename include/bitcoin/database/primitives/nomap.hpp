@@ -86,6 +86,9 @@ public:
     /// Query interface.
     /// -----------------------------------------------------------------------
 
+    /// Reserve additional count or slab to guard against disk full.
+    bool reserve(const Link& size) NOEXCEPT;
+
     /// Allocate count or slab size at returned link (follow with set|put).
     inline Link allocate(const Link& size) NOEXCEPT;
 

@@ -116,6 +116,13 @@ bool chunk_storage::expand(size_t size) NOEXCEPT
     return true;
 }
 
+bool chunk_storage::reserve(size_t size) NOEXCEPT
+{
+    std::unique_lock field_lock(field_mutex_);
+    buffer_.reserve(size);
+    return true;
+}
+
 size_t chunk_storage::allocate(size_t chunk) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);

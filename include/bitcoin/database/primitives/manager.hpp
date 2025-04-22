@@ -57,7 +57,10 @@ public:
     /// Increase the number of records as necessary (false only if fails).
     bool expand(const Link& count) NOEXCEPT;
 
-    /// Allocate records and return first logical position (eof possible).
+    /// Reserve additional count or slab to guard disk full (false if fails).
+    bool reserve(const Link& size) NOEXCEPT;
+
+    /// Increase logical count or slab and return first position (eof possible).
     /// For record, size is number of records to allocate (link + data).
     /// For slab size must include bytes (link + data) [key is part of data].
     Link allocate(const Link& size) NOEXCEPT;

@@ -64,10 +64,13 @@ public:
     /// Reduce logical size to specified (false if size exceeds logical).
     virtual bool truncate(size_t size) NOEXCEPT = 0;
 
-    /// Increase logical size to specified as requried (false only if fails).
+    /// Increase logical size to specified as required (false only if fails).
     virtual bool expand(size_t size) NOEXCEPT = 0;
 
-    /// Allocate bytes and return offset to first allocated (or eof).
+    /// Reserve additional bytes to guard against disk full (false if fails).
+    virtual bool reserve(size_t size) NOEXCEPT = 0;
+
+    /// Increase logical bytes and return offset to first allocated (or eof).
     virtual size_t allocate(size_t chunk) NOEXCEPT = 0;
 
     /// Get remap-protected r/w access to offset (or null) allocated to size.

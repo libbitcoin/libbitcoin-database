@@ -134,6 +134,12 @@ code CLASS::reload() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+bool CLASS::reserve(const Link& size) NOEXCEPT
+{
+    return manager_.reserve(size);
+}
+
+TEMPLATE
 inline Link CLASS::allocate(const Link& size) NOEXCEPT
 {
     return manager_.allocate(size);
