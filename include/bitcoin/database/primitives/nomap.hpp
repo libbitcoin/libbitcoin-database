@@ -89,9 +89,6 @@ public:
     /// Reserve additional count or slab to guard against disk full.
     bool reserve(const Link& size) NOEXCEPT;
 
-    /// Allocate count or slab size at returned link (follow with set|put).
-    inline Link allocate(const Link& size) NOEXCEPT;
-
     /// Return ptr for batch processing, holds shared lock on storage remap.
     inline memory_ptr get_memory() const NOEXCEPT;
 

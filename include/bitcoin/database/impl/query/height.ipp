@@ -143,7 +143,7 @@ bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // Reserve confirmed before put to ensure disk full atomicity.
-    // This reservation guard assumes no intervening writes to the table.
+    // This reservation guard assumes no concurrent writes to the table.
     if (!store_.confirmed.reserve(one) ||
         !set_strong(link, txs.number, txs.coinbase_fk, true))
         return false;
@@ -174,7 +174,7 @@ bool CLASS::pop_confirmed() NOEXCEPT
         return false;
 
     // Truncate cannot fail for disk full.
-    // This truncate assumes no intervening writes to the table.
+    // This truncate assumes no concurrent writes to the table.
     return store_.confirmed.truncate(top);
     // ========================================================================
 }
