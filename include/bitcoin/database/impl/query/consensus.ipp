@@ -283,33 +283,7 @@ bool CLASS::get_double_spenders(tx_links& out,
 // set_strong
 // ----------------------------------------------------------------------------
 
-// This is no longer required as txs are now set sequentially.
-////// protected
-////TEMPLATE
-////bool CLASS::set_strong(const header_link& link, const tx_links& txs,
-////    bool positive) NOEXCEPT
-////{
-////    using namespace system;
-////    using link_t = table::strong_tx::link;
-////    using element_t = table::strong_tx::record;
-////
-////    // Preallocate all strong_tx records for the block and reuse memory ptr.
-////    const auto records = possible_narrow_cast<link_t::integer>(txs.size());
-////    auto record = store_.strong_tx.allocate(records);
-////    const auto ptr = store_.strong_tx.get_memory();
-////
-////    for (const auto tx: txs)
-////        if (!store_.strong_tx.put(ptr, record++, link_t{ tx }, element_t
-////        {
-////            {},
-////            table::strong_tx::merge(positive, link)
-////        })) return false;
-////
-////    return true;
-////}
-
 // protected
-// This is invoked from block.txs archival (when checkpoint/milestone).
 TEMPLATE
 bool CLASS::set_strong(const header_link& link, size_t count,
     const tx_link& first_fk, bool positive) NOEXCEPT

@@ -76,11 +76,10 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
     const auto link = to_header(genesis.hash());
 
     // Unsafe for allocation failure, but only used in store creation.
-    return set_strong(link)
-        && set_filter_body(link, genesis)
+    return set_filter_body(link, genesis)
         && set_filter_head(link)
         && push_candidate(link)
-        && push_confirmed(link);
+        && push_confirmed(link, true);
     // ========================================================================
 }
 
@@ -96,21 +95,6 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
     // Clean single allocation failure (e.g. disk full).
     const table::height::record candidate{ {}, link };
     return store_.candidate.put(candidate);
-    // ========================================================================
-}
-
-TEMPLATE
-bool CLASS::push_confirmed(const header_link& link) NOEXCEPT
-{
-    if (link.is_terminal())
-        return false;
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    // Clean single allocation failure (e.g. disk full).
-    const table::height::record confirmed{ {}, link };
-    return store_.confirmed.put(confirmed);
     // ========================================================================
 }
 
@@ -131,6 +115,45 @@ bool CLASS::pop_candidate() NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::push_confirmed(const header_link& link) NOEXCEPT
+{
+    if (link.is_terminal())
+        return false;
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    const table::height::record confirmed{ {}, link };
+    return store_.confirmed.put(confirmed);
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
+{
+    if (!strong)
+        return push_confirmed(link);
+
+    table::txs::get_coinbase_and_count txs{};
+    if (!store_.txs.find(link, txs))
+        return false;
+
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // Reserve confirmed before put to ensure disk full atomicity.
+    // This reservation guard assumes no intervening writes to the table.
+    if (!store_.confirmed.reserve(one) ||
+        !set_strong(link, txs.number, txs.coinbase_fk, true))
+        return false;
+
+    const table::height::record confirmed{ {}, link };
+    return store_.confirmed.put(confirmed);
+    // ========================================================================
+}
+
+TEMPLATE
 bool CLASS::pop_confirmed() NOEXCEPT
 {
     using ix = table::transaction::ix::integer;
@@ -138,10 +161,20 @@ bool CLASS::pop_confirmed() NOEXCEPT
     if (is_zero(top))
         return false;
 
+    const auto link = to_confirmed(top);
+    table::txs::get_coinbase_and_count txs{};
+    if (!store_.txs.find(link, txs))
+        return {};
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean single allocation failure (e.g. disk full).
+    // Clean single allocation failure.
+    if (!set_strong(link, txs.number, txs.coinbase_fk, false))
+        return false;
+
+    // Truncate cannot fail for disk full.
+    // This truncate assumes no intervening writes to the table.
     return store_.confirmed.truncate(top);
     // ========================================================================
 }

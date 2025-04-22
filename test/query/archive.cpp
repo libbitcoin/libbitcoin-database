@@ -1300,9 +1300,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_position__confirmed__expected)
     BOOST_REQUIRE(!query.get_tx_position(out, 2));
     BOOST_REQUIRE(!query.get_tx_position(out, 3));
     BOOST_REQUIRE(!query.get_tx_position(out, 4));
-    BOOST_REQUIRE(query.push_confirmed(1));
-    BOOST_REQUIRE(query.push_confirmed(2));
-    BOOST_REQUIRE(query.push_confirmed(3));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BOOST_REQUIRE(query.push_confirmed(3, false));
 
     BOOST_REQUIRE_EQUAL(out, 0u);
     BOOST_REQUIRE(query.get_tx_position(out, 0));
@@ -1342,9 +1342,9 @@ BOOST_AUTO_TEST_CASE(query_archive__get_tx_position__always__expected)
     BOOST_REQUIRE(!query.get_tx_position(out, 2));
     BOOST_REQUIRE(!query.get_tx_position(out, 3));
     BOOST_REQUIRE(!query.get_tx_position(out, 4));
-    BOOST_REQUIRE(query.push_confirmed(1));
-    BOOST_REQUIRE(query.push_confirmed(2));
-    BOOST_REQUIRE(query.push_confirmed(3));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BOOST_REQUIRE(query.push_confirmed(3, false));
 
     BOOST_REQUIRE_EQUAL(out, 0u);
     BOOST_REQUIRE(query.get_tx_position(out, 0));
