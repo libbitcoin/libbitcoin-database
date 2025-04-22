@@ -40,6 +40,7 @@ using point_link = table::point::link;
 using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
 using filter_link = table::filter_tx::link;
+using strong_link = table::strong_tx::link;
 
 using header_links = std::vector<header_link::integer>;
 using tx_links = std::vector<tx_link::integer>;
@@ -516,6 +517,7 @@ public:
     bool initialize(const block& genesis) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
     bool push_confirmed(const header_link& link) NOEXCEPT;
+    bool push_confirmed(const header_link& link, bool strong) NOEXCEPT;
     bool pop_candidate() NOEXCEPT;
     bool pop_confirmed() NOEXCEPT;
 
@@ -592,8 +594,6 @@ protected:
     /// Support set_strong and set_unstrong writers.
     bool set_strong(const header_link& link, size_t count,
         const tx_link& first_fk, bool positive) NOEXCEPT;
-    bool set_strong(const header_link& link, const tx_links& txs,
-        bool positive) NOEXCEPT;
 
     /// Get all tx links for any point of block that is also in duplicate table.
     bool get_doubles(tx_links& out, const block& block) const NOEXCEPT;

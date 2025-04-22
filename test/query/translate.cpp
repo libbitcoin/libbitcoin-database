@@ -109,8 +109,8 @@
 ////    BOOST_REQUIRE_EQUAL(query.to_candidate(4), header_link::terminal);
 ////
 ////    // key-link translate of actual confirmeds.
-////    BOOST_REQUIRE(query.push_confirmed(1));
-////    BOOST_REQUIRE(query.push_confirmed(2));
+////    BOOST_REQUIRE(query.push_confirmed(1, false));
+////    BOOST_REQUIRE(query.push_confirmed(2, false));
 ////    BOOST_REQUIRE_EQUAL(query.to_confirmed(0), 0u);
 ////    BOOST_REQUIRE_EQUAL(query.to_confirmed(1), 1u);
 ////    BOOST_REQUIRE_EQUAL(query.to_confirmed(2), 2u);
@@ -760,7 +760,7 @@
 ////
 ////    // push_candidate/push_confirmed has no effect.
 ////    BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
-////    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash())));
+////    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
 ////    BOOST_REQUIRE_EQUAL(query.to_block(0), 0u);
 ////    BOOST_REQUIRE_EQUAL(query.to_block(1), header_link::terminal);
 ////    BOOST_REQUIRE_EQUAL(query.to_block(2), header_link::terminal);

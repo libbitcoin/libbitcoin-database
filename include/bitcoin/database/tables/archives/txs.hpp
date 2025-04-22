@@ -277,6 +277,36 @@ struct txs
 
         size_t number{};
     };
+
+    struct get_coinbase_and_count
+      : public schema::txs
+    {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            number = source.read_little_endian<ct::integer, ct::size>();
+            source.skip_bytes(bytes::size);
+
+            if (is_zero(number))
+            {
+                source.invalidate();
+            }
+            else
+            {
+                coinbase_fk = source.read_little_endian<tx::integer, tx::size>();
+            }
+
+            return source;
+        }
+
+        size_t number{};
+        tx::integer coinbase_fk{};
+    };
 };
 
 } // namespace table

@@ -103,10 +103,10 @@
 ////    BOOST_REQUIRE(!query.is_confirmed_block(1));
 ////    BOOST_REQUIRE(!query.is_confirmed_block(2));
 ////
-////    BOOST_REQUIRE(query.push_confirmed(1));
+////    BOOST_REQUIRE(query.push_confirmed(1, false));
 ////    BOOST_REQUIRE(query.is_confirmed_block(1));
 ////
-////    BOOST_REQUIRE(query.push_confirmed(2));
+////    BOOST_REQUIRE(query.push_confirmed(2, false));
 ////    BOOST_REQUIRE(query.is_confirmed_block(2));
 ////
 ////    BOOST_REQUIRE(query.pop_confirmed());
@@ -134,7 +134,7 @@
 ////    BOOST_REQUIRE(!query.is_confirmed_tx(1));
 ////    BOOST_REQUIRE(!query.is_confirmed_tx(2));
 ////
-////    BOOST_REQUIRE(query.push_confirmed(1));
+////    BOOST_REQUIRE(query.push_confirmed(1, false));
 ////    BOOST_REQUIRE(!query.is_confirmed_tx(1));
 ////    BOOST_REQUIRE(query.set_strong(1));
 ////    BOOST_REQUIRE(query.is_confirmed_tx(1));
@@ -142,7 +142,7 @@
 ////    // Ordering between strong and confirmed is unimportant.
 ////    BOOST_REQUIRE(query.set_strong(2));
 ////    BOOST_REQUIRE(!query.is_confirmed_tx(2));
-////    BOOST_REQUIRE(query.push_confirmed(2));
+////    BOOST_REQUIRE(query.push_confirmed(2, false));
 ////    BOOST_REQUIRE(query.is_confirmed_tx(2));
 ////}
 ////
@@ -161,14 +161,14 @@
 ////    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(1, 0)));
 ////    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(2, 0)));
 ////
-////    BOOST_REQUIRE(query.push_confirmed(1));
+////    BOOST_REQUIRE(query.push_confirmed(1, false));
 ////    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(1, 0)));
 ////    BOOST_REQUIRE(query.set_strong(1));
 ////    BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(1, 0)));
 ////
 ////    BOOST_REQUIRE(query.set_strong(2));
 ////    BOOST_REQUIRE(!query.is_confirmed_input(query.to_spend(2, 0)));
-////    BOOST_REQUIRE(query.push_confirmed(2));
+////    BOOST_REQUIRE(query.push_confirmed(2, false));
 ////    BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(2, 0)));
 ////}
 ////
@@ -187,14 +187,14 @@
 ////    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
 ////    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
 ////
-////    BOOST_REQUIRE(query.push_confirmed(1));
+////    BOOST_REQUIRE(query.push_confirmed(1, false));
 ////    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(1, 0)));
 ////    BOOST_REQUIRE(query.set_strong(1));
 ////    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(1, 0)));
 ////
 ////    BOOST_REQUIRE(query.set_strong(2));
 ////    BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
-////    BOOST_REQUIRE(query.push_confirmed(2));
+////    BOOST_REQUIRE(query.push_confirmed(2, false));
 ////    BOOST_REQUIRE(query.is_confirmed_output(query.to_output(2, 0)));
 ////}
 ////
@@ -230,9 +230,9 @@
 ////    BOOST_REQUIRE(!query.is_spent_output(query.to_output(0, 0))); // genesis
 ////    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 0))); // block1a
 ////    BOOST_REQUIRE(!query.is_spent_output(query.to_output(1, 1))); // block1a
-////    BOOST_REQUIRE(query.push_confirmed(1));
-////    BOOST_REQUIRE(query.push_confirmed(2));
-////    BOOST_REQUIRE(query.push_confirmed(3));
+////    BOOST_REQUIRE(query.push_confirmed(1, false));
+////    BOOST_REQUIRE(query.push_confirmed(2, false));
+////    BOOST_REQUIRE(query.push_confirmed(3, false));
 ////    BOOST_REQUIRE(!query.is_spent_output(query.to_output(0, 0))); // genesis
 ////    BOOST_REQUIRE(query.is_spent_output(query.to_output(1, 0)));  // block1a
 ////    BOOST_REQUIRE(query.is_spent_output(query.to_output(1, 1)));  // block1a
@@ -333,7 +333,7 @@
 ////    BOOST_REQUIRE(!query.is_spent(query.to_spend(2, 1))); // unconfirmed self
 ////
 ////    BOOST_REQUIRE(query.set_strong(2));
-////    BOOST_REQUIRE(query.push_confirmed(2));
+////    BOOST_REQUIRE(query.push_confirmed(2, false));
 ////    BOOST_REQUIRE(query.is_spent(query.to_spend(2, 0)));  // confirmed self
 ////    BOOST_REQUIRE(query.is_spent(query.to_spend(2, 1)));  // confirmed self
 ////
@@ -720,8 +720,8 @@
 ////    BOOST_REQUIRE(query.initialize(test::genesis));
 ////    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
 ////    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-////    BOOST_REQUIRE(query.push_confirmed(1));
-////    BOOST_REQUIRE(query.push_confirmed(2));
+////    BOOST_REQUIRE(query.push_confirmed(1, false));
+////    BOOST_REQUIRE(query.push_confirmed(2, false));
 ////
 ////    BOOST_REQUIRE(query.is_confirmed_tx(0));
 ////    BOOST_REQUIRE(query.is_confirmed_input(query.to_spend(0, 0)));

@@ -62,6 +62,15 @@ bool CLASS::expand(const Link& count) NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::reserve(const Link& size) NOEXCEPT
+{
+    if (size.is_terminal())
+        return false;
+
+    return file_.reserve(link_to_position(size));
+}
+
+TEMPLATE
 Link CLASS::allocate(const Link& size) NOEXCEPT
 {
     if (size.is_terminal())
