@@ -338,7 +338,7 @@ memory_ptr map::get(size_t offset) const NOEXCEPT
     // Truncate can reduce logical, but capacity is not affected. It is always
     // the case that ptr may write past current logical, so long as it never
     // writes past current capacity. Truncation is managed by callers.
-    const auto logical = size();
+    const auto allocated = capacity();
 
     // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
     const auto ptr = std::make_shared<access>(remap_mutex_);
@@ -349,7 +349,7 @@ memory_ptr map::get(size_t offset) const NOEXCEPT
 
     // With offset > size the assignment is negative (stream is exhausted).
     BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
-    ptr->assign(memory_map_ + offset, memory_map_ + logical);
+    ptr->assign(memory_map_ + offset, memory_map_ + allocated);
     BC_POP_WARNING()
     return ptr;
 }
