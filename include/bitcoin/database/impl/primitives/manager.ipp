@@ -49,6 +49,7 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
     if (count.is_terminal())
         return false;
 
+    // Truncate to count visible records (absolute).
     return file_.truncate(link_to_position(count));
 }
 
@@ -58,27 +59,30 @@ bool CLASS::expand(const Link& count) NOEXCEPT
     if (count.is_terminal())
         return false;
 
+    // Expand to count visible records (absolute).
     return file_.expand(link_to_position(count));
 }
 
 TEMPLATE
-bool CLASS::reserve(const Link& size) NOEXCEPT
+bool CLASS::reserve(const Link& count) NOEXCEPT
 {
-    if (size.is_terminal())
+    if (count.is_terminal())
         return false;
 
-    return file_.reserve(link_to_position(size));
+    // Expand by count INVISIBLE records (relative).
+    return file_.reserve(link_to_position(count));
 }
 
 TEMPLATE
-Link CLASS::allocate(const Link& size) NOEXCEPT
+Link CLASS::allocate(const Link& count) NOEXCEPT
 {
-    if (size.is_terminal())
-        return size;
+    if (count.is_terminal())
+        return count;
 
-    const auto start = file_.allocate(link_to_position(size));
+    // Expand by count visible records (relative), return absolute position.
+    const auto start = file_.allocate(link_to_position(count));
 
-    // This guards addition overflow in position_to_link (start must be valid).
+    // Guards addition overflow in position_to_link (start must be valid).
     if (start == storage::eof)
         return Link::terminal;
 

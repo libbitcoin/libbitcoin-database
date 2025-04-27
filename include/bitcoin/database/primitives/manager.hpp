@@ -28,7 +28,7 @@ namespace libbitcoin {
 namespace database {
     
 /// Linked list abstraction over storage for given link and record sizes.
-/// if slab (Size == max_size_t), count/link is bytes otherwise records.
+/// if slab (Size == max_size_t), count/link is bytes, otherwise records.
 /// Obtaining memory object is considered const access despite the fact that
 /// memory is writeable. Non-const manager access implies memory map modify.
 template <class Link, class Key, size_t Size>
@@ -48,22 +48,22 @@ public:
     /// The file size.
     inline size_t size() const NOEXCEPT;
 
-    /// The logical record count or slab size.
+    /// The logical record count.
     inline Link count() const NOEXCEPT;
 
-    /// Reduce the number of records (false if not lesser).
+    /// Reduce logical size to specified records (false if exceeds logical).
     bool truncate(const Link& count) NOEXCEPT;
 
-    /// Increase the number of records as necessary (false only if fails).
+    /// Increase logical size to specified bytes as required (false if fails).
     bool expand(const Link& count) NOEXCEPT;
 
-    /// Reserve additional count or slab to guard disk full (false if fails).
-    bool reserve(const Link& size) NOEXCEPT;
+    /// Increase capacity by specified bytes (false only if fails).
+    bool reserve(const Link& count) NOEXCEPT;
 
-    /// Increase logical count or slab and return first position (eof possible).
-    /// For record, size is number of records to allocate (link + data).
-    /// For slab size must include bytes (link + data) [key is part of data].
-    Link allocate(const Link& size) NOEXCEPT;
+    /// Increase logical by specified bytes, return offset to first (or eof).
+    /// For record, count is number of records to allocate (link + data).
+    /// For slab count must include bytes (link + data) [key is part of data].
+    Link allocate(const Link& count) NOEXCEPT;
 
     /// Return memory object for record at specified position (null possible).
     /// Obtaining memory object is considered const access despite fact that
