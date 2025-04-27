@@ -134,7 +134,7 @@ code CLASS::reload() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::reserve(const Link& size) NOEXCEPT
+inline bool CLASS::reserve(const Link& size) NOEXCEPT
 {
     // Reserve not writer-writer thread safe (two writers may share reserve).
     return manager_.reserve(size);

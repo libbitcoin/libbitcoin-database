@@ -87,7 +87,10 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Reserve additional count or slab to guard against disk full.
-    bool reserve(const Link& size) NOEXCEPT;
+    /// This is necessary for no-maps that are publicly-indexed (e.g. heights).
+    /// Not writer-writer thread safe. Link must be put (or discarded) before
+    /// any subsequent element is reserved or put, or will overwrite.
+    inline bool reserve(const Link& size) NOEXCEPT;
 
     /// Return ptr for batch processing, holds shared lock on storage remap.
     inline memory_ptr get_memory() const NOEXCEPT;
