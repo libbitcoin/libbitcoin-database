@@ -544,7 +544,7 @@ bool map::resize_(size_t size) NOEXCEPT
         // Disk full is the only restartable store failure (leave mapped).
         if (errno == ENOSPC)
         {
-            set_disk_space(size - logical_);
+            set_disk_space(size - capacity_);
             return false;
         }
 
