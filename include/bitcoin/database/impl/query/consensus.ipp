@@ -306,6 +306,17 @@ bool CLASS::set_strong(const header_link& link, size_t count,
                 table::strong_tx::merge(positive, link)
             })) return false;
 
+    // ************************************************************************
+    // CONSENSUS: To reproduce the behavior of a UTXO accumulator when
+    // reorganizing a BIP30 exception block, the first instance of the
+    // reorganized coinbase transaction must be set unstrong, despite its block
+    // being strong. This creates the odd situation where there is a confirmed
+    // block with unconfirmed txs. Otherwise the txs are spendable, but in the
+    // satoshi client their outputs no longer exist (de-accumulated). There is
+    // discussion about fixing this issue in the satoshi client, which would
+    // likely result in our behavior without this special handling. This is
+    // moot given the existence of checkpoints, so presently not consensus.
+    // ************************************************************************
     return true;
 }
 

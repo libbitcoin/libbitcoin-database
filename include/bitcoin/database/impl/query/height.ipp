@@ -89,6 +89,10 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
     if (link.is_terminal())
         return false;
 
+    // Reserve-commit commit for deferred access.
+    if (!store_.candidate.reserve(one))
+        return false;
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
@@ -115,41 +119,25 @@ bool CLASS::pop_candidate() NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::push_confirmed(const header_link& link) NOEXCEPT
-{
-    if (link.is_terminal())
-        return false;
-
-    // ========================================================================
-    const auto scope = store_.get_transactor();
-
-    // Clean single allocation failure (e.g. disk full).
-    const table::height::record confirmed{ {}, link };
-    return store_.confirmed.put(confirmed);
-    // ========================================================================
-}
-
-TEMPLATE
 bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
 {
-    if (!strong)
-        return push_confirmed(link);
-
     table::txs::get_coinbase_and_count txs{};
-    if (!store_.txs.find(link, txs))
+    if (strong && !store_.txs.find(link, txs))
+        return false;
+
+    // Reserve-commit to ensure disk full safety and deferred access.
+    if (!store_.confirmed.reserve(one))
         return false;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Reserve confirmed before put to ensure disk full atomicity.
-    // This reservation guard assumes no intervening writes to the table.
-    if (!store_.confirmed.reserve(one) ||
-        !set_strong(link, txs.number, txs.coinbase_fk, true))
+    // This reservation guard assumes no concurrent writes to the table.
+    if (strong && !set_strong(link, txs.number, txs.coinbase_fk, true))
         return false;
 
     const table::height::record confirmed{ {}, link };
-    return store_.confirmed.put(confirmed);
+    return store_.confirmed.commit(confirmed);
     // ========================================================================
 }
 
@@ -174,7 +162,7 @@ bool CLASS::pop_confirmed() NOEXCEPT
         return false;
 
     // Truncate cannot fail for disk full.
-    // This truncate assumes no intervening writes to the table.
+    // This truncate assumes no concurrent writes to the table.
     return store_.confirmed.truncate(top);
     // ========================================================================
 }

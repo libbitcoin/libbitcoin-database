@@ -49,6 +49,33 @@ BOOST_AUTO_TEST_CASE(manager__count__non_empty_slab__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+BOOST_AUTO_TEST_CASE(manager__capacity__non_reserved__expected)
+{
+    constexpr auto expected = 42u;
+    data_chunk buffer(expected, 0xff);
+    test::chunk_storage file(buffer);
+
+    // Capacity is byte-based.
+    const manager<linkage<4>, key1, max_size_t> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.capacity(), expected);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(manager__capacity__reserved__expected)
+{
+    constexpr auto expand = 7u;
+    constexpr auto initial = 42u;
+    constexpr auto expected = initial + expand;
+    data_chunk buffer(initial, 0xff);
+    test::chunk_storage file(buffer);
+
+    // Capacity is byte-based.
+    manager<linkage<4>, key1, max_size_t> instance(file);
+    BOOST_REQUIRE(instance.reserve(expand));
+    BOOST_REQUIRE_EQUAL(instance.capacity(), expected);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(manager__truncate__terminal_slab__false_unchanged)
 {
     data_chunk buffer;

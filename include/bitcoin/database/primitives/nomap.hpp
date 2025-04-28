@@ -62,8 +62,11 @@ public:
     /// Body file bytes.
     size_t body_size() const NOEXCEPT;
 
-    /// Count of records (or body file bytes if slab).
+    /// Count of body records (or bytes if slab).
     Link count() const NOEXCEPT;
+
+    /// Capacity of body in bytes.
+    size_t capacity() const NOEXCEPT;
 
     /// Reduce count as specified.
     bool truncate(const Link& count) NOEXCEPT;
@@ -87,10 +90,10 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Reserve additional count or slab to guard against disk full.
-    bool reserve(const Link& size) NOEXCEPT;
-
-    /// Allocate count or slab size at returned link (follow with set|put).
-    inline Link allocate(const Link& size) NOEXCEPT;
+    /// This is necessary for no-maps that are publicly-indexed (e.g. heights).
+    /// Not writer-writer thread safe. Link must be put (or discarded) before
+    /// any subsequent element is reserved or put, or will overwrite.
+    inline bool reserve(const Link& size) NOEXCEPT;
 
     /// Return ptr for batch processing, holds shared lock on storage remap.
     inline memory_ptr get_memory() const NOEXCEPT;
@@ -117,6 +120,11 @@ public:
     inline bool put_link(Link& link, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
     inline Link put_link(const Element& element) NOEXCEPT;
+
+    /// NOT THREAD SAFE
+    /// Write element to reserved next position and commit to logical space.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    inline bool commit(const Element& element) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);

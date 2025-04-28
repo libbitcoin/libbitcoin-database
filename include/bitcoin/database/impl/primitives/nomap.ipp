@@ -98,6 +98,12 @@ Link CLASS::count() const NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::capacity() const NOEXCEPT
+{
+    return manager_.capacity();
+}
+
+TEMPLATE
 bool CLASS::truncate(const Link& count) NOEXCEPT
 {
     return manager_.truncate(count);
@@ -134,15 +140,10 @@ code CLASS::reload() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::reserve(const Link& size) NOEXCEPT
+inline bool CLASS::reserve(const Link& size) NOEXCEPT
 {
+    // Reserve not writer-writer thread safe (two writers may share reserve).
     return manager_.reserve(size);
-}
-
-TEMPLATE
-inline Link CLASS::allocate(const Link& size) NOEXCEPT
-{
-    return manager_.allocate(size);
 }
 
 TEMPLATE
@@ -227,6 +228,21 @@ inline Link CLASS::put_link(const Element& element) NOEXCEPT
 {
     Link link{};
     return put_link(link, element) ? link : Link{};
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+inline bool CLASS::commit(const Element& element) NOEXCEPT
+{
+    // Zero allocation provides link of next (presumably reserved) element.
+    const auto link = manager_.allocate(0);
+
+    // Write element into reserved but unallocated space.
+    if (!put(link, element))
+        return false;
+
+    // Allocate reserved and written element (exposes logically).
+    return !manager_.allocate(element.count()).is_terminal();
 }
 
 } // namespace database

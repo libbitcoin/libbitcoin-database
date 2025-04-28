@@ -61,16 +61,16 @@ public:
     /// The current capacity of the memory map (zero if unmapped).
     virtual size_t capacity() const NOEXCEPT = 0;
 
-    /// Reduce logical size to specified (false if size exceeds logical).
+    /// Reduce logical size to specified bytes (false if exceeds logical).
     virtual bool truncate(size_t size) NOEXCEPT = 0;
 
-    /// Increase logical size to specified as required (false only if fails).
+    /// Increase logical size to specified bytes as required (false if fails).
     virtual bool expand(size_t size) NOEXCEPT = 0;
 
-    /// Reserve additional bytes to guard against disk full (false if fails).
+    /// Increase capacity by specified bytes (false only if fails).
     virtual bool reserve(size_t size) NOEXCEPT = 0;
 
-    /// Increase logical bytes and return offset to first allocated (or eof).
+    /// Increase logical by specified bytes, return offset to first (or eof).
     virtual size_t allocate(size_t chunk) NOEXCEPT = 0;
 
     /// Get remap-protected r/w access to offset (or null) allocated to size.
