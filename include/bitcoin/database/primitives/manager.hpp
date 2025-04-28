@@ -51,6 +51,9 @@ public:
     /// The logical record count.
     inline Link count() const NOEXCEPT;
 
+    /// The reserved byte count.
+    inline size_t capacity() const NOEXCEPT;
+
     /// Reduce logical size to specified records (false if exceeds logical).
     bool truncate(const Link& count) NOEXCEPT;
 

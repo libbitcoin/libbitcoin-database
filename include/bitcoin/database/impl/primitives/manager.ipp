@@ -44,6 +44,12 @@ inline Link CLASS::count() const NOEXCEPT
 }
 
 TEMPLATE
+inline size_t CLASS::capacity() const NOEXCEPT
+{
+    return file_.capacity();
+}
+
+TEMPLATE
 bool CLASS::truncate(const Link& count) NOEXCEPT
 {
     if (count.is_terminal())

@@ -113,6 +113,12 @@ Link CLASS::count() const NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::capacity() const NOEXCEPT
+{
+    return body_.capacity();
+}
+
+TEMPLATE
 bool CLASS::expand(const Link& count) NOEXCEPT
 {
     return body_.expand(count);

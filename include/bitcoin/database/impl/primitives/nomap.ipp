@@ -98,6 +98,12 @@ Link CLASS::count() const NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::capacity() const NOEXCEPT
+{
+    return manager_.capacity();
+}
+
+TEMPLATE
 bool CLASS::truncate(const Link& count) NOEXCEPT
 {
     return manager_.truncate(count);
