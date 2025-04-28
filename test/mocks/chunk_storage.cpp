@@ -30,18 +30,18 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // This is a trivial working chunk_storage interface implementation.
 chunk_storage::chunk_storage() NOEXCEPT
-  : buffer_{ local_ }, path_{ "test" }
+  : buffer_{ local_ }, path_{ "test" }, logical_{}
 {
 }
 
 chunk_storage::chunk_storage(system::data_chunk& reference) NOEXCEPT
-  : buffer_{ reference }, path_{ "test" }
+  : buffer_{ reference }, path_{ "test" }, logical_{ buffer_.size() }
 {
 }
 
 chunk_storage::chunk_storage(const std::filesystem::path& filename,
     size_t, size_t) NOEXCEPT
-  : buffer_{ local_ }, path_{ filename }
+  : buffer_{ local_ }, path_{ filename }, logical_{}
 {
 }
 
@@ -87,53 +87,78 @@ const std::filesystem::path& chunk_storage::file() const NOEXCEPT
 
 size_t chunk_storage::capacity() const NOEXCEPT
 {
+    // Since capacity is writeable, it's represented by vector size.
     std::shared_lock field_lock(field_mutex_);
-    return buffer_.capacity();
+    return buffer_.size();
 }
 
 size_t chunk_storage::size() const NOEXCEPT
 {
+    // Since capacity is writeable, size is maintained independently.
     std::shared_lock field_lock(field_mutex_);
-    return buffer_.size();
+    return logical_;
 }
 
 bool chunk_storage::truncate(size_t size) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
-    if (size > buffer_.size())
+    if (size > logical_)
         return false;
 
-    buffer_.resize(size);
+    // Excess capacity may increase.
+    logical_ = size;
     return true;
 }
 
 bool chunk_storage::expand(size_t size) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
-    if (size > buffer_.size())
-        buffer_.resize(size);
+    if (size > buffer_.max_size())
+        return false;
+
+    if (size <= logical_)
+        return true;
+
+    // Excess capacity may decrease.
+    logical_ = size;
+    if (logical_ > buffer_.size())
+        buffer_.resize(logical_);
 
     return true;
 }
 
-bool chunk_storage::reserve(size_t size) NOEXCEPT
+bool chunk_storage::reserve(size_t chunk) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
-    buffer_.reserve(size);
+    if (system::is_add_overflow<size_t>(logical_, chunk))
+        return false;
+    if (logical_ + chunk > buffer_.max_size())
+        return false;
+
+    // Excess capacity may increase, logical size does not change.
+    const auto end = logical_ + chunk;
+    if (end > buffer_.size())
+        buffer_.resize(end);
+
     return true;
 }
 
 size_t chunk_storage::allocate(size_t chunk) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
-    if (system::is_add_overflow<size_t>(buffer_.size(), chunk))
+    if (system::is_add_overflow<size_t>(logical_, chunk))
         return chunk_storage::eof;
-    if (buffer_.size() + chunk > buffer_.max_size())
+    if (logical_ + chunk > buffer_.max_size())
         return chunk_storage::eof;
 
     std::unique_lock map_lock(map_mutex_);
-    const auto link = buffer_.size();
-    buffer_.resize(buffer_.size() + chunk, 0x00);
+    const auto link = logical_;
+
+    // Excess capacity may decrease, logical size may increase.
+    logical_ += chunk;
+    if (logical_ > buffer_.size())
+        buffer_.resize(logical_);
+
     return link;
 }
 
@@ -149,9 +174,15 @@ memory_ptr chunk_storage::set(size_t offset, size_t size,
         else
         {
             std::unique_lock map_lock(map_mutex_);
+
+            // Excess capacity may decrease, logical size may increase.
             const auto minimum = offset + size;
-            if (minimum > buffer_.size())
-                buffer_.resize(minimum, backfill);
+            if (minimum > logical_)
+            {
+                logical_ = minimum;
+                if (logical_ > buffer_.size())
+                    buffer_.resize(logical_, backfill);
+            }
         }
     }
 
@@ -162,8 +193,8 @@ memory_ptr chunk_storage::get(size_t offset) const NOEXCEPT
 {
     const auto ptr = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
 
-    // With offset > size the assignment is negative (stream is exhausted).
-    ptr->assign(get_raw(offset), get_raw(size()));
+    // With offset > capacity the assignment is negative (stream is exhausted).
+    ptr->assign(get_raw(offset), get_raw(capacity()));
 
     return ptr;
 }
