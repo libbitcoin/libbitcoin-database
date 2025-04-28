@@ -121,6 +121,11 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     inline Link put_link(const Element& element) NOEXCEPT;
 
+    /// NOT THREAD SAFE
+    /// Write element to reserved next position and commit to logical space.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    inline bool commit(const Element& element) NOEXCEPT;
+
 private:
     static constexpr auto is_slab = (Size == max_size_t);
     using manager = database::manager<Link, system::data_array<zero>, Size>;

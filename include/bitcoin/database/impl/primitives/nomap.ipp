@@ -230,6 +230,21 @@ inline Link CLASS::put_link(const Element& element) NOEXCEPT
     return put_link(link, element) ? link : Link{};
 }
 
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+inline bool CLASS::commit(const Element& element) NOEXCEPT
+{
+    // Zero allocation provides link of next (presumably reserved) element.
+    const auto link = manager_.allocate(0);
+
+    // Write element into reserved but unallocated space.
+    if (!put(link, element))
+        return false;
+
+    // Allocate reserved and written element (exposes logically).
+    return !manager_.allocate(element.count()).is_terminal();
+}
+
 } // namespace database
 } // namespace libbitcoin
 
