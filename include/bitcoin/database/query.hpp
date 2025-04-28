@@ -516,7 +516,6 @@ public:
 
     bool initialize(const block& genesis) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
-    bool push_confirmed(const header_link& link) NOEXCEPT;
     bool push_confirmed(const header_link& link, bool strong) NOEXCEPT;
     bool pop_candidate() NOEXCEPT;
     bool pop_confirmed() NOEXCEPT;
