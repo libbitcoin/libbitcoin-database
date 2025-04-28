@@ -179,10 +179,6 @@ bool CLASS::get(const memory_ptr& ptr, const Link& link,
     reader source{ stream };
 
     if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(Size * element.count());) }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: shared lock.
-    ///////////////////////////////////////////////////////////////////////////
     return element.from_data(source);
 }
 
@@ -214,10 +210,6 @@ bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
     flipper sink{ stream };
 
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(Size * element.count());) }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: unique lock.
-    ///////////////////////////////////////////////////////////////////////////
     return element.to_data(sink);
 }
 
@@ -225,11 +217,6 @@ TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 inline bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // BUGBUG: when the table is directly accessible allocate/put is not
-    // BUGBUG: reader-writer thread safe (non-atomic), ok when not linked.
-    // BUGBUG: so use template bool to indicate guard using reader-writer lock.
-    ///////////////////////////////////////////////////////////////////////////
     const auto count = element.count();
     link = manager_.allocate(count);
     return put(link, element);

@@ -60,6 +60,7 @@ public:
     /// Increase logical size to specified bytes as required (false if fails).
     bool expand(const Link& count) NOEXCEPT;
 
+    /// Thread safe but reservations do not accumulate (effectively unsafe).
     /// Increase capacity by specified bytes (false only if fails).
     bool reserve(const Link& count) NOEXCEPT;
 
