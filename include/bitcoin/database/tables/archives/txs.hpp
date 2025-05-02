@@ -31,23 +31,23 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// Txs is a slab hashmap of tx fks (first is count), searchable by header.fk.
+/// Txs is a slab arraymap of tx fks (first is count), indexed by header.fk.
 struct txs
-  : public hash_map<schema::txs>
+  : public array_map<schema::txs>
 {
     using ct = linkage<schema::count_>;
     using tx = schema::transaction::link;
     using keys = std::vector<tx::integer>;
     using bytes = linkage<schema::size>;
-    using hash_map<schema::txs>::hashmap;
+    using array_map<schema::txs>::arraymap;
 
     struct slab
       : public schema::txs
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
-                ct::size + bytes::size + tx::size * tx_fks.size());
+            return system::possible_narrow_cast<link::integer>(ct::size +
+                bytes::size + tx::size * tx_fks.size());
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -96,8 +96,8 @@ struct txs
     {
         link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(pk + sk +
-                ct::size + bytes::size + tx::size * number);
+            return system::possible_narrow_cast<link::integer>(ct::size +
+                bytes::size + tx::size * number);
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT

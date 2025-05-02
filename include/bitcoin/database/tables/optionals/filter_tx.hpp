@@ -28,7 +28,7 @@ namespace libbitcoin {
 namespace database {
 namespace table {
     
-/// filter_tx is a slab of neutrino filters.
+/// filter_tx is a slab of neutrino filters indexed by block link.
 struct filter_tx
   : public array_map<schema::filter_tx>
 {

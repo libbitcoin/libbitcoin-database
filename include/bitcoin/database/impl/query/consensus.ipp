@@ -324,7 +324,7 @@ TEMPLATE
 bool CLASS::set_strong(const header_link& link) NOEXCEPT
 {
     table::txs::get_coinbase_and_count txs{};
-    if (!store_.txs.find(link, txs))
+    if (!store_.txs.at(to_txs(link), txs))
         return {};
 
     // This should be caught by get_coinbase_and_count return.
@@ -342,7 +342,7 @@ TEMPLATE
 bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 {
     table::txs::get_coinbase_and_count txs{};
-    if (!store_.txs.find(link, txs))
+    if (!store_.txs.at(to_txs(link), txs))
         return {};
 
     // This should be caught by get_coinbase_and_count return.

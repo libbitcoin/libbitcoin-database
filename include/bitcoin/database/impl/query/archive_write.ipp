@@ -341,14 +341,6 @@ TEMPLATE
 code CLASS::set_code(const block& block, const header_link& key,
     bool strong) NOEXCEPT
 {
-    txs_link unused{};
-    return set_code(unused, block, key, strong);
-}
-
-TEMPLATE
-code CLASS::set_code(txs_link& out_fk, const block& block,
-    const header_link& key, bool strong) NOEXCEPT
-{
     using namespace system;
     if (key.is_terminal())
         return error::txs_header;
@@ -384,15 +376,13 @@ code CLASS::set_code(txs_link& out_fk, const block& block,
 
     // Header link is the key for the txs table.
     // Clean single allocation failure (e.g. disk full).
-    out_fk = store_.txs.put_link(key, table::txs::put_group
+    return store_.txs.put(to_txs(key), table::txs::put_group
     {
         {},
         wire,
         count,
         tx_fks
-    });
-
-    return out_fk.is_terminal() ? error::txs_txs_put : error::success;
+    }) ? error::success : error::txs_txs_put;
     // ========================================================================
 }
 
