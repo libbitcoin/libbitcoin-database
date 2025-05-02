@@ -37,7 +37,6 @@ using input_link = table::input::link;
 using outs_link = table::outs::link;
 using ins_link = table::ins::link;
 using point_link = table::point::link;
-using txs_link = table::txs::link;
 using tx_link = table::transaction::link;
 using filter_link = table::filter_tx::link;
 using strong_link = table::strong_tx::link;
@@ -258,7 +257,6 @@ public:
     inline header_link to_confirmed(size_t height) const NOEXCEPT;
     inline header_link to_header(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
-    inline txs_link to_txs(const header_link& key) const NOEXCEPT;
     inline filter_link to_filter(const header_link& key) const NOEXCEPT;
     inline output_link to_output(const point& prevout) const NOEXCEPT;
     inline output_link to_output(const hash_digest& key,
@@ -313,11 +311,11 @@ public:
     constexpr size_t to_filter_bk(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_tx(const header_link& link) const NOEXCEPT;
     constexpr size_t to_prevout(const header_link& link) const NOEXCEPT;
+    constexpr size_t to_txs(const header_link& link) const NOEXCEPT;
 
     /// hashmap enumeration
     header_link top_header(size_t bucket) const NOEXCEPT;
     point_link top_point(size_t bucket) const NOEXCEPT;
-    txs_link top_txs(size_t bucket) const NOEXCEPT;
     tx_link top_tx(size_t bucket) const NOEXCEPT;
 
     /// Archive reads.
@@ -431,8 +429,6 @@ public:
     code set_code(const block& block, bool strong) NOEXCEPT;
     code set_code(header_link& out_fk, const block& block, bool strong) NOEXCEPT;
     code set_code(const block& block, const header_link& key, bool strong) NOEXCEPT;
-    code set_code(txs_link& out_fk, const block& block, const header_link& key,
-        bool strong) NOEXCEPT;
 
     /// Context.
     /// -----------------------------------------------------------------------

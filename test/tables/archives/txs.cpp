@@ -22,9 +22,15 @@
 BOOST_AUTO_TEST_SUITE(txs_tests)
 
 using namespace system;
-constexpr table::txs::key key = base16_array("112233");
-const table::txs::slab expected0{};
-const table::txs::slab expected1
+const table::txs::slab slab0
+{
+    {}, // schema::txs [all const static members]
+    0x000000,
+    std::vector<uint32_t>
+    {
+    }
+};
+const table::txs::slab slab1
 {
     {}, // schema::txs [all const static members]
     0x0000ab,
@@ -33,7 +39,7 @@ const table::txs::slab expected1
         0x56341211_u32
     }
 };
-const table::txs::slab expected2
+const table::txs::slab slab2
 {
     {}, // schema::txs [all const static members]
     0x00a00b,
@@ -43,7 +49,7 @@ const table::txs::slab expected2
         0x56341222_u32
     }
 };
-const table::txs::slab expected3
+const table::txs::slab slab3
 {
     {}, // schema::txs [all const static members]
     0xa0000b,
@@ -54,14 +60,8 @@ const table::txs::slab expected3
         0x56341233_u32
     }
 };
-const data_chunk expected_file
+const data_chunk expected0
 {
-    // 00->terminal
-    0xff, 0xff, 0xff, 0xff, 0xff,
-
-    // key
-    0x11, 0x22, 0x33,
-
     // slab0 (count) [0]
     0x00, 0x00, 0x00,
 
@@ -69,15 +69,9 @@ const data_chunk expected_file
     0x00, 0x00, 0x00,
 
     // slab0 (txs)
-
-    // --------------------------------------------------------------------------------------------
-
-    // 14->00
-    0x00, 0x00, 0x00, 0x00, 0x00,
-
-    // key
-    0x11, 0x22, 0x33,
-
+};
+const data_chunk expected1
+{
     // slab1 (count) [1]
     0x01, 0x00, 0x00,
 
@@ -86,15 +80,9 @@ const data_chunk expected_file
 
     // slab1 (txs)
     0x11, 0x12, 0x34, 0x56,
-
-    // --------------------------------------------------------------------------------------------
-
-    // 32->14
-    0x0e, 0x00, 0x00, 0x00, 0x00,
-
-    // key
-    0x11, 0x22, 0x33,
-
+};
+const data_chunk expected2
+{
     // slab2 (count) [2]
     0x02, 0x00, 0x00,
 
@@ -104,15 +92,9 @@ const data_chunk expected_file
     // slab2
     0x21, 0x12, 0x34, 0x56,
     0x22, 0x12, 0x34, 0x56,
-
-    // --------------------------------------------------------------------------------------------
-
-    // 54->32
-    0x20, 0x00, 0x00, 0x00, 0x00,
-
-    // key
-    0x11, 0x22, 0x33,
-
+};
+const data_chunk expected3
+{
     // slab3 (count) [3]
     0x03, 0x00, 0x00,
 
@@ -127,28 +109,45 @@ const data_chunk expected_file
 
 BOOST_AUTO_TEST_CASE(txs__put__get__expected)
 {
+    constexpr size_t key = 3;
+    table::txs::slab slab{};
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
     table::txs instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link(key, expected0).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected1).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected2).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(key, expected3).is_terminal());
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+    BOOST_REQUIRE(!instance.exists(key));
 
-    table::txs::slab slab{};
-    BOOST_REQUIRE(instance.get(0, slab));
-    BOOST_REQUIRE(slab == expected0);
+    BOOST_REQUIRE(instance.put(key, slab0));
+    BOOST_REQUIRE(instance.exists(key));
+    BOOST_REQUIRE(instance.at(key, slab));
+    BOOST_REQUIRE(slab == slab0);
+    BOOST_REQUIRE(instance.get(instance.at(key), slab));
+    BOOST_REQUIRE(slab == slab0);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), build_chunk({ expected0 }));
 
-    BOOST_REQUIRE(instance.get(14, slab));
-    BOOST_REQUIRE(slab == expected1);
+    BOOST_REQUIRE(instance.put(key, slab1));
+    BOOST_REQUIRE(instance.exists(key));
+    BOOST_REQUIRE(instance.at(key, slab));
+    BOOST_REQUIRE(slab == slab1);
+    BOOST_REQUIRE(instance.get(instance.at(key), slab));
+    BOOST_REQUIRE(slab == slab1);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1 }));
 
-    BOOST_REQUIRE(instance.get(32, slab));
-    BOOST_REQUIRE(slab == expected2);
+    BOOST_REQUIRE(instance.put(key, slab2));
+    BOOST_REQUIRE(instance.exists(key));
+    BOOST_REQUIRE(instance.at(key, slab));
+    BOOST_REQUIRE(slab == slab2);
+    BOOST_REQUIRE(instance.get(instance.at(key), slab));
+    BOOST_REQUIRE(slab == slab2);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1, expected2 }));
 
-    BOOST_REQUIRE(instance.get(54, slab));
-    BOOST_REQUIRE(slab == expected3);
+    BOOST_REQUIRE(instance.put(key, slab3));
+    BOOST_REQUIRE(instance.exists(key));
+    BOOST_REQUIRE(instance.at(key, slab));
+    BOOST_REQUIRE(slab == slab3);
+    BOOST_REQUIRE(instance.get(instance.at(key), slab));
+    BOOST_REQUIRE(slab == slab3);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1, expected2, expected3 }));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -122,7 +122,7 @@ TEMPLATE
 bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
 {
     table::txs::get_coinbase_and_count txs{};
-    if (strong && !store_.txs.find(link, txs))
+    if (strong && !store_.txs.at(to_txs(link), txs))
         return false;
 
     // Reserve-commit to ensure disk full safety and deferred access.
@@ -151,7 +151,7 @@ bool CLASS::pop_confirmed() NOEXCEPT
 
     const auto link = to_confirmed(top);
     table::txs::get_coinbase_and_count txs{};
-    if (!store_.txs.find(link, txs))
+    if (!store_.txs.at(to_txs(link), txs))
         return {};
 
     // ========================================================================

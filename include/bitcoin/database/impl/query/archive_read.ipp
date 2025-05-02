@@ -68,7 +68,7 @@ TEMPLATE
 inline bool CLASS::is_associated(const header_link& link) const NOEXCEPT
 {
     table::txs::get_associated txs{};
-    return store_.txs.find(link, txs) && txs.associated;
+    return store_.txs.at(to_txs(link), txs) && txs.associated;
 }
 
 TEMPLATE
@@ -106,7 +106,7 @@ TEMPLATE
 size_t CLASS::get_tx_count(const header_link& link) const NOEXCEPT
 {
     table::txs::get_tx_quantity txs{};
-    if (!store_.txs.find(link, txs))
+    if (!store_.txs.at(to_txs(link), txs))
         return {};
 
     return txs.number;
@@ -165,7 +165,7 @@ bool CLASS::get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT
 
     // False return below implies an integrity error (tx should be indexed).
     table::txs::get_position txs{ {}, link };
-    if (!store_.txs.find(fk, txs))
+    if (!store_.txs.at(to_txs(fk), txs))
         return false;
 
     out = txs.position;
@@ -192,7 +192,7 @@ TEMPLATE
 size_t CLASS::get_block_size(const header_link& link) const NOEXCEPT
 {
     table::txs::get_block_size txs{};
-    return store_.txs.find(link, txs) ? txs.wire : zero;
+    return store_.txs.at(to_txs(link), txs) ? txs.wire : zero;
 }
 
 TEMPLATE

@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// prevout is an array map index of previous outputs by block link.
+/// prevout is an array map index of previous outputs indexed by block link.
 /// The coinbase flag is merged into the tx field, reducing it's domain.
 /// Masking is from the right in order to accomodate integral tx domain.
 struct prevout

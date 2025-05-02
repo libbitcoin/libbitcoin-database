@@ -198,25 +198,22 @@ struct outs
     static_assert(link::size == 4u);
 };
 
-// slab hashmap
+// slab arraymap
 struct txs
 {
-    static constexpr size_t sk = schema::header::pk;
+    static constexpr size_t align = false;
     static constexpr size_t pk = schema::txs_;
     using link = linkage<pk, to_bits(pk)>;
-    using key = system::data_array<sk>;
     static constexpr size_t minsize =
         count_ +                // txs
         schema::size +          // block.serialized_size(true)
         schema::transaction::pk;// coinbase tx
-    static constexpr size_t minrow = pk + sk + minsize;
+    static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;
-    ////static constexpr size_t cell = sizeof(unsigned_type<link::size>);
     static constexpr size_t cell = link::size;
     static_assert(minsize == 10u);
-    static_assert(minrow == 18u);
+    static_assert(minrow == 10u);
     static_assert(link::size == 5u);
-    static_assert(cell == 5u);
 };
 
 /// Index tables.

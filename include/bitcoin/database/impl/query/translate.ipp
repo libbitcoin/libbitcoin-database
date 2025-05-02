@@ -76,12 +76,6 @@ inline tx_link CLASS::to_tx(const hash_digest& key) const NOEXCEPT
 }
 
 TEMPLATE
-inline txs_link CLASS::to_txs(const header_link& key) const NOEXCEPT
-{
-    return store_.txs.first(key);
-}
-
-TEMPLATE
 inline filter_link CLASS::to_filter(const header_link& key) const NOEXCEPT
 {
     return store_.filter_tx.first(key);
@@ -420,7 +414,7 @@ TEMPLATE
 tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
 {
     table::txs::get_coinbase txs{};
-    if (!store_.txs.find(link, txs))
+    if (!store_.txs.at(to_txs(link), txs))
         return {};
 
     return txs.coinbase_fk;
@@ -430,7 +424,7 @@ TEMPLATE
 tx_links CLASS::to_transactions(const header_link& link) const NOEXCEPT
 {
     table::txs::get_txs txs{};
-    if (!store_.txs.find(link, txs))
+    if (!store_.txs.at(to_txs(link), txs))
         return {};
 
     return std::move(txs.tx_fks);
@@ -440,7 +434,7 @@ TEMPLATE
 tx_links CLASS::to_spending_txs(const header_link& link) const NOEXCEPT
 {
     table::txs::get_spending_txs txs{};
-    if (!store_.txs.find(link, txs))
+    if (!store_.txs.at(to_txs(link), txs))
         return {};
 
     return std::move(txs.tx_fks);
@@ -470,6 +464,13 @@ constexpr size_t CLASS::to_prevout(const header_link& link) const NOEXCEPT
     return link.is_terminal() ? table::prevout::link::terminal : link.value;
 }
 
+TEMPLATE
+constexpr size_t CLASS::to_txs(const header_link& link) const NOEXCEPT
+{
+    static_assert(header_link::terminal <= table::txs::link::terminal);
+    return link.is_terminal() ? table::txs::link::terminal : link.value;
+}
+
 // hashmap enumeration
 // ----------------------------------------------------------------------------
 
@@ -485,13 +486,6 @@ point_link CLASS::top_point(size_t bucket) const NOEXCEPT
 {
     using namespace system;
     return store_.point.top(possible_narrow_cast<point_link::integer>(bucket));
-}
-
-TEMPLATE
-txs_link CLASS::top_txs(size_t bucket) const NOEXCEPT
-{
-    using namespace system;
-    return store_.txs.top(possible_narrow_cast<txs_link::integer>(bucket));
 }
 
 TEMPLATE
