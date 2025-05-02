@@ -281,7 +281,6 @@ struct duplicate
 // slab arraymap
 struct prevout
 {
-    // align imposes word alignment for arraymap (redundant is already).
     static constexpr size_t align = false;
     static constexpr size_t pk = schema::prevout_;
     using link = linkage<pk, to_bits(pk)>;
@@ -363,7 +362,6 @@ struct address
 // record arraymap
 struct filter_bk
 {
-    // align imposes word alignment for arraymap (redundant is already).
     static constexpr size_t align = false;
     static constexpr size_t pk = schema::header::pk;
     using link = linkage<pk, to_bits(pk)>;
