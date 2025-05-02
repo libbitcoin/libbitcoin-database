@@ -444,6 +444,13 @@ tx_links CLASS::to_spending_txs(const header_link& link) const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+constexpr size_t CLASS::to_validated_bk(const header_link& link) const NOEXCEPT
+{
+    static_assert(header_link::terminal <= table::validated_bk::link::terminal);
+    return link.is_terminal() ? table::validated_bk::link::terminal : link.value;
+}
+
+TEMPLATE
 constexpr size_t CLASS::to_filter_bk(const header_link& link) const NOEXCEPT
 {
     static_assert(header_link::terminal <= table::filter_bk::link::terminal);
