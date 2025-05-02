@@ -210,7 +210,6 @@ struct txs
         schema::transaction::pk;// coinbase tx
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;
-    static constexpr size_t cell = link::size;
     static_assert(minsize == 10u);
     static_assert(minrow == 10u);
     static_assert(link::size == 5u);
