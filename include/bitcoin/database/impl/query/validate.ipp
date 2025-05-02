@@ -96,7 +96,7 @@ TEMPLATE
 code CLASS::get_header_state(const header_link& link) const NOEXCEPT
 {
     table::validated_bk::slab_get_code valid{};
-    if (!store_.validated_bk.find(link, valid))
+    if (!store_.validated_bk.at(to_validated_bk(link), valid))
         return error::unvalidated;
 
     return to_block_code(valid.code);
@@ -111,7 +111,7 @@ TEMPLATE
 code CLASS::get_block_state(const header_link& link) const NOEXCEPT
 {
     table::validated_bk::slab_get_code valid{};
-    if (!store_.validated_bk.find(link, valid))
+    if (!store_.validated_bk.at(to_validated_bk(link), valid))
         return is_associated(link) ? error::unvalidated : error::unassociated;
 
     return to_block_code(valid.code);
@@ -122,7 +122,7 @@ code CLASS::get_block_state(uint64_t& fees,
     const header_link& link) const NOEXCEPT
 {
     table::validated_bk::slab valid{};
-    if (!store_.validated_bk.find(link, valid))
+    if (!store_.validated_bk.at(to_validated_bk(link), valid))
         return is_associated(link) ? error::unvalidated : error::unassociated;
 
     // TODO: Fees only valid if block_valid is the current state (iterate for valid).
@@ -261,12 +261,13 @@ bool CLASS::set_block_valid(const header_link& link, uint64_t fees) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.validated_bk.put(link, table::validated_bk::slab
-    {
-        {},
-        schema::block_state::valid,
-        fees
-    });
+    return store_.validated_bk.put(to_validated_bk(link),
+        table::validated_bk::slab
+        {
+            {},
+            schema::block_state::valid,
+            fees
+        });
     // ========================================================================
 }
 
@@ -277,12 +278,13 @@ bool CLASS::set_block_confirmable(const header_link& link) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.validated_bk.put(link, table::validated_bk::slab
-    {
-        {},
-        schema::block_state::confirmable,
-        0 // fees
-    });
+    return store_.validated_bk.put(to_validated_bk(link),
+        table::validated_bk::slab
+        {
+            {},
+            schema::block_state::confirmable,
+            0 // fees
+        });
     // ========================================================================
 }
 
@@ -293,12 +295,13 @@ bool CLASS::set_block_unconfirmable(const header_link& link) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.validated_bk.put(link, table::validated_bk::slab
-    {
-        {},
-        schema::block_state::unconfirmable,
-        0 // fees
-    });
+    return store_.validated_bk.put(to_validated_bk(link),
+        table::validated_bk::slab
+        {
+            {},
+            schema::block_state::unconfirmable,
+            0 // fees
+        });
     // ========================================================================
 }
 
@@ -309,12 +312,13 @@ bool CLASS::set_block_unknown(const header_link& link) NOEXCEPT
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.validated_bk.put(link, table::validated_bk::slab
-    {
-        {},
-        schema::block_state::block_unknown,
-        0 // fees
-    });
+    return store_.validated_bk.put(to_validated_bk(link),
+        table::validated_bk::slab
+        {
+            {},
+            schema::block_state::block_unknown,
+            0 // fees
+        });
     // ========================================================================
 }
 

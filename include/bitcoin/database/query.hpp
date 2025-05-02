@@ -308,6 +308,7 @@ public:
     tx_links to_spending_txs(const header_link& link) const NOEXCEPT;
 
     /// header to arraymap tables (guard domain transitions)
+    constexpr size_t to_validated_bk(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_bk(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_tx(const header_link& link) const NOEXCEPT;
     constexpr size_t to_prevout(const header_link& link) const NOEXCEPT;

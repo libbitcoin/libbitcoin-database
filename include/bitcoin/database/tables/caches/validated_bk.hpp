@@ -28,12 +28,12 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// validated_bk is a slab hashmap of block validation state.
+/// validated_bk is a slab arraymap of block state, indexed by header.fk.
 struct validated_bk
-  : public hash_map<schema::validated_bk>
+  : public array_map<schema::validated_bk>
 {
     using coding = linkage<schema::code>;
-    using hash_map<schema::validated_bk>::hashmap;
+    using array_map<schema::validated_bk>::arraymap;
 
     struct slab
       : public schema::validated_bk
@@ -41,8 +41,7 @@ struct validated_bk
         link count() const NOEXCEPT
         {
             using namespace system;
-            return possible_narrow_cast<link::integer>(pk + sk +
-                coding::size +
+            return possible_narrow_cast<link::integer>(coding::size +
                 variable_size(fees));
         }
 

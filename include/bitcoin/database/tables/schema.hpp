@@ -296,21 +296,20 @@ struct prevout
     static_assert(link::size == 5u);
 };
 
-// slab hashmap
+// slab arraymap
 struct validated_bk
 {
-    static constexpr size_t sk = schema::header::pk;
+    static constexpr size_t align = false;
     static constexpr size_t pk = schema::bk_slab;
     using link = linkage<pk, to_bits(pk)>;
-    using key = system::data_array<sk>;
     static constexpr size_t minsize =
         schema::code +  // TODO: change code to variable.
         one;
-    static constexpr size_t minrow = pk + sk + minsize;
+    static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;
-    static constexpr size_t cell = link::size;
     static_assert(minsize == 2u);
-    static_assert(minrow == 9u);
+    static_assert(minrow == 2u);
+    static_assert(link::size == 4u);
 };
 
 // slab modest (sk:4) multimap, with low multiple rate.
