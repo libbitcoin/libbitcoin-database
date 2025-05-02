@@ -1,227 +1,241 @@
-/////**
-//// * Copyright (c) 2011-2025 libbitcoin developers (see AUTHORS)
-//// *
-//// * This file is part of libbitcoin.
-//// *
-//// * This program is free software: you can redistribute it and/or modify
-//// * it under the terms of the GNU Affero General Public License as published by
-//// * the Free Software Foundation, either version 3 of the License, or
-//// * (at your option) any later version.
-//// *
-//// * This program is distributed in the hope that it will be useful,
-//// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-//// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//// * GNU Affero General Public License for more details.
-//// *
-//// * You should have received a copy of the GNU Affero General Public License
-//// * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//// */
-////#include "../../test.hpp"
-////#include "../../mocks/chunk_storage.hpp"
-////
-////BOOST_AUTO_TEST_SUITE(prevout_tests)
-////
-////// Setting block metadata on a shared instance creates test side effects.
-////// Chain objects such as blocks cannot be copied for side-effect-free metadata tests, since
-////// block copy takes shared pointer references. So create new test blocks for each metadata test.
-////#define DECLARE_BOGUS_BLOCK \
-////    const block bogus_block \
-////    { \
-////        header \
-////        { \
-////            0x31323334, \
-////            system::null_hash, \
-////            system::one_hash, \
-////            0x41424344, \
-////            0x51525354, \
-////            0x61626364 \
-////        }, \
-////        transactions \
-////        { \
-////            transaction \
-////            { \
-////                0x01, \
-////                inputs \
-////                { \
-////                    input \
-////                    { \
-////                        point{}, \
-////                        script{}, \
-////                        witness{}, \
-////                        0x02 \
-////                    }, \
-////                    input \
-////                    { \
-////                        point{}, \
-////                        script{}, \
-////                        witness{}, \
-////                        0x03 \
-////                    } \
-////                }, \
-////                outputs \
-////                { \
-////                    output \
-////                    { \
-////                        0x04, \
-////                        script{} \
-////                    } \
-////                }, \
-////                0x05 \
-////            }, \
-////            transaction \
-////            { \
-////                0x06, \
-////                inputs \
-////                { \
-////                    input \
-////                    { \
-////                        point{}, \
-////                        script{}, \
-////                        witness{}, \
-////                        0x07 \
-////                    }, \
-////                    input \
-////                    { \
-////                        point{}, \
-////                        script{}, \
-////                        witness{}, \
-////                        0x08 \
-////                    } \
-////                }, \
-////                outputs \
-////                { \
-////                    output \
-////                    { \
-////                        0x09, \
-////                        script{} \
-////                    } \
-////                }, \
-////                0x0a \
-////            }, \
-////            transaction \
-////            { \
-////                0x0b, \
-////                inputs \
-////                { \
-////                    input \
-////                    { \
-////                        point{}, \
-////                        script{}, \
-////                        witness{}, \
-////                        0x0c \
-////                    }, \
-////                    input \
-////                    { \
-////                        point{}, \
-////                        script{}, \
-////                        witness{}, \
-////                        0x0d \
-////                    } \
-////                }, \
-////                outputs \
-////                { \
-////                    output \
-////                    { \
-////                        0x0e, \
-////                        script{} \
-////                    } \
-////                }, \
-////                0x0f \
-////            } \
-////        } \
-////    }
-////
-////using namespace system;
-////using namespace system::chain;
-////constexpr auto terminal = schema::transaction::link::terminal;
-////constexpr table::prevout::record record1{ {}, 0x01020304_u32 };
-////constexpr table::prevout::record record2{ {}, 0xbaadf00d_u32 };
-////
-////BOOST_AUTO_TEST_CASE(prevout__put__at1__expected)
-////{
-////    test::chunk_storage head_store{};
-////    test::chunk_storage body_store{};
-////    table::prevout instance{ head_store, body_store, 5 };
-////    BOOST_REQUIRE(instance.create());
-////
-////    // Put at key.
-////    BOOST_REQUIRE(instance.put(3, record1));
-////    BOOST_REQUIRE(instance.put(42, record2));
-////
-////    // Dereference at key to get link.
-////    BOOST_REQUIRE_EQUAL(instance.at(3), 0u);
-////    BOOST_REQUIRE_EQUAL(instance.at(42), 1u);
-////    BOOST_REQUIRE(instance.at(0).is_terminal());
-////    BOOST_REQUIRE(instance.at(1).is_terminal());
-////    BOOST_REQUIRE(instance.at(2).is_terminal());
-////    BOOST_REQUIRE(instance.at(4).is_terminal());
-////}
-////
-////BOOST_AUTO_TEST_CASE(prevout__put__at2__expected)
-////{
-////    table::prevout::record element{};
-////    test::chunk_storage head_store{};
-////    test::chunk_storage body_store{};
-////    table::prevout instance{ head_store, body_store, 5 };
-////    BOOST_REQUIRE(instance.create());
-////
-////    // Put at key.
-////    BOOST_REQUIRE(instance.put(3, record1));
-////    BOOST_REQUIRE(instance.put(42, record2));
-////
-////    // Dereference at key to get element.
-////    BOOST_REQUIRE(instance.at(3, element));
-////    BOOST_REQUIRE(element == record1);
-////    BOOST_REQUIRE(instance.at(42, element));
-////    BOOST_REQUIRE(element == record2);
-////    BOOST_REQUIRE(!instance.at(0, element));
-////    BOOST_REQUIRE(!instance.at(1, element));
-////    BOOST_REQUIRE(!instance.at(2, element));
-////    BOOST_REQUIRE(!instance.at(4, element));
-////}
-////
-////BOOST_AUTO_TEST_CASE(prevout__put__exists__expected)
-////{
-////    test::chunk_storage head_store{};
-////    test::chunk_storage body_store{};
-////    table::prevout instance{ head_store, body_store, 5 };
-////    BOOST_REQUIRE(instance.create());
-////
-////    // Put at key.
-////    BOOST_REQUIRE(instance.put(3, record1));
-////    BOOST_REQUIRE(instance.put(42, record2));
-////
-////    // Exists at key.
-////    BOOST_REQUIRE(instance.exists(3));
-////    BOOST_REQUIRE(instance.exists(42));
-////    BOOST_REQUIRE(!instance.exists(0));
-////    BOOST_REQUIRE(!instance.exists(1));
-////    BOOST_REQUIRE(!instance.exists(2));
-////    BOOST_REQUIRE(!instance.exists(4));
-////}
-////
-////BOOST_AUTO_TEST_CASE(prevout__put__get__expected)
-////{
-////    table::prevout::record element{};
-////    test::chunk_storage head_store{};
-////    test::chunk_storage body_store{};
-////    table::prevout instance{ head_store, body_store, 5 };
-////    BOOST_REQUIRE(instance.create());
-////
-////    // Put at key.
-////    BOOST_REQUIRE(instance.put(3, record1));
-////    BOOST_REQUIRE(instance.put(42, record2));
-////
-////    // Get at link.
-////    BOOST_REQUIRE(instance.get(0, element));
-////    BOOST_REQUIRE(element == record1);
-////    BOOST_REQUIRE(instance.get(1, element));
-////    BOOST_REQUIRE(element == record2);
-////    BOOST_REQUIRE(!instance.get(2, element));
-////    BOOST_REQUIRE(!instance.get(3, element));
-////    BOOST_REQUIRE(!instance.get(4, element));
-////}
-////
+/**
+ * Copyright (c) 2011-2025 libbitcoin developers (see AUTHORS)
+ *
+ * This file is part of libbitcoin.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#include "../../test.hpp"
+#include "../../mocks/chunk_storage.hpp"
+
+BOOST_AUTO_TEST_SUITE(prevout_tests)
+
+// Setting block metadata on a shared instance creates test side effects.
+// Chain objects such as blocks cannot be copied for side-effect-free metadata tests, since
+// block copy takes shared pointer references. So create new test blocks for each metadata test.
+#define DECLARE_BOGUS_BLOCK \
+    const block bogus_block \
+    { \
+        header \
+        { \
+            0x31323334, \
+            system::null_hash, \
+            system::one_hash, \
+            0x41424344, \
+            0x51525354, \
+            0x61626364 \
+        }, \
+        transactions \
+        { \
+            transaction \
+            { \
+                0x01, \
+                inputs \
+                { \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x02 \
+                    }, \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x03 \
+                    } \
+                }, \
+                outputs \
+                { \
+                    output \
+                    { \
+                        0x04, \
+                        script{} \
+                    } \
+                }, \
+                0x05 \
+            }, \
+            transaction \
+            { \
+                0x06, \
+                inputs \
+                { \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x07 \
+                    }, \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x08 \
+                    } \
+                }, \
+                outputs \
+                { \
+                    output \
+                    { \
+                        0x09, \
+                        script{} \
+                    } \
+                }, \
+                0x0a \
+            }, \
+            transaction \
+            { \
+                0x0b, \
+                inputs \
+                { \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x0c \
+                    }, \
+                    input \
+                    { \
+                        point{}, \
+                        script{}, \
+                        witness{}, \
+                        0x0d \
+                    } \
+                }, \
+                outputs \
+                { \
+                    output \
+                    { \
+                        0x0e, \
+                        script{} \
+                    } \
+                }, \
+                0x0f \
+            } \
+        } \
+    }
+
+using namespace system;
+using namespace system::chain;
+using tx = schema::transaction::link;
+constexpr auto terminal = schema::transaction::link::terminal;
+const std::vector<tx::integer> conflicts1{ 0x01020304 };
+const std::vector<tx::integer> conflicts2{ 0xbaadf00d, 0x01020304 };
+
+BOOST_AUTO_TEST_CASE(prevout__put__at1__expected)
+{
+    DECLARE_BOGUS_BLOCK;
+    const table::prevout::slab_put_ref slab1{ {}, conflicts1, bogus_block };
+    const table::prevout::slab_put_ref slab2{ {}, conflicts2, bogus_block };
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    // Put at key.
+    BOOST_REQUIRE(instance.put(3, slab1));
+    BOOST_REQUIRE(instance.put(42, slab2));
+
+    // Dereference at key to get link.
+    BOOST_REQUIRE_EQUAL(instance.at(3), 0u);
+    BOOST_REQUIRE_EQUAL(instance.at(42), 37u);
+    BOOST_REQUIRE(instance.at(0).is_terminal());
+    BOOST_REQUIRE(instance.at(1).is_terminal());
+    BOOST_REQUIRE(instance.at(2).is_terminal());
+    BOOST_REQUIRE(instance.at(4).is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(prevout__put__at2__expected)
+{
+    DECLARE_BOGUS_BLOCK;
+    const table::prevout::slab_put_ref slab1{ {}, conflicts1, bogus_block };
+    const table::prevout::slab_put_ref slab2{ {}, conflicts2, bogus_block };
+    table::prevout::slab_get element{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    // Put at key.
+    BOOST_REQUIRE(instance.put(3, slab1));
+    BOOST_REQUIRE(instance.put(42, slab2));
+
+    // Dereference at key to get element.
+    BOOST_REQUIRE(instance.at(3, element));
+    BOOST_REQUIRE(element.conflicts == slab1.conflicts);
+    ////BOOST_REQUIRE(element.spends == spends1);
+    BOOST_REQUIRE(instance.at(42, element));
+    BOOST_REQUIRE(element.conflicts == slab2.conflicts);
+    ////BOOST_REQUIRE(element.spends == spends2);
+    BOOST_REQUIRE(!instance.at(0, element));
+    BOOST_REQUIRE(!instance.at(1, element));
+    BOOST_REQUIRE(!instance.at(2, element));
+    BOOST_REQUIRE(!instance.at(4, element));
+}
+
+BOOST_AUTO_TEST_CASE(prevout__put__exists__expected)
+{
+    DECLARE_BOGUS_BLOCK;
+    const table::prevout::slab_put_ref slab1{ {}, conflicts1, bogus_block };
+    const table::prevout::slab_put_ref slab2{ {}, conflicts2, bogus_block };
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    // Put at key.
+    BOOST_REQUIRE(instance.put(3, slab1));
+    BOOST_REQUIRE(instance.put(42, slab2));
+
+    // Exists at key.
+    BOOST_REQUIRE(instance.exists(3));
+    BOOST_REQUIRE(instance.exists(42));
+    BOOST_REQUIRE(!instance.exists(0));
+    BOOST_REQUIRE(!instance.exists(1));
+    BOOST_REQUIRE(!instance.exists(2));
+    BOOST_REQUIRE(!instance.exists(4));
+}
+
+BOOST_AUTO_TEST_CASE(prevout__put__get__expected)
+{
+    DECLARE_BOGUS_BLOCK;
+    const table::prevout::slab_put_ref slab1{ {}, conflicts1, bogus_block };
+    const table::prevout::slab_put_ref slab2{ {}, conflicts2, bogus_block };
+    table::prevout::slab_get element{};
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::prevout instance{ head_store, body_store, 5 };
+    BOOST_REQUIRE(instance.create());
+
+    // Put at key.
+    BOOST_REQUIRE(instance.put(3, slab1));
+    BOOST_REQUIRE_EQUAL(instance.at(3), 0u);
+    BOOST_REQUIRE(instance.put(42, slab2));
+    BOOST_REQUIRE_EQUAL(instance.at(42), 37u);
+
+    // Get at link.
+    BOOST_REQUIRE(instance.get(0, element));
+    BOOST_REQUIRE(element.conflicts == slab1.conflicts);
+    BOOST_REQUIRE(instance.get(37u, element));
+    BOOST_REQUIRE(element.conflicts == slab2.conflicts);
+}
+
 ////// values
 ////
 ////BOOST_AUTO_TEST_CASE(prevout__put__isolated_values__expected)
@@ -401,5 +415,5 @@
 ////    BOOST_REQUIRE_EQUAL(element.output_tx_fk(2), terminal);
 ////    BOOST_REQUIRE_EQUAL(element.output_tx_fk(3), in2_1.metadata.parent);
 ////}
-////
-////BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
