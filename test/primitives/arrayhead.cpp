@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__clear__get_body_count__zero)
     BOOST_REQUIRE_EQUAL(count, zero);
 }
 
-BOOST_AUTO_TEST_CASE(arrayhead__at__key__terminal)
+BOOST_AUTO_TEST_CASE(arrayhead__at__not_past_end__terminal)
 {
     test::chunk_storage store;
     test_header head{ store, buckets };
@@ -130,6 +130,16 @@ BOOST_AUTO_TEST_CASE(arrayhead__at__key__terminal)
     // create() allocates and fills buckets with terminal.
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.at(zero).is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(arrayhead__at__past_end__terminal)
+{
+    test::chunk_storage store;
+    test_header head{ store, buckets };
+
+    // create() allocates and fills buckets with terminal.
+    BOOST_REQUIRE(head.create());
+    BOOST_REQUIRE(head.at(buckets).is_terminal());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
