@@ -132,7 +132,13 @@ Link CLASS::at(size_t key) const NOEXCEPT
     if (link.is_terminal())
         return {};
 
-    const auto ptr = file_.get(link_to_position(link));
+    // Index may exceed header size, and file is intentionally unguarded.
+    // Position is head byte offset of word-aligned logical element (link).
+    const auto position = link_to_position(link);
+    if (position >= size())
+        return {};
+
+    const auto ptr = file_.get(position);
     if (is_null(ptr))
         return {};
 
