@@ -69,7 +69,7 @@ public:
     using outputs_ptr = system::chain::outputs_ptr;
     using transactions_ptr = system::chain::transactions_ptr;
     using chain_state = system::chain::chain_state;
-    using chain_state_ptr = system::chain::chain_state::ptr;
+    using chain_state_cptr = system::chain::chain_state::cptr;
     using chain_context = system::chain::context;
     using index = table::transaction::ix::integer;
     using sizes = std::pair<size_t, size_t>;
@@ -434,15 +434,15 @@ public:
     /// Context.
     /// -----------------------------------------------------------------------
 
-    chain_state_ptr get_chain_state(const system::settings& settings,
+    chain_state_cptr get_chain_state(const system::settings& settings,
         const hash_digest& hash) const NOEXCEPT;
-    chain_state_ptr get_candidate_chain_state(
+    chain_state_cptr get_candidate_chain_state(
         const system::settings& settings) const NOEXCEPT;
-    chain_state_ptr get_candidate_chain_state(const system::settings& settings,
+    chain_state_cptr get_candidate_chain_state(const system::settings& settings,
         size_t height) const NOEXCEPT;
-    chain_state_ptr get_candidate_chain_state(const system::settings& settings,
+    chain_state_cptr get_candidate_chain_state(const system::settings& settings,
         const header_link& link, size_t height) const NOEXCEPT;
-    chain_state_ptr get_candidate_chain_state(const system::settings& settings,
+    chain_state_cptr get_candidate_chain_state(const system::settings& settings,
         const header& header, const header_link& link,
         size_t height) const NOEXCEPT;
 
