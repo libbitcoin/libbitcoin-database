@@ -101,9 +101,9 @@ hashes CLASS::get_candidate_hashes(const heights& heights) const NOEXCEPT
 
     for (const auto& height: heights)
     {
-        const auto header_fk = to_candidate(height);
-        if (!header_fk.is_terminal())
-            out.push_back(get_header_key(header_fk));
+        const auto link = to_candidate(height);
+        if (!link.is_terminal())
+            out.push_back(get_header_key(link));
     }
 
     return out;
@@ -121,9 +121,9 @@ hashes CLASS::get_confirmed_hashes(const heights& heights) const NOEXCEPT
 
     for (const auto& height: heights)
     {
-        const auto header_fk = to_confirmed(height);
-        if (!header_fk.is_terminal())
-            out.push_back(get_header_key(header_fk));
+        const auto link = to_confirmed(height);
+        if (!link.is_terminal())
+            out.push_back(get_header_key(link));
     }
 
     return out;
