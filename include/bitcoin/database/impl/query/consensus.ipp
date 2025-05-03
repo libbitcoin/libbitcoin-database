@@ -29,6 +29,50 @@
 namespace libbitcoin {
 namespace database {
 
+// fork/work computations
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::get_work(uint256_t& fork_work,
+    const header_links& fork) const NOEXCEPT
+{
+    for (const auto& link: fork)
+    {
+        uint32_t bits{};
+        if (!get_bits(bits, link))
+            return false;
+
+        fork_work += system::chain::header::proof(bits);
+    }
+
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_strong(bool& strong, const uint256_t& fork_work,
+    size_t fork_point) const NOEXCEPT
+{
+    uint256_t work{};
+    for (auto height = get_top_confirmed(); height > fork_point;
+        --height)
+    {
+        uint32_t bits{};
+        if (!get_bits(bits, to_confirmed(height)))
+            return false;
+
+        // Not strong is confirmed work ever equals or exceeds fork_work.
+        work += system::chain::header::proof(bits);
+        if (work >= fork_work)
+        {
+            strong = false;
+            return true;
+        }
+    }
+
+    strong = true;
+    return true;
+}
+
 // unspent_duplicates (bip30)
 // ----------------------------------------------------------------------------
 

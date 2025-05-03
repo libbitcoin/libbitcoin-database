@@ -141,40 +141,6 @@ size_t CLASS::get_unassociated_count_above(size_t height,
     return count;
 }
 
-TEMPLATE
-hashes CLASS::get_candidate_hashes(const heights& heights) const NOEXCEPT
-{
-    hashes out{};
-    out.reserve(heights.size());
-    for (const auto& height: heights)
-    {
-        const auto header_fk = to_candidate(height);
-        if (!header_fk.is_terminal())
-            out.push_back(get_header_key(header_fk));
-    }
-
-    // Due to reorganization, top may decrease intermittently.
-    out.shrink_to_fit();
-    return out;
-}
-
-TEMPLATE
-hashes CLASS::get_confirmed_hashes(const heights& heights) const NOEXCEPT
-{
-    hashes out{};
-    out.reserve(heights.size());
-    for (const auto& height: heights)
-    {
-        const auto header_fk = to_confirmed(height);
-        if (!header_fk.is_terminal())
-            out.push_back(get_header_key(header_fk));
-    }
-
-    // Due to reorganization, top may decrease intermittently.
-    out.shrink_to_fit();
-    return out;
-}
-
 } // namespace database
 } // namespace libbitcoin
 

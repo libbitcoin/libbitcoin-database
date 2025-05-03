@@ -59,6 +59,80 @@ size_t CLASS::get_confirmed_size(size_t top) const NOEXCEPT
     return wire;
 }
 
+// shared_lock readers
+// ----------------------------------------------------------------------------
+// Protected against index pop (low contention) to ensure branch consistency.
+
+TEMPLATE
+header_links CLASS::get_candidate_fork(size_t top) const NOEXCEPT
+{
+    std::shared_lock interlock{ candidate_reorganization_mutex_ };
+    ///////////////////////////////////////////////////////////////////////////
+
+    header_links out{};
+    auto link = to_candidate(top);
+
+    // Terminal candidate from previously valid height implies regression.
+    // This is ok, it just means that the fork is no longer a candidate.
+    if (!link.is_terminal())
+    {
+        // Walk down candidates from top to fork point (highest common).
+        // Genesis is confirmed, and all ancestors must be non-terminal.
+        do
+        {
+            out.push_back(link);
+            link = to_candidate(--top);
+        }
+        while (link != to_confirmed(top));
+    }
+
+    return out;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+TEMPLATE
+hashes CLASS::get_candidate_hashes(const heights& heights) const NOEXCEPT
+{
+    hashes out{};
+    out.reserve(heights.size());
+
+    std::shared_lock interlock{ candidate_reorganization_mutex_ };
+    ///////////////////////////////////////////////////////////////////////////
+
+    for (const auto& height: heights)
+    {
+        const auto header_fk = to_candidate(height);
+        if (!header_fk.is_terminal())
+            out.push_back(get_header_key(header_fk));
+    }
+
+    return out;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+TEMPLATE
+hashes CLASS::get_confirmed_hashes(const heights& heights) const NOEXCEPT
+{
+    hashes out{};
+    out.reserve(heights.size());
+
+    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
+    ///////////////////////////////////////////////////////////////////////////
+
+    for (const auto& height: heights)
+    {
+        const auto header_fk = to_confirmed(height);
+        if (!header_fk.is_terminal())
+            out.push_back(get_header_key(header_fk));
+    }
+
+    return out;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+// writers
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 bool CLASS::initialize(const block& genesis) NOEXCEPT
 {
@@ -110,11 +184,14 @@ bool CLASS::pop_candidate() NOEXCEPT
     if (is_zero(top))
         return false;
 
+    // Clean single allocation failure (e.g. disk full).
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean single allocation failure (e.g. disk full).
+    std::unique_lock interlock{ candidate_reorganization_mutex_ };
+    ///////////////////////////////////////////////////////////////////////////
     return store_.candidate.truncate(top);
+    ///////////////////////////////////////////////////////////////////////////
     // ========================================================================
 }
 
@@ -163,7 +240,10 @@ bool CLASS::pop_confirmed() NOEXCEPT
 
     // Truncate cannot fail for disk full.
     // This truncate assumes no concurrent writes to the table.
+    std::unique_lock interlock{ confirmed_reorganization_mutex_ };
+    ///////////////////////////////////////////////////////////////////////////
     return store_.confirmed.truncate(top);
+    ///////////////////////////////////////////////////////////////////////////
     // ========================================================================
 }
 

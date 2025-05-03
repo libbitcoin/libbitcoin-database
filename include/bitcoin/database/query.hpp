@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_HPP
 #define LIBBITCOIN_DATABASE_QUERY_HPP
 
+#include <mutex>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -502,6 +503,9 @@ public:
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
     bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
+    bool get_work(uint256_t& work, const header_links& fork) const NOEXCEPT;
+    bool get_strong(bool& strong, const uint256_t& fork_work,
+        size_t fork_point) const NOEXCEPT;
 
     /// Height indexation.
     /// -----------------------------------------------------------------------
@@ -510,6 +514,7 @@ public:
     size_t get_candidate_size(size_t top) const NOEXCEPT;
     size_t get_confirmed_size() const NOEXCEPT;
     size_t get_confirmed_size(size_t top) const NOEXCEPT;
+    header_links get_candidate_fork(size_t top) const NOEXCEPT;
 
     bool initialize(const block& genesis) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
@@ -641,6 +646,8 @@ private:
         const Bool& element) NOEXCEPT;
 
     // These are thread safe.
+    mutable std::shared_mutex candidate_reorganization_mutex_{};
+    mutable std::shared_mutex confirmed_reorganization_mutex_{};
     Store& store_;
 };
 
