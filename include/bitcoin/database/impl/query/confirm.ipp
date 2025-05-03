@@ -157,7 +157,7 @@ bool CLASS::is_strong_block(const header_link& link) const NOEXCEPT
 ////
 ////    return error::success;
 ////}
-
+////
 ////TEMPLATE
 ////bool CLASS::is_locked(const point_link& link, uint32_t sequence,
 ////    const context& ctx) const NOEXCEPT
