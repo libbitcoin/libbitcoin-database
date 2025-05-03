@@ -332,9 +332,9 @@ memory_ptr map::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
 
 memory_ptr map::get(size_t offset) const NOEXCEPT
 {
-    // Obtaining logical before access prevents mutual mutex wait (deadlock).
-    // The store could remap between here and next line, but logical size
-    // only increases. Close zeroizes logical but must be unloaded to do so.
+    // Obtaining capacity before access prevents mutual mutex wait (deadlock).
+    // The store could remap between here and next line, but capacity only
+    // increases. Close zeroizes capacity but file must be unloaded to do so.
     // Truncate can reduce logical, but capacity is not affected. It is always
     // the case that ptr may write past current logical, so long as it never
     // writes past current capacity. Truncation is managed by callers.
