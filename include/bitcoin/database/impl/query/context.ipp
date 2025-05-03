@@ -163,7 +163,7 @@ bool CLASS::populate_all(chain_state::data& data,
 }
 
 TEMPLATE
-typename CLASS::chain_state_ptr CLASS::get_chain_state(
+typename CLASS::chain_state_cptr CLASS::get_chain_state(
     const system::settings& settings, const hash_digest& hash) const NOEXCEPT
 {
     const auto link = to_header(hash);
@@ -181,7 +181,7 @@ typename CLASS::chain_state_ptr CLASS::get_chain_state(
     if (!populate_all(data, settings, link, height))
         return nullptr;
 
-    return std::make_shared<chain_state>(std::move(data), settings);
+    return system::to_shared<chain_state>(std::move(data), settings);
 }
 
 // Chain state (candidate blocks).
@@ -290,21 +290,21 @@ bool CLASS::populate_candidate_all(chain_state::data& data,
 }
 
 TEMPLATE
-typename CLASS::chain_state_ptr CLASS::get_candidate_chain_state(
+typename CLASS::chain_state_cptr CLASS::get_candidate_chain_state(
     const system::settings& settings) const NOEXCEPT
 {
     return get_candidate_chain_state(settings, get_top_candidate());
 }
 
 TEMPLATE
-typename CLASS::chain_state_ptr CLASS::get_candidate_chain_state(
+typename CLASS::chain_state_cptr CLASS::get_candidate_chain_state(
     const system::settings& settings, size_t height) const NOEXCEPT
 {
     return get_candidate_chain_state(settings, to_candidate(height), height);
 }
 
 TEMPLATE
-typename CLASS::chain_state_ptr CLASS::get_candidate_chain_state(
+typename CLASS::chain_state_cptr CLASS::get_candidate_chain_state(
     const system::settings& settings, const header_link& link,
     size_t height) const NOEXCEPT
 {
@@ -314,7 +314,7 @@ typename CLASS::chain_state_ptr CLASS::get_candidate_chain_state(
 }
 
 TEMPLATE
-typename CLASS::chain_state_ptr CLASS::get_candidate_chain_state(
+typename CLASS::chain_state_cptr CLASS::get_candidate_chain_state(
     const system::settings& settings, const header& header,
     const header_link& link, size_t height) const NOEXCEPT
 {
