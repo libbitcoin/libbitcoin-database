@@ -221,7 +221,6 @@ struct txs
 // candidate and confirmed arrays
 struct height
 {
-    static constexpr size_t sk = zero;
     static constexpr size_t pk = schema::header::pk;
     using link = schema::header::link;
     static constexpr size_t minsize =
