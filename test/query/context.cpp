@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__genesis__expected
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
     {
-        131211u,
+        16523u,
         test::genesis.header().timestamp(),
         0u,
         0u,
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__block1__expected)
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
     {
-        131211u,                            // flags
+        16523u,                             // flags
         test::block1.header().timestamp(),  // timestamp
         test::genesis.header().timestamp(), // mtp
         1u,                                 // height
