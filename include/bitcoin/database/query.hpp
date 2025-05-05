@@ -658,7 +658,6 @@ private:
 #define CLASS query<Store>
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-BC_PUSH_WARNING(NO_USE_OF_MOVED_OBJECT)
 
 #include <bitcoin/database/impl/query/query.ipp>
 #include <bitcoin/database/impl/query/archive_read.ipp>
@@ -674,7 +673,6 @@ BC_PUSH_WARNING(NO_USE_OF_MOVED_OBJECT)
 #include <bitcoin/database/impl/query/translate.ipp>
 #include <bitcoin/database/impl/query/validate.ipp>
 
-BC_POP_WARNING()
 BC_POP_WARNING()
 
 #undef CLASS
