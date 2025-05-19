@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_INPUT_HPP
 #define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_INPUT_HPP
 
+#include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -87,8 +88,8 @@ struct input
         inline bool from_data(reader& source) NOEXCEPT
         {
             using namespace system;
-            script = to_shared(new chain::script{ source, true });
-            witness = to_shared(new chain::witness{ source, true });
+            script = std::make_shared<const chain::script>(source, true);
+            witness = std::make_shared<const chain::witness>(source, true);
             return source;
         }
 

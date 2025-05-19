@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_OUTPUT_HPP
 #define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_OUTPUT_HPP
 
+#include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -96,11 +97,14 @@ struct output
         {
             using namespace system;
             source.skip_bytes(tx::size);
-            output = to_shared(new chain::output
-            {
-                source.read_variable(),
-                to_shared<chain::script>(source, true)
-            });
+
+            // Required step to control order of stream read.
+            const auto prefix = source.read_variable();
+            output = std::make_shared<const chain::output>
+            (
+                prefix,
+                std::make_shared<const chain::script>(source, true)
+            );
 
             return source;
         }
