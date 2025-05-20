@@ -103,6 +103,7 @@ enum error_t : uint8_t
     block_unconfirmable,
     unassociated,
     unvalidated,
+    bypassed,
 
     /// confirmation (require not just context but prevouts and/or metadata).
     missing_previous_output,
