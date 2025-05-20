@@ -298,7 +298,7 @@ bool CLASS::set(const memory_ptr& ptr, const Link& link, const Key& key,
 
     const auto size = ptr->size();
     const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
-    if (position > size)
+    if (position >= size)
         return false;
 
     // Stream starts at record and the index is skipped for reader convenience.
@@ -495,7 +495,7 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
 
     const auto size = ptr->size();
     const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
-    if (position > size)
+    if (position >= size)
         return false;
 
     const auto offset = ptr->offset(start);
@@ -535,7 +535,7 @@ bool CLASS::write(Link& previous, const memory_ptr& ptr, const Link& link,
 
     const auto size = ptr->size();
     const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
-    if (position > size)
+    if (position >= size)
         return false;
 
     const auto offset = ptr->offset(start);
