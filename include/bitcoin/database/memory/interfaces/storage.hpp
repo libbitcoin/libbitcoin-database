@@ -78,9 +78,15 @@ public:
         uint8_t backfill) NOEXCEPT = 0;
 
     /// Get remap-protected r/w access to start/offset of memory map (or null).
+    /// Pointer is constrained to starting write within logical allocation.
     virtual memory_ptr get(size_t offset=zero) const NOEXCEPT = 0;
 
+    /// Get remap-protected r/w access to start/offset of memory map (or null).
+    /// Pointer is constrained to starting write within full capacity.
+    virtual memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT = 0;
+
     /// Get unprotected r/w access to start/offset of memory map (or null).
+    /// Pointer is constrained to starting write within full capacity.
     virtual memory::iterator get_raw(size_t offset=zero) const NOEXCEPT = 0;
 
     /// Get the fault condition.

@@ -168,7 +168,7 @@ bool CLASS::get(const memory_ptr& ptr, const Link& link,
 
     const auto size = ptr->size();
     const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
-    if (position > size)
+    if (position >= size)
         return false;
 
     const auto offset = ptr->offset(start);
@@ -203,6 +203,14 @@ bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
     using namespace system;
     const auto ptr = manager_.get(link);
+    return put(ptr, element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(const memory_ptr& ptr, const Element& element) NOEXCEPT
+{
+    using namespace system;
     if (!ptr)
         return false;
 
@@ -238,7 +246,7 @@ inline bool CLASS::commit(const Element& element) NOEXCEPT
     const auto link = manager_.allocate(0);
 
     // Write element into reserved but unallocated space.
-    if (!put(link, element))
+    if (!put(manager_.get_capacity(link), element))
         return false;
 
     // Allocate reserved and written element (exposes logically).

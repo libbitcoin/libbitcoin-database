@@ -332,13 +332,12 @@ memory_ptr map::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
 
 memory_ptr map::get(size_t offset) const NOEXCEPT
 {
-    // Obtaining capacity before access prevents mutual mutex wait (deadlock).
+    // Obtaining size before access prevents mutual mutex wait (deadlock).
     // The store could remap between here and next line, but capacity only
     // increases. Close zeroizes capacity but file must be unloaded to do so.
     // Truncate can reduce logical, but capacity is not affected. It is always
-    // the case that ptr may write past current logical, so long as it never
-    // writes past current capacity. Truncation is managed by callers.
-    const auto allocated = capacity();
+    // safe to write past current logical within current capacity.
+    const auto allocated = size();
 
     // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
     const auto ptr = std::make_shared<access>(remap_mutex_);
@@ -348,6 +347,20 @@ memory_ptr map::get(size_t offset) const NOEXCEPT
         return nullptr;
 
     // With offset > size the assignment is negative (stream is exhausted).
+    BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
+    ptr->assign(memory_map_ + offset, memory_map_ + allocated);
+    BC_POP_WARNING()
+    return ptr;
+}
+
+memory_ptr map::get_capacity(size_t offset) const NOEXCEPT
+{
+    // Same as get() but limited by capacity() vs. size().
+    const auto allocated = capacity();
+    const auto ptr = std::make_shared<access>(remap_mutex_);
+    if (!loaded_ || is_null(ptr))
+        return nullptr;
+
     BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
     ptr->assign(memory_map_ + offset, memory_map_ + allocated);
     BC_POP_WARNING()

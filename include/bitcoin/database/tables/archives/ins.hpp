@@ -76,7 +76,7 @@ struct ins
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(ix::size + sizeof(uint32_t) + in::size);
+            source.skip_bytes(sizeof(uint32_t) + in::size);
             parent_fk = source.read_little_endian<tx::integer, tx::size>();
             return source;
         }

@@ -69,7 +69,10 @@ header_links CLASS::get_candidate_fork(size_t top) const NOEXCEPT
     std::shared_lock interlock{ candidate_reorganization_mutex_ };
     ///////////////////////////////////////////////////////////////////////////
 
+    // Reservation may limit allocation to most common scenario.
     header_links out{};
+    out.reserve(one);
+    if (is_zero(top)) top = get_top_candidate();
     auto link = to_candidate(top);
 
     // Terminal candidate from previously valid height implies regression.
@@ -78,12 +81,40 @@ header_links CLASS::get_candidate_fork(size_t top) const NOEXCEPT
     {
         // Walk down candidates from top to fork point (highest common).
         // Genesis is confirmed, and all ancestors must be non-terminal.
-        do
+        while (link != to_confirmed(top))
         {
             out.push_back(link);
             link = to_candidate(--top);
         }
-        while (link != to_confirmed(top));
+    }
+
+    return out;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+TEMPLATE
+header_links CLASS::get_confirmed_fork(size_t top) const NOEXCEPT
+{
+    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Reservation may limit allocation to most common scenario.
+    header_links out{};
+    out.reserve(one);
+    if (is_zero(top)) top = get_top_confirmed();
+    auto link = to_confirmed(top);
+
+    // Terminal confirmed from previously valid height implies regression.
+    // This is ok, it just means that the fork is no longer confirmed.
+    if (!link.is_terminal())
+    {
+        // Walk down confirmeds from top to fork point (highest common).
+        // Genesis is confirmed, and all ancestors must be non-terminal.
+        while (link != to_candidate(top))
+        {
+            out.push_back(link);
+            link = to_confirmed(--top);
+        }
     }
 
     return out;

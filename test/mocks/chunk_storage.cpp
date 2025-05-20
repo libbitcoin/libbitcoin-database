@@ -194,6 +194,16 @@ memory_ptr chunk_storage::get(size_t offset) const NOEXCEPT
     const auto ptr = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
 
     // With offset > capacity the assignment is negative (stream is exhausted).
+    ptr->assign(get_raw(offset), get_raw(size()));
+
+    return ptr;
+}
+
+memory_ptr chunk_storage::get_capacity(size_t offset) const NOEXCEPT
+{
+    const auto ptr = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
+
+    // With offset > capacity the assignment is negative (stream is exhausted).
     ptr->assign(get_raw(offset), get_raw(capacity()));
 
     return ptr;
