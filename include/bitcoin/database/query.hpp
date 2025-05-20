@@ -517,6 +517,8 @@ public:
 
     header_links get_candidate_fork(size_t top=zero) const NOEXCEPT;
     header_links get_confirmed_fork(size_t top=zero) const NOEXCEPT;
+    header_links get_validated_fork(size_t& fork_point,
+        size_t top_checkpoint=zero) const NOEXCEPT;
 
     bool initialize(const block& genesis) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;

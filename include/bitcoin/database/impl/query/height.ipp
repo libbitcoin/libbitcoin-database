@@ -66,20 +66,21 @@ size_t CLASS::get_confirmed_size(size_t top) const NOEXCEPT
 TEMPLATE
 header_links CLASS::get_candidate_fork(size_t top) const NOEXCEPT
 {
-    std::shared_lock interlock{ candidate_reorganization_mutex_ };
-    ///////////////////////////////////////////////////////////////////////////
-
     // Reservation may limit allocation to most common scenario.
     header_links out{};
     out.reserve(one);
-    if (is_zero(top)) top = get_top_candidate();
-    auto link = to_candidate(top);
+
+    std::shared_lock interlock{ candidate_reorganization_mutex_ };
+    ///////////////////////////////////////////////////////////////////////////
+    if (is_zero(top))
+        top = get_top_candidate();
 
     // Terminal candidate from previously valid height implies regression.
     // This is ok, it just means that the fork is no longer a candidate.
+    auto link = to_candidate(top);
     if (!link.is_terminal())
     {
-        // Walk down candidates from top to fork point (highest common).
+        // Walk down candidates from top to above fork point (highest common).
         // Genesis is confirmed, and all ancestors must be non-terminal.
         while (link != to_confirmed(top))
         {
@@ -95,26 +96,52 @@ header_links CLASS::get_candidate_fork(size_t top) const NOEXCEPT
 TEMPLATE
 header_links CLASS::get_confirmed_fork(size_t top) const NOEXCEPT
 {
-    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
-    ///////////////////////////////////////////////////////////////////////////
-
     // Reservation may limit allocation to most common scenario.
     header_links out{};
     out.reserve(one);
-    if (is_zero(top)) top = get_top_confirmed();
-    auto link = to_confirmed(top);
+
+    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
+    ///////////////////////////////////////////////////////////////////////////
+    if (is_zero(top))
+        top = get_top_confirmed();
 
     // Terminal confirmed from previously valid height implies regression.
     // This is ok, it just means that the fork is no longer confirmed.
+    auto link = to_confirmed(top);
     if (!link.is_terminal())
     {
-        // Walk down confirmeds from top to fork point (highest common).
+        // Walk down confirmeds from top to above fork point (highest common).
         // Genesis is confirmed, and all ancestors must be non-terminal.
         while (link != to_candidate(top))
         {
             out.push_back(link);
             link = to_confirmed(--top);
         }
+    }
+
+    return out;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+TEMPLATE
+header_links CLASS::get_validated_fork(size_t& fork_point,
+    size_t top_checkpoint) const NOEXCEPT
+{
+    // Reservation may limit allocation to most common scenario.
+    header_links out{};
+    out.reserve(one);
+
+    std::shared_lock interlock{ candidate_reorganization_mutex_ };
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Walk up candidates from above fork point (highest common) to top.
+    fork_point = get_fork();
+    auto height = add1(fork_point);
+    auto link = to_candidate(height);
+    while (is_block_validated(link, height, top_checkpoint))
+    {
+        out.push_back(link);
+        link = to_candidate(++height);
     }
 
     return out;
