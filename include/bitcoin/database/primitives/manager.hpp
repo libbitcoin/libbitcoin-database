@@ -69,13 +69,16 @@ public:
     /// For slab count must include bytes (link + data) [key is part of data].
     Link allocate(const Link& count) NOEXCEPT;
 
-    /// Return memory object for record at specified position (null possible).
-    /// Obtaining memory object is considered const access despite fact that
-    /// memory is writeable. Non-const access implies memory map modify.
-    inline memory_ptr get(const Link& link) const NOEXCEPT;
-
     /// Return memory object for full memory map (null only if oom or unloaded).
     inline memory_ptr get() const NOEXCEPT;
+
+    /// Return memory object for record at specified position (null possible).
+    /// Pointer is constrained to starting write within logical allocation.
+    inline memory_ptr get(const Link& link) const NOEXCEPT;
+
+    /// Return memory object for record at specified position (null possible).
+    /// Pointer is constrained to starting write within full capacity.
+    inline memory_ptr get_capacity(const Link& link) const NOEXCEPT;
 
     /// Get the fault condition.
     code get_fault() const NOEXCEPT;

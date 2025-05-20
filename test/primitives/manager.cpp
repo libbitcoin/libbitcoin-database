@@ -245,21 +245,25 @@ BOOST_AUTO_TEST_CASE(manager__truncate__overflow_record__false_unchanged)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(manager__truncate__half_full_record__true_changed)
+BOOST_AUTO_TEST_CASE(manager__truncate__half_full_record__true_logical_size_changed)
 {
-    data_chunk buffer(14, 0xff);
+    constexpr auto body = 14u;
+    data_chunk buffer(body, 0xff);
     test::chunk_storage file(buffer);
     manager<linkage<2>, key0, 5u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE(instance.truncate(1));
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.capacity(), body);
 
     // Can only truncate to logical limit.
     BOOST_REQUIRE(!instance.truncate(2));
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.capacity(), body);
 
     BOOST_REQUIRE(instance.truncate(0));
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE_EQUAL(instance.capacity(), body);
     BOOST_REQUIRE(!instance.get_fault());
 }
 
@@ -311,10 +315,13 @@ BOOST_AUTO_TEST_CASE(manager__allocate__non_empty_record__expected)
 
 BOOST_AUTO_TEST_CASE(manager__get__terminal_record__terminal)
 {
-    data_chunk buffer(14, 0xff);
+    constexpr auto body = 14u;
+    constexpr auto element = 5u;
+    data_chunk buffer(body, 0xff);
     test::chunk_storage file(buffer);
-    const manager<linkage<2>, key0, 5u> instance(file);
+    const manager<linkage<2>, key0, element> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.get(1)->size(), (body - 1 * element));
     BOOST_REQUIRE(!instance.get(linkage<2>::terminal));
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -327,11 +334,49 @@ BOOST_AUTO_TEST_CASE(manager__get__record__expected)
         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
     };
 
+    constexpr auto element = 6u;
+    const auto body = buffer.size();
+    const auto expected = to_signed(body - 1u * element);
     test::chunk_storage file(buffer);
-    const manager<linkage<2>, key0, 6u> instance(file);
+    const manager<linkage<2>, key0, element> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.get(1)->size(), expected);
     BOOST_REQUIRE_EQUAL(*instance.get(0)->begin(), 0x00_u8);
     BOOST_REQUIRE_EQUAL(*instance.get(1)->begin(), 0x06_u8);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(manager__get_capacity__terminal_record__terminal)
+{
+    constexpr auto body = 14u;
+    constexpr auto element = 5u;
+    constexpr auto expected = to_signed(body - 1u * element);
+    data_chunk buffer(body, 0xff);
+    test::chunk_storage file(buffer);
+    const manager<linkage<2>, key0, element> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.get(1)->size(), expected);
+    BOOST_REQUIRE(!instance.get_capacity(linkage<2>::terminal));
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(manager__get_capacity__record__expected)
+{
+    data_chunk buffer
+    {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+    };
+
+    constexpr auto element = 6u;
+    const auto body = buffer.size();
+    const auto expected = to_signed(body - 1u * element);
+    test::chunk_storage file(buffer);
+    manager<linkage<2>, key0, element> instance(file);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.get(1)->size(), expected);
+    BOOST_REQUIRE_EQUAL(*instance.get_capacity(0)->begin(), 0x00_u8);
+    BOOST_REQUIRE_EQUAL(*instance.get_capacity(1)->begin(), 0x06_u8);
     BOOST_REQUIRE(!instance.get_fault());
 }
 

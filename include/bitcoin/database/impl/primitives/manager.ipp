@@ -112,6 +112,16 @@ inline memory_ptr CLASS::get(const Link& value) const NOEXCEPT
     return file_.get(link_to_position(value));
 }
 
+TEMPLATE
+inline memory_ptr CLASS::get_capacity(const Link& value) const NOEXCEPT
+{
+    if (value.is_terminal())
+        return nullptr;
+
+    // memory.size() may be negative (stream treats as exhausted).
+    return file_.get_capacity(link_to_position(value));
+}
+
 // Errors.
 // ----------------------------------------------------------------------------
 
