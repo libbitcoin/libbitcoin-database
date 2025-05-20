@@ -47,9 +47,13 @@ struct transaction
         bytes::size +
         sizeof(uint32_t);
 
-    static constexpr size_t skip_to_outs =
+    static constexpr size_t skip_to_ins =
         skip_to_version +
         sizeof(uint32_t);
+
+    static constexpr size_t skip_to_outs =
+        skip_to_ins +
+        ix::size;
 
     struct record
       : public schema::transaction
@@ -185,7 +189,7 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_outs);
+            source.skip_bytes(skip_to_ins);
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
             return source;
@@ -200,7 +204,7 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_outs);
+            source.skip_bytes(skip_to_ins);
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
             outs_count = source.read_little_endian<ix::integer, ix::size>();
             point_fk   = source.read_little_endian<ins::integer, ins::size>();
@@ -246,7 +250,7 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_outs);
+            source.skip_bytes(skip_to_ins);
             number = source.read_little_endian<ix::integer, ix::size>();
 
             if (index >= number)
@@ -271,7 +275,7 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_outs + ix::size);
+            source.skip_bytes(skip_to_outs);
             number = source.read_little_endian<ix::integer, ix::size>();
 
             if (index >= number)
