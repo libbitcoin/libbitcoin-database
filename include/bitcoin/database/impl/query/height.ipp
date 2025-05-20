@@ -148,8 +148,8 @@ hashes CLASS::get_candidate_hashes(const heights& heights) const NOEXCEPT
     hashes out{};
     out.reserve(heights.size());
 
-    std::shared_lock interlock{ candidate_reorganization_mutex_ };
     ///////////////////////////////////////////////////////////////////////////
+    std::shared_lock interlock{ candidate_reorganization_mutex_ };
 
     for (const auto& height: heights)
     {
@@ -168,8 +168,8 @@ hashes CLASS::get_confirmed_hashes(const heights& heights) const NOEXCEPT
     hashes out{};
     out.reserve(heights.size());
 
-    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
     ///////////////////////////////////////////////////////////////////////////
+    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
 
     for (const auto& height: heights)
     {
@@ -240,8 +240,8 @@ bool CLASS::pop_candidate() NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    std::unique_lock interlock{ candidate_reorganization_mutex_ };
     ///////////////////////////////////////////////////////////////////////////
+    std::unique_lock interlock{ candidate_reorganization_mutex_ };
     return store_.candidate.truncate(top);
     ///////////////////////////////////////////////////////////////////////////
     // ========================================================================
@@ -292,8 +292,8 @@ bool CLASS::pop_confirmed() NOEXCEPT
 
     // Truncate cannot fail for disk full.
     // This truncate assumes no concurrent writes to the table.
-    std::unique_lock interlock{ confirmed_reorganization_mutex_ };
     ///////////////////////////////////////////////////////////////////////////
+    std::unique_lock interlock{ confirmed_reorganization_mutex_ };
     return store_.confirmed.truncate(top);
     ///////////////////////////////////////////////////////////////////////////
     // ========================================================================
