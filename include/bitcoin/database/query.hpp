@@ -582,17 +582,17 @@ protected:
     /// Consensus.
     /// -----------------------------------------------------------------------
 
-    // Called by block_confirmable (check bip30)
+    /// Called by block_confirmable (check bip30)
     bool is_spent_coinbase(const tx_link& link) const NOEXCEPT;
     code unspent_duplicates(const header_link& coinbase,
         const context& ctx) const NOEXCEPT;
 
-    // Called by block_confirmable (populate and check double spends).
+    /// Called by block_confirmable (populate and check double spends).
     error::error_t unspendable(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;
 
-    // Called by block_confirmable (populate and check double spends).
+    /// Called by block_confirmable (populate and check double spends).
     code populate_prevouts(point_sets& sets, size_t points,
         const header_link& link) const NOEXCEPT;
 
