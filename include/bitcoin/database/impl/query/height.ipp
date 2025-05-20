@@ -64,83 +64,77 @@ size_t CLASS::get_confirmed_size(size_t top) const NOEXCEPT
 // Protected against index pop (low contention) to ensure branch consistency.
 
 TEMPLATE
-header_links CLASS::get_candidate_fork(size_t top) const NOEXCEPT
+header_links CLASS::get_candidate_fork(size_t& fork_point) const NOEXCEPT
 {
-    // Reservation may limit allocation to most common scenario.
+    // Reservation may limit allocation to most common single block scenario.
     header_links out{};
     out.reserve(one);
 
+    ///////////////////////////////////////////////////////////////////////////
     std::shared_lock interlock{ candidate_reorganization_mutex_ };
-    ///////////////////////////////////////////////////////////////////////////
-    if (is_zero(top))
-        top = get_top_candidate();
 
-    // Terminal candidate from previously valid height implies regression.
-    // This is ok, it just means that the fork is no longer a candidate.
-    auto link = to_candidate(top);
-    if (!link.is_terminal())
-    {
-        // Walk down candidates from top to above fork point (highest common).
-        // Genesis is confirmed, and all ancestors must be non-terminal.
-        while (link != to_confirmed(top))
-        {
-            out.push_back(link);
-            link = to_candidate(--top);
-        }
-    }
-
-    return out;
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-TEMPLATE
-header_links CLASS::get_confirmed_fork(size_t top) const NOEXCEPT
-{
-    // Reservation may limit allocation to most common scenario.
-    header_links out{};
-    out.reserve(one);
-
-    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
-    ///////////////////////////////////////////////////////////////////////////
-    if (is_zero(top))
-        top = get_top_confirmed();
-
-    // Terminal confirmed from previously valid height implies regression.
-    // This is ok, it just means that the fork is no longer confirmed.
-    auto link = to_confirmed(top);
-    if (!link.is_terminal())
-    {
-        // Walk down confirmeds from top to above fork point (highest common).
-        // Genesis is confirmed, and all ancestors must be non-terminal.
-        while (link != to_candidate(top))
-        {
-            out.push_back(link);
-            link = to_confirmed(--top);
-        }
-    }
-
-    return out;
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-TEMPLATE
-header_links CLASS::get_validated_fork(size_t& fork_point,
-    size_t top_checkpoint) const NOEXCEPT
-{
-    // Reservation may limit allocation to most common scenario.
-    header_links out{};
-    out.reserve(one);
-
-    std::shared_lock interlock{ candidate_reorganization_mutex_ };
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Walk up candidates from above fork point (highest common) to top.
     fork_point = get_fork();
     auto height = add1(fork_point);
     auto link = to_candidate(height);
-    while (is_block_validated(link, height, top_checkpoint))
+    while (!link.is_terminal())
     {
         out.push_back(link);
+        link = to_candidate(++height);
+    }
+
+    return out;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+TEMPLATE
+header_links CLASS::get_confirmed_fork(const header_link& fork) const NOEXCEPT
+{
+    if (fork.is_terminal())
+        return {};
+
+    // Reservation may limit allocation to most common single block scenario.
+    header_links out{};
+    out.reserve(one);
+
+    ///////////////////////////////////////////////////////////////////////////
+    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
+
+    // Verify fork block is still confirmed and get its height.
+    auto height = get_height(fork);
+    auto link = to_confirmed(height);
+    if (link != fork)
+        return out;
+
+    // First link above fork.
+    link = to_confirmed(++height);
+    while (!link.is_terminal())
+    {
+        out.push_back(link);
+        link = to_confirmed(++height);
+    }
+
+    return out;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+TEMPLATE
+header_states CLASS::get_validated_fork(size_t& fork_point,
+    size_t top_checkpoint) const NOEXCEPT
+{
+    // Reservation may limit allocation to most common scenario.
+    header_states out{};
+    out.reserve(one);
+    code ec{};
+
+    ///////////////////////////////////////////////////////////////////////////
+    std::shared_lock interlock{ candidate_reorganization_mutex_ };
+
+    fork_point = get_fork();
+    auto height = add1(fork_point);
+    auto link = to_candidate(height);
+    while (is_block_validated(ec, link, height, top_checkpoint))
+    {
+        out.emplace_back(link, ec);
         link = to_candidate(++height);
     }
 

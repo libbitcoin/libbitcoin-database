@@ -518,9 +518,9 @@ public:
     size_t get_confirmed_size() const NOEXCEPT;
     size_t get_confirmed_size(size_t top) const NOEXCEPT;
 
-    header_links get_candidate_fork(size_t top=zero) const NOEXCEPT;
-    header_links get_confirmed_fork(size_t top=zero) const NOEXCEPT;
-    header_links get_validated_fork(size_t& fork_point,
+    header_links get_confirmed_fork(const header_link& fork) const NOEXCEPT;
+    header_links get_candidate_fork(size_t& fork_point) const NOEXCEPT;
+    header_states get_validated_fork(size_t& fork_point,
         size_t top_checkpoint=zero) const NOEXCEPT;
 
     bool initialize(const block& genesis) NOEXCEPT;
