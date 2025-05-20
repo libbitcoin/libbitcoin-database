@@ -203,6 +203,14 @@ bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
     using namespace system;
     const auto ptr = manager_.get(link);
+    return put(ptr, element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(const memory_ptr& ptr, const Element& element) NOEXCEPT
+{
+    using namespace system;
     if (!ptr)
         return false;
 
