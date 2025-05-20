@@ -94,11 +94,17 @@
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\nomap.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\archive.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\archive_read.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\archive_write.cpp" />
     <ClCompile Include="..\..\..\..\test\query\confirm.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\consensus.cpp" />
     <ClCompile Include="..\..\..\..\test\query\context.cpp" />
     <ClCompile Include="..\..\..\..\test\query\extent.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\height.cpp">
+      <ObjectFileName>$(IntDir)test_query_height.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\initialize.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\objects.cpp" />
     <ClCompile Include="..\..\..\..\test\query\optional.cpp" />
     <ClCompile Include="..\..\..\..\test\query\translate.cpp" />
     <ClCompile Include="..\..\..\..\test\query\validate.cpp" />
@@ -115,7 +121,9 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\prevout.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
+      <ObjectFileName>$(IntDir)test_tables_indexes_height.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\optional\address.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\optional\filter_bk.cpp" />
