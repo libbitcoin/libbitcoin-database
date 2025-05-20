@@ -569,6 +569,8 @@ protected:
     /// Confirm.
     /// -----------------------------------------------------------------------
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
+    bool is_block_validated(const header_link& link, size_t height,
+        size_t checkpoint) const NOEXCEPT;
 
     /// Consensus.
     /// -----------------------------------------------------------------------
