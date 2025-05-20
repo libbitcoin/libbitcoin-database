@@ -402,13 +402,13 @@ inline bool CLASS::put(bool& duplicate, const memory_ptr& ptr,
     if (previous.is_terminal())
     {
         duplicate = false;
-        negative_.fetch_add(one, std::memory_order_relaxed);
+        ////negative_.fetch_add(one, std::memory_order_relaxed);
     }
     else
     {
         // Search the previous conflicts to determine if actual duplicate.
         duplicate = !first(ptr, previous, key).is_terminal();
-        positive_.fetch_add(one, std::memory_order_relaxed);
+        ////positive_.fetch_add(one, std::memory_order_relaxed);
     }
 
     return true;
