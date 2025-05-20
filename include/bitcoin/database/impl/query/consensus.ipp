@@ -34,12 +34,12 @@ namespace database {
 
 TEMPLATE
 bool CLASS::get_work(uint256_t& fork_work,
-    const header_links& fork) const NOEXCEPT
+    const header_states& states) const NOEXCEPT
 {
-    for (const auto& link: fork)
+    for (const auto& state: states)
     {
         uint32_t bits{};
-        if (!get_bits(bits, link))
+        if (!get_bits(bits, state.link))
             return false;
 
         fork_work += system::chain::header::proof(bits);

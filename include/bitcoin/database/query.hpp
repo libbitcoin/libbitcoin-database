@@ -50,6 +50,9 @@ using point_links = std::vector<point_link::integer>;
 using two_counts = std::pair<size_t, size_t>;
 using point_key = table::point::key;
 
+struct header_state{ header_link link; code code; };
+using header_states = std::vector<header_state>;
+
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>
 class query
@@ -503,7 +506,7 @@ public:
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
     bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
-    bool get_work(uint256_t& work, const header_links& fork) const NOEXCEPT;
+    bool get_work(uint256_t& work, const header_states& states) const NOEXCEPT;
     bool get_strong(bool& strong, const uint256_t& fork_work,
         size_t fork_point) const NOEXCEPT;
 
