@@ -101,9 +101,15 @@ public:
         uint8_t backfill) NOEXCEPT override;
 
     /// Get remap-protected r/w access to start/offset of memory map (or null).
+    /// Pointer is constrained to starting write within logical allocation.
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
+    /// Get remap-protected r/w access to start/offset of memory map (or null).
+    /// Pointer is constrained to starting write within full capacity.
+    memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT override;
+
     /// Get unprotected r/w access to start/offset of memory map (or null).
+    /// Pointer is constrained to starting write within logical allocation.
     memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override;
 
     /// Get the fault condition.
