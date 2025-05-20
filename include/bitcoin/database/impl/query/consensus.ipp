@@ -33,21 +33,6 @@ namespace database {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::is_block_validated(const header_link& link, size_t height,
-    size_t checkpoint) const NOEXCEPT
-{
-    const auto is_valid_state = [this](const auto& link) NOEXCEPT
-    {
-        // Don't use block state because associated is factored out below.
-        const auto ec = get_header_state(link);
-        return (ec == error::block_valid) || (ec == error::block_confirmable);
-    };
-
-    return (height <= checkpoint && is_associated(link)) ||
-        is_milestone(link) || is_valid_state(link);
-}
-
-TEMPLATE
 bool CLASS::get_work(uint256_t& fork_work,
     const header_links& fork) const NOEXCEPT
 {

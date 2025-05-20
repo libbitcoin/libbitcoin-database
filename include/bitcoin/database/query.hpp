@@ -568,11 +568,13 @@ protected:
     inline bool is_sufficient(const context& current,
         const context& evaluated) const NOEXCEPT;
 
+    /// Called by confirmation chaser.
+    bool is_block_validated(code& state, const header_link& link,
+        size_t height, size_t checkpoint) const NOEXCEPT;
+
     /// Confirm.
     /// -----------------------------------------------------------------------
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
-    bool is_block_validated(const header_link& link, size_t height,
-        size_t checkpoint) const NOEXCEPT;
 
     /// Consensus.
     /// -----------------------------------------------------------------------

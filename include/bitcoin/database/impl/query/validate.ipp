@@ -132,6 +132,31 @@ code CLASS::get_block_state(uint64_t& fees,
 }
 
 TEMPLATE
+bool CLASS::is_block_validated(code& state, const header_link& link,
+    size_t height, size_t checkpoint) const NOEXCEPT
+{
+    if (height <= checkpoint || is_milestone(link))
+    {
+        if (is_associated(link))
+        {
+            state = error::bypassed;
+            return true;
+        }
+        else
+        {
+            state = error::unassociated;
+            return false;
+        }
+    }
+    else
+    {
+        state = get_header_state(link);
+        return state == error::block_valid
+            || state == error::block_confirmable;
+    }
+}
+
+TEMPLATE
 code CLASS::get_tx_state(const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
