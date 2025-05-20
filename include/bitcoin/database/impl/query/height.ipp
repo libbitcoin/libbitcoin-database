@@ -64,28 +64,22 @@ size_t CLASS::get_confirmed_size(size_t top) const NOEXCEPT
 // Protected against index pop (low contention) to ensure branch consistency.
 
 TEMPLATE
-header_links CLASS::get_candidate_fork(size_t top) const NOEXCEPT
+header_links CLASS::get_candidate_fork(size_t& fork_point) const NOEXCEPT
 {
-    std::shared_lock interlock{ candidate_reorganization_mutex_ };
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Reservation may limit allocation to most common scenario.
+    // Reservation may limit allocation to most common single block scenario.
     header_links out{};
     out.reserve(one);
-    if (is_zero(top)) top = get_top_candidate();
-    auto link = to_candidate(top);
 
-    // Terminal candidate from previously valid height implies regression.
-    // This is ok, it just means that the fork is no longer a candidate.
-    if (!link.is_terminal())
+    ///////////////////////////////////////////////////////////////////////////
+    std::shared_lock interlock{ candidate_reorganization_mutex_ };
+
+    fork_point = get_fork();
+    auto height = add1(fork_point);
+    auto link = to_candidate(height);
+    while (!link.is_terminal())
     {
-        // Walk down candidates from top to fork point (highest common).
-        // Genesis is confirmed, and all ancestors must be non-terminal.
-        while (link != to_confirmed(top))
-        {
-            out.push_back(link);
-            link = to_candidate(--top);
-        }
+        out.push_back(link);
+        link = to_candidate(++height);
     }
 
     return out;
@@ -93,28 +87,55 @@ header_links CLASS::get_candidate_fork(size_t top) const NOEXCEPT
 }
 
 TEMPLATE
-header_links CLASS::get_confirmed_fork(size_t top) const NOEXCEPT
+header_links CLASS::get_confirmed_fork(const header_link& fork) const NOEXCEPT
 {
-    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
-    ///////////////////////////////////////////////////////////////////////////
+    if (fork.is_terminal())
+        return {};
 
-    // Reservation may limit allocation to most common scenario.
+    // Reservation may limit allocation to most common single block scenario.
     header_links out{};
     out.reserve(one);
-    if (is_zero(top)) top = get_top_confirmed();
-    auto link = to_confirmed(top);
 
-    // Terminal confirmed from previously valid height implies regression.
-    // This is ok, it just means that the fork is no longer confirmed.
-    if (!link.is_terminal())
+    ///////////////////////////////////////////////////////////////////////////
+    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
+
+    // Verify fork block is still confirmed and get its height.
+    auto height = get_height(fork);
+    auto link = to_confirmed(height);
+    if (link != fork)
+        return out;
+
+    // First link above fork.
+    link = to_confirmed(++height);
+    while (!link.is_terminal())
     {
-        // Walk down confirmeds from top to fork point (highest common).
-        // Genesis is confirmed, and all ancestors must be non-terminal.
-        while (link != to_candidate(top))
-        {
-            out.push_back(link);
-            link = to_confirmed(--top);
-        }
+        out.push_back(link);
+        link = to_confirmed(++height);
+    }
+
+    return out;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+TEMPLATE
+header_states CLASS::get_validated_fork(size_t& fork_point,
+    size_t top_checkpoint) const NOEXCEPT
+{
+    // Reservation may limit allocation to most common scenario.
+    header_states out{};
+    out.reserve(one);
+    code ec{};
+
+    ///////////////////////////////////////////////////////////////////////////
+    std::shared_lock interlock{ candidate_reorganization_mutex_ };
+
+    fork_point = get_fork();
+    auto height = add1(fork_point);
+    auto link = to_candidate(height);
+    while (is_block_validated(ec, link, height, top_checkpoint))
+    {
+        out.emplace_back(link, ec);
+        link = to_candidate(++height);
     }
 
     return out;
@@ -127,8 +148,8 @@ hashes CLASS::get_candidate_hashes(const heights& heights) const NOEXCEPT
     hashes out{};
     out.reserve(heights.size());
 
-    std::shared_lock interlock{ candidate_reorganization_mutex_ };
     ///////////////////////////////////////////////////////////////////////////
+    std::shared_lock interlock{ candidate_reorganization_mutex_ };
 
     for (const auto& height: heights)
     {
@@ -147,8 +168,8 @@ hashes CLASS::get_confirmed_hashes(const heights& heights) const NOEXCEPT
     hashes out{};
     out.reserve(heights.size());
 
-    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
     ///////////////////////////////////////////////////////////////////////////
+    std::shared_lock interlock{ confirmed_reorganization_mutex_ };
 
     for (const auto& height: heights)
     {
@@ -219,8 +240,8 @@ bool CLASS::pop_candidate() NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    std::unique_lock interlock{ candidate_reorganization_mutex_ };
     ///////////////////////////////////////////////////////////////////////////
+    std::unique_lock interlock{ candidate_reorganization_mutex_ };
     return store_.candidate.truncate(top);
     ///////////////////////////////////////////////////////////////////////////
     // ========================================================================
@@ -271,8 +292,8 @@ bool CLASS::pop_confirmed() NOEXCEPT
 
     // Truncate cannot fail for disk full.
     // This truncate assumes no concurrent writes to the table.
-    std::unique_lock interlock{ confirmed_reorganization_mutex_ };
     ///////////////////////////////////////////////////////////////////////////
+    std::unique_lock interlock{ confirmed_reorganization_mutex_ };
     return store_.confirmed.truncate(top);
     ///////////////////////////////////////////////////////////////////////////
     // ========================================================================

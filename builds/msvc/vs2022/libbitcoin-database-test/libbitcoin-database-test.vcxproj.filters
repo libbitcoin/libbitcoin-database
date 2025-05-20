@@ -105,10 +105,16 @@
     <ClCompile Include="..\..\..\..\test\primitives\nomap.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\archive.cpp">
+    <ClCompile Include="..\..\..\..\test\query\archive_read.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\archive_write.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\confirm.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\consensus.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\context.cpp">
@@ -117,7 +123,13 @@
     <ClCompile Include="..\..\..\..\test\query\extent.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\height.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\initialize.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\objects.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\optional.cpp">

@@ -95,6 +95,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { block_unconfirmable, "block unconfirmable" },
     { unassociated, "unassociated" },
     { unvalidated, "unvalidated" },
+    { bypassed, "bypassed" },
 
     // states
     { missing_previous_output, "missing previous output" },

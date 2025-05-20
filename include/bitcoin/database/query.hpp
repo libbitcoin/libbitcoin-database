@@ -50,6 +50,9 @@ using point_links = std::vector<point_link::integer>;
 using two_counts = std::pair<size_t, size_t>;
 using point_key = table::point::key;
 
+struct header_state{ header_link link; code ec; };
+using header_states = std::vector<header_state>;
+
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>
 class query
@@ -503,7 +506,7 @@ public:
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
     bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
-    bool get_work(uint256_t& work, const header_links& fork) const NOEXCEPT;
+    bool get_work(uint256_t& work, const header_states& states) const NOEXCEPT;
     bool get_strong(bool& strong, const uint256_t& fork_work,
         size_t fork_point) const NOEXCEPT;
 
@@ -515,8 +518,10 @@ public:
     size_t get_confirmed_size() const NOEXCEPT;
     size_t get_confirmed_size(size_t top) const NOEXCEPT;
 
-    header_links get_candidate_fork(size_t top=zero) const NOEXCEPT;
-    header_links get_confirmed_fork(size_t top=zero) const NOEXCEPT;
+    header_links get_confirmed_fork(const header_link& fork) const NOEXCEPT;
+    header_links get_candidate_fork(size_t& fork_point) const NOEXCEPT;
+    header_states get_validated_fork(size_t& fork_point,
+        size_t top_checkpoint=zero) const NOEXCEPT;
 
     bool initialize(const block& genesis) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
@@ -566,6 +571,10 @@ protected:
     inline bool is_sufficient(const context& current,
         const context& evaluated) const NOEXCEPT;
 
+    /// Called by confirmation chaser.
+    bool is_block_validated(code& state, const header_link& link,
+        size_t height, size_t checkpoint) const NOEXCEPT;
+
     /// Confirm.
     /// -----------------------------------------------------------------------
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
@@ -573,17 +582,17 @@ protected:
     /// Consensus.
     /// -----------------------------------------------------------------------
 
-    // Called by block_confirmable (check bip30)
+    /// Called by block_confirmable (check bip30)
     bool is_spent_coinbase(const tx_link& link) const NOEXCEPT;
     code unspent_duplicates(const header_link& coinbase,
         const context& ctx) const NOEXCEPT;
 
-    // Called by block_confirmable (populate and check double spends).
+    /// Called by block_confirmable (populate and check double spends).
     error::error_t unspendable(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;
 
-    // Called by block_confirmable (populate and check double spends).
+    /// Called by block_confirmable (populate and check double spends).
     code populate_prevouts(point_sets& sets, size_t points,
         const header_link& link) const NOEXCEPT;
 

@@ -419,6 +419,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__unvalidated__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "unvalidated");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__bypassed__true_exected_message)
+{
+    constexpr auto value = error::bypassed;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bypassed");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__missing_previous_output__true_exected_message)
 {
     constexpr auto value = error::missing_previous_output;
