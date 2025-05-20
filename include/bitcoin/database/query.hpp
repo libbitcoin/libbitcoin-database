@@ -50,7 +50,7 @@ using point_links = std::vector<point_link::integer>;
 using two_counts = std::pair<size_t, size_t>;
 using point_key = table::point::key;
 
-struct header_state{ header_link link; code code; };
+struct header_state{ header_link link; code ec; };
 using header_states = std::vector<header_state>;
 
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
