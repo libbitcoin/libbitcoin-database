@@ -514,7 +514,9 @@ public:
     size_t get_candidate_size(size_t top) const NOEXCEPT;
     size_t get_confirmed_size() const NOEXCEPT;
     size_t get_confirmed_size(size_t top) const NOEXCEPT;
-    header_links get_candidate_fork(size_t top) const NOEXCEPT;
+
+    header_links get_candidate_fork(size_t top=zero) const NOEXCEPT;
+    header_links get_confirmed_fork(size_t top=zero) const NOEXCEPT;
 
     bool initialize(const block& genesis) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
