@@ -63,6 +63,28 @@ size_t CLASS::get_confirmed_size(size_t top) const NOEXCEPT
 // ----------------------------------------------------------------------------
 // Protected against index pop (low contention) to ensure branch consistency.
 
+// Without both interlocks, or caller controlling one side with the other
+// locked, this is unsafe, since the compare of heights requires atomicity.
+TEMPLATE
+size_t CLASS::get_fork_() const NOEXCEPT
+{
+    for (auto height = get_top_confirmed(); is_nonzero(height); --height)
+        if (to_confirmed(height) == to_candidate(height))
+            return height;
+
+    return zero;
+}
+
+TEMPLATE
+size_t CLASS::get_fork() const NOEXCEPT
+{
+    ///////////////////////////////////////////////////////////////////////////
+    std::shared_lock interlock1{ candidate_reorganization_mutex_ };
+    std::shared_lock interlock2{ confirmed_reorganization_mutex_ };
+    return get_fork_();
+    ///////////////////////////////////////////////////////////////////////////
+}
+
 TEMPLATE
 header_links CLASS::get_candidate_fork(size_t& fork_point) const NOEXCEPT
 {
@@ -73,7 +95,7 @@ header_links CLASS::get_candidate_fork(size_t& fork_point) const NOEXCEPT
     ///////////////////////////////////////////////////////////////////////////
     std::shared_lock interlock{ candidate_reorganization_mutex_ };
 
-    fork_point = get_fork();
+    fork_point = get_fork_();
     auto height = add1(fork_point);
     auto link = to_candidate(height);
     while (!link.is_terminal())
@@ -129,7 +151,7 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     ///////////////////////////////////////////////////////////////////////////
     std::shared_lock interlock{ candidate_reorganization_mutex_ };
 
-    fork_point = get_fork();
+    fork_point = get_fork_();
     auto height = add1(fork_point);
     auto link = to_candidate(height);
     while (is_block_validated(ec, link, height, top_checkpoint))

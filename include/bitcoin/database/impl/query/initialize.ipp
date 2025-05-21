@@ -52,16 +52,6 @@ inline size_t CLASS::get_top_confirmed() const NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::get_fork() const NOEXCEPT
-{
-    for (auto height = get_top_confirmed(); is_nonzero(height); --height)
-        if (to_confirmed(height) == to_candidate(height))
-            return height;
-
-    return zero;
-}
-
-TEMPLATE
 size_t CLASS::get_top_associated() const NOEXCEPT
 {
     return get_top_associated_from(get_fork());
