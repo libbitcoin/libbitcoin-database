@@ -58,7 +58,7 @@ bool CLASS::get_branch(header_states& branch,
         if (link.is_terminal())
             return false;
 
-        branch.push_back(link);
+        branch.emplace_back(link, {});
     }
 
     return true;
