@@ -496,6 +496,7 @@ public:
     /// Height index not used by these.
     bool is_strong_tx(const tx_link& link) const NOEXCEPT;
     bool is_strong_block(const header_link& link) const NOEXCEPT;
+    bool is_unconfirmable(const header_link& link) const NOEXCEPT;
 
     /// Consensus.
     /// -----------------------------------------------------------------------
@@ -506,8 +507,11 @@ public:
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
     bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
+    bool get_branch(header_states& branch, const hash_digest& hash) const NOEXCEPT;
     bool get_work(uint256_t& work, const header_states& states) const NOEXCEPT;
-    bool get_strong(bool& strong, const uint256_t& fork_work,
+    bool get_strong_branch(bool& strong, const uint256_t& branch_work,
+        size_t branch_point) const NOEXCEPT;
+    bool get_strong_fork(bool& strong, const uint256_t& fork_work,
         size_t fork_point) const NOEXCEPT;
 
     /// Height indexation.

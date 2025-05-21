@@ -88,6 +88,12 @@ inline bool CLASS::is_sufficient(const context& current,
         && evaluated.mtp <= current.mtp;
 }
 
+TEMPLATE
+bool CLASS::is_unconfirmable(const header_link& link) const NOEXCEPT
+{
+    return get_header_state(link) == error::block_unconfirmable;
+}
+
 // unvalidated
 // block_valid
 // block_confirmable
