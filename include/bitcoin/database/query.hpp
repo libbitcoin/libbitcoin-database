@@ -496,6 +496,7 @@ public:
     /// Height index not used by these.
     bool is_strong_tx(const tx_link& link) const NOEXCEPT;
     bool is_strong_block(const header_link& link) const NOEXCEPT;
+    bool is_unconfirmable(const header_link& link) const NOEXCEPT;
 
     /// Consensus.
     /// -----------------------------------------------------------------------
