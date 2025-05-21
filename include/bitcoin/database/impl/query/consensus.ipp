@@ -49,12 +49,51 @@ bool CLASS::get_work(uint256_t& fork_work,
 }
 
 TEMPLATE
-bool CLASS::get_strong(bool& strong, const uint256_t& fork_work,
+bool CLASS::get_branch(header_states& branch,
+    const hash_digest& hash) const NOEXCEPT
+{
+    for (auto link = to_header(hash); !is_candidate_header(link);
+        link = to_parent(link))
+    {
+        if (link.is_terminal())
+            return false;
+
+        branch.push_back(link);
+    }
+
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_strong_branch(bool& strong, const uint256_t& branch_work,
+    size_t branch_point) const NOEXCEPT
+{
+    uint256_t work{};
+    for (auto height = get_top_candidate(); height > branch_point; --height)
+    {
+        uint32_t bits{};
+        if (!get_bits(bits, to_candidate(height)))
+            return false;
+
+        // Not strong when candidate_work equals or exceeds branch_work.
+        work += system::chain::header::proof(bits);
+        if (work >= branch_work)
+        {
+            strong = false;
+            return true;
+        }
+    }
+
+    strong = true;
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_strong_fork(bool& strong, const uint256_t& fork_work,
     size_t fork_point) const NOEXCEPT
 {
     uint256_t work{};
-    for (auto height = get_top_confirmed(); height > fork_point;
-        --height)
+    for (auto height = get_top_confirmed(); height > fork_point; --height)
     {
         uint32_t bits{};
         if (!get_bits(bits, to_confirmed(height)))
