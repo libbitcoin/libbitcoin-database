@@ -660,6 +660,9 @@ private:
     static inline bool push_bool(std_vector<Bool>& stack,
         const Bool& element) NOEXCEPT;
 
+    // Not thread safe.
+    size_t get_fork_() const NOEXCEPT;
+
     // These are thread safe.
     mutable std::shared_mutex candidate_reorganization_mutex_{};
     mutable std::shared_mutex confirmed_reorganization_mutex_{};
