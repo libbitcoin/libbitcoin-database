@@ -219,6 +219,12 @@ error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+bool CLASS::is_prevouts_cached(const header_link& link) const NOEXCEPT
+{
+    return store_.prevout.exists(to_prevout(link));
+}
+
+TEMPLATE
 code CLASS::populate_prevouts(point_sets& sets, size_t points,
     const header_link& link) const NOEXCEPT
 {
