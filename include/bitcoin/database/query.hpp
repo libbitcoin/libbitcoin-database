@@ -503,6 +503,7 @@ public:
     /// These are used in consensus confirmation.
 
     code block_confirmable(const header_link& link) const NOEXCEPT;
+    bool is_prevouts_cached(const header_link& link) const NOEXCEPT;
 
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
