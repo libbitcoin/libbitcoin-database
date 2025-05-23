@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_FILE_ROTATOR_HPP
 #define LIBBITCOIN_DATABASE_FILE_ROTATOR_HPP
 
-#include <ostream>
 #include <memory>
 #include <filesystem>
 #include <bitcoin/system.hpp>

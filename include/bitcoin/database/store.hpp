@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_STORE_HPP
 
 #include <filesystem>
-#include <functional>
 #include <shared_mutex>
 #include <unordered_map>
 #include <bitcoin/database/boost.hpp>

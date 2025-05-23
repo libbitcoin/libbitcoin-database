@@ -71,6 +71,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/memory/accessor.cpp \
     test/memory/map.cpp \
     test/memory/utilities.cpp \
+    test/mocks/blocks.cpp \
     test/mocks/blocks.hpp \
     test/mocks/chunk_storage.cpp \
     test/mocks/chunk_storage.hpp \

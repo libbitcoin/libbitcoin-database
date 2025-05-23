@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_LOCKS_FILE_LOCK_HPP
 #define LIBBITCOIN_DATABASE_LOCKS_FILE_LOCK_HPP
 
-#include <string>
 #include <filesystem>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
