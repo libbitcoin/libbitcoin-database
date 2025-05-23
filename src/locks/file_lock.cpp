@@ -18,7 +18,6 @@
  */
 #include <bitcoin/database/locks/file_lock.hpp>
 
-#include <string>
 #include <filesystem>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
