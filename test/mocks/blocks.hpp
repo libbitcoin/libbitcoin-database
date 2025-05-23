@@ -64,6 +64,10 @@ constexpr database::context context
 };
 
 using namespace system::chain;
+
+// defined in blocks.cpp.
+block get_bogus_block();
+
 const auto genesis = system::settings{ selection::mainnet }.genesis_block;
 const block block1{ test::block1_data, true };
 const block block2{ test::block2_data, true };

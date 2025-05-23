@@ -84,6 +84,7 @@
     <ClCompile Include="..\..\..\..\test\memory\utilities.cpp">
       <ObjectFileName>$(IntDir)test_memory_utilities.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\mocks\blocks.cpp" />
     <ClCompile Include="..\..\..\..\test\mocks\chunk_storage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arrayhead.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp" />
