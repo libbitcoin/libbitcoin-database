@@ -141,7 +141,7 @@ header_links CLASS::get_confirmed_fork(const header_link& fork) const NOEXCEPT
 
 TEMPLATE
 header_states CLASS::get_validated_fork(size_t& fork_point,
-    size_t top_checkpoint) const NOEXCEPT
+    size_t top_checkpoint, bool filter) const NOEXCEPT
 {
     // Reservation may limit allocation to most common scenario.
     header_states out{};
@@ -154,7 +154,8 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     fork_point = get_fork_();
     auto height = add1(fork_point);
     auto link = to_candidate(height);
-    while (is_block_validated(ec, link, height, top_checkpoint))
+    while (is_block_validated(ec, link, height, top_checkpoint) &&
+        (!filter || is_filtered(link)))
     {
         out.emplace_back(link, ec);
         link = to_candidate(++height);
