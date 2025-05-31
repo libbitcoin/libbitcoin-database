@@ -119,6 +119,10 @@ bool CLASS::populate_hashes(chain_state::data& data,
         data.bip9_bit1_hash = get_header_key(
             to_candidate(map.bip9_bit1_height));
 
+    if (map.bip9_bit2_height != chain_state::map::unrequested)
+        data.bip9_bit2_hash = get_header_key(
+            to_candidate(map.bip9_bit2_height));
+
     return true;
 }
 
