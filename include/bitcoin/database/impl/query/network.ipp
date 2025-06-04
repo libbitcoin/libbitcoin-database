@@ -79,7 +79,6 @@ CLASS::span CLASS::get_locator_span(const hashes& locator,
     const hash_digest& stop, size_t limit) const NOEXCEPT
 {
     using namespace system;
-    span out{};
 
     // Start at fork point, stop at given header (both excluded).
     const auto start = add1(get_fork(locator));
@@ -94,9 +93,12 @@ CLASS::span CLASS::get_locator_span(const hashes& locator,
     const auto top1 = ceilinged_add(get_top_confirmed(), one);
     const auto end = std::min(ceilinged_add(start, allowed), top1);
 
-    // Convert negative range to empty.
-    out.end = std::max(start, end);
-    return out;
+    // max converts negative range to empty.
+    return
+    {
+        start,
+        std::max(start, end)
+    };
 }
 
 // protected
