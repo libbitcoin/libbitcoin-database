@@ -94,6 +94,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/extent.cpp \
     test/query/height.cpp \
     test/query/initialize.cpp \
+    test/query/network.cpp \
     test/query/objects.cpp \
     test/query/optional.cpp \
     test/query/translate.cpp \
@@ -181,6 +182,7 @@ include_bitcoin_database_impl_query_HEADERS = \
     include/bitcoin/database/impl/query/extent.ipp \
     include/bitcoin/database/impl/query/height.ipp \
     include/bitcoin/database/impl/query/initialize.ipp \
+    include/bitcoin/database/impl/query/network.ipp \
     include/bitcoin/database/impl/query/objects.ipp \
     include/bitcoin/database/impl/query/optional.ipp \
     include/bitcoin/database/impl/query/query.ipp \

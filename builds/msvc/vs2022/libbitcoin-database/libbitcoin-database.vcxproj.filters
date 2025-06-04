@@ -352,6 +352,9 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\initialize.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\network.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\objects.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>

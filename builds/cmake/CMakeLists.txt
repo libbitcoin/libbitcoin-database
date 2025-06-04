@@ -304,6 +304,7 @@ if (with-tests)
         "../../test/query/extent.cpp"
         "../../test/query/height.cpp"
         "../../test/query/initialize.cpp"
+        "../../test/query/network.cpp"
         "../../test/query/objects.cpp"
         "../../test/query/optional.cpp"
         "../../test/query/translate.cpp"

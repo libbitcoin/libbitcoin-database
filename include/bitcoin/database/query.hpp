@@ -711,6 +711,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/extent.ipp>
 #include <bitcoin/database/impl/query/height.ipp>
 #include <bitcoin/database/impl/query/initialize.ipp>
+#include <bitcoin/database/impl/query/network.ipp>
 #include <bitcoin/database/impl/query/objects.ipp>
 #include <bitcoin/database/impl/query/optional.ipp>
 #include <bitcoin/database/impl/query/translate.ipp>
