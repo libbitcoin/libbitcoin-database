@@ -67,6 +67,7 @@ public:
     using script = system::chain::script;
     using output = system::chain::output;
     using header = system::chain::header;
+    using headers = system::chain::header_cptrs;
     using transaction = system::chain::transaction;
     using transactions = system::chain::transaction_cptrs;
     using inputs_ptr = system::chain::inputs_ptr;
@@ -534,6 +535,12 @@ public:
     bool pop_candidate() NOEXCEPT;
     bool pop_confirmed() NOEXCEPT;
 
+    /// Populate message payloads from locator.
+    headers get_headers(const hashes& locator, const hash_digest& stop,
+        size_t limit) const NOEXCEPT;
+    hashes get_blocks(const hashes& locator, const hash_digest& stop,
+        size_t limit) const NOEXCEPT;
+
     /// Optional Tables.
     /// -----------------------------------------------------------------------
 
@@ -557,6 +564,23 @@ public:
         const hash_digest& head) NOEXCEPT;
 
 protected:
+    struct span
+    {
+        size_t size() const NOEXCEPT { return end - begin; }
+        size_t begin;
+        size_t end;
+    };
+
+    /// Network
+    /// -----------------------------------------------------------------------
+
+    /// Height of highest confirmed block (assumes locator descending).
+    size_t get_fork(const hashes& locator) const NOEXCEPT;
+
+    /// Height of highest confirmed block (assumes locator descending).
+    span get_locator_span(const hashes& locator, const hash_digest& stop,
+        size_t limit) const NOEXCEPT;
+
     /// Translate.
     /// -----------------------------------------------------------------------
     uint32_t to_input_index(const tx_link& parent_fk,
