@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_HEIGHT_IPP
 #define LIBBITCOIN_DATABASE_QUERY_HEIGHT_IPP
 
+#include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -57,6 +58,98 @@ size_t CLASS::get_confirmed_size(size_t top) const NOEXCEPT
         wire += get_block_size(to_confirmed(height));
 
     return wire;
+}
+
+// locator readers
+// ----------------------------------------------------------------------------
+// These do not require strict consistency.
+
+TEMPLATE
+CLASS::headers CLASS::get_headers(const hashes& locator,
+    const hash_digest& stop, size_t limit) const NOEXCEPT
+{
+    headers out{};
+    const auto span = get_locator_span(locator, stop, limit);
+    out.reserve(span.size());
+
+    for (auto height = span.begin; height < span.end; ++height)
+    {
+        // Terminal implies intervening reorganization.
+        const auto link = to_confirmed(height);
+        if (link.is_terminal())
+            return {};
+
+        out.push_back(get_header(link));
+        BC_ASSERT(!is_null(out.back()));
+    }
+
+    return out;
+}
+
+TEMPLATE
+hashes CLASS::get_blocks(const hashes& locator,
+    const hash_digest& stop, size_t limit) const NOEXCEPT
+{
+    hashes out{};
+    const auto span = get_locator_span(locator, stop, limit);
+    out.reserve(span.size());
+
+    for (auto height = span.begin; height < span.end; ++height)
+    {
+        // Terminal implies intervening reorganization.
+        const auto link = to_confirmed(height);
+        if (link.is_terminal())
+            return {};
+
+        out.push_back(get_header_key(link));
+        BC_ASSERT(out.back() != system::null_hash);
+    }
+
+    return out;
+}
+
+TEMPLATE
+CLASS::span CLASS::get_locator_span(const hashes& locator,
+    const hash_digest& stop, size_t limit) const NOEXCEPT
+{
+    using namespace system;
+    span out{};
+
+    // Start at fork point, stop at given header (both excluded).
+    const auto start = add1(get_fork(locator));
+    const auto last1 = (stop == null_hash) ? max_uint32 :
+        get_height(to_header(stop)).value;
+
+    // Determine number of headers requested, limited by max allowed.
+    const auto request = floored_subtract<size_t>(last1, start);
+    const auto allowed = std::min(request, limit);
+
+    // Set end to (start + allowed), limited by (top + 1).
+    const auto top1 = ceilinged_add(get_top_confirmed(), one);
+    const auto end = std::min(ceilinged_add(start, allowed), top1);
+
+    // Convert negative range to empty.
+    out.end = std::max(start, end);
+    return out;
+}
+
+// protected
+TEMPLATE
+size_t CLASS::get_fork(const hashes& locator) const NOEXCEPT
+{
+    // Locator is presumed (by convention) to be in order by height.
+    for (const auto& hash: locator)
+    {
+        const auto link = to_header(hash);
+        const auto height = get_height(link);
+
+        table::height::record confirmed{};
+        if (store_.confirmed.get(height, confirmed) &&
+            confirmed.header_fk == link)
+                return height;
+    }
+
+    return zero;
 }
 
 // shared_lock readers

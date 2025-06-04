@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__genesis__expected
         test::genesis.header().timestamp(),
         0u,
         0u,
-        1u,
+        0u,
         0u
     };
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__block1__expected)
         test::block1.header().timestamp(),  // timestamp
         test::genesis.header().timestamp(), // mtp
         1u,                                 // height
-        1u,                                 // minimum_block_version
+        0u,                                 // minimum_block_version
         486604799u                          // work_required
     };
 
