@@ -464,6 +464,7 @@ public:
 
     /// Values.
     // get_context(chain::context) sets only flags, median_time_past, height.
+    uint32_t get_top_timestamp(bool confirmed) const NOEXCEPT;
     bool get_timestamp(uint32_t& timestamp, const header_link& link) const NOEXCEPT;
     bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
     bool get_work(uint256_t& work, const header_link& link) const NOEXCEPT;

@@ -205,6 +205,18 @@ code CLASS::get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+uint32_t CLASS::get_top_timestamp(bool confirmed) const NOEXCEPT
+{
+    const auto top = confirmed ? to_confirmed(get_top_confirmed()) :
+        to_candidate(get_top_candidate());
+
+    // returns zero if read fails.
+    uint32_t timestamp{};
+    /* bool */ get_timestamp(timestamp, top);
+    return timestamp;
+}
+
+TEMPLATE
 bool CLASS::get_timestamp(uint32_t& timestamp,
     const header_link& link) const NOEXCEPT
 {

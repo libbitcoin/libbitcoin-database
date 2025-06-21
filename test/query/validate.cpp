@@ -43,6 +43,31 @@ BOOST_FIXTURE_TEST_SUITE(query_validate_tests, query_validate_setup_fixture)
 // nop event handler.
 const auto events_handler = [](auto, auto) {};
 
+BOOST_AUTO_TEST_CASE(query_validate__get_top_timestamp__always__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{}, false, false));
+    BOOST_REQUIRE(query.push_candidate(1));
+    BOOST_REQUIRE_EQUAL(query.get_top_timestamp(true), 0x495fab29_u32);
+    BOOST_REQUIRE_EQUAL(query.get_top_timestamp(false), 0x4966bc61_u32);
+    BOOST_REQUIRE(query.push_candidate(2));
+    BOOST_REQUIRE_EQUAL(query.get_top_timestamp(true), 0x495fab29_u32);
+    BOOST_REQUIRE_EQUAL(query.get_top_timestamp(false), 0x4966bcb0_u32);
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE_EQUAL(query.get_top_timestamp(true), 0x4966bc61_u32);
+    BOOST_REQUIRE_EQUAL(query.get_top_timestamp(false), 0x4966bcb0_u32);
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BOOST_REQUIRE_EQUAL(query.get_top_timestamp(true), 0x4966bcb0_u32);
+    BOOST_REQUIRE_EQUAL(query.get_top_timestamp(false), 0x4966bcb0_u32);
+}
+
 BOOST_AUTO_TEST_CASE(query_validate__get_timestamp__genesis__expected)
 {
     settings settings{};
