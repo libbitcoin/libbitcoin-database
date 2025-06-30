@@ -89,10 +89,13 @@ struct input
         {
             using namespace system;
             script = std::make_shared<const chain::script>(source, true);
-            witness = std::make_shared<const chain::witness>(source, true);
+            witness = witnessed ?
+                std::make_shared<const chain::witness>(source, true) :
+                std::make_shared<const chain::witness>();
             return source;
         }
 
+        bool witnessed{};
         system::chain::script::cptr script{};
         system::chain::witness::cptr witness{};
     };

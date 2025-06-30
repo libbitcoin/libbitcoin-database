@@ -364,24 +364,26 @@ public:
     /// Objects.
     /// -----------------------------------------------------------------------
 
-    inputs_ptr get_inputs(const tx_link& link) const NOEXCEPT;
+    inputs_ptr get_inputs(const tx_link& link, bool witness) const NOEXCEPT;
     outputs_ptr get_outputs(const tx_link& link) const NOEXCEPT;
-    transactions_ptr get_transactions(const header_link& link) const NOEXCEPT;
+    transactions_ptr get_transactions(const header_link& link,
+        bool witness) const NOEXCEPT;
 
     header::cptr get_header(const header_link& link) const NOEXCEPT;
-    block::cptr get_block(const header_link& link) const NOEXCEPT;
-    transaction::cptr get_transaction(const tx_link& link) const NOEXCEPT;
+    block::cptr get_block(const header_link& link, bool witness) const NOEXCEPT;
+    transaction::cptr get_transaction(const tx_link& link, bool witness) const NOEXCEPT;
+    input::cptr get_input(const point_link& link, bool witness) const NOEXCEPT;
     output::cptr get_output(const output_link& link) const NOEXCEPT;
-    input::cptr get_input(const point_link& link) const NOEXCEPT;
-    inputs_ptr get_spenders(const output_link& link) const NOEXCEPT;
+    inputs_ptr get_spenders(const output_link& link,
+        bool witness) const NOEXCEPT;
 
     input::cptr get_input(const tx_link& link,
-        uint32_t input_index) const NOEXCEPT;
+        uint32_t input_index, bool witness) const NOEXCEPT;
     output::cptr get_output(const tx_link& link,
         uint32_t output_index) const NOEXCEPT;
     point get_point(const point_link& link) const NOEXCEPT;
-    inputs_ptr get_spenders(const tx_link& link,
-        uint32_t output_index) const NOEXCEPT;
+    inputs_ptr get_spenders_index(const tx_link& link,
+        uint32_t output_index, bool witness) const NOEXCEPT;
 
     /// False implies missing prevouts, node input.metadata is populated.
     bool populate_with_metadata(const input& input) const NOEXCEPT;

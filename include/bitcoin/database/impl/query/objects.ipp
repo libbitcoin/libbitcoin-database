@@ -45,7 +45,7 @@ inline bool CLASS::push_bool(std_vector<Bool>& stack,
 
 TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_inputs(
-    const tx_link& link) const NOEXCEPT
+    const tx_link& link, bool witness) const NOEXCEPT
 {
     // TODO: eliminate shared memory pointer reallocations.
     using namespace system;
@@ -57,7 +57,7 @@ typename CLASS::inputs_ptr CLASS::get_inputs(
     inputs->reserve(fks.size());
 
     for (const auto& fk: fks)
-        if (!push_bool(*inputs, get_input(fk)))
+        if (!push_bool(*inputs, get_input(fk, witness)))
             return {};
 
     return inputs;
@@ -85,7 +85,7 @@ typename CLASS::outputs_ptr CLASS::get_outputs(
 
 TEMPLATE
 typename CLASS::transactions_ptr CLASS::get_transactions(
-    const header_link& link) const NOEXCEPT
+    const header_link& link, bool witness) const NOEXCEPT
 {
     // TODO: eliminate shared memory pointer reallocations.
     using namespace system;
@@ -97,7 +97,7 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
     transactions->reserve(txs.size());
 
     for (const auto& tx_fk: txs)
-        if (!push_bool(*transactions, get_transaction(tx_fk)))
+        if (!push_bool(*transactions, get_transaction(tx_fk, witness)))
             return {};
 
     return transactions;
@@ -133,14 +133,14 @@ typename CLASS::header::cptr CLASS::get_header(
 }
 
 TEMPLATE
-typename CLASS::block::cptr CLASS::get_block(
-    const header_link& link) const NOEXCEPT
+typename CLASS::block::cptr CLASS::get_block(const header_link& link,
+    bool witness) const NOEXCEPT
 {
     const auto header = get_header(link);
     if (!header)
         return {};
 
-    const auto transactions = get_transactions(link);
+    const auto transactions = get_transactions(link, witness);
     if (!transactions)
         return {};
 
@@ -152,8 +152,8 @@ typename CLASS::block::cptr CLASS::get_block(
 }
 
 TEMPLATE
-typename CLASS::transaction::cptr CLASS::get_transaction(
-    const tx_link& link) const NOEXCEPT
+typename CLASS::transaction::cptr CLASS::get_transaction(const tx_link& link,
+    bool witness) const NOEXCEPT
 {
     using namespace system;
     table::transaction::only_with_sk tx{};
@@ -172,7 +172,7 @@ typename CLASS::transaction::cptr CLASS::get_transaction(
 
     // Points are allocated contiguously.
     for (auto fk = tx.point_fk; fk < (tx.point_fk + tx.ins_count); ++fk)
-        if (!push_bool(*inputs, get_input(fk)))
+        if (!push_bool(*inputs, get_input(fk, witness)))
             return {};
 
     for (const auto& fk: outs.out_fks)
@@ -217,11 +217,11 @@ typename CLASS::point::cptr CLASS::make_point(hash_digest&& hash,
 }
 
 TEMPLATE
-typename CLASS::input::cptr CLASS::get_input(
-    const point_link& link) const NOEXCEPT
+typename CLASS::input::cptr CLASS::get_input(const point_link& link,
+    bool witness) const NOEXCEPT
 {
     using namespace system;
-    table::input::get_ptrs in{};
+    table::input::get_ptrs in{ {}, witness };
     table::ins::get_input ins{};
     table::point::record point{};
     if (!store_.ins.get(link, ins) ||
@@ -255,7 +255,7 @@ typename CLASS::point CLASS::get_point(
 
 TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_spenders(
-    const output_link& link) const NOEXCEPT
+    const output_link& link, bool witness) const NOEXCEPT
 {
     using namespace system;
     const auto point_fks = to_spenders(link);
@@ -264,7 +264,7 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
 
     // TODO: eliminate shared memory pointer reallocation.
     for (const auto& point_fk: point_fks)
-        if (!push_bool(*inputs, get_input(point_fk)))
+        if (!push_bool(*inputs, get_input(point_fk, witness)))
             return {};
 
     return inputs;
@@ -272,9 +272,9 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
 
 TEMPLATE
 typename CLASS::input::cptr CLASS::get_input(const tx_link& link,
-    uint32_t input_index) const NOEXCEPT
+    uint32_t input_index, bool witness) const NOEXCEPT
 {
-    return get_input(to_point(link, input_index));
+    return get_input(to_point(link, input_index), witness);
 }
 
 TEMPLATE
@@ -285,10 +285,10 @@ typename CLASS::output::cptr CLASS::get_output(const tx_link& link,
 }
 
 TEMPLATE
-typename CLASS::inputs_ptr CLASS::get_spenders(const tx_link& link,
-    uint32_t output_index) const NOEXCEPT
+typename CLASS::inputs_ptr CLASS::get_spenders_index(const tx_link& link,
+    uint32_t output_index, bool witness) const NOEXCEPT
 {
-    return get_spenders(to_output(link, output_index));
+    return get_spenders(to_output(link, output_index), witness);
 }
 
 // Populate prevout objects.
