@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(query_archive_write__set_tx__get_tx__expected)
     BOOST_REQUIRE(query.set(tx));
     BOOST_REQUIRE(query.is_tx(tx.hash(false)));
 
-    const auto pointer1 = query.get_transaction(query.to_tx(tx_hash));
+    const auto pointer1 = query.get_transaction(query.to_tx(tx_hash), false);
     BOOST_REQUIRE(pointer1);
 ////    BOOST_REQUIRE(*pointer1 == tx);
     BOOST_REQUIRE_EQUAL(pointer1->hash(false), tx_hash);
@@ -599,7 +599,7 @@ BOOST_AUTO_TEST_CASE(query_archive_write__set_block__get_block__expected)
 ////    BOOST_REQUIRE_EQUAL(store.spend_body(), genesis_spend_body);
     BOOST_REQUIRE_EQUAL(store.txs_body(), genesis_txs_body);
 
-    const auto pointer1 = query.get_block(query.to_header(test::genesis.hash()));
+    const auto pointer1 = query.get_block(query.to_header(test::genesis.hash()), false);
     BOOST_REQUIRE(pointer1);
 ////    BOOST_REQUIRE(*pointer1 == test::genesis);
 
@@ -753,7 +753,7 @@ BOOST_AUTO_TEST_CASE(query_archive_write__set_block_txs__get_block__expected)
 ////    BOOST_REQUIRE_EQUAL(store.spend_body(), genesis_spend_body);
     BOOST_REQUIRE_EQUAL(store.txs_body(), genesis_txs_body);
 
-    const auto pointer1 = query.get_block(query.to_header(test::genesis.hash()));
+    const auto pointer1 = query.get_block(query.to_header(test::genesis.hash()), false);
     BOOST_REQUIRE(pointer1);
 ////    BOOST_REQUIRE(*pointer1 == test::genesis);
 
@@ -1392,7 +1392,7 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_input__not_found__nullptr)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
-    BOOST_REQUIRE(!query.get_input(query.to_tx(system::null_hash), 0u));
+    BOOST_REQUIRE(!query.get_input(query.to_tx(system::null_hash), 0u, false));
     BOOST_REQUIRE(!store.close(events_handler));
 }
 
@@ -1422,7 +1422,7 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_inputs__tx_not_found__nullptr)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(!query.get_inputs(1));
+    BOOST_REQUIRE(!query.get_inputs(1, false));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive_write__get_inputs__found__expected)
@@ -1434,7 +1434,7 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_inputs__found__expected)
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::tx4));
-    BOOST_REQUIRE_EQUAL(query.get_inputs(1)->size(), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_inputs(1, false)->size(), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(query_archive_write__get_output__not_found__nullptr)
@@ -1501,7 +1501,7 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_transactions__tx_not_found__nullpt
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::tx4));
-    BOOST_REQUIRE(!query.get_transactions(3));
+    BOOST_REQUIRE(!query.get_transactions(3, false));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive_write__get_transactions__found__expected)
@@ -1515,9 +1515,9 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_transactions__found__expected)
     BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
     BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
     BOOST_REQUIRE(query.set(test::tx4));
-    BOOST_REQUIRE_EQUAL(query.get_transactions(0)->size(), 1u);
-    BOOST_REQUIRE_EQUAL(query.get_transactions(1)->size(), 1u);
-    BOOST_REQUIRE_EQUAL(query.get_transactions(2)->size(), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_transactions(0, false)->size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_transactions(1, false)->size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_transactions(2, false)->size(), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(query_archive_write__get_spenders__unspent_or_not_found__expected)
@@ -1533,29 +1533,29 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_spenders__unspent_or_not_found__ex
     BOOST_REQUIRE(query.set(test::block3, test::context, false, false));
 
     // Caller should always test for nullptr.
-    BOOST_REQUIRE(query.get_spenders(output_link::terminal)->empty());
-    BOOST_REQUIRE(query.get_spenders(tx_link::terminal, 0)->empty());
-    BOOST_REQUIRE(query.get_spenders(tx_link::terminal, 1)->empty());
+    BOOST_REQUIRE(query.get_spenders(output_link::terminal, true)->empty());
+    BOOST_REQUIRE(query.get_spenders_index(tx_link::terminal, 0, true)->empty());
+    BOOST_REQUIRE(query.get_spenders_index(tx_link::terminal, 1, true)->empty());
 
-    BOOST_REQUIRE(query.get_spenders(query.to_output(0, 0))->empty());
-    BOOST_REQUIRE(query.get_spenders(query.to_output(0, 1))->empty());
-    BOOST_REQUIRE(query.get_spenders(0, 0)->empty());
-    BOOST_REQUIRE(query.get_spenders(0, 1)->empty());
+    BOOST_REQUIRE(query.get_spenders(query.to_output(0, 0), true)->empty());
+    BOOST_REQUIRE(query.get_spenders(query.to_output(0, 1), true)->empty());
+    BOOST_REQUIRE(query.get_spenders_index(0, 0, true)->empty());
+    BOOST_REQUIRE(query.get_spenders_index(0, 1, true)->empty());
 
-    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 0))->empty());
-    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 1))->empty());
-    BOOST_REQUIRE(query.get_spenders(1, 0)->empty());
-    BOOST_REQUIRE(query.get_spenders(1, 1)->empty());
+    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 0), true)->empty());
+    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 1), true)->empty());
+    BOOST_REQUIRE(query.get_spenders_index(1, 0, true)->empty());
+    BOOST_REQUIRE(query.get_spenders_index(1, 1, true)->empty());
 
-    BOOST_REQUIRE(query.get_spenders(query.to_output(2, 0))->empty());
-    BOOST_REQUIRE(query.get_spenders(query.to_output(2, 1))->empty());
-    BOOST_REQUIRE(query.get_spenders(2, 0)->empty());
-    BOOST_REQUIRE(query.get_spenders(2, 1)->empty());
+    BOOST_REQUIRE(query.get_spenders(query.to_output(2, 0), true)->empty());
+    BOOST_REQUIRE(query.get_spenders(query.to_output(2, 1), true)->empty());
+    BOOST_REQUIRE(query.get_spenders_index(2, 0, true)->empty());
+    BOOST_REQUIRE(query.get_spenders_index(2, 1, true)->empty());
 
-    BOOST_REQUIRE(query.get_spenders(query.to_output(3, 0))->empty());
-    BOOST_REQUIRE(query.get_spenders(query.to_output(3, 1))->empty());
-    BOOST_REQUIRE(query.get_spenders(3, 0)->empty());
-    BOOST_REQUIRE(query.get_spenders(3, 1)->empty());
+    BOOST_REQUIRE(query.get_spenders(query.to_output(3, 0), true)->empty());
+    BOOST_REQUIRE(query.get_spenders(query.to_output(3, 1), true)->empty());
+    BOOST_REQUIRE(query.get_spenders_index(3, 0, true)->empty());
+    BOOST_REQUIRE(query.get_spenders_index(3, 1, true)->empty());
 }
 
 ////BOOST_AUTO_TEST_CASE(query_archive_write__get_spenders__found_and_spent__expected)
@@ -1568,50 +1568,50 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_spenders__unspent_or_not_found__ex
 ////    BOOST_REQUIRE(query.initialize(test::genesis));
 ////
 ////    // Neither of the two block1a outputs spent yet.
-////    BOOST_REQUIRE(query.set(test::block1a, test::context));
-////    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 0))->empty());
-////    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 1))->empty());
-////    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 2))->empty());
-////    BOOST_REQUIRE(query.get_spenders(1, 0)->empty());
-////    BOOST_REQUIRE(query.get_spenders(1, 1)->empty());
-////    BOOST_REQUIRE(query.get_spenders(1, 2)->empty());
+////    BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
+////    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 0), true)->empty());
+////    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 1), true)->empty());
+////    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 2), true)->empty());
+////    BOOST_REQUIRE(query.get_spenders_index(1, 0, true)->empty());
+////    BOOST_REQUIRE(query.get_spenders_index(1, 1, true)->empty());
+////    BOOST_REQUIRE(query.get_spenders_index(1, 2, true)->empty());
 ////
 ////    // Each of the two outputs of block1a spent once.
-////    BOOST_REQUIRE(query.set(test::block2a, test::context));
+////    BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
 ////
-////    BOOST_REQUIRE_EQUAL(query.get_spenders(query.to_output(1, 0))->size(), 1u);
-////    BOOST_REQUIRE_EQUAL(query.get_spenders(query.to_output(1, 1))->size(), 1u);
-////    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 2))->empty());
-////    BOOST_REQUIRE_EQUAL(query.get_spenders(1, 0)->size(), 1u);
-////    BOOST_REQUIRE_EQUAL(query.get_spenders(1, 1)->size(), 1u);
-////    BOOST_REQUIRE_EQUAL(query.get_spenders(1, 2)->size(), 0u);
+////    BOOST_REQUIRE_EQUAL(query.get_spenders(query.to_output(1, 0), true)->size(), 1u);
+////    BOOST_REQUIRE_EQUAL(query.get_spenders(query.to_output(1, 1), true)->size(), 1u);
+////    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 2), true)->empty());
+////    BOOST_REQUIRE_EQUAL(query.get_spenders_index(1, 0, true)->size(), 1u);
+////    BOOST_REQUIRE_EQUAL(query.get_spenders_index(1, 1, true)->size(), 1u);
+////    BOOST_REQUIRE_EQUAL(query.get_spenders_index(1, 2, true)->size(), 0u);
 ////
 ////    // Match the two spenders.
 ////    const auto block_inputs = test::block2a.transactions_ptr()->front()->inputs_ptr();
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0))->front() == *(*block_inputs).front());
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1))->front() == *(*block_inputs).back());
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0), true)->front() == *(*block_inputs).front());
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1), true)->front() == *(*block_inputs).back());
 ////    BOOST_REQUIRE(*query.get_spenders(1, 0)->front() == *(*block_inputs).front());
 ////    BOOST_REQUIRE(*query.get_spenders(1, 1)->front() == *(*block_inputs).back());
 ////
 ////    // Each of the two outputs of block1a spent twice (two unconfirmed double spends).
 ////    BOOST_REQUIRE(query.set(test::tx4));
-////    BOOST_REQUIRE_EQUAL(query.get_spenders(query.to_output(1, 0))->size(), 2u);
-////    BOOST_REQUIRE_EQUAL(query.get_spenders(query.to_output(1, 1))->size(), 2u);
-////    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 2))->empty());
-////    BOOST_REQUIRE_EQUAL(query.get_spenders(1, 0)->size(), 2u);
-////    BOOST_REQUIRE_EQUAL(query.get_spenders(1, 1)->size(), 2u);
-////    BOOST_REQUIRE_EQUAL(query.get_spenders(1, 2)->size(), 0u);
+////    BOOST_REQUIRE_EQUAL(query.get_spenders(query.to_output(1, 0), true)->size(), 2u);
+////    BOOST_REQUIRE_EQUAL(query.get_spenders(query.to_output(1, 1), true)->size(), 2u);
+////    BOOST_REQUIRE(query.get_spenders(query.to_output(1, 2), true)->empty());
+////    BOOST_REQUIRE_EQUAL(query.get_spenders_index(1, 0, true)->size(), 2u);
+////    BOOST_REQUIRE_EQUAL(query.get_spenders_index(1, 1, true)->size(), 2u);
+////    BOOST_REQUIRE_EQUAL(query.get_spenders_index(1, 2, true)->size(), 0u);
 ////
 ////    // Match the four spenders.
 ////    const auto tx_inputs = test::tx4.inputs_ptr();
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0))->front() == *(*tx_inputs).front());
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1))->front() == *(*tx_inputs).back());
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0))->back() == *(*block_inputs).front());
-////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1))->back() == *(*block_inputs).back());
-////    BOOST_REQUIRE(*query.get_spenders(1, 0)->front() == *(*tx_inputs).front());
-////    BOOST_REQUIRE(*query.get_spenders(1, 1)->front() == *(*tx_inputs).back());
-////    BOOST_REQUIRE(*query.get_spenders(1, 0)->back() == *(*block_inputs).front());
-////    BOOST_REQUIRE(*query.get_spenders(1, 1)->back() == *(*block_inputs).back());
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0), true)->front() == *(*tx_inputs).front());
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1), true)->front() == *(*tx_inputs).back());
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 0), true)->back() == *(*block_inputs).front());
+////    BOOST_REQUIRE(*query.get_spenders(query.to_output(1, 1), true)->back() == *(*block_inputs).back());
+////    BOOST_REQUIRE(*query.get_spenders_index(1, 0, true)->front() == *(*tx_inputs).front());
+////    BOOST_REQUIRE(*query.get_spenders_index(1, 1, true)->front() == *(*tx_inputs).back());
+////    BOOST_REQUIRE(*query.get_spenders_index(1, 0, true)->back() == *(*block_inputs).front());
+////    BOOST_REQUIRE(*query.get_spenders_index(1, 1, true)->back() == *(*block_inputs).back());
 ////}
 
 BOOST_AUTO_TEST_CASE(query_archive_write__get_value__genesis__expected)
