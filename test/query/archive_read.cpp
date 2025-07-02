@@ -40,8 +40,7 @@ struct query_archive_read_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_archive_read_tests, query_archive_read_setup_fixture)
 
-const auto events_handler = [](auto, auto) {};
-
+////const auto events_handler = [](auto, auto) {};
 
 BOOST_AUTO_TEST_CASE(query_archive_read_test)
 {

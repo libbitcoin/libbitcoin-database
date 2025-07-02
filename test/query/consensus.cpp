@@ -40,8 +40,7 @@ struct query_consensus_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_consensus_tests, query_consensus_setup_fixture)
 
-const auto events_handler = [](auto, auto) {};
-
+////const auto events_handler = [](auto, auto) {};
 
 BOOST_AUTO_TEST_CASE(query_consensus_test)
 {

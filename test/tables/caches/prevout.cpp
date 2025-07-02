@@ -25,7 +25,6 @@ BOOST_AUTO_TEST_SUITE(prevout_tests)
 using namespace system;
 using namespace system::chain;
 using tx = schema::transaction::link;
-constexpr auto terminal = schema::transaction::link::terminal;
 const std::vector<tx::integer> conflicts1{ 0x01020304 };
 const std::vector<tx::integer> conflicts2{ 0xbaadf00d, 0x01020304 };
 

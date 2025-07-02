@@ -40,8 +40,7 @@ struct query_objects_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(query_objects_tests, query_objects_setup_fixture)
 
-const auto events_handler = [](auto, auto) {};
-
+////const auto events_handler = [](auto, auto) {};
 
 BOOST_AUTO_TEST_CASE(query_objects_test)
 {

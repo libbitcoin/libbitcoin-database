@@ -64,11 +64,8 @@ BOOST_AUTO_TEST_CASE(validated_bk__put__two__expected)
     table::validated_bk instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());
 
-    table::validated_bk::link link1{};
     BOOST_REQUIRE(instance.put(0, slab1));
     BOOST_REQUIRE_EQUAL(instance.at(0), 0u);
-
-    table::validated_bk::link link2{};
     BOOST_REQUIRE(instance.put(1, slab2));
     BOOST_REQUIRE_EQUAL(instance.at(1), 10u);
 
