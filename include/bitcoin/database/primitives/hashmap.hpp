@@ -79,7 +79,7 @@ public:
     /// Capacity of body in bytes.
     size_t capacity() const NOEXCEPT;
 
-    /// Increase count as neccesary to specified.
+    /// Increase count as necessary to specified.
     bool expand(const Link& count) NOEXCEPT;
 
     /// Diagnostic counters.
