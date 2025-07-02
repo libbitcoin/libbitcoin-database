@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "test.hpp"
+#include "mocks/blocks.hpp"
 #include "mocks/map_store.hpp"
 
  // these are the slow tests (mmap)
@@ -271,6 +272,22 @@ BOOST_AUTO_TEST_CASE(store__open__created__success)
     configuration.path = TEST_DIRECTORY;
     store<map> instance{ configuration };
     BOOST_REQUIRE(!instance.create(events));
+    BOOST_REQUIRE(!instance.close(events));
+}
+
+// prune
+// ----------------------------------------------------------------------------
+// Empty store asserts so create and initialize.
+
+BOOST_AUTO_TEST_CASE(store__prune__initialized__success)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<map> instance{ configuration };
+    query<store<map>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BOOST_REQUIRE(!instance.prune(events));
     BOOST_REQUIRE(!instance.close(events));
 }
 

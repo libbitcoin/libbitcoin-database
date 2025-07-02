@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_STORE_IPP
 #define LIBBITCOIN_DATABASE_STORE_IPP
 
+#include <chrono>
 #include <unordered_map>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
@@ -49,6 +50,7 @@ const std::unordered_map<event_t, std::string> CLASS::events
 
     { event_t::wait_lock, "wait_lock" },
     { event_t::flush_body, "flush_body" },
+    { event_t::prune_table, "prune_table" },
     { event_t::backup_table, "backup_table" },
     { event_t::copy_header, "copy_header" },
     { event_t::archive_snapshot, "archive_snapshot" },
@@ -412,6 +414,61 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     }
 
     // process and flush locks remain open until close().
+    transactor_mutex_.unlock();
+    return ec;
+}
+
+TEMPLATE
+code CLASS::prune(const event_handler& handler) NOEXCEPT
+{
+    while (!transactor_mutex_.try_lock_for(std::chrono::seconds(1)))
+    {
+        handler(event_t::wait_lock, table_t::store);
+    }
+
+    code ec{ error::success };
+    const auto prune = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::prune_table, table);
+            if (!storage.reset())
+                ec = error::prune_table;
+        }
+    };
+
+    const auto unload = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::unload_file, table);
+            ec = storage.unload();
+        }
+    };
+
+    const auto load = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::load_file, table);
+            ec = storage.load();
+        }
+    };
+
+    // Prevouts resettable if all candidates confirmed (fork is candidate top).
+    const query<CLASS> query_{ *this };
+    if (query_.get_fork() == query_.get_top_candidate())
+    {
+        // zeroize table head, set body logical size to zero.
+        prune(ec, prevout, table_t::prevout_table);
+
+        // unmap body, setting mapped size to logical size (zero).
+        unload(ec, prevout_body_, table_t::prevout_body);
+
+        // map body, making table usable again.
+        load(ec, prevout_body_, table_t::prevout_body);
+    }
+
     transactor_mutex_.unlock();
     return ec;
 }

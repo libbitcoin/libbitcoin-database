@@ -329,6 +329,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__close_table__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "failed to close table");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__prune_table__true_exected_message)
+{
+    constexpr auto value = error::prune_table;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to prune table");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__backup_table__true_exected_message)
 {
     constexpr auto value = error::backup_table;

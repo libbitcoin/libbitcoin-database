@@ -36,6 +36,7 @@ enum class event_t
 
     wait_lock,
     flush_body,
+    prune_table,
     backup_table,
     copy_header,
     archive_snapshot,
