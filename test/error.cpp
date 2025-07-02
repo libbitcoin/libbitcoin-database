@@ -293,6 +293,24 @@ BOOST_AUTO_TEST_CASE(error_t__code__rename_directory__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "rename directory failure");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__copy_directory__true_exected_message)
+{
+    constexpr auto value = error::copy_directory;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "copy directory failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_coalesced__true_exected_message)
+{
+    constexpr auto value = error::not_coalesced;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not coalesced");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__missing_snapshot__true_exected_message)
 {
     constexpr auto value = error::missing_snapshot;

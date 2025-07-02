@@ -467,6 +467,10 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
         // map body, making table usable again.
         load(ec, prevout_body_, table_t::prevout_body);
     }
+    else
+    {
+        ec = error::not_coalesced;
+    }
 
     transactor_mutex_.unlock();
     return ec;
