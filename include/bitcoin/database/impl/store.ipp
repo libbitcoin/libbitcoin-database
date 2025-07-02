@@ -49,6 +49,7 @@ const std::unordered_map<event_t, std::string> CLASS::events
 
     { event_t::wait_lock, "wait_lock" },
     { event_t::flush_body, "flush_body" },
+    { event_t::prune_table, "prune_table" },
     { event_t::backup_table, "backup_table" },
     { event_t::copy_header, "copy_header" },
     { event_t::archive_snapshot, "archive_snapshot" },

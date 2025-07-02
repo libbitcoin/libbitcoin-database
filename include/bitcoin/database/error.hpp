@@ -91,6 +91,7 @@ enum error_t : uint8_t
     /// tables
     create_table,
     close_table,
+    prune_table,
     backup_table,
     restore_table,
     verify_table,

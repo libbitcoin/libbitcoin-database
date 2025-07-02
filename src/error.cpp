@@ -83,6 +83,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     // tables
     { create_table, "failed to create table" },
     { close_table, "failed to close table" },
+    { prune_table, "failed to prune table" },
     { backup_table, "failed to backup table" },
     { restore_table, "failed to restore table" },
     { verify_table, "failed to verify table" },
