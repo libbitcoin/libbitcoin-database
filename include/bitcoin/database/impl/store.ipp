@@ -421,6 +421,8 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
 TEMPLATE
 code CLASS::prune(const event_handler& handler) NOEXCEPT
 {
+    // Transactor lock generally only covers writes, but in this case prevout
+    // reads must also be guarded since the body shrinks and head is cleared.
     while (!transactor_mutex_.try_lock_for(std::chrono::seconds(1)))
     {
         handler(event_t::wait_lock, table_t::store);
