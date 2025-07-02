@@ -99,6 +99,12 @@ bool CLASS::is_full() const NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::is_coalesced() const NOEXCEPT
+{
+    return get_fork() == get_top_candidate();
+}
+
+TEMPLATE
 size_t CLASS::get_space() const NOEXCEPT
 {
     return store_.get_space();
@@ -108,6 +114,12 @@ TEMPLATE
 code CLASS::reload(const typename Store::event_handler& handler) const NOEXCEPT
 {
     return store_.reload(handler);
+}
+
+TEMPLATE
+code CLASS::prune(const typename Store::event_handler& handler) const NOEXCEPT
+{
+    return store_.prune(handler);
 }
 
 TEMPLATE
