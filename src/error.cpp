@@ -75,8 +75,10 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { missing_directory, "missing directory failure" },
     { clear_directory, "clear directory failure" },
     { rename_directory, "rename directory failure" },
+    { copy_directory, "copy directory failure" },
 
     // store
+    { not_coalesced, "not coalesced" },
     { missing_snapshot, "missing snapshot" },
     { unloaded_file, "file not loaded" },
 

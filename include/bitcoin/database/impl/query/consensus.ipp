@@ -221,7 +221,14 @@ error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
 TEMPLATE
 bool CLASS::is_prevouts_cached(const header_link& link) const NOEXCEPT
 {
-    return store_.prevout.exists(to_prevout(link));
+    const auto prevout = to_prevout(link);
+
+    // Transactor required for prevout read because of pruning.
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    return store_.prevout.exists(prevout);
+    // ========================================================================
 }
 
 TEMPLATE
@@ -235,8 +242,18 @@ code CLASS::populate_prevouts(point_sets& sets, size_t points,
     // An empty block will fail here as no prevout element is populated.
     table::prevout::slab_get cache{};
     cache.spends.resize(points);
-    if (!store_.prevout.at(to_prevout(link), cache))
-        return error::integrity5;
+    const auto prevout = to_prevout(link);
+
+    // Transactor required for prevout read because of pruning.
+    // ========================================================================
+    {
+        const auto scope = store_.get_transactor();
+
+        if (!store_.prevout.at(prevout, cache))
+            return error::integrity5;
+
+    }
+    // ========================================================================
 
     // Is any duplicated point in the block confirmed (generally empty).
     for (const auto& spender: cache.conflicts)
@@ -494,12 +511,14 @@ bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
     if (!get_doubles(doubles, block))
         return false;
 
+    const auto prevout = to_prevout(link);
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
     const table::prevout::slab_put_ref prevouts{ {}, doubles, block };
-    return store_.prevout.put(to_prevout(link), prevouts);
+    return store_.prevout.put(prevout, prevouts);
     // ========================================================================
 }
 

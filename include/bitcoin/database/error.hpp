@@ -85,6 +85,7 @@ enum error_t : uint8_t
     copy_directory,
 
     /// store
+    not_coalesced,
     missing_snapshot,
     unloaded_file,
 
