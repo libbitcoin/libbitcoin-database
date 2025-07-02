@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_STORE_IPP
 #define LIBBITCOIN_DATABASE_STORE_IPP
 
+#include <chrono>
 #include <unordered_map>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
