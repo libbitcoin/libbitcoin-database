@@ -63,6 +63,9 @@ public:
     /// Open and load the set of tables, set locks.
     code open(const event_handler& handler) NOEXCEPT;
 
+    /// Prune prunable tables (from loaded, leaves loaded).
+    code prune(const event_handler& handler) NOEXCEPT;
+
     /// Snapshot the set of tables (from loaded, leaves loaded).
     code snapshot(const event_handler& handler) NOEXCEPT;
 
