@@ -456,8 +456,7 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
     };
 
     // Prevouts resettable if all candidates confirmed (fork is candidate top).
-    const query<CLASS> query_{ *this };
-    if (query_.get_fork() == query_.get_top_candidate())
+    if (query<CLASS>{ *this }.is_coalesced())
     {
         // zeroize table head, set body logical size to zero.
         prune(ec, prevout, table_t::prevout_table);
