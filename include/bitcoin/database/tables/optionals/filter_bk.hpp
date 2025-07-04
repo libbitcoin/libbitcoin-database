@@ -39,6 +39,21 @@ struct filter_bk
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
+            hash = source.read_hash();
+            head = source.read_hash();
+            return source;
+        }
+
+        hash_digest hash{};
+        hash_digest head{};
+    };
+
+    struct get_head_only
+      : public schema::filter_bk
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(system::hash_size);
             head = source.read_hash();
             return source;
         }
@@ -46,16 +61,30 @@ struct filter_bk
         hash_digest head{};
     };
 
+    struct get_hash_only
+      : public schema::filter_bk
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            hash = source.read_hash();
+            return source;
+        }
+
+        hash_digest hash{};
+    };
+
     struct put_ref
       : public schema::filter_bk
     {
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
+            sink.write_bytes(hash);
             sink.write_bytes(head);
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
 
+        const hash_digest& hash{};
         const hash_digest& head{};
     };
 };

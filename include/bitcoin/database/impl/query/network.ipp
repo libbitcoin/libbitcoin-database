@@ -120,6 +120,28 @@ size_t CLASS::get_fork(const hashes& locator) const NOEXCEPT
     return zero;
 }
 
+TEMPLATE
+bool CLASS::get_ancestry(header_links& ancestry, const header_link& descendant,
+    size_t count) const NOEXCEPT
+{
+    size_t height{};
+    if (!get_height(height, descendant))
+        return false;
+
+    // Limit to genesis.
+    count = std::min(add1(height), count);
+    ancestry.resize(count);
+    auto link = descendant;
+
+    // Ancestry navigation ensures continuity without locks.
+    // If count is zero then not even descendant is pushed.
+    // link terminal if previous was genesis (avoided by count <= height).
+    for (auto& ancestor: ancestry)
+        link = to_parent((ancestor = link));
+
+    return true;
+}
+
 } // namespace database
 } // namespace libbitcoin
 

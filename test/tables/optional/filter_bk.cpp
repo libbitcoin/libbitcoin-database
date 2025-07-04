@@ -51,22 +51,27 @@ BOOST_AUTO_TEST_CASE(filter_bk__put__ordered__expected)
     );
     const data_chunk expected_body = base16_chunk
     (
-        "0000000000000000000000000000000000000000000000000000000000000000"
-        "0100000000000000000000000000000000000000000000000000000000000000"
-        "0200000000000000000000000000000000000000000000000000000000000000"
-        "0300000000000000000000000000000000000000000000000000000000000000"
-        "0400000000000000000000000000000000000000000000000000000000000000"
+        // hash, head
+        "0000000000000000000000000000000000000000000000000000000000000000""0000000000000000000000000000000000000000000000000000000000000000"
+        "0100000000000000000000000000000000000000000000000000000000000000""0500000000000000000000000000000000000000000000000000000000000000"
+        "0200000000000000000000000000000000000000000000000000000000000000""0600000000000000000000000000000000000000000000000000000000000000"
+        "0300000000000000000000000000000000000000000000000000000000000000""0700000000000000000000000000000000000000000000000000000000000000"
+        "0400000000000000000000000000000000000000000000000000000000000000""0800000000000000000000000000000000000000000000000000000000000000"
     );
 
-    constexpr hash_digest two_hash = from_uintx(uint256_t(2));
-    constexpr hash_digest three_hash = from_uintx(uint256_t(3));
-    constexpr hash_digest four_hash = from_uintx(uint256_t(4));
+    constexpr auto two_hash = from_uintx(uint256_t(2));
+    constexpr auto three_hash = from_uintx(uint256_t(3));
+    constexpr auto four_hash = from_uintx(uint256_t(4));
+    constexpr auto five_hash = from_uintx(uint256_t(5));
+    constexpr auto six_hash = from_uintx(uint256_t(6));
+    constexpr auto seven_hash = from_uintx(uint256_t(7));
+    constexpr auto eight_hash = from_uintx(uint256_t(8));
 
-    const table::filter_bk::put_ref put0{ {}, null_hash };
-    const table::filter_bk::put_ref put1{ {}, one_hash };
-    const table::filter_bk::put_ref put2{ {}, two_hash };
-    const table::filter_bk::put_ref put3{ {}, three_hash };
-    const table::filter_bk::put_ref put4{ {}, four_hash };
+    const table::filter_bk::put_ref put0{ {}, null_hash, null_hash };
+    const table::filter_bk::put_ref put1{ {}, one_hash, five_hash };
+    const table::filter_bk::put_ref put2{ {}, two_hash, six_hash };
+    const table::filter_bk::put_ref put3{ {}, three_hash, seven_hash };
+    const table::filter_bk::put_ref put4{ {}, four_hash, eight_hash };
 
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -95,11 +100,18 @@ BOOST_AUTO_TEST_CASE(filter_bk__put__ordered__expected)
     BOOST_REQUIRE(instance.at(2, get2));
     BOOST_REQUIRE(instance.at(3, get3));
     BOOST_REQUIRE(instance.at(4, get4));
+
+    BOOST_REQUIRE_EQUAL(get0.hash, null_hash);
+    BOOST_REQUIRE_EQUAL(get1.hash, one_hash);
+    BOOST_REQUIRE_EQUAL(get2.hash, two_hash);
+    BOOST_REQUIRE_EQUAL(get3.hash, three_hash);
+    BOOST_REQUIRE_EQUAL(get4.hash, four_hash);
+
     BOOST_REQUIRE_EQUAL(get0.head, null_hash);
-    BOOST_REQUIRE_EQUAL(get1.head, one_hash);
-    BOOST_REQUIRE_EQUAL(get2.head, two_hash);
-    BOOST_REQUIRE_EQUAL(get3.head, three_hash);
-    BOOST_REQUIRE_EQUAL(get4.head, four_hash);
+    BOOST_REQUIRE_EQUAL(get1.head, five_hash);
+    BOOST_REQUIRE_EQUAL(get2.head, six_hash);
+    BOOST_REQUIRE_EQUAL(get3.head, seven_hash);
+    BOOST_REQUIRE_EQUAL(get4.head, eight_hash);
 }
 
 BOOST_AUTO_TEST_CASE(filter_bk__put__disordered__expected)
@@ -128,24 +140,29 @@ BOOST_AUTO_TEST_CASE(filter_bk__put__disordered__expected)
         "ffffff"
         "ffffff"
     );
-    const data_chunk  expected_body = base16_chunk
+    const data_chunk expected_body = base16_chunk
     (
-        "0100000000000000000000000000000000000000000000000000000000000000"
-        "0000000000000000000000000000000000000000000000000000000000000000"
-        "0400000000000000000000000000000000000000000000000000000000000000"
-        "0200000000000000000000000000000000000000000000000000000000000000"
-        "0300000000000000000000000000000000000000000000000000000000000000"
+        // hash, head
+        "0100000000000000000000000000000000000000000000000000000000000000""0500000000000000000000000000000000000000000000000000000000000000"
+        "0000000000000000000000000000000000000000000000000000000000000000""0000000000000000000000000000000000000000000000000000000000000000"
+        "0400000000000000000000000000000000000000000000000000000000000000""0800000000000000000000000000000000000000000000000000000000000000"
+        "0200000000000000000000000000000000000000000000000000000000000000""0600000000000000000000000000000000000000000000000000000000000000"
+        "0300000000000000000000000000000000000000000000000000000000000000""0700000000000000000000000000000000000000000000000000000000000000"
     );
 
-    constexpr hash_digest two_hash = from_uintx(uint256_t(2));
-    constexpr hash_digest three_hash = from_uintx(uint256_t(3));
-    constexpr hash_digest four_hash = from_uintx(uint256_t(4));
+    constexpr auto two_hash = from_uintx(uint256_t(2));
+    constexpr auto three_hash = from_uintx(uint256_t(3));
+    constexpr auto four_hash = from_uintx(uint256_t(4));
+    constexpr auto five_hash = from_uintx(uint256_t(5));
+    constexpr auto six_hash = from_uintx(uint256_t(6));
+    constexpr auto seven_hash = from_uintx(uint256_t(7));
+    constexpr auto eight_hash = from_uintx(uint256_t(8));
 
-    const table::filter_bk::put_ref put0{ {}, null_hash };
-    const table::filter_bk::put_ref put1{ {}, one_hash };
-    const table::filter_bk::put_ref put2{ {}, two_hash };
-    const table::filter_bk::put_ref put3{ {}, three_hash };
-    const table::filter_bk::put_ref put4{ {}, four_hash };
+    const table::filter_bk::put_ref put0{ {}, null_hash, null_hash };
+    const table::filter_bk::put_ref put1{ {}, one_hash, five_hash };
+    const table::filter_bk::put_ref put2{ {}, two_hash, six_hash };
+    const table::filter_bk::put_ref put3{ {}, three_hash, seven_hash };
+    const table::filter_bk::put_ref put4{ {}, four_hash, eight_hash };
 
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
@@ -174,11 +191,18 @@ BOOST_AUTO_TEST_CASE(filter_bk__put__disordered__expected)
     BOOST_REQUIRE(instance.at(2, get2));
     BOOST_REQUIRE(instance.at(3, get3));
     BOOST_REQUIRE(instance.at(4, get4));
+
+    BOOST_REQUIRE_EQUAL(get0.hash, null_hash);
+    BOOST_REQUIRE_EQUAL(get1.hash, one_hash);
+    BOOST_REQUIRE_EQUAL(get2.hash, two_hash);
+    BOOST_REQUIRE_EQUAL(get3.hash, three_hash);
+    BOOST_REQUIRE_EQUAL(get4.hash, four_hash);
+
     BOOST_REQUIRE_EQUAL(get0.head, null_hash);
-    BOOST_REQUIRE_EQUAL(get1.head, one_hash);
-    BOOST_REQUIRE_EQUAL(get2.head, two_hash);
-    BOOST_REQUIRE_EQUAL(get3.head, three_hash);
-    BOOST_REQUIRE_EQUAL(get4.head, four_hash);
+    BOOST_REQUIRE_EQUAL(get1.head, five_hash);
+    BOOST_REQUIRE_EQUAL(get2.head, six_hash);
+    BOOST_REQUIRE_EQUAL(get3.head, seven_hash);
+    BOOST_REQUIRE_EQUAL(get4.head, eight_hash);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
