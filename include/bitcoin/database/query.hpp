@@ -550,6 +550,10 @@ public:
     hashes get_blocks(const hashes& locator, const hash_digest& stop,
         size_t limit) const NOEXCEPT;
 
+    /// Get descending list of ancestry starting with descendant (inclusive).
+    bool get_ancestry(header_links& ancestry, const header_link& descendant,
+        size_t count) const NOEXCEPT;
+
     /// Optional Tables.
     /// -----------------------------------------------------------------------
 
