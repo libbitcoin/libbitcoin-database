@@ -19,6 +19,8 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_OPTIONAL_IPP
 #define LIBBITCOIN_DATABASE_QUERY_OPTIONAL_IPP
 
+#include <algorithm>
+#include <ranges>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -153,6 +155,12 @@ bool CLASS::get_confirmed_balance(uint64_t& out,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+bool CLASS::is_filtered_body(const header_link& link) const NOEXCEPT
+{
+    return store_.filter_tx.exists(to_filter_tx(link));
+}
+
+TEMPLATE
 bool CLASS::get_filter_body(filter& out, const header_link& link) const NOEXCEPT
 {
     table::filter_tx::get_filter filter_tx{};
@@ -163,16 +171,76 @@ bool CLASS::get_filter_body(filter& out, const header_link& link) const NOEXCEPT
     return true;
 }
 
+// filter_bk (surrogate-keyed).
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::is_filtered_head(const header_link& link) const NOEXCEPT
+{
+    return store_.filter_bk.exists(to_filter_bk(link));
+}
+
 TEMPLATE
 bool CLASS::get_filter_head(hash_digest& out,
     const header_link& link) const NOEXCEPT
 {
-    table::filter_bk::get_head filter_bk{};
+    table::filter_bk::get_head_only filter_bk{};
     if (!store_.filter_bk.at(to_filter_bk(link), filter_bk))
         return false;
-    
+
     out = std::move(filter_bk.head);
     return true;
+}
+
+TEMPLATE
+bool CLASS::get_filter_hash(hash_digest& out,
+    const header_link& link) const NOEXCEPT
+{
+    table::filter_bk::get_hash_only filter_bk{};
+    if (!store_.filter_bk.at(to_filter_bk(link), filter_bk))
+        return false;
+
+    out = std::move(filter_bk.hash);
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_filter_hashes(hashes& filter_hashes,
+    hash_digest& previous_header, const header_link& stop_link,
+    size_t count) const NOEXCEPT
+{
+    size_t height{};
+    if (!get_height(height, stop_link))
+        return false;
+
+    count = std::min(add1(height), count);
+    filter_hashes.resize(count);
+    auto link = stop_link;
+
+    // Reversal allows ancenstry population into forward vector.
+    for (auto& hash: std::views::reverse(filter_hashes))
+    {
+        // Implies that stop_link is not a filtered block.
+        if (!get_filter_hash(hash, link))
+            return false;
+
+        // Ancestry from stop link (included) ensures continuity without locks.
+        link = to_parent(link);
+    }
+
+    // There's no trailing increment without at least one loop iteration.
+    if (is_zero(count))
+        link = to_parent(link);
+
+    // link is genesis, previous is null.
+    if (link.is_terminal())
+    {
+        previous_header = system::null_hash;
+        return true;
+    }
+
+    // Obtaining previous from ancestry eansures its continuity as well.
+    return get_filter_head(previous_header, link);
 }
 
 // set_filter_body
@@ -214,14 +282,6 @@ bool CLASS::set_filter_body(const header_link& link,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::is_filtered(const header_link& link) const NOEXCEPT
-{
-    // The current block has been filtered. So when order is imposed in confirm
-    // this can be checked in the case of bump events (maybe not validated).
-    return !filter_enabled() || store_.filter_tx.exists(to_filter_tx(link));
-}
-
-TEMPLATE
 bool CLASS::set_filter_head(const header_link& link) NOEXCEPT
 {
     using namespace system::neutrino;
@@ -240,13 +300,14 @@ bool CLASS::set_filter_head(const header_link& link) NOEXCEPT
         if (!get_filter_head(previous, parent))
             return false;
 
-    // Use the previous head and current body to compute the current head.
-    return set_filter_head(link, compute_filter_header(previous, body));
+    // Use previous head and current body to compute current hash and head.
+    hash_digest hash{};
+    return set_filter_head(link, compute_header(hash, previous, body), hash);
 }
 
 TEMPLATE
-bool CLASS::set_filter_head(const header_link& link,
-    const hash_digest& head) NOEXCEPT
+bool CLASS::set_filter_head(const header_link& link, const hash_digest& head,
+    const hash_digest& hash) NOEXCEPT
 {
     if (!filter_enabled())
         return true;
@@ -258,6 +319,7 @@ bool CLASS::set_filter_head(const header_link& link,
     return store_.filter_bk.put(to_filter_bk(link), table::filter_bk::put_ref
     {
         {},
+        hash,
         head
     });
     // ========================================================================

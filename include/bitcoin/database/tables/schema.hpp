@@ -363,12 +363,13 @@ struct filter_bk
     static constexpr size_t pk = schema::header::pk;
     using link = linkage<pk, to_bits(pk)>;
     static constexpr size_t minsize =
+        schema::hash +
         schema::hash;
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
     static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 32u);
-    static_assert(minrow == 32u);
+    static_assert(minsize == 64u);
+    static_assert(minrow == 64u);
     static_assert(link::size == 3u);
 };
 

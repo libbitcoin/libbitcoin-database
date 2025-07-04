@@ -563,14 +563,19 @@ public:
     bool get_confirmed_balance(uint64_t& out,
         const hash_digest& key) const NOEXCEPT;
 
-    bool is_filtered(const header_link& link) const NOEXCEPT;
+    bool is_filtered_body(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
-    bool get_filter_head(hash_digest& out, const header_link& link) const NOEXCEPT;
     bool set_filter_body(const header_link& link, const block& block) NOEXCEPT;
     bool set_filter_body(const header_link& link, const filter& body) NOEXCEPT;
+
+    bool is_filtered_head(const header_link& link) const NOEXCEPT;
+    bool get_filter_head(hash_digest& out, const header_link& link) const NOEXCEPT;
+    bool get_filter_hash(hash_digest& out, const header_link& link) const NOEXCEPT;
+    bool get_filter_hashes(hashes& filter_hashes, hash_digest& previous_header,
+        const header_link& stop_link, size_t count) const NOEXCEPT;
     bool set_filter_head(const header_link& link) NOEXCEPT;
-    bool set_filter_head(const header_link& link,
-        const hash_digest& head) NOEXCEPT;
+    bool set_filter_head(const header_link& link, const hash_digest& head,
+        const hash_digest& hash) NOEXCEPT;
 
 protected:
     struct span

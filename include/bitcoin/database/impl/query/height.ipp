@@ -149,6 +149,9 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     out.reserve(one);
     code ec{};
 
+    // Disable filter constraint if filtering is disabled.
+    filter &= filter_enabled();
+
     ///////////////////////////////////////////////////////////////////////////
     std::shared_lock interlock{ candidate_reorganization_mutex_ };
 
@@ -156,7 +159,7 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     auto height = add1(fork_point);
     auto link = to_candidate(height);
     while (is_block_validated(ec, link, height, top_checkpoint) &&
-        (!filter || is_filtered(link)))
+        (!filter || is_filtered_body(link)))
     {
         out.emplace_back(link, ec);
         link = to_candidate(++height);
