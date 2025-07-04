@@ -243,6 +243,19 @@ bool CLASS::get_filter_hashes(hashes& filter_hashes,
     return get_filter_head(previous_header, link);
 }
 
+TEMPLATE
+bool CLASS::get_filter_heads(hashes& filter_heads,
+    size_t stop_height, size_t interval) const NOEXCEPT
+{
+    size_t height{};
+    filter_heads.resize(system::floored_divide(stop_height, interval));
+    for (auto& head: filter_heads)
+        if (!get_filter_head(head, to_confirmed((height += interval))))
+            return false;
+
+    return true;
+}
+
 // set_filter_body
 // ----------------------------------------------------------------------------
 
