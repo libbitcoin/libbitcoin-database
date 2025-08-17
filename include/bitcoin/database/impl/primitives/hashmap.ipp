@@ -51,7 +51,7 @@ bool CLASS::close() NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::backup() NOEXCEPT
+bool CLASS::backup(bool) NOEXCEPT
 {
     return head_.set_body_count(body_.count());
 }

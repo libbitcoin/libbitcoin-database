@@ -50,8 +50,8 @@ public:
 
     bool create() NOEXCEPT;
     bool close() NOEXCEPT;
-    bool reset() NOEXCEPT;
-    bool backup() NOEXCEPT;
+    bool clear() NOEXCEPT;
+    bool backup(bool prune=false) NOEXCEPT;
     bool restore() NOEXCEPT;
     bool verify() const NOEXCEPT;
 

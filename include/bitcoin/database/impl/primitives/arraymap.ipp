@@ -50,17 +50,21 @@ bool CLASS::close() NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::reset() NOEXCEPT
+bool CLASS::clear() NOEXCEPT
 {
-    Link count{};
-    return head_.clear() && head_.get_body_count(count) &&
-        body_.truncate(count);
+    // Head is nullified and its body reference is zeroized. Body memory
+    // recovery requires truncate/unload/load, which should be preceded by a
+    // snapshot as all existing snapshots will be invalidated by the truncate.
+    // An intervening snapshot will capture the zero count body reference (and
+    // null head links) and will therefore be recoverable whether or not the
+    // truncation succeeds.
+    return head_.clear();
 }
 
 TEMPLATE
-bool CLASS::backup() NOEXCEPT
+bool CLASS::backup(bool prune) NOEXCEPT
 {
-    return head_.set_body_count(body_.count());
+    return head_.set_body_count(prune ? Link{ 0 } : body_.count());
 }
 
 TEMPLATE

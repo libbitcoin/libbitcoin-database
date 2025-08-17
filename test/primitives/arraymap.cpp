@@ -834,6 +834,7 @@ BOOST_AUTO_TEST_CASE(arraymap__record_body_count__nine_close__nine)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+// Close resets the cleared body count.
 BOOST_AUTO_TEST_CASE(arraymap__reset__nine_close__zero)
 {
     data_chunk head(initial_head_size, 0xff);
@@ -841,9 +842,9 @@ BOOST_AUTO_TEST_CASE(arraymap__reset__nine_close__zero)
     test::chunk_storage head_store{ head };
     test::chunk_storage body_store{ body };
     record_table instance{ head_store, body_store, initial_buckets };
-    BOOST_REQUIRE(instance.reset());
+    BOOST_REQUIRE(instance.clear());
     BOOST_REQUIRE(instance.close());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("090000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
     BOOST_REQUIRE(!instance.get_fault());
 }
 
