@@ -429,49 +429,49 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
     }
 
     code ec{ error::success };
-    const auto prune = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
-    {
-        if (!ec)
-        {
-            handler(event_t::prune_table, table);
-            if (!storage.reset())
-                ec = error::prune_table;
-        }
-    };
-
-    const auto unload = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
-    {
-        if (!ec)
-        {
-            handler(event_t::unload_file, table);
-            ec = storage.unload();
-        }
-    };
-
-    const auto load = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
-    {
-        if (!ec)
-        {
-            handler(event_t::load_file, table);
-            ec = storage.load();
-        }
-    };
 
     // Prevouts resettable if all candidates confirmed (fork is candidate top).
-    if (query<CLASS>{ *this }.is_coalesced())
+    if (!query<CLASS>{ *this }.is_coalesced())
     {
-        // zeroize table head, set body logical size to zero.
-        prune(ec, prevout, table_t::prevout_table);
-
-        // unmap body, setting mapped size to logical size (zero).
-        unload(ec, prevout_body_, table_t::prevout_body);
-
-        // map body, making table usable again.
-        load(ec, prevout_body_, table_t::prevout_body);
+        ec = error::not_coalesced;
     }
     else
     {
-        ec = error::not_coalesced;
+        // nullify table head, set reference body count to zero.
+        handler(event_t::prune_table, table_t::prevout_head);
+        if (!prevout.clear())
+        {
+            ec = error::prune_table;
+        }
+        else
+        {
+            // Snapshot with nullified head and zero body count.
+            // The 'prune' parameter signals to not reset body count.
+            ec = snapshot(handler, true);
+
+            if (!ec)
+            {
+                // zeroize table body, set logical body count to zero.
+                handler(event_t::prune_table, table_t::prevout_body);
+                if (!prevout_body_.truncate(zero))
+                {
+                    ec = error::prune_table;
+                }
+                else
+                {
+                    // unmap body, setting mapped size to logical size (zero).
+                    handler(event_t::unload_file, table_t::prevout_body);
+                    ec = prevout_body_.unload();
+
+                    if (!ec)
+                    {
+                        // map body, making table usable again.
+                        handler(event_t::load_file, table_t::prevout_body);
+                        ec = prevout_body_.load();
+                    }
+                }
+            }
+        }
     }
 
     transactor_mutex_.unlock();
@@ -479,9 +479,9 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
 }
 
 TEMPLATE
-code CLASS::snapshot(const event_handler& handler) NOEXCEPT
+code CLASS::snapshot(const event_handler& handler, bool prune) NOEXCEPT
 {
-    while (!transactor_mutex_.try_lock_for(std::chrono::seconds(1)))
+    while (!prune && !transactor_mutex_.try_lock_for(std::chrono::seconds(1)))
     {
         handler(event_t::wait_lock, table_t::store);
     }
@@ -511,7 +511,7 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
     flush(ec, strong_tx_body_, table_t::strong_tx_body);
 
     flush(ec, duplicate_body_, table_t::duplicate_body);
-    flush(ec, prevout_body_, table_t::prevout_body);
+    if (!prune) flush(ec, prevout_body_, table_t::prevout_body);
     flush(ec, validated_bk_body_, table_t::validated_bk_body);
     flush(ec, validated_tx_body_, table_t::validated_tx_body);
 
@@ -519,8 +519,8 @@ code CLASS::snapshot(const event_handler& handler) NOEXCEPT
     flush(ec, filter_bk_body_, table_t::filter_bk_body);
     flush(ec, filter_tx_body_, table_t::filter_tx_body);
 
-    if (!ec) ec = backup(handler);
-    transactor_mutex_.unlock();
+    if (!ec) ec = backup(handler, prune);
+    if (!prune) transactor_mutex_.unlock();
     return ec;
 }
 
@@ -863,16 +863,16 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
 }
 
 TEMPLATE
-code CLASS::backup(const event_handler& handler) NOEXCEPT
+code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
 {
     code ec{ error::success };
     const auto backup = [&handler](code& ec, auto& storage,
-        table_t table) NOEXCEPT
+        table_t table, bool prune=false) NOEXCEPT
     {
         if (!ec)
         {
             handler(event_t::backup_table, table);
-            if (!storage.backup())
+            if (!storage.backup(prune))
                 ec = error::backup_table;
         }
     };
@@ -891,7 +891,7 @@ code CLASS::backup(const event_handler& handler) NOEXCEPT
     backup(ec, strong_tx, table_t::strong_tx_table);
 
     backup(ec, duplicate, table_t::duplicate_table);
-    backup(ec, prevout, table_t::prevout_table);
+    backup(ec, prevout, table_t::prevout_table, prune);
     backup(ec, validated_bk, table_t::validated_bk_table);
     backup(ec, validated_tx, table_t::validated_tx_table);
 

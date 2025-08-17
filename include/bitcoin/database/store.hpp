@@ -67,7 +67,7 @@ public:
     code prune(const event_handler& handler) NOEXCEPT;
 
     /// Snapshot the set of tables (from loaded, leaves loaded).
-    code snapshot(const event_handler& handler) NOEXCEPT;
+    code snapshot(const event_handler& handler, bool prune=false) NOEXCEPT;
 
     /// Restore the most recent snapshot (from closed, leaves loaded).
     code restore(const event_handler& handler) NOEXCEPT;
@@ -125,7 +125,7 @@ public:
 protected:
     code open_load(const event_handler& handler) NOEXCEPT;
     code unload_close(const event_handler& handler) NOEXCEPT;
-    code backup(const event_handler& handler) NOEXCEPT;
+    code backup(const event_handler& handler, bool prune=false) NOEXCEPT;
     code dump(const std::filesystem::path& folder,
         const event_handler& handler) NOEXCEPT;
 
