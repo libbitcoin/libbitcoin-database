@@ -449,6 +449,7 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
             // The 'prune' parameter signals to not reset body count.
             ec = snapshot(handler, true);
 
+            // If the pruning fails here the snapshot remains valid.
             if (!ec)
             {
                 // zeroize table body, set logical body count to zero.
