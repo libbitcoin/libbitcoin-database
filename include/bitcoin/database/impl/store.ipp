@@ -1048,8 +1048,13 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     static const auto heads = configuration_.path / schema::dir::heads;
     static const auto primary = configuration_.path / schema::dir::primary;
     static const auto secondary = configuration_.path / schema::dir::secondary;
+    static const auto temporary = configuration_.path / schema::dir::temporary;
 
     handler(event_t::recover_snapshot, table_t::store);
+
+    // Clean up any residual /temporary.
+    file::clear_directory(temporary);
+    file::remove(temporary);
 
     if (file::is_directory(primary))
     {
@@ -1058,7 +1063,6 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         if (!ec) ec = file::remove_ex(heads);
         if (!ec) ec = file::rename_ex(primary, heads);
         if (!ec) ec = file::copy_directory_ex(heads, primary);
-        if (ec) /* bool */ file::remove_ex(primary);
     }
     else if (file::is_directory(secondary))
     {
@@ -1067,7 +1071,6 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         if (!ec) ec = file::remove_ex(heads);
         if (!ec) ec = file::rename_ex(secondary, heads);
         if (!ec) ec = file::copy_directory_ex(heads, primary);
-        if (ec) /* bool */ file::remove_ex(secondary);
     }
     else
     {
