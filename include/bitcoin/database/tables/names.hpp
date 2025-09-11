@@ -31,6 +31,7 @@ namespace dir
     constexpr auto heads = "heads";
     constexpr auto primary = "primary";
     constexpr auto secondary = "secondary";
+    constexpr auto temporary = "temporary";
 }
 
 namespace archive
