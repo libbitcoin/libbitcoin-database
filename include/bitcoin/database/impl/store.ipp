@@ -904,29 +904,40 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
 
     static const auto primary = configuration_.path / schema::dir::primary;
     static const auto secondary = configuration_.path / schema::dir::secondary;
+    static const auto temporary = configuration_.path / schema::dir::temporary;
 
     handler(event_t::archive_snapshot, table_t::store);
 
+    // Ensure existing and empty /temporary.
+    if ((ec = file::clear_directory_ex(temporary))) return ec;
+
+    // Ensure no /primary.
     if (file::is_directory(primary))
     {
-        // Delete /secondary, rename /primary to /secondary.
+        // Delete /secondary.
         if ((ec = file::clear_directory_ex(secondary))) return ec;
         if ((ec = file::remove_ex(secondary))) return ec;
+
+        // Rename /primary to /secondary (atomic).
         if ((ec = file::rename_ex(primary, secondary))) return ec;
     }
 
-    // Dump /heads memory maps to /primary.
-    if ((ec = file::clear_directory_ex(primary))) return ec;
-    ec = dump(primary, handler);
+    // Dump /heads memory maps to /temporary.
+    if ((ec = dump(temporary, handler)))
+    {
+        // Failed dump, clear temporary and rename secondary to primary.
+        if (file::clear_directory(temporary) && file::remove(temporary))
+            file::rename(secondary, primary);
 
-    // If failed clear primary and rename secondary to primary.
-    if (ec && file::clear_directory(primary) && file::remove(primary))
-        /* bool */ file::rename(secondary, primary);
+        // Return original fault.
+        return ec;
+    }
 
-    return ec;
+    // Rename /temporary to /primary (atomic).
+    return file::rename_ex(temporary, primary);
 }
 
-// Dump memory maps of /heads to new files in /primary.
+// Dump memory maps of /heads to new files in /temporary.
 // Heads are copied from RAM, not flushed to disk and copied as files.
 TEMPLATE
 code CLASS::dump(const path& folder,
