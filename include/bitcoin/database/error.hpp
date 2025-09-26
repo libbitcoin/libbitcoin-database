@@ -68,6 +68,7 @@ enum error_t : uint8_t
     mremap_failure,
     munmap_failure,
     madvise_failure,
+    sysconf_failure,
     ftruncate_failure,
     fsync_failure,
 
