@@ -40,7 +40,7 @@ chunk_storage::chunk_storage(system::data_chunk& reference) NOEXCEPT
 }
 
 chunk_storage::chunk_storage(const std::filesystem::path& filename,
-    size_t, size_t) NOEXCEPT
+    size_t, size_t, bool) NOEXCEPT
   : buffer_{ local_ }, path_{ filename }, logical_{}
 {
 }

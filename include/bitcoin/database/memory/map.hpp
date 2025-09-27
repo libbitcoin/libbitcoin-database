@@ -43,7 +43,7 @@ public:
     DELETE_COPY_MOVE(map);
 
     map(const std::filesystem::path& filename, size_t minimum=1,
-        size_t expansion=0) NOEXCEPT;
+        size_t expansion=0, bool random=true) NOEXCEPT;
 
     /// Destruct for debug assertion only.
     virtual ~map() NOEXCEPT;
@@ -140,6 +140,7 @@ private:
     const std::filesystem::path filename_;
     const size_t minimum_;
     const size_t expansion_;
+    const bool random_;
 
     // Protected by remap_mutex.
     // requires remap_mutex_ exclusive lock for write.

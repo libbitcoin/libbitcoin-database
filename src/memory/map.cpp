@@ -24,6 +24,7 @@
     #include <sys/mman.h>
     #include <sys/stat.h>
     #include <sys/types.h>
+    #include <unistd.h>
 #endif
 #include <algorithm>
 #include <chrono>
@@ -43,8 +44,12 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 using namespace system;
 
-map::map(const path& filename, size_t minimum, size_t expansion) NOEXCEPT
-  : filename_(filename), minimum_(minimum), expansion_(expansion)
+map::map(const path& filename, size_t minimum, size_t expansion,
+    bool random) NOEXCEPT
+  : filename_(filename),
+    minimum_(minimum),
+    expansion_(expansion),
+    random_(random)
 {
 }
 
@@ -69,7 +74,8 @@ code map::open() NOEXCEPT
     if (opened_ != file::invalid)
         return error::open_open;
 
-    if (const auto ec = file::open_ex(opened_, filename_))
+    // Windows doesn't use madvise, instead infers map access from file open.
+    if (const auto ec = file::open_ex(opened_, filename_, random_))
         return ec;
 
     return file::size_ex(logical_, opened_);
@@ -583,43 +589,41 @@ bool map::finalize_(size_t size) NOEXCEPT
         return false;
     }
 
-    // TODO: also, madvise only the size increase.
-    // TODO: madvise with large length value fails on linux (and zero is noop).
-    // TODO: Random may not be best since writes are sequential (for bodies).
-    // TODO: Heads are truly read/write random so could benefit.
-    // TODO: this fails with large and/or unaligned size. Align size to page,
-    // TODO: rounded up. Iterate over calls at 1GB (1_u64 << 30), sample:
-    ////// Get page size (usually 4KB)
-    ////const size_t page_size = sysconf(_SC_PAGESIZE);
-    ////if (page_size == static_cast<size_t>(-1))
-    ////{
-    ////    set_first_code(error::sysconf_failure);
-    ////    unmap_();
-    ////    return false;
-    ////}
-    ////
-    ////// Align size up to page boundary
-    ////const size_t aligned_size = (size + page_size - 1) & ~(page_size - 1);
-    ////
-    ////// Use 1GB chunks to avoid large-length issues
-    ////constexpr size_t chunk_size = 1ULL << 30; // 1GB
-    ////uint8_t* ptr = memory_map_;
-    ////for (size_t offset = 0; offset < aligned_size; offset += chunk_size)
-    ////{
-    ////    size_t len = std::min(chunk_size, aligned_size - offset);
-    ////    if (::madvise(ptr + offset, len, MADV_SEQUENTIAL) == fail)
-    ////    {
-    ////        set_first_code(error::madvise_failure);
-    ////        unmap_();
-    ////        return false;
-    ////    }
-    ////}
-    ////if (::madvise(memory_map_, size, MADV_RANDOM) == fail)
-    ////{
-    ////    set_first_code(error::madvise_failure);
-    ////    unmap_();
-    ////    return false;
-    ////}
+#if !defined(HAVE_MSC)
+    // Get page size (usually 4KB).
+    const int page_size = ::sysconf(_SC_PAGESIZE);
+    const auto page = possible_narrow_sign_cast<size_t>(page_size);
+
+    // If not one bit then page size is not a power of two as required.
+    if (page_size == fail || !is_one(ones_count(page)))
+    {
+        set_first_code(error::sysconf_failure);
+        unmap_();
+        return false;
+    }
+    
+    // Align size up to page boundary.
+    const auto max = sub1(page);
+    const auto align = bit_and(ceilinged_add(size, max), bit_not(max));
+
+    // Use 1GB chunks to avoid large-length issues.
+    constexpr auto chunk = power2(30u);
+    const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
+
+    for (auto offset = zero; offset < align; offset += chunk)
+    {
+        BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
+        const auto start = memory_map_ + offset;
+        BC_POP_WARNING()
+
+        if (::madvise(start, std::min(chunk, align - offset), advice) == fail)
+        {
+            set_first_code(error::madvise_failure);
+            unmap_();
+            return false;
+        }
+    }
+#endif
 
     loaded_ = true;
     capacity_ = size;
