@@ -30,9 +30,6 @@ typedef size_t oft__;
 #define MS_SYNC         2
 #define MS_INVALIDATE   4
 
-// Flags for madvise (stub).
-#define MADV_RANDOM     0
-
 void* mmap(void* addr, size_t len, int prot, int flags, int fd, oft__ off) noexcept;
 void* mremap_(void* addr, size_t old_size, size_t new_size, int prot,
     int flags, int fd) noexcept;

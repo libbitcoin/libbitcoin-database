@@ -61,6 +61,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { mremap_failure, "mremap failure" },
     { munmap_failure, "munmap failure" },
     { madvise_failure, "madvise failure" },
+    { sysconf_failure, "sysconf failure" },
     { ftruncate_failure, "ftruncate failure" },
     { fsync_failure, "fsync failure" },
 

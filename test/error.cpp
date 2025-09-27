@@ -203,6 +203,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__madvise_failure__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "madvise failure");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__sysconf_failure__true_exected_message)
+{
+    constexpr auto value = error::sysconf_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sysconf failure");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__ftruncate_failure__true_exected_message)
 {
     constexpr auto value = error::ftruncate_failure;

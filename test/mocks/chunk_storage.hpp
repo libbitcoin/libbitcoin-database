@@ -32,7 +32,7 @@ public:
     chunk_storage() NOEXCEPT;
     chunk_storage(system::data_chunk& reference) NOEXCEPT;
     chunk_storage(const std::filesystem::path& filename, size_t minimum=1,
-        size_t expansion=0) NOEXCEPT;
+        size_t expansion=0, bool random=true) NOEXCEPT;
 
     // test side door.
     system::data_chunk& buffer() NOEXCEPT;

@@ -35,12 +35,13 @@ static DWORD protect_page(int prot) noexcept
 
     if ((prot & PROT_EXEC) != 0)
     {
-        return ((prot & PROT_WRITE) != 0) ? PAGE_EXECUTE_READWRITE :
-            PAGE_EXECUTE_READ;
+        return ((prot & PROT_WRITE) != 0) ?
+            PAGE_EXECUTE_READWRITE : PAGE_EXECUTE_READ;
     }
     else
     {
-        return ((prot & PROT_WRITE) != 0) ? PAGE_READWRITE : PAGE_READONLY;
+        return ((prot & PROT_WRITE) != 0) ?
+            PAGE_READWRITE : PAGE_READONLY;
     }
 }
 
@@ -79,38 +80,37 @@ void* mmap(void* /*addr*/, size_t len, int prot, int flags, int fd,
     const auto file_lo = large ? (DWORD)((off)       & MAXDWORD) : (DWORD)off;
     const auto file_hi = large ? (DWORD)((off >> 32) & MAXDWORD) : (DWORD)0;
 
-    if (len == 0 || (flags & MAP_FIXED) != 0 || prot == PROT_EXEC)
+    // Disallow fixed, executable, and or anonymous mapping.
+    if (len == 0 ||
+        (prot == PROT_EXEC) ||
+        (flags & MAP_FIXED) != 0 ||
+        (flags & MAP_ANONYMOUS) != 0)
     {
         errno = EINVAL;
         return MAP_FAILED;
     }
 
     // Never call CloseHandle on the return value of this function.
-    const auto handle = ((flags & MAP_ANONYMOUS) == 0) ?
-        (HANDLE)_get_osfhandle(fd) : INVALID_HANDLE_VALUE;
-
-    if ((flags & MAP_ANONYMOUS) == 0 && handle == INVALID_HANDLE_VALUE)
+    const auto handle = (HANDLE)_get_osfhandle(fd);
+    if (handle == INVALID_HANDLE_VALUE)
     {
         errno = EBADF;
         return MAP_FAILED;
     }
 
-    const auto mapping = CreateFileMappingW(handle, NULL, protect, max_hi,
-        max_lo, NULL);
-
+    const auto mapping = CreateFileMappingW(handle, NULL, protect, max_hi, max_lo, NULL);
     if (mapping == NULL)
     {
         errno = last_error(EPERM);
         return MAP_FAILED;
     }
 
-    const auto map = MapViewOfFile(mapping, access, file_hi, file_lo, len);
-
     // "to fully close a file mapping object, an application must unmap all
     // mapped views of the file mapping object by calling UnmapViewOfFile and
     // close the file mapping object handle by calling CloseHandle. These
     // functions can be called in any order." - so we close the handle here and
     // retain only the map.
+    const auto map = MapViewOfFile(mapping, access, file_hi, file_lo, len);
     if (map == NULL || CloseHandle(mapping) == FALSE)
     {
         errno = last_error(EPERM);
@@ -156,7 +156,6 @@ int mprotect(void* addr, size_t len, int prot) noexcept
 {
     DWORD old_protect = 0;
     const auto new_protect = protect_page(prot);
-
     if (VirtualProtect(addr, len, new_protect, &old_protect) == FALSE)
     {
         errno = last_error(EPERM);
@@ -269,6 +268,12 @@ int ftruncate(int fd, oft__ size) noexcept
 
     errno = 0;
     return 0;
+}
+
+// stub
+int sysconf(int) noexcept
+{
+    return {};
 }
 
 #endif // _WIN32

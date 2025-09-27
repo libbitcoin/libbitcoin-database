@@ -242,29 +242,62 @@ code copy_directory_ex(const path& from, const path& to) NOEXCEPT
 
 // File descriptor functions required for memory mapping.
 
-int open(const path& filename) NOEXCEPT
+#if defined(HAVE_MSC) || !defined(HAVE_APPLE)
+    #define MSC_OR_NOAPPLE(parameter) parameter
+#else
+    #define MSC_OR_NOAPPLE(parameter)
+#endif
+
+int open(const path& filename, bool MSC_OR_NOAPPLE(random)) NOEXCEPT
 {
     const auto path = system::to_extended_path(filename);
     int file_descriptor{};
 
-    // _wsopen_s and open set errno on failure.
-    // _wsopen_s and wstring do not throw (but are unannotated).
 #if defined(HAVE_MSC)
-    // sets file_descriptor = -1 on error.
-    _wsopen_s(&file_descriptor, path.c_str(),
-        O_RDWR | _O_BINARY | _O_RANDOM, _SH_DENYWR, _S_IREAD | _S_IWRITE);
+    // _wsopen_s and wstring do not throw (but are unannotated).
+    // sets file_descriptor = -1 and errno on error.
+    const auto access = (random ? _O_RANDOM : _O_SEQUENTIAL);
+    ::_wsopen_s(&file_descriptor, path.c_str(),
+        O_RDWR | _O_BINARY | access, _SH_DENYWR, _S_IREAD | _S_IWRITE);
 #else
-    // returns -1 on failure.
-    file_descriptor = ::open(path.c_str(),
-        O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-#endif
+    // open sets errno on failure.
+    file_descriptor = ::open(path.c_str(), O_RDWR, S_IRUSR | S_IWUSR);
+
+#if !defined(HAVE_APPLE)
+    if (file_descriptor != -1)
+    {
+        // _O_RANDOM equivalent, posix_fadvise returns error on failure.
+        const auto advice = random ? POSIX_FADV_RANDOM : POSIX_FADV_SEQUENTIAL;
+        const auto result = ::posix_fadvise(file_descriptor, 0, 0, advice);
+        if (!is_zero(result))
+        {
+            close(file_descriptor);
+            file_descriptor = -1;
+            errno = result;
+        }
+        else
+        {
+            // _SH_DENYWR equivalent.
+            const struct flock lock{ F_WRLCK, SEEK_SET, 0, 0 };
+            if (::fcntl(file_descriptor, F_SETLK, &lock) == -1)
+            {
+                const auto last = errno;
+                close(file_descriptor);
+                file_descriptor = -1;
+                errno = last;
+            }
+        }
+    }
+#endif // !HAVE_APPLE
+#endif // HAVE_MSC
+
     return file_descriptor;
 }
 
-code open_ex(int& file_descriptor, const path& filename) NOEXCEPT
+code open_ex(int& file_descriptor, const path& filename, bool random) NOEXCEPT
 {
     system::error::clear_errno();
-    file_descriptor = open(filename);
+    file_descriptor = open(filename, random);
     return system::error::get_errno();
 }
 
