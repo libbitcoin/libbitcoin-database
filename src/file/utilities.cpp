@@ -44,8 +44,10 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 inline path trim(const path& value) NOEXCEPT
 {
+    static const string_list trims{ "/", "\\", "\x20" };
+
     // Trailing slash may cause successful create_directories returning false.
-    return system::trim_right_copy(value.string(), { "/", "\\", "\x20" });
+    return to_path(trim_right_copy(from_path(value), trims));
 }
 
 // We don't use ec because it gets set (not found) when false, but no way to
