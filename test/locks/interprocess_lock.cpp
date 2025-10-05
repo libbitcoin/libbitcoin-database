@@ -18,20 +18,7 @@
  */
 #include "../test.hpp"
 
-struct interprocess_lock_setup_fixture
-{
-    interprocess_lock_setup_fixture() noexcept
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    ~interprocess_lock_setup_fixture() noexcept
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-};
-
-BOOST_FIXTURE_TEST_SUITE(interprocess_lock_tests, interprocess_lock_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(interprocess_lock_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(interprocess_lock__construct__file__expected)
 {

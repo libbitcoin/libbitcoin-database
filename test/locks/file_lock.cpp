@@ -18,20 +18,7 @@
  */
 #include "../test.hpp"
 
-struct file_lock_setup_fixture
-{
-    file_lock_setup_fixture() noexcept
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    ~file_lock_setup_fixture() noexcept
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-};
-
-BOOST_FIXTURE_TEST_SUITE(file_lock_tests, file_lock_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(file_lock_tests, test::directory_setup_fixture)
 
 class access final
   : public file_lock

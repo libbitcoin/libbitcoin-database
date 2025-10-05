@@ -42,14 +42,14 @@ size_t size(const std::filesystem::path& file_path) NOEXCEPT
     // returns max_size_t on error.
     code ec;
     return system::possible_narrow_and_sign_cast<size_t>(
-        std::filesystem::file_size(system::to_extended_path(file_path), ec));
+        std::filesystem::file_size(system::extended_path(file_path), ec));
 }
 
 bool exists(const std::filesystem::path& file_path) NOEXCEPT
 {
     // Returns true only if file existed.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    std::ifstream file(system::to_extended_path(file_path));
+    std::ifstream file(system::extended_path(file_path));
     const auto good = file.good();
     file.close();
     BC_POP_WARNING()
@@ -60,7 +60,7 @@ bool remove(const std::filesystem::path& file_path) NOEXCEPT
 {
     // Deletes and returns false if file did not exist (or error).
     code ec;
-    return std::filesystem::remove(system::to_extended_path(file_path), ec);
+    return std::filesystem::remove(system::extended_path(file_path), ec);
 }
 
 bool clear(const std::filesystem::path& directory) NOEXCEPT
@@ -68,7 +68,7 @@ bool clear(const std::filesystem::path& directory) NOEXCEPT
     // remove_all returns count removed, and error code if fails.
     // create_directories returns true if path exists or created.
     // used for setup, with no expectations of file/directory existence.
-    const auto path = system::to_extended_path(directory);
+    const auto path = system::extended_path(directory);
     code ec;
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     std::filesystem::remove_all(path, ec);
@@ -78,7 +78,7 @@ bool clear(const std::filesystem::path& directory) NOEXCEPT
 
 bool folder(const std::filesystem::path& directory) NOEXCEPT
 {
-    const auto path = system::to_extended_path(directory);
+    const auto path = system::extended_path(directory);
     code ec;
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return !ec && std::filesystem::is_directory(path, ec);
@@ -89,7 +89,7 @@ bool create(const std::filesystem::path& file_path) NOEXCEPT
 {
     // Creates and returns true if file existed or not (and no error).
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    std::ofstream file(system::to_extended_path(file_path));
+    std::ofstream file(system::extended_path(file_path));
     const auto good = file.good();
     file.close();
     BC_POP_WARNING()
@@ -112,7 +112,7 @@ std::string read_line(const std::filesystem::path& file_path,
     size_t line) NOEXCEPT
 {
     std::string out{};
-    std::ifstream file(system::to_extended_path(file_path));
+    std::ifstream file(system::extended_path(file_path));
     do { out.clear(); std::getline(file, out); } while (is_nonzero(line--));
     return out;
 }

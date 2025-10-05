@@ -57,7 +57,7 @@ bool file_lock::destroy() NOEXCEPT
     // remove returns false if file did not exist though error_code is false if
     // file did not exist. use of error_code overload also precludes exception.
     std::error_code ec;
-    std::filesystem::remove(system::to_extended_path(file_), ec);
+    std::filesystem::remove(system::extended_path(file_), ec);
     return !ec;
 }
 

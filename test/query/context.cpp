@@ -20,25 +20,7 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-struct query_context_setup_fixture
-{
-    DELETE_COPY_MOVE(query_context_setup_fixture);
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-    query_context_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    ~query_context_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    BC_POP_WARNING()
-};
-
-BOOST_FIXTURE_TEST_SUITE(query_context_tests, query_context_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_context_tests, test::directory_setup_fixture)
 
 const auto events_handler = [](auto, auto) {};
 

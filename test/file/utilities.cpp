@@ -18,25 +18,7 @@
  */
 #include "../test.hpp"
 
-struct file_utilities_setup_fixture
-{
-    DELETE_COPY_MOVE(file_utilities_setup_fixture);
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-    file_utilities_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    ~file_utilities_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    BC_POP_WARNING()
-};
-
-BOOST_FIXTURE_TEST_SUITE(file_utilities_tests, file_utilities_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(file_utilities_tests, test::directory_setup_fixture)
 
 using namespace system;
 static_assert(file::invalid == -1);

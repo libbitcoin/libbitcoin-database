@@ -20,25 +20,7 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-struct query_archive_write_setup_fixture
-{
-    DELETE_COPY_MOVE(query_archive_write_setup_fixture);
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-    query_archive_write_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    ~query_archive_write_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    BC_POP_WARNING()
-};
-
-BOOST_FIXTURE_TEST_SUITE(query_archive_write_tests, query_archive_write_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_archive_write_tests, test::directory_setup_fixture)
 
 // ensure context::flags is same size as chain_context::flags.
 static_assert(is_same_type<database::context::flag_t::integer, decltype(system::chain::context{}.flags)>);
