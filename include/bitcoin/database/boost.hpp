@@ -48,15 +48,11 @@ inline file_handle_t open_existing_file(
     const std::filesystem::path& file) NOEXCEPT
 {
     constexpr auto mode = interprocess::read_write;
-#if defined(HAVE_MSC)
-    const auto filename = system::to_extended_path(file);
-#else
-    const auto filename = file;
-#endif
+    const auto filename = system::extended_path(file);
 
     // Does not throw (unannotated).
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return ipcdetail::open_existing_file(file.string().c_str(), mode);
+    return ipcdetail::open_existing_file(filename.c_str(), mode);
     BC_POP_WARNING()
 }
 

@@ -53,7 +53,7 @@ inline path trim(const path& value) NOEXCEPT
 bool is_directory(const path& directory) NOEXCEPT
 {
     code ec{ system::error::errorno_t::no_error };
-    return std::filesystem::is_directory(system::to_extended_path(directory), ec);
+    return std::filesystem::is_directory(system::extended_path(directory), ec);
 }
 
 bool clear_directory(const path& directory) NOEXCEPT
@@ -64,7 +64,7 @@ bool clear_directory(const path& directory) NOEXCEPT
 code clear_directory_ex(const path& directory) NOEXCEPT
 {
     code ec{ system::error::errorno_t::no_error };
-    const auto path = system::to_extended_path(directory);
+    const auto path = system::extended_path(directory);
     std::filesystem::remove_all(path, ec);
     if (ec) return ec;
     std::filesystem::create_directories(path, ec);
@@ -79,7 +79,7 @@ bool create_directory(const path& directory) NOEXCEPT
 code create_directory_ex(const path& directory) NOEXCEPT
 {
     code ec{ system::error::errorno_t::no_error };
-    const auto path = system::to_extended_path(trim(directory));
+    const auto path = system::extended_path(trim(directory));
     const auto created = std::filesystem::create_directories(path, ec);
     if (ec || created) return ec;
     return system::error::errorno_t::is_a_directory;
@@ -182,7 +182,7 @@ bool remove(const path& name) NOEXCEPT
 code remove_ex(const path& name) NOEXCEPT
 {
     code ec{ system::error::errorno_t::no_error };
-    std::filesystem::remove(system::to_extended_path(name), ec);
+    std::filesystem::remove(system::extended_path(name), ec);
     return ec;
 }
 
@@ -196,8 +196,8 @@ bool rename(const path& from, const path& to) NOEXCEPT
 code rename_ex(const path& from, const path& to) NOEXCEPT
 {
     code ec{ system::error::errorno_t::no_error };
-    std::filesystem::rename(system::to_extended_path(from),
-        system::to_extended_path(to), ec);
+    std::filesystem::rename(system::extended_path(from),
+        system::extended_path(to), ec);
 
     return ec;
 }
@@ -212,8 +212,8 @@ bool copy(const path& from, const path& to) NOEXCEPT
 code copy_ex(const path& from, const path& to) NOEXCEPT
 {
     code ec{ system::error::errorno_t::no_error };
-    std::filesystem::copy_file(system::to_extended_path(from),
-        system::to_extended_path(to), ec);
+    std::filesystem::copy_file(system::extended_path(from),
+        system::extended_path(to), ec);
 
     return ec;
 }
@@ -234,8 +234,8 @@ code copy_directory_ex(const path& from, const path& to) NOEXCEPT
         return system::error::errorno_t::not_a_directory;
 
     code ec{ system::error::errorno_t::no_error };
-    std::filesystem::copy(system::to_extended_path(from),
-        system::to_extended_path(to), ec);
+    std::filesystem::copy(system::extended_path(from),
+        system::extended_path(to), ec);
 
     return ec;
 }
@@ -250,7 +250,7 @@ code copy_directory_ex(const path& from, const path& to) NOEXCEPT
 
 int open(const path& filename, bool MSC_OR_NOAPPLE(random)) NOEXCEPT
 {
-    const auto path = system::to_extended_path(filename);
+    const auto path = system::extended_path(filename);
     int file_descriptor{};
 
 #if defined(HAVE_MSC)
@@ -371,7 +371,7 @@ code size_ex(size_t& out, const std::filesystem::path& filename) NOEXCEPT
 {
     code ec{ system::error::errorno_t::no_error };
     const auto size = std::filesystem::file_size(
-        to_extended_path(filename), ec);
+        system::extended_path(filename), ec);
 
     if (ec) return ec;
     if (is_limited<size_t>(size))
@@ -389,7 +389,8 @@ bool space(size_t& out, const path& filename) NOEXCEPT
 code space_ex(size_t& out, const path& filename) NOEXCEPT
 {
     code ec{ system::error::errorno_t::no_error };
-    const auto space = std::filesystem::space(to_extended_path(filename), ec);
+    const auto space = std::filesystem::space(
+        system::extended_path(filename), ec);
     if (ec) return ec;
     if (is_limited<size_t>(space.available))
         return system::error::errorno_t::value_too_large;
