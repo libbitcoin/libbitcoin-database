@@ -18,25 +18,7 @@
  */
 #include "../test.hpp"
 
-struct rotator_setup_fixture
-{
-    DELETE_COPY_MOVE(rotator_setup_fixture);
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-    rotator_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    ~rotator_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    BC_POP_WARNING()
-};
-
-BOOST_FIXTURE_TEST_SUITE(rotator_tests, rotator_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(rotator_tests, test::directory_setup_fixture)
 
 // ostream instance.
 using rotate = file::stream::out::rotator;

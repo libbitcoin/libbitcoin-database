@@ -20,25 +20,7 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-struct query_validate_setup_fixture
-{
-    DELETE_COPY_MOVE(query_validate_setup_fixture);
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-    query_validate_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    ~query_validate_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    BC_POP_WARNING()
-};
-
-BOOST_FIXTURE_TEST_SUITE(query_validate_tests, query_validate_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_validate_tests, test::directory_setup_fixture)
 
 // nop event handler.
 const auto events_handler = [](auto, auto) {};

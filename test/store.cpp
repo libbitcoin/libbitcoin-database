@@ -20,27 +20,9 @@
 #include "mocks/blocks.hpp"
 #include "mocks/map_store.hpp"
 
- // these are the slow tests (mmap)
+// these are the slow tests (mmap)
 
-struct store_setup_fixture
-{
-    DELETE_COPY_MOVE(store_setup_fixture);
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-    store_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    ~store_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    BC_POP_WARNING()
-};
-
-BOOST_FIXTURE_TEST_SUITE(store_tests, store_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 // nop event handler.
 const auto events = [](auto, auto){};

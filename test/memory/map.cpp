@@ -22,25 +22,7 @@
 // error::load_failure, error::flush_failure, error::unload_failure codes, but
 // don't want to make this class virtual.
 
-struct map_setup_fixture
-{
-    DELETE_COPY_MOVE(map_setup_fixture);
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-    map_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    ~map_setup_fixture() NOEXCEPT
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    BC_POP_WARNING()
-};
-
-BOOST_FIXTURE_TEST_SUITE(map_tests, map_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(map_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(map__file__always__expected)
 {

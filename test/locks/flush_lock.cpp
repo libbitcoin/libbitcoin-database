@@ -18,20 +18,7 @@
  */
 #include "../test.hpp"
 
-struct flush_lock_setup_fixture
-{
-    flush_lock_setup_fixture() noexcept
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-
-    ~flush_lock_setup_fixture() noexcept
-    {
-        BOOST_REQUIRE(test::clear(test::directory));
-    }
-};
-
-BOOST_FIXTURE_TEST_SUITE(flush_lock_tests, flush_lock_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(flush_lock_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(flush_lock__construct__file__expected)
 {

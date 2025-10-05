@@ -108,6 +108,20 @@ bool create(const std::filesystem::path& file_path,
 std::string read_line(const std::filesystem::path& file_path,
     size_t line = zero) NOEXCEPT;
 
+struct directory_setup_fixture
+{
+    DELETE_COPY_MOVE(directory_setup_fixture);
+
+    directory_setup_fixture() NOEXCEPT
+    {
+        BOOST_REQUIRE(clear(directory));
+    }
+    ~directory_setup_fixture() NOEXCEPT
+    {
+        BOOST_REQUIRE(clear(directory));
+    }
+};
+
 } // namespace test
 
 #endif
