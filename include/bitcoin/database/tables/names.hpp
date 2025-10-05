@@ -26,6 +26,8 @@ namespace libbitcoin {
 namespace database {
 namespace schema {
 
+/// These should be ASCII only.
+
 namespace dir
 {
     constexpr auto heads = "heads";
