@@ -558,7 +558,7 @@ bool map::remap_(size_t size) NOEXCEPT
 bool map::resize_(size_t size) NOEXCEPT
 {
     // Disk full detection is platform common, any other failure is an abort.
-    if (::ftruncate(opened_, size) == fail)
+    if (::fallocate(opened_, 0, capacity_, size - capacity_) == fail)
     {
         // Disk full is the only restartable store failure (leave mapped).
         if (errno == ENOSPC)
