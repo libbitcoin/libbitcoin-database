@@ -40,6 +40,7 @@ int msync(void* addr, size_t len, int flags) noexcept;
 int mlock(const void* addr, size_t len) noexcept;
 int munlock(const void* addr, size_t len) noexcept;
 int fsync(int fd) noexcept;
+int fallocate(int fd, int mode, oft__ offset, oft__ size) noexcept;
 int ftruncate(int fd, oft__ size) noexcept;
 
 #endif // _WIN32

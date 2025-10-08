@@ -557,8 +557,13 @@ bool map::remap_(size_t size) NOEXCEPT
 // disk_full: space is set but no code is set with false return.
 bool map::resize_(size_t size) NOEXCEPT
 {
-    // Disk full detection is platform common, any other failure is an abort.
+    // Disk full detection, any other failure is an abort.
+#if defined(HAVE_APPLE)
+    // TODO: implement fallocate for macOS (open and write a byte per block).
+    if (::ftruncate(opened_, size) == fail)
+#else
     if (::fallocate(opened_, 0, capacity_, size - capacity_) == fail)
+#endif
     {
         // Disk full is the only restartable store failure (leave mapped).
         if (errno == ENOSPC)
