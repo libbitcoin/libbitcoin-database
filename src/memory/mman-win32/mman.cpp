@@ -223,7 +223,7 @@ int fsync(int fd) noexcept
     return 0;
 }
 
-int fallocate(int fd, int mode, oft__ offset, oft__ size) noexcept
+int fallocate(int fd, int, oft__ offset, oft__ size) noexcept
 {
     return ftruncate(fd, offset + size);
 }
