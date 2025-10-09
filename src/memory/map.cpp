@@ -558,11 +558,10 @@ bool map::remap_(size_t size) NOEXCEPT
 bool map::resize_(size_t size) NOEXCEPT
 {
     // Disk full detection, any other failure is an abort.
-#if defined(HAVE_APPLE)
-    // TODO: implement fallocate for macOS (open and write a byte per block).
-    if (::ftruncate(opened_, size) == fail)
-#else
+#if !defined (WITHOUT_FALLOCATE)
     if (::fallocate(opened_, 0, capacity_, size - capacity_) == fail)
+#else
+    if (::ftruncate(opened_, size) == fail)
 #endif
     {
         // Disk full is the only restartable store failure (leave mapped).
@@ -594,6 +593,7 @@ bool map::finalize_(size_t size) NOEXCEPT
         return false;
     }
 
+#if !defined (WITHOUT_MADVISE)
 #if !defined(HAVE_MSC)
     // Get page size (usually 4KB).
     const int page_size = ::sysconf(_SC_PAGESIZE);
@@ -629,6 +629,7 @@ bool map::finalize_(size_t size) NOEXCEPT
         }
     }
 #endif
+#endif // WITHOUT_MADVISE
 
     loaded_ = true;
     capacity_ = size;
