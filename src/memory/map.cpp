@@ -554,6 +554,47 @@ bool map::remap_(size_t size) NOEXCEPT
     return finalize_(size);
 }
 
+#if defined(HAVE_APPLE)
+// ::fallocate is not defined on macOS, so implement. Ignores mode (linux).
+int fallocate(int fd, int, size_t offset, size_t len) NOEXCEPT
+{
+    fstore_t store
+    {
+        // Prefer contiguous allocation
+        .fst_flags = F_ALLOCATECONTIG,
+
+        // Allocate from EOF
+        .fst_posmode = F_PEOFPOSMODE,
+
+        // Start from current capacity
+        .fst_offset = offset,
+
+        // Delta size
+        .fst_length = len,
+
+        // Output: actual bytes allocated
+        .fst_bytesalloc = 0
+    };
+
+    // Try contiguous allocation.
+    auto result = ::fcntl(fd, F_PREALLOCATE, &store);
+
+    // Fallback to non-contiguous.
+    if ((result == fail) && (errno != ENOSPC))
+    {
+        store.fst_flags = F_ALLOCATEALL;
+        result = ::fcntl(fd, F_PREALLOCATE, &store);
+    }
+
+    if (result == fail)
+        return fail;
+
+    // Extend file to new size (required for mmap). This is not required on
+    // Linux because fallocate(2) automatically extends file's logical size.
+    return ::ftruncate(fd, offset + len);
+}
+#endif // HAVE_APPLE
+
 // disk_full: space is set but no code is set with false return.
 bool map::resize_(size_t size) NOEXCEPT
 {
