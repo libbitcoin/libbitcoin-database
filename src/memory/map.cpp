@@ -617,7 +617,8 @@ bool map::finalize_(size_t size) NOEXCEPT
 
     // Use 1GB chunks to avoid large-length issues.
     constexpr auto chunk = power2(30u);
-    const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
+    const auto advice = (random_ ? MADV_RANDOM : MADV_SEQUENTIAL) |
+        MADV_WILLNEED;
 
     for (auto offset = zero; offset < align; offset += chunk)
     {
