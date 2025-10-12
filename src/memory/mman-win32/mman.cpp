@@ -259,12 +259,14 @@ int ftruncate(int fd, oft__ size) noexcept
         // sets errno
         return -1;
     }
-    
+
     // "UnmapViewOfFile must be called first to unmap all views and call
-    // CloseHandle to close file mapping object before can call SetEndOfFile." -
-    // we have earlier called CloseHandle to close file mapping object (in mmap)
+    // CloseHandle to close file mapping object before can call SetEndOfFile."
+    // We have earlier called CloseHandle to close file mapping object (in mmap)
     // but have not called UnmapViewOfFile before calling this from remap_() and
     // it is apparently working.
+
+    // This sets the physical size of the file, making this an fallocate.
     if (SetEndOfFile(handle) == FALSE)
     {
         errno = last_error(EIO);
