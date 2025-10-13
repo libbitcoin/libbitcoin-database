@@ -53,7 +53,7 @@ typename CLASS::inputs_ptr CLASS::get_inputs(
     if (fks.empty())
         return {};
 
-    const auto inputs = to_shared<chain::input_cptrs>();
+    const auto inputs = make_shared<chain::input_cptrs>();
     inputs->reserve(fks.size());
 
     for (const auto& fk: fks)
@@ -73,7 +73,7 @@ typename CLASS::outputs_ptr CLASS::get_outputs(
     if (fks.empty())
         return {};
 
-    const auto outputs = to_shared<chain::output_cptrs>();
+    const auto outputs = make_shared<chain::output_cptrs>();
     outputs->reserve(fks.size());
 
     for (const auto& fk: fks)
@@ -93,7 +93,7 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
     if (txs.empty())
         return {};
 
-    const auto transactions = to_shared<chain::transaction_cptrs>();
+    const auto transactions = make_shared<chain::transaction_cptrs>();
     transactions->reserve(txs.size());
 
     for (const auto& tx_fk: txs)
@@ -165,8 +165,8 @@ typename CLASS::transaction::cptr CLASS::get_transaction(const tx_link& link,
     if (!store_.outs.get(tx.outs_fk, outs))
         return {};
 
-    const auto inputs = to_shared<chain::input_cptrs>();
-    const auto outputs = to_shared<chain::output_cptrs>();
+    const auto inputs = make_shared<chain::input_cptrs>();
+    const auto outputs = make_shared<chain::output_cptrs>();
     inputs->reserve(tx.ins_count);
     outputs->reserve(tx.outs_count);
 
@@ -209,11 +209,11 @@ typename CLASS::point::cptr CLASS::make_point(hash_digest&& hash,
     uint32_t index) NOEXCEPT
 {
     // Share null point instances to reduce memory consumption.
-    static const auto null_point = system::to_shared<const point>();
+    static const auto null_point = system::make_shared<const point>();
     if (index == point::null_index)
         return null_point;
 
-    return system::to_shared<point>(std::move(hash), index);
+    return system::make_shared<point>(std::move(hash), index);
 }
 
 TEMPLATE
@@ -259,7 +259,7 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
 {
     using namespace system;
     const auto point_fks = to_spenders(link);
-    const auto inputs = to_shared<chain::input_cptrs>();
+    const auto inputs = make_shared<chain::input_cptrs>();
     inputs->reserve(point_fks.size());
 
     // TODO: eliminate shared memory pointer reallocation.
