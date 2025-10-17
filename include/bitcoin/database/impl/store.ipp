@@ -21,7 +21,6 @@
 
 #include <chrono>
 #include <unordered_map>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/file/file.hpp>
