@@ -31,3 +31,5 @@ build
 *.lock
 /.vs
 *.db
+*.db-wal
+*.db-shm
