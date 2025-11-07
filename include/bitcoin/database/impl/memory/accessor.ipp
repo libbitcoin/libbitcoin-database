@@ -66,13 +66,25 @@ inline ptrdiff_t CLASS::size() const NOEXCEPT
 }
 
 TEMPLATE
-inline uint8_t* CLASS::begin() NOEXCEPT
+inline uint8_t* CLASS::data() const NOEXCEPT
+{
+    return begin();
+}
+
+TEMPLATE
+inline CLASS::operator system::data_slab() const NOEXCEPT
+{
+    return { begin(), end() };
+};
+
+TEMPLATE
+inline uint8_t* CLASS::begin() const NOEXCEPT
 {
     return begin_;
 }
 
 TEMPLATE
-inline uint8_t* CLASS::end() NOEXCEPT
+inline uint8_t* CLASS::end() const NOEXCEPT
 {
     return end_;
 }

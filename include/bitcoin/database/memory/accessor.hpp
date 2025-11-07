@@ -50,12 +50,13 @@ public:
     /// The logical buffer size (from begin to end).
     inline ptrdiff_t size() const NOEXCEPT override;
 
-    /// Get logical buffer (guarded against remap only).
-    inline uint8_t* begin() NOEXCEPT override;
-    inline uint8_t* end() NOEXCEPT override;
-
     /// Alias for begin.
-    inline uint8_t* data() NOEXCEPT override { return begin(); }
+    inline uint8_t* data() const NOEXCEPT override;
+
+    /// Get logical buffer (guarded against remap only).
+    inline operator system::data_slab() const NOEXCEPT override;
+    inline uint8_t* begin() const NOEXCEPT override;
+    inline uint8_t* end() const NOEXCEPT override;
 
 private:
     uint8_t* begin_{};
