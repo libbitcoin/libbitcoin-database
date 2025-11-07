@@ -41,12 +41,13 @@ public:
     /// The logical buffer size (from begin to end).
     virtual ptrdiff_t size() const NOEXCEPT = 0;
 
-    /// Get logical buffer.
-    virtual uint8_t* begin() NOEXCEPT = 0;
-    virtual uint8_t* end() NOEXCEPT = 0;
-
     /// Alias begin.
-    virtual uint8_t* data() NOEXCEPT = 0;
+    virtual uint8_t* data() const NOEXCEPT = 0;
+
+    /// Get logical buffer.
+    virtual operator system::data_slab() const NOEXCEPT = 0;
+    virtual uint8_t* begin() const NOEXCEPT = 0;
+    virtual uint8_t* end() const NOEXCEPT = 0;
 };
 
 typedef memory::ptr memory_ptr;
