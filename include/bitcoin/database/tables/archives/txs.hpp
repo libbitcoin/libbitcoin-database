@@ -171,6 +171,34 @@ struct txs
         tx::integer coinbase_fk{};
     };
 
+    struct get_tx
+      : public schema::txs
+    {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            const auto number = source.read_little_endian<ct::integer, ct::size>();
+            source.skip_bytes(bytes::size);
+            if (number > position)
+            {
+                source.skip_bytes(position * tx::size);
+                tx_fk = source.read_little_endian<tx::integer, tx::size>();
+                return source;
+            }
+
+            source.invalidate();
+            return source;
+        }
+
+        const size_t position{};
+        tx::integer tx_fk{};
+    };
+
     struct get_block_size
       : public schema::txs
     {

@@ -411,16 +411,6 @@ output_links CLASS::to_block_prevouts(const header_link& link) const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
-{
-    table::txs::get_coinbase txs{};
-    if (!store_.txs.at(to_txs(link), txs))
-        return {};
-
-    return txs.coinbase_fk;
-}
-
-TEMPLATE
 tx_links CLASS::to_transactions(const header_link& link) const NOEXCEPT
 {
     table::txs::get_txs txs{};
@@ -438,6 +428,27 @@ tx_links CLASS::to_spending_txs(const header_link& link) const NOEXCEPT
         return {};
 
     return std::move(txs.tx_fks);
+}
+
+TEMPLATE
+tx_link CLASS::to_coinbase(const header_link& link) const NOEXCEPT
+{
+    table::txs::get_coinbase txs{};
+    if (!store_.txs.at(to_txs(link), txs))
+        return {};
+
+    return txs.coinbase_fk;
+}
+
+TEMPLATE
+tx_link CLASS::to_transaction(const header_link& link,
+    size_t position) const NOEXCEPT
+{
+    table::txs::get_tx txs{ {}, position };
+    if (!store_.txs.at(to_txs(link), txs))
+        return {};
+
+    return txs.tx_fk;
 }
 
 // header to arraymap tables (guard domain transitions)
