@@ -314,9 +314,11 @@ public:
     output_links to_block_prevouts(const header_link& link) const NOEXCEPT;
 
     /// block to txs (forward navigation)
-    tx_link to_coinbase(const header_link& link) const NOEXCEPT;
     tx_links to_transactions(const header_link& link) const NOEXCEPT;
     tx_links to_spending_txs(const header_link& link) const NOEXCEPT;
+    tx_link to_coinbase(const header_link& link) const NOEXCEPT;
+    tx_link to_transaction(const header_link& link,
+        size_t position) const NOEXCEPT;
 
     /// header to arraymap tables (guard domain transitions)
     constexpr size_t to_validated_bk(const header_link& link) const NOEXCEPT;
