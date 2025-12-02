@@ -112,6 +112,27 @@ struct output
         system::chain::output::cptr output{};
     };
 
+    struct get_script
+      : public schema::output
+    {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            source.skip_bytes(tx::size);
+            source.skip_variable();
+            script = std::make_shared<const chain::script>(source, true);
+            return source;
+        }
+
+        system::chain::script::cptr script{};
+    };
+
     struct get_parent
       : public schema::output
     {

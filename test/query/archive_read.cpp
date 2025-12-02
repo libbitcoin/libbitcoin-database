@@ -470,6 +470,28 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_count__coinbase__1)
     BOOST_REQUIRE_EQUAL(query.get_tx_count(0), 1u);
 }
 
+BOOST_AUTO_TEST_CASE(query_archive_read__get_witness__not_found__nullptr)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(events_handler));
+    BOOST_REQUIRE(!query.get_witness(query.to_point({}, {})));
+    BOOST_REQUIRE(!store.close(events_handler));
+}
+
+BOOST_AUTO_TEST_CASE(query_archive_read__get_input_script__not_found__nullptr)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(events_handler));
+    BOOST_REQUIRE(!query.get_input_script(query.to_point(tx_link{}, {})));
+    BOOST_REQUIRE(!store.close(events_handler));
+}
+
 BOOST_AUTO_TEST_CASE(query_archive_read__get_input__not_found__nullptr)
 {
     settings settings{};
@@ -477,7 +499,8 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_input__not_found__nullptr)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
-    BOOST_REQUIRE(!query.get_input(query.to_tx(system::null_hash), 0u, false));
+    BOOST_REQUIRE(!query.get_input(query.to_point(tx_link{}, {}), false));
+    BOOST_REQUIRE(!query.get_input(query.to_tx(system::null_hash), {}, false));
     BOOST_REQUIRE(!store.close(events_handler));
 }
 
@@ -495,8 +518,10 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_input__genesis__expected)
 
     const auto tx = test::genesis.transactions_ptr()->front();
     const auto input = tx->inputs_ptr()->front();
-////    BOOST_REQUIRE(*input == *query.get_input(query.to_tx(tx->hash(false)), 0u));
-////    BOOST_REQUIRE(*input == *query.get_input(0));
+    const auto point = query.to_point(query.to_tx(tx->hash(false)), 0u);
+    BOOST_REQUIRE(*input == *query.get_input(point, false));
+    BOOST_REQUIRE(input->witness() == *query.get_witness(point));
+    BOOST_REQUIRE(input->script() == *query.get_input_script(point));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive_read__get_inputs__tx_not_found__nullptr)
@@ -522,6 +547,18 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_inputs__found__expected)
     BOOST_REQUIRE_EQUAL(query.get_inputs(1, false)->size(), 2u);
 }
 
+BOOST_AUTO_TEST_CASE(query_archive_read__get_output_script__not_found__nullptr)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(events_handler));
+    BOOST_REQUIRE(!query.get_output_script(query.to_output(system::null_hash, 0u)));
+    BOOST_REQUIRE(!query.get_output(0));
+    BOOST_REQUIRE(!store.close(events_handler));
+}
+
 BOOST_AUTO_TEST_CASE(query_archive_read__get_output__not_found__nullptr)
 {
     settings settings{};
@@ -530,7 +567,7 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_output__not_found__nullptr)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(!query.get_output(query.to_tx(system::null_hash), 0u));
-    BOOST_REQUIRE(!query.get_output(query.to_output(system::chain::point{ system::null_hash, 0u })));
+    BOOST_REQUIRE(!query.get_output(query.to_output(system::null_hash, 0u)));
     BOOST_REQUIRE(!query.get_output(0));
     BOOST_REQUIRE(!store.close(events_handler));
 }
@@ -548,10 +585,11 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_output__genesis__expected)
     BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
 
     const auto tx = test::genesis.transactions_ptr()->front();
-    const auto output1 = tx->outputs_ptr()->front();
-    BOOST_REQUIRE(*output1 == *query.get_output(query.to_tx(tx->hash(false)), 0u));
-    BOOST_REQUIRE(*output1 == *query.get_output(query.to_output(tx->hash(false), 0u)));
-    BOOST_REQUIRE(*output1 == *query.get_output(0));
+    const auto output = tx->outputs_ptr()->front();
+    BOOST_REQUIRE(*output == *query.get_output(0));
+    BOOST_REQUIRE(*output == *query.get_output(query.to_tx(tx->hash(false)), 0u));
+    BOOST_REQUIRE(*output == *query.get_output(query.to_output(tx->hash(false), 0u)));
+    BOOST_REQUIRE(output->script() == *query.get_output_script(query.to_output(tx->hash(false), 0u)));
 }
 
 BOOST_AUTO_TEST_CASE(query_archive_read__get_outputs__tx_not_found__nullptr)
