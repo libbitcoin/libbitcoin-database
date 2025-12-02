@@ -64,9 +64,10 @@ public:
     using block = system::chain::block;
     using point = system::chain::point;
     using input = system::chain::input;
-    using script = system::chain::script;
     using output = system::chain::output;
     using header = system::chain::header;
+    using script = system::chain::script;
+    using witness = system::chain::witness;
     using headers = system::chain::header_cptrs;
     using transaction = system::chain::transaction;
     using transactions = system::chain::transaction_cptrs;
@@ -379,19 +380,21 @@ public:
 
     header::cptr get_header(const header_link& link) const NOEXCEPT;
     block::cptr get_block(const header_link& link, bool witness) const NOEXCEPT;
-    transaction::cptr get_transaction(const tx_link& link, bool witness) const NOEXCEPT;
-    input::cptr get_input(const point_link& link, bool witness) const NOEXCEPT;
-    output::cptr get_output(const output_link& link) const NOEXCEPT;
-    inputs_ptr get_spenders(const output_link& link,
+    transaction::cptr get_transaction(const tx_link& link,
         bool witness) const NOEXCEPT;
 
-    input::cptr get_input(const tx_link& link,
-        uint32_t input_index, bool witness) const NOEXCEPT;
-    output::cptr get_output(const tx_link& link,
-        uint32_t output_index) const NOEXCEPT;
     point get_point(const point_link& link) const NOEXCEPT;
-    inputs_ptr get_spenders_index(const tx_link& link,
-        uint32_t output_index, bool witness) const NOEXCEPT;
+    witness::cptr get_witness(const point_link& link) const NOEXCEPT;
+    script::cptr get_input_script(const point_link& link) const NOEXCEPT;
+    input::cptr get_input(const point_link& link, bool witness) const NOEXCEPT;
+    input::cptr get_input(const tx_link& link, uint32_t index,
+        bool witness) const NOEXCEPT;
+
+    script::cptr get_output_script(const output_link& link) const NOEXCEPT;
+    output::cptr get_output(const output_link& link) const NOEXCEPT;
+    output::cptr get_output(const tx_link& link, uint32_t index) const NOEXCEPT;
+    inputs_ptr get_spenders(const output_link& link,
+        bool witness) const NOEXCEPT;
 
     /// False implies missing prevouts, node input.metadata is populated.
     bool populate_with_metadata(const input& input) const NOEXCEPT;

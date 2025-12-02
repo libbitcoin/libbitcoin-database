@@ -192,17 +192,6 @@ typename CLASS::transaction::cptr CLASS::get_transaction(const tx_link& link,
     return ptr;
 }
 
-TEMPLATE
-typename CLASS::output::cptr CLASS::get_output(
-    const output_link& link) const NOEXCEPT
-{
-    table::output::only out{};
-    if (!store_.output.get(link, out))
-        return {};
-
-    return out.output;
-}
-
 // static/protected
 TEMPLATE
 typename CLASS::point::cptr CLASS::make_point(hash_digest&& hash,
@@ -214,6 +203,50 @@ typename CLASS::point::cptr CLASS::make_point(hash_digest&& hash,
         return null_point;
 
     return system::to_shared<point>(std::move(hash), index);
+}
+
+TEMPLATE
+typename CLASS::point CLASS::get_point(
+    const point_link& link) const NOEXCEPT
+{
+    table::point::record point{};
+    if (!store_.point.get(link, point))
+        return {};
+
+    return { point.hash, point.index };
+}
+
+TEMPLATE
+typename CLASS::witness::cptr CLASS::get_witness(
+    const point_link& link) const NOEXCEPT
+{
+    table::input::get_witness in{};
+    table::ins::get_input ins{};
+    if (!store_.ins.get(link, ins) ||
+        !store_.input.get(ins.input_fk, in))
+        return {};
+
+    return in.witness;
+}
+
+TEMPLATE
+typename CLASS::script::cptr CLASS::get_input_script(
+    const point_link& link) const NOEXCEPT
+{
+    table::input::get_script in{};
+    table::ins::get_input ins{};
+    if (!store_.ins.get(link, ins) ||
+        !store_.input.get(ins.input_fk, in))
+        return {};
+
+    return in.script;
+}
+
+TEMPLATE
+typename CLASS::input::cptr CLASS::get_input(const tx_link& link,
+    uint32_t index, bool witness) const NOEXCEPT
+{
+    return get_input(to_point(link, index), witness);
 }
 
 TEMPLATE
@@ -243,14 +276,32 @@ typename CLASS::input::cptr CLASS::get_input(const point_link& link,
 }
 
 TEMPLATE
-typename CLASS::point CLASS::get_point(
-    const point_link& link) const NOEXCEPT
+typename CLASS::script::cptr CLASS::get_output_script(
+    const output_link& link) const NOEXCEPT
 {
-    table::point::record point{};
-    if (!store_.point.get(link, point))
+    table::output::get_script out{};
+    if (!store_.output.get(link, out))
         return {};
 
-    return { point.hash, point.index };
+    return out.script;
+}
+
+TEMPLATE
+typename CLASS::output::cptr CLASS::get_output(const tx_link& link,
+    uint32_t index) const NOEXCEPT
+{
+    return get_output(to_output(link, index));
+}
+
+TEMPLATE
+typename CLASS::output::cptr CLASS::get_output(
+    const output_link& link) const NOEXCEPT
+{
+    table::output::only out{};
+    if (!store_.output.get(link, out))
+        return {};
+
+    return out.output;
 }
 
 TEMPLATE
@@ -268,27 +319,6 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
             return {};
 
     return inputs;
-}
-
-TEMPLATE
-typename CLASS::input::cptr CLASS::get_input(const tx_link& link,
-    uint32_t input_index, bool witness) const NOEXCEPT
-{
-    return get_input(to_point(link, input_index), witness);
-}
-
-TEMPLATE
-typename CLASS::output::cptr CLASS::get_output(const tx_link& link,
-    uint32_t output_index) const NOEXCEPT
-{
-    return get_output(to_output(link, output_index));
-}
-
-TEMPLATE
-typename CLASS::inputs_ptr CLASS::get_spenders_index(const tx_link& link,
-    uint32_t output_index, bool witness) const NOEXCEPT
-{
-    return get_spenders(to_output(link, output_index), witness);
 }
 
 // Populate prevout objects.

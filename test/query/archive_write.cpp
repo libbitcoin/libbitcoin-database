@@ -1516,28 +1516,28 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_spenders__unspent_or_not_found__ex
 
     // Caller should always test for nullptr.
     BOOST_REQUIRE(query.get_spenders(output_link::terminal, true)->empty());
-    BOOST_REQUIRE(query.get_spenders_index(tx_link::terminal, 0, true)->empty());
-    BOOST_REQUIRE(query.get_spenders_index(tx_link::terminal, 1, true)->empty());
+    //BOOST_REQUIRE(query.get_spenders_index(tx_link::terminal, 0, true)->empty());
+    //BOOST_REQUIRE(query.get_spenders_index(tx_link::terminal, 1, true)->empty());
 
     BOOST_REQUIRE(query.get_spenders(query.to_output(0, 0), true)->empty());
     BOOST_REQUIRE(query.get_spenders(query.to_output(0, 1), true)->empty());
-    BOOST_REQUIRE(query.get_spenders_index(0, 0, true)->empty());
-    BOOST_REQUIRE(query.get_spenders_index(0, 1, true)->empty());
+    //BOOST_REQUIRE(query.get_spenders_index(0, 0, true)->empty());
+    //BOOST_REQUIRE(query.get_spenders_index(0, 1, true)->empty());
 
     BOOST_REQUIRE(query.get_spenders(query.to_output(1, 0), true)->empty());
     BOOST_REQUIRE(query.get_spenders(query.to_output(1, 1), true)->empty());
-    BOOST_REQUIRE(query.get_spenders_index(1, 0, true)->empty());
-    BOOST_REQUIRE(query.get_spenders_index(1, 1, true)->empty());
+    //BOOST_REQUIRE(query.get_spenders_index(1, 0, true)->empty());
+    //BOOST_REQUIRE(query.get_spenders_index(1, 1, true)->empty());
 
     BOOST_REQUIRE(query.get_spenders(query.to_output(2, 0), true)->empty());
     BOOST_REQUIRE(query.get_spenders(query.to_output(2, 1), true)->empty());
-    BOOST_REQUIRE(query.get_spenders_index(2, 0, true)->empty());
-    BOOST_REQUIRE(query.get_spenders_index(2, 1, true)->empty());
+    //BOOST_REQUIRE(query.get_spenders_index(2, 0, true)->empty());
+    //BOOST_REQUIRE(query.get_spenders_index(2, 1, true)->empty());
 
     BOOST_REQUIRE(query.get_spenders(query.to_output(3, 0), true)->empty());
     BOOST_REQUIRE(query.get_spenders(query.to_output(3, 1), true)->empty());
-    BOOST_REQUIRE(query.get_spenders_index(3, 0, true)->empty());
-    BOOST_REQUIRE(query.get_spenders_index(3, 1, true)->empty());
+    //BOOST_REQUIRE(query.get_spenders_index(3, 0, true)->empty());
+    //BOOST_REQUIRE(query.get_spenders_index(3, 1, true)->empty());
 }
 
 ////BOOST_AUTO_TEST_CASE(query_archive_write__get_spenders__found_and_spent__expected)

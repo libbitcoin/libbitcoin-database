@@ -100,6 +100,45 @@ struct input
         system::chain::witness::cptr witness{};
     };
 
+    struct get_script
+      : public schema::input
+    {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            script = std::make_shared<const chain::script>(source, true);
+            return source;
+        }
+
+        system::chain::script::cptr script{};
+    };
+
+    struct get_witness
+      : public schema::input
+    {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            source.skip_bytes(source.read_size());
+            witness = std::make_shared<const chain::witness>(source, true);
+            return source;
+        }
+
+        system::chain::witness::cptr witness{};
+    };
+
     struct put_ref
       : public schema::input
     {
