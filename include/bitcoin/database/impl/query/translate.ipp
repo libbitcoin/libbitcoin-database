@@ -196,7 +196,6 @@ header_link CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 
     return {};
 }
-
 TEMPLATE
 header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 {
@@ -206,6 +205,27 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 
     // Terminal implies genesis (no parent).
     return header.parent_fk;
+}
+
+// to confirmed objects (reverse navigation)
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+header_link CLASS::to_confirmed_block(
+    const hash_digest& tx_hash) const NOEXCEPT
+{
+    const auto block = to_strong(tx_hash);
+    if (!is_confirmed_block(block))
+        return {};
+
+    return block;
+}
+
+TEMPLATE
+point_link CLASS::to_confirmed_spender(const point&) const NOEXCEPT
+{
+    // TODO: implement.
+    return {};
 }
 
 // output to spenders (reverse navigation)

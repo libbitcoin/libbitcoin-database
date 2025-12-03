@@ -291,6 +291,10 @@ public:
     header_link to_strong(const hash_digest& tx_hash) const NOEXCEPT;
     header_link to_parent(const header_link& link) const NOEXCEPT;
 
+    /// to confirmed objects (reverse navigation)
+    header_link to_confirmed_block(const hash_digest& tx_hash) const NOEXCEPT;
+    point_link to_confirmed_spender(const point& prevout) const NOEXCEPT;
+
     /// output to spenders (reverse navigation)
     point_links to_spenders(const point& prevout) const NOEXCEPT;
     point_links to_spenders(const output_link& link) const NOEXCEPT;
