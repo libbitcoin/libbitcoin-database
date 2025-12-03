@@ -167,6 +167,18 @@ output_link CLASS::to_prevout(const point_link& link) const NOEXCEPT
 
 // Required for confirmation processing.
 TEMPLATE
+header_link CLASS::to_block(const tx_link& key) const NOEXCEPT
+{
+    table::strong_tx::record strong{};
+    if (!store_.strong_tx.find(key, strong) || !strong.positive())
+        return {};
+
+    // Terminal implies not in strong block (reorganized).
+    return strong.header_fk();
+}
+
+// Required for confirmation processing.
+TEMPLATE
 header_link CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 {
     // Get all tx links for tx_hash.
@@ -184,7 +196,6 @@ header_link CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 
     return {};
 }
-
 TEMPLATE
 header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 {
@@ -196,16 +207,25 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
     return header.parent_fk;
 }
 
+// to confirmed objects (reverse navigation)
+// ----------------------------------------------------------------------------
+
 TEMPLATE
-header_link CLASS::to_block(const tx_link& key) const NOEXCEPT
+header_link CLASS::to_confirmed_block(
+    const hash_digest& tx_hash) const NOEXCEPT
 {
-    // Required for confirmation processing.
-    table::strong_tx::record strong{};
-    if (!store_.strong_tx.find(key, strong) || !strong.positive())
+    const auto block = to_strong(tx_hash);
+    if (!is_confirmed_block(block))
         return {};
 
-    // Terminal implies not in strong block (reorganized).
-    return strong.header_fk();
+    return block;
+}
+
+TEMPLATE
+point_link CLASS::to_confirmed_spender(const point&) const NOEXCEPT
+{
+    // TODO: implement.
+    return {};
 }
 
 // output to spenders (reverse navigation)
