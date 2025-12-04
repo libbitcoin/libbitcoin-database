@@ -524,6 +524,7 @@ public:
     code block_confirmable(const header_link& link) const NOEXCEPT;
     bool is_prevouts_cached(const header_link& link) const NOEXCEPT;
 
+    bool is_strong(const tx_link& link) const NOEXCEPT;
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
     bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
