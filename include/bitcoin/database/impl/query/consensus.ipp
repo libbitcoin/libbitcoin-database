@@ -176,6 +176,13 @@ code CLASS::unspent_duplicates(const header_link& link,
 // unspendable
 // ----------------------------------------------------------------------------
 
+TEMPLATE
+bool CLASS::is_strong(const tx_link& tx) const NOEXCEPT
+{
+    // Try all txs with same hash as self (any instance will suffice).
+    return !to_strong(get_tx_key(tx)).is_terminal();
+}
+
 // protected
 TEMPLATE
 error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
@@ -184,14 +191,10 @@ error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
     // Ensure prevout tx is in a strong block, first try self link.
     auto strong = to_block(tx);
 
-    // Extremely rare, normally implies a duplicate tx.
-    if (strong.is_terminal())
-    {
-        // Try all txs with same hash as self (any instance will suffice).
-        strong = to_strong(get_tx_key(tx));
-        if (strong.is_terminal())
-            return error::unconfirmed_spend;
-    }
+    // Unassociated to block is rare, generally implies a duplicate tx.
+    // Not strong (in any block) implies the spend is not confirmed.
+    if (strong.is_terminal() && !is_strong(tx))
+        return error::unconfirmed_spend;
 
     const auto relative = ctx.is_enabled(system::chain::flags::bip68_rule) &&
         transaction::is_relative_locktime_applied(coinbase, version, sequence);

@@ -397,6 +397,7 @@ public:
     script::cptr get_output_script(const output_link& link) const NOEXCEPT;
     output::cptr get_output(const output_link& link) const NOEXCEPT;
     output::cptr get_output(const tx_link& link, uint32_t index) const NOEXCEPT;
+    point get_spender(const point_link& link) const NOEXCEPT;
     inputs_ptr get_spenders(const output_link& link,
         bool witness) const NOEXCEPT;
 
@@ -524,6 +525,7 @@ public:
     code block_confirmable(const header_link& link) const NOEXCEPT;
     bool is_prevouts_cached(const header_link& link) const NOEXCEPT;
 
+    bool is_strong(const tx_link& link) const NOEXCEPT;
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
     bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
