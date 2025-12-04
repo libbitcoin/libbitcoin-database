@@ -287,12 +287,6 @@ point_links CLASS::to_spenders(const output_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-point_links CLASS::to_spenders(const point& point) const NOEXCEPT
-{
-    return to_spenders(point.hash(), point.index());
-}
-
-TEMPLATE
 point_links CLASS::to_spenders(const tx_link& output_tx,
     uint32_t output_index) const NOEXCEPT
 {
@@ -303,12 +297,18 @@ TEMPLATE
 point_links CLASS::to_spenders(const hash_digest& point_hash,
     uint32_t output_index) const NOEXCEPT
 {
+    return to_spenders({ point_hash, output_index });
+}
+
+TEMPLATE
+point_links CLASS::to_spenders(const point& point) const NOEXCEPT
+{
     // Avoid returning spend links for coinbase inputs (not spenders).
-    if (output_index == point::null_index)
+    if (point.index() == point::null_index)
         return {};
 
     point_links points{};
-    for (auto it = store_.point.it({ point_hash, output_index }); it; ++it)
+    for (auto it = store_.point.it(point); it; ++it)
         points.push_back(*it);
 
     return points;
