@@ -305,6 +305,17 @@ typename CLASS::output::cptr CLASS::get_output(
 }
 
 TEMPLATE
+typename CLASS::point CLASS::get_spender(const point_link& link) const NOEXCEPT
+{
+    if (const auto tx = to_spending_tx(link); !tx.is_terminal())
+        if (const auto index = to_input_index(tx, link);
+            index != point::null_index)
+            return { get_tx_key(tx), index };
+
+    return {};
+}
+
+TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_spenders(
     const output_link& link, bool witness) const NOEXCEPT
 {
