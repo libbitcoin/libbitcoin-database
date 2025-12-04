@@ -187,7 +187,7 @@ header_link CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
         txs.push_back(*it);
 
     // Find the first strong tx of the set and return its block.
-    for (auto tx: txs)
+    for (const auto& tx: txs)
     {
         const auto block = to_block(tx);
         if (!block.is_terminal())
@@ -260,20 +260,6 @@ uint32_t CLASS::to_output_index(const tx_link& parent_fk,
 
     return point::null_index;
 }
-
-// Assumes singular which doesn't make sense.
-// protected/to_spenders
-////TEMPLATE
-////spend_link CLASS::to_spender(const tx_link& link,
-////    const spend_key& point) const NOEXCEPT
-////{
-////    table::spend::get_key spend{};
-////    for (const auto& spend_fk: to_spends(link))
-////        if (store_.spend.get(spend_fk, spend) && (spend.key == point))
-////            return spend_fk;
-////
-////    return {};
-////}
 
 TEMPLATE
 point_links CLASS::to_spenders(const output_link& link) const NOEXCEPT
