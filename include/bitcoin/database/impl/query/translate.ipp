@@ -222,9 +222,13 @@ header_link CLASS::to_confirmed_block(
 }
 
 TEMPLATE
-point_link CLASS::to_confirmed_spender(const point&) const NOEXCEPT
+point_link CLASS::to_confirmed_spender(const point& prevout) const NOEXCEPT
 {
-    // TODO: implement.
+    // see is_spent_output().
+    for (const auto& in: to_spenders(prevout))
+        if (is_confirmed_input(in))
+            return in;
+
     return {};
 }
 
