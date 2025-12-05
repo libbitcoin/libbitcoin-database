@@ -124,17 +124,23 @@ code CLASS::get_block_state(const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-code CLASS::get_block_state(uint64_t& fees,
-    const header_link& link) const NOEXCEPT
+uint64_t CLASS::get_block_fees(const header_link& link) const NOEXCEPT
 {
-    table::validated_bk::slab valid{};
-    if (!store_.validated_bk.at(to_validated_bk(link), valid))
-        return is_associated(link) ? error::unvalidated : error::unassociated;
+    // TODO: optimize.
+    const auto block = get_block(link, false);
+    return block && populate_without_metadata(*block) ? block->fees() :
+        max_uint64;
+}
 
-    // TODO: Fees only valid if block_valid is the current state (iterate for valid).
-    fees = valid.fees;
+TEMPLATE
+uint64_t CLASS::get_tx_fee(const tx_link& link) const NOEXCEPT
+{
+    // TODO: optimize.
+    const auto tx = get_transaction(link, false);
+    if (is_coinbase(link))
+        return {};
 
-    return to_block_code(valid.code);
+    return tx && populate_without_metadata(*tx) ? tx->fee() : max_uint64;
 }
 
 TEMPLATE

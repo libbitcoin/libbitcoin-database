@@ -305,6 +305,41 @@ typename CLASS::output::cptr CLASS::get_output(
 }
 
 TEMPLATE
+typename CLASS::point CLASS::get_spent(const output_link& link) const NOEXCEPT
+{
+    ////const auto tx = to_output_tx(link);
+    ////const auto hash = get_tx_key(tx);
+    ////const auto index = to_output_index(tx, link);
+    ////if (tx.is_terminal())
+    ////{
+    ////    return { {}, 42 };
+    ////}
+    ////else if (hash == system::null_hash && index == point::null_index)
+    ////{
+    ////    return { {}, 96 };
+    ////}
+    ////else if (hash == system::null_hash && index != point::null_index)
+    ////{
+    ////    return { {}, index };
+    ////}
+    ////else if (hash != system::null_hash && index == point::null_index)
+    ////{
+    ////    return { hash, 69 };
+    ////}
+    ////else // if (hash != system::null_hash && index != point::null_index)
+    ////{
+    ////    return { hash, index };
+    ////}
+
+    if (const auto tx = to_output_tx(link); !tx.is_terminal())
+        if (const auto index = to_output_index(tx, link);
+            index != point::null_index)
+            return { get_tx_key(tx), index };
+
+    return {};
+}
+
+TEMPLATE
 typename CLASS::point CLASS::get_spender(const point_link& link) const NOEXCEPT
 {
     if (const auto tx = to_spending_tx(link); !tx.is_terminal())
