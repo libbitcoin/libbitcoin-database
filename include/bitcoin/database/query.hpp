@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_HPP
 #define LIBBITCOIN_DATABASE_QUERY_HPP
 
+#include <atomic>
 #include <mutex>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -570,15 +571,14 @@ public:
     /// Optional Tables.
     /// -----------------------------------------------------------------------
 
-    /// Address, set internal to tx (natural-keyed).
-    bool to_address_outputs(output_links& out,
-        const hash_digest& key) const NOEXCEPT;
-    bool to_confirmed_unspent_outputs(output_links& out,
-        const hash_digest& key) const NOEXCEPT;
-    bool to_minimum_unspent_outputs(output_links& out, const hash_digest& key,
-        uint64_t value) const NOEXCEPT;
-    bool get_confirmed_balance(uint64_t& out,
-        const hash_digest& key) const NOEXCEPT;
+    bool to_address_outputs(const std::atomic_bool& cancel,
+        output_links& out, const hash_digest& key) const NOEXCEPT;
+    bool to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
+        output_links& out, const hash_digest& key) const NOEXCEPT;
+    bool to_minimum_unspent_outputs(const std::atomic_bool& cancel,
+        output_links& out, const hash_digest& key, uint64_t value) const NOEXCEPT;
+    bool get_confirmed_balance(const std::atomic_bool& cancel,
+        uint64_t& out, const hash_digest& key) const NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;

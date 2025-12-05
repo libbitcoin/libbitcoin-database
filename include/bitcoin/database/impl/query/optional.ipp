@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_OPTIONAL_IPP
 #define LIBBITCOIN_DATABASE_QUERY_OPTIONAL_IPP
 
+#include <atomic>
 #include <algorithm>
 #include <ranges>
 #include <utility>
@@ -32,19 +33,19 @@ namespace database {
 // ----------------------------------------------------------------------------
 // TODO: use point keys (for multimap compression).
 
-// TODO: test more.
 TEMPLATE
-bool CLASS::to_address_outputs(output_links& out,
-    const hash_digest& key) const NOEXCEPT
+bool CLASS::to_address_outputs(const std::atomic_bool& cancel,
+    output_links& out, const hash_digest& key) const NOEXCEPT
 {
     out.clear();
+    
+    // Pushing into the vector is more efficient than precomputation of size.
     for (auto it = store_.address.it(key); it; ++it)
     {
         table::address::record address{};
-        if (!store_.address.get(it, address))
+        if (cancel || !store_.address.get(it, address))
         {
             out.clear();
-            out.shrink_to_fit();
             return false;
         }
 
@@ -56,11 +57,11 @@ bool CLASS::to_address_outputs(output_links& out,
 
 // TODO: test more.
 TEMPLATE
-bool CLASS::to_confirmed_unspent_outputs(output_links& out,
-    const hash_digest& key) const NOEXCEPT
+bool CLASS::to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
+    output_links& out, const hash_digest& key) const NOEXCEPT
 {
     output_links output_fks{};
-    if (!to_address_outputs(output_fks, key))
+    if (!to_address_outputs(cancel, output_fks, key))
         return false;
 
     out.clear();
@@ -75,11 +76,11 @@ bool CLASS::to_confirmed_unspent_outputs(output_links& out,
 
 // TODO: test more.
 TEMPLATE
-bool CLASS::to_minimum_unspent_outputs(output_links& out,
-    const hash_digest& key, uint64_t minimum) const NOEXCEPT
+bool CLASS::to_minimum_unspent_outputs(const std::atomic_bool& cancel,
+    output_links& out, const hash_digest& key, uint64_t minimum) const NOEXCEPT
 {
     output_links unspent_fks{};
-    if (!to_confirmed_unspent_outputs(unspent_fks, key))
+    if (!to_confirmed_unspent_outputs(cancel, unspent_fks, key))
         return false;
 
     out.clear();
@@ -104,12 +105,12 @@ bool CLASS::to_minimum_unspent_outputs(output_links& out,
 
 // TODO: test more.
 TEMPLATE
-bool CLASS::get_confirmed_balance(uint64_t& out,
-    const hash_digest& key) const NOEXCEPT
+bool CLASS::get_confirmed_balance(const std::atomic_bool& cancel,
+    uint64_t& out, const hash_digest& key) const NOEXCEPT
 {
     out = zero;
     output_links unspent_fks{};
-    if (!to_confirmed_unspent_outputs(unspent_fks, key))
+    if (!to_confirmed_unspent_outputs(cancel, unspent_fks, key))
         return false;
 
     for (auto unspent_fk: unspent_fks)

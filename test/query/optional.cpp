@@ -27,20 +27,6 @@ const auto events_handler = [](auto, auto) {};
 
 const auto genesis_address = test::genesis.transactions_ptr()->front()->outputs_ptr()->front()->script().hash();
 
-BOOST_AUTO_TEST_CASE(query_optional__get_confirmed_balance__genesis__expected)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    uint64_t out{};
-    BOOST_REQUIRE(query.get_confirmed_balance(out, genesis_address));
-    BOOST_REQUIRE_EQUAL(out, 5000000000u);
-}
-
 BOOST_AUTO_TEST_CASE(query_optional__to_address_outputs__genesis__expected)
 {
     settings settings{};
@@ -51,9 +37,25 @@ BOOST_AUTO_TEST_CASE(query_optional__to_address_outputs__genesis__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     output_links out{};
-    BOOST_REQUIRE(query.to_address_outputs(out, genesis_address));
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(query.to_address_outputs(cancel, out, genesis_address));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
     BOOST_REQUIRE_EQUAL(out.front(), query.to_output(0, 0));
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__to_address_outputs__cancel__canceled_false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    output_links out{};
+    const std::atomic_bool cancel{ true };
+    BOOST_REQUIRE(!query.to_address_outputs(cancel, out, genesis_address));
+    BOOST_REQUIRE(out.empty());
 }
 
 BOOST_AUTO_TEST_CASE(query_optional__to_confirmed_unspent_outputs__genesis__expected)
@@ -66,24 +68,26 @@ BOOST_AUTO_TEST_CASE(query_optional__to_confirmed_unspent_outputs__genesis__expe
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     output_links out{};
-    BOOST_REQUIRE(query.to_confirmed_unspent_outputs(out, genesis_address));
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(query.to_confirmed_unspent_outputs(cancel, out, genesis_address));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
     BOOST_REQUIRE_EQUAL(out.front(), 0);
 }
 
-////BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__above__excluded)
-////{
-////    settings settings{};
-////    settings.path = TEST_DIRECTORY;
-////    test::chunk_store store{ settings };
-////    test::query_accessor query{ store };
-////    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
-////    BOOST_REQUIRE(query.initialize(test::genesis));
-////
-////    output_links out{};
-////    BOOST_REQUIRE(query.to_minimum_unspent_outputs(out, genesis_address, 5000000001));
-////    BOOST_REQUIRE(out.empty());
-////}
+BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__above__excluded)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    output_links out{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(query.to_minimum_unspent_outputs(cancel, out, genesis_address, 5000000001));
+    BOOST_REQUIRE(out.empty());
+}
 
 BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__at__included)
 {
@@ -95,7 +99,8 @@ BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__at__included)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     output_links out{};
-    BOOST_REQUIRE(query.to_minimum_unspent_outputs(out, genesis_address, 5000000000));
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(query.to_minimum_unspent_outputs(cancel, out, genesis_address, 5000000000));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
     BOOST_REQUIRE_EQUAL(out.front(), 0);
 }
@@ -110,12 +115,28 @@ BOOST_AUTO_TEST_CASE(query_optional__to_minimum_unspent_outputs__below__included
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     output_links out{};
-    BOOST_REQUIRE(query.to_minimum_unspent_outputs(out, genesis_address, 0));
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(query.to_minimum_unspent_outputs(cancel, out, genesis_address, 0));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
     BOOST_REQUIRE_EQUAL(out.front(), 0);
-    BOOST_REQUIRE(query.to_minimum_unspent_outputs(out, genesis_address, 4999999999));
+    BOOST_REQUIRE(query.to_minimum_unspent_outputs(cancel, out, genesis_address, 4999999999));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
     BOOST_REQUIRE_EQUAL(out.front(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__get_confirmed_balance__genesis__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    uint64_t out{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(query.get_confirmed_balance(cancel, out, genesis_address));
+    BOOST_REQUIRE_EQUAL(out, 5000000000u);
 }
 
 ////BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
