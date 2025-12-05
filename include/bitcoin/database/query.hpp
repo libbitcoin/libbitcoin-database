@@ -394,10 +394,11 @@ public:
     input::cptr get_input(const tx_link& link, uint32_t index,
         bool witness) const NOEXCEPT;
 
+    point get_spent(const output_link& link) const NOEXCEPT;
+    point get_spender(const point_link& link) const NOEXCEPT;
     script::cptr get_output_script(const output_link& link) const NOEXCEPT;
     output::cptr get_output(const output_link& link) const NOEXCEPT;
     output::cptr get_output(const tx_link& link, uint32_t index) const NOEXCEPT;
-    point get_spender(const point_link& link) const NOEXCEPT;
     inputs_ptr get_spenders(const output_link& link,
         bool witness) const NOEXCEPT;
 
