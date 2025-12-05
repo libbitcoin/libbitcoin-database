@@ -106,8 +106,7 @@ struct outs
         {
             using namespace system;
             static_assert(tx::size <= sizeof(uint64_t));
-            constexpr auto value_parent_difference = sizeof(uint64_t) -
-                tx::size;
+            constexpr auto value_parent_diff = sizeof(uint64_t) - tx::size;
 
             auto out_fk = output_fk;
             const auto& outs = *tx_.outputs_ptr();
@@ -118,7 +117,7 @@ struct outs
                 // Calculate next corresponding output fk from serialized size.
                 // (variable_size(value) + (value + script)) - (value - parent)
                 out_fk += (variable_size(out->value()) + out->serialized_size() -
-                    value_parent_difference);
+                    value_parent_diff);
             });
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);

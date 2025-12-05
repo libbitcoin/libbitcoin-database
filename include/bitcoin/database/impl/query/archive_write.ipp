@@ -192,6 +192,7 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
         if (ad_fk.is_terminal())
             return error::tx_address_allocate;
 
+        constexpr auto value_parent_diff = sizeof(uint64_t) - tx_link::size;
         const auto ptr = store_.address.get_memory();
         for (const auto& output: *ous)
         {
@@ -199,7 +200,11 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
                 table::address::record{ {}, out_fk }))
                 return error::tx_address_put;
 
-            out_fk.value += output->serialized_size();
+            // See outs::put_ref.
+            // Calculate next corresponding output fk from serialized size.
+            // (variable_size(value) + (value + script)) - (value - parent)
+            out_fk.value += (variable_size(output->value()) +
+                output->serialized_size() - value_parent_diff);
         }
     }
 
