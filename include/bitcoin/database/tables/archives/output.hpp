@@ -133,6 +133,26 @@ struct output
         system::chain::script::cptr script{};
     };
 
+    struct get_parent_value
+      : public schema::output
+    {
+        link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            parent_fk = source.read_little_endian<tx::integer, tx::size>();
+            value = source.read_variable();
+            return source;
+        }
+
+        tx::integer parent_fk{};
+        uint64_t value{};
+    };
+
     struct get_parent
       : public schema::output
     {
