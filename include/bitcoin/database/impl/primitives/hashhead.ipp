@@ -273,7 +273,7 @@ INLINE constexpr CLASS::cell CLASS::next_cell(bool& collision, cell previous,
         using namespace system;
         const auto prev = to_filter(previous);
         const auto next = filter_t::screen(prev, entropy);
-        collision = false; //// filter_t::is_collision(prev, next);
+        collision = filter_t::is_collision(prev, next);
         return bit_or<cell>(shift_left<cell>(next, link_bits), current);
     }
 }
