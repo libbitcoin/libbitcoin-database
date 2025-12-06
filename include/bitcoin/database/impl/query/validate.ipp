@@ -39,12 +39,15 @@ inline code CLASS::to_block_code(
         // Transitional: Satisfies validation rules (prevouts unverified).
         case schema::block_state::valid:
             return error::block_valid;
+
         // Final: Satisfies confirmation rules (prevouts confirmable).
         case schema::block_state::confirmable:
             return error::block_confirmable;
+
         // Final: Does not satisfy either validation or confirmation rules.
         case schema::block_state::unconfirmable:
             return error::block_unconfirmable;
+
         // Fault: Has no state, should not happen when read from store.
         // block_unknown also used to reset a state (debugging).
         case schema::block_state::block_unknown:
@@ -66,9 +69,11 @@ inline code CLASS::to_tx_code(
         // Final: Is valid (passed check, accept, and connect).
         case schema::tx_state::connected:
             return error::tx_connected;
+
         // Final: Is not valid (failed check, accept, or connect).
         case schema::tx_state::disconnected:
             return error::tx_disconnected;
+
         // Fault: Has no state, should not happen when read from store.
         // tx_unknown also used to reset a state (debugging).
         case schema::tx_state::tx_unknown:
