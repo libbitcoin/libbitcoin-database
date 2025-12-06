@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_HPP
 #define LIBBITCOIN_DATABASE_QUERY_HPP
 
+#include <atomic>
 #include <mutex>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -65,6 +66,7 @@ public:
     using point = system::chain::point;
     using input = system::chain::input;
     using output = system::chain::output;
+    using outpoint = system::chain::outpoint;
     using header = system::chain::header;
     using script = system::chain::script;
     using witness = system::chain::witness;
@@ -394,8 +396,8 @@ public:
     input::cptr get_input(const tx_link& link, uint32_t index,
         bool witness) const NOEXCEPT;
 
-    point get_spent(const output_link& link) const NOEXCEPT;
     point get_spender(const point_link& link) const NOEXCEPT;
+    outpoint get_spent(const output_link& link) const NOEXCEPT;
     script::cptr get_output_script(const output_link& link) const NOEXCEPT;
     output::cptr get_output(const output_link& link) const NOEXCEPT;
     output::cptr get_output(const tx_link& link, uint32_t index) const NOEXCEPT;
@@ -570,15 +572,14 @@ public:
     /// Optional Tables.
     /// -----------------------------------------------------------------------
 
-    /// Address, set internal to tx (natural-keyed).
-    bool to_address_outputs(output_links& out,
-        const hash_digest& key) const NOEXCEPT;
-    bool to_confirmed_unspent_outputs(output_links& out,
-        const hash_digest& key) const NOEXCEPT;
-    bool to_minimum_unspent_outputs(output_links& out, const hash_digest& key,
-        uint64_t value) const NOEXCEPT;
-    bool get_confirmed_balance(uint64_t& out,
-        const hash_digest& key) const NOEXCEPT;
+    bool to_address_outputs(const std::atomic_bool& cancel,
+        output_links& out, const hash_digest& key) const NOEXCEPT;
+    bool to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
+        output_links& out, const hash_digest& key) const NOEXCEPT;
+    bool to_minimum_unspent_outputs(const std::atomic_bool& cancel,
+        output_links& out, const hash_digest& key, uint64_t value) const NOEXCEPT;
+    bool get_confirmed_balance(const std::atomic_bool& cancel,
+        uint64_t& out, const hash_digest& key) const NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;

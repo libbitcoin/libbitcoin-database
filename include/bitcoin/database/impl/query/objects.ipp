@@ -305,25 +305,32 @@ typename CLASS::output::cptr CLASS::get_output(
 }
 
 TEMPLATE
-typename CLASS::point CLASS::get_spent(const output_link& link) const NOEXCEPT
+typename CLASS::outpoint CLASS::get_spent(
+    const output_link& link) const NOEXCEPT
 {
-    if (const auto tx = to_output_tx(link); !tx.is_terminal())
-        if (const auto index = to_output_index(tx, link);
-            index != point::null_index)
-            return { get_tx_key(tx), index };
+    table::output::get_parent_value out{};
+    if (!store_.output.get(link, out))
+        return {};
 
-    return {};
+    const auto index = to_output_index(out.parent_fk, link);
+    if (index == point::null_index)
+        return {};
+
+    return { { get_tx_key(out.parent_fk), index }, out.value };
 }
 
 TEMPLATE
 typename CLASS::point CLASS::get_spender(const point_link& link) const NOEXCEPT
 {
-    if (const auto tx = to_spending_tx(link); !tx.is_terminal())
-        if (const auto index = to_input_index(tx, link);
-            index != point::null_index)
-            return { get_tx_key(tx), index };
+    const auto tx = to_spending_tx(link);
+    if (tx.is_terminal())
+        return {};
 
-    return {};
+    const auto index = to_input_index(tx, link);
+    if (index == point::null_index)
+        return {};
+
+    return { get_tx_key(tx), index };
 }
 
 TEMPLATE
