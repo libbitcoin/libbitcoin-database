@@ -31,7 +31,7 @@ namespace database {
 
 // Address (natural-keyed).
 // ----------------------------------------------------------------------------
-// TODO: use point keys (for multimap compression).
+// TODO: could use point keys (for multimap compression).
 
 TEMPLATE
 bool CLASS::to_address_outputs(const std::atomic_bool& cancel,
@@ -55,7 +55,6 @@ bool CLASS::to_address_outputs(const std::atomic_bool& cancel,
     return true;
 }
 
-// TODO: test more.
 TEMPLATE
 bool CLASS::to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
     output_links& out, const hash_digest& key) const NOEXCEPT
