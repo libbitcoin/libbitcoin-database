@@ -21,6 +21,7 @@
 #include <bitcoin/database/query.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/store.hpp>
+#include <bitcoin/database/types.hpp>
 #include <bitcoin/database/version.hpp>
 #include <bitcoin/database/file/file.hpp>
 #include <bitcoin/database/file/rotator.hpp>

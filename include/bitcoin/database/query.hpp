@@ -24,35 +24,10 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/error.hpp>
-#include <bitcoin/database/primitives/primitives.hpp>
-#include <bitcoin/database/tables/tables.hpp>
+#include <bitcoin/database/types.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-/// Database type aliases.
-using height_link = table::height::link;
-using header_link = table::header::link;
-using output_link = table::output::link;
-using input_link = table::input::link;
-using outs_link = table::outs::link;
-using ins_link = table::ins::link;
-using point_link = table::point::link;
-using tx_link = table::transaction::link;
-using filter_link = table::filter_tx::link;
-using strong_link = table::strong_tx::link;
-
-using header_links = std::vector<header_link::integer>;
-using tx_links = std::vector<tx_link::integer>;
-using input_links = std::vector<input_link::integer>;
-using output_links = std::vector<output_link::integer>;
-using point_links = std::vector<point_link::integer>;
-using two_counts = std::pair<size_t, size_t>;
-using point_key = table::point::key;
-
-struct header_state{ header_link link; code ec; };
-using header_states = std::vector<header_state>;
 
 // Writers (non-const) are only: push_, pop_, set_ and initialize.
 template <typename Store>
@@ -66,7 +41,6 @@ public:
     using point = system::chain::point;
     using input = system::chain::input;
     using output = system::chain::output;
-    using outpoint = system::chain::outpoint;
     using header = system::chain::header;
     using script = system::chain::script;
     using witness = system::chain::witness;
@@ -396,13 +370,16 @@ public:
     input::cptr get_input(const tx_link& link, uint32_t index,
         bool witness) const NOEXCEPT;
 
-    point get_spender(const point_link& link) const NOEXCEPT;
-    outpoint get_spent(const output_link& link) const NOEXCEPT;
     script::cptr get_output_script(const output_link& link) const NOEXCEPT;
     output::cptr get_output(const output_link& link) const NOEXCEPT;
     output::cptr get_output(const tx_link& link, uint32_t index) const NOEXCEPT;
     inputs_ptr get_spenders(const output_link& link,
         bool witness) const NOEXCEPT;
+
+    /// Inpoint and outpoint result sets.
+    outpoint get_spent(const output_link& link) const NOEXCEPT;
+    inpoint get_spender(const point_link& link) const NOEXCEPT;
+    inpoints get_spenders(const point& point) const NOEXCEPT;
 
     /// False implies missing prevouts, node input.metadata is populated.
     bool populate_with_metadata(const input& input) const NOEXCEPT;

@@ -305,35 +305,6 @@ typename CLASS::output::cptr CLASS::get_output(
 }
 
 TEMPLATE
-typename CLASS::outpoint CLASS::get_spent(
-    const output_link& link) const NOEXCEPT
-{
-    table::output::get_parent_value out{};
-    if (!store_.output.get(link, out))
-        return {};
-
-    const auto index = to_output_index(out.parent_fk, link);
-    if (index == point::null_index)
-        return {};
-
-    return { { get_tx_key(out.parent_fk), index }, out.value };
-}
-
-TEMPLATE
-typename CLASS::point CLASS::get_spender(const point_link& link) const NOEXCEPT
-{
-    const auto tx = to_spending_tx(link);
-    if (tx.is_terminal())
-        return {};
-
-    const auto index = to_input_index(tx, link);
-    if (index == point::null_index)
-        return {};
-
-    return { get_tx_key(tx), index };
-}
-
-TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_spenders(
     const output_link& link, bool witness) const NOEXCEPT
 {
@@ -348,6 +319,48 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
             return {};
 
     return inputs;
+}
+
+// Inpoint and outpoint result sets.
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+outpoint CLASS::get_spent(const output_link& link) const NOEXCEPT
+{
+    table::output::get_parent_value out{};
+    if (!store_.output.get(link, out))
+        return {};
+
+    const auto index = to_output_index(out.parent_fk, link);
+    if (index == point::null_index)
+        return {};
+
+    return { { get_tx_key(out.parent_fk), index }, out.value };
+}
+
+TEMPLATE
+inpoint CLASS::get_spender(const point_link& link) const NOEXCEPT
+{
+    const auto tx = to_spending_tx(link);
+    if (tx.is_terminal())
+        return {};
+
+    const auto index = to_input_index(tx, link);
+    if (index == point::null_index)
+        return {};
+
+    return { get_tx_key(tx), index };
+}
+
+TEMPLATE
+inpoints CLASS::get_spenders(const point& point) const NOEXCEPT
+{
+    inpoints ins{};
+    for (const auto& link: to_spenders(point))
+        ins.insert(get_spender(link));
+
+    // std::set (lexically sorted/deduped).
+    return ins;
 }
 
 // Populate prevout objects.
