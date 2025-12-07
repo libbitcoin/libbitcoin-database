@@ -341,23 +341,23 @@ outpoint CLASS::get_spent(const output_link& link) const NOEXCEPT
 TEMPLATE
 inpoint CLASS::get_spender(const point_link& link) const NOEXCEPT
 {
-    const auto tx = to_spending_tx(link);
-    if (tx.is_terminal())
+    const auto tx_fk = to_spending_tx(link);
+    if (tx_fk.is_terminal())
         return {};
 
-    const auto index = to_input_index(tx, link);
+    const auto index = to_input_index(tx_fk, link);
     if (index == point::null_index)
         return {};
 
-    return { get_tx_key(tx), index };
+    return { get_tx_key(tx_fk), index };
 }
 
 TEMPLATE
 inpoints CLASS::get_spenders(const point& point) const NOEXCEPT
 {
     inpoints ins{};
-    for (const auto& link: to_spenders(point))
-        ins.insert(get_spender(link));
+    for (const auto& point_fk: to_spenders(point))
+        ins.insert(get_spender(point_fk));
 
     // std::set (lexically sorted/deduped).
     return ins;
