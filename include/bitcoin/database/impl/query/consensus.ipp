@@ -185,7 +185,7 @@ bool CLASS::is_strong(const tx_link& tx) const NOEXCEPT
 
 // protected
 TEMPLATE
-error::error_t CLASS::unspendable(uint32_t sequence, bool coinbase,
+code CLASS::unspendable(uint32_t sequence, bool coinbase,
     const tx_link& tx, uint32_t version, const context& ctx) const NOEXCEPT
 {
     // Ensure prevout tx is in a strong block, first try self link.
@@ -317,27 +317,27 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
     // Get points for each tx, and sum the total number.
     std::transform(parallel, txs.begin(), txs.end(), sets.begin(), to_set);
-    if (failure)
-        return { failure.load() };
+    if (failure != error::success)
+        return failure.load();
 
     // Check double spends strength, populates prevout parent tx/cb/sq links.
     if ((ec = populate_prevouts(sets, points, link)))
         return ec;
 
-    const auto is_unspendable = [this, &ctx, &failure](const auto& set) NOEXCEPT
+    const auto is_spendable = [this, &ctx, &failure](const auto& set) NOEXCEPT
     {
-        error::error_t ec{};
+        code ec{};
         for (const auto& point: set.points)
             if (!point.tx.is_terminal() && ((ec = unspendable(point.sequence,
                 point.coinbase, point.tx, set.version, ctx))))
-                failure.store(ec);
+                failure.store(static_cast<error::error_t>(ec.value()));
 
-        return failure != error::success;
+        return failure == error::success;
     };
 
     // Check all spends for spendability (strong, unlocked and mature).
-    if (std::any_of(parallel, sets.begin(), sets.end(), is_unspendable))
-        return { failure.load() };
+    if (!std::all_of(parallel, sets.begin(), sets.end(), is_spendable))
+        return failure.load();
 
     return error::success;
 }

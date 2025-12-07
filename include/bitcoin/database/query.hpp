@@ -652,7 +652,7 @@ protected:
         const context& ctx) const NOEXCEPT;
 
     /// Called by block_confirmable (populate and check double spends).
-    error::error_t unspendable(uint32_t sequence, bool coinbase,
+    code unspendable(uint32_t sequence, bool coinbase,
         const tx_link& prevout_tx, uint32_t version,
         const context& ctx) const NOEXCEPT;
 
