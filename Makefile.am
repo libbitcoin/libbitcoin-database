@@ -144,6 +144,7 @@ include_bitcoin_database_HEADERS = \
     include/bitcoin/database/query.hpp \
     include/bitcoin/database/settings.hpp \
     include/bitcoin/database/store.hpp \
+    include/bitcoin/database/types.hpp \
     include/bitcoin/database/version.hpp
 
 include_bitcoin_database_filedir = ${includedir}/bitcoin/database/file

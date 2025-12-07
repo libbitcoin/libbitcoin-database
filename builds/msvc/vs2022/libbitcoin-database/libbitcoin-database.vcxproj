@@ -197,6 +197,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\states.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\tables.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
     <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.hpp" />
   </ItemGroup>
