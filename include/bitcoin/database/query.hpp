@@ -549,13 +549,13 @@ public:
     /// Optional Tables.
     /// -----------------------------------------------------------------------
 
-    bool to_address_outputs(const std::atomic_bool& cancel,
-        output_links& out, const hash_digest& key) const NOEXCEPT;
-    bool to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
-        output_links& out, const hash_digest& key) const NOEXCEPT;
-    bool to_minimum_unspent_outputs(const std::atomic_bool& cancel,
-        output_links& out, const hash_digest& key, uint64_t value) const NOEXCEPT;
-    bool get_confirmed_balance(const std::atomic_bool& cancel,
+    code to_address_outputs(const std::atomic_bool& cancel,
+        outpoints& out, const hash_digest& key) const NOEXCEPT;
+    code to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
+        outpoints& out, const hash_digest& key) const NOEXCEPT;
+    code to_minimum_unspent_outputs(const std::atomic_bool& cancel,
+        outpoints& out, const hash_digest& key, uint64_t value) const NOEXCEPT;
+    code get_confirmed_balance(const std::atomic_bool& cancel,
         uint64_t& out, const hash_digest& key) const NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;

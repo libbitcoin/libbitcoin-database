@@ -26,103 +26,109 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
+ // TODO: address table could use point keys to compress the multimap.
+
 namespace libbitcoin {
 namespace database {
 
 // Address (natural-keyed).
 // ----------------------------------------------------------------------------
-// TODO: could use point keys (for multimap compression).
+// Pushing into vectors is more efficient than precomputation of size.
 
 TEMPLATE
-bool CLASS::to_address_outputs(const std::atomic_bool& cancel,
-    output_links& out, const hash_digest& key) const NOEXCEPT
+code CLASS::to_address_outputs(const std::atomic_bool& cancel,
+    outpoints& out, const hash_digest& key) const NOEXCEPT
 {
     out.clear();
-    
-    // Pushing into the vector is more efficient than precomputation of size.
     for (auto it = store_.address.it(key); it; ++it)
     {
+        if (cancel)
+            return error::canceled;
+
         table::address::record address{};
-        if (cancel || !store_.address.get(it, address))
-        {
-            out.clear();
-            return false;
-        }
+        if (!store_.address.get(it, address))
+            return error::integrity;
 
-        out.push_back(address.output_fk);
+        out.insert(get_spent(address.output_fk));
     }
 
-    return true;
+    return error::success;
 }
 
 TEMPLATE
-bool CLASS::to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
-    output_links& out, const hash_digest& key) const NOEXCEPT
+code CLASS::to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
+    outpoints& out, const hash_digest& key) const NOEXCEPT
 {
-    output_links output_fks{};
-    if (!to_address_outputs(cancel, output_fks, key))
-        return false;
-
     out.clear();
-    out.reserve(output_fks.size());
-    for (auto output_fk: output_fks)
-        if (is_confirmed_unspent(output_fk))
-            out.push_back(output_fk);
-
-    out.shrink_to_fit();
-    return true;
-}
-
-// TODO: test more.
-TEMPLATE
-bool CLASS::to_minimum_unspent_outputs(const std::atomic_bool& cancel,
-    output_links& out, const hash_digest& key, uint64_t minimum) const NOEXCEPT
-{
-    output_links unspent_fks{};
-    if (!to_confirmed_unspent_outputs(cancel, unspent_fks, key))
-        return false;
-
-    out.clear();
-    out.reserve(unspent_fks.size());
-    for (auto unspent_fk: unspent_fks)
+    for (auto it = store_.address.it(key); it; ++it)
     {
-        uint64_t value{};
-        if (!get_value(value, unspent_fk))
-        {
-            out.clear();
-            out.shrink_to_fit();
-            return false;
-        }
+        if (cancel)
+            return error::canceled;
 
-        if (value >= minimum)
-            out.push_back(unspent_fk);
+        table::address::record address{};
+        if (!store_.address.get(it, address))
+            return error::integrity;
+
+        if (is_confirmed_unspent(address.output_fk))
+            out.insert(get_spent(address.output_fk));
     }
 
-    out.shrink_to_fit();
-    return true;
+    return error::success;
 }
 
-// TODO: test more.
 TEMPLATE
-bool CLASS::get_confirmed_balance(const std::atomic_bool& cancel,
+code CLASS::to_minimum_unspent_outputs(const std::atomic_bool& cancel,
+    outpoints& out, const hash_digest& key, uint64_t minimum) const NOEXCEPT
+{
+    out.clear();
+    for (auto it = store_.address.it(key); it; ++it)
+    {
+        if (cancel)
+            return error::canceled;
+
+        table::address::record address{};
+        if (!store_.address.get(it, address))
+            return error::integrity;
+
+        if (is_confirmed_unspent(address.output_fk))
+        {
+            uint64_t value{};
+            if (!get_value(value, address.output_fk))
+                return error::integrity;
+
+            if (value >= minimum)
+                out.insert(get_spent(address.output_fk));
+        }
+    }
+
+    return error::success;
+}
+
+TEMPLATE
+code CLASS::get_confirmed_balance(const std::atomic_bool& cancel,
     uint64_t& out, const hash_digest& key) const NOEXCEPT
 {
     out = zero;
-    output_links unspent_fks{};
-    if (!to_confirmed_unspent_outputs(cancel, unspent_fks, key))
-        return false;
-
-    for (auto unspent_fk: unspent_fks)
+    for (auto it = store_.address.it(key); it; ++it)
     {
-        uint64_t value{};
-        if (!get_value(value, unspent_fk))
-            return false;
+        if (cancel)
+            return error::canceled;
 
-        // max if overflowed.
-        out = system::ceilinged_add(value, out);
+        table::address::record address{};
+        if (!store_.address.get(it, address))
+            return error::integrity;
+
+        if (is_confirmed_unspent(address.output_fk))
+        {
+            uint64_t value{};
+            if (!get_value(value, address.output_fk))
+                return error::integrity;
+
+            out = system::ceilinged_add(value, out);
+        }
     }
 
-    return true;
+    return error::success;
 }
 
 ////TEMPLATE
