@@ -35,7 +35,10 @@ enum error_t : uint8_t
 {
     /// general
     success,
+    canceled,
     unknown_state,
+
+    /// integrity (internal fault)
     integrity,
     integrity1,
     integrity2,
