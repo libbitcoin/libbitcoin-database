@@ -556,7 +556,7 @@ public:
     code to_minimum_unspent_outputs(const std::atomic_bool& cancel,
         outpoints& out, const hash_digest& key, uint64_t value) const NOEXCEPT;
     code get_confirmed_balance(const std::atomic_bool& cancel,
-        uint64_t& out, const hash_digest& key) const NOEXCEPT;
+        uint64_t& balance, const hash_digest& key) const NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
