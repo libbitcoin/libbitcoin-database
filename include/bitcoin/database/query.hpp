@@ -549,11 +549,11 @@ public:
     /// Optional Tables.
     /// -----------------------------------------------------------------------
 
-    code to_address_outputs(const std::atomic_bool& cancel,
+    code get_address_outputs(const std::atomic_bool& cancel,
         outpoints& out, const hash_digest& key) const NOEXCEPT;
-    code to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
+    code get_confirmed_unspent_outputs(const std::atomic_bool& cancel,
         outpoints& out, const hash_digest& key) const NOEXCEPT;
-    code to_minimum_unspent_outputs(const std::atomic_bool& cancel,
+    code get_minimum_unspent_outputs(const std::atomic_bool& cancel,
         outpoints& out, const hash_digest& key, uint64_t value) const NOEXCEPT;
     code get_confirmed_balance(const std::atomic_bool& cancel,
         uint64_t& balance, const hash_digest& key) const NOEXCEPT;

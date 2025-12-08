@@ -36,7 +36,7 @@ namespace database {
 // Pushing into vectors is more efficient than precomputation of size.
 
 TEMPLATE
-code CLASS::to_address_outputs(const std::atomic_bool& cancel,
+code CLASS::get_address_outputs(const std::atomic_bool& cancel,
     outpoints& out, const hash_digest& key) const NOEXCEPT
 {
     out.clear();
@@ -56,7 +56,7 @@ code CLASS::to_address_outputs(const std::atomic_bool& cancel,
 }
 
 TEMPLATE
-code CLASS::to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
+code CLASS::get_confirmed_unspent_outputs(const std::atomic_bool& cancel,
     outpoints& out, const hash_digest& key) const NOEXCEPT
 {
     out.clear();
@@ -77,7 +77,7 @@ code CLASS::to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
 }
 
 TEMPLATE
-code CLASS::to_minimum_unspent_outputs(const std::atomic_bool& cancel,
+code CLASS::get_minimum_unspent_outputs(const std::atomic_bool& cancel,
     outpoints& out, const hash_digest& key, uint64_t minimum) const NOEXCEPT
 {
     out.clear();
@@ -109,7 +109,7 @@ code CLASS::get_confirmed_balance(const std::atomic_bool& cancel,
     uint64_t& balance, const hash_digest& key) const NOEXCEPT
 {
     outpoints outs{};
-    if (code ec = to_confirmed_unspent_outputs(cancel, outs, key))
+    if (code ec = get_confirmed_unspent_outputs(cancel, outs, key))
     {
         balance = zero;
         return ec;
