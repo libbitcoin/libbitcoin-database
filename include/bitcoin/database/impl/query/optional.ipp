@@ -36,7 +36,7 @@ namespace database {
 // Pushing into vectors is more efficient than precomputation of size.
 
 TEMPLATE
-code CLASS::to_address_outputs(const std::atomic_bool& cancel,
+code CLASS::get_address_outputs(const std::atomic_bool& cancel,
     outpoints& out, const hash_digest& key) const NOEXCEPT
 {
     out.clear();
@@ -56,7 +56,7 @@ code CLASS::to_address_outputs(const std::atomic_bool& cancel,
 }
 
 TEMPLATE
-code CLASS::to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
+code CLASS::get_confirmed_unspent_outputs(const std::atomic_bool& cancel,
     outpoints& out, const hash_digest& key) const NOEXCEPT
 {
     out.clear();
@@ -77,7 +77,7 @@ code CLASS::to_confirmed_unspent_outputs(const std::atomic_bool& cancel,
 }
 
 TEMPLATE
-code CLASS::to_minimum_unspent_outputs(const std::atomic_bool& cancel,
+code CLASS::get_minimum_unspent_outputs(const std::atomic_bool& cancel,
     outpoints& out, const hash_digest& key, uint64_t minimum) const NOEXCEPT
 {
     out.clear();
@@ -106,27 +106,21 @@ code CLASS::to_minimum_unspent_outputs(const std::atomic_bool& cancel,
 
 TEMPLATE
 code CLASS::get_confirmed_balance(const std::atomic_bool& cancel,
-    uint64_t& out, const hash_digest& key) const NOEXCEPT
+    uint64_t& balance, const hash_digest& key) const NOEXCEPT
 {
-    out = zero;
-    for (auto it = store_.address.it(key); it; ++it)
+    outpoints outs{};
+    if (code ec = get_confirmed_unspent_outputs(cancel, outs, key))
     {
-        if (cancel)
-            return error::canceled;
-
-        table::address::record address{};
-        if (!store_.address.get(it, address))
-            return error::integrity;
-
-        if (is_confirmed_unspent(address.output_fk))
-        {
-            uint64_t value{};
-            if (!get_value(value, address.output_fk))
-                return error::integrity;
-
-            out = system::ceilinged_add(value, out);
-        }
+        balance = zero;
+        return ec;
     }
+
+    // Use of to_confirmed_unspent_outputs() provides necessary deduplication.
+    balance = std::accumulate(outs.begin(), outs.end(), zero,
+        [](size_t total, const outpoint& out) NOEXCEPT
+        {
+            return system::ceilinged_add(total, out.value());
+        });
 
     return error::success;
 }
