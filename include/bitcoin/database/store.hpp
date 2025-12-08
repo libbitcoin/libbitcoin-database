@@ -54,6 +54,12 @@ public:
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
 
+    /// Properties
+    /// -----------------------------------------------------------------------
+
+    /// Allow full throttle concurrent query execution (may use 100% CPU).
+    bool turbo() const NOEXCEPT;
+
     /// Methods.
     /// -----------------------------------------------------------------------
 
