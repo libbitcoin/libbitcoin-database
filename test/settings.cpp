@@ -23,6 +23,7 @@ BOOST_AUTO_TEST_SUITE(settings_tests)
 BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
 {
     database::settings configuration;
+    BOOST_REQUIRE_EQUAL(configuration.turbo, false);
     BOOST_REQUIRE_EQUAL(configuration.path, "bitcoin");
 
     // Archives.

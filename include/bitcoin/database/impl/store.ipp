@@ -226,6 +226,12 @@ CLASS::store(const settings& config) NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::turbo() const NOEXCEPT
+{
+    return configuration_.turbo;
+}
+
+TEMPLATE
 code CLASS::create(const event_handler& handler) NOEXCEPT
 {
     if (!transactor_mutex_.try_lock())

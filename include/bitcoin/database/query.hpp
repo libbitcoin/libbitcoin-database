@@ -313,6 +313,10 @@ public:
     point_link top_point(size_t bucket) const NOEXCEPT;
     tx_link top_tx(size_t bucket) const NOEXCEPT;
 
+    /// optional enumeration
+    code to_address_outputs(const std::atomic_bool& cancel,
+        output_links& out, const hash_digest& key) const NOEXCEPT;
+
     /// Archive reads.
     /// -----------------------------------------------------------------------
 
@@ -550,13 +554,14 @@ public:
     /// -----------------------------------------------------------------------
 
     code get_address_outputs(const std::atomic_bool& cancel,
-        outpoints& out, const hash_digest& key) const NOEXCEPT;
+        outpoints& out, const hash_digest& key, bool turbo=false) const NOEXCEPT;
     code get_confirmed_unspent_outputs(const std::atomic_bool& cancel,
-        outpoints& out, const hash_digest& key) const NOEXCEPT;
+        outpoints& out, const hash_digest& key, bool turbo=false) const NOEXCEPT;
     code get_minimum_unspent_outputs(const std::atomic_bool& cancel,
-        outpoints& out, const hash_digest& key, uint64_t value) const NOEXCEPT;
+        outpoints& out, const hash_digest& key, uint64_t value,
+        bool turbo=false) const NOEXCEPT;
     code get_confirmed_balance(const std::atomic_bool& cancel,
-        uint64_t& balance, const hash_digest& key) const NOEXCEPT;
+        uint64_t& balance, const hash_digest& key, bool turbo=false) const NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
@@ -687,6 +692,16 @@ protected:
         const system::settings& settings, const header& header,
         const header_link& link, size_t height) const NOEXCEPT;
 
+    /// address
+    /// -----------------------------------------------------------------------
+
+    code get_address_outputs_turbo(const std::atomic_bool& cancel,
+        outpoints& out, const hash_digest& key) const NOEXCEPT;
+    code get_confirmed_unspent_outputs_turbo(const std::atomic_bool& cancel,
+        outpoints& out, const hash_digest& key) const NOEXCEPT;
+    code get_minimum_unspent_outputs_turbo(const std::atomic_bool& cancel,
+        outpoints& out, const hash_digest& key, uint64_t minimum) const NOEXCEPT;
+
     /// tx_fk must be allocated.
     /// -----------------------------------------------------------------------
     code set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT;
@@ -696,6 +711,10 @@ private:
     template <typename Bool>
     static inline bool push_bool(std_vector<Bool>& stack,
         const Bool& element) NOEXCEPT;
+    template <typename Functor>
+    static inline code parallel_address_transform(
+        const std::atomic_bool& cancel, outpoints& out,
+        const output_links& links, Functor&& functor) NOEXCEPT;
 
     // Not thread safe.
     size_t get_fork_() const NOEXCEPT;
