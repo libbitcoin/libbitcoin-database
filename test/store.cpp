@@ -20,7 +20,7 @@
 #include "mocks/blocks.hpp"
 #include "mocks/map_store.hpp"
 
-// these are the slow tests (mmap)
+// these include the slow tests (mmap)
 
 BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
@@ -43,6 +43,68 @@ BOOST_AUTO_TEST_CASE(store__construct__default_configuration__referenced)
     const settings configuration{};
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(&instance.configuration(), &configuration);
+}
+
+BOOST_AUTO_TEST_CASE(store__is_dirty__uninitialized__true)
+{
+    const settings configuration{};
+    store<map> instance{ configuration };
+    BOOST_REQUIRE(instance.is_dirty());
+}
+
+BOOST_AUTO_TEST_CASE(store__is_dirty__initialized__true)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<map> instance{ configuration };
+    query<store<map>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BOOST_REQUIRE(!instance.is_dirty());
+    BOOST_REQUIRE(!instance.close(events));
+}
+
+BOOST_AUTO_TEST_CASE(store__is_dirty__open__false)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<map> instance{ configuration };
+    query<store<map>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BOOST_REQUIRE(!instance.is_dirty());
+    BOOST_REQUIRE(!instance.close(events));
+}
+
+BOOST_AUTO_TEST_CASE(store__is_dirty__open_add_header__false)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<map> instance{ configuration };
+    query<store<map>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BOOST_REQUIRE(query_.set(system::chain::header{}, context{}, false));
+    BOOST_REQUIRE(!instance.is_dirty());
+    BOOST_REQUIRE(!instance.close(events));
+}
+
+BOOST_AUTO_TEST_CASE(store__is_dirty__open_with_two_headers__true)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+
+    store<map> instance1{ configuration };
+    query<store<map>> query1_{ instance1 };
+    BOOST_REQUIRE(!instance1.create(events));
+    BOOST_REQUIRE(query1_.initialize(test::genesis));
+    BOOST_REQUIRE(query1_.set(system::chain::header{}, context{}, false));
+    BOOST_REQUIRE(!instance1.close(events));
+
+    store<map> instance2{ configuration };
+    BOOST_REQUIRE(!instance1.open(events));
+    BOOST_REQUIRE(instance2.is_dirty());
+    BOOST_REQUIRE(!instance1.close(events));
 }
 
 BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)

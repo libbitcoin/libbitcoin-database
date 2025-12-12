@@ -24,6 +24,7 @@
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/file/file.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 // TODO: evaluate performance benefits of concurrency.
 
@@ -542,7 +543,7 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     }
 
     code ec{ error::success };
-    const auto reload = [&handler](code& ec, auto& storage,
+    const auto reload = [&handler, this](code& ec, auto& storage,
         table_t table) NOEXCEPT
     {
         if (!ec)
@@ -552,6 +553,7 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
             {
                 handler(event_t::load_file, table);
                 ec = storage.reload();
+                this->dirty_ = true;
             }
         }
     };
@@ -763,6 +765,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, filter_tx_head_, table_t::filter_tx_head);
     load(ec, filter_tx_body_, table_t::filter_tx_body);
 
+    // create, open, and restore each invoke open_load.
+    dirty_ = header_body_.size() > schema::header::minrow;
     return ec;
 }
 
@@ -1147,6 +1151,12 @@ TEMPLATE
 const typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
 {
     return transactor{ transactor_mutex_ };
+}
+
+TEMPLATE
+bool CLASS::is_dirty() const NOEXCEPT
+{
+    return dirty_;
 }
 
 TEMPLATE

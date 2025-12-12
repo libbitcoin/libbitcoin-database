@@ -105,6 +105,9 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // If dirty we must guard against duplicates.
+    const auto dirty = store_.is_dirty();
+
     // Allocate contiguously and store inputs.
     input_link in_fk{};
     if (!store_.input.put_link(in_fk, table::input::put_ref{ {}, tx }))
@@ -158,31 +161,43 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
         if (!store_.point.expand(ins_fk + inputs))
             return error::tx_point_allocate;
 
-        // Collect duplicates to store in duplicate table.
-        std::vector<chain::point> twins{};
-        auto ptr = store_.point.get_memory();
-
-        // This must be set after tx.set and before tx.commit, since searchable and
-        // produces an association to tx.link, and is also an integral part of tx.
-        for (const auto& in: *ins)
+        // Must be set after tx.set and before tx.commit, since searchable and
+        // produces association to tx.link, and is also an integral part of tx.
+        if (dirty)
         {
-            bool duplicate{};
-            if (!store_.point.put(duplicate, ptr, ins_fk++, in->point(),
-                table::point::record{}))
-                return error::tx_point_put;
+            // Collect duplicates to store in duplicate table.
+            std::vector<chain::point> twins{};
+            auto ptr = store_.point.get_memory();
+            for (const auto& in: *ins)
+            {
+                bool duplicate{};
+                if (!store_.point.put(duplicate, ptr, ins_fk++, in->point(),
+                    table::point::record{}))
+                    return error::tx_point_put;
 
-            if (duplicate)
-                twins.push_back(in->point());
+                if (duplicate)
+                    twins.push_back(in->point());
+            }
+
+            ptr.reset();
+
+            // As few duplicates are expected, duplicate domain is only 2^16.
+            // Return of tx_duplicate_put implies link domain has overflowed.
+            for (const auto& twin: twins)
+                if (!store_.duplicate.exists(twin))
+                    if (!store_.duplicate.put(twin, table::duplicate::record{}))
+                        return error::tx_duplicate_put;
         }
+        else
+        {
+            auto ptr = store_.point.get_memory();
+            for (const auto& in: *ins)
+                if (!store_.point.put(ptr, ins_fk++, in->point(),
+                    table::point::record{}))
+                    return error::tx_point_put;
 
-        ptr.reset();
-
-        // As few duplicates are expected, the duplicate domain is only 2^16.
-        // Return of tx_duplicate_put implies that the link domain has overflowed.
-        for (const auto& twin: twins)
-            if (!store_.duplicate.exists(twin))
-                if (!store_.duplicate.put(twin, table::duplicate::record{}))
-                    return error::tx_duplicate_put;
+            ptr.reset();
+        }
     }
 
     // Commit address index records (hashmap).
