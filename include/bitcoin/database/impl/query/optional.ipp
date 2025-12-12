@@ -37,7 +37,7 @@ namespace database {
 // private/static
 TEMPLATE
 template <typename Functor>
-inline code CLASS::parallel_address_transform(const std::atomic_bool& cancel,
+inline code CLASS::parallel_address_transform(std::atomic_bool& cancel,
     outpoints& out, const output_links& links, Functor&& functor) NOEXCEPT
 {
     constexpr auto parallel = poolstl::execution::par;
@@ -65,8 +65,8 @@ inline code CLASS::parallel_address_transform(const std::atomic_bool& cancel,
 
 // protected
 TEMPLATE
-code CLASS::to_address_outputs(const std::atomic_bool& cancel,
-    output_links& out, const hash_digest& key) const NOEXCEPT
+code CLASS::to_address_outputs(std::atomic_bool& cancel, output_links& out,
+    const hash_digest& key) const NOEXCEPT
 {
     // Pushing into the vector is more efficient than precomputation of size.
     out.clear();
@@ -87,8 +87,8 @@ code CLASS::to_address_outputs(const std::atomic_bool& cancel,
 
 // protected
 TEMPLATE
-code CLASS::get_address_outputs_turbo(const std::atomic_bool& cancel,
-    outpoints& out, const hash_digest& key) const NOEXCEPT
+code CLASS::get_address_outputs_turbo(std::atomic_bool& cancel, outpoints& out,
+    const hash_digest& key) const NOEXCEPT
 {
     out.clear();
     output_links links{};
@@ -106,8 +106,8 @@ code CLASS::get_address_outputs_turbo(const std::atomic_bool& cancel,
 }
 
 TEMPLATE
-code CLASS::get_address_outputs(const std::atomic_bool& cancel,
-    outpoints& out, const hash_digest& key, bool turbo) const NOEXCEPT
+code CLASS::get_address_outputs(std::atomic_bool& cancel, outpoints& out,
+    const hash_digest& key, bool turbo) const NOEXCEPT
 {
     if (turbo && store_.turbo())
         return get_address_outputs_turbo(cancel, out, key);
@@ -130,7 +130,7 @@ code CLASS::get_address_outputs(const std::atomic_bool& cancel,
 
 // protected
 TEMPLATE
-code CLASS::get_confirmed_unspent_outputs_turbo(const std::atomic_bool& cancel,
+code CLASS::get_confirmed_unspent_outputs_turbo(std::atomic_bool& cancel,
     outpoints& out, const hash_digest& key) const NOEXCEPT
 {
     out.clear();
@@ -151,7 +151,7 @@ code CLASS::get_confirmed_unspent_outputs_turbo(const std::atomic_bool& cancel,
 }
 
 TEMPLATE
-code CLASS::get_confirmed_unspent_outputs(const std::atomic_bool& cancel,
+code CLASS::get_confirmed_unspent_outputs(std::atomic_bool& cancel,
     outpoints& out, const hash_digest& key, bool turbo) const NOEXCEPT
 {
     if (turbo && store_.turbo())
@@ -176,7 +176,7 @@ code CLASS::get_confirmed_unspent_outputs(const std::atomic_bool& cancel,
 
 // protected
 TEMPLATE
-code CLASS::get_minimum_unspent_outputs_turbo(const std::atomic_bool& cancel,
+code CLASS::get_minimum_unspent_outputs_turbo(std::atomic_bool& cancel,
     outpoints& out, const hash_digest& key, uint64_t minimum) const NOEXCEPT
 {
     out.clear();
@@ -207,9 +207,9 @@ code CLASS::get_minimum_unspent_outputs_turbo(const std::atomic_bool& cancel,
 }
 
 TEMPLATE
-code CLASS::get_minimum_unspent_outputs(const std::atomic_bool& cancel,
-    outpoints& out, const hash_digest& key,
-    uint64_t minimum, bool turbo) const NOEXCEPT
+code CLASS::get_minimum_unspent_outputs(std::atomic_bool& cancel,
+    outpoints& out, const hash_digest& key, uint64_t minimum,
+    bool turbo) const NOEXCEPT
 {
     if (turbo && store_.turbo())
         return get_minimum_unspent_outputs_turbo(cancel, out, key, minimum);
@@ -239,8 +239,8 @@ code CLASS::get_minimum_unspent_outputs(const std::atomic_bool& cancel,
 }
 
 TEMPLATE
-code CLASS::get_confirmed_balance(const std::atomic_bool& cancel,
-    uint64_t& balance, const hash_digest& key, bool turbo) const NOEXCEPT
+code CLASS::get_confirmed_balance(std::atomic_bool& cancel, uint64_t& balance,
+    const hash_digest& key, bool turbo) const NOEXCEPT
 {
     outpoints outs{};
     if (code ec = get_confirmed_unspent_outputs(cancel, outs, key, turbo))
