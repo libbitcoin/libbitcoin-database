@@ -90,6 +90,9 @@ public:
     /// Get a transactor object.
     const transactor get_transactor() NOEXCEPT;
 
+    /// Determine if the store is non-empty/initialized.
+    bool is_dirty() const NOEXCEPT;
+
     /// Get first fault code or error::success.
     code get_fault() const NOEXCEPT;
 
@@ -229,6 +232,7 @@ protected:
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
     std::shared_timed_mutex transactor_mutex_{};
+    bool dirty_{ true };
 
 private:
     using path = std::filesystem::path;

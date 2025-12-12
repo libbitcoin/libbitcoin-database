@@ -91,10 +91,11 @@ TEMPLATE
 code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
 {
     // This is the only multitable write query (except initialize/genesis).
-    using namespace system;
+
     if (tx.is_empty())
         return error::tx_empty;
 
+    using namespace system;
     using ix = linkage<schema::index>;
     const auto& ins = tx.inputs_ptr();
     const auto& ous = tx.outputs_ptr();
@@ -105,24 +106,31 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // If dirty we must guard against duplicates.
+    const auto dirty = store_.is_dirty();
+
     // Allocate contiguously and store inputs.
     input_link in_fk{};
-    if (!store_.input.put_link(in_fk, table::input::put_ref{ {}, tx }))
+    if (!store_.input.put_link(in_fk,
+        table::input::put_ref{ {}, tx }))
         return error::tx_input_put;
 
     // Allocate contiguously and store outputs.
     output_link out_fk{};
-    if (!store_.output.put_link(out_fk, table::output::put_ref{ {}, tx_fk, tx }))
+    if (!store_.output.put_link(out_fk,
+        table::output::put_ref{ {}, tx_fk, tx }))
         return error::tx_output_put;
 
     // Allocate and contiguously store input links.
     ins_link ins_fk{};
-    if (!store_.ins.put_link(ins_fk, table::ins::put_ref{ {}, in_fk, tx_fk, tx }))
+    if (!store_.ins.put_link(ins_fk,
+        table::ins::put_ref{ {}, in_fk, tx_fk, tx }))
         return error::tx_ins_put;
 
     // Allocate and contiguously store output links.
     outs_link outs_fk{};
-    if (!store_.outs.put_link(outs_fk, table::outs::put_ref{ {}, out_fk, tx }))
+    if (!store_.outs.put_link(outs_fk,
+        table::outs::put_ref{ {}, out_fk, tx }))
         return error::tx_outs_put;
 
     // Create tx record.
@@ -148,41 +156,54 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
             return error::tx_point_allocate;
 
         for (const auto& in: *ins)
-            if (!store_.point.put(ins_fk++, in->point(), table::point::record{}))
+            if (!store_.point.put(ins_fk++, in->point(),
+                table::point::record{}))
                 return error::tx_null_point_put;
     }
     else
     {
-        // Expand synchronizes keys with ins_fk, entries dropped into same offset.
+        // Expand synchronizes keys with ins_fk, entries set into same offset.
         // Allocate contiguous points (at sequential keys matching ins_fk).
         if (!store_.point.expand(ins_fk + inputs))
             return error::tx_point_allocate;
 
-        // Collect duplicates to store in duplicate table.
-        std::vector<chain::point> twins{};
-        auto ptr = store_.point.get_memory();
-
-        // This must be set after tx.set and before tx.commit, since searchable and
-        // produces an association to tx.link, and is also an integral part of tx.
-        for (const auto& in: *ins)
+        // Must be set after tx.set and before tx.commit, since searchable and
+        // produces association to tx.link, and is also an integral part of tx.
+        if (dirty)
         {
-            bool duplicate{};
-            if (!store_.point.put(duplicate, ptr, ins_fk++, in->point(),
-                table::point::record{}))
-                return error::tx_point_put;
+            // Collect duplicates to store in duplicate table.
+            std::vector<chain::point> twins{};
+            auto ptr = store_.point.get_memory();
+            for (const auto& in: *ins)
+            {
+                bool duplicate{};
+                if (!store_.point.put(duplicate, ptr, ins_fk++, in->point(),
+                    table::point::record{}))
+                    return error::tx_point_put;
 
-            if (duplicate)
-                twins.push_back(in->point());
+                if (duplicate)
+                    twins.push_back(in->point());
+            }
+
+            ptr.reset();
+
+            // As few duplicates are expected, duplicate domain is only 2^16.
+            // Return of tx_duplicate_put implies link domain has overflowed.
+            for (const auto& twin: twins)
+                if (!store_.duplicate.exists(twin))
+                    if (!store_.duplicate.put(twin, table::duplicate::record{}))
+                        return error::tx_duplicate_put;
         }
+        else
+        {
+            auto ptr = store_.point.get_memory();
+            for (const auto& in: *ins)
+                if (!store_.point.put(ptr, ins_fk++, in->point(),
+                    table::point::record{}))
+                    return error::tx_point_put;
 
-        ptr.reset();
-
-        // As few duplicates are expected, the duplicate domain is only 2^16.
-        // Return of tx_duplicate_put implies that the link domain has overflowed.
-        for (const auto& twin: twins)
-            if (!store_.duplicate.exists(twin))
-                if (!store_.duplicate.put(twin, table::duplicate::record{}))
-                    return error::tx_duplicate_put;
+            ptr.reset();
+        }
     }
 
     // Commit address index records (hashmap).
@@ -361,8 +382,6 @@ code CLASS::set_code(const block& block, const header_link& key,
 
     code ec{};
     auto fk = tx_fks;
-
-    // Each tx is set under a distinct transactor.
     for (const auto& tx: *block.transactions_ptr())
         if ((ec = set_code(fk++, *tx)))
             return ec;
