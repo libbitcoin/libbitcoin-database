@@ -555,16 +555,12 @@ bool CLASS::write(Link& previous, const memory_ptr& ptr, const Link& link,
         return false;
 
     // Commit element to search (terminal is a valid bucket index).
-    bool collision{};
-    if (!head_.push(collision, link, next, key))
+    bool search{};
+    if (!head_.push(search, link, next, key))
         return false;
 
-    // If filter collision set previous stack head for conflict resolution.
-    if (collision)
-        previous = next;
-    else
-        previous = Link::terminal;
-
+    // If collision set previous stack head for conflict resolution search.
+    previous = search ? Link{ next } : Link{};
     return true;
 }
 

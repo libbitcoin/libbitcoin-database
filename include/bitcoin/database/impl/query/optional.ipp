@@ -45,9 +45,9 @@ inline code CLASS::parallel_address_transform(std::atomic_bool& cancel,
     std::atomic_bool fail{};
     std::vector<outpoint> outpoints(links.size());
     std::transform(parallel, links.begin(), links.end(), outpoints.begin(),
-        [&functor, &fail](const auto& link) NOEXCEPT
+        [&functor, &cancel, &fail](const auto& link) NOEXCEPT
         {
-            return functor(link, fail);
+            return functor(link, cancel, fail);
         });
 
     out.clear();
@@ -96,7 +96,7 @@ code CLASS::get_address_outputs_turbo(std::atomic_bool& cancel, outpoints& out,
         return ec;
 
     return parallel_address_transform(cancel, out, links,
-        [this, &cancel](const auto& link, auto& fail) NOEXCEPT
+        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT
         {
             if (cancel || fail) return outpoint{};
             auto outpoint = get_spent(link);
@@ -139,7 +139,7 @@ code CLASS::get_confirmed_unspent_outputs_turbo(std::atomic_bool& cancel,
         return ec;
 
     return parallel_address_transform(cancel, out, links,
-        [this, &cancel](const auto& link, auto& fail) NOEXCEPT
+        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT
         {
             if (cancel || fail || !is_confirmed_unspent(link))
                 return outpoint{};
@@ -185,7 +185,7 @@ code CLASS::get_minimum_unspent_outputs_turbo(std::atomic_bool& cancel,
         return ec;
 
     return parallel_address_transform(cancel, out, links,
-        [this, &cancel, minimum](const auto& link, auto& fail) NOEXCEPT
+        [this, minimum](const auto& link, auto& cancel, auto& fail) NOEXCEPT
         {
             if (cancel || fail || !is_confirmed_unspent(link))
                 return outpoint{};
