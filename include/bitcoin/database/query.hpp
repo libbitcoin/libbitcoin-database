@@ -457,6 +457,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// States.
+    bool is_validateable(size_t height) const NOEXCEPT;
     uint64_t get_tx_fee(const tx_link& link) const NOEXCEPT;
     uint64_t get_block_fees(const header_link& link) const NOEXCEPT;
     code get_block_state(const header_link& link) const NOEXCEPT;

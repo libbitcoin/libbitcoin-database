@@ -29,6 +29,19 @@ namespace database {
 // States.
 // ----------------------------------------------------------------------------
 
+TEMPLATE
+bool CLASS::is_validateable(size_t height) const NOEXCEPT
+{
+    const auto ec = get_block_state(to_candidate(height));
+
+    // First block state should be unvalidated, valid, or confirmable.
+    return
+        (ec == database::error::unvalidated) ||
+        (ec == database::error::block_valid) ||
+        (ec == database::error::unknown_state) ||
+        (ec == database::error::block_confirmable);
+}
+
 // protected
 TEMPLATE
 inline code CLASS::to_block_code(
