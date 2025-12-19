@@ -87,6 +87,18 @@ inline bool CLASS::is_valid(const header_link& link) const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+hash_digest CLASS::get_top_confirmed_hash() const NOEXCEPT
+{
+    return get_header_key(to_confirmed(get_top_confirmed()));
+}
+
+TEMPLATE
+hash_digest CLASS::get_top_candidate_hash() const NOEXCEPT
+{
+    return get_header_key(to_candidate(get_top_candidate()));
+}
+
+TEMPLATE
 hashes CLASS::get_tx_keys(const header_link& link) const NOEXCEPT
 {
     const auto tx_fks = to_transactions(link);
