@@ -331,6 +331,8 @@ public:
     inline bool is_valid(const header_link& link) const NOEXCEPT;
 
     /// Empty/null_hash implies fault, zero count implies unassociated.
+    hash_digest get_top_confirmed_hash() const NOEXCEPT;
+    hash_digest get_top_candidate_hash() const NOEXCEPT;
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
     size_t get_tx_count(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
