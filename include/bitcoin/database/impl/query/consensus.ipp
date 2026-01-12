@@ -472,9 +472,7 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::get_doubles(tx_links& out, const point& point) const NOEXCEPT
 {
-    // Body size check avoids a header hit when no duplicates (common).
-    if (is_zero(store_.duplicate.body_size()) ||
-        !store_.duplicate.exists(point))
+    if (!store_.duplicate.exists(point))
         return true;
 
     auto success = false;
@@ -510,8 +508,10 @@ bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
     if (block.transactions() <= one)
         return true;
 
+    // Body size check avoids a header hit when no duplicates (common).
     tx_links doubles{};
-    if (!get_doubles(doubles, block))
+    if (!is_zero(store_.duplicate.body_size()) &&
+        !get_doubles(doubles, block))
         return false;
 
     const auto prevout = to_prevout(link);
