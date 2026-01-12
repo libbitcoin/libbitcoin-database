@@ -77,12 +77,6 @@ inline bool CLASS::is_confirmable(const header_link& link) const NOEXCEPT
     return get_header_state(link) == error::block_confirmable;
 }
 
-TEMPLATE
-inline bool CLASS::is_valid(const header_link& link) const NOEXCEPT
-{
-    return get_header_state(link) == error::block_valid;
-}
-
 // Empty/null_hash implies fault, zero count implies unassociated.
 // ----------------------------------------------------------------------------
 

@@ -162,6 +162,14 @@ uint64_t CLASS::get_tx_fee(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+inline bool CLASS::is_validated(const header_link& link) const NOEXCEPT
+{
+    // Validated and not invalid (checkpoint/milestone shows false).
+    const auto state = get_header_state(link);
+    return state == error::block_valid || state == error::block_confirmable;
+}
+
+TEMPLATE
 bool CLASS::is_block_validated(code& state, const header_link& link,
     size_t height, size_t checkpoint) const NOEXCEPT
 {
