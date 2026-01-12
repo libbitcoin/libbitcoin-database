@@ -165,16 +165,45 @@ output_link CLASS::to_prevout(const point_link& link) const NOEXCEPT
 // block/tx to block (reverse navigation)
 // ----------------------------------------------------------------------------
 
+TEMPLATE
+tx_link CLASS::to_strong_tx(const tx_link& link) const NOEXCEPT
+{
+    return to_strong_tx(get_tx_key(link));
+}
+
+TEMPLATE
+tx_link CLASS::to_strong_tx(const hash_digest& tx_hash) const NOEXCEPT
+{
+    // Get all tx links for tx_hash.
+    tx_links txs{};
+    for (auto it = store_.tx.it(tx_hash); it; ++it)
+        txs.push_back(*it);
+
+    // Find the first strong tx of the set and return its link.
+    for (const auto& tx : txs)
+        if (!to_block(tx).is_terminal())
+            return tx;
+
+    return {};
+}
+
+// protected (weak association)
 // Required for confirmation processing.
 TEMPLATE
-header_link CLASS::to_block(const tx_link& key) const NOEXCEPT
+header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 {
     table::strong_tx::record strong{};
-    if (!store_.strong_tx.find(key, strong) || !strong.positive())
+    if (!store_.strong_tx.find(link, strong) || !strong.positive())
         return {};
 
     // Terminal implies not in strong block (reorganized).
     return strong.header_fk();
+}
+
+TEMPLATE
+header_link CLASS::to_strong(const tx_link& link) const NOEXCEPT
+{
+    return to_strong(get_tx_key(link));
 }
 
 // Required for confirmation processing.
@@ -188,14 +217,12 @@ header_link CLASS::to_strong(const hash_digest& tx_hash) const NOEXCEPT
 
     // Find the first strong tx of the set and return its block.
     for (const auto& tx: txs)
-    {
-        const auto block = to_block(tx);
-        if (!block.is_terminal())
+        if (const auto block = to_block(tx); !block.is_terminal())
             return block;
-    }
 
     return {};
 }
+
 TEMPLATE
 header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 {
