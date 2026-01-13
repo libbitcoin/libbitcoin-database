@@ -156,16 +156,14 @@ inline hash_digest CLASS::get_point_hash(const point_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::get_tx_height(size_t& out, const tx_link& link) const NOEXCEPT
 {
-    // to_block is strong but not necessarily confirmed.
-    const auto fk = to_block(link);
+    const auto fk = to_strong(link);
     return is_confirmed_block(fk) && get_height(out, fk);
 }
 
 TEMPLATE
 bool CLASS::get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT
 {
-    // to_block is strong but not necessarily confirmed.
-    const auto fk = to_block(link);
+    const auto fk = to_strong(link);
     if (!is_confirmed_block(fk))
         return false;
 

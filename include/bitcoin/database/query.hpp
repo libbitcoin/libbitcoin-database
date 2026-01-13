@@ -263,7 +263,9 @@ public:
     output_link to_prevout(const point_link& link) const NOEXCEPT;
 
     /// block/tx to block (reverse navigation)
-    header_link to_block(const tx_link& key) const NOEXCEPT;
+    tx_link to_strong_tx(const tx_link& link) const NOEXCEPT;
+    tx_link to_strong_tx(const hash_digest& tx_hash) const NOEXCEPT;
+    header_link to_strong(const tx_link& link) const NOEXCEPT;
     header_link to_strong(const hash_digest& tx_hash) const NOEXCEPT;
     header_link to_parent(const header_link& link) const NOEXCEPT;
 
@@ -410,7 +412,7 @@ public:
     bool set(const block& block, const context& ctx,
         bool milestone, bool strong) NOEXCEPT;
     bool set(const transaction& tx) NOEXCEPT;
-    bool set(const block& block, bool strong) NOEXCEPT;
+    bool set(const block& block, bool strong, bool bypass) NOEXCEPT;
 
     /// Set transaction.
     code set_code(const transaction& tx) NOEXCEPT;
@@ -436,9 +438,11 @@ public:
         const chain_context& ctx, bool milestone, bool strong) NOEXCEPT;
 
     /// Set block.txs (headers-first).
-    code set_code(const block& block, bool strong) NOEXCEPT;
-    code set_code(header_link& out_fk, const block& block, bool strong) NOEXCEPT;
-    code set_code(const block& block, const header_link& key, bool strong) NOEXCEPT;
+    code set_code(const block& block, bool strong, bool bypass) NOEXCEPT;
+    code set_code(header_link& out_fk, const block& block, bool strong,
+        bool bypass) NOEXCEPT;
+    code set_code(const block& block, const header_link& key, bool strong,
+        bool bypass) NOEXCEPT;
 
     /// Context.
     /// -----------------------------------------------------------------------
@@ -602,6 +606,7 @@ protected:
 
     /// Translate.
     /// -----------------------------------------------------------------------
+    header_link to_block(const tx_link& link) const NOEXCEPT;
     uint32_t to_input_index(const tx_link& parent_fk,
         const point_link& point_fk) const NOEXCEPT;
     uint32_t to_output_index(const tx_link& parent_fk,
@@ -702,11 +707,13 @@ protected:
     code get_confirmed_unspent_outputs_turbo(std::atomic_bool& cancel,
         outpoints& out, const hash_digest& key) const NOEXCEPT;
     code get_minimum_unspent_outputs_turbo(std::atomic_bool& cancel,
-        outpoints& out, const hash_digest& key, uint64_t minimum) const NOEXCEPT;
+        outpoints& out, const hash_digest& key,
+        uint64_t minimum) const NOEXCEPT;
 
     /// tx_fk must be allocated.
     /// -----------------------------------------------------------------------
-    code set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT;
+    code set_code(const tx_link& tx_fk, const transaction& tx,
+        bool bypass) NOEXCEPT;
 
 private:
     // Chain objects.

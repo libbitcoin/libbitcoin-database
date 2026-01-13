@@ -65,10 +65,10 @@ bool CLASS::set(const transaction& tx) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set(const block& block, bool strong) NOEXCEPT
+bool CLASS::set(const block& block, bool strong, bool bypass) NOEXCEPT
 {
     // This sets only the txs of a block with header/context already archived.
-    return !set_code(block, strong);
+    return !set_code(block, strong, bypass);
 }
 
 // set transaction
@@ -84,11 +84,12 @@ code CLASS::set_code(const transaction& tx) NOEXCEPT
     if (tx_fk.is_terminal())
         return error::tx_tx_allocate;
 
-    return set_code(tx_fk, tx);
+    return set_code(tx_fk, tx, false);
 }
 
 TEMPLATE
-code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
+code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
+    bool bypass) NOEXCEPT
 {
     // This is the only multitable write query (except initialize/genesis).
 
@@ -105,9 +106,6 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
 
     // ========================================================================
     const auto scope = store_.get_transactor();
-
-    // If dirty we must guard against duplicates.
-    const auto dirty = store_.is_dirty();
 
     // Allocate contiguously and store inputs.
     input_link in_fk{};
@@ -167,9 +165,13 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx) NOEXCEPT
         if (!store_.point.expand(ins_fk + inputs))
             return error::tx_point_allocate;
 
+        // If dirty we must guard against duplicates.
+        // Dirty doesn't hold up in the case of an invalidated block, as that
+        // may result in a duplicated tx. So dirty should be false in the case
+        // of a non-bypass (valid) block.
         // Must be set after tx.set and before tx.commit, since searchable and
         // produces association to tx.link, and is also an integral part of tx.
-        if (dirty)
+        if (store_.is_dirty() || !bypass)
         {
             // Collect duplicates to store in duplicate table.
             std::vector<chain::point> twins{};
@@ -336,7 +338,7 @@ code CLASS::set_code(header_link& out_fk, const block& block,
     const context& ctx, bool milestone, bool strong) NOEXCEPT
 {
     const auto ec = set_code(out_fk, block.header(), ctx, milestone);
-    return ec ? ec : set_code(block, out_fk, strong);
+    return ec ? ec : set_code(block, out_fk, strong, strong || milestone);
 }
 
 // set txs from block
@@ -346,26 +348,26 @@ code CLASS::set_code(header_link& out_fk, const block& block,
 // releases all memory for parts of itself, due to the custom allocator.
 
 TEMPLATE
-code CLASS::set_code(const block& block, bool strong) NOEXCEPT
+code CLASS::set_code(const block& block, bool strong, bool bypass) NOEXCEPT
 {
     header_link unused{};
-    return set_code(unused, block, strong);
+    return set_code(unused, block, strong, bypass);
 }
 
 TEMPLATE
-code CLASS::set_code(header_link& out_fk, const block& block,
-    bool strong) NOEXCEPT
+code CLASS::set_code(header_link& out_fk, const block& block, bool strong,
+    bool bypass) NOEXCEPT
 {
     out_fk = to_header(block.get_hash());
     if (out_fk.is_terminal())
         return error::txs_header;
 
-    return set_code(block, out_fk, strong);
+    return set_code(block, out_fk, strong, bypass);
 }
 
 TEMPLATE
 code CLASS::set_code(const block& block, const header_link& key,
-    bool strong) NOEXCEPT
+    bool strong, bool bypass) NOEXCEPT
 {
     using namespace system;
     if (key.is_terminal())
@@ -383,7 +385,7 @@ code CLASS::set_code(const block& block, const header_link& key,
     code ec{};
     auto fk = tx_fks;
     for (const auto& tx: *block.transactions_ptr())
-        if ((ec = set_code(fk++, *tx)))
+        if ((ec = set_code(fk++, *tx, bypass)))
             return ec;
 
     using bytes = linkage<schema::size>::integer;

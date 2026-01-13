@@ -68,7 +68,7 @@ TEMPLATE
 bool CLASS::is_confirmed_tx(const tx_link& link) const NOEXCEPT
 {
     // The tx is strong *and* its block is confirmed (by height).
-    const auto fk = to_block(link);
+    const auto fk = to_strong(link);
     return !fk.is_terminal() && is_confirmed_block(fk);
 }
 
