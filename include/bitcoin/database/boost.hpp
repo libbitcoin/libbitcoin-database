@@ -19,9 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_BOOST_HPP
 #define LIBBITCOIN_DATABASE_BOOST_HPP
 
-#if defined(HAVE_MSC)
-    #include <windows.h>
-#endif
+// Must pull in any base boost configuration before including boost.
+#include <bitcoin/system.hpp>
+
 #include <filesystem>
 #include <boost/interprocess/detail/os_file_functions.hpp>
 #include <boost/multi_index_container.hpp>
@@ -29,7 +29,6 @@
 #include <boost/multi_index/key.hpp>
 #include <boost/multi_index/key_extractors.hpp>
 #include <boost/multi_index/ordered_index.hpp>
-#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace database {
