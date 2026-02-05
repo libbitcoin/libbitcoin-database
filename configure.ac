@@ -250,15 +250,13 @@ AS_CASE([${with_tests}], [yes],
 
 # Require bitcoin-system of at least version 4.0.0 and output ${bitcoin_system_CPPFLAGS/LIBS/PKG}.
 #------------------------------------------------------------------------------
-PKG_CHECK_MODULES([bitcoin_system], [libbitcoin-system >= 4.0.0],
-    [bitcoin_system_INCLUDEDIR="`$PKG_CONFIG --variable=includedir "libbitcoin-system >= 4.0.0" 2>/dev/null`"
-     bitcoin_system_OTHER_CFLAGS="`$PKG_CONFIG --cflags-only-other "libbitcoin-system >= 4.0.0" 2>/dev/null`"],
-    [AC_MSG_ERROR([libbitcoin-system >= 4.0.0 is required but was not found.])])
+PKG_CHECK_MODULES([bitcoin_system], [libbitcoin-system >= 4.0.0], [],
+    [
+      AC_MSG_ERROR([libbitcoin-system >= 4.0.0 is required but was not found.])
+    ])
 AC_SUBST([bitcoin_system_PKG], ['libbitcoin-system >= 4.0.0'])
 AC_SUBST([bitcoin_system_CPPFLAGS], [${bitcoin_system_CFLAGS}])
-AS_IF([test x${bitcoin_system_INCLUDEDIR} != "x"],
-    [AC_SUBST([bitcoin_system_ISYS_CPPFLAGS], ["-isystem${bitcoin_system_INCLUDEDIR} ${bitcoin_system_OTHER_CFLAGS}"])],
-    [AC_SUBST([bitcoin_system_ISYS_CPPFLAGS], [${bitcoin_system_OTHER_CFLAGS}])])
+AC_SUBST([bitcoin_system_ISYS_CPPFLAGS], [`echo ${bitcoin_system_CPPFLAGS} | $SED s/^-I/-isystem/g | $SED s/' -I'/' -isystem'/g`]])
 AC_MSG_NOTICE([bitcoin_system_CPPFLAGS : ${bitcoin_system_CPPFLAGS}])
 AC_MSG_NOTICE([bitcoin_system_ISYS_CPPFLAGS : ${bitcoin_system_ISYS_CPPFLAGS}])
 AC_MSG_NOTICE([bitcoin_system_OTHER_CFLAGS : ${bitcoin_system_OTHER_CFLAGS}])
