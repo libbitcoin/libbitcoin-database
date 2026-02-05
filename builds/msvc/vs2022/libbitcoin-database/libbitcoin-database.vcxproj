@@ -130,7 +130,9 @@
     <ClCompile Include="..\..\..\..\src\locks\flush_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\map.cpp" />
-    <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.cpp">
+      <ObjectFileName>$(IntDir)src_memory_mman-win32_mman.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\memory\utilities.cpp">
       <ObjectFileName>$(IntDir)src_memory_utilities.obj</ObjectFileName>
     </ClCompile>

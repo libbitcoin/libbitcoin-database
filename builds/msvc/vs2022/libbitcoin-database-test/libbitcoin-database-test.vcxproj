@@ -132,8 +132,12 @@
     <ClCompile Include="..\..\..\..\test\memory\utilities.cpp">
       <ObjectFileName>$(IntDir)test_memory_utilities.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\mocks\blocks.cpp" />
-    <ClCompile Include="..\..\..\..\test\mocks\chunk_storage.cpp" />
+    <ClCompile Include="..\..\..\..\test\mocks\blocks.cpp">
+      <ObjectFileName>$(IntDir)test_mocks_blocks.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\mocks\chunk_storage.cpp">
+      <ObjectFileName>$(IntDir)test_mocks_chunk_storage.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\arrayhead.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashhead.cpp" />
@@ -178,7 +182,9 @@
     <ClCompile Include="..\..\..\..\test\tables\optional\address.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\optional\filter_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\optional\filter_tx.cpp" />
-    <ClCompile Include="..\..\..\..\test\test.cpp" />
+    <ClCompile Include="..\..\..\..\test\test.cpp">
+      <ObjectFileName>$(IntDir)test_test.obj</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\test\mocks\blocks.hpp" />
