@@ -79,7 +79,7 @@ struct input
     struct get_ptrs
       : public schema::input
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -103,7 +103,7 @@ struct input
     struct get_script
       : public schema::input
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -122,7 +122,7 @@ struct input
     struct get_witness
       : public schema::input
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};

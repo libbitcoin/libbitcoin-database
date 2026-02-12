@@ -42,7 +42,7 @@ struct outs
     struct record
       : public schema::outs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(out_fks.size());
         }
@@ -80,7 +80,7 @@ struct outs
     struct get_output
       : public schema::outs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             return 1;
         }
@@ -97,7 +97,7 @@ struct outs
     struct put_ref
       : public schema::outs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(tx_.outputs());
         }

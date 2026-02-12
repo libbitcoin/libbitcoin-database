@@ -101,7 +101,7 @@ struct ins
     struct put_ref
       : public schema::ins
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(tx_.inputs());
         }

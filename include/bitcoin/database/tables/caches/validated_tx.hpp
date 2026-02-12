@@ -41,7 +41,7 @@ struct validated_tx
     struct slab
       : public schema::validated_tx
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             using namespace system;
             return possible_narrow_cast<link::integer>(pk + sk +
@@ -89,7 +89,7 @@ struct validated_tx
     struct slab_get_code
       : public schema::validated_tx
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
