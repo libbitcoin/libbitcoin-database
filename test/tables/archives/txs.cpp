@@ -52,7 +52,7 @@ const table::txs::slab slab2
 const table::txs::slab slab3
 {
     {}, // schema::txs [all const static members]
-    0xa0000b,
+    0x09000b,
     std::vector<uint32_t>
     {
         0x56341231_u32,
@@ -98,8 +98,8 @@ const data_chunk expected3
     // slab3 (count) [3]
     0x03, 0x00, 0x00,
 
-    // slab3 (wire) [0xa0000b]
-    0x0b, 0x00, 0xa0,
+    // slab3 (wire) [0x09000b]
+    0x0b, 0x00, 0x09,
 
     // slab3
     0x31, 0x12, 0x34, 0x56,

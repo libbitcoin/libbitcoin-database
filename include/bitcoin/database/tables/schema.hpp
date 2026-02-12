@@ -208,6 +208,8 @@ struct txs
         count_ +                // txs
         schema::size +          // block.serialized_size(true)
         schema::transaction::pk;// coinbase tx
+        ////schema::bit +       // is interval - merged bit into schema::size.
+        ////0 | schema::hash +  // electrum interval hash (each 2048th block).
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;
     static_assert(minsize == 10u);
