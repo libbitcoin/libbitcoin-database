@@ -40,7 +40,7 @@ constexpr size_t hash = system::hash_size;
 
 /// Primary keys.
 /// -----------------------------------------------------------------------
-constexpr size_t dup = 2;       // ->duplicate
+constexpr size_t dup = 2;       // ->duplicate [TODO: increase to 3]
 constexpr size_t put = 5;       // ->input/output slab.
 constexpr size_t ins_ = 4;      // ->point|ins record.
 constexpr size_t outs_ = 4;     // ->outs (puts) record.
@@ -208,6 +208,8 @@ struct txs
         count_ +                // txs
         schema::size +          // block.serialized_size(true)
         schema::transaction::pk;// coinbase tx
+        ////schema::bit +       // is interval - merged bit into schema::size.
+        ////0 | schema::hash +  // electrum interval hash (each 2048th block).
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;
     static_assert(minsize == 10u);
@@ -216,7 +218,7 @@ struct txs
 };
 
 /// Index tables.
-/// -----------------------------------------------------------------------
+/// ---------------------------------------------------------------------------
 
 // candidate and confirmed arrays
 struct height
@@ -254,7 +256,7 @@ struct strong_tx
 };
 
 /// Cache tables.
-/// -----------------------------------------------------------------------
+/// ---------------------------------------------------------------------------
 
 // record hashmap
 struct duplicate
@@ -333,7 +335,7 @@ struct validated_tx
 };
 
 /// Optional tables.
-/// -----------------------------------------------------------------------
+/// ---------------------------------------------------------------------------
 
 // TODO: modest (sk:4) record multimap, with high multiple rate.
 // large (sk:32) record multimap, with high multiple rate.

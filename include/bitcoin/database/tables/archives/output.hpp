@@ -87,7 +87,7 @@ struct output
     struct only
       : public schema::output
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -115,7 +115,7 @@ struct output
     struct get_script
       : public schema::output
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -136,7 +136,7 @@ struct output
     struct get_parent_value
       : public schema::output
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -156,7 +156,7 @@ struct output
     struct get_parent
       : public schema::output
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -174,7 +174,7 @@ struct output
     struct get_value
       : public schema::output
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};

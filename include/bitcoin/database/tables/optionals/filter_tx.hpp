@@ -37,7 +37,7 @@ struct filter_tx
     struct get_filter
       : public schema::filter_tx
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(
                 variable_size(filter.size()) + filter.size());
@@ -56,7 +56,7 @@ struct filter_tx
     struct put_ref
       : public schema::filter_tx
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(
                 variable_size(filter.size()) + filter.size());

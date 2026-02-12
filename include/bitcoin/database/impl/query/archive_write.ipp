@@ -65,10 +65,11 @@ bool CLASS::set(const transaction& tx) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set(const block& block, bool strong, bool bypass) NOEXCEPT
+bool CLASS::set(const block& block, bool strong, bool bypass,
+    size_t height) NOEXCEPT
 {
     // This sets only the txs of a block with header/context already archived.
-    return !set_code(block, strong, bypass);
+    return !set_code(block, strong, bypass, height);
 }
 
 // set transaction
@@ -338,7 +339,8 @@ code CLASS::set_code(header_link& out_fk, const block& block,
     const context& ctx, bool milestone, bool strong) NOEXCEPT
 {
     const auto ec = set_code(out_fk, block.header(), ctx, milestone);
-    return ec ? ec : set_code(block, out_fk, strong, strong || milestone);
+    return ec ? ec : set_code(block, out_fk, strong, strong || milestone,
+        ctx.height);
 }
 
 // set txs from block
@@ -348,26 +350,27 @@ code CLASS::set_code(header_link& out_fk, const block& block,
 // releases all memory for parts of itself, due to the custom allocator.
 
 TEMPLATE
-code CLASS::set_code(const block& block, bool strong, bool bypass) NOEXCEPT
+code CLASS::set_code(const block& block, bool strong, bool bypass,
+    size_t height) NOEXCEPT
 {
     header_link unused{};
-    return set_code(unused, block, strong, bypass);
+    return set_code(unused, block, strong, bypass, height);
 }
 
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const block& block, bool strong,
-    bool bypass) NOEXCEPT
+    bool bypass, size_t height) NOEXCEPT
 {
     out_fk = to_header(block.get_hash());
     if (out_fk.is_terminal())
         return error::txs_header;
 
-    return set_code(block, out_fk, strong, bypass);
+    return set_code(block, out_fk, strong, bypass, height);
 }
 
 TEMPLATE
 code CLASS::set_code(const block& block, const header_link& key,
-    bool strong, bool bypass) NOEXCEPT
+    bool strong, bool bypass, size_t /* height */) NOEXCEPT
 {
     using namespace system;
     if (key.is_terminal())
@@ -392,6 +395,13 @@ code CLASS::set_code(const block& block, const header_link& key,
     const auto size = block.serialized_size(true);
     const auto wire = possible_narrow_cast<bytes>(size);
 
+    // TODO: compute and set interval hash for interval blocks as configured.
+    // TODO: create query to walk header.parent across full interval to collect
+    // TODO: merkle leaves and compute intermediate merkle root. This requires
+    // TODO: header.parent link traversal only, with read of hash for each. The
+    // TODO: full interval of hashes (e.g. 2048) is preallocated to a vector.
+    std::optional<hash_digest> interval{};
+
     // ========================================================================
     const auto scope = store_.get_transactor();
     constexpr auto positive = true;
@@ -407,7 +417,8 @@ code CLASS::set_code(const block& block, const header_link& key,
         {},
         wire,
         count,
-        tx_fks
+        tx_fks,
+        std::move(interval)
     }) ? error::success : error::txs_txs_put;
     // ========================================================================
 }

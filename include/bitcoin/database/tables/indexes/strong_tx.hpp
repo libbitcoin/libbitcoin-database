@@ -50,24 +50,24 @@ struct strong_tx
     {
         inline bool positive() const NOEXCEPT
         {
-            return system::get_right(block_fk, offset);
+            return system::get_right(signed_block_fk, offset);
         }
 
         inline header::integer header_fk() const NOEXCEPT
         {
-            return system::set_right(block_fk, offset, false);
+            return system::set_right(signed_block_fk, offset, false);
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            block_fk = source.read_little_endian<header::integer, header::size>();
+            signed_block_fk = source.read_little_endian<header::integer, header::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            sink.write_little_endian<header::integer, header::size>(block_fk);
+            sink.write_little_endian<header::integer, header::size>(signed_block_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
@@ -78,7 +78,7 @@ struct strong_tx
                 && header_fk() == other.header_fk();
         }
 
-        header::integer block_fk{};
+        header::integer signed_block_fk{};
     };
 };
 

@@ -97,12 +97,12 @@ BOOST_AUTO_TEST_CASE(strong_tx__get__two__expected)
     BOOST_REQUIRE(instance.get(0u, out));
     BOOST_REQUIRE_EQUAL(out.header_fk(), strong1.header_fk());
     BOOST_REQUIRE_EQUAL(out.positive(), strong1.positive());
-    BOOST_REQUIRE_EQUAL(out.block_fk, bit_or(0x0078f87fu, 0x00800000u));
+    BOOST_REQUIRE_EQUAL(out.signed_block_fk, bit_or(0x0078f87fu, 0x00800000u));
 
     BOOST_REQUIRE(instance.get(1u, out));
     BOOST_REQUIRE_EQUAL(out.header_fk(), strong2.header_fk());
     BOOST_REQUIRE_EQUAL(out.positive(), strong2.positive());
-    BOOST_REQUIRE_EQUAL(out.block_fk, bit_or(0x0078f87fu, 0x00000000u));
+    BOOST_REQUIRE_EQUAL(out.signed_block_fk, bit_or(0x0078f87fu, 0x00000000u));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

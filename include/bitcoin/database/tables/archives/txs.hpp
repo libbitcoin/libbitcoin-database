@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <optional>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -38,63 +39,86 @@ struct txs
     using ct = linkage<schema::count_>;
     using tx = schema::transaction::link;
     using keys = std::vector<tx::integer>;
-    using bytes = linkage<schema::size>;
+    using bytes = linkage<schema::size, sub1(to_bits(schema::size))>;
+    using hash = std::optional<hash_digest>;
     using array_map<schema::txs>::arraymap;
+    static constexpr auto offset = bytes::bits;
+    static_assert(offset < to_bits(bytes::size));
 
+    static constexpr bytes::integer merge(bool interval,
+        bytes::integer wire) NOEXCEPT
+    {
+        using namespace system;
+        BC_ASSERT_MSG(!get_right(wire, offset), "overflow");
+        return set_right(wire, offset, interval);
+    }
+
+    // Intervals are set only if non-zero in database.interval.
     struct slab
       : public schema::txs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(ct::size +
-                bytes::size + tx::size * tx_fks.size());
+                bytes::size + tx::size * tx_fks.size() +
+                (interval.has_value() ? schema::hash : zero));
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
+            using namespace system;
             tx_fks.resize(source.read_little_endian<ct::integer, ct::size>());
-            wire = source.read_little_endian<bytes::integer, bytes::size>();
+            const auto flaged = source.read_little_endian<bytes::integer, bytes::size>();
+            wire = set_right(flaged, offset, false);
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
             {
                 fk = source.read_little_endian<tx::integer, tx::size>();
             });
 
+            if (get_right(flaged, offset)) interval = source.read_hash();
             BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            BC_ASSERT(tx_fks.size() < system::power2<uint64_t>(to_bits(ct::size)));
-            const auto fks = system::possible_narrow_cast<ct::integer>(tx_fks.size());
+            using namespace system;
+            BC_ASSERT(tx_fks.size() < power2<uint64_t>(to_bits(ct::size)));
+
+            const auto flag = interval.has_value();
+            const auto flaged = merge(flag, wire);
+            const auto fks = possible_narrow_cast<ct::integer>(tx_fks.size());
 
             sink.write_little_endian<ct::integer, ct::size>(fks);
-            sink.write_little_endian<bytes::integer, bytes::size>(wire);
-            std::for_each(tx_fks.begin(), tx_fks.end(), [&](const auto& fk) NOEXCEPT
-            {
-                sink.write_little_endian<tx::integer, tx::size>(fk);
-            });
+            sink.write_little_endian<bytes::integer, bytes::size>(flaged);
+            std::for_each(tx_fks.begin(), tx_fks.end(),
+                [&](const auto& fk) NOEXCEPT
+                {
+                    sink.write_little_endian<tx::integer, tx::size>(fk);
+                });
 
+            if (flag) sink.write_bytes(interval.value());
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 
         inline bool operator==(const slab& other) const NOEXCEPT
         {
-            return tx_fks == other.tx_fks;
+            return wire == other.wire
+                && tx_fks == other.tx_fks
+                && interval == other.interval;
         }
 
-        // block.serialized_size(true)
         bytes::integer wire{};
         keys tx_fks{};
+        hash interval{};
     };
 
     // put a contiguous set of tx identifiers.
-    // TODO: this could be collapsed to a count and first using a sentinel.
     struct put_group
       : public schema::txs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(ct::size +
                 bytes::size + tx::size * number);
@@ -103,27 +127,32 @@ struct txs
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             BC_ASSERT(number < system::power2<uint64_t>(to_bits(ct::size)));
+            const auto flag = interval.has_value();
 
             sink.write_little_endian<ct::integer, ct::size>(number);
-            sink.write_little_endian<bytes::integer, bytes::size>(wire);
+            sink.write_little_endian<bytes::integer, bytes::size>(
+                merge(flag, wire));
 
+            // TODO: this can instead be stored as a count and coinbase fk,
+            // TODO: but will need to be disambiguated from compact blocks.
             for (auto fk = tx_fk; fk < (tx_fk + number); ++fk)
                 sink.write_little_endian<tx::integer, tx::size>(fk);
 
+            if (flag) sink.write_bytes(interval.value());
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 
-        // block.serialized_size(true)
         bytes::integer wire{};
         ct::integer number{};
         tx::integer tx_fk{};
+        hash interval{};
     };
 
     struct get_position
       : public schema::txs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -148,7 +177,7 @@ struct txs
     struct get_coinbase
       : public schema::txs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -174,7 +203,7 @@ struct txs
     struct get_tx
       : public schema::txs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -202,7 +231,7 @@ struct txs
     struct get_block_size
       : public schema::txs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -211,7 +240,8 @@ struct txs
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(ct::size);
-            wire = source.read_little_endian<bytes::integer, bytes::size>();
+            wire = system::set_right(source.read_little_endian<
+                bytes::integer, bytes::size>(), offset, false);
             return source;
         }
 
@@ -221,7 +251,7 @@ struct txs
     struct get_associated
       : public schema::txs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -239,7 +269,7 @@ struct txs
     struct get_txs
       : public schema::txs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -263,7 +293,7 @@ struct txs
     struct get_spending_txs
       : public schema::txs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -291,7 +321,7 @@ struct txs
     struct get_tx_quantity
       : public schema::txs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};
@@ -309,7 +339,7 @@ struct txs
     struct get_coinbase_and_count
       : public schema::txs
     {
-        link count() const NOEXCEPT
+        inline link count() const NOEXCEPT
         {
             BC_ASSERT(false);
             return {};

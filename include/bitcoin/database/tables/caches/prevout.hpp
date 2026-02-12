@@ -38,7 +38,7 @@ struct prevout
     using tx = schema::transaction::link;
     using header = schema::header::link;
     using array_map<schema::prevout>::arraymap;
-    static constexpr size_t offset = tx::bits;
+    static constexpr auto offset = tx::bits;
     static_assert(offset < to_bits(tx::size));
 
     // The below implementation overloads tx-sized record count with sequences.

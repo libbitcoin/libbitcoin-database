@@ -412,7 +412,8 @@ public:
     bool set(const block& block, const context& ctx,
         bool milestone, bool strong) NOEXCEPT;
     bool set(const transaction& tx) NOEXCEPT;
-    bool set(const block& block, bool strong, bool bypass) NOEXCEPT;
+    bool set(const block& block, bool strong, bool bypass,
+        size_t height) NOEXCEPT;
 
     /// Set transaction.
     code set_code(const transaction& tx) NOEXCEPT;
@@ -438,11 +439,12 @@ public:
         const chain_context& ctx, bool milestone, bool strong) NOEXCEPT;
 
     /// Set block.txs (headers-first).
-    code set_code(const block& block, bool strong, bool bypass) NOEXCEPT;
+    code set_code(const block& block, bool strong, bool bypass,
+        size_t height) NOEXCEPT;
     code set_code(header_link& out_fk, const block& block, bool strong,
-        bool bypass) NOEXCEPT;
+        bool bypass, size_t height) NOEXCEPT;
     code set_code(const block& block, const header_link& key, bool strong,
-        bool bypass) NOEXCEPT;
+        bool bypass, size_t height) NOEXCEPT;
 
     /// Context.
     /// -----------------------------------------------------------------------
