@@ -705,7 +705,7 @@ BOOST_AUTO_TEST_CASE(query_archive_write__set_block_txs__get_block__expected)
     BOOST_REQUIRE(!query.is_block(test::genesis.hash()));
     BOOST_REQUIRE(query.set(test::genesis.header(), test::context, milestone));
     BOOST_REQUIRE(!query.is_associated(0));
-    BOOST_REQUIRE(query.set(test::genesis, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, false, false, zero));
     BOOST_REQUIRE(query.is_block(test::genesis.hash()));
     BOOST_REQUIRE(query.is_associated(0));
 
