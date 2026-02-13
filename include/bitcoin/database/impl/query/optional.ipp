@@ -290,7 +290,7 @@ std::optional<hash_digest> CLASS::get_interval(header_link link,
         link = to_parent(link);
     }
 
-    // Generate the inteval (merkle root) for the span ending on link header.
+    // Generate the interval (merkle root) for the span ending on link header.
     return system::merkle_root(std::move(leaves));
 }
 
