@@ -243,7 +243,7 @@ code CLASS::get_confirmed_balance(std::atomic_bool& cancel, uint64_t& balance,
     const hash_digest& key, bool turbo) const NOEXCEPT
 {
     outpoints outs{};
-    if (code ec = get_confirmed_unspent_outputs(cancel, outs, key, turbo))
+    if (const auto ec = get_confirmed_unspent_outputs(cancel, outs, key, turbo))
     {
         balance = zero;
         return ec;
