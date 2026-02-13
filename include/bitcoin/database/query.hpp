@@ -572,7 +572,7 @@ public:
         bool turbo=false) const NOEXCEPT;
 
     /// No value if header is not at configured interval.
-    std::optional<hash_digest> get_interval(header_link header,
+    std::optional<hash_digest> get_interval(const header_link& link,
         size_t height) const NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
