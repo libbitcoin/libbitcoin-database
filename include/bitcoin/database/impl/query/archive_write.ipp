@@ -392,15 +392,9 @@ code CLASS::set_code(const block& block, const header_link& key,
             return ec;
 
     using bytes = linkage<schema::size>::integer;
+    auto interval = get_interval(key, height);
     const auto size = block.serialized_size(true);
     const auto wire = possible_narrow_cast<bytes>(size);
-
-    // TODO: compute and set interval hash for interval blocks as configured.
-    // TODO: create query to walk header.parent across full interval to collect
-    // TODO: merkle leaves and compute intermediate merkle root. This requires
-    // TODO: header.parent link traversal only, with read of hash for each. The
-    // TODO: full interval of hashes (e.g. 2048) is preallocated to a vector.
-    std::optional<hash_digest> interval{};
 
     // ========================================================================
     const auto scope = store_.get_transactor();

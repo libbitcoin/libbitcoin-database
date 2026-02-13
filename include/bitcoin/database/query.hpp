@@ -21,6 +21,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <optional>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -569,7 +570,12 @@ public:
     code get_minimum_unspent_outputs(std::atomic_bool& cancel, outpoints& out,
         const hash_digest& key, uint64_t value, bool turbo=false) const NOEXCEPT;
     code get_confirmed_balance(std::atomic_bool& cancel,
-        uint64_t& balance, const hash_digest& key, bool turbo=false) const NOEXCEPT;
+        uint64_t& balance, const hash_digest& key,
+        bool turbo=false) const NOEXCEPT;
+
+    /// No value if header is not at configured interval.
+    std::optional<hash_digest> get_interval(header_link header,
+        size_t height) const NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
