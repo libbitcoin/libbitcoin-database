@@ -686,6 +686,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__txs_empty__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "txs_empty");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__txs_height__true_exected_message)
+{
+    constexpr auto value = error::txs_height;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "txs_height");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__txs_confirm__true_exected_message)
 {
     constexpr auto value = error::txs_confirm;

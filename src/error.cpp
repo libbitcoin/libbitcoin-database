@@ -134,6 +134,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     // txs archive
     { txs_header, "txs_header" },
     { txs_empty, "txs_empty" },
+    { txs_height, "txs_height" },
     { txs_confirm, "txs_confirm" },
     { txs_txs_put, "txs_txs_put" }
 };

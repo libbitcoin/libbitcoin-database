@@ -141,6 +141,7 @@ enum error_t : uint8_t
     /// txs archive
     txs_header,
     txs_empty,
+    txs_height,
     txs_confirm,
     txs_txs_put
 };
