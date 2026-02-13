@@ -415,17 +415,17 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate_
     BOOST_REQUIRE_EQUAL(unassociated3.size(), 0u);
 
     // There are two unassociated blocks above block 1 (new fork point).
-    BOOST_REQUIRE(query.set(test::block1, false, false, zero));
+    BOOST_REQUIRE(query.set(test::block1, false, false));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block1.hash()), false));
     BOOST_REQUIRE_EQUAL(query.get_all_unassociated().size(), 2u);
 
     // There is one unassociated block above block 2 (new fork point).
-    BOOST_REQUIRE(query.set(test::block2, false, false, zero));
+    BOOST_REQUIRE(query.set(test::block2, false, false));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block2.hash()), false));
     BOOST_REQUIRE_EQUAL(query.get_all_unassociated().size(), 1u);
 
     // There are no unassociated blocks above block 3 (new fork point).
-    BOOST_REQUIRE(query.set(test::block3, false, false, zero));
+    BOOST_REQUIRE(query.set(test::block3, false, false));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block3.hash()), false));
     BOOST_REQUIRE_EQUAL(query.get_all_unassociated().size(), 0u);
 }
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_count_above__gapped_cand
     BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(3, 1), 0u);
 
     // There is one unassociated block at block 2.
-    BOOST_REQUIRE(query.set(test::block3, false, false, zero));             // associated
+    BOOST_REQUIRE(query.set(test::block3, false, false));             // associated
     BOOST_REQUIRE_EQUAL(query.get_unassociated_count(), 1u);
     BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(0), 1u);
     BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(1), 1u);
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_count_above__gapped_cand
     BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(3), 0u);
 
     // There are no unassociated blocks.
-    BOOST_REQUIRE(query.set(test::block2, false, false, zero));             // associated
+    BOOST_REQUIRE(query.set(test::block2, false, false));             // associated
     BOOST_REQUIRE_EQUAL(query.get_unassociated_count(), 0u);
     BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(0), 0u);
     BOOST_REQUIRE_EQUAL(query.get_unassociated_count_above(1), 0u);

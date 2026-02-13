@@ -60,6 +60,9 @@ public:
     /// Allow full throttle concurrent query execution (may use 100% CPU).
     bool turbo() const NOEXCEPT;
 
+    /// Depth of electrum merkle tree interval caching.
+    uint8_t interval_depth() const NOEXCEPT;
+
     /// Methods.
     /// -----------------------------------------------------------------------
 

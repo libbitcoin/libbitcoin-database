@@ -227,6 +227,94 @@ BOOST_AUTO_TEST_CASE(query_optional__get_confirmed_balance__genesis__expected)
     BOOST_REQUIRE_EQUAL(out, 5000000000u);
 }
 
+// Merkle root of test blocks [0..1]
+constexpr auto root01 = system::base16_hash("abdc2227d02d114b77be15085c1257709252a7a103f9ac0ab3c85d67e12bc0b8");
+
+// Merkle root of test blocks [2..4]
+constexpr auto root02 = system::base16_hash("f2a2a2907abb326726a2d6500fe494f63772a941b414236c302e920bc1aa9caf");
+
+// Merkle root of test blocks [0..4]
+constexpr auto root04 = system::sha256::double_hash(root01, root02);
+
+BOOST_AUTO_TEST_CASE(query_optional__get_interval__depth_0__block_hash)
+{
+    settings settings{};
+    settings.interval_depth = 0;
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+
+    const auto header0 = query.to_header(test::genesis.hash());
+    const auto header1 = query.to_header(test::block1.hash());
+    const auto header2 = query.to_header(test::block2.hash());
+    const auto header3 = query.to_header(test::block3.hash());
+    BOOST_REQUIRE(!header0.is_terminal());
+    BOOST_REQUIRE(!header1.is_terminal());
+    BOOST_REQUIRE(!header2.is_terminal());
+    BOOST_REQUIRE(!header3.is_terminal());
+    BOOST_REQUIRE(query.get_interval(header0, 0).has_value());
+    BOOST_REQUIRE(query.get_interval(header1, 1).has_value());
+    BOOST_REQUIRE(query.get_interval(header2, 2).has_value());
+    BOOST_REQUIRE(query.get_interval(header3, 3).has_value());
+    BOOST_REQUIRE_EQUAL(query.get_interval(header0, 0).value(), test::genesis.hash());
+    BOOST_REQUIRE_EQUAL(query.get_interval(header1, 1).value(), test::block1.hash());
+    BOOST_REQUIRE_EQUAL(query.get_interval(header2, 2).value(), test::block2.hash());
+    BOOST_REQUIRE_EQUAL(query.get_interval(header3, 3).value(), test::block3.hash());
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__get_interval__depth_1__expected)
+{
+    settings settings{};
+    settings.interval_depth = 1;
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+
+    const auto header0 = query.to_header(test::genesis.hash());
+    const auto header1 = query.to_header(test::block1.hash());
+    const auto header2 = query.to_header(test::block2.hash());
+    const auto header3 = query.to_header(test::block3.hash());
+    BOOST_REQUIRE(!header0.is_terminal());
+    BOOST_REQUIRE(!header1.is_terminal());
+    BOOST_REQUIRE(!header2.is_terminal());
+    BOOST_REQUIRE(!header3.is_terminal());
+    BOOST_REQUIRE(!query.get_interval(header0, 0).has_value());
+    BOOST_REQUIRE( query.get_interval(header1, 1).has_value());
+    BOOST_REQUIRE(!query.get_interval(header2, 2).has_value());
+    BOOST_REQUIRE( query.get_interval(header3, 3).has_value());
+    BOOST_REQUIRE_EQUAL(query.get_interval(header1, 1).value(), root01);
+    BOOST_REQUIRE_EQUAL(query.get_interval(header3, 3).value(), root02);
+}
+
+BOOST_AUTO_TEST_CASE(query_optional__get_interval__depth_2__expected)
+{
+    settings settings{};
+    settings.interval_depth = 2;
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+
+    const auto header3 = query.to_header(test::block3.hash());
+    BOOST_REQUIRE(!header3.is_terminal());
+    BOOST_REQUIRE(query.get_interval(header3, 3).has_value());
+    BOOST_REQUIRE_EQUAL(query.get_interval(header3, 3).value(), root04);
+}
+
 ////BOOST_AUTO_TEST_CASE(query_optional__set_filter__get_filter_and_head__expected)
 ////{
 ////    const auto& filter_head0 = system::null_hash;

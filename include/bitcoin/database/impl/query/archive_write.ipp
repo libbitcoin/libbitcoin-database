@@ -65,11 +65,10 @@ bool CLASS::set(const transaction& tx) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set(const block& block, bool strong, bool bypass,
-    size_t height) NOEXCEPT
+bool CLASS::set(const block& block, bool strong, bool bypass) NOEXCEPT
 {
     // This sets only the txs of a block with header/context already archived.
-    return !set_code(block, strong, bypass, height);
+    return !set_code(block, strong, bypass);
 }
 
 // set transaction
@@ -350,27 +349,30 @@ code CLASS::set_code(header_link& out_fk, const block& block,
 // releases all memory for parts of itself, due to the custom allocator.
 
 TEMPLATE
-code CLASS::set_code(const block& block, bool strong, bool bypass,
-    size_t height) NOEXCEPT
+code CLASS::set_code(const block& block, bool strong, bool bypass) NOEXCEPT
 {
     header_link unused{};
-    return set_code(unused, block, strong, bypass, height);
+    return set_code(unused, block, strong, bypass);
 }
 
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const block& block, bool strong,
-    bool bypass, size_t height) NOEXCEPT
+    bool bypass) NOEXCEPT
 {
     out_fk = to_header(block.get_hash());
     if (out_fk.is_terminal())
         return error::txs_header;
+
+    size_t height{};
+    if (!get_height(height, out_fk))
+        return error::txs_height;
 
     return set_code(block, out_fk, strong, bypass, height);
 }
 
 TEMPLATE
 code CLASS::set_code(const block& block, const header_link& key,
-    bool strong, bool bypass, size_t /* height */) NOEXCEPT
+    bool strong, bool bypass, size_t height) NOEXCEPT
 {
     using namespace system;
     if (key.is_terminal())
@@ -392,15 +394,9 @@ code CLASS::set_code(const block& block, const header_link& key,
             return ec;
 
     using bytes = linkage<schema::size>::integer;
+    auto interval = get_interval(key, height);
     const auto size = block.serialized_size(true);
     const auto wire = possible_narrow_cast<bytes>(size);
-
-    // TODO: compute and set interval hash for interval blocks as configured.
-    // TODO: create query to walk header.parent across full interval to collect
-    // TODO: merkle leaves and compute intermediate merkle root. This requires
-    // TODO: header.parent link traversal only, with read of hash for each. The
-    // TODO: full interval of hashes (e.g. 2048) is preallocated to a vector.
-    std::optional<hash_digest> interval{};
 
     // ========================================================================
     const auto scope = store_.get_transactor();

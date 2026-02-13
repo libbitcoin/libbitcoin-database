@@ -259,6 +259,41 @@ code CLASS::get_confirmed_balance(std::atomic_bool& cancel, uint64_t& balance,
     return error::success;
 }
 
+TEMPLATE
+std::optional<hash_digest> CLASS::get_interval(header_link link,
+    size_t height) const NOEXCEPT
+{
+    // Interval is enabled by address table.
+    if (!address_enabled())
+        return {};
+
+    // Interval is the merkle root that spans 2^depth block hashes.
+    const auto span = system::power2(store_.interval_depth());
+
+    // power2() overflow returns zero.
+    if (is_zero(span))
+        return {};
+
+    // One is a functional but undesirable case.
+    if (is_one(span))
+        return get_header_key(link);
+
+    // Interval ends at nth block where n is a multiple of span.
+    if (!system::is_multiple(add1(height), span))
+        return {};
+
+    // Generate the leaf nodes for the span.
+    hashes leaves(span);
+    for (auto& leaf: std::views::reverse(leaves))
+    {
+        leaf = get_header_key(link);
+        link = to_parent(link);
+    }
+
+    // Generate the interval (merkle root) for the span ending on link header.
+    return system::merkle_root(std::move(leaves));
+}
+
 ////TEMPLATE
 ////bool CLASS::set_address_output(const output& output,
 ////    const output_link& link) NOEXCEPT

@@ -21,6 +21,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <optional>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
@@ -412,8 +413,7 @@ public:
     bool set(const block& block, const context& ctx,
         bool milestone, bool strong) NOEXCEPT;
     bool set(const transaction& tx) NOEXCEPT;
-    bool set(const block& block, bool strong, bool bypass,
-        size_t height) NOEXCEPT;
+    bool set(const block& block, bool strong, bool bypass) NOEXCEPT;
 
     /// Set transaction.
     code set_code(const transaction& tx) NOEXCEPT;
@@ -439,10 +439,9 @@ public:
         const chain_context& ctx, bool milestone, bool strong) NOEXCEPT;
 
     /// Set block.txs (headers-first).
-    code set_code(const block& block, bool strong, bool bypass,
-        size_t height) NOEXCEPT;
+    code set_code(const block& block, bool strong, bool bypass) NOEXCEPT;
     code set_code(header_link& out_fk, const block& block, bool strong,
-        bool bypass, size_t height) NOEXCEPT;
+        bool bypass) NOEXCEPT;
     code set_code(const block& block, const header_link& key, bool strong,
         bool bypass, size_t height) NOEXCEPT;
 
@@ -569,7 +568,12 @@ public:
     code get_minimum_unspent_outputs(std::atomic_bool& cancel, outpoints& out,
         const hash_digest& key, uint64_t value, bool turbo=false) const NOEXCEPT;
     code get_confirmed_balance(std::atomic_bool& cancel,
-        uint64_t& balance, const hash_digest& key, bool turbo=false) const NOEXCEPT;
+        uint64_t& balance, const hash_digest& key,
+        bool turbo=false) const NOEXCEPT;
+
+    /// No value if header is not at configured interval.
+    std::optional<hash_digest> get_interval(header_link header,
+        size_t height) const NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
