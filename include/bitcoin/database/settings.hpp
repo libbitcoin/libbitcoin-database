@@ -37,7 +37,15 @@ struct BCD_API settings
     settings(system::chain::selection context) NOEXCEPT;
 
     /// Properties.
+    /// -----------------------------------------------------------------------
+
+    /// Enable concurrency in individual client-server queries.
     bool turbo;
+
+    /// Depth of electrum merkle tree interval caching.
+    uint8_t interval_depth;
+
+    /// Path to the database directory.
     std::filesystem::path path;
 
     /// Archives.

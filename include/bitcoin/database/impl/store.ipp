@@ -233,6 +233,12 @@ bool CLASS::turbo() const NOEXCEPT
 }
 
 TEMPLATE
+uint8_t CLASS::interval_depth() const NOEXCEPT
+{
+    return configuration_.interval_depth;
+}
+
+TEMPLATE
 code CLASS::create(const event_handler& handler) NOEXCEPT
 {
     if (!transactor_mutex_.try_lock())
