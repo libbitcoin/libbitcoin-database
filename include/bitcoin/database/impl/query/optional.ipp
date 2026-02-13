@@ -260,7 +260,7 @@ code CLASS::get_confirmed_balance(std::atomic_bool& cancel, uint64_t& balance,
 }
 
 TEMPLATE
-std::optional<hash_digest> CLASS::get_interval(header_link link,
+std::optional<hash_digest> CLASS::get_interval(const header_link& link,
     size_t height) const NOEXCEPT
 {
     // Interval is enabled by address table.
@@ -283,11 +283,12 @@ std::optional<hash_digest> CLASS::get_interval(header_link link,
         return {};
 
     // Generate the leaf nodes for the span.
+    auto header = link;
     hashes leaves(span);
     for (auto& leaf: std::views::reverse(leaves))
     {
-        leaf = get_header_key(link);
-        link = to_parent(link);
+        leaf = get_header_key(header);
+        header = to_parent(header);
     }
 
     // Generate the interval (merkle root) for the span ending on link header.
