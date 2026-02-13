@@ -53,7 +53,7 @@ struct txs
         return set_right(wire, offset, interval);
     }
 
-    // Intervals are set only if non-zero in database.interval.
+    // Intervals are optional based on store configuration.
     struct slab
       : public schema::txs
     {
@@ -121,7 +121,8 @@ struct txs
         inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(ct::size +
-                bytes::size + tx::size * number);
+                bytes::size + tx::size * number +
+                (interval.has_value() ? schema::hash : zero));
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
