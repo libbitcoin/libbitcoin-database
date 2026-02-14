@@ -68,14 +68,14 @@ struct txs
         {
             using namespace system;
             tx_fks.resize(source.read_little_endian<ct::integer, ct::size>());
-            const auto flaged = source.read_little_endian<bytes::integer, bytes::size>();
-            wire = set_right(flaged, offset, false);
+            const auto flagged = source.read_little_endian<bytes::integer, bytes::size>();
+            wire = set_right(flagged, offset, false);
             std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
             {
                 fk = source.read_little_endian<tx::integer, tx::size>();
             });
 
-            if (get_right(flaged, offset)) interval = source.read_hash();
+            if (get_right(flagged, offset)) interval = source.read_hash();
             BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
@@ -86,11 +86,11 @@ struct txs
             BC_ASSERT(tx_fks.size() < power2<uint64_t>(to_bits(ct::size)));
 
             const auto flag = interval.has_value();
-            const auto flaged = merge(flag, wire);
+            const auto flagged = merge(flag, wire);
             const auto fks = possible_narrow_cast<ct::integer>(tx_fks.size());
 
             sink.write_little_endian<ct::integer, ct::size>(fks);
-            sink.write_little_endian<bytes::integer, bytes::size>(flaged);
+            sink.write_little_endian<bytes::integer, bytes::size>(flagged);
             std::for_each(tx_fks.begin(), tx_fks.end(),
                 [&](const auto& fk) NOEXCEPT
                 {
@@ -147,6 +147,28 @@ struct txs
         bytes::integer wire{};
         ct::integer number{};
         tx::integer tx_fk{};
+        hash interval{};
+    };
+
+    struct get_interval
+      : public schema::txs
+    {
+        inline link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            const auto number = source.read_little_endian<ct::integer, ct::size>();
+            const auto flagged = source.read_little_endian<bytes::integer, bytes::size>();
+            source.skip_bytes(tx::size * number);
+            if (get_right(flagged, offset)) interval = source.read_hash();
+            return source;
+        }
+
         hash interval{};
     };
 

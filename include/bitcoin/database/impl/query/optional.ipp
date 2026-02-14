@@ -243,7 +243,7 @@ code CLASS::get_confirmed_balance(std::atomic_bool& cancel, uint64_t& balance,
     const hash_digest& key, bool turbo) const NOEXCEPT
 {
     outpoints outs{};
-    if (code ec = get_confirmed_unspent_outputs(cancel, outs, key, turbo))
+    if (const auto ec = get_confirmed_unspent_outputs(cancel, outs, key, turbo))
     {
         balance = zero;
         return ec;
@@ -259,40 +259,149 @@ code CLASS::get_confirmed_balance(std::atomic_bool& cancel, uint64_t& balance,
     return error::success;
 }
 
+// merkle
+// ----------------------------------------------------------------------------
+
+// protected
 TEMPLATE
-std::optional<hash_digest> CLASS::get_interval(const header_link& link,
+size_t CLASS::interval_span() const NOEXCEPT
+{
+    // span of zero (overflow) is disallowed (division by zero).
+    // span of one (2^0) caches every block (no optimization, wasted storage).
+    // span greater than top height eliminates caching (no optimization).
+    const auto span = system::power2(store_.interval_depth());
+    return is_zero(span) ? max_size_t : span;
+}
+
+// protected
+TEMPLATE
+CLASS::hash_option CLASS::create_interval(header_link link,
     size_t height) const NOEXCEPT
 {
-    // Interval is enabled by address table.
-    if (!address_enabled())
-        return {};
-
-    // Interval is the merkle root that spans 2^depth block hashes.
-    const auto span = system::power2(store_.interval_depth());
-
-    // power2() overflow returns zero.
-    if (is_zero(span))
-        return {};
-
-    // One is a functional but undesirable case.
-    if (is_one(span))
-        return get_header_key(link);
-
     // Interval ends at nth block where n is a multiple of span.
-    if (!system::is_multiple(add1(height), span))
+    // One is a functional but undesirable case (no optimization).
+    const auto span = interval_span();
+    BC_ASSERT(!is_zero(span));
+
+    // If valid link is provided then empty return implies non-interval height.
+    if (link.is_terminal() || !system::is_multiple(add1(height), span))
         return {};
 
     // Generate the leaf nodes for the span.
-    auto header = link;
     hashes leaves(span);
     for (auto& leaf: std::views::reverse(leaves))
     {
-        leaf = get_header_key(header);
-        header = to_parent(header);
+        leaf = get_header_key(link);
+        link = to_parent(link);
     }
 
-    // Generate the interval (merkle root) for the span ending on link header.
+    // Generate the merkle root of the interval ending on link header.
     return system::merkle_root(std::move(leaves));
+}
+
+// protected
+TEMPLATE
+CLASS::hash_option CLASS::get_confirmed_interval(size_t height) const NOEXCEPT
+{
+    const auto span = interval_span();
+    BC_ASSERT(!is_zero(span));
+
+    if (!system::is_multiple(add1(height), span))
+        return {};
+
+    table::txs::get_interval txs{};
+    if (!store_.txs.get(to_confirmed(height), txs))
+        return {};
+
+    return txs.interval;
+}
+
+// protected
+TEMPLATE
+void CLASS::push_merkle(hashes& to, hashes&& from, size_t first) NOEXCEPT
+{
+    using namespace system;
+    for (const auto& row: block::merkle_branch(first, from.size()))
+    {
+        BC_ASSERT(row.sibling * add1(row.width) <= from.size());
+        const auto it = std::next(from.begin(), row.sibling * row.width);
+        const auto mover = std::make_move_iterator(it);
+        to.push_back(merkle_root({ mover, std::next(mover, row.width) }));
+    }
+}
+
+// protected
+TEMPLATE
+code CLASS::get_merkle_proof(hashes& proof, hashes roots, size_t target,
+    size_t waypoint) NOEXCEPT
+{
+    const auto span = interval_span();
+    BC_ASSERT(!is_zero(span));
+
+    const auto first = (target / span) * span;
+    const auto last = std::min(sub1(first + span), waypoint);
+    auto other = get_confirmed_hashes(first, add1(last - first));
+    if (other.empty())
+        return error::merkle_proof;
+
+    using namespace system;
+    proof.reserve(ceilinged_log2(other.size()) + ceilinged_log2(roots.size()));
+    push_merkle(proof, std::move(other), target % span);
+    push_merkle(proof, std::move(roots), target / span);
+    return error::success;
+}
+
+// protected
+TEMPLATE
+code CLASS::get_merkle_tree(hashes& tree, size_t waypoint) NOEXCEPT
+{
+    const auto span = interval_span();
+    BC_ASSERT(!is_zero(span));
+
+    const auto range = add1(waypoint);
+    tree.reserve(system::ceilinged_divide(range, span));
+    for (size_t first{}; first < range; first += span)
+    {
+        const auto last = std::min(sub1(first + span), waypoint);
+        const auto size = add1(last - first);
+
+        if (size == span)
+        {
+            auto interval = get_confirmed_interval(first);
+            if (!interval.has_value()) return error::merkle_interval;
+            tree.push_back(std::move(interval.value()));
+        }
+        else
+        {
+            auto confirmed = get_confirmed_hashes(first, size);
+            if (confirmed.empty()) return error::merkle_hashes;
+            tree.push_back(system::merkle_root(std::move(confirmed)));
+        }
+    }
+
+    return error::success;
+}
+
+TEMPLATE
+code CLASS::get_merkle_root_and_proof(hash_digest& root, hashes& proof,
+    size_t target, size_t waypoint) NOEXCEPT
+{
+    if (target > waypoint)
+        return error::merkle_arguments;
+
+    if (waypoint > get_top_confirmed())
+        return error::merkle_not_found;
+
+    hashes tree{};
+    if (const auto ec = get_merkle_tree(tree, waypoint))
+        return ec;
+
+    proof.clear();
+    if (const auto ec = get_merkle_proof(proof, tree, target, waypoint))
+        return ec;
+
+    root = system::merkle_root(std::move(tree));
+    return {};
 }
 
 ////TEMPLATE

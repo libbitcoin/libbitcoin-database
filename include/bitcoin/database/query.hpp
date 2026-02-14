@@ -234,8 +234,6 @@ public:
     size_t get_unassociated_count_above(size_t height) const NOEXCEPT;
     size_t get_unassociated_count_above(size_t height,
         size_t last) const NOEXCEPT;
-    hashes get_candidate_hashes(const heights& heights) const NOEXCEPT;
-    hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
 
     /// Translation (key/link to link/s).
     /// -----------------------------------------------------------------------
@@ -537,6 +535,10 @@ public:
     size_t get_confirmed_size() const NOEXCEPT;
     size_t get_confirmed_size(size_t top) const NOEXCEPT;
 
+    hashes get_candidate_hashes(const heights& heights) const NOEXCEPT;
+    hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
+    hashes get_confirmed_hashes(size_t first, size_t count) const NOEXCEPT;
+
     header_links get_confirmed_fork(const header_link& fork) const NOEXCEPT;
     header_links get_candidate_fork(size_t& fork_point) const NOEXCEPT;
     header_states get_validated_fork(size_t& fork_point,
@@ -570,10 +572,8 @@ public:
     code get_confirmed_balance(std::atomic_bool& cancel,
         uint64_t& balance, const hash_digest& key,
         bool turbo=false) const NOEXCEPT;
-
-    /// No value if header is not at configured interval.
-    std::optional<hash_digest> get_interval(const header_link& link,
-        size_t height) const NOEXCEPT;
+    code get_merkle_root_and_proof(hash_digest& root, hashes& proof,
+        size_t target, size_t checkpoint) NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
@@ -593,6 +593,7 @@ public:
         const hash_digest& hash) NOEXCEPT;
 
 protected:
+    using hash_option = std::optional<hash_digest>;
     struct span
     {
         size_t size() const NOEXCEPT { return end - begin; }
@@ -707,7 +708,6 @@ protected:
 
     /// address
     /// -----------------------------------------------------------------------
-
     code get_address_outputs_turbo(std::atomic_bool& cancel,
         outpoints& out, const hash_digest& key) const NOEXCEPT;
     code get_confirmed_unspent_outputs_turbo(std::atomic_bool& cancel,
@@ -715,6 +715,16 @@ protected:
     code get_minimum_unspent_outputs_turbo(std::atomic_bool& cancel,
         outpoints& out, const hash_digest& key,
         uint64_t minimum) const NOEXCEPT;
+
+    /// merkle
+    /// -----------------------------------------------------------------------
+    size_t interval_span() const NOEXCEPT;
+    hash_option get_confirmed_interval(size_t height) const NOEXCEPT;
+    hash_option create_interval(header_link link, size_t height) const NOEXCEPT;
+    void push_merkle(hashes& branch, hashes&& hashes, size_t first) NOEXCEPT;
+    code get_merkle_tree(hashes& roots, size_t waypoint) NOEXCEPT;
+    code get_merkle_proof(hashes& proof, hashes roots, size_t target,
+        size_t waypoint) NOEXCEPT;
 
     /// tx_fk must be allocated.
     /// -----------------------------------------------------------------------

@@ -394,7 +394,7 @@ code CLASS::set_code(const block& block, const header_link& key,
             return ec;
 
     using bytes = linkage<schema::size>::integer;
-    auto interval = get_interval(key, height);
+    auto interval = create_interval(key, height);
     const auto size = block.serialized_size(true);
     const auto wire = possible_narrow_cast<bytes>(size);
 

@@ -143,7 +143,14 @@ enum error_t : uint8_t
     txs_empty,
     txs_height,
     txs_confirm,
-    txs_txs_put
+    txs_txs_put,
+
+    /// optional
+    merkle_proof,
+    merkle_interval,
+    merkle_hashes,
+    merkle_arguments,
+    merkle_not_found
 };
 
 // No current need for error_code equivalence mapping.
