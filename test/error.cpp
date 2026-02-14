@@ -713,4 +713,51 @@ BOOST_AUTO_TEST_CASE(error_t__code__txs_txs_put__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "txs_txs_put");
 }
 
+// optional
+
+BOOST_AUTO_TEST_CASE(error_t__code__merkle_proof__true_expected_message)
+{
+    constexpr auto value = error::merkle_proof;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "merkle_proof");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__merkle_interval__true_expected_message)
+{
+    constexpr auto value = error::merkle_interval;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "merkle_interval");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__merkle_hashes__true_expected_message)
+{
+    constexpr auto value = error::merkle_hashes;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "merkle_hashes");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__merkle_arguments__true_expected_message)
+{
+    constexpr auto value = error::merkle_arguments;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "merkle_arguments");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__merkle_not_found__true_expected_message)
+{
+    constexpr auto value = error::merkle_not_found;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "merkle_not_found");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

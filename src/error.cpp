@@ -136,7 +136,14 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { txs_empty, "txs_empty" },
     { txs_height, "txs_height" },
     { txs_confirm, "txs_confirm" },
-    { txs_txs_put, "txs_txs_put" }
+    { txs_txs_put, "txs_txs_put" },
+
+    // optional
+    { merkle_proof, "merkle_proof" },
+    { merkle_interval, "merkle_interval" },
+    { merkle_hashes, "merkle_hashes" },
+    { merkle_arguments, "merkle_arguments" },
+    { merkle_not_found, "merkle_not_found" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")
