@@ -234,8 +234,6 @@ public:
     size_t get_unassociated_count_above(size_t height) const NOEXCEPT;
     size_t get_unassociated_count_above(size_t height,
         size_t last) const NOEXCEPT;
-    hashes get_candidate_hashes(const heights& heights) const NOEXCEPT;
-    hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
 
     /// Translation (key/link to link/s).
     /// -----------------------------------------------------------------------
@@ -536,6 +534,10 @@ public:
     size_t get_candidate_size(size_t top) const NOEXCEPT;
     size_t get_confirmed_size() const NOEXCEPT;
     size_t get_confirmed_size(size_t top) const NOEXCEPT;
+
+    hashes get_candidate_hashes(const heights& heights) const NOEXCEPT;
+    hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
+    hashes get_confirmed_hashes(size_t first, size_t count) const NOEXCEPT;
 
     header_links get_confirmed_fork(const header_link& fork) const NOEXCEPT;
     header_links get_candidate_fork(size_t& fork_point) const NOEXCEPT;

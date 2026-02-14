@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_QUERY_HEIGHT_IPP
 
 #include <algorithm>
+#include <ranges>
 #include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
@@ -207,6 +208,32 @@ hashes CLASS::get_confirmed_hashes(const heights& heights) const NOEXCEPT
 
     return out;
     ///////////////////////////////////////////////////////////////////////////
+}
+
+TEMPLATE
+hashes CLASS::get_confirmed_hashes(size_t first, size_t count) const NOEXCEPT
+{
+    using namespace system;
+    const auto size = is_odd(count) && count > one ? add1(count) : count;
+    if (is_add_overflow(count, one) || is_add_overflow(first, size))
+        return {};
+
+    auto link = to_confirmed(first + count);
+    if (link.is_terminal())
+        return {};
+
+    // Extra allocation for odd count optimizes for merkle root.
+    // Vector capacity is never reduced when resizing to smaller size.
+    hashes out(size);
+    out.resize(count);
+
+    for (auto& hash: std::views::reverse(out))
+    {
+        hash = get_header_key(link);
+        link = to_parent(link);
+    }
+
+    return out;
 }
 
 // writers
