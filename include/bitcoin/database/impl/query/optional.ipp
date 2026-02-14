@@ -332,7 +332,7 @@ void CLASS::push_merkle(hashes& to, hashes&& from, size_t first) NOEXCEPT
 
 // protected
 TEMPLATE
-bool CLASS::get_merkle_proof(hashes& proof, hashes roots, size_t target,
+code CLASS::get_merkle_proof(hashes& proof, hashes roots, size_t target,
     size_t waypoint) NOEXCEPT
 {
     const auto span = interval_span();
@@ -342,18 +342,18 @@ bool CLASS::get_merkle_proof(hashes& proof, hashes roots, size_t target,
     const auto last = std::min(sub1(first + span), waypoint);
     auto other = get_confirmed_hashes(first, add1(last - first));
     if (other.empty())
-        return false;
+        return error::merkle_proof;
 
     using namespace system;
     proof.reserve(ceilinged_log2(other.size()) + ceilinged_log2(roots.size()));
     push_merkle(proof, std::move(other), target % span);
     push_merkle(proof, std::move(roots), target / span);
-    return true;
+    return error::success;
 }
 
 // protected
 TEMPLATE
-bool CLASS::get_merkle_tree(hashes& tree, size_t waypoint) NOEXCEPT
+code CLASS::get_merkle_tree(hashes& tree, size_t waypoint) NOEXCEPT
 {
     const auto span = interval_span();
     BC_ASSERT(!is_zero(span));
@@ -368,40 +368,40 @@ bool CLASS::get_merkle_tree(hashes& tree, size_t waypoint) NOEXCEPT
         if (size == span)
         {
             auto interval = get_confirmed_interval(first);
-            if (!interval.has_value()) return false;
+            if (!interval.has_value()) return error::merkle_interval;
             tree.push_back(std::move(interval.value()));
         }
         else
         {
             auto confirmed = get_confirmed_hashes(first, size);
-            if (confirmed.empty()) return false;
+            if (confirmed.empty()) return error::merkle_hashes;
             tree.push_back(system::merkle_root(std::move(confirmed)));
         }
     }
 
-    return true;
+    return error::success;
 }
 
 TEMPLATE
-bool CLASS::get_merkle_root_and_proof(hash_digest& root, hashes& proof,
+code CLASS::get_merkle_root_and_proof(hash_digest& root, hashes& proof,
     size_t target, size_t waypoint) NOEXCEPT
 {
     if (target > waypoint)
-        return false;
+        return error::merkle_arguments;
 
     if (waypoint > get_top_confirmed())
-        return false;
+        return error::merkle_not_found;
 
     hashes tree{};
-    if (!get_merkle_tree(tree, waypoint))
-        return false;
+    if (const auto ec = get_merkle_tree(tree, waypoint))
+        return ec;
 
     proof.clear();
-    if (!get_merkle_proof(proof, tree, target, waypoint))
-        return false;
+    if (const auto ec = get_merkle_proof(proof, tree, target, waypoint))
+        return ec;
 
     root = system::merkle_root(std::move(tree));
-    return true;
+    return {};
 }
 
 ////TEMPLATE

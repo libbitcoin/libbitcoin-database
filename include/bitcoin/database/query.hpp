@@ -572,8 +572,7 @@ public:
     code get_confirmed_balance(std::atomic_bool& cancel,
         uint64_t& balance, const hash_digest& key,
         bool turbo=false) const NOEXCEPT;
-
-    bool get_merkle_root_and_proof(hash_digest& root, hashes& proof,
+    code get_merkle_root_and_proof(hash_digest& root, hashes& proof,
         size_t target, size_t checkpoint) NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
@@ -724,8 +723,8 @@ protected:
     hash_option get_confirmed_interval(size_t height) const NOEXCEPT;
     hash_option create_interval(header_link link, size_t height) const NOEXCEPT;
     void push_merkle(hashes& branch, hashes&& hashes, size_t first) NOEXCEPT;
-    bool get_merkle_tree(hashes& roots, size_t waypoint) NOEXCEPT;
-    bool get_merkle_proof(hashes& proof, hashes roots, size_t target,
+    code get_merkle_tree(hashes& roots, size_t waypoint) NOEXCEPT;
+    code get_merkle_proof(hashes& proof, hashes roots, size_t target,
         size_t waypoint) NOEXCEPT;
 
     /// tx_fk must be allocated.
