@@ -718,7 +718,6 @@ protected:
 
     /// merkle
     /// -----------------------------------------------------------------------
-
     size_t interval_span() const NOEXCEPT;
     hash_option get_confirmed_interval(size_t height) const NOEXCEPT;
     hash_option create_interval(header_link link, size_t height) const NOEXCEPT;
