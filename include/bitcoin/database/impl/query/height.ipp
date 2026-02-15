@@ -238,10 +238,10 @@ hashes CLASS::get_confirmed_hashes(size_t first, size_t count) const NOEXCEPT
 
 TEMPLATE
 header_links CLASS::get_confirmed_headers(size_t first,
-    size_t count) const NOEXCEPT
+    size_t maximum) const NOEXCEPT
 {
     // Empty is always a successful/valid result for this method.
-    if (is_zero(count))
+    if (is_zero(maximum))
         return {};
 
     // First requested height is currently above top.
@@ -249,9 +249,9 @@ header_links CLASS::get_confirmed_headers(size_t first,
     if (first > top)
         return {};
 
-    // add1(top) cannot overflow, as indexed block count cannot exceed size_t.
-    count = system::limit(count, add1(top) - first);
-    auto last = first + sub1(count);
+    // add1(top) cannot overflow, as indexed block maximum cannot exceed size_t.
+    maximum = system::limit(maximum, add1(top) - first);
+    auto last = first + sub1(maximum);
 
     // Due to reorganization it is possible for this height to now be terminal.
     auto link = to_confirmed(last);
