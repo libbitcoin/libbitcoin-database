@@ -310,7 +310,7 @@ CLASS::hash_option CLASS::get_confirmed_interval(size_t height) const NOEXCEPT
         return {};
 
     table::txs::get_interval txs{};
-    if (!store_.txs.get(to_confirmed(height), txs))
+    if (!store_.txs.at(to_confirmed(height), txs))
         return {};
 
     return txs.interval;
@@ -318,7 +318,7 @@ CLASS::hash_option CLASS::get_confirmed_interval(size_t height) const NOEXCEPT
 
 // protected
 TEMPLATE
-void CLASS::push_merkle(hashes& to, hashes&& from, size_t first) NOEXCEPT
+void CLASS::push_merkle(hashes& to, hashes&& from, size_t first) const NOEXCEPT
 {
     using namespace system;
     for (const auto& row: block::merkle_branch(first, from.size()))
@@ -333,7 +333,7 @@ void CLASS::push_merkle(hashes& to, hashes&& from, size_t first) NOEXCEPT
 // protected
 TEMPLATE
 code CLASS::get_merkle_proof(hashes& proof, hashes roots, size_t target,
-    size_t waypoint) NOEXCEPT
+    size_t waypoint) const NOEXCEPT
 {
     const auto span = interval_span();
     BC_ASSERT(!is_zero(span));
@@ -353,7 +353,7 @@ code CLASS::get_merkle_proof(hashes& proof, hashes roots, size_t target,
 
 // protected
 TEMPLATE
-code CLASS::get_merkle_tree(hashes& tree, size_t waypoint) NOEXCEPT
+code CLASS::get_merkle_tree(hashes& tree, size_t waypoint) const NOEXCEPT
 {
     const auto span = interval_span();
     BC_ASSERT(!is_zero(span));
@@ -384,7 +384,7 @@ code CLASS::get_merkle_tree(hashes& tree, size_t waypoint) NOEXCEPT
 
 TEMPLATE
 code CLASS::get_merkle_root_and_proof(hash_digest& root, hashes& proof,
-    size_t target, size_t waypoint) NOEXCEPT
+    size_t target, size_t waypoint) const NOEXCEPT
 {
     if (target > waypoint)
         return error::merkle_arguments;
