@@ -236,6 +236,42 @@ hashes CLASS::get_confirmed_hashes(size_t first, size_t count) const NOEXCEPT
     return out;
 }
 
+TEMPLATE
+header_links CLASS::get_confirmed_headers(size_t first,
+    size_t count) const NOEXCEPT
+{
+    // Empty is always a successful/valid result for this method.
+    if (is_zero(count))
+        return {};
+
+    // First requested height is currently above top.
+    const auto top = get_top_confirmed();
+    if (first > top)
+        return {};
+
+    // add1(top) cannot overflow, as indexed block count cannot exceed size_t.
+    count = system::limit(count, add1(top) - first);
+    auto last = first + sub1(count);
+
+    // Due to reorganization it is possible for this height to now be terminal.
+    auto link = to_confirmed(last);
+
+    // Walk link back to first indexed header (for reorg safety).
+    while (link.is_terminal() && last > first)
+        link = to_confirmed(--last);
+
+    // No headers are currently confirmed at/above first.
+    if (link.is_terminal())
+        return {};
+
+    // Compiler should optimize out last to_parent() call.
+    header_links out(add1(last - first));
+    for (auto& value: std::views::reverse(out))
+        link = to_parent(value = link);
+
+    return out;
+}
+
 // writers
 // ----------------------------------------------------------------------------
 
