@@ -310,7 +310,7 @@ CLASS::hash_option CLASS::get_confirmed_interval(size_t height) const NOEXCEPT
         return {};
 
     table::txs::get_interval txs{};
-    if (!store_.txs.get(to_confirmed(height), txs))
+    if (!store_.txs.at(to_confirmed(height), txs))
         return {};
 
     return txs.interval;
