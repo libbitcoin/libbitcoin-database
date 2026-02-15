@@ -573,7 +573,7 @@ public:
         uint64_t& balance, const hash_digest& key,
         bool turbo=false) const NOEXCEPT;
     code get_merkle_root_and_proof(hash_digest& root, hashes& proof,
-        size_t target, size_t checkpoint) NOEXCEPT;
+        size_t target, size_t checkpoint) const NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
@@ -721,10 +721,10 @@ protected:
     size_t interval_span() const NOEXCEPT;
     hash_option get_confirmed_interval(size_t height) const NOEXCEPT;
     hash_option create_interval(header_link link, size_t height) const NOEXCEPT;
-    void push_merkle(hashes& branch, hashes&& hashes, size_t first) NOEXCEPT;
-    code get_merkle_tree(hashes& roots, size_t waypoint) NOEXCEPT;
+    void push_merkle(hashes& branch, hashes&& hashes, size_t first) const NOEXCEPT;
+    code get_merkle_tree(hashes& roots, size_t waypoint) const NOEXCEPT;
     code get_merkle_proof(hashes& proof, hashes roots, size_t target,
-        size_t waypoint) NOEXCEPT;
+        size_t waypoint) const NOEXCEPT;
 
     /// tx_fk must be allocated.
     /// -----------------------------------------------------------------------
