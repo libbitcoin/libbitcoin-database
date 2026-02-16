@@ -316,9 +316,9 @@ CLASS::hash_option CLASS::get_confirmed_interval(size_t height) const NOEXCEPT
     return txs.interval;
 }
 
-// protected
+// static/protected
 TEMPLATE
-void CLASS::push_merkle(hashes& to, hashes&& from, size_t first) const NOEXCEPT
+void CLASS::merge_merkle(hashes& to, hashes&& from, size_t first) NOEXCEPT
 {
     using namespace system;
     for (const auto& row: block::merkle_branch(first, from.size()))
@@ -346,8 +346,8 @@ code CLASS::get_merkle_proof(hashes& proof, hashes roots, size_t target,
 
     using namespace system;
     proof.reserve(ceilinged_log2(other.size()) + ceilinged_log2(roots.size()));
-    push_merkle(proof, std::move(other), target % span);
-    push_merkle(proof, std::move(roots), target / span);
+    merge_merkle(proof, std::move(other), target % span);
+    merge_merkle(proof, std::move(roots), target / span);
     return error::success;
 }
 

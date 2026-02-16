@@ -720,10 +720,12 @@ protected:
 
     /// merkle
     /// -----------------------------------------------------------------------
+    static void merge_merkle(hashes& branch, hashes&& hashes,
+        size_t first) NOEXCEPT;
+
     size_t interval_span() const NOEXCEPT;
     hash_option get_confirmed_interval(size_t height) const NOEXCEPT;
     hash_option create_interval(header_link link, size_t height) const NOEXCEPT;
-    void push_merkle(hashes& branch, hashes&& hashes, size_t first) const NOEXCEPT;
     code get_merkle_tree(hashes& roots, size_t waypoint) const NOEXCEPT;
     code get_merkle_proof(hashes& proof, hashes roots, size_t target,
         size_t waypoint) const NOEXCEPT;
