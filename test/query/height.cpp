@@ -112,16 +112,20 @@ BOOST_AUTO_TEST_CASE(query_height__get_confirmed_hashes2__various__expected_size
     BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(0, 1).size(), 1u);
     BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(0, 2).size(), 2u);
     BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(0, 3).size(), 3u);
-    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(0, 4).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(0, 4).size(), 4u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(0, 5).size(), 0u);
     BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(1, 0).size(), 0u);
     BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(1, 1).size(), 1u);
     BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(1, 2).size(), 2u);
-    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(1, 3).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(1, 3).size(), 3u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(1, 4).size(), 0u);
     BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(2, 0).size(), 0u);
     BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(2, 1).size(), 1u);
-    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(2, 2).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(2, 2).size(), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(2, 3).size(), 0u);
     BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(3, 0).size(), 0u);
-    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(3, 1).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(3, 1).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(3, 2).size(), 0u);
     BOOST_REQUIRE_EQUAL(query.get_confirmed_hashes(4, 0).size(), 0u);
 }
 
@@ -142,9 +146,97 @@ BOOST_AUTO_TEST_CASE(query_height__get_confirmed_hashes2__three__ascending_order
 
     const auto hashes = query.get_confirmed_hashes(0, 3);
     BOOST_REQUIRE_EQUAL(hashes.size(), 3);
-    BOOST_REQUIRE_EQUAL(hashes[0], test::block1.hash());
-    BOOST_REQUIRE_EQUAL(hashes[1], test::block2.hash());
-    BOOST_REQUIRE_EQUAL(hashes[2], test::block3.hash());
+    BOOST_REQUIRE_EQUAL(hashes[0], test::genesis.hash());
+    BOOST_REQUIRE_EQUAL(hashes[1], test::block1.hash());
+    BOOST_REQUIRE_EQUAL(hashes[2], test::block2.hash());
+}
+
+// get_confirmed_headers
+
+BOOST_AUTO_TEST_CASE(query_height__get_confirmed_headers__empty__empty)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(0, 0).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(0, 42).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(42, 0).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(42, 42).size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_height__get_confirmed_headers__unconfirmeds__empty)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block3, test::context, false, false));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block3.hash())));
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(0, 0).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(0, 42).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(42, 0).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(42, 42).size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_height__get_confirmed_headers__confirmeds__expected_size)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block3, test::context, false, false));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block1.hash()), false));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block2.hash()), false));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block3.hash())));
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(0, 0).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(0, 1).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(0, 2).size(), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(0, 3).size(), 3u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(1, 0).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(1, 1).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(1, 2).size(), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(1, 3).size(), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(2, 0).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(2, 1).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(2, 2).size(), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(3, 0).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(3, 1).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(4, 0).size(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_headers(4, 1).size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_height__get_confirmed_headers__confirmeds__expected_headers)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block3, test::context, false, false));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block1.hash()), false));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block2.hash()), false));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block3.hash())));
+
+    const auto headers = query.get_confirmed_headers(1, 3);
+    BOOST_REQUIRE_EQUAL(headers.size(), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_header_key(headers[0]), test::block1.hash());
+    BOOST_REQUIRE_EQUAL(query.get_header_key(headers[1]), test::block2.hash());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

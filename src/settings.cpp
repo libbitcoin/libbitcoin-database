@@ -27,10 +27,7 @@ namespace database {
 using namespace bc::system;
 
 settings::settings() NOEXCEPT
-  : turbo{ false },
-    interval_depth{ max_uint8 },
-    path{ "bitcoin" },
-
+  :
     // Archives.
 
     header_buckets{ 128 },

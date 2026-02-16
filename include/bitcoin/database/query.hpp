@@ -539,7 +539,7 @@ public:
     hashes get_confirmed_hashes(const heights& heights) const NOEXCEPT;
     hashes get_confirmed_hashes(size_t first, size_t count) const NOEXCEPT;
     header_links get_confirmed_headers(size_t first,
-        size_t maximum) const NOEXCEPT;
+        size_t limit) const NOEXCEPT;
 
     header_links get_confirmed_fork(const header_link& fork) const NOEXCEPT;
     header_links get_candidate_fork(size_t& fork_point) const NOEXCEPT;
@@ -720,10 +720,12 @@ protected:
 
     /// merkle
     /// -----------------------------------------------------------------------
+    static void merge_merkle(hashes& branch, hashes&& hashes,
+        size_t first) NOEXCEPT;
+
     size_t interval_span() const NOEXCEPT;
     hash_option get_confirmed_interval(size_t height) const NOEXCEPT;
     hash_option create_interval(header_link link, size_t height) const NOEXCEPT;
-    void push_merkle(hashes& branch, hashes&& hashes, size_t first) const NOEXCEPT;
     code get_merkle_tree(hashes& roots, size_t waypoint) const NOEXCEPT;
     code get_merkle_proof(hashes& proof, hashes roots, size_t target,
         size_t waypoint) const NOEXCEPT;
