@@ -40,13 +40,13 @@ struct BCD_API settings
     /// -----------------------------------------------------------------------
 
     /// Enable concurrency in individual client-server queries.
-    bool turbo;
+    bool turbo{ false };
 
     /// Depth of electrum merkle tree interval caching.
-    uint8_t interval_depth;
+    uint8_t interval_depth{ max_uint8 };
 
     /// Path to the database directory.
-    std::filesystem::path path;
+    std::filesystem::path path{ "bitcoin" };
 
     /// Archives.
     /// -----------------------------------------------------------------------
