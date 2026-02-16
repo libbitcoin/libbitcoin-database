@@ -215,10 +215,12 @@ hashes CLASS::get_confirmed_hashes(size_t first, size_t count) const NOEXCEPT
 {
     using namespace system;
     const auto size = is_odd(count) && count > one ? add1(count) : count;
-    if (is_add_overflow(count, one) || is_add_overflow(first, size))
+    if (is_zero(count) ||
+        is_add_overflow(count, one) ||
+        is_add_overflow(first, size))
         return {};
 
-    auto link = to_confirmed(first + count);
+    auto link = to_confirmed(first + sub1(count));
     if (link.is_terminal())
         return {};
 
