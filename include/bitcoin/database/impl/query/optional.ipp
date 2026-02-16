@@ -367,7 +367,7 @@ code CLASS::get_merkle_tree(hashes& tree, size_t waypoint) const NOEXCEPT
 
         if (size == span)
         {
-            auto interval = get_confirmed_interval(first);
+            auto interval = get_confirmed_interval(last);
             if (!interval.has_value()) return error::merkle_interval;
             tree.push_back(std::move(interval.value()));
         }
