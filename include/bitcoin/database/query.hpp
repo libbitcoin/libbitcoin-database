@@ -402,6 +402,7 @@ public:
     /// Services.
     /// -----------------------------------------------------------------------
 
+    hash_digest get_merkle_root(size_t height) const NOEXCEPT;
     code get_merkle_root_and_proof(hash_digest& root, hashes& proof,
         size_t target, size_t checkpoint) const NOEXCEPT;
 

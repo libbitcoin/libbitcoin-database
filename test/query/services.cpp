@@ -384,6 +384,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_tree__one_full_interval__expecte
 }
 
 // get_merkle_root_and_proof
+// get_merkle_proof
 
 BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__target_equals_waypoint__success)
 {
@@ -415,6 +416,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__target_equals_wa
     BOOST_REQUIRE_EQUAL(proof.size(), 2u);
     BOOST_REQUIRE_EQUAL(proof[0], system::merkle_root({ test::block2.hash() }));
     BOOST_REQUIRE_EQUAL(proof[1], system::merkle_root({ test::genesis.hash(), test::block1.hash() }));
+    BOOST_REQUIRE_EQUAL(root, query.get_merkle_root(3));
     BOOST_REQUIRE_EQUAL(root, expected);
 }
 
@@ -445,10 +447,11 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__target_less_than
         test::block3.hash()
     });
     BOOST_REQUIRE(!query.get_merkle_root_and_proof(root, proof, 1u, 3u));
-    BOOST_REQUIRE_EQUAL(root, expected);
     BOOST_REQUIRE_EQUAL(proof.size(), 2u);
     BOOST_REQUIRE_EQUAL(proof[0], system::merkle_root({ test::genesis.hash() }));
     BOOST_REQUIRE_EQUAL(proof[1], system::merkle_root({ test::block2.hash(), test::block3.hash() }));
+    BOOST_REQUIRE_EQUAL(root, query.get_merkle_root(3));
+    BOOST_REQUIRE_EQUAL(root, expected);
 }
 
 BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__target_greater_than_waypoint__error_merkle_arguments)
@@ -464,6 +467,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__target_greater_t
     hashes proof{};
     hash_digest root{};
     BOOST_REQUIRE_EQUAL(query.get_merkle_root_and_proof(root, proof, 5u, 3u), error::merkle_arguments);
+    BOOST_REQUIRE_EQUAL(query.get_merkle_root(3), system::null_hash);
 }
 
 BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__waypoint_beyond_top__error_merkle_not_found)
@@ -479,6 +483,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__waypoint_beyond_
     hashes proof{};
     hash_digest root{};
     BOOST_REQUIRE_EQUAL(query.get_merkle_root_and_proof(root, proof, 0u, 100u), error::merkle_not_found);
+    BOOST_REQUIRE_EQUAL(query.get_merkle_root(100), system::null_hash);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -162,6 +162,16 @@ code CLASS::get_merkle_root_and_proof(hash_digest& root, hashes& proof,
     return {};
 }
 
+TEMPLATE
+hash_digest CLASS::get_merkle_root(size_t height) const NOEXCEPT
+{
+    hashes tree{};
+    if (const auto ec = get_merkle_tree(tree, height))
+        return {};
+
+    return system::merkle_root(std::move(tree));
+}
+
 } // namespace database
 } // namespace libbitcoin
 
