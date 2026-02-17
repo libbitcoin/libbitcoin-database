@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_NOMAP_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_NOMAP_HPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/arrayhead.hpp>

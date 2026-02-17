@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_QUERY_NETWORK_IPP
 
 #include <algorithm>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {

@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <ranges>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 // TODO: address table could use point keys to compress the multimap.

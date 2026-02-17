@@ -301,6 +301,7 @@ if (with-tests)
         "../../test/query/confirm.cpp"
         "../../test/query/consensus.cpp"
         "../../test/query/context.cpp"
+        "../../test/query/estimate.cpp"
         "../../test/query/extent.cpp"
         "../../test/query/height.cpp"
         "../../test/query/initialize.cpp"

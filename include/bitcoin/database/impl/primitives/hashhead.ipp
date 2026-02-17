@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HASHHEAD_IPP
 
 #include <algorithm>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 // Heads are not subject to resize/remap and therefore do not require memory

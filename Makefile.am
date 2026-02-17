@@ -91,6 +91,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/confirm.cpp \
     test/query/consensus.cpp \
     test/query/context.cpp \
+    test/query/estimate.cpp \
     test/query/extent.cpp \
     test/query/height.cpp \
     test/query/initialize.cpp \
@@ -181,6 +182,7 @@ include_bitcoin_database_impl_query_HEADERS = \
     include/bitcoin/database/impl/query/confirm.ipp \
     include/bitcoin/database/impl/query/consensus.ipp \
     include/bitcoin/database/impl/query/context.ipp \
+    include/bitcoin/database/impl/query/estimate.ipp \
     include/bitcoin/database/impl/query/extent.ipp \
     include/bitcoin/database/impl/query/height.ipp \
     include/bitcoin/database/impl/query/initialize.ipp \

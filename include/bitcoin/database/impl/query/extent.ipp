@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_QUERY_EXTENT_IPP
 
 #include <numeric>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 #define DEFINE_SIZES(name) \

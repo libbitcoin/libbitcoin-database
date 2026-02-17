@@ -152,6 +152,7 @@
     <ClCompile Include="..\..\..\..\test\query\confirm.cpp" />
     <ClCompile Include="..\..\..\..\test\query\consensus.cpp" />
     <ClCompile Include="..\..\..\..\test\query\context.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\estimate.cpp" />
     <ClCompile Include="..\..\..\..\test\query\extent.cpp" />
     <ClCompile Include="..\..\..\..\test\query\height.cpp">
       <ObjectFileName>$(IntDir)test_query_height.obj</ObjectFileName>

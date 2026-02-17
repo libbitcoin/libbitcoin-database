@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {

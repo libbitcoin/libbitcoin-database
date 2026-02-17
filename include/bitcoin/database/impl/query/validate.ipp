@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_QUERY_VALIDATE_IPP
 
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {

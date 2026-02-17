@@ -18,7 +18,7 @@
  */
 #include <bitcoin/database/error.hpp>
 
-#include <bitcoin/system.hpp>
+#include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {

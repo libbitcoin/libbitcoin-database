@@ -22,7 +22,6 @@
 #include <iterator>
 #include <cstring>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {

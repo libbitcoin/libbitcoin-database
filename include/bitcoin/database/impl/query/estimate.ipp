@@ -16,39 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/locks/flush_lock.hpp>
+#ifndef LIBBITCOIN_DATABASE_QUERY_ESTIMATE_IPP
+#define LIBBITCOIN_DATABASE_QUERY_ESTIMATE_IPP
 
-#include <filesystem>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
-flush_lock::flush_lock(const std::filesystem::path& file) NOEXCEPT
-  : file_lock(file)
-{
-}
 
-bool flush_lock::try_lock() NOEXCEPT
-{
-    if (exists())
-        return false;
-
-    return create();
-}
-
-bool flush_lock::try_unlock() NOEXCEPT
-{
-    if (!exists())
-        return false;
-
-    return destroy();
-}
-
-bool flush_lock::is_locked() const NOEXCEPT
-{
-    return exists();
-}
+// fee estimate
+// ----------------------------------------------------------------------------
 
 } // namespace database
 } // namespace libbitcoin
+
+#endif

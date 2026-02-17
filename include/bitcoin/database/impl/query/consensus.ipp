@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <atomic>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
 

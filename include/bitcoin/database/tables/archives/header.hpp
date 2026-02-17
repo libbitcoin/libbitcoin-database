@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_HEADER_HPP
 #define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_HEADER_HPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>

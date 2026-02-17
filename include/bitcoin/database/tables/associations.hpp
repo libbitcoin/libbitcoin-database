@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_ASSOCIATIONS_HPP
 #define LIBBITCOIN_DATABASE_TABLES_ASSOCIATIONS_HPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/association.hpp>

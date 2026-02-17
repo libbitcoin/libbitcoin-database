@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_IPP
 
 ////#include <iterator>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 // Zero/negative size is allowed (automatically handled by bc streams).

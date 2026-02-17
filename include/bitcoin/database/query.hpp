@@ -23,7 +23,6 @@
 #include <mutex>
 #include <optional>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/types.hpp>
 
@@ -785,6 +784,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/objects.ipp>
 #include <bitcoin/database/impl/query/optional.ipp>
 #include <bitcoin/database/impl/query/merkle.ipp>
+#include <bitcoin/database/impl/query/estimate.ipp>
 #include <bitcoin/database/impl/query/translate.ipp>
 #include <bitcoin/database/impl/query/validate.ipp>
 

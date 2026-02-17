@@ -20,7 +20,7 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_services_tests, test::directory_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_merkle_tests, test::directory_setup_fixture)
 
 // nop event handler.
 const auto events_handler = [](auto, auto) {};
@@ -51,7 +51,7 @@ public:
 
 // interval_span
 
-BOOST_AUTO_TEST_CASE(query_services__interval_span__uninitialized__max_size_t)
+BOOST_AUTO_TEST_CASE(query_merkle__interval_span__uninitialized__max_size_t)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(query_services__interval_span__uninitialized__max_size_t)
     BOOST_REQUIRE_EQUAL(query.interval_span(), max_size_t);
 }
 
-BOOST_AUTO_TEST_CASE(query_services__interval_span__11__2048)
+BOOST_AUTO_TEST_CASE(query_merkle__interval_span__11__2048)
 {
     settings settings{};
     settings.interval_depth = 11;
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(query_services__interval_span__11__2048)
     BOOST_REQUIRE_EQUAL(query.interval_span(), 2048u);
 }
 
-BOOST_AUTO_TEST_CASE(query_services__interval_span__0__1)
+BOOST_AUTO_TEST_CASE(query_merkle__interval_span__0__1)
 {
     settings settings{};
     settings.interval_depth = 0;
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(query_services__interval_span__0__1)
 
 // create_interval
 
-BOOST_AUTO_TEST_CASE(query_services__create_interval__depth_0__block_hash)
+BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_0__block_hash)
 {
     settings settings{};
     settings.interval_depth = 0;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(query_services__create_interval__depth_0__block_hash)
     BOOST_REQUIRE_EQUAL(query.create_interval(header3, 3).value(), test::block3.hash());
 }
 
-BOOST_AUTO_TEST_CASE(query_services__create_interval__depth_1__expected)
+BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_1__expected)
 {
     settings settings{};
     settings.interval_depth = 1;
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(query_services__create_interval__depth_1__expected)
     BOOST_REQUIRE_EQUAL(query.create_interval(header3, 3).value(), root02);
 }
 
-BOOST_AUTO_TEST_CASE(query_services__create_interval__depth_2__expected)
+BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_2__expected)
 {
     settings settings{};
     settings.interval_depth = 2;
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(query_services__create_interval__depth_2__expected)
 
 // get_confirmed_interval
 
-BOOST_AUTO_TEST_CASE(query_services__get_confirmed_interval__not_multiple__no_value)
+BOOST_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__not_multiple__no_value)
 {
     settings settings{};
     settings.interval_depth = 3;
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_confirmed_interval__not_multiple__no_va
 }
 
 // Interval is set by create_interval(), integral to set(block).
-BOOST_AUTO_TEST_CASE(query_services__get_confirmed_interval__multiple__expected_value)
+BOOST_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__multiple__expected_value)
 {
     settings settings{};
     settings.interval_depth = 2;
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_confirmed_interval__multiple__expected_
 
 // merge_merkle
 
-BOOST_AUTO_TEST_CASE(query_services__merge_merkle__empty_from__empty_to)
+BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__empty_from__empty_to)
 {
     hashes to{};
     merkle_accessor::merge_merkle(to, {}, 0);
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(query_services__merge_merkle__empty_from__empty_to)
     BOOST_REQUIRE(to.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_services__push_merkle__two_leaves_target_zero__merges_one_sibling)
+BOOST_AUTO_TEST_CASE(query_merkle__push_merkle__two_leaves_target_zero__merges_one_sibling)
 {
     hashes to{};
     hashes from
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(query_services__push_merkle__two_leaves_target_zero__merges
     BOOST_REQUIRE_EQUAL(to[0], system::merkle_root({ test::block1.hash() }));
 }
 
-BOOST_AUTO_TEST_CASE(query_services__merge_merkle__three_leaves_target_two__handles_odd_length)
+BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__three_leaves_target_two__handles_odd_length)
 {
     hashes to{};
     hashes from
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(query_services__merge_merkle__three_leaves_target_two__hand
     BOOST_REQUIRE_EQUAL(to[0], system::merkle_root({ test::genesis.hash(), test::block1.hash() }));
 }
 
-BOOST_AUTO_TEST_CASE(query_services__merge_merkle__four_leaves_target_three__merges_two_siblings)
+BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__four_leaves_target_three__merges_two_siblings)
 {
     hashes to{};
     hashes from
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(query_services__merge_merkle__four_leaves_target_three__mer
 
 // get_merkle_proof
 
-BOOST_AUTO_TEST_CASE(query_services__get_merkle_proof__no_confirmed_blocks__error_merkle_proof)
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__no_confirmed_blocks__error_merkle_proof)
 {
     settings settings{};
     settings.interval_depth = 2;
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_proof__no_confirmed_blocks__erro
     BOOST_REQUIRE(proof.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_services__get_merkle_proof__target_in_first_interval__expected)
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__target_in_first_interval__expected)
 {
     settings settings{};
     settings.interval_depth = 2;
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_proof__target_in_first_interval_
     BOOST_REQUIRE_EQUAL(proof[1], system::merkle_root({ test::genesis.hash(), test::block1.hash() }));
 }
 
-BOOST_AUTO_TEST_CASE(query_services__get_merkle_proof__multiple_intervals__expected)
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__multiple_intervals__expected)
 {
     settings settings{};
     settings.interval_depth = 1;
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_proof__multiple_intervals__expec
 
 // get_merkle_tree
 
-BOOST_AUTO_TEST_CASE(query_services__get_merkle_tree__waypoint_zero__genesis)
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_tree__waypoint_zero__genesis)
 {
     settings settings{};
     settings.interval_depth = 2;
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_tree__waypoint_zero__genesis)
     BOOST_REQUIRE_EQUAL(tree[0], expected);
 }
 
-BOOST_AUTO_TEST_CASE(query_services__get_merkle_tree__one_full_interval__expected_root)
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_tree__one_full_interval__expected_root)
 {
     settings settings{};
     settings.interval_depth = 2;
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_tree__one_full_interval__expecte
 // get_merkle_root_and_proof
 // get_merkle_proof
 
-BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__target_equals_waypoint__success)
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_equals_waypoint__success)
 {
     settings settings{};
     settings.interval_depth = 2;
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__target_equals_wa
     BOOST_REQUIRE_EQUAL(root, expected);
 }
 
-BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__target_less_than_waypoint__success)
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_less_than_waypoint__success)
 {
     settings settings{};
     settings.interval_depth = 2;
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__target_less_than
     BOOST_REQUIRE_EQUAL(root, expected);
 }
 
-BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__target_greater_than_waypoint__error_merkle_arguments)
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_greater_than_waypoint__error_merkle_arguments)
 {
     settings settings{};
     settings.interval_depth = 2;
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__target_greater_t
     BOOST_REQUIRE_EQUAL(query.get_merkle_root(3), system::null_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_services__get_merkle_root_and_proof__waypoint_beyond_top__error_merkle_not_found)
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__waypoint_beyond_top__error_merkle_not_found)
 {
     settings settings{};
     settings.interval_depth = 2;

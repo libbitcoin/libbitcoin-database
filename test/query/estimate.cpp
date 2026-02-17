@@ -16,39 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/locks/flush_lock.hpp>
+#include "../test.hpp"
+#include "../mocks/blocks.hpp"
+#include "../mocks/chunk_store.hpp"
 
-#include <filesystem>
-#include <bitcoin/database/define.hpp>
+BOOST_FIXTURE_TEST_SUITE(query_estimate_tests, test::directory_setup_fixture)
 
-namespace libbitcoin {
-namespace database {
-    
-flush_lock::flush_lock(const std::filesystem::path& file) NOEXCEPT
-  : file_lock(file)
+// nop event handler.
+////const auto events_handler = [](auto, auto) {};
+
+BOOST_AUTO_TEST_CASE(query_estimate_test)
 {
+    BOOST_REQUIRE(true);
 }
 
-bool flush_lock::try_lock() NOEXCEPT
-{
-    if (exists())
-        return false;
-
-    return create();
-}
-
-bool flush_lock::try_unlock() NOEXCEPT
-{
-    if (!exists())
-        return false;
-
-    return destroy();
-}
-
-bool flush_lock::is_locked() const NOEXCEPT
-{
-    return exists();
-}
-
-} // namespace database
-} // namespace libbitcoin
+BOOST_AUTO_TEST_SUITE_END()

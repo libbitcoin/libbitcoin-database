@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <ranges>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 

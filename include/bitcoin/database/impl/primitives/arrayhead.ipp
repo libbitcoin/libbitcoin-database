@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYHEAD_IPP
 
 #include <algorithm>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 // TODO: xcode clang++16 does not support C++20 std::atomic_ref.
