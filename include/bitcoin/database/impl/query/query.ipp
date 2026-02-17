@@ -75,6 +75,37 @@ CLASS::query(Store& store) NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::interval_span() const NOEXCEPT
+{
+    if (const auto span = span_.load(std::memory_order_relaxed);
+        is_nonzero(span))
+        return span;
+
+    // initialize_span() never returns zero.
+    span_.store(initialize_span(), std::memory_order_relaxed);
+    return span_;
+}
+
+// protected
+TEMPLATE
+size_t CLASS::interval_depth() const NOEXCEPT
+{
+    table::txs::get_genesis_depth txs{};
+    return store_.txs.at(to_txs(0), txs) ? txs.depth : store_.interval_depth();
+}
+
+// protected
+TEMPLATE
+size_t CLASS::initialize_span() const NOEXCEPT
+{
+    // span of zero (overflow) is disallowed (division by zero).
+    // span of one (2^0) caches every block (no optimization, wasted storage).
+    // span greater than top height eliminates caching (no optimization).
+    const auto span = system::power2(interval_depth());
+    return is_zero(span) ? max_size_t : span;
+}
+
+TEMPLATE
 code CLASS::get_code() const NOEXCEPT
 {
     return is_full() ? error::disk_full : get_fault();

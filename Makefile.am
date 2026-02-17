@@ -97,6 +97,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/network.cpp \
     test/query/objects.cpp \
     test/query/optional.cpp \
+    test/query/services.cpp \
     test/query/translate.cpp \
     test/query/validate.cpp \
     test/tables/archives/header.cpp \
@@ -187,6 +188,7 @@ include_bitcoin_database_impl_query_HEADERS = \
     include/bitcoin/database/impl/query/objects.ipp \
     include/bitcoin/database/impl/query/optional.ipp \
     include/bitcoin/database/impl/query/query.ipp \
+    include/bitcoin/database/impl/query/services.ipp \
     include/bitcoin/database/impl/query/translate.ipp \
     include/bitcoin/database/impl/query/validate.ipp
 

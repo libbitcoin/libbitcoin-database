@@ -235,7 +235,9 @@ bool CLASS::turbo() const NOEXCEPT
 TEMPLATE
 uint8_t CLASS::interval_depth() const NOEXCEPT
 {
-    return configuration_.interval_depth;
+    // Configuration uses uint16_t because of boost parser bug for single byte.
+    // But 2^255 is sufficient given that interval is limited by chain length.
+    return system::limit<uint8_t>(configuration_.interval_depth);
 }
 
 TEMPLATE

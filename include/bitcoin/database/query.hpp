@@ -210,9 +210,10 @@ public:
     size_t output_count(const tx_links& txs) const NOEXCEPT;
     two_counts put_counts(const tx_links& txs) const NOEXCEPT;
 
-    /// Optional table state.
+    /// Optional/configured table state.
     bool address_enabled() const NOEXCEPT;
     bool filter_enabled() const NOEXCEPT;
+    size_t interval_span() const NOEXCEPT;
 
     /// Initialization (natural-keyed).
     /// -----------------------------------------------------------------------
@@ -398,6 +399,12 @@ public:
     bool populate_without_metadata(const block& block) const NOEXCEPT;
     bool populate_without_metadata(const transaction& tx) const NOEXCEPT;
 
+    /// Services.
+    /// -----------------------------------------------------------------------
+
+    code get_merkle_root_and_proof(hash_digest& root, hashes& proof,
+        size_t target, size_t checkpoint) const NOEXCEPT;
+
     /// Archive writes.
     /// -----------------------------------------------------------------------
 
@@ -574,8 +581,6 @@ public:
     code get_confirmed_balance(std::atomic_bool& cancel,
         uint64_t& balance, const hash_digest& key,
         bool turbo=false) const NOEXCEPT;
-    code get_merkle_root_and_proof(hash_digest& root, hashes& proof,
-        size_t target, size_t checkpoint) const NOEXCEPT;
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
@@ -718,12 +723,16 @@ protected:
         outpoints& out, const hash_digest& key,
         uint64_t minimum) const NOEXCEPT;
 
-    /// merkle
+    /// services:merkle
     /// -----------------------------------------------------------------------
+
     static void merge_merkle(hashes& branch, hashes&& hashes,
         size_t first) NOEXCEPT;
 
-    size_t interval_span() const NOEXCEPT;
+    // merkle related configuration
+    size_t interval_depth() const NOEXCEPT;
+    size_t initialize_span() const NOEXCEPT;
+
     hash_option get_confirmed_interval(size_t height) const NOEXCEPT;
     hash_option create_interval(header_link link, size_t height) const NOEXCEPT;
     code get_merkle_tree(hashes& roots, size_t waypoint) const NOEXCEPT;
@@ -750,6 +759,7 @@ private:
     // These are thread safe.
     mutable std::shared_mutex candidate_reorganization_mutex_{};
     mutable std::shared_mutex confirmed_reorganization_mutex_{};
+    mutable std::atomic<size_t> span_{};
     Store& store_;
 };
 
@@ -773,6 +783,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/network.ipp>
 #include <bitcoin/database/impl/query/objects.ipp>
 #include <bitcoin/database/impl/query/optional.ipp>
+#include <bitcoin/database/impl/query/services.ipp>
 #include <bitcoin/database/impl/query/translate.ipp>
 #include <bitcoin/database/impl/query/validate.ipp>
 

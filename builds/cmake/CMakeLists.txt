@@ -307,6 +307,7 @@ if (with-tests)
         "../../test/query/network.cpp"
         "../../test/query/objects.cpp"
         "../../test/query/optional.cpp"
+        "../../test/query/services.cpp"
         "../../test/query/translate.cpp"
         "../../test/query/validate.cpp"
         "../../test/tables/archives/header.cpp"

@@ -21,20 +21,24 @@
 
 BOOST_AUTO_TEST_SUITE(txs_tests)
 
+// Default configuration doesn't result in intervals set here.
+
 using namespace system;
 const table::txs::slab slab0
 {
     {}, // schema::txs [all const static members]
     0x000000,
-    std::vector<uint32_t>
     {
-    }
+        // tx fk 0 uniquely identifies genesis, resulting in depth storage.
+        0x00000000_u32
+    },
+    {},  // interval (unused due to default span)
+    0x42 // depth (genesis only)
 };
 const table::txs::slab slab1
 {
     {}, // schema::txs [all const static members]
     0x0000ab,
-    std::vector<uint32_t>
     {
         0x56341211_u32
     }
@@ -43,7 +47,6 @@ const table::txs::slab slab2
 {
     {}, // schema::txs [all const static members]
     0x00a00b,
-    std::vector<uint32_t>
     {
         0x56341221_u32,
         0x56341222_u32
@@ -53,7 +56,6 @@ const table::txs::slab slab3
 {
     {}, // schema::txs [all const static members]
     0x09000b,
-    std::vector<uint32_t>
     {
         0x56341231_u32,
         0x56341232_u32,
@@ -62,13 +64,17 @@ const table::txs::slab slab3
 };
 const data_chunk expected0
 {
-    // slab0 (count) [0]
-    0x00, 0x00, 0x00,
+    // slab0 (count) [1]
+    0x01, 0x00, 0x00,
 
     // slab0 (wire) [0x00]
     0x00, 0x00, 0x00,
 
     // slab0 (txs)
+    0x00, 0x00, 0x00, 0x00,
+
+    // depth (genesis)
+    0x42
 };
 const data_chunk expected1
 {
@@ -79,7 +85,7 @@ const data_chunk expected1
     0xab, 0x00, 0x00,
 
     // slab1 (txs)
-    0x11, 0x12, 0x34, 0x56,
+    0x11, 0x12, 0x34, 0x56
 };
 const data_chunk expected2
 {
@@ -91,7 +97,7 @@ const data_chunk expected2
 
     // slab2
     0x21, 0x12, 0x34, 0x56,
-    0x22, 0x12, 0x34, 0x56,
+    0x22, 0x12, 0x34, 0x56
 };
 const data_chunk expected3
 {
@@ -114,40 +120,40 @@ BOOST_AUTO_TEST_CASE(txs__put__get__expected)
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
     table::txs instance{ head_store, body_store, 20 };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.exists(key));
+    BOOST_CHECK(instance.create());
+    BOOST_CHECK(!instance.exists(key));
 
-    BOOST_REQUIRE(instance.put(key, slab0));
-    BOOST_REQUIRE(instance.exists(key));
-    BOOST_REQUIRE(instance.at(key, slab));
-    BOOST_REQUIRE(slab == slab0);
-    BOOST_REQUIRE(instance.get(instance.at(key), slab));
-    BOOST_REQUIRE(slab == slab0);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), build_chunk({ expected0 }));
+    BOOST_CHECK(instance.put(key, slab0));
+    BOOST_CHECK(instance.exists(key));
+    BOOST_CHECK(instance.at(key, slab));
+    BOOST_CHECK(slab == slab0);
+    BOOST_CHECK(instance.get(instance.at(key), slab));
+    BOOST_CHECK(slab == slab0);
+    BOOST_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0 }));
 
-    BOOST_REQUIRE(instance.put(key, slab1));
-    BOOST_REQUIRE(instance.exists(key));
-    BOOST_REQUIRE(instance.at(key, slab));
-    BOOST_REQUIRE(slab == slab1);
-    BOOST_REQUIRE(instance.get(instance.at(key), slab));
-    BOOST_REQUIRE(slab == slab1);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1 }));
+    BOOST_CHECK(instance.put(key, slab1));
+    BOOST_CHECK(instance.exists(key));
+    BOOST_CHECK(instance.at(key, slab));
+    BOOST_CHECK(slab == slab1);
+    BOOST_CHECK(instance.get(instance.at(key), slab));
+    BOOST_CHECK(slab == slab1);
+    BOOST_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1 }));
 
-    BOOST_REQUIRE(instance.put(key, slab2));
-    BOOST_REQUIRE(instance.exists(key));
-    BOOST_REQUIRE(instance.at(key, slab));
-    BOOST_REQUIRE(slab == slab2);
-    BOOST_REQUIRE(instance.get(instance.at(key), slab));
-    BOOST_REQUIRE(slab == slab2);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1, expected2 }));
+    BOOST_CHECK(instance.put(key, slab2));
+    BOOST_CHECK(instance.exists(key));
+    BOOST_CHECK(instance.at(key, slab));
+    BOOST_CHECK(slab == slab2);
+    BOOST_CHECK(instance.get(instance.at(key), slab));
+    BOOST_CHECK(slab == slab2);
+    BOOST_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1, expected2 }));
 
-    BOOST_REQUIRE(instance.put(key, slab3));
-    BOOST_REQUIRE(instance.exists(key));
-    BOOST_REQUIRE(instance.at(key, slab));
-    BOOST_REQUIRE(slab == slab3);
-    BOOST_REQUIRE(instance.get(instance.at(key), slab));
-    BOOST_REQUIRE(slab == slab3);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1, expected2, expected3 }));
+    BOOST_CHECK(instance.put(key, slab3));
+    BOOST_CHECK(instance.exists(key));
+    BOOST_CHECK(instance.at(key, slab));
+    BOOST_CHECK(slab == slab3);
+    BOOST_CHECK(instance.get(instance.at(key), slab));
+    BOOST_CHECK(slab == slab3);
+    BOOST_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1, expected2, expected3 }));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

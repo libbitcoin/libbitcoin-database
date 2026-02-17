@@ -398,6 +398,9 @@ code CLASS::set_code(const block& block, const header_link& key,
     const auto size = block.serialized_size(true);
     const auto wire = possible_narrow_cast<bytes>(size);
 
+    // Depth is only used for genesis (is_zero(tx_fks[0])).
+    const auto depth = store_.interval_depth();
+
     // ========================================================================
     const auto scope = store_.get_transactor();
     constexpr auto positive = true;
@@ -414,7 +417,8 @@ code CLASS::set_code(const block& block, const header_link& key,
         wire,
         count,
         tx_fks,
-        std::move(interval)
+        std::move(interval),
+        depth
     }) ? error::success : error::txs_txs_put;
     // ========================================================================
 }
