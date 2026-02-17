@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_SERVICES_IPP
-#define LIBBITCOIN_DATABASE_QUERY_SERVICES_IPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_MERKLE_IPP
+#define LIBBITCOIN_DATABASE_QUERY_MERKLE_IPP
 
 #include <algorithm>
 #include <ranges>

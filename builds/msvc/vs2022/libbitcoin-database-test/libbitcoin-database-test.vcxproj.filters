@@ -132,6 +132,9 @@
     <ClCompile Include="..\..\..\..\test\query\initialize.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\merkle.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\network.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
@@ -139,9 +142,6 @@
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\optional.cpp">
-      <Filter>src\query</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\services.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\translate.cpp">
