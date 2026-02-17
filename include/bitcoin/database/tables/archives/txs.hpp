@@ -57,11 +57,17 @@ struct txs
     struct slab
       : public schema::txs
     {
+        inline bool is_genesis() const NOEXCEPT
+        {
+            return !tx_fks.empty() && is_zero(tx_fks.front());
+        }
+
         inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(ct::size +
                 bytes::size + tx::size * tx_fks.size() +
-                (interval.has_value() ? schema::hash : zero));
+                (interval.has_value() ? schema::hash : zero) +
+                to_int(is_genesis()));
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -76,6 +82,7 @@ struct txs
             });
 
             if (get_right(flagged, offset)) interval = source.read_hash();
+            if (is_genesis()) depth = source.read_byte();
             BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
@@ -98,6 +105,7 @@ struct txs
                 });
 
             if (flag) sink.write_bytes(interval.value());
+            if (is_genesis()) sink.write_byte(depth);
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
@@ -112,17 +120,24 @@ struct txs
         bytes::integer wire{};
         keys tx_fks{};
         hash interval{};
+        uint8_t depth{};
     };
 
     // put a contiguous set of tx identifiers.
     struct put_group
       : public schema::txs
     {
+        inline bool is_genesis() const NOEXCEPT
+        {
+            return is_zero(tx_fk);
+        }
+
         inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(ct::size +
                 bytes::size + tx::size * number +
-                (interval.has_value() ? schema::hash : zero));
+                (interval.has_value() ? schema::hash : zero) +
+                to_int(is_zero(tx_fk)));
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
@@ -140,6 +155,7 @@ struct txs
                 sink.write_little_endian<tx::integer, tx::size>(fk);
 
             if (flag) sink.write_bytes(interval.value());
+            if (is_genesis()) sink.write_byte(depth);
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
@@ -148,6 +164,7 @@ struct txs
         ct::integer number{};
         tx::integer tx_fk{};
         hash interval{};
+        uint8_t depth{};
     };
 
     struct get_interval
@@ -170,6 +187,31 @@ struct txs
         }
 
         hash interval{};
+    };
+
+    // This reader is only applicable to the genesis block.
+    struct get_genesis_depth
+      : public schema::txs
+    {
+        inline link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        // Stored at end since only read once (at startup).
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            const auto number = source.read_little_endian<ct::integer, ct::size>();
+            const auto flagged = source.read_little_endian<bytes::integer, bytes::size>();
+            const auto skip = tx::size * number +
+                (system::get_right(flagged, offset) ? schema::hash : zero);
+            source.skip_bytes(skip);
+            depth = source.read_byte();
+            return source;
+        }
+
+        uint8_t depth{};
     };
 
     struct get_position

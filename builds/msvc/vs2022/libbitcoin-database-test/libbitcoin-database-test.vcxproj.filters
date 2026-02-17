@@ -141,6 +141,9 @@
     <ClCompile Include="..\..\..\..\test\query\optional.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\services.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\translate.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
