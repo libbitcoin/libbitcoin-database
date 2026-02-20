@@ -23,7 +23,6 @@
 
 #include <array>
 #include <filesystem>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database.hpp>
 
 #define TEST_NAME \

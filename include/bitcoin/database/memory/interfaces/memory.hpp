@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_MEMORY_INTERFACES_MEMORY_HPP
 
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {

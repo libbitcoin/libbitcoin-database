@@ -1,0 +1,111 @@
+/**
+ * Copyright (c) 2011-2025 libbitcoin developers (see AUTHORS)
+ *
+ * This file is part of libbitcoin.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#ifndef LIBBITCOIN_DATABASE_QUERY_ESTIMATE_IPP
+#define LIBBITCOIN_DATABASE_QUERY_ESTIMATE_IPP
+
+#include <atomic>
+#include <algorithm>
+#include <iterator>
+#include <memory>
+#include <numeric>
+#include <utility>
+#include <bitcoin/database/define.hpp>
+
+namespace libbitcoin {
+namespace database {
+    
+// fee estimate
+// ----------------------------------------------------------------------------
+
+// protected
+TEMPLATE
+bool CLASS::get_block_fees(fee_rates& out,
+    const header_link& link) const NOEXCEPT
+{
+    out.clear();
+    const auto block = get_block(link, false);
+    if (!block)
+        return false;
+
+    block->populate();
+    if (!populate_without_metadata(*block))
+        return false;
+
+    const auto& txs = *block->transactions_ptr();
+    if (txs.empty())
+        return false;
+
+    out.reserve(txs.size());
+    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+        out.emplace_back((*tx)->virtual_size(), (*tx)->fee());
+
+    return true;
+}
+
+// public
+TEMPLATE
+bool CLASS::get_block_fees(std::atomic_bool& cancel, fee_rate_sets& out,
+    size_t top, size_t count) const NOEXCEPT
+{
+    out.clear();
+    if (is_zero(count))
+        return true;
+
+    if (top > get_top_confirmed())
+        return false;
+
+    const auto start = top - sub1(count);
+    if (system::is_subtract_overflow(top, sub1(count)))
+        return false;
+
+    out.resize(count);
+    std::vector<size_t> offsets(count);
+    std::iota(offsets.begin(), offsets.end(), zero);
+
+    std::atomic_bool failure{};
+    constexpr auto relaxed = std::memory_order_relaxed;
+    std::for_each(poolstl::execution::par, offsets.begin(), offsets.end(),
+        [&](const size_t& offset) NOEXCEPT
+        {
+            if (failure.load(relaxed))
+                return;
+
+            if (cancel.load(relaxed))
+            {
+                failure.store(true, relaxed);
+                return;
+            }
+
+            const auto link = to_confirmed(start + offset);
+            if (!get_block_fees(out.at(offset), link))
+            {
+                failure.store(false, relaxed);
+                return;
+            }
+        });
+
+    const auto failed = failure.load(relaxed);
+    if (failed) out.clear();
+    return failed;
+}
+
+} // namespace database
+} // namespace libbitcoin
+
+#endif

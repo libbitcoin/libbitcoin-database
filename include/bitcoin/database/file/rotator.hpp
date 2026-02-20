@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <filesystem>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/file/utilities.hpp>
 

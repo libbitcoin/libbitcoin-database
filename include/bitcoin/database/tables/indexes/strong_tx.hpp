@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_STRONG_TX_HPP
 #define LIBBITCOIN_DATABASE_TABLES_INDEXES_STRONG_TX_HPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/tables/schema.hpp>

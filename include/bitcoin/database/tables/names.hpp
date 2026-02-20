@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_NAMES_HPP
 #define LIBBITCOIN_DATABASE_TABLES_NAMES_HPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {

@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_MANAGER_IPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_MANAGER_IPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {

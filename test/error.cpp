@@ -713,7 +713,52 @@ BOOST_AUTO_TEST_CASE(error_t__code__txs_txs_put__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "txs_txs_put");
 }
 
-// optional
+// services
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_found__true_expected_message)
+{
+    constexpr auto value = error::not_found;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not_found");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__empty_block__true_expected_message)
+{
+    constexpr auto value = error::empty_block;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "empty_block");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__query_canceled__true_expected_message)
+{
+    constexpr auto value = error::query_canceled;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "query_canceled");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__invalid_argument__true_expected_message)
+{
+    constexpr auto value = error::invalid_argument;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "invalid_argument");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__missing_prevouts__true_expected_message)
+{
+    constexpr auto value = error::missing_prevouts;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "missing_prevouts");
+}
 
 BOOST_AUTO_TEST_CASE(error_t__code__merkle_proof__true_expected_message)
 {
@@ -740,24 +785,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__merkle_hashes__true_expected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "merkle_hashes");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__merkle_arguments__true_expected_message)
-{
-    constexpr auto value = error::merkle_arguments;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "merkle_arguments");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__merkle_not_found__true_expected_message)
-{
-    constexpr auto value = error::merkle_not_found;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "merkle_not_found");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

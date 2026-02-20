@@ -152,15 +152,16 @@
     <ClCompile Include="..\..\..\..\test\query\confirm.cpp" />
     <ClCompile Include="..\..\..\..\test\query\consensus.cpp" />
     <ClCompile Include="..\..\..\..\test\query\context.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\estimate.cpp" />
     <ClCompile Include="..\..\..\..\test\query\extent.cpp" />
     <ClCompile Include="..\..\..\..\test\query\height.cpp">
       <ObjectFileName>$(IntDir)test_query_height.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\initialize.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\merkle.cpp" />
     <ClCompile Include="..\..\..\..\test\query\network.cpp" />
     <ClCompile Include="..\..\..\..\test\query\objects.cpp" />
     <ClCompile Include="..\..\..\..\test\query\optional.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\services.cpp" />
     <ClCompile Include="..\..\..\..\test\query\translate.cpp" />
     <ClCompile Include="..\..\..\..\test\query\validate.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />

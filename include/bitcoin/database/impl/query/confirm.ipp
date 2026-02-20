@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_QUERY_CONFIRM_IPP
 
 #include <algorithm>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
 

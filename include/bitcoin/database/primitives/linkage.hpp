@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_LINKAGE_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_LINKAGE_HPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {

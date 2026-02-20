@@ -21,7 +21,6 @@
 
 #include <atomic>
 #include <shared_mutex>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 

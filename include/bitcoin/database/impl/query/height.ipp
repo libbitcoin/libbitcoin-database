@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <ranges>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -382,8 +381,6 @@ bool CLASS::pop_confirmed() NOEXCEPT
     if (!set_strong(link, txs.number, txs.coinbase_fk, false))
         return false;
 
-    // Truncate cannot fail for disk full.
-    // This truncate assumes no concurrent writes to the table.
     ///////////////////////////////////////////////////////////////////////////
     std::unique_lock interlock{ confirmed_reorganization_mutex_ };
     return store_.confirmed.truncate(top);

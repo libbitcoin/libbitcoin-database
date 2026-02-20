@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_TYPES_HPP
 
 #include <set>
-#include <utility>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 
@@ -47,14 +46,17 @@ using point_links = std::vector<point_link::integer>;
 using two_counts = std::pair<size_t, size_t>;
 using point_key = table::point::key;
 
-struct header_state{ header_link link; code ec; };
-using header_states = std::vector<header_state>;
-
-// TODO: define a system::chain::inpoint with added state.
 using inpoint = system::chain::point;
 using inpoints = std::set<inpoint>;
 using outpoint = system::chain::outpoint;
 using outpoints = std::set<outpoint>;
+
+struct header_state { header_link link; code ec; };
+using header_states = std::vector<header_state>;
+
+struct fee_rate { size_t bytes{}; uint64_t fee{}; };
+using fee_rates = std::vector<fee_rate>;
+using fee_rate_sets = std::vector<fee_rates>;
 
 } // namespace database
 } // namespace libbitcoin

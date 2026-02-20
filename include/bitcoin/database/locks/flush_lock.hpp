@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_LOCKS_FLUSH_LOCK_HPP
 
 #include <filesystem>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/locks/file_lock.hpp>
 

@@ -26,7 +26,6 @@
 #include <sys/types.h>
 #include <filesystem>
 #include <ios>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
 

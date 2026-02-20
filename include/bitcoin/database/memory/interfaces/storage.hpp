@@ -20,8 +20,6 @@
 #define LIBBITCOIN_DATABASE_MEMORY_INTERFACES_STORAGE_HPP
 
 #include <filesystem>
-#include <bitcoin/system.hpp>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 

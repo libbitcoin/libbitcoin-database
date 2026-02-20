@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_POINT_HPP
 
 #include <algorithm>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>

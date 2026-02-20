@@ -16,13 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_SERVICES_IPP
-#define LIBBITCOIN_DATABASE_QUERY_SERVICES_IPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_MERKLE_IPP
+#define LIBBITCOIN_DATABASE_QUERY_MERKLE_IPP
 
 #include <algorithm>
 #include <ranges>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -145,10 +144,10 @@ code CLASS::get_merkle_root_and_proof(hash_digest& root, hashes& proof,
     size_t target, size_t waypoint) const NOEXCEPT
 {
     if (target > waypoint)
-        return error::merkle_arguments;
+        return error::invalid_argument;
 
     if (waypoint > get_top_confirmed())
-        return error::merkle_not_found;
+        return error::not_found;
 
     hashes tree{};
     if (const auto ec = get_merkle_tree(tree, waypoint))
@@ -160,6 +159,16 @@ code CLASS::get_merkle_root_and_proof(hash_digest& root, hashes& proof,
 
     root = system::merkle_root(std::move(tree));
     return {};
+}
+
+TEMPLATE
+hash_digest CLASS::get_merkle_root(size_t height) const NOEXCEPT
+{
+    hashes tree{};
+    if (const auto ec = get_merkle_tree(tree, height))
+        return {};
+
+    return system::merkle_root(std::move(tree));
 }
 
 } // namespace database

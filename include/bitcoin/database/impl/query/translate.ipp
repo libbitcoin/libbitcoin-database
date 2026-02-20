@@ -24,7 +24,6 @@
 #include <numeric>
 #include <unordered_map>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {

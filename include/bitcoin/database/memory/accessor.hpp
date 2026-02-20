@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_MEMORY_ACCESSOR_HPP
 
 #include <shared_mutex>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 

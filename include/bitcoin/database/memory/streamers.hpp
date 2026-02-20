@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_STREAMERS_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_STREAMERS_HPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 

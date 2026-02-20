@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_QUERY_IPP
 #define LIBBITCOIN_DATABASE_QUERY_QUERY_IPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 
 // Error handling:

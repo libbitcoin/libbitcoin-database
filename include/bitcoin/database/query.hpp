@@ -23,7 +23,6 @@
 #include <mutex>
 #include <optional>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/types.hpp>
 
@@ -402,6 +401,13 @@ public:
     /// Services.
     /// -----------------------------------------------------------------------
 
+    /// Gether fee rate tuples by block or set of blocks.
+    bool get_block_fees(fee_rates& out, const header_link& link) const NOEXCEPT;
+    bool get_block_fees(std::atomic_bool& cancel, fee_rate_sets& out,
+        size_t top, size_t count) const NOEXCEPT;
+
+    /// Merkle computations over the index of confirmed headers.
+    hash_digest get_merkle_root(size_t height) const NOEXCEPT;
     code get_merkle_root_and_proof(hash_digest& root, hashes& proof,
         size_t target, size_t checkpoint) const NOEXCEPT;
 
@@ -723,7 +729,7 @@ protected:
         outpoints& out, const hash_digest& key,
         uint64_t minimum) const NOEXCEPT;
 
-    /// services:merkle
+    /// merkle
     /// -----------------------------------------------------------------------
 
     static void merge_merkle(hashes& branch, hashes&& hashes,
@@ -783,7 +789,8 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/network.ipp>
 #include <bitcoin/database/impl/query/objects.ipp>
 #include <bitcoin/database/impl/query/optional.ipp>
-#include <bitcoin/database/impl/query/services.ipp>
+#include <bitcoin/database/impl/query/merkle.ipp>
+#include <bitcoin/database/impl/query/estimate.ipp>
 #include <bitcoin/database/impl/query/translate.ipp>
 #include <bitcoin/database/impl/query/validate.ipp>
 

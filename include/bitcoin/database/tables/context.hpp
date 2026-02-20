@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_CONTEXT_HPP
 #define LIBBITCOIN_DATABASE_CONTEXT_HPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/tables/schema.hpp>

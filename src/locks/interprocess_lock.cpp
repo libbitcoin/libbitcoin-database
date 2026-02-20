@@ -19,7 +19,6 @@
 #include <bitcoin/database/locks/interprocess_lock.hpp>
 
 #include <filesystem>
-#include <bitcoin/system.hpp>
 #include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/locks/file_lock.hpp>

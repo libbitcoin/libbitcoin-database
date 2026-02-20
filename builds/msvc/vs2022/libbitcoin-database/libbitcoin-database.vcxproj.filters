@@ -346,6 +346,9 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\context.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\estimate.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\extent.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
@@ -353,6 +356,9 @@
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\initialize.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\merkle.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\network.ipp">
@@ -365,9 +371,6 @@
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\query.ipp">
-      <Filter>include\bitcoin\database\impl\query</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\services.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\translate.ipp">
