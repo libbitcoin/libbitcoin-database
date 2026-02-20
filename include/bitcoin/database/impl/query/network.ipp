@@ -133,7 +133,6 @@ bool CLASS::get_ancestry(header_links& ancestry, const header_link& descendant,
     auto link = descendant;
 
     // Ancestry navigation ensures continuity without locks.
-    // If count is zero then not even descendant is pushed.
     // link terminal if previous was genesis (avoided by count <= height).
     for (auto& ancestor: ancestry)
         link = to_parent((ancestor = link));
