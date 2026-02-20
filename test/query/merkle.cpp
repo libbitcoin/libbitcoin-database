@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_less_than_w
     BOOST_REQUIRE_EQUAL(root, expected);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_greater_than_waypoint__error_merkle_arguments)
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_greater_than_waypoint__error_invalid_argument)
 {
     settings settings{};
     settings.interval_depth = 2;
@@ -466,11 +466,11 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_greater_tha
 
     hashes proof{};
     hash_digest root{};
-    BOOST_REQUIRE_EQUAL(query.get_merkle_root_and_proof(root, proof, 5u, 3u), error::merkle_arguments);
+    BOOST_REQUIRE_EQUAL(query.get_merkle_root_and_proof(root, proof, 5u, 3u), error::invalid_argument);
     BOOST_REQUIRE_EQUAL(query.get_merkle_root(3), system::null_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__waypoint_beyond_top__error_merkle_not_found)
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__waypoint_beyond_top__error_not_found)
 {
     settings settings{};
     settings.interval_depth = 2;
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__waypoint_beyond_to
 
     hashes proof{};
     hash_digest root{};
-    BOOST_REQUIRE_EQUAL(query.get_merkle_root_and_proof(root, proof, 0u, 100u), error::merkle_not_found);
+    BOOST_REQUIRE_EQUAL(query.get_merkle_root_and_proof(root, proof, 0u, 100u), error::not_found);
     BOOST_REQUIRE_EQUAL(query.get_merkle_root(100), system::null_hash);
 }
 

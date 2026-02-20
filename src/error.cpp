@@ -138,12 +138,15 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { txs_confirm, "txs_confirm" },
     { txs_txs_put, "txs_txs_put" },
 
-    // optional
+    // services
+    { not_found, "not_found" },
+    { empty_block, "empty_block" },
+    { query_canceled, "query_canceled" },
+    { invalid_argument, "invalid_argument" },
+    { missing_prevouts, "missing_prevouts" },
     { merkle_proof, "merkle_proof" },
     { merkle_interval, "merkle_interval" },
-    { merkle_hashes, "merkle_hashes" },
-    { merkle_arguments, "merkle_arguments" },
-    { merkle_not_found, "merkle_not_found" }
+    { merkle_hashes, "merkle_hashes" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

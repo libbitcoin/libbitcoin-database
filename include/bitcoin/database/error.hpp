@@ -145,12 +145,15 @@ enum error_t : uint8_t
     txs_confirm,
     txs_txs_put,
 
-    /// optional
+    /// services
+    not_found,
+    empty_block,
+    query_canceled,
+    invalid_argument,
+    missing_prevouts,
     merkle_proof,
     merkle_interval,
-    merkle_hashes,
-    merkle_arguments,
-    merkle_not_found
+    merkle_hashes
 };
 
 // No current need for error_code equivalence mapping.

@@ -144,10 +144,10 @@ code CLASS::get_merkle_root_and_proof(hash_digest& root, hashes& proof,
     size_t target, size_t waypoint) const NOEXCEPT
 {
     if (target > waypoint)
-        return error::merkle_arguments;
+        return error::invalid_argument;
 
     if (waypoint > get_top_confirmed())
-        return error::merkle_not_found;
+        return error::not_found;
 
     hashes tree{};
     if (const auto ec = get_merkle_tree(tree, waypoint))
