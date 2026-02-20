@@ -401,18 +401,10 @@ public:
     /// Services.
     /// -----------------------------------------------------------------------
 
-    /// Fee estimation in satoshis / transaction virtual size.
-    /// Pass zero to target next block for confirmation, range:0..1007.
-    static uint64_t estimate_fee(const fee::accumulator& fees,
-        size_t target, fee::mode mode=fee::mode::basic) NOEXCEPT;
-
-    /// Create and maintain a fee estimation accumulator.
-    static bool create_fees(fee::accumulator& out,
-        const fee_state_sets& blocks) NOEXCEPT;
-    static bool pop_fees(fee::accumulator& fees,
-        const fee_states& block) NOEXCEPT;
-    static bool push_fees(fee::accumulator& fees,
-        const fee_states& block) NOEXCEPT;
+    /// Gether fee rate tuples by block or set of blocks.
+    bool get_block_fees(fee_rates& out, const header_link& link) const NOEXCEPT;
+    bool get_block_fees(std::atomic_bool& cancel, fee_rate_sets& out,
+        size_t top, size_t count) const NOEXCEPT;
 
     /// Merkle computations over the index of confirmed headers.
     hash_digest get_merkle_root(size_t height) const NOEXCEPT;
@@ -736,30 +728,6 @@ protected:
     code get_minimum_unspent_outputs_turbo(std::atomic_bool& cancel,
         outpoints& out, const hash_digest& key,
         uint64_t minimum) const NOEXCEPT;
-
-    /// estimate
-    /// -----------------------------------------------------------------------
-
-    // std::pow (replace static const with constexpr in c++23).
-    static inline double decay_rate() NOEXCEPT
-    {
-        return std::pow(0.5, 1.0 / fee::size::count);
-    }
-
-    /// Update fee accumulation based on block organization.
-    static double to_scale_term(size_t age) NOEXCEPT;
-    static double to_scale_factor(bool push) NOEXCEPT;
-    static void decay_fees(auto& buckets, double factor) NOEXCEPT;
-    static void decay_fees(fee::accumulator& fees, bool push) NOEXCEPT;
-    static uint64_t compute_fee(const fee::accumulator& fees, size_t target,
-        double measure, bool use_markov=false) NOEXCEPT;
-    static bool update_fees(fee::accumulator& fees, const fee_states& states,
-        size_t height, bool push) NOEXCEPT;
-
-    code get_block_fees(fee_states& out,
-        const header_link& link) const NOEXCEPT;
-    code get_block_fees(std::atomic_bool& cancel, fee_state_sets& out,
-        size_t top, size_t count) const NOEXCEPT;
 
     /// merkle
     /// -----------------------------------------------------------------------

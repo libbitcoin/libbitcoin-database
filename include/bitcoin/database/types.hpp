@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_TYPES_HPP
 
 #include <set>
-#include <utility>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 
@@ -55,75 +54,9 @@ using outpoints = std::set<outpoint>;
 struct header_state { header_link link; code ec; };
 using header_states = std::vector<header_state>;
 
-struct fee_state { size_t bytes{}; uint64_t fee{}; };
-using fee_states = std::vector<fee_state>;
-using fee_state_sets = std::vector<fee_states>;
-
-namespace fee
-{
-    using atomic_size = std::atomic<size_t>;
-
-    /// Estimation modes.
-    enum class mode
-    {
-        basic,
-        markov,
-        economical,
-        conservative 
-    };
-
-    /// Estimation confidences.
-    namespace confidence
-    {
-        static constexpr double low = 0.60;
-        static constexpr double mid = 0.85;
-        static constexpr double high = 0.95;
-    }
-
-    /// Bucket count sizing parameters.
-    namespace horizon
-    {
-        static constexpr size_t small  = 12;
-        static constexpr size_t medium = 48;
-        static constexpr size_t large  = 1008;
-    }
-
-    /// Bucket count sizing parameters.
-    namespace size
-    {
-        ////static constexpr double min  = 1.0;
-        static constexpr double min = 0.1;
-        static constexpr double max  = 100'000.0;
-        static constexpr double step = 1.05;
-
-        /// This is derived from min/max/step above.
-        ////static constexpr size_t count = 236;
-        static constexpr size_t count = 283;
-    }
-
-    /// Accumulator (persistent, decay-weighted counters).
-    struct accumulator
-    {
-        template <size_t Depth>
-        struct bucket
-        {
-            /// Total scaled txs in bucket.
-            atomic_size total{};
-
-            /// confirmed[n]: scaled txs confirmed in > n blocks.
-            std::array<atomic_size, Depth> confirmed;
-        };
-
-        /// Current block height of accumulated state.
-        size_t top_height{};
-
-        /// Accumulated scaled fee in decayed buckets by horizon.
-        /// Array count is the half life of the decay it implies.
-        std::array<bucket<horizon::small>,  size::count> small{};
-        std::array<bucket<horizon::medium>, size::count> medium{};
-        std::array<bucket<horizon::large>,  size::count> large{};
-    };
-} // namespace fee
+struct fee_rate { size_t bytes{}; uint64_t fee{}; };
+using fee_rates = std::vector<fee_rate>;
+using fee_rate_sets = std::vector<fee_rates>;
 
 } // namespace database
 } // namespace libbitcoin
