@@ -522,6 +522,115 @@ const block block_spend_internal_2b
         }
     }
 };
+const block block_missing_prevout_2b
+{
+    header
+    {
+        0x31323334,         // version
+        block1b.hash(),     // previous_block_hash
+        system::one_hash,   // merkle_root
+        0x41424344,         // timestamp
+        0x51525354,         // bits
+        0x61626364          // nonce
+    },
+    transactions
+    {
+        tx2b,
+        transaction
+        {
+            0xb2,
+            inputs
+            {
+                input
+                {
+                    // missing prevout index.
+                    point{ tx2b.hash(false), 0x01 },
+                    script{ { { opcode::checkmultisig }, { opcode::size } } },
+                    witness{},
+                    0xb2
+                }
+            },
+            outputs
+            {
+                output
+                {
+                    0xb0, // fee will be 0x01
+                    script{ { { opcode::pick } } }
+                }
+            },
+            0xb2
+        }
+    }
+};
+const block block_valid_spend_internal_2b
+{
+    header
+    {
+        0x31323334,         // version
+        block1b.hash(),     // previous_block_hash
+        system::one_hash,   // merkle_root
+        0x41424344,         // timestamp
+        0x51525354,         // bits
+        0x61626364          // nonce
+    },
+    transactions
+    {
+        tx2b,
+        transaction
+        {
+            0xb2,
+            inputs
+            {
+                input
+                {
+                    point{ tx2b.hash(false), 0x00 },
+                    script{ { { opcode::checkmultisig }, { opcode::size } } },
+                    witness{},
+                    0xb2
+                }
+            },
+            outputs
+            {
+                output
+                {
+                    0xb0, // fee will be 0x01
+                    script{ { { opcode::pick } } }
+                }
+            },
+            0xb2
+        },
+        transaction
+        {
+            0xb2,
+            inputs
+            {
+                input
+                {
+                    point{ block1b.transactions_ptr()->front()->hash(false), 0x00 },
+                    script{ { { opcode::checkmultisig }, { opcode::size } } },
+                    witness{},
+                    0xb2
+                },
+                input
+                {
+                    point{ block1b.transactions_ptr()->front()->hash(false), 0x01 },
+                    script{ { { opcode::checkmultisig } } },
+                    witness{},
+                    0xb2
+                }
+            },
+            outputs
+            {
+                output
+                {
+                    0xb2, // fee will be 0xb1 + 0xb1 - 0xb2 = 0xb0
+                    script{ { { opcode::pick }, { opcode::roll }, { opcode::pick } } }
+                }
+            },
+            0xb2
+        }
+    }
+};
 
 } // namespace test
 
