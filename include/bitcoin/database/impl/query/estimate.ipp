@@ -30,10 +30,6 @@
 namespace libbitcoin {
 namespace database {
     
-// fee estimate
-// ----------------------------------------------------------------------------
-
-// protected
 TEMPLATE
 bool CLASS::get_block_fees(fee_rates& out,
     const header_link& link) const NOEXCEPT
@@ -58,7 +54,6 @@ bool CLASS::get_block_fees(fee_rates& out,
     return true;
 }
 
-// public
 TEMPLATE
 bool CLASS::get_block_fees(std::atomic_bool& cancel, fee_rate_sets& out,
     size_t top, size_t count) const NOEXCEPT
@@ -78,31 +73,22 @@ bool CLASS::get_block_fees(std::atomic_bool& cancel, fee_rate_sets& out,
     std::vector<size_t> offsets(count);
     std::iota(offsets.begin(), offsets.end(), zero);
 
-    std::atomic_bool failure{};
+    std::atomic_bool fail{};
     constexpr auto relaxed = std::memory_order_relaxed;
     std::for_each(poolstl::execution::par, offsets.begin(), offsets.end(),
         [&](const size_t& offset) NOEXCEPT
         {
-            if (failure.load(relaxed))
+            if (fail.load(relaxed))
                 return;
 
-            if (cancel.load(relaxed))
-            {
-                failure.store(true, relaxed);
-                return;
-            }
-
-            const auto link = to_confirmed(start + offset);
-            if (!get_block_fees(out.at(offset), link))
-            {
-                failure.store(false, relaxed);
-                return;
-            }
+            if (cancel.load(relaxed) || !get_block_fees(out.at(offset),
+                to_confirmed(start + offset)))
+                fail.store(true, relaxed);
         });
 
-    const auto failed = failure.load(relaxed);
+    const auto failed = fail.load(relaxed);
     if (failed) out.clear();
-    return failed;
+    return !failed;
 }
 
 } // namespace database
