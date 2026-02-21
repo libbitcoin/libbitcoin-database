@@ -30,10 +30,18 @@
 namespace libbitcoin {
 namespace database {
     
-// fee estimate
-// ----------------------------------------------------------------------------
+TEMPLATE
+bool CLASS::get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT
+{
+    const auto tx = get_transaction(link, false);
+    if (!tx || !populate_without_metadata(*tx))
+        return false;
 
-// protected
+    out.bytes = tx->virtual_size();
+    out.fee = tx->fee();
+    return true;
+}
+    
 TEMPLATE
 bool CLASS::get_block_fees(fee_rates& out,
     const header_link& link) const NOEXCEPT
@@ -58,9 +66,8 @@ bool CLASS::get_block_fees(fee_rates& out,
     return true;
 }
 
-// public
 TEMPLATE
-bool CLASS::get_block_fees(std::atomic_bool& cancel, fee_rate_sets& out,
+bool CLASS::get_branch_fees(std::atomic_bool& cancel, fee_rate_sets& out,
     size_t top, size_t count) const NOEXCEPT
 {
     out.clear();
@@ -78,31 +85,22 @@ bool CLASS::get_block_fees(std::atomic_bool& cancel, fee_rate_sets& out,
     std::vector<size_t> offsets(count);
     std::iota(offsets.begin(), offsets.end(), zero);
 
-    std::atomic_bool failure{};
+    std::atomic_bool fail{};
     constexpr auto relaxed = std::memory_order_relaxed;
     std::for_each(poolstl::execution::par, offsets.begin(), offsets.end(),
         [&](const size_t& offset) NOEXCEPT
         {
-            if (failure.load(relaxed))
+            if (fail.load(relaxed))
                 return;
 
-            if (cancel.load(relaxed))
-            {
-                failure.store(true, relaxed);
-                return;
-            }
-
-            const auto link = to_confirmed(start + offset);
-            if (!get_block_fees(out.at(offset), link))
-            {
-                failure.store(false, relaxed);
-                return;
-            }
+            if (cancel.load(relaxed) || !get_block_fees(out.at(offset),
+                to_confirmed(start + offset)))
+                fail.store(true, relaxed);
         });
 
-    const auto failed = failure.load(relaxed);
+    const auto failed = fail.load(relaxed);
     if (failed) out.clear();
-    return failed;
+    return !failed;
 }
 
 } // namespace database

@@ -401,9 +401,13 @@ public:
     /// Services.
     /// -----------------------------------------------------------------------
 
-    /// Gether fee rate tuples by block or set of blocks.
+    uint64_t get_tx_fee(const tx_link& link) const NOEXCEPT;
+    uint64_t get_block_fee(const header_link& link) const NOEXCEPT;
+
+    /// Gether fee rate tuples by tx, block or branch.
+    bool get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT;
     bool get_block_fees(fee_rates& out, const header_link& link) const NOEXCEPT;
-    bool get_block_fees(std::atomic_bool& cancel, fee_rate_sets& out,
+    bool get_branch_fees(std::atomic_bool& cancel, fee_rate_sets& out,
         size_t top, size_t count) const NOEXCEPT;
 
     /// Merkle computations over the index of confirmed headers.
@@ -476,8 +480,6 @@ public:
 
     /// States.
     bool is_validateable(size_t height) const NOEXCEPT;
-    uint64_t get_tx_fee(const tx_link& link) const NOEXCEPT;
-    uint64_t get_block_fees(const header_link& link) const NOEXCEPT;
     code get_block_state(const header_link& link) const NOEXCEPT;
     code get_header_state(const header_link& link) const NOEXCEPT;
     code get_tx_state(const tx_link& link, const context& ctx) const NOEXCEPT;
