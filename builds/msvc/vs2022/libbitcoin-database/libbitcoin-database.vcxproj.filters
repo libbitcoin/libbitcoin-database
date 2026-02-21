@@ -346,10 +346,10 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\context.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\estimate.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\extent.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\extent.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\fees.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\height.ipp">

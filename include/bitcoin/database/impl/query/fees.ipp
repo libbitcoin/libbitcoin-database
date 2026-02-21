@@ -29,7 +29,27 @@
 
 namespace libbitcoin {
 namespace database {
-    
+
+// TODO: optimize.
+
+TEMPLATE
+uint64_t CLASS::get_tx_fee(const tx_link& link) const NOEXCEPT
+{
+    const auto tx = get_transaction(link, false);
+    if (is_coinbase(link))
+        return {};
+
+    return tx && populate_without_metadata(*tx) ? tx->fee() : max_uint64;
+}
+
+TEMPLATE
+uint64_t CLASS::get_block_fee(const header_link& link) const NOEXCEPT
+{
+    const auto block = get_block(link, false);
+    return block && populate_without_metadata(*block) ? block->fees() :
+        max_uint64;
+}
+
 TEMPLATE
 bool CLASS::get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT
 {

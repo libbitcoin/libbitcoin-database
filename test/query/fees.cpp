@@ -20,12 +20,19 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_estimate_tests, test::directory_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_fees__tests, test::directory_setup_fixture)
 
 // nop event handler.
 ////const auto events_handler = [](auto, auto) {};
 
-BOOST_AUTO_TEST_CASE(query_estimate_test)
+// get_tx_fee
+// get_block_fee
+
+// get_tx_fees
+// get_block_fees
+// get_branch_fees
+
+BOOST_AUTO_TEST_CASE(query_fee)
 {
     BOOST_REQUIRE(true);
 }

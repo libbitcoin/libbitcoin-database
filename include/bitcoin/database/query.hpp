@@ -398,17 +398,21 @@ public:
     bool populate_without_metadata(const block& block) const NOEXCEPT;
     bool populate_without_metadata(const transaction& tx) const NOEXCEPT;
 
-    /// Services.
+    /// Fees.
     /// -----------------------------------------------------------------------
 
+    /// Total fee value by tx or block.
     uint64_t get_tx_fee(const tx_link& link) const NOEXCEPT;
     uint64_t get_block_fee(const header_link& link) const NOEXCEPT;
 
-    /// Gether fee rate tuples by tx, block or branch.
+    /// Fee rate tuples by tx, block or branch.
     bool get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT;
     bool get_block_fees(fee_rates& out, const header_link& link) const NOEXCEPT;
     bool get_branch_fees(std::atomic_bool& cancel, fee_rate_sets& out,
         size_t top, size_t count) const NOEXCEPT;
+
+    /// Merkle.
+    /// -----------------------------------------------------------------------
 
     /// Merkle computations over the index of confirmed headers.
     hash_digest get_merkle_root(size_t height) const NOEXCEPT;
@@ -786,13 +790,13 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/consensus.ipp>
 #include <bitcoin/database/impl/query/context.ipp>
 #include <bitcoin/database/impl/query/extent.ipp>
+#include <bitcoin/database/impl/query/fees.ipp>
 #include <bitcoin/database/impl/query/height.ipp>
 #include <bitcoin/database/impl/query/initialize.ipp>
 #include <bitcoin/database/impl/query/network.ipp>
 #include <bitcoin/database/impl/query/objects.ipp>
 #include <bitcoin/database/impl/query/optional.ipp>
 #include <bitcoin/database/impl/query/merkle.ipp>
-#include <bitcoin/database/impl/query/estimate.ipp>
 #include <bitcoin/database/impl/query/translate.ipp>
 #include <bitcoin/database/impl/query/validate.ipp>
 
