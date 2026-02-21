@@ -141,7 +141,7 @@ code CLASS::get_block_state(const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-uint64_t CLASS::get_block_fees(const header_link& link) const NOEXCEPT
+uint64_t CLASS::get_block_fee(const header_link& link) const NOEXCEPT
 {
     // TODO: optimize.
     const auto block = get_block(link, false);

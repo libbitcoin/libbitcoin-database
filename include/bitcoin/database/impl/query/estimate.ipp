@@ -31,6 +31,18 @@ namespace libbitcoin {
 namespace database {
     
 TEMPLATE
+bool CLASS::get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT
+{
+    const auto tx = get_transaction(link, false);
+    if (!tx || !populate_without_metadata(*tx))
+        return false;
+
+    out.bytes = tx->virtual_size();
+    out.fee = tx->fee();
+    return true;
+}
+    
+TEMPLATE
 bool CLASS::get_block_fees(fee_rates& out,
     const header_link& link) const NOEXCEPT
 {
@@ -55,7 +67,7 @@ bool CLASS::get_block_fees(fee_rates& out,
 }
 
 TEMPLATE
-bool CLASS::get_block_fees(std::atomic_bool& cancel, fee_rate_sets& out,
+bool CLASS::get_branch_fees(std::atomic_bool& cancel, fee_rate_sets& out,
     size_t top, size_t count) const NOEXCEPT
 {
     out.clear();
