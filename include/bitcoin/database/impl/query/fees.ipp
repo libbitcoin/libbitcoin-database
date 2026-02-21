@@ -88,17 +88,17 @@ bool CLASS::get_block_fees(fee_rates& out,
 
 TEMPLATE
 bool CLASS::get_branch_fees(std::atomic_bool& cancel, fee_rate_sets& out,
-    size_t top, size_t count) const NOEXCEPT
+    size_t start, size_t count) const NOEXCEPT
 {
     out.clear();
     if (is_zero(count))
         return true;
 
-    if (top > get_top_confirmed())
+    if (system::is_add_overflow(start, sub1(count)))
         return false;
 
-    const auto start = top - sub1(count);
-    if (system::is_subtract_overflow(top, sub1(count)))
+    const auto last = start + sub1(count);
+    if (last > get_top_confirmed())
         return false;
 
     out.resize(count);

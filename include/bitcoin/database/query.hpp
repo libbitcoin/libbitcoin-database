@@ -409,7 +409,7 @@ public:
     bool get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT;
     bool get_block_fees(fee_rates& out, const header_link& link) const NOEXCEPT;
     bool get_branch_fees(std::atomic_bool& cancel, fee_rate_sets& out,
-        size_t top, size_t count) const NOEXCEPT;
+        size_t start, size_t count) const NOEXCEPT;
 
     /// Merkle.
     /// -----------------------------------------------------------------------
