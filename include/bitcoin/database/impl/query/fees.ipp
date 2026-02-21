@@ -36,10 +36,13 @@ TEMPLATE
 uint64_t CLASS::get_tx_fee(const tx_link& link) const NOEXCEPT
 {
     const auto tx = get_transaction(link, false);
-    if (is_coinbase(link))
-        return {};
+    if (!tx)
+        return max_uint64;
 
-    return tx && populate_without_metadata(*tx) ? tx->fee() : max_uint64;
+    if (tx->is_coinbase())
+        return zero;
+
+    return populate_without_metadata(*tx) ? tx->fee() : max_uint64;
 }
 
 TEMPLATE
@@ -54,7 +57,7 @@ TEMPLATE
 bool CLASS::get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT
 {
     const auto tx = get_transaction(link, false);
-    if (!tx || !populate_without_metadata(*tx))
+    if (!tx || tx->is_coinbase() || !populate_without_metadata(*tx))
         return false;
 
     out.bytes = tx->virtual_size();
