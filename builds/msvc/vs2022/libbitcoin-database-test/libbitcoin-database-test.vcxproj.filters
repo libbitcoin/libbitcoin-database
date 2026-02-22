@@ -123,10 +123,10 @@
     <ClCompile Include="..\..\..\..\test\query\context.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\estimate.cpp">
+    <ClCompile Include="..\..\..\..\test\query\extent.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\extent.cpp">
+    <ClCompile Include="..\..\..\..\test\query\fees.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\height.cpp">

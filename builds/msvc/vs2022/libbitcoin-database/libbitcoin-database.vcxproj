@@ -219,8 +219,8 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\confirm.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\context.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\estimate.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\extent.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\fees.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\height.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\initialize.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\merkle.ipp" />
