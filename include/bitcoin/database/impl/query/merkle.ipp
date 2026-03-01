@@ -76,20 +76,33 @@ CLASS::hash_option CLASS::get_confirmed_interval(size_t height) const NOEXCEPT
 
 // static/protected
 TEMPLATE
-void CLASS::merge_merkle(hashes& to, hashes&& from, size_t first) NOEXCEPT
+void CLASS::merge_merkle(hashes& path, hashes&& leaves, size_t first,
+    size_t lift) NOEXCEPT
 {
-    // From is either even or has one additional element of reserved space.
-    if (!is_one(from.size()) && is_odd(from.size()))
-        from.push_back(from.back());
-
-    for (const auto& row: block::merkle_branch(first, from.size()))
+    auto size = leaves.size();
+    if (!is_one(size) && is_odd(size))
     {
-        if (const auto start = row.sibling * row.width; start < from.size())
+        // leaves is either even or has +1 element of reserved space.
+        leaves.push_back(leaves.back());
+        ++size;
+    }
+
+    for (const auto& row: block::merkle_branch(first, size + lift))
+    {
+        hashes subroot{};
+        if (const auto leaf = row.sibling * row.width; leaf < size)
         {
-            const auto count = std::min(row.width, from.size() - start);
-            auto it = std::make_move_iterator(std::next(from.begin(), start));
-            to.push_back(partial_subroot({ it, std::next(it, count) }, row.width));
+            const auto count = std::min(row.width, size - leaf);
+            const auto next = std::next(leaves.begin(), leaf);
+            const auto it = std::make_move_iterator(next);
+            subroot = { it, std::next(it, count) };
         }
+        else
+        {
+            subroot = { std::move(leaves.back()) };
+        }
+
+        path.push_back(partial_subroot(std::move(subroot), row.width));
     }
 }
 
@@ -102,15 +115,22 @@ code CLASS::get_merkle_proof(hashes& proof, hashes roots, size_t target,
     BC_ASSERT(!is_zero(span));
 
     const auto first = (target / span) * span;
-    const auto last = std::min(sub1(first + span), waypoint);
-    auto other = get_confirmed_hashes(first, add1(last - first));
-    if (other.empty())
+    const auto close = sub1(first + span);
+    const auto last  = std::min(waypoint, close);
+    const auto size  = add1(last - first);
+    auto parts = get_confirmed_hashes(first, size);
+    if (is_zero(parts.size()))
         return error::merkle_proof;
 
+    const auto count = parts.size();
+    const auto pad   = to_int<size_t>(!is_one(count) && is_odd(count));
+    const auto lift  = is_zero(first) ? zero : (span - (count + pad));
+
     using namespace system;
-    proof.reserve(ceilinged_log2(other.size()) + ceilinged_log2(roots.size()));
-    merge_merkle(proof, std::move(other), target % span);
-    merge_merkle(proof, std::move(roots), target / span);
+    proof.clear();
+    proof.reserve(ceilinged_log2(parts.size()) + ceilinged_log2(roots.size()));
+    merge_merkle(proof, std::move(parts), target % span, lift);
+    merge_merkle(proof, std::move(roots), target / span, zero);
     return error::success;
 }
 
@@ -206,7 +226,6 @@ code CLASS::get_merkle_root_and_proof(hash_digest& root, hashes& proof,
     if (const auto ec = get_merkle_subroots(roots, waypoint))
         return ec;
 
-    proof.clear();
     if (const auto ec = get_merkle_proof(proof, roots, target, waypoint))
         return ec;
 

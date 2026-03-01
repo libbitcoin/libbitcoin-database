@@ -769,8 +769,8 @@ protected:
 
     // merkle related utilities
     static hash_digest partial_subroot(hashes&& tree, size_t span) NOEXCEPT;
-    static void merge_merkle(hashes& to, hashes&& from,
-        size_t first) NOEXCEPT;
+    static void merge_merkle(hashes& path, hashes&& leaves, size_t first,
+        size_t lift) NOEXCEPT;
 
     // merkle related configuration
     size_t interval_depth() const NOEXCEPT;
