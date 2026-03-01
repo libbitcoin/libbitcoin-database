@@ -266,14 +266,14 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__multiple__expected_va
 BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__empty_from__expected)
 {
     hashes to{};
-    merkle_accessor::merge_merkle(to, {}, 0);
+    merkle_accessor::merge_merkle(to, {}, 0, 0);
     BOOST_CHECK(to.empty());
 }
 
 BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__one_hash__empty)
 {
     hashes to{};
-    merkle_accessor::merge_merkle(to, { system::null_hash }, 0);
+    merkle_accessor::merge_merkle(to, { system::null_hash }, 0, 0);
     BOOST_CHECK(to.empty());
 }
 
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__push_merkle__two_leaves_target_zero__expected
         test::block1_hash
     };
 
-    merkle_accessor::merge_merkle(to, std::move(from), 0);
+    merkle_accessor::merge_merkle(to, std::move(from), 0, 0);
     BOOST_CHECK_EQUAL(to.size(), 1u);
     BOOST_CHECK_EQUAL(to[0], test::block1_hash);
 }
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__three_leaves_target_two__expect
         test::block2_hash
     };
 
-    merkle_accessor::merge_merkle(to, std::move(from), 2);
+    merkle_accessor::merge_merkle(to, std::move(from), 2, 0);
     BOOST_CHECK_EQUAL(to.size(), 2u);
     BOOST_CHECK_EQUAL(to[0], test::block2_hash);
     BOOST_CHECK_EQUAL(to[1], root01);
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__four_leaves_target_three__expec
         test::block3_hash
     };
 
-    merkle_accessor::merge_merkle(to, std::move(from), 3);
+    merkle_accessor::merge_merkle(to, std::move(from), 3, 0);
     BOOST_CHECK_EQUAL(to.size(), 2u);
     BOOST_CHECK_EQUAL(to[0], test::block2_hash);
     BOOST_CHECK_EQUAL(to[1], root01);
@@ -522,6 +522,27 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_less_than_w
     BOOST_CHECK_EQUAL(root, root03);
 }
 
+bool setup_eight_block_store(merkle_accessor& query)
+{
+    return query.initialize(test::genesis) &&
+        query.set(test::block1, context{ 0, 1, 0 }, false, false) &&
+        query.set(test::block2, context{ 0, 2, 0 }, false, false) &&
+        query.set(test::block3, context{ 0, 3, 0 }, false, false) &&
+        query.set(test::block4, context{ 0, 4, 0 }, false, false) &&
+        query.set(test::block5, context{ 0, 5, 0 }, false, false) &&
+        query.set(test::block6, context{ 0, 6, 0 }, false, false) &&
+        query.set(test::block7, context{ 0, 7, 0 }, false, false) &&
+        query.set(test::block8, context{ 0, 8, 0 }, false, false) &&
+        query.push_confirmed(query.to_header(test::block1_hash), false) &&
+        query.push_confirmed(query.to_header(test::block2_hash), false) &&
+        query.push_confirmed(query.to_header(test::block3_hash), false) &&
+        query.push_confirmed(query.to_header(test::block4_hash), false) &&
+        query.push_confirmed(query.to_header(test::block5_hash), false) &&
+        query.push_confirmed(query.to_header(test::block6_hash), false) &&
+        query.push_confirmed(query.to_header(test::block7_hash), false) &&
+        query.push_confirmed(query.to_header(test::block8_hash), false);
+}
+
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_0__success)
 {
     settings settings{};
@@ -530,23 +551,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block4, context{ 0, 4, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block5, context{ 0, 5, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block6, context{ 0, 6, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block7, context{ 0, 7, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block8, context{ 0, 8, 0 }, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block4_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block5_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block6_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block7_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block8_hash), false));
+    BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
     BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
@@ -571,7 +576,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
     BOOST_CHECK_EQUAL(proof[1], sub67);
     BOOST_CHECK_EQUAL(proof[2], sub03);
-    BOOST_CHECK_EQUAL(proof[3], sub88); // << FAIL
+    BOOST_CHECK_EQUAL(proof[3], sub88);
 }
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_1__success)
@@ -582,23 +587,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block4, context{ 0, 4, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block5, context{ 0, 5, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block6, context{ 0, 6, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block7, context{ 0, 7, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block8, context{ 0, 8, 0 }, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block4_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block5_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block6_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block7_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block8_hash), false));
+    BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
     BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
@@ -619,7 +608,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
     BOOST_CHECK_EQUAL(proof[1], sub67);
     BOOST_CHECK_EQUAL(proof[2], sub03);
-    BOOST_CHECK_EQUAL(proof[3], sub88); // << FAIL
+    BOOST_CHECK_EQUAL(proof[3], sub88);
 }
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_2__success)
@@ -630,23 +619,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block4, context{ 0, 4, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block5, context{ 0, 5, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block6, context{ 0, 6, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block7, context{ 0, 7, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block8, context{ 0, 8, 0 }, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block4_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block5_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block6_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block7_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block8_hash), false));
+    BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
     BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
@@ -676,23 +649,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block4, context{ 0, 4, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block5, context{ 0, 5, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block6, context{ 0, 6, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block7, context{ 0, 7, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block8, context{ 0, 8, 0 }, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block4_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block5_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block6_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block7_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block8_hash), false));
+    BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
     BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
@@ -721,23 +678,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block4, context{ 0, 4, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block5, context{ 0, 5, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block6, context{ 0, 6, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block7, context{ 0, 7, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block8, context{ 0, 8, 0 }, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block4_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block5_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block6_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block7_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block8_hash), false));
+    BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
     BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
@@ -750,11 +691,11 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     hash_digest root{};
     BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
     BOOST_CHECK_EQUAL(root, span08);
-    BOOST_CHECK_EQUAL(proof.size(), 4u);
+    BOOST_CHECK_EQUAL(proof.size(), 4u); // <<<<< FAIL (proof.size() == 5)
     BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
     BOOST_CHECK_EQUAL(proof[1], sub67);
     BOOST_CHECK_EQUAL(proof[2], sub03);
-    BOOST_CHECK_EQUAL(proof[3], sub88); // << FAIL
+    BOOST_CHECK_EQUAL(proof[3], sub88);
 }
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_11__success)
@@ -765,23 +706,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block4, context{ 0, 4, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block5, context{ 0, 5, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block6, context{ 0, 6, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block7, context{ 0, 7, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block8, context{ 0, 8, 0 }, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block4_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block5_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block6_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block7_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block8_hash), false));
+    BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
     BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
@@ -794,11 +719,82 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     hash_digest root{};
     BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
     BOOST_CHECK_EQUAL(root, span08);
-    BOOST_CHECK_EQUAL(proof.size(), 4u);
+    BOOST_CHECK_EQUAL(proof.size(), 4u); // <<<<< FAIL (proof.size() == 11)
     BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
     BOOST_CHECK_EQUAL(proof[1], sub67);
     BOOST_CHECK_EQUAL(proof[2], sub03);
-    BOOST_CHECK_EQUAL(proof[3], sub88); // << FAIL
+    BOOST_CHECK_EQUAL(proof[3], sub88);
+}
+
+// This tests a potentially sparse path (avoids compression).
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_8_depth_0__success)
+{
+    settings settings{};
+    settings.interval_depth = 0;
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    merkle_accessor query{ store };
+    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK(setup_eight_block_store(query));
+
+    hashes roots{};
+    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
+    BOOST_CHECK_EQUAL(roots.size(), 9u);
+    BOOST_CHECK_EQUAL(roots[0], test::block0_hash);
+    BOOST_CHECK_EQUAL(roots[1], test::block1_hash);
+    BOOST_CHECK_EQUAL(roots[2], test::block2_hash);
+    BOOST_CHECK_EQUAL(roots[3], test::block3_hash);
+    BOOST_CHECK_EQUAL(roots[4], test::block4_hash);
+    BOOST_CHECK_EQUAL(roots[5], test::block5_hash);
+    BOOST_CHECK_EQUAL(roots[6], test::block6_hash);
+    BOOST_CHECK_EQUAL(roots[7], test::block7_hash);
+    BOOST_CHECK_EQUAL(roots[8], test::block8_hash);
+
+    BOOST_CHECK_EQUAL(query.get_merkle_root(8), span08);
+
+    hashes proof{};
+    hash_digest root{};
+    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 8, 8));
+    BOOST_CHECK_EQUAL(root, span08);
+    BOOST_CHECK_EQUAL(proof.size(), 4u);
+    BOOST_CHECK_EQUAL(proof[0], test::block8_hash);
+    BOOST_CHECK_EQUAL(proof[1], root82);
+    BOOST_CHECK_EQUAL(proof[2], root84);
+    BOOST_CHECK_EQUAL(proof[3], root07);
+}
+
+BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__partial_interval_with_elevation_depth__success)
+{
+    settings settings{};
+    settings.interval_depth = 2;
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    merkle_accessor query{ store };
+    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK(setup_eight_block_store(query));
+
+    constexpr auto root42 = system::sha256::double_hash(test::block4_hash, test::block4_hash);
+    constexpr auto root44 = system::sha256::double_hash(root42, root42);
+    constexpr auto expected_root = system::sha256::double_hash(root03, root44);
+
+    hashes roots{};
+    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 4), error::success);
+    BOOST_CHECK_EQUAL(roots.size(), 2u);
+    BOOST_CHECK_EQUAL(roots[0], root03);
+    BOOST_CHECK_EQUAL(roots[1], root44);
+
+    BOOST_CHECK_EQUAL(query.get_merkle_root(4), expected_root);
+
+    hashes proof{};
+    hash_digest root{};
+    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 4, 4));
+    BOOST_CHECK_EQUAL(root, expected_root);
+
+    // expected result:
+    BOOST_CHECK_EQUAL(proof.size(), 3u);
+    BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
+    BOOST_CHECK_EQUAL(proof[1], root42);
+    BOOST_CHECK_EQUAL(proof[2], root03);
 }
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_greater_than_waypoint__error_invalid_argument)
