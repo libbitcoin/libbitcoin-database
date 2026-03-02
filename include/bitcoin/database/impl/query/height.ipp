@@ -263,8 +263,8 @@ header_links CLASS::get_confirmed_headers(size_t first,
         return {};
 
     // add1(top) cannot overflow, as indexed block maximum cannot exceed size_t.
-    limit = std::min(limit, add1(top) - first);
-    auto last = first + sub1(limit);
+    limit = std::min(limit, add1(top - first));
+    auto last = sub1(first + limit);
 
     // Due to reorganization it is possible for this height to now be terminal.
     auto link = to_confirmed(last);
