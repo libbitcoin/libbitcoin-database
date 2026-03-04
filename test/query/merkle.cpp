@@ -54,38 +54,6 @@ constexpr auto root88 = system::sha256::double_hash(root84, root84);
 
 constexpr auto root08 = system::sha256::double_hash(root07, root88);
 
-// depth 1 subroots are just the block hashes.
-
-// depth 1 subroots.
-constexpr auto sub01 = system::base16_hash("abdc2227d02d114b77be15085c1257709252a7a103f9ac0ab3c85d67e12bc0b8");
-constexpr auto sub23 = system::base16_hash("f2a2a2907abb326726a2d6500fe494f63772a941b414236c302e920bc1aa9caf");
-constexpr auto sub45 = system::base16_hash("f9f17a3c6d02b0920eccb11156df370bf4117fae2233dfee40817586ba981ca5");
-constexpr auto sub67 = system::base16_hash("96cbbc84783888e4cc971ae8acf86dd3c1a419370336bb3c634c97695a8c5ac9");
-constexpr auto sub82 = system::base16_hash("67552d97dfd80082ecd5fe3b233e3a4aa9cb9a07a6040bb43b507cbec44088f2");
-static_assert(sub01 == root01);
-static_assert(sub23 == root23);
-static_assert(sub45 == root45);
-static_assert(sub67 == root67);
-static_assert(sub82 == root82);
-
-// depth 2 subroots.
-constexpr auto sub03 = system::base16_hash("965ac94082cebbcffe458075651e9cc33ce703ab0115c72d9e8b1a9906b2b636");
-constexpr auto sub47 = system::base16_hash("0e85585b6afb71116ec439b72a25edb8003ef34bc42fb2c88a05249da335774d");
-constexpr auto sub84 = system::base16_hash("c752fe3464335530a1109a7cfc6193f9aafb6d0dd913a4a51b92bc6cc4a90c33");
-static_assert(sub03 == root03);
-static_assert(sub47 == root47);
-static_assert(sub84 == root84);
-
-// depth 3 subroots.
-constexpr auto sub07 = system::base16_hash("c809e7a698a4b4c474ff6f5f05e88af6d7cb80ddbbe302660dfe6bd1969224a2");
-constexpr auto sub88 = system::base16_hash("89e5daa6950b895190716dd26054432b564ccdc2868188ba1da76de8e1dc7591");
-static_assert(sub07 == root07);
-static_assert(sub88 == root88);
-
-// depth 4 root (is not a subroot)
-constexpr auto span08 = system::base16_hash("e347b1c43fd9b5415bf0d92708db8284b78daf4d0e24f9c3405f45feb85e25db");
-static_assert(span08 == root08);
-
 class merkle_accessor
   : public test::query_accessor
 {
@@ -566,7 +534,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     BOOST_CHECK_EQUAL(roots[7], test::block7_hash);
     BOOST_CHECK_EQUAL(roots[8], test::block8_hash);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), span08);
+    BOOST_CHECK_EQUAL(query.get_merkle_root(8), root08);
 
     hashes proof{};
     hash_digest root{};
@@ -574,9 +542,9 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     BOOST_CHECK_EQUAL(root, root08);
     BOOST_CHECK_EQUAL(proof.size(), 4u);
     BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], sub67);
-    BOOST_CHECK_EQUAL(proof[2], sub03);
-    BOOST_CHECK_EQUAL(proof[3], sub88);
+    BOOST_CHECK_EQUAL(proof[1], root67);
+    BOOST_CHECK_EQUAL(proof[2], root03);
+    BOOST_CHECK_EQUAL(proof[3], root88);
 }
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_1__success)
@@ -592,23 +560,23 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     hashes roots{};
     BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
     BOOST_CHECK_EQUAL(roots.size(), 5u);
-    BOOST_CHECK_EQUAL(roots[0], sub01);
-    BOOST_CHECK_EQUAL(roots[1], sub23);
-    BOOST_CHECK_EQUAL(roots[2], sub45);
-    BOOST_CHECK_EQUAL(roots[3], sub67);
-    BOOST_CHECK_EQUAL(roots[4], sub82);
+    BOOST_CHECK_EQUAL(roots[0], root01);
+    BOOST_CHECK_EQUAL(roots[1], root23);
+    BOOST_CHECK_EQUAL(roots[2], root45);
+    BOOST_CHECK_EQUAL(roots[3], root67);
+    BOOST_CHECK_EQUAL(roots[4], root82);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), span08);
+    BOOST_CHECK_EQUAL(query.get_merkle_root(8), root08);
 
     hashes proof{};
     hash_digest root{};
     BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
-    BOOST_CHECK_EQUAL(root, span08);
+    BOOST_CHECK_EQUAL(root, root08);
     BOOST_CHECK_EQUAL(proof.size(), 4u);
     BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], sub67);
-    BOOST_CHECK_EQUAL(proof[2], sub03);
-    BOOST_CHECK_EQUAL(proof[3], sub88);
+    BOOST_CHECK_EQUAL(proof[1], root67);
+    BOOST_CHECK_EQUAL(proof[2], root03);
+    BOOST_CHECK_EQUAL(proof[3], root88);
 }
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_2__success)
@@ -624,21 +592,21 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     hashes roots{};
     BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
     BOOST_CHECK_EQUAL(roots.size(), 3u);
-    BOOST_CHECK_EQUAL(roots[0], sub03);
-    BOOST_CHECK_EQUAL(roots[1], sub47);
-    BOOST_CHECK_EQUAL(roots[2], sub84);
+    BOOST_CHECK_EQUAL(roots[0], root03);
+    BOOST_CHECK_EQUAL(roots[1], root47);
+    BOOST_CHECK_EQUAL(roots[2], root84);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), span08);
+    BOOST_CHECK_EQUAL(query.get_merkle_root(8), root08);
 
     hashes proof{};
     hash_digest root{};
     BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
-    BOOST_CHECK_EQUAL(root, span08);
+    BOOST_CHECK_EQUAL(root, root08);
     BOOST_CHECK_EQUAL(proof.size(), 4u);
     BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], sub67);
-    BOOST_CHECK_EQUAL(proof[2], sub03);
-    BOOST_CHECK_EQUAL(proof[3], sub88);
+    BOOST_CHECK_EQUAL(proof[1], root67);
+    BOOST_CHECK_EQUAL(proof[2], root03);
+    BOOST_CHECK_EQUAL(proof[3], root88);
 }
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_3__success)
@@ -654,20 +622,20 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     hashes roots{};
     BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
     BOOST_CHECK_EQUAL(roots.size(), 2u);
-    BOOST_CHECK_EQUAL(roots[0], sub07);
-    BOOST_CHECK_EQUAL(roots[1], sub88);
+    BOOST_CHECK_EQUAL(roots[0], root07);
+    BOOST_CHECK_EQUAL(roots[1], root88);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), span08);
+    BOOST_CHECK_EQUAL(query.get_merkle_root(8), root08);
 
     hashes proof{};
     hash_digest root{};
     BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
-    BOOST_CHECK_EQUAL(root, span08);
+    BOOST_CHECK_EQUAL(root, root08);
     BOOST_CHECK_EQUAL(proof.size(), 4u);
     BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], sub67);
-    BOOST_CHECK_EQUAL(proof[2], sub03);
-    BOOST_CHECK_EQUAL(proof[3], sub88);
+    BOOST_CHECK_EQUAL(proof[1], root67);
+    BOOST_CHECK_EQUAL(proof[2], root03);
+    BOOST_CHECK_EQUAL(proof[3], root88);
 }
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_4__success)
@@ -683,19 +651,19 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     hashes roots{};
     BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
     BOOST_CHECK_EQUAL(roots.size(), 1u);
-    BOOST_CHECK_EQUAL(roots[0], span08);
+    BOOST_CHECK_EQUAL(roots[0], root08);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), span08);
+    BOOST_CHECK_EQUAL(query.get_merkle_root(8), root08);
 
     hashes proof{};
     hash_digest root{};
     BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
-    BOOST_CHECK_EQUAL(root, span08);
+    BOOST_CHECK_EQUAL(root, root08);
     BOOST_CHECK_EQUAL(proof.size(), 4u); // <<<<< FAIL (proof.size() == 5)
     BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], sub67);
-    BOOST_CHECK_EQUAL(proof[2], sub03);
-    BOOST_CHECK_EQUAL(proof[3], sub88);
+    BOOST_CHECK_EQUAL(proof[1], root67);
+    BOOST_CHECK_EQUAL(proof[2], root03);
+    BOOST_CHECK_EQUAL(proof[3], root88);
 }
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_11__success)
@@ -711,19 +679,19 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     hashes roots{};
     BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
     BOOST_CHECK_EQUAL(roots.size(), 1u);
-    BOOST_CHECK_EQUAL(roots[0], span08);
+    BOOST_CHECK_EQUAL(roots[0], root08);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), span08);
+    BOOST_CHECK_EQUAL(query.get_merkle_root(8), root08);
 
     hashes proof{};
     hash_digest root{};
     BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
-    BOOST_CHECK_EQUAL(root, span08);
+    BOOST_CHECK_EQUAL(root, root08);
     BOOST_CHECK_EQUAL(proof.size(), 4u); // <<<<< FAIL (proof.size() == 11)
     BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], sub67);
-    BOOST_CHECK_EQUAL(proof[2], sub03);
-    BOOST_CHECK_EQUAL(proof[3], sub88);
+    BOOST_CHECK_EQUAL(proof[1], root67);
+    BOOST_CHECK_EQUAL(proof[2], root03);
+    BOOST_CHECK_EQUAL(proof[3], root88);
 }
 
 // This tests a potentially sparse path (avoids compression).
@@ -750,12 +718,12 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_8_depth_0__
     BOOST_CHECK_EQUAL(roots[7], test::block7_hash);
     BOOST_CHECK_EQUAL(roots[8], test::block8_hash);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), span08);
+    BOOST_CHECK_EQUAL(query.get_merkle_root(8), root08);
 
     hashes proof{};
     hash_digest root{};
     BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 8, 8));
-    BOOST_CHECK_EQUAL(root, span08);
+    BOOST_CHECK_EQUAL(root, root08);
     BOOST_CHECK_EQUAL(proof.size(), 4u);
     BOOST_CHECK_EQUAL(proof[0], test::block8_hash);
     BOOST_CHECK_EQUAL(proof[1], root82);
