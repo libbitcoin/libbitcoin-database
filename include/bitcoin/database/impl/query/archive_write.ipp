@@ -164,10 +164,10 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
         if (!store_.point.expand(ins_fk + inputs))
             return error::tx_point_allocate;
 
-        // If dirty we must guard against duplicates.
-        // Dirty doesn't hold up in the case of an invalidated block, as that
-        // may result in a duplicated tx. So dirty should be false in the case
-        // of a non-bypass (valid) block.
+        // If dirty we must guard against duplicates. Dirty is caused by disk,
+        // full, disorganized or reorganized block, and tx pooling. It is set
+        // to true at runtime by any of these and in case of duplicate table
+        // non-empty at store startup. disorg/reorg indicated by candidate pop.
         // Must be set after tx.set and before tx.commit, since searchable and
         // produces association to tx.link, and is also an integral part of tx.
         if (store_.is_dirty() || !bypass)
