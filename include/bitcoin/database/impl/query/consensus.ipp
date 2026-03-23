@@ -25,6 +25,9 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
 
+// Consensus error codes must be system::error category in order for the node
+// to properly categorize the result.
+
 namespace libbitcoin {
 namespace database {
 
@@ -167,7 +170,7 @@ code CLASS::unspent_duplicates(const header_link& link,
     // bip30: all outputs of all previous duplicate coinbases must be spent.
     for (const auto& cb: coinbases)
         if (!is_spent_coinbase(cb))
-            return error::unspent_coinbase_collision;
+            return system::error::unspent_coinbase_collision;
 
     return error::success;
 }
@@ -193,7 +196,7 @@ code CLASS::unspendable(uint32_t sequence, bool coinbase,
     // Unassociated to block is rare, generally implies a duplicate tx.
     // Not strong (in any block) implies the spend is not confirmed.
     if (strong.is_terminal() && !is_strong(tx))
-        return error::unconfirmed_spend;
+        return system::error::unconfirmed_spend;
 
     const auto relative = ctx.is_enabled(system::chain::flags::bip68_rule) &&
         transaction::is_relative_locktime_applied(coinbase, version, sequence);
@@ -207,11 +210,11 @@ code CLASS::unspendable(uint32_t sequence, bool coinbase,
         if (relative &&
             input::is_relative_locked(sequence, ctx.height, ctx.mtp,
                 out.height, out.mtp))
-            return error::relative_time_locked;
+            return system::error::relative_time_locked;
 
         if (coinbase &&
             !transaction::is_coinbase_mature(out.height, ctx.height))
-            return error::coinbase_maturity;
+            return system::error::coinbase_maturity;
     }
 
     return error::success;
@@ -260,7 +263,7 @@ code CLASS::populate_prevouts(point_sets& sets, size_t points,
     // Is any duplicated point in the block confirmed (generally empty).
     for (const auto& spender: cache.conflicts)
         if (is_strong_tx(spender))
-            return error::confirmed_double_spend;
+            return system::error::confirmed_double_spend;
 
     // Augment spend.points with metadata.
     auto it = cache.spends.begin();
