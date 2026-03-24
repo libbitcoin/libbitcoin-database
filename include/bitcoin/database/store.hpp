@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_STORE_HPP
 #define LIBBITCOIN_DATABASE_STORE_HPP
 
+#include <atomic>
 #include <filesystem>
 #include <shared_mutex>
 #include <unordered_map>
@@ -95,6 +96,7 @@ public:
 
     /// Determine if the store is non-empty/initialized.
     bool is_dirty() const NOEXCEPT;
+    void set_dirty() NOEXCEPT;
 
     /// Get first fault code or error::success.
     code get_fault() const NOEXCEPT;
@@ -235,7 +237,9 @@ protected:
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
     std::shared_timed_mutex transactor_mutex_{};
-    bool dirty_{ true };
+
+    // This is thread safe.
+    std::atomic_bool dirty_{ true };
 
 private:
     using path = std::filesystem::path;

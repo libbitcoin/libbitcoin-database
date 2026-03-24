@@ -343,6 +343,9 @@ bool CLASS::pop_candidate() NOEXCEPT
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // Candidate pop implies reorg or disorg, which implies future duplicates.
+    store_.set_dirty();
+
     ///////////////////////////////////////////////////////////////////////////
     std::unique_lock interlock{ candidate_reorganization_mutex_ };
     return store_.candidate.truncate(top);
