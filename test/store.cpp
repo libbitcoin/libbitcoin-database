@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(store__is_dirty__uninitialized__true)
     BOOST_REQUIRE(instance.is_dirty());
 }
 
-BOOST_AUTO_TEST_CASE(store__is_dirty__initialized__true)
+BOOST_AUTO_TEST_CASE(store__is_dirty__initialized___false)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
@@ -61,6 +61,20 @@ BOOST_AUTO_TEST_CASE(store__is_dirty__initialized__true)
     BOOST_REQUIRE(!instance.create(events));
     BOOST_REQUIRE(query_.initialize(test::genesis));
     BOOST_REQUIRE(!instance.is_dirty());
+    BOOST_REQUIRE(!instance.close(events));
+}
+
+BOOST_AUTO_TEST_CASE(store__set_dirty__initialized__is_dirty)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<map> instance{ configuration };
+    query<store<map>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BOOST_REQUIRE(!instance.is_dirty());
+    instance.set_dirty();
+    BOOST_REQUIRE(instance.is_dirty());
     BOOST_REQUIRE(!instance.close(events));
 }
 

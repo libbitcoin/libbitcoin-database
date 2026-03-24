@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_STORE_IPP
 #define LIBBITCOIN_DATABASE_STORE_IPP
 
+#include <atomic>
 #include <chrono>
 #include <unordered_map>
 #include <bitcoin/database/boost.hpp>
@@ -561,7 +562,7 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
             {
                 handler(event_t::load_file, table);
                 ec = storage.reload();
-                this->dirty_ = true;
+                this->dirty_.store(true, std::memory_order_relaxed);
             }
         }
     };
@@ -774,7 +775,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, filter_tx_body_, table_t::filter_tx_body);
 
     // create, open, and restore each invoke open_load.
-    dirty_ = header_body_.size() > schema::header::minrow;
+    const auto dirty = header_body_.size() > schema::header::minrow;
+    dirty_.store(dirty, std::memory_order_relaxed);
     return ec;
 }
 
@@ -1164,7 +1166,13 @@ const typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
 TEMPLATE
 bool CLASS::is_dirty() const NOEXCEPT
 {
-    return dirty_;
+    return dirty_.load(std::memory_order_relaxed);
+}
+
+TEMPLATE
+void CLASS::set_dirty() NOEXCEPT
+{
+    return dirty_.store(true, std::memory_order_relaxed);
 }
 
 TEMPLATE
