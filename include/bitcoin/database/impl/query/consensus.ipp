@@ -477,14 +477,22 @@ bool CLASS::get_doubles(tx_links& out, const point& point) const NOEXCEPT
     if (!store_.duplicate.exists(point))
         return true;
 
-    auto success = false;
-    for (auto it = store_.tx.it(point.hash()); it != it.end(); ++it)
+    // Get the [tx.hash:index] of each spender of the point (index unused).
+    const auto spenders = get_spenders(point);
+    bool found{};
+
+    // Inpoints are deduped by the std::set.
+    for (const auto& spender: spenders)
     {
-        success = true;
-        out.push_back(*it);
+        // Exhaustive enumeration of all txs with spender hash.
+        for (auto it = store_.tx.it(spender.hash()); it != it.end(); ++it)
+        {
+            found = true;
+            out.push_back(*it);
+        }
     }
 
-    return success;
+    return found;
 }
 
 TEMPLATE
