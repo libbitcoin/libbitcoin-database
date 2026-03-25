@@ -104,12 +104,14 @@ CLASS::span CLASS::get_locator_span(const hashes& locator,
 TEMPLATE
 size_t CLASS::get_fork(const hashes& locator) const NOEXCEPT
 {
-    // Locator is presumed (by convention) to be in order by height.
+    // Locator is presumed (by convention) to be in reverse order by height.
     for (const auto& hash: locator)
     {
         const auto link = to_header(hash);
-        const auto height = get_height(link);
+        if (link.is_terminal())
+            continue;
 
+        const auto height = get_height(link);
         table::height::record confirmed{};
         if (store_.confirmed.get(height, confirmed) &&
             confirmed.header_fk == link)
