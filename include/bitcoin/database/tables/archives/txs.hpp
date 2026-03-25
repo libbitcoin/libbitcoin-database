@@ -288,6 +288,37 @@ struct txs
         size_t position{};
     };
 
+    struct get_at_position
+      : public schema::txs
+    {
+        inline link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            // tx sizes
+            source.skip_bytes(skip_sizes);
+
+            // tx fks
+            const auto number = source.read_little_endian<ct::integer, ct::size>();
+            if (position < number)
+            {
+                source.skip_bytes(position * tx::size);
+                tx_fk = source.read_little_endian<tx::integer, tx::size>();
+                return source;
+            }
+
+            source.invalidate();
+            return source;
+        }
+
+        const size_t position{};
+        tx::integer tx_fk{};
+    };
+
     struct get_coinbase
       : public schema::txs
     {

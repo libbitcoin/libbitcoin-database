@@ -344,8 +344,10 @@ public:
     inline hash_digest get_point_hash(const point_link& link) const NOEXCEPT;
 
     /// False position implies not confirmed (or fault).
-    bool get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT;
     bool get_tx_height(size_t& out, const tx_link& link) const NOEXCEPT;
+    bool get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT;
+    tx_link get_position_tx(const header_link& link,
+        size_t position) const NOEXCEPT;
 
     /// Sizes.
     bool get_tx_size(size_t& out, const tx_link& link,
