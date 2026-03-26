@@ -59,7 +59,9 @@ class merkle_accessor
 {
 public:
     using base = test::query_accessor;
+    using positions = base::positions;
     using base::base;
+    using base::merkle_branch;
     using base::interval_span;
     using base::create_interval;
     using base::get_confirmed_interval;
@@ -68,6 +70,148 @@ public:
     using base::get_merkle_subroots;
     using base::get_merkle_root_and_proof;
 };
+
+// merkle_branch
+
+BOOST_AUTO_TEST_CASE(query_merkle___merkle_branch__leaf_zero__empty)
+{
+    BOOST_REQUIRE(merkle_accessor::merkle_branch(0, 0, true).empty());
+    BOOST_REQUIRE(merkle_accessor::merkle_branch(0, 0, false).empty());
+}
+
+BOOST_AUTO_TEST_CASE(query_merkle___merkle_branch__one__zero)
+{
+    auto branch = merkle_accessor::merkle_branch(1, 2, true);
+    BOOST_REQUIRE_EQUAL(branch.size(), 1u);
+    BOOST_REQUIRE_EQUAL(branch[0].sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
+
+    branch = merkle_accessor::merkle_branch(1, 2, false);
+    BOOST_REQUIRE_EQUAL(branch.size(), 1u);
+    BOOST_REQUIRE_EQUAL(branch[0].sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
+}
+
+BOOST_AUTO_TEST_CASE(query_merkle___merkle_branch__three__two_and_zero)
+{
+    auto branch = merkle_accessor::merkle_branch(3, 4, true);
+    BOOST_REQUIRE_EQUAL(branch.size(), 2u);
+    BOOST_REQUIRE_EQUAL(branch[0].sibling, 2u);
+    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
+    BOOST_REQUIRE_EQUAL(branch[1].sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
+
+    branch = merkle_accessor::merkle_branch(3, 4, false);
+    BOOST_REQUIRE_EQUAL(branch.size(), 2u);
+    BOOST_REQUIRE_EQUAL(branch[0].sibling, 2u);
+    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
+    BOOST_REQUIRE_EQUAL(branch[1].sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
+}
+
+BOOST_AUTO_TEST_CASE(query_merkle___merkle_branch__seven__six_four_and_zero)
+{
+    auto branch = merkle_accessor::merkle_branch(7, 8, true);
+    BOOST_REQUIRE_EQUAL(branch.size(), 3u);
+    BOOST_REQUIRE_EQUAL(branch[0].sibling, 6u);
+    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
+    BOOST_REQUIRE_EQUAL(branch[1].sibling, 2u);
+    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
+    BOOST_REQUIRE_EQUAL(branch[2].sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch[2].width, 4u);
+
+    branch = merkle_accessor::merkle_branch(7, 8, false);
+    BOOST_REQUIRE_EQUAL(branch.size(), 3u);
+    BOOST_REQUIRE_EQUAL(branch[0].sibling, 6u);
+    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
+    BOOST_REQUIRE_EQUAL(branch[1].sibling, 2u);
+    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
+    BOOST_REQUIRE_EQUAL(branch[2].sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch[2].width, 4u);
+}
+
+BOOST_AUTO_TEST_CASE(block__merkle_branch__medium_power_of_two__expected)
+{
+    const merkle_accessor::positions expected{ { 14, 1 }, { 6, 2 }, { 2, 4 }, { 0, 8 } };
+
+    auto branch = merkle_accessor::merkle_branch(15, 16, true);
+    BOOST_REQUIRE_EQUAL(branch.size(), 4u);
+    BOOST_REQUIRE_EQUAL(branch[0].sibling, 14u);
+    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
+    BOOST_REQUIRE_EQUAL(branch[1].sibling, 6u);
+    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
+    BOOST_REQUIRE_EQUAL(branch[2].sibling, 2u);
+    BOOST_REQUIRE_EQUAL(branch[2].width, 4u);
+    BOOST_REQUIRE_EQUAL(branch[3].sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch[3].width, 8u);
+
+    branch = merkle_accessor::merkle_branch(15, 16, false);
+    BOOST_REQUIRE_EQUAL(branch.size(), 4u);
+    BOOST_REQUIRE_EQUAL(branch[0].sibling, 14u);
+    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
+    BOOST_REQUIRE_EQUAL(branch[1].sibling, 6u);
+    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
+    BOOST_REQUIRE_EQUAL(branch[2].sibling, 2u);
+    BOOST_REQUIRE_EQUAL(branch[2].width, 4u);
+    BOOST_REQUIRE_EQUAL(branch[3].sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch[3].width, 8u);
+}
+
+BOOST_AUTO_TEST_CASE(block__merkle_branch__power_of_two_minus_one__expected)
+{
+    constexpr auto leaf = 1023u;
+    constexpr auto size = system::ceilinged_log2(add1(leaf));
+    auto branch = merkle_accessor::merkle_branch(leaf, add1(leaf), true);
+    BOOST_REQUIRE_EQUAL(branch.size(), size);
+    BOOST_REQUIRE_EQUAL(branch.front().sibling, 1022u);
+    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
+    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
+
+    branch = merkle_accessor::merkle_branch(leaf, add1(leaf), false);
+    BOOST_REQUIRE_EQUAL(branch.size(), size);
+    BOOST_REQUIRE_EQUAL(branch.front().sibling, 1022u);
+    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
+    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
+}
+
+BOOST_AUTO_TEST_CASE(block__merkle_branch__odd_large_leaf_with_duplication__expected)
+{
+    constexpr auto leaf = 2047u;
+    constexpr auto size = system::ceilinged_log2(add1(leaf));
+    auto branch = merkle_accessor::merkle_branch(leaf, add1(leaf), true);
+    BOOST_REQUIRE_EQUAL(branch.size(), size);
+    BOOST_REQUIRE_EQUAL(branch.front().sibling, 2046u);
+    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
+    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
+
+    branch = merkle_accessor::merkle_branch(leaf, add1(leaf), false);
+    BOOST_REQUIRE_EQUAL(branch.size(), size);
+    BOOST_REQUIRE_EQUAL(branch.front().sibling, 2046u);
+    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
+    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
+}
+
+BOOST_AUTO_TEST_CASE(block__merkle_branch__maximum_non_overflow__expected)
+{
+    constexpr auto maximum = sub1(system::power2(sub1(bits<size_t>)));
+    auto branch = merkle_accessor::merkle_branch(maximum, add1(maximum), true);
+    BOOST_REQUIRE_EQUAL(branch.size(), sub1(bits<size_t>));
+    BOOST_REQUIRE_EQUAL(branch.front().sibling, sub1(maximum));
+    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
+    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(sub1(bits<size_t>))));
+
+    branch = merkle_accessor::merkle_branch(maximum, add1(maximum), false);
+    BOOST_REQUIRE_EQUAL(branch.size(), sub1(bits<size_t>));
+    BOOST_REQUIRE_EQUAL(branch.front().sibling, sub1(maximum));
+    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
+    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(sub1(bits<size_t>))));
+}
 
 // interval_span
 
