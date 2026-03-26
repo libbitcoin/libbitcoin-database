@@ -189,6 +189,17 @@ bool CLASS::get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT
     return true;
 }
 
+TEMPLATE
+tx_link CLASS::get_position_tx(const header_link& link,
+    size_t position) const NOEXCEPT
+{
+    table::txs::get_at_position txs{ {}, position };
+    if (!store_.txs.at(to_txs(link), txs))
+        return {};
+
+    return txs.tx_fk;
+}
+
 // Sizes.
 // ----------------------------------------------------------------------------
 

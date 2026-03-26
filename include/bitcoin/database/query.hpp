@@ -344,8 +344,10 @@ public:
     inline hash_digest get_point_hash(const point_link& link) const NOEXCEPT;
 
     /// False position implies not confirmed (or fault).
-    bool get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT;
     bool get_tx_height(size_t& out, const tx_link& link) const NOEXCEPT;
+    bool get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT;
+    tx_link get_position_tx(const header_link& link,
+        size_t position) const NOEXCEPT;
 
     /// Sizes.
     bool get_tx_size(size_t& out, const tx_link& link,
@@ -766,11 +768,15 @@ protected:
 
     /// merkle
     /// -----------------------------------------------------------------------
+    struct position { size_t sibling; size_t width; };
+    using positions = std::vector<position>;
 
     // merkle related utilities
     static hash_digest partial_subroot(hashes&& tree, size_t span) NOEXCEPT;
     static void merge_merkle(hashes& path, hashes&& leaves, size_t first,
         size_t lift) NOEXCEPT;
+    static positions merkle_branch(size_t leaf, size_t leaves,
+        bool compress=false) NOEXCEPT;
 
     // merkle related configuration
     size_t interval_depth() const NOEXCEPT;

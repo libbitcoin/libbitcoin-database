@@ -31,6 +31,37 @@ namespace database {
 // merkle
 // ----------------------------------------------------------------------------
 
+// static/protected
+TEMPLATE
+CLASS::positions CLASS::merkle_branch(size_t leaf, size_t leaves,
+    bool compress) NOEXCEPT
+{
+    using namespace system;
+    BC_ASSERT(leaves <= power2(sub1(bits<size_t>)));
+    BC_ASSERT(is_even(leaves) || is_one(leaves));
+
+    positions branch{};
+    if (is_zero(leaves) || leaf >= leaves)
+        return branch;
+
+    // Upper bound, actual count may be less given compression.
+    branch.reserve(ceilinged_log2(leaves));
+
+    for (auto width = one, current = leaves; current > one;)
+    {
+        const auto sibling = bit_xor(leaf, one);
+        if (!compress || sibling < current)
+            branch.emplace_back(sibling, width);
+
+        ++current;
+        shift_left_into(width);
+        shift_right_into(leaf);
+        shift_right_into(current);
+    }
+
+    return branch;
+}
+
 // protected
 TEMPLATE
 CLASS::hash_option CLASS::create_interval(header_link link,
@@ -87,7 +118,7 @@ void CLASS::merge_merkle(hashes& path, hashes&& leaves, size_t first,
         ++size;
     }
 
-    for (const auto& row: block::merkle_branch(first, size + lift))
+    for (const auto& row: merkle_branch(first, size + lift))
     {
         hashes subroot{};
         if (const auto leaf = row.sibling * row.width; leaf < size)
