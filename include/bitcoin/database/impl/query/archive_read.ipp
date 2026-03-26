@@ -112,8 +112,12 @@ hashes CLASS::get_tx_keys(const header_link& link) const NOEXCEPT
     if (tx_fks.empty())
         return {};
 
+    // Overallocate as required for the common merkle scenario.
+    const auto count = tx_fks.size();
+    const auto size = is_odd(count) && !is_one(count) ? add1(count) : count;
+
     system::hashes hashes{};
-    hashes.reserve(tx_fks.size());
+    hashes.reserve(size);
     for (const auto& tx_fk: tx_fks)
         hashes.push_back(get_tx_key(tx_fk));
 
