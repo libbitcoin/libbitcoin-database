@@ -239,8 +239,8 @@ struct output
             // skip: parent_fk
             source.skip_bytes(tx::size);
 
-            // value
-            flipper.write_variable(source.read_variable());
+            // value (translates from variable to fixed width)
+            flipper.write_8_bytes_little_endian(source.read_variable());
 
             // script (prefixed)
             const auto length = source.read_size();

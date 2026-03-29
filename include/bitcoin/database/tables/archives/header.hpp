@@ -327,10 +327,12 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
+            const auto time_bits_nonce_size = 3u * sizeof(uint32_t);
             const auto version_size = sizeof(uint32_t);
             source.rewind_bytes(sk);
             flipper.skip_bytes(version_size);
             flipper.write_bytes(source.read_hash());
+            flipper.skip_bytes(schema::hash + time_bits_nonce_size);
             return source;
         }
 
@@ -342,8 +344,8 @@ struct header
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            const auto version_size = sizeof(uint32_t);
             const auto time_bits_nonce_size = 3u * sizeof(uint32_t);
+            const auto version_size = sizeof(uint32_t);
             source.skip_bytes(skip_to_parent);
             parent_fk = to_parent(source.read_little_endian<link::integer, link::size>());
             flipper.write_bytes(source.read_bytes(version_size));

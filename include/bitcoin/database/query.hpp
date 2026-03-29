@@ -350,14 +350,10 @@ public:
         size_t position) const NOEXCEPT;
 
     /// Sizes.
-    bool get_tx_size(size_t& out, const tx_link& link,
-        bool witness) const NOEXCEPT;
-    bool get_block_size(size_t& out, const header_link& link,
-        bool witness) const NOEXCEPT;
-    bool get_block_sizes(size_t& light, size_t& heavy,
-        const header_link& link) const NOEXCEPT;
-    bool get_tx_sizes(size_t& light, size_t& heavy,
-        const tx_link& link) const NOEXCEPT;
+    bool get_tx_size(size_t& out, const tx_link& link, bool witness) const NOEXCEPT;
+    bool get_block_size(size_t& out, const header_link& link, bool witness) const NOEXCEPT;
+    bool get_block_sizes(size_t& light, size_t& heavy, const header_link& link) const NOEXCEPT;
+    bool get_tx_sizes(size_t& light, size_t& heavy, const tx_link& link) const NOEXCEPT;
 
     /// Heights.
     height_link get_height(const hash_digest& key) const NOEXCEPT;
@@ -377,17 +373,17 @@ public:
     /// Wire.
     /// -----------------------------------------------------------------------
 
-    data_chunk get_wire_header(const header_link& link) const NOEXCEPT;
-    bool get_wire_header(byteflipper& flipper,
-        const header_link& link) const NOEXCEPT;
-
-    data_chunk get_wire_tx(const tx_link& link, bool witness) const NOEXCEPT;
-    bool get_wire_tx(byteflipper& flipper, const tx_link& link,
-        bool witness) const NOEXCEPT;
-
-    data_chunk get_wire_block(const header_link& link, bool witness) const NOEXCEPT;
+    bool get_wire_input(byteflipper& flipper, const point_link& link) const NOEXCEPT;
+    bool get_wire_output(byteflipper& flipper, const output_link& link) const NOEXCEPT;
+    bool get_wire_witness(byteflipper& flipper, const point_link& link) const NOEXCEPT;
+    bool get_wire_header(byteflipper& flipper, const header_link& link) const NOEXCEPT;
+    bool get_wire_tx(byteflipper& flipper, const tx_link& link, bool witness) const NOEXCEPT;
     bool get_wire_block(byteflipper& flipper, const header_link& link,
         bool witness) const NOEXCEPT;
+
+    data_chunk get_wire_header(const header_link& link) const NOEXCEPT;
+    data_chunk get_wire_tx(const tx_link& link, bool witness) const NOEXCEPT;
+    data_chunk get_wire_block(const header_link& link, bool witness) const NOEXCEPT;
 
     /// Objects.
     /// -----------------------------------------------------------------------
