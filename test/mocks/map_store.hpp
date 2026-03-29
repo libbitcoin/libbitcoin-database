@@ -23,9 +23,6 @@
 
 namespace test {
 
-// nop event handler.
-const auto events_handler = [](auto, auto) {};
-
 // store<map> test accessor.
 class map_store
   : public store<map>
@@ -38,17 +35,17 @@ public:
 
     inline code backup_() NOEXCEPT
     {
-        return backup(events_handler);
+        return backup([](auto, auto) {});
     }
 
     inline code dump_(const std::filesystem::path& folder) NOEXCEPT
     {
-        return dump(folder, events_handler);
+        return dump(folder, [](auto, auto) {});
     }
 
     inline code restore_() NOEXCEPT
     {
-        return restore(events_handler);
+        return restore([](auto, auto) {});
     }
 
     inline const settings& configuration() const NOEXCEPT
