@@ -101,6 +101,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/optional.cpp \
     test/query/translate.cpp \
     test/query/validate.cpp \
+    test/query/wire.cpp \
     test/tables/archives/header.cpp \
     test/tables/archives/input.cpp \
     test/tables/archives/output.cpp \
@@ -192,7 +193,8 @@ include_bitcoin_database_impl_query_HEADERS = \
     include/bitcoin/database/impl/query/optional.ipp \
     include/bitcoin/database/impl/query/query.ipp \
     include/bitcoin/database/impl/query/translate.ipp \
-    include/bitcoin/database/impl/query/validate.ipp
+    include/bitcoin/database/impl/query/validate.ipp \
+    include/bitcoin/database/impl/query/wire.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \

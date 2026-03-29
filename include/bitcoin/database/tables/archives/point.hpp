@@ -89,6 +89,22 @@ struct point
 
         system::chain::point key{};
     };
+
+    struct wire
+      : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.rewind_bytes(schema::point::sk);
+
+            // point
+            constexpr auto length = schema::hash + ix::size;
+            flipper.write_bytes(source.read_bytes(length));
+            return source;
+        }
+
+        system::byteflipper& flipper;
+    };
 };
 
 } // namespace table

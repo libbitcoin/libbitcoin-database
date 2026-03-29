@@ -374,6 +374,21 @@ public:
     bool get_block_spend(uint64_t& out, const header_link& link) const NOEXCEPT;
     bool get_block_fee(uint64_t& out, const header_link& link) const NOEXCEPT;
 
+    /// Wire.
+    /// -----------------------------------------------------------------------
+
+    data_chunk get_wire_header(const header_link& link) const NOEXCEPT;
+    bool get_wire_header(byteflipper& flipper,
+        const header_link& link) const NOEXCEPT;
+
+    data_chunk get_wire_tx(const tx_link& link, bool witness) const NOEXCEPT;
+    bool get_wire_tx(byteflipper& flipper, const tx_link& link,
+        bool witness) const NOEXCEPT;
+
+    data_chunk get_wire_block(const header_link& link, bool witness) const NOEXCEPT;
+    bool get_wire_block(byteflipper& flipper, const header_link& link,
+        bool witness) const NOEXCEPT;
+
     /// Objects.
     /// -----------------------------------------------------------------------
 
@@ -836,6 +851,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/merkle.ipp>
 #include <bitcoin/database/impl/query/translate.ipp>
 #include <bitcoin/database/impl/query/validate.ipp>
+#include <bitcoin/database/impl/query/wire.ipp>
 
 BC_POP_WARNING()
 

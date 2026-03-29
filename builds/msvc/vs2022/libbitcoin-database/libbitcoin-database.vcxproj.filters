@@ -379,6 +379,9 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\validate.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\wire.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\store.ipp">
       <Filter>include\bitcoin\database\impl</Filter>
     </None>

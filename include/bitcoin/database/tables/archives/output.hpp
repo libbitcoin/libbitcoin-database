@@ -46,8 +46,7 @@ struct output
         inline link count() const NOEXCEPT
         {
             return system::possible_narrow_cast<link::integer>(
-                tx::size +
-                variable_size(value) +
+                tx::size + variable_size(value) +
                 script.serialized_size(true));
         }
 
@@ -230,6 +229,27 @@ struct output
 
         const tx::integer parent_fk{};
         const system::chain::transaction& tx_{};
+    };
+
+    struct wire_script
+      : public schema::output
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            // skip: parent_fk
+            source.skip_bytes(tx::size);
+
+            // value
+            flipper.write_variable(source.read_variable());
+
+            // script (prefixed)
+            const auto length = source.read_size();
+            flipper.write_variable(length);
+            flipper.write_bytes(source.read_bytes(length));
+            return source;
+        }
+
+        system::byteflipper& flipper;
     };
 };
 

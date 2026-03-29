@@ -321,6 +321,43 @@ struct header
         context ctx{};
         uint32_t timestamp{};
     };
+
+    struct wire_key
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            const auto version_size = sizeof(uint32_t);
+            source.rewind_bytes(sk);
+            flipper.skip_bytes(version_size);
+            flipper.write_bytes(source.read_hash());
+            return source;
+        }
+
+        system::byteflipper& flipper;
+    };
+
+    struct wire_header
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            const auto version_size = sizeof(uint32_t);
+            const auto time_bits_nonce_size = 3u * sizeof(uint32_t);
+            source.skip_bytes(skip_to_parent);
+            parent_fk = to_parent(source.read_little_endian<link::integer, link::size>());
+            flipper.write_bytes(source.read_bytes(version_size));
+            flipper.write_bytes(system::null_hash);
+            source.skip_bytes(time_bits_nonce_size);
+            flipper.write_bytes(source.read_hash());
+            source.rewind_bytes(time_bits_nonce_size + schema::hash);
+            flipper.write_bytes(source.read_bytes(time_bits_nonce_size));
+            return source;
+        }
+
+        system::byteflipper& flipper;
+        link::integer parent_fk{};
+    };
 };
 
 } // namespace table
