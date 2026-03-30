@@ -132,6 +132,19 @@ struct ins
         const tx::integer parent_fk{};
         const system::chain::transaction& tx_{};
     };
+
+    struct wire_sequence
+      : public schema::ins
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            const auto sequence_size = sizeof(uint32_t);
+            flipper.write_bytes(source.read_bytes(sequence_size));
+            return source;
+        }
+
+        system::byteflipper& flipper;
+    };
 };
 
 } // namespace table

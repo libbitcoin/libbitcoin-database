@@ -29,11 +29,18 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
+// There is no value in this table, just search keys.
 struct point
   : public hash_map<schema::point>
 {
     using hash_map<schema::point>::hashmap;
     using ix = linkage<schema::index>;
+
+    static uint32_t to_index(ix::integer value) NOEXCEPT
+    {
+        using namespace system;
+        return value == ix::terminal ? chain::point::null_index : value;
+    }
 
     struct record
       : public schema::point
@@ -42,11 +49,7 @@ struct point
         {
             source.rewind_bytes(schema::point::sk);
             hash = source.read_hash();
-            index = source.read_little_endian<ix::integer, ix::size>();
-
-            if (index == ix::terminal)
-                index = system::chain::point::null_index;
-
+            index = to_index(source.read_little_endian<ix::integer, ix::size>());
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
@@ -81,13 +84,28 @@ struct point
             key =
             {
                 source.read_hash(),
-                source.read_little_endian<ix::integer, ix::size>()
+                to_index(source.read_little_endian<ix::integer, ix::size>())
             };
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
         system::chain::point key{};
+    };
+
+    struct wire_point
+      : public schema::point
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.rewind_bytes(schema::point::sk);
+            flipper.write_bytes(source.read_hash());
+            const auto value = source.read_little_endian<ix::integer, ix::size>();
+            flipper.write_4_bytes_little_endian(to_index(value));
+            return source;
+        }
+
+        system::byteflipper& flipper;
     };
 };
 

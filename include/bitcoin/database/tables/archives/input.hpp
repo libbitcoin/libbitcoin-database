@@ -175,6 +175,47 @@ struct input
 
         const system::chain::transaction& tx_{};
     };
+
+    struct wire_script
+      : public schema::input
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            // script (prefixed)
+            const auto length = source.read_size();
+            flipper.write_variable(length);
+            flipper.write_bytes(source.read_bytes(length));
+            return source;
+        }
+
+        system::byteflipper& flipper;
+    };
+
+    struct wire_witness
+      : public schema::input
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            // script (skip)
+            source.skip_bytes(source.read_size());
+
+            // witness (count)
+            const auto count = source.read_size();
+            flipper.write_variable(count);
+
+            // witness (prefixed)
+            for (size_t element{}; element < count; ++element)
+            {
+                const auto length = source.read_size();
+                flipper.write_variable(length);
+                flipper.write_bytes(source.read_bytes(length));
+            }
+
+            return source;
+        }
+
+        system::byteflipper& flipper;
+    };
 };
 
 BC_POP_WARNING()
