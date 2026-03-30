@@ -240,16 +240,16 @@ struct output
             source.skip_bytes(tx::size);
 
             // value (translates from variable to fixed width)
-            flipper.write_8_bytes_little_endian(source.read_variable());
+            sink.write_8_bytes_little_endian(source.read_variable());
 
             // script (prefixed)
             const auto length = source.read_size();
-            flipper.write_variable(length);
-            flipper.write_bytes(source.read_bytes(length));
+            sink.write_variable(length);
+            sink.write_bytes(source.read_bytes(length));
             return source;
         }
 
-        system::byteflipper& flipper;
+        bytewriter& sink;
     };
 };
 

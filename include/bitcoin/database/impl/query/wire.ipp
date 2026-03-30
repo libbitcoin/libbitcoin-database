@@ -33,109 +33,63 @@ namespace database {
 // This normalized approach is also the most efficient.
 
 TEMPLATE
-bool CLASS::get_wire_header(byteflipper& flipper,
+bool CLASS::get_wire_header(bytewriter& sink,
     const header_link& link) const NOEXCEPT
 {
-    const auto start = flipper.get_write_position();
-    table::header::wire_header header{ {}, flipper };
-    if (!store_.header.get(link, header))
-    {
-        flipper.invalidate();
-        return false;
-    }
-
-    // Genesis header parent is defaulted.
-    if (header.parent_fk == schema::header::link::terminal)
-        return true;
-
-    flipper.set_position(start);
-    table::header::wire_key key{ {}, flipper };
-    if (!store_.header.get(header.parent_fk, key))
-    {
-        flipper.invalidate();
-        return false;
-    }
-
-    return true;
+    // Double read of header table is small, prevents need for writer rewind.
+    const auto parent = to_parent(link);
+    table::header::wire_header header{ {}, sink, get_header_key(parent) };
+    return store_.header.get(link, header);
 }
 
 TEMPLATE
-bool CLASS::get_wire_input(byteflipper& flipper,
+bool CLASS::get_wire_input(bytewriter& sink,
     const point_link& link) const NOEXCEPT
 {
-    // [point]
-    table::point::wire_point point{ {}, flipper };
+    table::point::wire_point point{ {}, sink };
     if (!store_.point.get(link, point))
-    {
-        flipper.invalidate();
         return false;
-    }
 
-    // [[size]script]
     table::ins::get_input ins{};
-    table::input::wire_script script{ {}, flipper };
+    table::input::wire_script script{ {}, sink };
     if (!store_.ins.get(link, ins) ||
         !store_.input.get(ins.input_fk, script))
-    {
-        flipper.invalidate();
         return false;
-    }
 
-    // [sequence]
-    flipper.write_4_bytes_little_endian(ins.sequence);
+    sink.write_4_bytes_little_endian(ins.sequence);
     return true;
 }
 
 TEMPLATE
-bool CLASS::get_wire_output(byteflipper& flipper,
+bool CLASS::get_wire_output(bytewriter& sink,
     const output_link& link) const NOEXCEPT
 {
-    // [value][[[size]script]]
-    table::output::wire_script out{ {}, flipper };
-    if (!store_.output.get(link, out))
-    {
-        flipper.invalidate();
-        return false;
-    }
-
-    return true;
+    table::output::wire_script out{ {}, sink };
+    return store_.output.get(link, out);
 }
 
 TEMPLATE
-bool CLASS::get_wire_witness(byteflipper& flipper,
+bool CLASS::get_wire_witness(bytewriter& sink,
     const point_link& link) const NOEXCEPT
 {
-    // [count][[[size]element]]
     table::ins::get_input ins{};
-    table::input::wire_witness wire{ {}, flipper };
-    if (!store_.ins.get(link, ins) ||
-        !store_.input.get(ins.input_fk, wire))
-    {
-        flipper.invalidate();
-        return false;
-    }
-
-    return true;
+    table::input::wire_witness wire{ {}, sink };
+    return store_.ins.get(link, ins)
+        && store_.input.get(ins.input_fk, wire);
 }
 
 TEMPLATE
-bool CLASS::get_wire_tx(byteflipper& flipper, const tx_link& link,
+bool CLASS::get_wire_tx(bytewriter& sink, const tx_link& link,
     bool witness) const NOEXCEPT
 {
     table::transaction::record tx{};
     if (!store_.tx.get(link, tx))
-    {
-        flipper.invalidate();
         return false;
-    }
 
     table::outs::record outs{};
     outs.out_fks.resize(tx.outs_count);
     if (!store_.outs.get(tx.outs_fk, outs))
-    {
-        flipper.invalidate();
         return false;
-    }
 
     // Point links are contiguous (computed).
     const auto ins_begin = tx.point_fk;
@@ -143,52 +97,49 @@ bool CLASS::get_wire_tx(byteflipper& flipper, const tx_link& link,
     const auto ins_final = ins_begin + ins_count;
     const auto witnessed = witness && (tx.heavy != tx.light);
 
-    flipper.write_4_bytes_little_endian(tx.version);
+    sink.write_4_bytes_little_endian(tx.version);
 
     if (witnessed)
     {
-        flipper.write_byte(system::chain::witness_marker);
-        flipper.write_byte(system::chain::witness_enabled);
+        sink.write_byte(system::chain::witness_marker);
+        sink.write_byte(system::chain::witness_enabled);
     }
 
-    flipper.write_variable(ins_count);
+    sink.write_variable(ins_count);
     for (auto fk = ins_begin; fk < ins_final; ++fk)
-        if (!get_wire_input(flipper, fk))
+        if (!get_wire_input(sink, fk))
             return false;
 
-    flipper.write_variable(outs.out_fks.size());
+    sink.write_variable(outs.out_fks.size());
     for (const auto& fk: outs.out_fks)
-        if (!get_wire_output(flipper, fk))
+        if (!get_wire_output(sink, fk))
             return false;
 
     if (witnessed)
     {
         for (auto fk = ins_begin; fk < ins_final; ++fk)
-            if (!get_wire_witness(flipper, fk))
+            if (!get_wire_witness(sink, fk))
                 return false;
     }
 
-    flipper.write_4_bytes_little_endian(tx.locktime);
+    sink.write_4_bytes_little_endian(tx.locktime);
     return true;
 }
 
 TEMPLATE
-bool CLASS::get_wire_block(byteflipper& flipper, const header_link& link,
+bool CLASS::get_wire_block(bytewriter& sink, const header_link& link,
     bool witness) const NOEXCEPT
 {
-    if (!get_wire_header(flipper, link))
+    if (!get_wire_header(sink, link))
         return false;
 
     const auto txs = to_transactions(link);
     if (txs.empty())
-    {
-        flipper.invalidate();
         return false;
-    }
 
-    flipper.write_variable(txs.size());
+    sink.write_variable(txs.size());
     for (const auto& tx_link: txs)
-        if (!get_wire_tx(flipper, tx_link, witness))
+        if (!get_wire_tx(sink, tx_link, witness))
             return false;
 
     return true;

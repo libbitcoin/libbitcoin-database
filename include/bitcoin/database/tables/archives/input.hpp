@@ -183,12 +183,12 @@ struct input
         {
             // script (prefixed)
             const auto length = source.read_size();
-            flipper.write_variable(length);
-            flipper.write_bytes(source.read_bytes(length));
+            sink.write_variable(length);
+            sink.write_bytes(source.read_bytes(length));
             return source;
         }
 
-        system::byteflipper& flipper;
+        bytewriter& sink;
     };
 
     struct wire_witness
@@ -201,20 +201,20 @@ struct input
 
             // witness (count)
             const auto count = source.read_size();
-            flipper.write_variable(count);
+            sink.write_variable(count);
 
             // witness (prefixed)
             for (size_t element{}; element < count; ++element)
             {
                 const auto length = source.read_size();
-                flipper.write_variable(length);
-                flipper.write_bytes(source.read_bytes(length));
+                sink.write_variable(length);
+                sink.write_bytes(source.read_bytes(length));
             }
 
             return source;
         }
 
-        system::byteflipper& flipper;
+        bytewriter& sink;
     };
 };
 
