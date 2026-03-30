@@ -26,10 +26,12 @@ namespace libbitcoin {
 namespace database {
 
 /// These all operate over a system::iostream.
-
 using reader = system::byte_reader<system::iostream<>>;
 using writer = system::byte_writer<system::iostream<>>;
 using flipper = system::byte_flipper<system::iostream<>>;
+
+/// Interfaces.
+using bytewriter = system::bytewriter;
 
 } // namespace database
 } // namespace libbitcoin

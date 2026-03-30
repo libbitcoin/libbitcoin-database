@@ -139,11 +139,11 @@ struct ins
         inline bool from_data(reader& source) NOEXCEPT
         {
             const auto sequence_size = sizeof(uint32_t);
-            flipper.write_bytes(source.read_bytes(sequence_size));
+            sink.write_bytes(source.read_bytes(sequence_size));
             return source;
         }
 
-        system::byteflipper& flipper;
+        bytewriter& sink;
     };
 };
 

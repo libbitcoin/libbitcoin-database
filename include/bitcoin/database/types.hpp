@@ -52,9 +52,6 @@ using outpoint = system::chain::outpoint;
 using outpoints = std::set<outpoint>;
 
 using data_chunk = system::data_chunk;
-using bytereader = system::bytereader;
-using bytewriter = system::bytewriter;
-using byteflipper = system::byteflipper;
 
 struct header_state { header_link link; code ec; };
 using header_states = std::vector<header_state>;

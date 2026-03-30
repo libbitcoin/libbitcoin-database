@@ -99,13 +99,13 @@ struct point
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.rewind_bytes(schema::point::sk);
-            flipper.write_bytes(source.read_hash());
+            sink.write_bytes(source.read_hash());
             const auto value = source.read_little_endian<ix::integer, ix::size>();
-            flipper.write_4_bytes_little_endian(to_index(value));
+            sink.write_4_bytes_little_endian(to_index(value));
             return source;
         }
 
-        system::byteflipper& flipper;
+        bytewriter& sink;
     };
 };
 

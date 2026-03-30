@@ -373,12 +373,13 @@ public:
     /// Wire.
     /// -----------------------------------------------------------------------
 
-    bool get_wire_input(byteflipper& flipper, const point_link& link) const NOEXCEPT;
-    bool get_wire_output(byteflipper& flipper, const output_link& link) const NOEXCEPT;
-    bool get_wire_witness(byteflipper& flipper, const point_link& link) const NOEXCEPT;
-    bool get_wire_header(byteflipper& flipper, const header_link& link) const NOEXCEPT;
-    bool get_wire_tx(byteflipper& flipper, const tx_link& link, bool witness) const NOEXCEPT;
-    bool get_wire_block(byteflipper& flipper, const header_link& link,
+    bool get_wire_input(bytewriter& sink, const point_link& link) const NOEXCEPT;
+    bool get_wire_output(bytewriter& sink, const output_link& link) const NOEXCEPT;
+    bool get_wire_witness(bytewriter& sink, const point_link& link) const NOEXCEPT;
+    bool get_wire_header(bytewriter& sink, const header_link& link) const NOEXCEPT;
+    bool get_wire_tx(bytewriter& sink, const tx_link& link,
+        bool witness) const NOEXCEPT;
+    bool get_wire_block(bytewriter& sink, const header_link& link,
         bool witness) const NOEXCEPT;
 
     data_chunk get_wire_header(const header_link& link) const NOEXCEPT;
