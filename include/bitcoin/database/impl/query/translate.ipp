@@ -179,7 +179,7 @@ tx_link CLASS::to_strong_tx(const hash_digest& tx_hash) const NOEXCEPT
         txs.push_back(*it);
 
     // Find the first strong tx of the set and return its link.
-    for (const auto& tx : txs)
+    for (const auto& tx: txs)
         if (!to_block(tx).is_terminal())
             return tx;
 
