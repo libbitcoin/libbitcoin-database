@@ -394,6 +394,13 @@ bool CLASS::populate_with_metadata(const input& input) const NOEXCEPT
 TEMPLATE
 bool CLASS::populate_with_metadata(const transaction& tx) const NOEXCEPT
 {
+    // This override makes the public method safe for coinbase calling.
+    return tx.is_coinbase() || populate_with_metadata_(tx);
+}
+
+TEMPLATE
+bool CLASS::populate_with_metadata_(const transaction& tx) const NOEXCEPT
+{
     BC_ASSERT(!tx.is_coinbase());
 
     const auto& ins = tx.inputs_ptr();

@@ -768,6 +768,9 @@ protected:
         const system::settings& settings, const header& header,
         const header_link& link, size_t height) const NOEXCEPT;
 
+    /// Bypasses and only asserts coinbase guard (internal use).
+    bool populate_with_metadata_(const transaction& tx) const NOEXCEPT;
+
     /// address
     /// -----------------------------------------------------------------------
     code get_address_outputs_turbo(std::atomic_bool& cancel,
