@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <ranges>
 #include <utility>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
@@ -119,10 +120,14 @@ bool CLASS::get_strong_fork(bool& strong, const uint256_t& fork_work,
 
 // protected
 TEMPLATE
-bool CLASS::is_spent_coinbase(const tx_link&) const NOEXCEPT
+bool CLASS::is_spent_coinbase(const tx_link&, size_t) const NOEXCEPT
 {
-    // TODO: with multiple previous duplicates there must be same number of
-    // TODO: spends of each coinbase output.
+    // bip30: all outputs of all previous (strong) duplicate cbs must be spent.
+    // Since spends of duplicate txs all look the same in the store, we can
+    // only count the number of them that are strong. This is straightforward,
+    // however a double spend check will not allow a second spend. As such we
+    // are currently operating until the presumption that only the two bip30
+    // exception blocks will ever be allowed. This is an area of future work.
     return true;
 }
 
@@ -138,39 +143,31 @@ code CLASS::unspent_duplicates(const header_link& link,
         return error::success;
 
     // Get coinbase (block's first tx link).
-    const auto coinbase = to_coinbase(link);
-    if (coinbase.is_terminal())
+    const auto self = to_coinbase(link);
+    if (self.is_terminal())
         return error::integrity1;
 
-    // Get all coinbases of the same hash (must be at least one, because self).
+    // Get all other cbs of the same hash (iterator isolated).
     // ........................................................................
     std::vector<tx_link> coinbases{};
-    for (auto it = store_.tx.it(get_tx_key(coinbase)); it != it.end(); ++it)
-        if (!system::contains(coinbases, *it))
-            coinbases.push_back(*it);
+    for (auto it = store_.tx.it(get_tx_key(self)); it != it.end(); ++it)
+        if (*it != self) coinbases.push_back(*it);
 
-    // remove non-strong cbs (usually empty, self not strong w/prevout table).
+    // Remove non-strong cbs (self not strong until organized).
     // strong_tx records are always populated by the associating block header.
-    // Coinbase txs are always set strong in assocition with the associating
+    // Coinbase txs are always set strong in association with the associating
     // header, both for block associations and compact. The compact block cb
-    // may be archived only when it is also associated via txs to the header.
+    // may only be archived when it is also associated via txs to the header.
     // ........................................................................
-    std::erase_if(coinbases, [this](const auto& cb) NOEXCEPT
-    {
-        table::strong_tx::record strong{};
-        return store_.strong_tx.find(cb, strong) && strong.positive();
-    });
+    const auto count = std::ranges::count_if(coinbases,
+        [this](const auto& cb) NOEXCEPT
+        {
+            table::strong_tx::record strong{};
+            return store_.strong_tx.find(cb, strong) && strong.positive();
+        });
 
-    ////// Strong must be other blocks, dis/re-orged blocks are not strong.
-    ////// Remove self (will be not found if current block is not set_strong).
-    ////const auto self = std::find(coinbases.begin(), coinbases.end(), link);
-    ////if (self == coinbases.end() || coinbases.erase(self) == coinbases.end())
-    ////    return error::integrity3;
-    
-    // bip30: all outputs of all previous duplicate coinbases must be spent.
-    for (const auto& cb: coinbases)
-        if (!is_spent_coinbase(cb))
-            return system::error::unspent_coinbase_collision;
+    if (!is_spent_coinbase(self, count))
+        return system::error::unspent_coinbase_collision;
 
     return error::success;
 }
@@ -208,8 +205,7 @@ code CLASS::unspendable(uint32_t sequence, bool coinbase,
             return error::integrity4;
 
         if (relative &&
-            input::is_relative_locked(sequence, ctx.height, ctx.mtp,
-                out.height, out.mtp))
+            input::is_relative_locked(sequence, ctx.height, ctx.mtp, out.height, out.mtp))
             return system::error::relative_time_locked;
 
         if (coinbase &&

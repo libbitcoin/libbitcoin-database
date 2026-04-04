@@ -417,15 +417,15 @@ public:
     inpoint get_spender(const point_link& link) const NOEXCEPT;
     inpoints get_spenders(const point& point) const NOEXCEPT;
 
-    /// False implies missing prevouts, node input.metadata is populated.
-    bool populate_with_metadata(const input& input) const NOEXCEPT;
-    bool populate_with_metadata(const block& block) const NOEXCEPT;
-    bool populate_with_metadata(const transaction& tx) const NOEXCEPT;
-
     /// False implies missing prevouts, input.metadata is not populated.
     bool populate_without_metadata(const input& input) const NOEXCEPT;
     bool populate_without_metadata(const block& block) const NOEXCEPT;
     bool populate_without_metadata(const transaction& tx) const NOEXCEPT;
+
+    /// False implies missing prevouts, node input.metadata is populated.
+    bool populate_with_metadata(const input& input, bool chain=false) const NOEXCEPT;
+    bool populate_with_metadata(const block& block, bool chain=false) const NOEXCEPT;
+    bool populate_with_metadata(const transaction& tx, bool chain=false) const NOEXCEPT;
 
     /// Fees.
     /// -----------------------------------------------------------------------
@@ -705,7 +705,7 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Called by block_confirmable (check bip30)
-    bool is_spent_coinbase(const tx_link& link) const NOEXCEPT;
+    bool is_spent_coinbase(const tx_link& link, size_t count) const NOEXCEPT;
     code unspent_duplicates(const header_link& coinbase,
         const context& ctx) const NOEXCEPT;
 
@@ -769,7 +769,8 @@ protected:
         const header_link& link, size_t height) const NOEXCEPT;
 
     /// Bypasses and only asserts coinbase guard (internal use).
-    bool populate_with_metadata_(const transaction& tx) const NOEXCEPT;
+    bool populate_with_metadata_(const transaction& tx,
+        bool chain) const NOEXCEPT;
 
     /// address
     /// -----------------------------------------------------------------------

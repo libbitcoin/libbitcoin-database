@@ -270,6 +270,7 @@ typename CLASS::input::cptr CLASS::get_input(const point_link& link,
         ins.sequence
     );
 
+    // Node only (cheap so always include).
     // Internally-populated points will have default link of max_uint32.
     ptr->metadata.point_link = link;
     return ptr;
@@ -369,7 +370,8 @@ inpoints CLASS::get_spenders(const point& point) const NOEXCEPT
 // populate_with_metadata
 
 TEMPLATE
-bool CLASS::populate_with_metadata(const input& input) const NOEXCEPT
+bool CLASS::populate_with_metadata(const input& input,
+    bool chain) const NOEXCEPT
 {
     // Null point would return nullptr and be interpreted as missing.
     BC_ASSERT(!input.point().is_null());
@@ -381,9 +383,21 @@ bool CLASS::populate_with_metadata(const input& input) const NOEXCEPT
         return true;
 
     const auto tx = to_tx(input.point().hash());
-    input.prevout = get_output(tx, input.point().index());
-    input.metadata.parent_tx = tx;
+
+    // Node and chain confirmation.
     input.metadata.coinbase = is_coinbase(tx);
+    input.prevout = get_output(tx, input.point().index());
+
+    // Node only (cheap so always include).
+    input.metadata.parent_tx = tx;
+
+    // TODO: Chain only metadata (expensive).
+    if (chain)
+    {
+        input.metadata.spender_height = max_uint32;
+        input.metadata.prevout_height = max_uint32;
+        input.metadata.median_time_past = max_uint32;
+    }
 
     // If read via the store for store confirmation, then...
     // input.metadata.point_link must be set earlier in get_input().
@@ -392,36 +406,39 @@ bool CLASS::populate_with_metadata(const input& input) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::populate_with_metadata(const transaction& tx) const NOEXCEPT
+bool CLASS::populate_with_metadata(const transaction& tx,
+    bool chain) const NOEXCEPT
 {
     // This override makes the public method safe for coinbase calling.
-    return tx.is_coinbase() || populate_with_metadata_(tx);
+    return tx.is_coinbase() || populate_with_metadata_(tx, chain);
 }
 
 TEMPLATE
-bool CLASS::populate_with_metadata_(const transaction& tx) const NOEXCEPT
+bool CLASS::populate_with_metadata_(const transaction& tx,
+    bool chain) const NOEXCEPT
 {
     BC_ASSERT(!tx.is_coinbase());
 
     const auto& ins = tx.inputs_ptr();
     return std::all_of(ins->begin(), ins->end(),
-        [this](const auto& in) NOEXCEPT
+        [this, chain](const auto& in) NOEXCEPT
         {
-            return this->populate_with_metadata(*in);
+            return this->populate_with_metadata(*in, chain);
         });
 }
 
 TEMPLATE
-bool CLASS::populate_with_metadata(const block& block) const NOEXCEPT
+bool CLASS::populate_with_metadata(const block& block,
+    bool chain) const NOEXCEPT
 {
     const auto& txs = block.transactions_ptr();
     if (txs->empty())
         return false;
 
     return std::all_of(std::next(txs->begin()), txs->end(),
-        [this](const auto& tx) NOEXCEPT
+        [this, chain](const auto& tx) NOEXCEPT
         {
-            return this->populate_with_metadata(*tx);
+            return this->populate_with_metadata(*tx, chain);
         });
 }
 
