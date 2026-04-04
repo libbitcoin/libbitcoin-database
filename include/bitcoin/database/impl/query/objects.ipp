@@ -270,8 +270,8 @@ typename CLASS::input::cptr CLASS::get_input(const point_link& link,
         ins.sequence
     );
 
-    // Internally-populated points will have default link.
-    ptr->metadata.link = link;
+    // Internally-populated points will have default link of max_uint32.
+    ptr->metadata.point_link = link;
     return ptr;
 }
 
@@ -374,24 +374,32 @@ bool CLASS::populate_with_metadata(const input& input) const NOEXCEPT
     // Null point would return nullptr and be interpreted as missing.
     BC_ASSERT(!input.point().is_null());
 
+    // input.metadata.point_link must be defaulted to max_uint32.
+    BC_ASSERT(input.metadata.point_link == max_uint32);
+
     if (input.prevout)
         return true;
 
     const auto tx = to_tx(input.point().hash());
     input.prevout = get_output(tx, input.point().index());
-    input.metadata.parent = tx;
-    input.metadata.inside = false;
+    input.metadata.parent_tx = tx;
     input.metadata.coinbase = is_coinbase(tx);
 
-    // input.metadata.link is set earlier in get_input(). Internally-populated
-    // inputs will have the default metadata.link (max_uint32). This must map
-    // onto Link::terminal, indicating an internal spend.
-
+    // If read via the store for store confirmation, then...
+    // input.metadata.point_link must be set earlier in get_input().
+    ////BC_ASSERT(input.metadata.point_link != max_uint32);
     return !is_null(input.prevout);
 }
 
 TEMPLATE
 bool CLASS::populate_with_metadata(const transaction& tx) const NOEXCEPT
+{
+    // This override makes the public method safe for coinbase calling.
+    return tx.is_coinbase() || populate_with_metadata_(tx);
+}
+
+TEMPLATE
+bool CLASS::populate_with_metadata_(const transaction& tx) const NOEXCEPT
 {
     BC_ASSERT(!tx.is_coinbase());
 

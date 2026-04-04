@@ -385,7 +385,7 @@ bool CLASS::get_double_spenders(tx_links& out,
 
     for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
         for (const auto& in: *(*tx)->inputs_ptr())
-            if (!get_double_spenders(out, in->point(), in->metadata.link))
+            if (!get_double_spenders(out, in->point(), in->metadata.point_link))
                 return false;
 
     return true;

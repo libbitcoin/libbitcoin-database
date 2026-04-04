@@ -831,41 +831,35 @@ BOOST_AUTO_TEST_CASE(query_archive_write__populate_with_metadata__metadata__expe
     const auto& genesis = clean_(test::genesis);
 
     BOOST_CHECK(!genesis.inputs_ptr()->at(0)->prevout);
-    BOOST_CHECK( genesis.inputs_ptr()->at(0)->metadata.inside);
     BOOST_CHECK( genesis.inputs_ptr()->at(0)->metadata.coinbase);
-    BOOST_CHECK_EQUAL(genesis.inputs_ptr()->at(0)->metadata.parent, 0u);
+    BOOST_CHECK_EQUAL(genesis.inputs_ptr()->at(0)->metadata.parent_tx, max_uint32);
 
     BOOST_CHECK(query.populate_with_metadata(genesis));
 
     BOOST_CHECK(!genesis.inputs_ptr()->at(0)->prevout);
-    BOOST_CHECK( genesis.inputs_ptr()->at(0)->metadata.inside);
     BOOST_CHECK( genesis.inputs_ptr()->at(0)->metadata.coinbase);
-    BOOST_CHECK_EQUAL(genesis.inputs_ptr()->at(0)->metadata.parent, 0u);
+    BOOST_CHECK_EQUAL(genesis.inputs_ptr()->at(0)->metadata.parent_tx, max_uint32);
 
     // Transaction population.
     const auto& tx4 = clean_(test::tx4);
 
     BOOST_CHECK(!tx4.inputs_ptr()->at(0)->prevout);
-    BOOST_CHECK( tx4.inputs_ptr()->at(0)->metadata.inside);
     BOOST_CHECK( tx4.inputs_ptr()->at(0)->metadata.coinbase);
-    BOOST_CHECK_EQUAL(tx4.inputs_ptr()->at(0)->metadata.parent, 0u);
+    BOOST_CHECK_EQUAL(tx4.inputs_ptr()->at(0)->metadata.parent_tx, max_uint32);
     BOOST_CHECK(!tx4.inputs_ptr()->at(1)->prevout);
-    BOOST_CHECK( tx4.inputs_ptr()->at(1)->metadata.inside);
     BOOST_CHECK( tx4.inputs_ptr()->at(1)->metadata.coinbase);
-    BOOST_CHECK_EQUAL(tx4.inputs_ptr()->at(1)->metadata.parent, 0u);
+    BOOST_CHECK_EQUAL(tx4.inputs_ptr()->at(1)->metadata.parent_tx, max_uint32);
 
     BOOST_CHECK(query.populate_with_metadata(tx4));
 
     // TODO: test non-coinbase and other parent.
     // spent/mtp are defaults, coinbase/parent are set (to non-default values).
     BOOST_CHECK( tx4.inputs_ptr()->at(0)->prevout);
-    BOOST_CHECK(!tx4.inputs_ptr()->at(0)->metadata.inside);
     BOOST_CHECK(!tx4.inputs_ptr()->at(0)->metadata.coinbase);
-    BOOST_CHECK_EQUAL(tx4.inputs_ptr()->at(0)->metadata.parent, 1u);
+    BOOST_CHECK_EQUAL(tx4.inputs_ptr()->at(0)->metadata.parent_tx, 1u);
     BOOST_CHECK( tx4.inputs_ptr()->at(1)->prevout);
-    BOOST_CHECK(!tx4.inputs_ptr()->at(1)->metadata.inside);
     BOOST_CHECK(!tx4.inputs_ptr()->at(1)->metadata.coinbase);
-    BOOST_CHECK_EQUAL(tx4.inputs_ptr()->at(1)->metadata.parent, 1u);
+    BOOST_CHECK_EQUAL(tx4.inputs_ptr()->at(1)->metadata.parent_tx, 1u);
 }
 
 // populate_without_metadata
