@@ -51,12 +51,22 @@ struct prevout
         return set_right(output_tx_fk, offset, coinbase);
     }
 
+    static constexpr tx::integer merge(
+        const system::chain::prevout& metadata) NOEXCEPT
+    {
+        BC_ASSERT((metadata.parent_tx == max_uint32) ==
+            (metadata.point_link == max_uint32));
+
+        // parent_tx metadata default (max) implies block-internal spend.
+        return metadata.parent_tx == max_uint32 ? tx::terminal :
+            merge(metadata.coinbase, metadata.parent_tx);
+    }
+
     struct slab_put_ref
       : public schema::prevout
     {
         inline link count() const NOEXCEPT
         {
-            // TODO: assert overflow.
             using namespace system;
             const auto conflicts_ = conflicts.size();
             return variable_size(conflicts_) + (conflicts_ * tx::size) +
@@ -65,7 +75,7 @@ struct prevout
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            const auto write_con = [&](const auto& con) NOEXCEPT
+            const auto write_conflict = [&](const auto& con) NOEXCEPT
             {
                 sink.write_little_endian<tx::integer, tx::size>(con);
             };
@@ -76,10 +86,7 @@ struct prevout
                 return std::for_each(ins->begin(), ins->end(),
                     [&](const auto& in) NOEXCEPT
                     {
-                        // Sets terminal sentinel for block-internal spends.
-                        const auto value = in->metadata.inside ? tx::terminal :
-                            merge(in->metadata.coinbase, in->metadata.parent);
-
+                        const auto value = merge(in->metadata);
                         sink.write_little_endian<tx::integer, tx::size>(value);
                         sink.write_little_endian<uint32_t>(in->sequence());
                     });
@@ -93,7 +100,7 @@ struct prevout
 
             // Count is written as a tx link so the table can remain an array.
             sink.write_variable(number);
-            std::for_each(cons.begin(), cons.end(), write_con);
+            std::for_each(cons.begin(), cons.end(), write_conflict);
             std::for_each(std::next(txs.begin()), txs.end(), write_tx);
 
             BC_ASSERT(!sink || (sink.get_write_position() == count()));
@@ -109,7 +116,6 @@ struct prevout
     {
         inline link count() const NOEXCEPT
         {
-            // TODO: assert overflow.
             using namespace system;
             const auto conflicts_ = conflicts.size();
             return variable_size(conflicts_) + (conflicts_ * tx::size) +
