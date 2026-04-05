@@ -31,6 +31,15 @@
     <Filter Include="include\bitcoin\database\impl\query">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000001}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\bitcoin\database\impl\query\archival">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\impl\query\consensus">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\impl\query\navigate">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000004}</UniqueIdentifier>
+    </Filter>
     <Filter Include="include\bitcoin\database\locks">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000A}</UniqueIdentifier>
     </Filter>
@@ -38,7 +47,7 @@
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000B}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\database\memory\interfaces">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000002}</UniqueIdentifier>
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000005}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\database\primitives">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000C}</UniqueIdentifier>
@@ -47,19 +56,19 @@
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-00000000000D}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\database\tables\archives">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000003}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\tables\caches">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000004}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\tables\indexes">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000005}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\database\tables\optionals">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="resource">
+    <Filter Include="include\bitcoin\database\tables\caches">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\tables\indexes">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\database\tables\optionals">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resource">
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000010}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000000}</UniqueIdentifier>
@@ -331,25 +340,64 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomap.ipp">
       <Filter>include\bitcoin\database\impl\primitives</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive_read.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\address.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive_write.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\amounts.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\confirm.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\chain_reader.ipp">
+      <Filter>include\bitcoin\database\impl\query\archival</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\chain_writer.ipp">
+      <Filter>include\bitcoin\database\impl\query\archival</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\wire_reader.ipp">
+      <Filter>include\bitcoin\database\impl\query\archival</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\wire_writer.ipp">
+      <Filter>include\bitcoin\database\impl\query\archival</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\confirmed.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus.ipp">
-      <Filter>include\bitcoin\database\impl\query</Filter>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_block.ipp">
+      <Filter>include\bitcoin\database\impl\query\consensus</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\context.ipp">
-      <Filter>include\bitcoin\database\impl\query</Filter>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_chain_state.ipp">
+      <Filter>include\bitcoin\database\impl\query\consensus</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_compact.ipp">
+      <Filter>include\bitcoin\database\impl\query\consensus</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_forks.ipp">
+      <Filter>include\bitcoin\database\impl\query\consensus</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_populate.ipp">
+      <Filter>include\bitcoin\database\impl\query\consensus</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_prevouts.ipp">
+      <Filter>include\bitcoin\database\impl\query\consensus</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_states.ipp">
+      <Filter>include\bitcoin\database\impl\query\consensus</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_strong.ipp">
+      <Filter>include\bitcoin\database\impl\query\consensus</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_transaction.ipp">
+      <Filter>include\bitcoin\database\impl\query\consensus</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_work.ipp">
+      <Filter>include\bitcoin\database\impl\query\consensus</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\extent.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\fees.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\fee_rate.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\filters.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\height.ipp">
@@ -358,28 +406,40 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\initialize.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\locator.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\merkle.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\network.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\navigate\navigate_arraymap.ipp">
+      <Filter>include\bitcoin\database\impl\query\navigate</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\navigate\navigate_forward.ipp">
+      <Filter>include\bitcoin\database\impl\query\navigate</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\navigate\navigate_hashmap.ipp">
+      <Filter>include\bitcoin\database\impl\query\navigate</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\navigate\navigate_natural.ipp">
+      <Filter>include\bitcoin\database\impl\query\navigate</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\navigate\navigate_reverse.ipp">
+      <Filter>include\bitcoin\database\impl\query\navigate</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\properties_block.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\objects.ipp">
-      <Filter>include\bitcoin\database\impl\query</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\optional.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\properties_tx.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\query.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\translate.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\sequences.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\validate.ipp">
-      <Filter>include\bitcoin\database\impl\query</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\wire.ipp">
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\sizes.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\store.ipp">

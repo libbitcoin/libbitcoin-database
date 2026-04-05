@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <ranges>
 #include <utility>
 #include <bitcoin/database/define.hpp>
 
@@ -29,6 +28,41 @@ namespace libbitcoin {
 namespace database {
 
 // merkle
+// ----------------------------------------------------------------------------
+// server/electrum
+
+TEMPLATE
+code CLASS::get_merkle_root_and_proof(hash_digest& root, hashes& proof,
+    size_t target, size_t waypoint) const NOEXCEPT
+{
+    if (target > waypoint)
+        return error::invalid_argument;
+
+    if (waypoint > get_top_confirmed())
+        return error::not_found;
+
+    hashes roots{};
+    if (const auto ec = get_merkle_subroots(roots, waypoint))
+        return ec;
+
+    if (const auto ec = get_merkle_proof(proof, roots, target, waypoint))
+        return ec;
+
+    root = system::merkle_root(std::move(roots));
+    return {};
+}
+
+TEMPLATE
+hash_digest CLASS::get_merkle_root(size_t height) const NOEXCEPT
+{
+    hashes roots{};
+    if (const auto ec = get_merkle_subroots(roots, height))
+        return {};
+
+    return system::merkle_root(std::move(roots));
+}
+
+// utilities
 // ----------------------------------------------------------------------------
 
 // static/protected
@@ -241,37 +275,6 @@ code CLASS::get_merkle_subroots(hashes& roots, size_t waypoint) const NOEXCEPT
     }
 
     return error::success;
-}
-
-TEMPLATE
-code CLASS::get_merkle_root_and_proof(hash_digest& root, hashes& proof,
-    size_t target, size_t waypoint) const NOEXCEPT
-{
-    if (target > waypoint)
-        return error::invalid_argument;
-
-    if (waypoint > get_top_confirmed())
-        return error::not_found;
-
-    hashes roots{};
-    if (const auto ec = get_merkle_subroots(roots, waypoint))
-        return ec;
-
-    if (const auto ec = get_merkle_proof(proof, roots, target, waypoint))
-        return ec;
-
-    root = system::merkle_root(std::move(roots));
-    return {};
-}
-
-TEMPLATE
-hash_digest CLASS::get_merkle_root(size_t height) const NOEXCEPT
-{
-    hashes roots{};
-    if (const auto ec = get_merkle_subroots(roots, height))
-        return {};
-
-    return system::merkle_root(std::move(roots));
 }
 
 } // namespace database

@@ -21,16 +21,38 @@
 
 #include <algorithm>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/error.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-// Block status (mostly surrogate-keyed).
+  
+// find_confirmed
 // ----------------------------------------------------------------------------
-// Not for use in validatation (2 additional gets) or confirmation (height).
 
-// protected/get_confirmed_balance(address)
+TEMPLATE
+header_link CLASS::find_confirmed_block(
+    const hash_digest& tx_hash) const NOEXCEPT
+{
+    const auto block = find_strong(tx_hash);
+    if (is_confirmed_block(block))
+        return block;
+
+    return {};
+}
+
+TEMPLATE
+point_link CLASS::find_confirmed_spender(const point& prevout) const NOEXCEPT
+{
+    for (const auto& in: to_spenders(prevout))
+        if (is_confirmed_input(in))
+            return in;
+
+    return {};
+}
+
+// is_confirmed
+// ----------------------------------------------------------------------------
+
+// protected
 TEMPLATE
 bool CLASS::is_confirmed_unspent(const output_link& link) const NOEXCEPT
 {
@@ -67,7 +89,7 @@ TEMPLATE
 bool CLASS::is_confirmed_tx(const tx_link& link) const NOEXCEPT
 {
     // The tx is strong *and* its block is confirmed (by height).
-    const auto fk = to_strong(link);
+    const auto fk = find_strong(link);
     return !fk.is_terminal() && is_confirmed_block(fk);
 }
 
@@ -98,7 +120,7 @@ bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
     });
 }
 
-// Block confirmed by height is not used for confirmation (just strong tx).
+// is_strong
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -113,88 +135,6 @@ bool CLASS::is_strong_block(const header_link& link) const NOEXCEPT
 {
     return is_strong_tx(to_coinbase(link));
 }
-
-////// unused
-////TEMPLATE
-////bool CLASS::is_strong_spend(const point_link& link) const NOEXCEPT
-////{
-////    return is_strong_tx(to_spending_tx(link));
-////}
-////
-////// unused
-////TEMPLATE
-////bool CLASS::is_mature(const point_link& link, size_t height) const NOEXCEPT
-////{
-////    const auto key = get_point_hash(link);
-////    if (key == system::null_hash)
-////        return true;
-////
-////    return !mature_prevout(key, height);
-////}
-////
-////// protected (only for is_mature/unused)
-////TEMPLATE
-////code CLASS::mature_prevout(const hash_digest& hash,
-////    size_t height) const NOEXCEPT
-////{
-////    // Search for prevout tx and get its link.
-////    const auto tx_fk = to_tx(hash);
-////    const auto header_fk = to_block(tx_fk);
-////    if (header_fk.is_terminal())
-////        return error::unconfirmed_spend;
-////
-////    // Must also be strong (above).
-////    if (!is_coinbase(tx_fk))
-////        return error::success;
-////
-////    const auto prevout_height = get_height(header_fk);
-////    if (prevout_height.is_terminal())
-////        return error::integrity;
-////
-////    if (!transaction::is_coinbase_mature(prevout_height, height))
-////        return error::coinbase_maturity;
-////
-////    return error::success;
-////}
-////
-////TEMPLATE
-////bool CLASS::is_locked(const point_link& link, uint32_t sequence,
-////    const context& ctx) const NOEXCEPT
-////{
-////    return !locked_prevout(link, sequence, ctx);
-////}
-////
-////TEMPLATE
-////code CLASS::locked_prevout(const point_link& link, uint32_t sequence,
-////    const context& ctx) const NOEXCEPT
-////{
-////    if (!ctx.is_enabled(system::chain::flags::bip68_rule))
-////        return error::success;
-////
-////    // Get hash from point, search for prevout tx and get its link.
-////    table::transaction::get_version tx{};
-////    const auto tx_fk = store_.tx.find(get_point_hash(link), tx);
-////    if (tx_fk.is_terminal())
-////        return error::missing_previous_output;
-////
-////    if (tx.version < system::chain::relative_locktime_min_version)
-////        return error::success;
-////
-////    // to_block assures confirmation by strong_tx traversal.
-////    const auto header_fk = to_block(tx_fk);
-////    if (header_fk.is_terminal())
-////        return error::unconfirmed_spend;
-////
-////    context prevout_ctx{};
-////    if (!get_context(prevout_ctx, header_fk))
-////        return error::integrity;
-////
-////    if (input::is_relative_locked(sequence, ctx.height, ctx.mtp,
-////        prevout_ctx.height, prevout_ctx.mtp))
-////        return error::relative_time_locked;
-////
-////    return error::success;
-////}
 
 } // namespace database
 } // namespace libbitcoin

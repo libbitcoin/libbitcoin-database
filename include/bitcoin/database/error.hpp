@@ -40,16 +40,13 @@ enum error_t : uint8_t
 
     /// integrity (internal fault)
     integrity,
-    integrity1,
     integrity2,
     integrity3,
-    integrity4,
-    integrity5,
-    integrity6,
-    integrity7,
-    integrity8,
-    integrity9,
-    ////integrity10,
+    integrity_spendable,
+    integrity_get_prevouts,
+    integrity_block_confirmable1,
+    integrity_block_confirmable2,
+    ////integrity_spent_duplicates,
 
     /// memory map
     open_open,

@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__set_strong__set_unstrong__expected)
 
 constexpr auto bip68 = system::chain::flags::bip68_rule;
 
-BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__bad_link__integrity)
+BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__bad_link__integrity_block_confirmable1)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__bad_link__integrity)
     BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{ bip68, 1, 0 }, false, false));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity6);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity_block_confirmable1);
 }
 
 // These pass but are limited by vectors with mostly coinbases.
@@ -612,11 +612,11 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_intern
     ////BOOST_REQUIRE(query.set_strong(2));
 
     // Not confirmable because tx not strong.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity5);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity_get_prevouts);
     BOOST_REQUIRE(query.set_strong(2));
 
     // Not confirmable because lack of maturity.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity5);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity_get_prevouts);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_internal_mature__success)
@@ -636,14 +636,14 @@ BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__spend_coinbase_and_intern
     ////BOOST_REQUIRE(query.set_strong(2));
 
     // Not confirmable because tx not strong.
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity5);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity_get_prevouts);
 
     // block_spend_internal_2b spends first block1b output and first own output.
     // But first block1b is first tx in block_spend_internal_2b so excluded as coinbase.
     // It spends only its first own output (coinbase) and that can never be mature.
     // But spend target is not stored as coinbase because it's not a null point.
     BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity5);
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity_get_prevouts);
 }
 
 BOOST_AUTO_TEST_CASE(query_confirm__block_confirmable__confirmed_double_spend__confirmed_double_spend)

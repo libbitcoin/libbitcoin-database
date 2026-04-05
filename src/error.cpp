@@ -33,16 +33,11 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // integrity (internal fault)
     { integrity, "store corrupted" },
-    { integrity1, "store corrupted1" },
-    { integrity2, "store corrupted2" },
-    { integrity3, "store corrupted3" },
-    { integrity4, "store corrupted4" },
-    { integrity5, "store corrupted5" },
-    { integrity6, "store corrupted6" },
-    { integrity7, "store corrupted7" },
-    { integrity8, "store corrupted8" },
-    { integrity9, "store corrupted9" },
-    ////{ integrity10, "store corrupted10" },
+    { integrity_spendable, "store corrupted, unspendable" },
+    { integrity_get_prevouts, "store corrupted, get_prevouts" },
+    { integrity_block_confirmable1, "store corrupted, block_confirmable1" },
+    { integrity_block_confirmable2, "store corrupted, block_confirmable2" },
+        ////{ integrity_spent_duplicates, "store corrupted, spent_duplicates" },
 
     // memory map
     { open_open, "opening open file" },

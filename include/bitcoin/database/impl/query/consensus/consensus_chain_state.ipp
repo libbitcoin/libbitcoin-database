@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_CONTEXT_IPP
-#define LIBBITCOIN_DATABASE_QUERY_CONTEXT_IPP
+#ifndef LIBBITCOIN_DATABASE_CONSENSUS_CHAIN_STATE_IPP
+#define LIBBITCOIN_DATABASE_CONSENSUS_CHAIN_STATE_IPP
 
 #include <ranges>
 #include <memory>
@@ -25,9 +25,6 @@
 
 namespace libbitcoin {
 namespace database {
-
-// This value should never be read, but may be useful in debugging.
-static constexpr uint32_t unspecified_timestamp = max_uint32;
 
 // Chain state (any blocks).
 // ----------------------------------------------------------------------------

@@ -252,7 +252,6 @@ bool CLASS::address_enabled() const NOEXCEPT
 TEMPLATE
 bool CLASS::filter_enabled() const NOEXCEPT
 {
-    // TODO: use just one?
     return store_.filter_bk.enabled() && store_.filter_tx.enabled();
 }
 

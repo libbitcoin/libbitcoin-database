@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_WIRE_IPP
-#define LIBBITCOIN_DATABASE_QUERY_WIRE_IPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_ARCHIVAL_WIRE_READER_IPP
+#define LIBBITCOIN_DATABASE_QUERY_ARCHIVAL_WIRE_READER_IPP
 
 #include <algorithm>
 #include <utility>
@@ -26,9 +26,9 @@
 namespace libbitcoin {
 namespace database {
 
-// Wire serialized objects.
+// Reader directly from store to wire-encoded buffer (store to network).
 // ----------------------------------------------------------------------------
-// Due to the idiotic segwit serialization of witness after output there is are
+// Due to the stoopid segwit serialization of witness after output there is are
 // duplicated navigations to store_.ins and store_.input by the witness reader.
 // This normalized approach is also the most efficient.
 

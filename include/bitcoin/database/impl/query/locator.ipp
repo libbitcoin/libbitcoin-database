@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_NETWORK_IPP
-#define LIBBITCOIN_DATABASE_QUERY_NETWORK_IPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_LOCATOR_IPP
+#define LIBBITCOIN_DATABASE_QUERY_LOCATOR_IPP
 
 #include <algorithm>
 #include <bitcoin/database/define.hpp>
@@ -29,6 +29,7 @@ namespace database {
 // ----------------------------------------------------------------------------
 // These do not require strict consistency.
 
+// node/header-out
 TEMPLATE
 CLASS::headers CLASS::get_headers(const hashes& locator,
     const hash_digest& stop, size_t limit) const NOEXCEPT
@@ -51,6 +52,7 @@ CLASS::headers CLASS::get_headers(const hashes& locator,
     return out;
 }
 
+// node/block-out
 TEMPLATE
 hashes CLASS::get_blocks(const hashes& locator,
     const hash_digest& stop, size_t limit) const NOEXCEPT
@@ -73,6 +75,10 @@ hashes CLASS::get_blocks(const hashes& locator,
     return out;
 }
 
+// utilities
+// ----------------------------------------------------------------------------
+// protected
+
 TEMPLATE
 CLASS::span CLASS::get_locator_span(const hashes& locator,
     const hash_digest& stop, size_t limit) const NOEXCEPT
@@ -80,7 +86,7 @@ CLASS::span CLASS::get_locator_span(const hashes& locator,
     using namespace system;
 
     // Start at fork point, stop at given header (both excluded).
-    const auto start = add1(get_fork(locator));
+    const auto start = add1(get_locator_start(locator));
     const auto last1 = (stop == null_hash) ? max_uint32 :
         get_height(to_header(stop)).value;
 
@@ -100,9 +106,8 @@ CLASS::span CLASS::get_locator_span(const hashes& locator,
     };
 }
 
-// protected
 TEMPLATE
-size_t CLASS::get_fork(const hashes& locator) const NOEXCEPT
+size_t CLASS::get_locator_start(const hashes& locator) const NOEXCEPT
 {
     // Locator is presumed (by convention) to be in reverse order by height.
     for (const auto& hash: locator)
@@ -119,27 +124,6 @@ size_t CLASS::get_fork(const hashes& locator) const NOEXCEPT
     }
 
     return zero;
-}
-
-TEMPLATE
-bool CLASS::get_ancestry(header_links& ancestry, const header_link& descendant,
-    size_t count) const NOEXCEPT
-{
-    size_t height{};
-    if (!get_height(height, descendant))
-        return false;
-
-    // Limit to genesis.
-    count = std::min(add1(height), count);
-    ancestry.resize(count);
-    auto link = descendant;
-
-    // Ancestry navigation ensures continuity without locks.
-    // link terminal if previous was genesis (avoided by count <= height).
-    for (auto& ancestor: ancestry)
-        link = to_parent((ancestor = link));
-
-    return true;
 }
 
 } // namespace database
