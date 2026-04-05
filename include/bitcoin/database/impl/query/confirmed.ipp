@@ -27,6 +27,7 @@ namespace database {
   
 // find_confirmed
 // ----------------------------------------------------------------------------
+// These ensure both strong and candidate/confirmed indexation.
 
 TEMPLATE
 header_link CLASS::find_confirmed_block(
@@ -118,22 +119,6 @@ bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
     {
         return is_confirmed_input(in);
     });
-}
-
-// is_strong
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-bool CLASS::is_strong_tx(const tx_link& link) const NOEXCEPT
-{
-    table::strong_tx::record strong{};
-    return store_.strong_tx.find(link, strong) && strong.positive();
-}
-
-TEMPLATE
-bool CLASS::is_strong_block(const header_link& link) const NOEXCEPT
-{
-    return is_strong_tx(to_coinbase(link));
 }
 
 } // namespace database

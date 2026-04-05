@@ -24,18 +24,24 @@
 namespace libbitcoin {
 namespace database {
     
-// is_any_strong
+// is_strong
 // ----------------------------------------------------------------------------
 // True if any tx.link for same tx.hash is associated to a strong block.
-
+    
 TEMPLATE
-bool CLASS::is_any_strong(const tx_link& tx) const NOEXCEPT
+bool CLASS::is_strong_tx(const tx_link& link) const NOEXCEPT
 {
     // Try all txs with same hash as self (any instance will suffice).
-    return !find_strong(get_tx_key(tx)).is_terminal();
+    return !find_strong_tx(link).is_terminal();
 }
 
-// find_strong_tx
+TEMPLATE
+bool CLASS::is_strong_block(const header_link& link) const NOEXCEPT
+{
+    return is_strong_tx(to_coinbase(link));
+}
+
+// find_strong
 // ----------------------------------------------------------------------------
 // Return the tx.link for same tx.hash with strong association to block.
 
