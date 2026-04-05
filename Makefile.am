@@ -180,8 +180,6 @@ include_bitcoin_database_impl_querydir = ${includedir}/bitcoin/database/impl/que
 include_bitcoin_database_impl_query_HEADERS = \
     include/bitcoin/database/impl/query/address.ipp \
     include/bitcoin/database/impl/query/amounts.ipp \
-    include/bitcoin/database/impl/query/chain_reader.ipp \
-    include/bitcoin/database/impl/query/chain_writer.ipp \
     include/bitcoin/database/impl/query/confirmed.ipp \
     include/bitcoin/database/impl/query/extent.ipp \
     include/bitcoin/database/impl/query/fee_rate.ipp \
@@ -194,8 +192,14 @@ include_bitcoin_database_impl_query_HEADERS = \
     include/bitcoin/database/impl/query/properties_tx.ipp \
     include/bitcoin/database/impl/query/query.ipp \
     include/bitcoin/database/impl/query/sequences.ipp \
-    include/bitcoin/database/impl/query/sizes.ipp \
-    include/bitcoin/database/impl/query/wire_reader.ipp
+    include/bitcoin/database/impl/query/sizes.ipp
+
+include_bitcoin_database_impl_query_archivaldir = ${includedir}/bitcoin/database/impl/query/archival
+include_bitcoin_database_impl_query_archival_HEADERS = \
+    include/bitcoin/database/impl/query/archival/chain_reader.ipp \
+    include/bitcoin/database/impl/query/archival/chain_writer.ipp \
+    include/bitcoin/database/impl/query/archival/wire_reader.ipp \
+    include/bitcoin/database/impl/query/archival/wire_writer.ipp
 
 include_bitcoin_database_impl_query_consensusdir = ${includedir}/bitcoin/database/impl/query/consensus
 include_bitcoin_database_impl_query_consensus_HEADERS = \

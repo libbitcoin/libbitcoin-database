@@ -216,8 +216,10 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\address.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\amounts.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\chain_reader.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\chain_writer.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\chain_reader.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\chain_writer.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\wire_reader.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\wire_writer.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\confirmed.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_block.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_chain_state.ipp" />
@@ -246,7 +248,6 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\query.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\sequences.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\sizes.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\wire_reader.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\store.ipp" />
     <None Include="packages.config" />
   </ItemGroup>

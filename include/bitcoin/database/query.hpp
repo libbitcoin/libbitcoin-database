@@ -837,6 +837,11 @@ private:
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+#include <bitcoin/database/impl/query/archival/chain_reader.ipp>
+#include <bitcoin/database/impl/query/archival/chain_writer.ipp>
+#include <bitcoin/database/impl/query/archival/wire_reader.ipp>
+#include <bitcoin/database/impl/query/archival/wire_writer.ipp>
+
 #include <bitcoin/database/impl/query/consensus/consensus_block.ipp>
 #include <bitcoin/database/impl/query/consensus/consensus_chain_state.ipp>
 #include <bitcoin/database/impl/query/consensus/consensus_compact.ipp>
@@ -856,8 +861,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 #include <bitcoin/database/impl/query/address.ipp>
 #include <bitcoin/database/impl/query/amounts.ipp>
-#include <bitcoin/database/impl/query/chain_reader.ipp>
-#include <bitcoin/database/impl/query/chain_writer.ipp>
 #include <bitcoin/database/impl/query/confirmed.ipp>
 #include <bitcoin/database/impl/query/extent.ipp>
 #include <bitcoin/database/impl/query/fee_rate.ipp>
@@ -871,7 +874,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/query.ipp>
 #include <bitcoin/database/impl/query/sequences.ipp>
 #include <bitcoin/database/impl/query/sizes.ipp>
-#include <bitcoin/database/impl/query/wire_reader.ipp>
 
 BC_POP_WARNING()
 
