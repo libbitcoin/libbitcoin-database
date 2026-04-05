@@ -348,6 +348,8 @@ public:
     /// False position implies not confirmed (or fault).
     bool get_tx_height(size_t& out, const tx_link& link) const NOEXCEPT;
     bool get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT;
+    bool get_tx_position(size_t& out, const tx_link& link,
+        const header_link& block) const NOEXCEPT;
     tx_link get_position_tx(const header_link& link,
         size_t position) const NOEXCEPT;
 
@@ -565,7 +567,6 @@ public:
 
     code block_confirmable(const header_link& link) const NOEXCEPT;
 
-    bool is_any_strong(const tx_link& link) const NOEXCEPT;
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
     bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
