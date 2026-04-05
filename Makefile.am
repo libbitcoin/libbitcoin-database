@@ -178,23 +178,45 @@ include_bitcoin_database_impl_primitives_HEADERS = \
 
 include_bitcoin_database_impl_querydir = ${includedir}/bitcoin/database/impl/query
 include_bitcoin_database_impl_query_HEADERS = \
-    include/bitcoin/database/impl/query/archive_read.ipp \
-    include/bitcoin/database/impl/query/archive_write.ipp \
-    include/bitcoin/database/impl/query/confirm.ipp \
-    include/bitcoin/database/impl/query/consensus.ipp \
-    include/bitcoin/database/impl/query/context.ipp \
+    include/bitcoin/database/impl/query/address.ipp \
+    include/bitcoin/database/impl/query/amounts.ipp \
+    include/bitcoin/database/impl/query/chain_reader.ipp \
+    include/bitcoin/database/impl/query/chain_writer.ipp \
+    include/bitcoin/database/impl/query/confirmed.ipp \
     include/bitcoin/database/impl/query/extent.ipp \
-    include/bitcoin/database/impl/query/fees.ipp \
+    include/bitcoin/database/impl/query/fee_rate.ipp \
+    include/bitcoin/database/impl/query/filters.ipp \
     include/bitcoin/database/impl/query/height.ipp \
     include/bitcoin/database/impl/query/initialize.ipp \
+    include/bitcoin/database/impl/query/locator.ipp \
     include/bitcoin/database/impl/query/merkle.ipp \
-    include/bitcoin/database/impl/query/network.ipp \
-    include/bitcoin/database/impl/query/objects.ipp \
-    include/bitcoin/database/impl/query/optional.ipp \
+    include/bitcoin/database/impl/query/properties_block.ipp \
+    include/bitcoin/database/impl/query/properties_tx.ipp \
     include/bitcoin/database/impl/query/query.ipp \
-    include/bitcoin/database/impl/query/translate.ipp \
-    include/bitcoin/database/impl/query/validate.ipp \
-    include/bitcoin/database/impl/query/wire.ipp
+    include/bitcoin/database/impl/query/sequences.ipp \
+    include/bitcoin/database/impl/query/sizes.ipp \
+    include/bitcoin/database/impl/query/wire_reader.ipp
+
+include_bitcoin_database_impl_query_consensusdir = ${includedir}/bitcoin/database/impl/query/consensus
+include_bitcoin_database_impl_query_consensus_HEADERS = \
+    include/bitcoin/database/impl/query/consensus/consensus_block.ipp \
+    include/bitcoin/database/impl/query/consensus/consensus_chain_state.ipp \
+    include/bitcoin/database/impl/query/consensus/consensus_compact.ipp \
+    include/bitcoin/database/impl/query/consensus/consensus_forks.ipp \
+    include/bitcoin/database/impl/query/consensus/consensus_populate.ipp \
+    include/bitcoin/database/impl/query/consensus/consensus_prevouts.ipp \
+    include/bitcoin/database/impl/query/consensus/consensus_states.ipp \
+    include/bitcoin/database/impl/query/consensus/consensus_strong.ipp \
+    include/bitcoin/database/impl/query/consensus/consensus_transaction.ipp \
+    include/bitcoin/database/impl/query/consensus/consensus_work.ipp
+
+include_bitcoin_database_impl_query_navigatedir = ${includedir}/bitcoin/database/impl/query/navigate
+include_bitcoin_database_impl_query_navigate_HEADERS = \
+    include/bitcoin/database/impl/query/navigate/navigate_arraymap.ipp \
+    include/bitcoin/database/impl/query/navigate/navigate_forward.ipp \
+    include/bitcoin/database/impl/query/navigate/navigate_hashmap.ipp \
+    include/bitcoin/database/impl/query/navigate/navigate_natural.ipp \
+    include/bitcoin/database/impl/query/navigate/navigate_reverse.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \

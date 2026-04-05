@@ -35,6 +35,7 @@ public:
     using base::get_headers;
     using base::get_ancestry;
     using base::get_locator_span;
+    using base::get_locator_start;
 };
 
 // get_headers
@@ -530,9 +531,9 @@ BOOST_AUTO_TEST_CASE(query_network__get_locator_span__large_limit__capped_by_top
     BOOST_REQUIRE_EQUAL(span.size(), 1u);
 }
 
-// get_fork
+// get_locator_start
 
-BOOST_AUTO_TEST_CASE(query_network__get_fork__empty__zero)
+BOOST_AUTO_TEST_CASE(query_network__get_locator_start__empty__zero)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -540,10 +541,10 @@ BOOST_AUTO_TEST_CASE(query_network__get_fork__empty__zero)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.get_fork({}), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_locator_start({}), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_network__get_fork__genesis__zero)
+BOOST_AUTO_TEST_CASE(query_network__get_locator_start__genesis__zero)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -551,10 +552,10 @@ BOOST_AUTO_TEST_CASE(query_network__get_fork__genesis__zero)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.get_fork({ test::block0_hash }), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_locator_start({ test::block0_hash }), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_network__get_fork__unconfirmed__zero)
+BOOST_AUTO_TEST_CASE(query_network__get_locator_start__unconfirmed__zero)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -565,10 +566,10 @@ BOOST_AUTO_TEST_CASE(query_network__get_fork__unconfirmed__zero)
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
     BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
-    BOOST_REQUIRE_EQUAL(query.get_fork({ test::block1_hash }), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_locator_start({ test::block1_hash }), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_network__get_fork__confirmed__first_match)
+BOOST_AUTO_TEST_CASE(query_network__get_locator_start__confirmed__first_match)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -582,7 +583,7 @@ BOOST_AUTO_TEST_CASE(query_network__get_fork__confirmed__first_match)
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
-    BOOST_REQUIRE_EQUAL(query.get_fork({ system::null_hash, test::block2_hash, test::block1_hash }), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_locator_start({ system::null_hash, test::block2_hash, test::block1_hash }), 2u);
 }
 
 // get_ancestry

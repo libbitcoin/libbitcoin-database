@@ -29,6 +29,21 @@ namespace database {
 // Initialization (natural-keyed).
 // ----------------------------------------------------------------------------
 
+// server/dumps
+TEMPLATE
+hash_digest CLASS::get_top_confirmed_hash() const NOEXCEPT
+{
+    return get_header_key(to_confirmed(get_top_confirmed()));
+}
+
+// server/dumps
+TEMPLATE
+hash_digest CLASS::get_top_candidate_hash() const NOEXCEPT
+{
+    return get_header_key(to_candidate(get_top_candidate()));
+}
+
+// node start
 TEMPLATE
 inline bool CLASS::is_initialized() const NOEXCEPT
 {
@@ -36,6 +51,7 @@ inline bool CLASS::is_initialized() const NOEXCEPT
         is_nonzero(store_.candidate.count());
 }
 
+// node organizer/block-in/header-in
 TEMPLATE
 inline size_t CLASS::get_top_candidate() const NOEXCEPT
 {
@@ -43,6 +59,7 @@ inline size_t CLASS::get_top_candidate() const NOEXCEPT
     return sub1(store_.candidate.count());
 }
 
+// node recent/confirmer/snapshot
 TEMPLATE
 inline size_t CLASS::get_top_confirmed() const NOEXCEPT
 {
@@ -50,12 +67,14 @@ inline size_t CLASS::get_top_confirmed() const NOEXCEPT
     return sub1(store_.confirmed.count());
 }
 
+// ununsed
 TEMPLATE
 size_t CLASS::get_top_associated() const NOEXCEPT
 {
     return get_top_associated_from(get_fork());
 }
 
+// ununsed
 TEMPLATE
 size_t CLASS::get_top_associated_from(size_t height) const NOEXCEPT
 {
@@ -66,6 +85,7 @@ size_t CLASS::get_top_associated_from(size_t height) const NOEXCEPT
     return --height;
 }
 
+// ununsed
 TEMPLATE
 associations CLASS::get_all_unassociated() const NOEXCEPT
 {
@@ -78,6 +98,7 @@ associations CLASS::get_unassociated_above(size_t height) const NOEXCEPT
     return get_unassociated_above(height, max_size_t);
 }
 
+// ununsed
 TEMPLATE
 associations CLASS::get_unassociated_above(size_t height,
     size_t count) const NOEXCEPT
@@ -85,6 +106,7 @@ associations CLASS::get_unassociated_above(size_t height,
     return get_unassociated_above(height, count, max_size_t);
 }
 
+// node/checker
 TEMPLATE
 associations CLASS::get_unassociated_above(size_t height,
     size_t count, size_t last) const NOEXCEPT
@@ -104,6 +126,37 @@ associations CLASS::get_unassociated_above(size_t height,
 
     return out;
 }
+
+// ununsed
+TEMPLATE
+size_t CLASS::get_unassociated_count() const NOEXCEPT
+{
+    return get_unassociated_count_above(get_fork());
+}
+
+// ununsed
+TEMPLATE
+size_t CLASS::get_unassociated_count_above(size_t height) const NOEXCEPT
+{
+    return get_unassociated_count_above(height, max_size_t);
+}
+
+// node/checker
+TEMPLATE
+size_t CLASS::get_unassociated_count_above(size_t height,
+    size_t maximum) const NOEXCEPT
+{
+    size_t count{};
+    const auto top = get_top_candidate();
+    while (++height <= top && count < maximum)
+        if (!is_associated(to_candidate(height)))
+            ++count;
+
+    return count;
+}
+
+// utility
+// ----------------------------------------------------------------------------
 
 // protected
 TEMPLATE
@@ -133,29 +186,31 @@ bool CLASS::get_unassociated(association& out,
     return true;
 }
 
-TEMPLATE
-size_t CLASS::get_unassociated_count() const NOEXCEPT
-{
-    return get_unassociated_count_above(get_fork());
-}
+// writer
+// ----------------------------------------------------------------------------
 
 TEMPLATE
-size_t CLASS::get_unassociated_count_above(size_t height) const NOEXCEPT
+bool CLASS::initialize(const block& genesis) NOEXCEPT
 {
-    return get_unassociated_count_above(height, max_size_t);
-}
+    BC_ASSERT(!is_initialized());
+    BC_ASSERT(is_one(genesis.transactions_ptr()->size()));
 
-TEMPLATE
-size_t CLASS::get_unassociated_count_above(size_t height,
-    size_t maximum) const NOEXCEPT
-{
-    size_t count{};
-    const auto top = get_top_candidate();
-    while (++height <= top && count < maximum)
-        if (!is_associated(to_candidate(height)))
-            ++count;
+    // TODO: add genesis block filter_tx head and body when filter_tx is enabled.
 
-    return count;
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    if (!set(genesis, context{}, false, false))
+        return false;
+
+    const auto link = to_header(genesis.hash());
+
+    // Unsafe for allocation failure, but only used in store creation.
+    return set_filter_body(link, genesis)
+        && set_filter_head(link)
+        && push_candidate(link)
+        && push_confirmed(link, true);
+    // ========================================================================
 }
 
 } // namespace database

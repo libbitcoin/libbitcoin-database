@@ -16,48 +16,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_ESTIMATE_IPP
-#define LIBBITCOIN_DATABASE_QUERY_ESTIMATE_IPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_FEE_RATE_IPP
+#define LIBBITCOIN_DATABASE_QUERY_FEE_RATE_IPP
 
 #include <atomic>
 #include <algorithm>
 #include <iterator>
-#include <numeric>
 #include <utility>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-// virtual_size
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-bool CLASS::get_tx_virtual_size(size_t& out,
-    const tx_link& link) const NOEXCEPT
-{
-    size_t light{}, heavy{};
-    if (!get_tx_sizes(light, heavy, link))
-        return false;
-
-    out = system::chain::virtual_size(light, heavy);
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_block_virtual_size(size_t& out,
-    const header_link& link) const NOEXCEPT
-{
-    size_t light{}, heavy{};
-    if (!get_block_sizes(light, heavy, link))
-        return false;
-
-    out = system::chain::virtual_size(light, heavy);
-    return true;
-}
-
 // tx/block/branch fee rates
 // ----------------------------------------------------------------------------
+// server estimator
 
 TEMPLATE
 bool CLASS::get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT

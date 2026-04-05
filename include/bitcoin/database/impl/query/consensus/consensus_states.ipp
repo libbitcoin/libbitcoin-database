@@ -16,17 +16,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_VALIDATE_IPP
-#define LIBBITCOIN_DATABASE_QUERY_VALIDATE_IPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_CONSENSUS_STATES_IPP
+#define LIBBITCOIN_DATABASE_QUERY_CONSENSUS_STATES_IPP
 
 #include <utility>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-// States.
+// State machine for block and tx.
 // ----------------------------------------------------------------------------
+
+ TEMPLATE
+inline bool CLASS::is_confirmable(const header_link& link) const NOEXCEPT
+{
+    return get_header_state(link) == error::block_confirmable;
+}
 
 TEMPLATE
 bool CLASS::is_validateable(size_t height) const NOEXCEPT
@@ -212,100 +219,7 @@ code CLASS::get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
     return error::unvalidated;
 }
 
-// Values.
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-uint32_t CLASS::get_top_timestamp(bool confirmed) const NOEXCEPT
-{
-    const auto top = confirmed ? to_confirmed(get_top_confirmed()) :
-        to_candidate(get_top_candidate());
-
-    // returns zero if read fails.
-    uint32_t timestamp{};
-    /* bool */ get_timestamp(timestamp, top);
-    return timestamp;
-}
-
-TEMPLATE
-bool CLASS::get_timestamp(uint32_t& timestamp,
-    const header_link& link) const NOEXCEPT
-{
-    table::header::get_timestamp header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    timestamp = header.timestamp;
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_version(uint32_t& version,
-    const header_link& link) const NOEXCEPT
-{
-    table::header::get_version header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    version = header.version;
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_work(uint256_t& work, const header_link& link) const NOEXCEPT
-{
-    uint32_t bits{};
-    const auto result = get_bits(bits, link);
-    work = header::proof(bits);
-    return result;
-}
-
-TEMPLATE
-bool CLASS::get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT
-{
-    table::header::get_bits header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    bits = header.bits;
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_context(context& ctx, const header_link& link) const NOEXCEPT
-{
-    table::header::record_context header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    ctx = std::move(header.ctx);
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_context(system::chain::context& ctx,
-    const header_link& link) const NOEXCEPT
-{
-    table::header::record_context header{};
-    if (!store_.header.get(link, header))
-        return false;
-
-    // Context for block/header.check and header.accept are filled from
-    // chain_state, not from the store.
-    ctx =
-    {
-        header.ctx.flags,     // [block.check, block.accept & block.connect]
-        {},                   // [block.check] timestamp
-        header.ctx.mtp,       // [block.check, header.accept]
-        header.ctx.height,    // [block.check & block.accept]
-        {},                   // [header.accept] minimum_block_version
-        {}                    // [header.accept] work_required
-    };
-
-    return true;
-}
-
-// set_block_state
+// writers
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -347,9 +261,6 @@ bool CLASS::set_block_state(const header_link& link,
         table::validated_bk::record{ {}, state });
     // ========================================================================
 }
-
-// set_tx_state
-// ----------------------------------------------------------------------------
 
 TEMPLATE
 bool CLASS::set_tx_unknown(const tx_link& link) NOEXCEPT

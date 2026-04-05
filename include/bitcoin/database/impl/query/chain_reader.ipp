@@ -16,30 +16,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_OBJECTS_IPP
-#define LIBBITCOIN_DATABASE_QUERY_OBJECTS_IPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_CHAIN_READER_IPP
+#define LIBBITCOIN_DATABASE_QUERY_CHAIN_READER_IPP
 
-#include <algorithm>
 #include <utility>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
-// private/static
-TEMPLATE
-template <typename Bool>
-inline bool CLASS::push_bool(std_vector<Bool>& stack,
-    const Bool& element) NOEXCEPT
-{
-    if (!element)
-        return false;
 
-    stack.push_back(element);
-    return true;
-}
-
-// Chain objects.
+// tx_link->inputs|outputs
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -82,6 +68,9 @@ typename CLASS::outputs_ptr CLASS::get_outputs(
     return outputs;
 }
 
+// header_link->txs
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 typename CLASS::transactions_ptr CLASS::get_transactions(
     const header_link& link, bool witness) const NOEXCEPT
@@ -101,6 +90,9 @@ typename CLASS::transactions_ptr CLASS::get_transactions(
 
     return transactions;
 }
+
+// header_link->header
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 typename CLASS::header::cptr CLASS::get_header(
@@ -131,6 +123,9 @@ typename CLASS::header::cptr CLASS::get_header(
     return ptr;
 }
 
+// header_link->block
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 typename CLASS::block::cptr CLASS::get_block(const header_link& link,
     bool witness) const NOEXCEPT
@@ -149,6 +144,9 @@ typename CLASS::block::cptr CLASS::get_block(const header_link& link,
         transactions
     );
 }
+
+// tx_link->tx
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 typename CLASS::transaction::cptr CLASS::get_transaction(const tx_link& link,
@@ -192,18 +190,8 @@ typename CLASS::transaction::cptr CLASS::get_transaction(const tx_link& link,
     return ptr;
 }
 
-// static/protected
-TEMPLATE
-typename CLASS::point::cptr CLASS::make_point(hash_digest&& hash,
-    uint32_t index) NOEXCEPT
-{
-    // Share null point instances to reduce memory consumption.
-    static const auto null_point = system::to_shared<const point>();
-    if (index == point::null_index)
-        return null_point;
-
-    return system::to_shared<point>(std::move(hash), index);
-}
+// point_link->point
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 typename CLASS::point CLASS::get_point(
@@ -215,6 +203,9 @@ typename CLASS::point CLASS::get_point(
 
     return { point.hash, point.index };
 }
+
+// point_link->witness
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 typename CLASS::witness::cptr CLASS::get_witness(
@@ -229,6 +220,8 @@ typename CLASS::witness::cptr CLASS::get_witness(
     return in.witness;
 }
 
+// point_link->input_script
+// ----------------------------------------------------------------------------
 TEMPLATE
 typename CLASS::script::cptr CLASS::get_input_script(
     const point_link& link) const NOEXCEPT
@@ -242,12 +235,18 @@ typename CLASS::script::cptr CLASS::get_input_script(
     return in.script;
 }
 
+// [tx_link, index]->input
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 typename CLASS::input::cptr CLASS::get_input(const tx_link& link,
     uint32_t index, bool witness) const NOEXCEPT
 {
     return get_input(to_point(link, index), witness);
 }
+
+// point_link->input
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 typename CLASS::input::cptr CLASS::get_input(const point_link& link,
@@ -276,6 +275,9 @@ typename CLASS::input::cptr CLASS::get_input(const point_link& link,
     return ptr;
 }
 
+// output_link->output_script
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 typename CLASS::script::cptr CLASS::get_output_script(
     const output_link& link) const NOEXCEPT
@@ -287,12 +289,18 @@ typename CLASS::script::cptr CLASS::get_output_script(
     return out.script;
 }
 
+// [tx_link, index]->output
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 typename CLASS::output::cptr CLASS::get_output(const tx_link& link,
     uint32_t index) const NOEXCEPT
 {
     return get_output(to_output(link, index));
 }
+
+// output_link->output
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 typename CLASS::output::cptr CLASS::get_output(
@@ -305,6 +313,9 @@ typename CLASS::output::cptr CLASS::get_output(
     return out.output;
 }
 
+// output_link->inputs[spenders]
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 typename CLASS::inputs_ptr CLASS::get_spenders(
     const output_link& link, bool witness) const NOEXCEPT
@@ -314,7 +325,6 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
     const auto inputs = to_shared<chain::input_cptrs>();
     inputs->reserve(point_fks.size());
 
-    // TODO: eliminate shared memory pointer reallocation.
     for (const auto& point_fk: point_fks)
         if (!push_bool(*inputs, get_input(point_fk, witness)))
             return {};
@@ -322,7 +332,7 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
     return inputs;
 }
 
-// Inpoint and outpoint result sets.
+// output_link_->outpoint, point_link->inpoint, point->inpoints
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -364,125 +374,33 @@ inpoints CLASS::get_spenders(const point& point) const NOEXCEPT
     return ins;
 }
 
-// Populate prevout objects.
+// utility
 // ----------------------------------------------------------------------------
+// private/static
 
-// populate_with_metadata
-
-TEMPLATE
-bool CLASS::populate_with_metadata(const input& input,
-    bool chain) const NOEXCEPT
-{
-    // Null point would return nullptr and be interpreted as missing.
-    BC_ASSERT(!input.point().is_null());
-
-    // input.metadata.point_link must be defaulted to max_uint32.
-    BC_ASSERT(input.metadata.point_link == max_uint32);
-
-    if (input.prevout)
-        return true;
-
-    const auto tx = to_tx(input.point().hash());
-
-    // Node and chain confirmation.
-    input.metadata.coinbase = is_coinbase(tx);
-    input.prevout = get_output(tx, input.point().index());
-
-    // Node only (cheap so always include).
-    input.metadata.parent_tx = tx;
-
-    // TODO: Chain only metadata (expensive).
-    if (chain)
-    {
-        input.metadata.spender_height = max_uint32;
-        input.metadata.prevout_height = max_uint32;
-        input.metadata.median_time_past = max_uint32;
-    }
-
-    // If read via the store for store confirmation, then...
-    // input.metadata.point_link must be set earlier in get_input().
-    ////BC_ASSERT(input.metadata.point_link != max_uint32);
-    return !is_null(input.prevout);
-}
 
 TEMPLATE
-bool CLASS::populate_with_metadata(const transaction& tx,
-    bool chain) const NOEXCEPT
+template <typename Bool>
+inline bool CLASS::push_bool(std_vector<Bool>& stack,
+    const Bool& element) NOEXCEPT
 {
-    // This override makes the public method safe for coinbase calling.
-    return tx.is_coinbase() || populate_with_metadata_(tx, chain);
-}
-
-TEMPLATE
-bool CLASS::populate_with_metadata_(const transaction& tx,
-    bool chain) const NOEXCEPT
-{
-    BC_ASSERT(!tx.is_coinbase());
-
-    const auto& ins = tx.inputs_ptr();
-    return std::all_of(ins->begin(), ins->end(),
-        [this, chain](const auto& in) NOEXCEPT
-        {
-            return this->populate_with_metadata(*in, chain);
-        });
-}
-
-TEMPLATE
-bool CLASS::populate_with_metadata(const block& block,
-    bool chain) const NOEXCEPT
-{
-    const auto& txs = block.transactions_ptr();
-    if (txs->empty())
+    if (!element)
         return false;
 
-    return std::all_of(std::next(txs->begin()), txs->end(),
-        [this, chain](const auto& tx) NOEXCEPT
-        {
-            return this->populate_with_metadata(*tx, chain);
-        });
-}
-
-// populate_without_metadata
-
-TEMPLATE
-bool CLASS::populate_without_metadata(const input& input) const NOEXCEPT
-{
-    // Null point would return nullptr and be interpreted as missing.
-    BC_ASSERT(!input.point().is_null());
-
-    if (input.prevout)
-        return true;
-
-    const auto tx = to_tx(input.point().hash());
-    input.prevout = get_output(tx, input.point().index());
-    return !is_null(input.prevout);
+    stack.push_back(element);
+    return true;
 }
 
 TEMPLATE
-bool CLASS::populate_without_metadata(const transaction& tx) const NOEXCEPT
+typename CLASS::point::cptr CLASS::make_point(hash_digest&& hash,
+    uint32_t index) NOEXCEPT
 {
-    BC_ASSERT(!tx.is_coinbase());
+    // Share null point instances to reduce memory consumption.
+    static const auto null_point = system::to_shared<const point>();
+    if (index == point::null_index)
+        return null_point;
 
-    const auto& ins = tx.inputs_ptr();
-    return std::all_of(ins->begin(), ins->end(),
-        [this](const auto& in) NOEXCEPT
-        {
-            return this->populate_without_metadata(*in);
-        });
-}
-
-TEMPLATE
-bool CLASS::populate_without_metadata(const block& block) const NOEXCEPT
-{
-    const auto& txs = block.transactions_ptr();
-    if (txs->empty())
-        return false;
-
-    return std::all_of(std::next(txs->begin()), txs->end(),
-        [this](const auto& tx) NOEXCEPT
-        {
-            return this->populate_without_metadata(*tx);
-        });
+    return system::to_shared<point>(std::move(hash), index);
 }
 
 } // namespace database

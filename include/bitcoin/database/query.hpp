@@ -24,7 +24,9 @@
 #include <optional>
 #include <utility>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/error.hpp>
 #include <bitcoin/database/types.hpp>
+#include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -262,15 +264,15 @@ public:
     output_link to_previous_output(const point_link& link) const NOEXCEPT;
 
     /// block/tx to block (reverse navigation)
-    tx_link to_strong_tx(const tx_link& link) const NOEXCEPT;
-    tx_link to_strong_tx(const hash_digest& tx_hash) const NOEXCEPT;
-    header_link to_strong(const tx_link& link) const NOEXCEPT;
-    header_link to_strong(const hash_digest& tx_hash) const NOEXCEPT;
+    tx_link find_strong_tx(const tx_link& link) const NOEXCEPT;
+    tx_link find_strong_tx(const hash_digest& tx_hash) const NOEXCEPT;
+    header_link find_strong(const tx_link& link) const NOEXCEPT;
+    header_link find_strong(const hash_digest& tx_hash) const NOEXCEPT;
     header_link to_parent(const header_link& link) const NOEXCEPT;
 
-    /// to confirmed objects (reverse navigation)
-    header_link to_confirmed_block(const hash_digest& tx_hash) const NOEXCEPT;
-    point_link to_confirmed_spender(const point& prevout) const NOEXCEPT;
+    /// find confirmed objects (reverse navigation)
+    header_link find_confirmed_block(const hash_digest& tx_hash) const NOEXCEPT;
+    point_link find_confirmed_spender(const point& prevout) const NOEXCEPT;
 
     /// output to spenders (reverse navigation)
     point_links to_spenders(const point& prevout) const NOEXCEPT;
@@ -314,7 +316,7 @@ public:
     point_link top_point(size_t bucket) const NOEXCEPT;
     tx_link top_tx(size_t bucket) const NOEXCEPT;
 
-    /// optional enumeration
+    /// outputs enumeration
     code to_address_outputs(std::atomic_bool& cancel, output_links& out,
         const hash_digest& key) const NOEXCEPT;
 
@@ -562,9 +564,8 @@ public:
     /// These are used in consensus confirmation.
 
     code block_confirmable(const header_link& link) const NOEXCEPT;
-    bool is_prevouts_cached(const header_link& link) const NOEXCEPT;
 
-    bool is_strong(const tx_link& link) const NOEXCEPT;
+    bool is_any_strong(const tx_link& link) const NOEXCEPT;
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
     bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
@@ -653,7 +654,7 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Height of highest confirmed block (assumes locator descending).
-    size_t get_fork(const hashes& locator) const NOEXCEPT;
+    size_t get_locator_start(const hashes& locator) const NOEXCEPT;
 
     /// Height of highest confirmed block (assumes locator descending).
     span get_locator_span(const hashes& locator, const hash_digest& stop,
@@ -673,8 +674,6 @@ protected:
 
     /// Objects.
     /// -----------------------------------------------------------------------
-    static inline point::cptr make_point(hash_digest&& hash,
-        uint32_t index) NOEXCEPT;
 
     bool get_outputs_total_value(uint64_t& out,
         const output_links& links) const NOEXCEPT;
@@ -706,21 +705,18 @@ protected:
 
     /// Called by block_confirmable (check bip30)
     bool is_spent_coinbase(const tx_link& link, size_t count) const NOEXCEPT;
-    code unspent_duplicates(const header_link& coinbase,
+    code spent_duplicates(const header_link& coinbase,
         const context& ctx) const NOEXCEPT;
 
     /// Called by block_confirmable (populate and check double spends).
-    code unspendable(uint32_t sequence, bool coinbase,
-        const tx_link& prevout_tx, uint32_t version,
-        const context& ctx) const NOEXCEPT;
+    system::error::transaction_error_t spendable(const point_set::point& point,
+        uint32_t version, const context& ctx) const NOEXCEPT;
 
     /// Called by block_confirmable (populate and check double spends).
-    code populate_prevouts(point_sets& sets, size_t points,
+    code get_prevouts(point_sets& sets, size_t points,
         const header_link& link) const NOEXCEPT;
 
-    /// TODO: apply these to compact block confirmation, as the block will
-    /// TODO: associate existing txs, making it impossible to rely on the
-    /// TODO: duplicates table. The full query approach is used instead.
+    /// TODO: compact blocks confirmation.
     bool get_double_spenders(tx_links& out, const block& block) const NOEXCEPT;
     bool get_double_spenders(tx_links& out, const point& point,
         const point_link& self) const NOEXCEPT;
@@ -810,6 +806,9 @@ protected:
         bool bypass) NOEXCEPT;
 
 private:
+    // This value should never be read, but may be useful in debugging.
+    static constexpr uint32_t unspecified_timestamp = max_uint32;
+
     // Chain objects.
     template <typename Bool>
     static inline bool push_bool(std_vector<Bool>& stack,
@@ -817,6 +816,8 @@ private:
     template <typename Functor>
     static inline code parallel_address_transform(std::atomic_bool& cancel,
         outpoints& out, const output_links& links, Functor&& functor) NOEXCEPT;
+    static inline point::cptr make_point(hash_digest&& hash,
+        uint32_t index) NOEXCEPT;
 
     // Not thread safe.
     size_t get_fork_() const NOEXCEPT;
@@ -836,23 +837,41 @@ private:
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-#include <bitcoin/database/impl/query/query.ipp>
-#include <bitcoin/database/impl/query/archive_read.ipp>
-#include <bitcoin/database/impl/query/archive_write.ipp>
-#include <bitcoin/database/impl/query/confirm.ipp>
-#include <bitcoin/database/impl/query/consensus.ipp>
-#include <bitcoin/database/impl/query/context.ipp>
+#include <bitcoin/database/impl/query/consensus/consensus_block.ipp>
+#include <bitcoin/database/impl/query/consensus/consensus_chain_state.ipp>
+#include <bitcoin/database/impl/query/consensus/consensus_compact.ipp>
+#include <bitcoin/database/impl/query/consensus/consensus_forks.ipp>
+#include <bitcoin/database/impl/query/consensus/consensus_populate.ipp>
+#include <bitcoin/database/impl/query/consensus/consensus_prevouts.ipp>
+#include <bitcoin/database/impl/query/consensus/consensus_states.ipp>
+#include <bitcoin/database/impl/query/consensus/consensus_strong.ipp>
+#include <bitcoin/database/impl/query/consensus/consensus_transaction.ipp>
+#include <bitcoin/database/impl/query/consensus/consensus_work.ipp>
+
+#include <bitcoin/database/impl/query/navigate/navigate_arraymap.ipp>
+#include <bitcoin/database/impl/query/navigate/navigate_forward.ipp>
+#include <bitcoin/database/impl/query/navigate/navigate_hashmap.ipp>
+#include <bitcoin/database/impl/query/navigate/navigate_natural.ipp>
+#include <bitcoin/database/impl/query/navigate/navigate_reverse.ipp>
+
+#include <bitcoin/database/impl/query/address.ipp>
+#include <bitcoin/database/impl/query/amounts.ipp>
+#include <bitcoin/database/impl/query/chain_reader.ipp>
+#include <bitcoin/database/impl/query/chain_writer.ipp>
+#include <bitcoin/database/impl/query/confirmed.ipp>
 #include <bitcoin/database/impl/query/extent.ipp>
-#include <bitcoin/database/impl/query/fees.ipp>
+#include <bitcoin/database/impl/query/fee_rate.ipp>
+#include <bitcoin/database/impl/query/filters.ipp>
 #include <bitcoin/database/impl/query/height.ipp>
 #include <bitcoin/database/impl/query/initialize.ipp>
-#include <bitcoin/database/impl/query/network.ipp>
-#include <bitcoin/database/impl/query/objects.ipp>
-#include <bitcoin/database/impl/query/optional.ipp>
+#include <bitcoin/database/impl/query/locator.ipp>
 #include <bitcoin/database/impl/query/merkle.ipp>
-#include <bitcoin/database/impl/query/translate.ipp>
-#include <bitcoin/database/impl/query/validate.ipp>
-#include <bitcoin/database/impl/query/wire.ipp>
+#include <bitcoin/database/impl/query/properties_block.ipp>
+#include <bitcoin/database/impl/query/properties_tx.ipp>
+#include <bitcoin/database/impl/query/query.ipp>
+#include <bitcoin/database/impl/query/sequences.ipp>
+#include <bitcoin/database/impl/query/sizes.ipp>
+#include <bitcoin/database/impl/query/wire_reader.ipp>
 
 BC_POP_WARNING()
 
