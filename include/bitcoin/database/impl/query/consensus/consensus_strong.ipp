@@ -54,21 +54,27 @@ tx_link CLASS::find_strong_tx(const tx_link& link) const NOEXCEPT
 
     return find_strong_tx(get_tx_key(link));
 }
-
 TEMPLATE
 tx_link CLASS::find_strong_tx(const hash_digest& tx_hash) const NOEXCEPT
 {
-    // Get all tx links for tx_hash.
-    tx_links txs{};
-    for (auto it = store_.tx.it(tx_hash); it; ++it)
-        txs.push_back(*it);
-
-    // Find the first strong tx of the set and return its link.
-    for (const auto& tx: txs)
+    // Find the first strong tx of all duplicates and return its link.
+    for (const auto& tx: to_duplicates(tx_hash))
         if (!to_block(tx).is_terminal())
             return tx;
 
     return {};
+}
+
+TEMPLATE
+height_link CLASS::find_strong_spender_height(
+    const point& point) const NOEXCEPT
+{
+    size_t out{};
+    for (const auto& sp: to_spenders(point))
+        if (const auto tx = to_spending_tx(sp); get_tx_height(out, tx))
+            break;
+
+    return { system::possible_narrow_cast<uint32_t>(out) };
 }
 
 // find_strong (block)
@@ -87,13 +93,8 @@ header_link CLASS::find_strong(const tx_link& link) const NOEXCEPT
 TEMPLATE
 header_link CLASS::find_strong(const hash_digest& tx_hash) const NOEXCEPT
 {
-    // Get all tx links for tx_hash.
-    tx_links txs{};
-    for (auto it = store_.tx.it(tx_hash); it; ++it)
-        txs.push_back(*it);
-
     // Find the first strong tx of the set and return its block.
-    for (const auto& tx: txs)
+    for (const auto& tx: to_duplicates(tx_hash))
         if (const auto block = to_block(tx); !block.is_terminal())
             return block;
 
