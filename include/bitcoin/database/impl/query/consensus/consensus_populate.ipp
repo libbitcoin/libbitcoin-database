@@ -95,13 +95,41 @@ bool CLASS::populate_with_metadata(const input& input,
     // Node only (cheap so always include).
     input.metadata.parent_tx = tx;
 
-    // TODO: Chain only metadata (expensive).
-    // This is used by node for unconfirmed tx validation.
+    // This is used by node for unconfirmed tx validation (expensive).
+    // There are three consensus-relevant heights. These are the height of the
+    // presumed next block (pool), the height of the block containing previous
+    // output's transaction, and the height of a block containing a previous
+    // spender of the previous output. median-time-past is of the prevout.
     if (chain)
     {
-        input.metadata.spender_height = max_uint32;
-        input.metadata.prevout_height = max_uint32;
-        input.metadata.median_time_past = max_uint32;
+        auto& metadata = input.metadata;
+
+        context ctx{};
+        if (get_context(ctx, find_strong(metadata.parent_tx)))
+        {
+            // Confirmed previous output found at height (and with mtp).
+            metadata.prevout_height = ctx.height;
+            metadata.median_time_past = ctx.mtp;
+        }
+        else
+        {
+            // Confirmed previous output not found.
+            metadata.prevout_height = max_uint32;
+            metadata.median_time_past = max_uint32;
+        }
+
+        if (const auto height = find_strong_spender_height(input.point());
+            !height.is_terminal())
+        {
+            // Confirmed spender found at height.
+            metadata.spender_height = system::possible_narrow_cast<uint32_t>(
+                height.value);
+        }
+        else
+        {
+            // Confirmed spender not found.
+            metadata.spender_height = max_uint32;
+        }
     }
 
     // If read via the store for store confirmation, then...

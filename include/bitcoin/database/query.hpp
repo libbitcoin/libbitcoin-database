@@ -268,7 +268,10 @@ public:
     tx_link find_strong_tx(const hash_digest& tx_hash) const NOEXCEPT;
     header_link find_strong(const tx_link& link) const NOEXCEPT;
     header_link find_strong(const hash_digest& tx_hash) const NOEXCEPT;
+    height_link find_strong_spender_height(const point& point) const NOEXCEPT;
+
     header_link to_parent(const header_link& link) const NOEXCEPT;
+    tx_links to_duplicates(const hash_digest& tx_hash) const NOEXCEPT;
 
     /// find confirmed objects (reverse navigation)
     header_link find_confirmed_block(const hash_digest& tx_hash) const NOEXCEPT;
@@ -523,8 +526,7 @@ public:
     code get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
         const context& ctx) const NOEXCEPT;
 
-    /// Values.
-    // get_context(chain::context) sets only flags, median_time_past, height.
+    /// Header properties.
     uint32_t get_top_timestamp(bool confirmed) const NOEXCEPT;
     bool get_timestamp(uint32_t& timestamp, const header_link& link) const NOEXCEPT;
     bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;

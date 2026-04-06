@@ -1252,9 +1252,6 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_tx_position__confirmed__expected)
     BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
     BOOST_CHECK(query.set(test::block3a, context{ 0, 3, 0 }, false, false));
-    BOOST_CHECK(query.set_strong(1));
-    BOOST_CHECK(query.set_strong(2));
-    BOOST_CHECK(query.set_strong(3));
 
     size_t out{};
     const auto foo = query.get_tx_position(out, 0);
@@ -1265,9 +1262,9 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_tx_position__confirmed__expected)
     BOOST_CHECK(!query.get_tx_position(out, 2));
     BOOST_CHECK(!query.get_tx_position(out, 3));
     BOOST_CHECK(!query.get_tx_position(out, 4));
-    BOOST_CHECK(query.push_confirmed(1, false));
-    BOOST_CHECK(query.push_confirmed(2, false));
-    BOOST_CHECK(query.push_confirmed(3, false));
+    BOOST_CHECK(query.set_strong(1));
+    BOOST_CHECK(query.set_strong(2));
+    BOOST_CHECK(query.set_strong(3));
 
     BOOST_CHECK_EQUAL(out, 0u);
     BOOST_CHECK(query.get_tx_position(out, 0));
@@ -1295,9 +1292,6 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_tx_position__always__expected)
     BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
     BOOST_CHECK(query.set(test::block3a, context{ 0, 3, 0 }, false, false));
     BOOST_CHECK(query.set(test::tx4));
-    BOOST_CHECK(query.set_strong(1));
-    BOOST_CHECK(query.set_strong(2));
-    BOOST_CHECK(query.set_strong(3));
 
     size_t out{};
     BOOST_CHECK(query.get_tx_position(out, 0));
@@ -1307,9 +1301,9 @@ BOOST_AUTO_TEST_CASE(query_archive_write__get_tx_position__always__expected)
     BOOST_CHECK(!query.get_tx_position(out, 2));
     BOOST_CHECK(!query.get_tx_position(out, 3));
     BOOST_CHECK(!query.get_tx_position(out, 4));
-    BOOST_CHECK(query.push_confirmed(1, false));
-    BOOST_CHECK(query.push_confirmed(2, false));
-    BOOST_CHECK(query.push_confirmed(3, false));
+    BOOST_CHECK(query.set_strong(1));
+    BOOST_CHECK(query.set_strong(2));
+    BOOST_CHECK(query.set_strong(3));
 
     BOOST_CHECK_EQUAL(out, 0u);
     BOOST_CHECK(query.get_tx_position(out, 0));

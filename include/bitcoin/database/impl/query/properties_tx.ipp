@@ -53,27 +53,19 @@ inline bool CLASS::is_tx_segregated(const tx_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::get_tx_height(size_t& out, const tx_link& link) const NOEXCEPT
 {
-    const auto fk = find_strong(link);
-    return is_confirmed_block(fk) && get_height(out, fk);
+    return get_height(out, find_strong(link));
 }
 
 TEMPLATE
 bool CLASS::get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT
 {
-    // False implies strong block association not found.
-    const auto block = find_strong(link);
-    if (!is_confirmed_block(block))
-        return false;
-
-    // False return implies an integrity error (tx should be indexed).
-    return get_tx_position(out, link, block);
+    return get_tx_position(out, link, find_strong(link));
 }
 
 TEMPLATE
 bool CLASS::get_tx_position(size_t& out, const tx_link& link,
     const header_link& block) const NOEXCEPT
 {
-    // False return implies an integrity error (tx must be indexed).
     table::txs::get_position txs{ {}, link };
     if (!store_.txs.at(to_txs(block), txs))
         return false;

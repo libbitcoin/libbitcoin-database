@@ -147,6 +147,19 @@ uint32_t CLASS::to_output_index(const tx_link& parent_fk,
     return point::null_index;
 }
 
+// tx.hash->txs (all instances of same tx by hash)
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+tx_links CLASS::to_duplicates(const hash_digest& tx_hash) const NOEXCEPT
+{
+    tx_links out{};
+    for (auto it = store_.tx.it(tx_hash); it; ++it)
+        out.push_back(*it);
+
+    return out;
+}
+
 // tx->block[strong]
 // ----------------------------------------------------------------------------
 // protected (logically hazardous)

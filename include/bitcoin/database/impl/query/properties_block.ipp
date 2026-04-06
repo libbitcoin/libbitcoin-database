@@ -121,6 +121,9 @@ bool CLASS::get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT
     return true;
 }
 
+// context
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 bool CLASS::get_context(context& ctx, const header_link& link) const NOEXCEPT
 {
