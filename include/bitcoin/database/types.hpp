@@ -37,6 +37,7 @@ using point_link = table::point::link;
 using tx_link = table::transaction::link;
 using filter_link = table::filter_tx::link;
 using strong_link = table::strong_tx::link;
+using address_link = table::address::link;
 
 using header_links = std::vector<header_link::integer>;
 using tx_links = std::vector<tx_link::integer>;
@@ -46,6 +47,7 @@ using point_links = std::vector<point_link::integer>;
 using two_counts = std::pair<size_t, size_t>;
 using point_key = table::point::key;
 
+using checkpoint = system::chain::checkpoint;
 using inpoint = system::chain::point;
 using inpoints = std::set<inpoint>;
 using outpoint = system::chain::outpoint;
@@ -59,6 +61,12 @@ using header_states = std::vector<header_state>;
 struct fee_rate { size_t bytes{}; uint64_t fee{}; };
 using fee_rates = std::vector<fee_rate>;
 using fee_rate_sets = std::vector<fee_rates>;
+
+struct history { checkpoint tx{}; uint64_t fee{}; };
+using histories = std::set<history>;
+
+struct unspent { outpoint tx{}; size_t height{}; };
+using unspents = std::set<unspent>;
 
 } // namespace database
 } // namespace libbitcoin

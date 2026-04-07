@@ -614,18 +614,44 @@ public:
     bool get_ancestry(header_links& ancestry, const header_link& descendant,
         size_t count) const NOEXCEPT;
 
-    /// Optional Tables.
+    /// Address.
     /// -----------------------------------------------------------------------
 
-    code get_address_outputs(std::atomic_bool& cancel, outpoints& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_unspent_outputs(std::atomic_bool& cancel, outpoints& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    /// Native queries (deduped, arbitrary sort).
     code get_minimum_unspent_outputs(std::atomic_bool& cancel, outpoints& out,
         const hash_digest& key, uint64_t value, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_balance(std::atomic_bool& cancel,
-        uint64_t& balance, const hash_digest& key,
+    code get_confirmed_unspent_outputs(std::atomic_bool& cancel, outpoints& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_address_outputs(std::atomic_bool& cancel, outpoints& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+
+    /// Electrum queries (deduped, electrum sort).
+    code get_unconfirmed_address(std::atomic_bool& cancel, histories& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_confirmed_address(std::atomic_bool& cancel, histories& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_address(std::atomic_bool& cancel, histories& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+
+    /// Electrum queries (deduped, electrum sort).
+    code get_unconfirmed_unspent(std::atomic_bool& cancel, histories& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_confirmed_unspent(std::atomic_bool& cancel, histories& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_unspent(std::atomic_bool& cancel, unspents& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+
+    /// Balance queries (universal, unconfirmed conflict resolution arbitrary).
+    code get_unconfirmed_balance(std::atomic_bool& cancel, uint64_t& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_confirmed_balance(std::atomic_bool& cancel, uint64_t& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_balance(std::atomic_bool& cancel, uint64_t& confirmed,
+        uint64_t& combined, const hash_digest& key,
         bool turbo=false) const NOEXCEPT;
+
+    /// Filters.
+    /// -----------------------------------------------------------------------
 
     bool is_filtered_body(const header_link& link) const NOEXCEPT;
     bool get_filter_body(filter& out, const header_link& link) const NOEXCEPT;
