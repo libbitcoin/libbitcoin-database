@@ -55,28 +55,6 @@ code CLASS::get_address_outputs(stopper& cancel, outpoints& out,
     return error::success;
 }
 
-// protected
-TEMPLATE
-code CLASS::get_confirmed_unspent_outputs_turbo(stopper& cancel,
-    outpoints& out, const hash_digest& key) const NOEXCEPT
-{
-    out.clear();
-    output_links links{};
-    if (const code ec = to_address_outputs(cancel, links, key))
-        return ec;
-
-    return parallel_address_transform(cancel, out, links,
-        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT
-        {
-            if (cancel || fail || !is_confirmed_unspent(link))
-                return outpoint{};
-
-            auto outpoint = get_spent(link);
-            fail = (outpoint.point().index() == point::null_index);
-            return outpoint;
-        });
-}
-
 // server/native
 TEMPLATE
 code CLASS::get_confirmed_unspent_outputs(stopper& cancel,
@@ -100,38 +78,6 @@ code CLASS::get_confirmed_unspent_outputs(stopper& cancel,
     }
 
     return error::success;
-}
-
-// protected
-TEMPLATE
-code CLASS::get_minimum_unspent_outputs_turbo(stopper& cancel,
-    outpoints& out, const hash_digest& key, uint64_t minimum) const NOEXCEPT
-{
-    out.clear();
-    output_links links{};
-    if (const code ec = to_address_outputs(cancel, links, key))
-        return ec;
-
-    return parallel_address_transform(cancel, out, links,
-        [this, minimum](const auto& link, auto& cancel, auto& fail) NOEXCEPT
-        {
-            if (cancel || fail || !is_confirmed_unspent(link))
-                return outpoint{};
-
-            uint64_t value{};
-            if (!get_value(value, link))
-            {
-                fail = true;
-                return outpoint{};
-            }
-
-            if (value < minimum)
-                return outpoint{};
-
-            auto outpoint = get_spent(link);
-            fail = (outpoint.point().index() == point::null_index);
-            return outpoint;
-        });
 }
 
 // unused
@@ -167,10 +113,86 @@ code CLASS::get_minimum_unspent_outputs(stopper& cancel,
     return error::success;
 }
 
+// turbos
+// ----------------------------------------------------------------------------
+// protected
+
+TEMPLATE
+code CLASS::get_address_outputs_turbo(stopper& cancel, outpoints& out,
+    const hash_digest& key) const NOEXCEPT
+{
+    out.clear();
+    output_links links{};
+    if (const code ec = to_address_outputs(cancel, links, key))
+        return ec;
+
+    return parallel_address_transform(cancel, out, links,
+        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT
+        {
+            if (cancel || fail) return outpoint{};
+            auto outpoint = get_spent(link);
+            fail = outpoint.point().is_null();
+            return outpoint;
+        });
+}
+
+TEMPLATE
+code CLASS::get_confirmed_unspent_outputs_turbo(stopper& cancel,
+    outpoints& out, const hash_digest& key) const NOEXCEPT
+{
+    out.clear();
+    output_links links{};
+    if (const code ec = to_address_outputs(cancel, links, key))
+        return ec;
+
+    return parallel_address_transform(cancel, out, links,
+        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT
+        {
+            if (cancel || fail || !is_confirmed_unspent(link))
+                return outpoint{};
+
+            auto outpoint = get_spent(link);
+            fail = outpoint.point().is_null();
+            return outpoint;
+        });
+}
+
+TEMPLATE
+code CLASS::get_minimum_unspent_outputs_turbo(stopper& cancel,
+    outpoints& out, const hash_digest& key, uint64_t minimum) const NOEXCEPT
+{
+    out.clear();
+    output_links links{};
+    if (const code ec = to_address_outputs(cancel, links, key))
+        return ec;
+
+    return parallel_address_transform(cancel, out, links,
+        [this, minimum](const auto& link, auto& cancel, auto& fail) NOEXCEPT
+        {
+            if (cancel || fail || !is_confirmed_unspent(link))
+                return outpoint{};
+
+            uint64_t value{};
+            if (!get_value(value, link))
+            {
+                fail = true;
+                return outpoint{};
+            }
+
+            if (value < minimum)
+                return outpoint{};
+
+            auto outpoint = get_spent(link);
+            fail = outpoint.point().is_null();
+            return outpoint;
+        });
+}
+
+
 // utilities
 // ----------------------------------------------------------------------------
-
 // private/static
+
 TEMPLATE
 template <typename Functor>
 inline code CLASS::parallel_address_transform(stopper& cancel,
@@ -192,31 +214,11 @@ inline code CLASS::parallel_address_transform(stopper& cancel,
     for (auto& outpoint: outpoints)
     {
         if (cancel) return error::canceled;
-        if (outpoint.point().index() != point::null_index)
+        if (!outpoint.point().is_null())
             out.insert(std::move(outpoint));
     }
 
     return error::success;
-}
-
-// protected
-TEMPLATE
-code CLASS::get_address_outputs_turbo(stopper& cancel, outpoints& out,
-    const hash_digest& key) const NOEXCEPT
-{
-    out.clear();
-    output_links links{};
-    if (const code ec = to_address_outputs(cancel, links, key))
-        return ec;
-
-    return parallel_address_transform(cancel, out, links,
-        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT
-        {
-            if (cancel || fail) return outpoint{};
-            auto outpoint = get_spent(link);
-            fail = (outpoint.point().index() == point::null_index);
-            return outpoint;
-        });
 }
 
 } // namespace database
