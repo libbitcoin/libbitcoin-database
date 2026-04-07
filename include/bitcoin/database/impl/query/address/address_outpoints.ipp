@@ -49,7 +49,7 @@ code CLASS::get_address_outputs(stopper& cancel, outpoints& out,
         if (!store_.address.get(it, address))
             return error::integrity;
 
-        out.insert(get_spent(address.output_fk));
+        out.insert(get_outpoint(address.output_fk));
     }
 
     return error::success;
@@ -74,7 +74,7 @@ code CLASS::get_confirmed_unspent_outputs(stopper& cancel,
             return error::integrity;
 
         if (is_confirmed_unspent(address.output_fk))
-            out.insert(get_spent(address.output_fk));
+            out.insert(get_outpoint(address.output_fk));
     }
 
     return error::success;
@@ -106,7 +106,7 @@ code CLASS::get_minimum_unspent_outputs(stopper& cancel,
                 return error::integrity;
 
             if (value >= minimum)
-                out.insert(get_spent(address.output_fk));
+                out.insert(get_outpoint(address.output_fk));
         }
     }
 
@@ -130,7 +130,7 @@ code CLASS::get_address_outputs_turbo(stopper& cancel, outpoints& out,
         [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT
         {
             if (cancel || fail) return outpoint{};
-            auto outpoint = get_spent(link);
+            auto outpoint = get_outpoint(link);
             fail = outpoint.point().is_null();
             return outpoint;
         });
@@ -151,7 +151,7 @@ code CLASS::get_confirmed_unspent_outputs_turbo(stopper& cancel,
             if (cancel || fail || !is_confirmed_unspent(link))
                 return outpoint{};
 
-            auto outpoint = get_spent(link);
+            auto outpoint = get_outpoint(link);
             fail = outpoint.point().is_null();
             return outpoint;
         });
@@ -182,7 +182,7 @@ code CLASS::get_minimum_unspent_outputs_turbo(stopper& cancel,
             if (value < minimum)
                 return outpoint{};
 
-            auto outpoint = get_spent(link);
+            auto outpoint = get_outpoint(link);
             fail = outpoint.point().is_null();
             return outpoint;
         });

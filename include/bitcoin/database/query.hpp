@@ -414,7 +414,7 @@ public:
         bool witness) const NOEXCEPT;
 
     /// Inpoint and outpoint result sets.
-    outpoint get_spent(const output_link& link) const NOEXCEPT;
+    outpoint get_outpoint(const output_link& link) const NOEXCEPT;
     inpoint get_spender(const point_link& link) const NOEXCEPT;
     inpoints get_spenders(const point& point) const NOEXCEPT;
 
