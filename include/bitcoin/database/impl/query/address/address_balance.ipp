@@ -33,7 +33,7 @@ namespace database {
 
 // unused
 TEMPLATE
-code CLASS::get_unconfirmed_balance(std::atomic_bool& , uint64_t& ,
+code CLASS::get_unconfirmed_balance(stopper& , uint64_t& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};
@@ -41,7 +41,7 @@ code CLASS::get_unconfirmed_balance(std::atomic_bool& , uint64_t& ,
 
 // server/native
 TEMPLATE
-code CLASS::get_confirmed_balance(std::atomic_bool& cancel, uint64_t& out,
+code CLASS::get_confirmed_balance(stopper& cancel, uint64_t& out,
     const hash_digest& key, bool turbo) const NOEXCEPT
 {
     outpoints outs{};
@@ -63,7 +63,7 @@ code CLASS::get_confirmed_balance(std::atomic_bool& cancel, uint64_t& out,
 
 // server/electrum
 TEMPLATE
-code CLASS::get_balance(std::atomic_bool& , uint64_t& ,
+code CLASS::get_balance(stopper& , uint64_t& ,
     uint64_t& , const hash_digest& ,
     bool ) const NOEXCEPT
 {

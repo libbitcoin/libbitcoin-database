@@ -35,8 +35,10 @@ lib_LTLIBRARIES = src/libbitcoin-database.la
 src_libbitcoin_database_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 src_libbitcoin_database_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_database_la_SOURCES = \
+    src/define.cpp \
     src/error.cpp \
     src/settings.cpp \
+    src/types.cpp \
     src/file/rotator.cpp \
     src/file/utilities.cpp \
     src/locks/file_lock.cpp \

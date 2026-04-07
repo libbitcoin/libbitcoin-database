@@ -212,7 +212,7 @@ size_t CLASS::output_count(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-two_counts CLASS::put_counts(const tx_link& link) const NOEXCEPT
+counts CLASS::put_counts(const tx_link& link) const NOEXCEPT
 {
     table::transaction::get_put_counts tx{};
     if (!store_.tx.get(link, tx))
@@ -238,7 +238,7 @@ size_t CLASS::output_count(const tx_links& txs) const NOEXCEPT
 }
 
 TEMPLATE
-two_counts CLASS::put_counts(const tx_links& txs) const NOEXCEPT
+counts CLASS::put_counts(const tx_links& txs) const NOEXCEPT
 {
     return { input_count(txs), output_count(txs) };
 }

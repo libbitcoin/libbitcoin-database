@@ -121,6 +121,7 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\define.cpp" />
     <ClCompile Include="..\..\..\..\src\error.cpp" />
     <ClCompile Include="..\..\..\..\src\file\rotator.cpp" />
     <ClCompile Include="..\..\..\..\src\file\utilities.cpp">
@@ -137,6 +138,7 @@
       <ObjectFileName>$(IntDir)src_memory_utilities.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
+    <ClCompile Include="..\..\..\..\src\types.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />

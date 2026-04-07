@@ -64,7 +64,7 @@ code CLASS::to_address_outputs(output_links& out,
 }
 
 TEMPLATE
-code CLASS::to_address_outputs(std::atomic_bool& cancel, output_links& out,
+code CLASS::to_address_outputs(stopper& cancel, output_links& out,
     const hash_digest& key) const NOEXCEPT
 {
     // Pushing into the vector is more efficient than precomputation of size.

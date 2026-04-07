@@ -27,7 +27,6 @@
 #include <filesystem>
 #include <ios>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/error.hpp>
 
 namespace libbitcoin {
 namespace database {

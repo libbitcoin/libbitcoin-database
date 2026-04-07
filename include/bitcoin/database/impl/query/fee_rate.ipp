@@ -68,7 +68,7 @@ bool CLASS::get_block_fees(fee_rates& out,
 }
 
 TEMPLATE
-bool CLASS::get_branch_fees(std::atomic_bool& cancel, fee_rate_sets& out,
+bool CLASS::get_branch_fees(stopper& cancel, fee_rate_sets& out,
     size_t start, size_t count) const NOEXCEPT
 {
     out.clear();
@@ -80,7 +80,7 @@ bool CLASS::get_branch_fees(std::atomic_bool& cancel, fee_rate_sets& out,
         return false;
 
     out.resize(count);
-    std::atomic_bool fail{};
+    stopper fail{};
     std::vector<size_t> offsets(count);
     std::iota(offsets.begin(), offsets.end(), zero);
     constexpr auto parallel = poolstl::execution::par;

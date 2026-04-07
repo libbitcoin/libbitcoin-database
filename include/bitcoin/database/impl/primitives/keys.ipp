@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_PRIMITIVES_KEYS_IPP
 
 #include <algorithm>
-#include <bitcoin/database.hpp>
+#include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {

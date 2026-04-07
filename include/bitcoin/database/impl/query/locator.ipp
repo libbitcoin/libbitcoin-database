@@ -80,8 +80,8 @@ hashes CLASS::get_blocks(const hashes& locator,
 // protected
 
 TEMPLATE
-CLASS::span CLASS::get_locator_span(const hashes& locator,
-    const hash_digest& stop, size_t limit) const NOEXCEPT
+span CLASS::get_locator_span(const hashes& locator, const hash_digest& stop,
+    size_t limit) const NOEXCEPT
 {
     using namespace system;
 

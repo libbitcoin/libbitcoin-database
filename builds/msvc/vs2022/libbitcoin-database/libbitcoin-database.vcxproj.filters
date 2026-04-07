@@ -90,6 +90,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\define.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\error.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -118,6 +121,9 @@
       <Filter>src\memory</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\settings.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\types.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

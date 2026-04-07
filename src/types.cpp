@@ -1,0 +1,107 @@
+/**
+ * Copyright (c) 2011-2026 libbitcoin developers (see AUTHORS)
+ *
+ * This file is part of libbitcoin.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#include <bitcoin/database/types.hpp>
+
+#include <bitcoin/database/define.hpp>
+
+namespace libbitcoin {
+namespace database {
+
+// local
+inline bool hash_less_than(const hash_digest& a, const hash_digest& b) NOEXCEPT
+{
+    using namespace system;
+    constexpr auto hi = to_half(byte_bits);
+    constexpr auto lo = sub1(power2<uint8_t>(hi));
+
+    // return encode_hash(a) < encode_hash(a)
+    for (auto byte{ hash_size }; !is_zero(byte); --byte)
+    {
+        const auto byte_a = a[sub1(byte)];
+        const auto byte_b = b[sub1(byte)];
+
+        const auto hi_a = shift_right(byte_a, hi);
+        const auto hi_b = shift_right(byte_b, hi);
+        if (hi_a != hi_b)
+            return hi_a < hi_b;
+
+        const auto lo_a = bit_and(byte_a, lo);
+        const auto lo_b = bit_and(byte_b, lo);
+        if (lo_a != lo_b)
+            return lo_a < lo_b;
+    }
+
+    return false;
+}
+
+bool history::less_than::operator()(const history& a, const history& b) NOEXCEPT
+{
+    using namespace system;
+    const auto a_height = a.tx.height();
+    const auto b_height = b.tx.height();
+    const auto a_confirmed = !is_min(a_height) && !is_max(a_height);
+    const auto b_confirmed = !is_min(b_height) && !is_max(b_height);
+
+    // Confirmed before unconfirmed.
+    if (a_confirmed != b_confirmed)
+        return a_confirmed;
+
+    // Chain.block height ascending (0 < max | x < y).
+    if (a_height != b_height)
+        return a_height < b_height;
+
+    // Block.tx position ascending (positions must differ).
+    if (a_confirmed)
+        return a.position < b.position;
+
+    // Both unconfirmed (0 or max), base16 lexical txid ascending.
+    return hash_less_than(a.tx.hash(), b.tx.hash());
+}
+
+bool unspent::less_than::operator()(const unspent& a, const unspent& b) NOEXCEPT
+{
+    const auto a_point = a.tx.point();
+    const auto b_point = b.tx.point();
+    const bool a_confirmed = !is_zero(a.height);
+    const bool b_confirmed = !is_zero(b.height);
+
+    // Confirmed before unconfirmed.
+    if (a_confirmed != b_confirmed)
+        return a_confirmed;
+
+    if (a_confirmed)
+    {
+        // Chain.block height ascending (x < y).
+        if (a.height != b.height)
+            return a.height < b.height;
+
+        // Block.tx position ascending.
+        if (a.position != b.position)
+            return a.position < b.position;
+
+        // Tx.output index ascending.
+        return a_point.index() < b_point.index();
+    }
+
+    // Unconfirmed have 0 height/position, arbitrary sort (hash:index).
+    return a_point < b_point;
+}
+
+} // namespace database
+} // namespace libbitcoin

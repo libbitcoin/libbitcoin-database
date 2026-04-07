@@ -98,7 +98,7 @@ CLASS::positions CLASS::merkle_branch(size_t leaf, size_t leaves,
 
 // protected
 TEMPLATE
-CLASS::hash_option CLASS::create_interval(header_link link,
+hash_option CLASS::create_interval(header_link link,
     size_t height) const NOEXCEPT
 {
     // Interval ends at nth block where n is a multiple of span.
@@ -124,7 +124,7 @@ CLASS::hash_option CLASS::create_interval(header_link link,
 
 // protected
 TEMPLATE
-CLASS::hash_option CLASS::get_confirmed_interval(size_t height) const NOEXCEPT
+hash_option CLASS::get_confirmed_interval(size_t height) const NOEXCEPT
 {
     const auto span = interval_span();
     BC_ASSERT(!is_zero(span));

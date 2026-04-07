@@ -19,7 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_BOOST_HPP
 #define LIBBITCOIN_DATABASE_BOOST_HPP
 
-// Must pull in any base boost configuration before including boost.
+#include <bitcoin/database/version.hpp>
+
+// Must pull in any base boost configuration before system.
 #include <bitcoin/system.hpp>
 
 #include <filesystem>
