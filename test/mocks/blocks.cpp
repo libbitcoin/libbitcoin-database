@@ -81,6 +81,13 @@ const block block7{ block7_data, true };
 const block block8{ block8_data, true };
 const block block9{ block9_data, true };
 
+system::hash_digest genesis_address() NOEXCEPT
+{
+    static const auto address = genesis.transactions_ptr()->front()->
+        outputs_ptr()->front()->script().hash();
+    return address;
+}
+
 bool setup_three_block_store(query_t& query) NOEXCEPT
 {
     return query.initialize(genesis) &&

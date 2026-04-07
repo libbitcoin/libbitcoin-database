@@ -16,27 +16,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
-#include "../mocks/blocks.hpp"
-#include "../mocks/chunk_store.hpp"
-
-BOOST_FIXTURE_TEST_SUITE(query_archive_read_tests, test::directory_setup_fixture)
+#include "../../test.hpp"
+#include "../../mocks/blocks.hpp"
+#include "../../mocks/chunk_store.hpp"
 
 // ensure context::flags is same size as chain_context::flags.
-static_assert(is_same_type<database::context::flag_t::integer, decltype(system::chain::context{}.flags)>);
+static_assert(is_same_type < database::context::flag_t::integer, decltype(system::chain::context{}.flags) > );
 
-// nop event handler.
-const auto events_handler = [](auto, auto) {};
+BOOST_FIXTURE_TEST_SUITE(query_chain_reader_tests, test::directory_setup_fixture)
 
 // is_coinbase
 
-BOOST_AUTO_TEST_CASE(query_archive_read__is_coinbase__coinbase__true)
+BOOST_AUTO_TEST_CASE(query_chain_reader__is_coinbase__coinbase__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{}, false, false));
     BOOST_CHECK(query.set(test::block2, context{}, false, false));
@@ -47,13 +44,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__is_coinbase__coinbase__true)
     BOOST_CHECK(query.is_coinbase(3));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__is_coinbase__non_coinbase__false)
+BOOST_AUTO_TEST_CASE(query_chain_reader__is_coinbase__non_coinbase__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1a, context{}, false, false));
     BOOST_CHECK(query.set(test::block2a, context{}, false, false));
@@ -67,13 +64,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__is_coinbase__non_coinbase__false)
 
 // is_tx_segregated
 
-BOOST_AUTO_TEST_CASE(query_archive_read__is_tx_segregated__always__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__is_tx_segregated__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1a, context{}, false, false));
     BOOST_CHECK(!query.is_tx_segregated(0));
@@ -83,13 +80,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__is_tx_segregated__always__expected)
 
 // is_block_segregated
 
-BOOST_AUTO_TEST_CASE(query_archive_read__is_block_segregated__always__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__is_block_segregated__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1a, context{}, false, false));
     BOOST_CHECK(!query.is_block_segregated(0));
@@ -99,25 +96,25 @@ BOOST_AUTO_TEST_CASE(query_archive_read__is_block_segregated__always__expected)
 
 // is_milestone
 
-BOOST_AUTO_TEST_CASE(query_archive_read__is_milestone__genesis__false)
+BOOST_AUTO_TEST_CASE(query_chain_reader__is_milestone__genesis__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(!query.is_milestone(0));
     BOOST_CHECK(!query.is_milestone(1));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__is_milestone__set__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__is_milestone__set__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{}, true, false));
     BOOST_CHECK(query.set(test::block2, context{}, false, false));;
@@ -126,7 +123,7 @@ BOOST_AUTO_TEST_CASE(query_archive_read__is_milestone__set__expected)
     BOOST_CHECK(!query.is_milestone(2));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_header__invalid_parent__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__invalid_parent__expected)
 {
     constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
     constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
@@ -169,7 +166,7 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_header__invalid_parent__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
 
     store.header_head() = expected_header_head;
     store.header_body() = expected_header_body;
@@ -177,7 +174,7 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_header__invalid_parent__expected)
     BOOST_CHECK(!query.get_header(header_link::terminal));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_header__default__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__default__expected)
 {
     constexpr auto root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
     constexpr auto block_hash = system::base16_array("85d0b02a16f6d645aa865fad4a8666f5e7bb2b0c4392a5d675496d6c3defa1f2");
@@ -231,7 +228,7 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_header__default__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
 
     ////store.header_head() = expected_header_head;
     ////store.header_body() = expected_header_body;
@@ -248,36 +245,36 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_header__default__expected)
     BOOST_CHECK_EQUAL(pointer1->hash(), block_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_keys__not_found__empty)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_tx_keys__not_found__empty)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.get_tx_keys(query.to_header(system::null_hash)).empty());
-    BOOST_CHECK(!store.close(events_handler));
+    BOOST_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_header_key__always__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_header_key__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK_EQUAL(query.get_header_key(0), test::genesis.hash());
     BOOST_CHECK_EQUAL(query.get_header_key(1), system::null_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_point_key__always__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_point_key__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK_EQUAL(query.get_point_hash(0), system::null_hash);
 
@@ -297,13 +294,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_point_key__always__expected)
     ////BOOST_CHECK_EQUAL(query.get_point_hash(6), system::null_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_key__always__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_tx_key__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK_EQUAL(query.get_tx_key(0), test::genesis.transactions_ptr()->front()->hash(false));
     BOOST_CHECK_EQUAL(query.get_tx_key(1), system::null_hash);
@@ -314,13 +311,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_key__always__expected)
     BOOST_CHECK_EQUAL(query.get_tx_key(3), system::null_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_height1__always__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_height1__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -344,13 +341,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_height1__always__expected)
     BOOST_CHECK(!query.get_height(out, 6));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_height2__always__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_height2__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -374,13 +371,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_height2__always__expected)
     BOOST_CHECK(!query.get_height(out, system::one_hash));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_height__not_strong__false)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_tx_height__not_strong__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::tx4));
 
@@ -388,13 +385,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_height__not_strong__false)
     BOOST_CHECK(!query.get_tx_height(out, 1));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_position__strong__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_tx_position__strong__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
@@ -433,13 +430,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_position__strong__expected)
     BOOST_CHECK_EQUAL(query.get_position_tx(3, 0), 4u);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_position__always__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_tx_position__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
@@ -475,13 +472,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_position__always__expected)
 }
 
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_position_tx__always__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_position_tx__always__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
@@ -496,13 +493,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_position_tx__always__expected)
     BOOST_CHECK(query.get_position_tx({}, 0).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_sizes__coinbase__204)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_tx_sizes__coinbase__204)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
 
     size_t light{};
@@ -512,52 +509,52 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_sizes__coinbase__204)
     BOOST_CHECK_EQUAL(heavy, 204u);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_tx_count__coinbase__1)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_tx_count__coinbase__1)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK_EQUAL(query.get_tx_count(0), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_witness__not_found__nullptr)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_witness__not_found__nullptr)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(!query.get_witness(query.to_point({}, {})));
-    BOOST_CHECK(!store.close(events_handler));
+    BOOST_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_input_script__not_found__nullptr)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_input_script__not_found__nullptr)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(!query.get_input_script(query.to_point(tx_link{}, {})));
-    BOOST_CHECK(!store.close(events_handler));
+    BOOST_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_input__not_found__nullptr)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_input__not_found__nullptr)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(!query.get_input(query.to_point(tx_link{}, {}), false));
     BOOST_CHECK(!query.get_input(query.to_tx(system::null_hash), {}, false));
-    BOOST_CHECK(!store.close(events_handler));
+    BOOST_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_input__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_input__genesis__expected)
 {
     settings settings{};
     settings.header_buckets = 8;
@@ -566,7 +563,7 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_input__genesis__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.set(test::genesis, test::context, false, false));
 
     const auto tx = test::genesis.transactions_ptr()->front();
@@ -577,55 +574,55 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_input__genesis__expected)
     BOOST_CHECK(input->script() == *query.get_input_script(point));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_inputs__tx_not_found__nullptr)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_inputs__tx_not_found__nullptr)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(!query.get_inputs(1, false));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_inputs__found__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_inputs__found__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::tx4));
     BOOST_CHECK_EQUAL(query.get_inputs(1, false)->size(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_output_script__not_found__nullptr)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_output_script__not_found__nullptr)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(!query.get_output_script(query.to_output(system::null_hash, 0u)));
     BOOST_CHECK(!query.get_output(0));
-    BOOST_CHECK(!store.close(events_handler));
+    BOOST_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_output__not_found__nullptr)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_output__not_found__nullptr)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(!query.get_output(query.to_tx(system::null_hash), 0u));
     BOOST_CHECK(!query.get_output(query.to_output(system::null_hash, 0u)));
     BOOST_CHECK(!query.get_output(0));
-    BOOST_CHECK(!store.close(events_handler));
+    BOOST_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_output__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_output__genesis__expected)
 {
     settings settings{};
     settings.header_buckets = 8;
@@ -634,7 +631,7 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_output__genesis__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.set(test::genesis, test::context, false, false));
 
     const auto tx = test::genesis.transactions_ptr()->front();
@@ -645,48 +642,48 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_output__genesis__expected)
     BOOST_CHECK(output->script() == *query.get_output_script(query.to_output(tx->hash(false), 0u)));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_outputs__tx_not_found__nullptr)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_outputs__tx_not_found__nullptr)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(!query.get_outputs(1));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_outputs__found__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_outputs__found__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::tx4));
     BOOST_CHECK_EQUAL(query.get_outputs(1)->size(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_transactions__tx_not_found__nullptr)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_transactions__tx_not_found__nullptr)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::tx4));
     BOOST_CHECK(!query.get_transactions(3, false));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_transactions__found__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_transactions__found__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1a, test::context, false, false));
     BOOST_CHECK(query.set(test::block2a, test::context, false, false));
@@ -696,13 +693,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_transactions__found__expected)
     BOOST_CHECK_EQUAL(query.get_transactions(2, false)->size(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_spenders__unspent_or_not_found__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_spenders__unspent_or_not_found__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, test::context, false, false));
     BOOST_CHECK(query.set(test::block2, test::context, false, false));
@@ -734,13 +731,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_spenders__unspent_or_not_found__exp
     ////BOOST_CHECK(query.get_spenders_index(3, 1, true)->empty());
 }
 
-////BOOST_AUTO_TEST_CASE(query_archive_read__get_spenders__found_and_spent__expected)
+////BOOST_AUTO_TEST_CASE(query_chain_reader__get_spenders__found_and_spent__expected)
 ////{
 ////    settings settings{};
 ////    settings.path = TEST_DIRECTORY;
 ////    test::chunk_store store{ settings };
 ////    test::query_accessor query{ store };
-////    BOOST_CHECK(!store.create(events_handler));
+////    BOOST_CHECK(!store.create(test::events_handler));
 ////    BOOST_CHECK(query.initialize(test::genesis));
 ////
 ////    // Neither of the two block1a outputs spent yet.
@@ -790,13 +787,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__get_spenders__unspent_or_not_found__exp
 ////    BOOST_CHECK(*query.get_spenders_index(1, 1, true)->back() == *(*block_inputs).back());
 ////}
 
-BOOST_AUTO_TEST_CASE(query_archive_read__get_value__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_value__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
 
     uint64_t value{};
@@ -823,13 +820,13 @@ const auto& clean_(const auto& block_or_tx) NOEXCEPT
 }
 
 // First four blocks have only coinbase txs.
-BOOST_AUTO_TEST_CASE(query_archive_read__populate_with_metadata__null_prevouts__true)
+BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__null_prevouts__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, test::context, false, false));
     BOOST_CHECK(query.set(test::block2, test::context, false, false));
@@ -846,13 +843,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__populate_with_metadata__null_prevouts__
     BOOST_CHECK(query.populate_with_metadata(copy3));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__populate_with_metadata__partial_prevouts__false)
+BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__partial_prevouts__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1a, test::context, false, false));
     BOOST_CHECK(query.set(test::block2a, test::context, false, false));
@@ -880,13 +877,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__populate_with_metadata__partial_prevout
     BOOST_CHECK(query.populate_with_metadata(*tx4.inputs_ptr()->at(1)));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__populate_with_metadata__metadata__expected)
+BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__metadata__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1a, test::context, false, false));
     BOOST_CHECK(query.set(test::block2a, test::context, false, false));
@@ -932,13 +929,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__populate_with_metadata__metadata__expec
 // ----------------------------------------------------------------------------
 
 // First four blocks have only coinbase txs.
-BOOST_AUTO_TEST_CASE(query_archive_read__populate_without_metadata__null_prevouts__true)
+BOOST_AUTO_TEST_CASE(query_chain_reader__populate_without_metadata__null_prevouts__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, test::context, false, false));
     BOOST_CHECK(query.set(test::block2, test::context, false, false));
@@ -949,13 +946,13 @@ BOOST_AUTO_TEST_CASE(query_archive_read__populate_without_metadata__null_prevout
     BOOST_CHECK(query.populate_without_metadata(test::block3));
 }
 
-BOOST_AUTO_TEST_CASE(query_archive_read__populate_without_metadata__partial_prevouts__false)
+BOOST_AUTO_TEST_CASE(query_chain_reader__populate_without_metadata__partial_prevouts__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1a, test::context, false, false));
     BOOST_CHECK(query.set(test::block2a, test::context, false, false));

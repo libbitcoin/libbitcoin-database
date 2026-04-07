@@ -16,15 +16,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
-#include "../mocks/blocks.hpp"
-#include "../mocks/chunk_store.hpp"
+#include "../../test.hpp"
+#include "../../mocks/blocks.hpp"
+#include "../../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_wire_tests, test::directory_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_wire_reader_reader_tests, test::directory_setup_fixture)
 
 // get_wire_header
 
-BOOST_AUTO_TEST_CASE(query_wire__get_wire_header__genesis_and_not__expected)
+BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_header__genesis_and_not__expected)
 {
     using namespace system;
     database::settings settings{};
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(query_wire__get_wire_header__genesis_and_not__expected)
 
 // get_wire_tx
 
-BOOST_AUTO_TEST_CASE(query_wire__get_wire_tx__genesis_and_not__expected)
+BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__genesis_and_not__expected)
 {
     using namespace system;
     database::settings settings{};
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(query_wire__get_wire_tx__genesis_and_not__expected)
     BOOST_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire__get_wire_tx__witness_true__expected)
+BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__witness_true__expected)
 {
     using namespace system;
     database::settings settings{};
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(query_wire__get_wire_tx__witness_true__expected)
     BOOST_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire__get_wire_tx__witness_false__expected)
+BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__witness_false__expected)
 {
     using namespace system;
     database::settings settings{};
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(query_wire__get_wire_tx__witness_false__expected)
 
 // get_wire_block
 
-BOOST_AUTO_TEST_CASE(query_wire__get_wire_block__genesis_and_not__expected)
+BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__genesis_and_not__expected)
 {
     using namespace system;
     database::settings settings{};
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(query_wire__get_wire_block__genesis_and_not__expected)
     BOOST_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire__get_wire_block__witness_true__expected)
+BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__witness_true__expected)
 {
     using namespace system;
     database::settings settings{};
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(query_wire__get_wire_block__witness_true__expected)
     BOOST_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire__get_wire_block__witness_false__expected)
+BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__witness_false__expected)
 {
     using namespace system;
     database::settings settings{};

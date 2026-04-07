@@ -28,20 +28,32 @@
     <Filter Include="src\query">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\query\address">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\query\archive">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\query\consensus">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\query\navigate">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\tables">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\tables\archives">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000C}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\tables\caches">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000009}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000D}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\tables\indexes">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000A}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000E}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\tables\optional">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000B}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000F}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -108,25 +120,73 @@
     <ClCompile Include="..\..\..\..\test\primitives\nomap.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\archive_read.cpp">
+    <ClCompile Include="..\..\..\..\test\query\address\address_balance.cpp">
+      <Filter>src\query\address</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\address\address_history.cpp">
+      <Filter>src\query\address</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\address\address_outpoints.cpp">
+      <Filter>src\query\address</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\address\address_unspent.cpp">
+      <Filter>src\query\address</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\amounts.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\archive_write.cpp">
+    <ClCompile Include="..\..\..\..\test\query\archive\chain_reader.cpp">
+      <Filter>src\query\archive</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\archive\chain_writer.cpp">
+      <Filter>src\query\archive</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\archive\wire_reader.cpp">
+      <Filter>src\query\archive</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\archive\wire_writer.cpp">
+      <Filter>src\query\archive</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\confirmed.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\confirm.cpp">
-      <Filter>src\query</Filter>
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_block.cpp">
+      <Filter>src\query\consensus</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\consensus.cpp">
-      <Filter>src\query</Filter>
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_chain_state.cpp">
+      <Filter>src\query\consensus</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\context.cpp">
-      <Filter>src\query</Filter>
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_compact.cpp">
+      <Filter>src\query\consensus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_forks.cpp">
+      <Filter>src\query\consensus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_populate.cpp">
+      <Filter>src\query\consensus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_prevouts.cpp">
+      <Filter>src\query\consensus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_states.cpp">
+      <Filter>src\query\consensus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_strong.cpp">
+      <Filter>src\query\consensus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_transaction.cpp">
+      <Filter>src\query\consensus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_work.cpp">
+      <Filter>src\query\consensus</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\extent.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\fees.cpp">
+    <ClCompile Include="..\..\..\..\test\query\fee_rate.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\filters.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\height.cpp">
@@ -135,25 +195,37 @@
     <ClCompile Include="..\..\..\..\test\query\initialize.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\locator.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\merkle.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\network.cpp">
+    <ClCompile Include="..\..\..\..\test\query\navigate\navigate_arraymap.cpp">
+      <Filter>src\query\navigate</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\navigate\navigate_forward.cpp">
+      <Filter>src\query\navigate</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\navigate\navigate_hashmap.cpp">
+      <Filter>src\query\navigate</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\navigate\navigate_natural.cpp">
+      <Filter>src\query\navigate</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\navigate\navigate_reverse.cpp">
+      <Filter>src\query\navigate</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\properties_block.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\objects.cpp">
+    <ClCompile Include="..\..\..\..\test\query\properties_tx.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\optional.cpp">
+    <ClCompile Include="..\..\..\..\test\query\sequences.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\translate.cpp">
-      <Filter>src\query</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\validate.cpp">
-      <Filter>src\query</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\wire.cpp">
+    <ClCompile Include="..\..\..\..\test\query\sizes.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
@@ -168,13 +240,16 @@
     <ClCompile Include="..\..\..\..\test\tables\archives\input.cpp">
       <Filter>src\tables\archives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\archives\ins.cpp">
+      <Filter>src\tables\archives</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\archives\output.cpp">
       <Filter>src\tables\archives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\archives\point.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\archives\outs.cpp">
       <Filter>src\tables\archives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\archives\puts.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\archives\point.cpp">
       <Filter>src\tables\archives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\archives\transaction.cpp">
@@ -211,6 +286,9 @@
       <Filter>src\tables\optional</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\types.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
