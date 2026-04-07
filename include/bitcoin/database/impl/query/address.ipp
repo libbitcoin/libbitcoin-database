@@ -28,6 +28,7 @@ namespace libbitcoin {
 namespace database {
 
 // Address (natural-keyed).
+// TODO: [address_outpoints.ipp]
 // ----------------------------------------------------------------------------
 // Address table is populated during transaction archival.
 
@@ -188,28 +189,6 @@ code CLASS::get_minimum_unspent_outputs(std::atomic_bool& cancel,
     return error::success;
 }
 
-// server/native
-TEMPLATE
-code CLASS::get_confirmed_balance(std::atomic_bool& cancel, uint64_t& balance,
-    const hash_digest& key, bool turbo) const NOEXCEPT
-{
-    outpoints outs{};
-    if (const auto ec = get_confirmed_unspent_outputs(cancel, outs, key, turbo))
-    {
-        balance = zero;
-        return ec;
-    }
-
-    // Use of to_confirmed_unspent_outputs() provides necessary deduplication.
-    balance = std::accumulate(outs.begin(), outs.end(), zero,
-        [](size_t total, const outpoint& out) NOEXCEPT
-        {
-            return system::ceilinged_add(total, out.value());
-        });
-
-    return error::success;
-}
-
 // utilities
 // ----------------------------------------------------------------------------
 
@@ -260,6 +239,100 @@ code CLASS::get_address_outputs_turbo(std::atomic_bool& cancel, outpoints& out,
             fail = (outpoint.point().index() == point::null_index);
             return outpoint;
         });
+}
+
+// TODO: [address_history.ipp]
+// ----------------------------------------------------------------------------
+// Canonically-sorted/deduped address history:
+// root txs (height:zero) sorted before transitive (height:max) txs.
+// tied-height transactions sorted by base16 txid (not converted).
+
+TEMPLATE
+code CLASS::get_unconfirmed_address(std::atomic_bool& , histories& ,
+    const hash_digest& , bool ) const NOEXCEPT
+{
+    return {};
+}
+
+TEMPLATE
+code CLASS::get_confirmed_address(std::atomic_bool& , histories& ,
+    const hash_digest& , bool ) const NOEXCEPT
+{
+    return {};
+}
+
+TEMPLATE
+code CLASS::get_address(std::atomic_bool& , histories& ,
+    const hash_digest& , bool ) const NOEXCEPT
+{
+    return {};
+}
+
+// TODO: [address_unspent.ipp]
+// ----------------------------------------------------------------------------
+// A list of all unspent output transactions in canonical order.
+// Unconfirmed unspent are included at end of list in consistent order.
+
+TEMPLATE
+code CLASS::get_unconfirmed_unspent(std::atomic_bool& , histories& ,
+    const hash_digest& , bool ) const NOEXCEPT
+{
+    return {};
+}
+
+TEMPLATE
+code CLASS::get_confirmed_unspent(std::atomic_bool& , histories& ,
+    const hash_digest& , bool ) const NOEXCEPT
+{
+    return {};
+}
+
+TEMPLATE
+code CLASS::get_unspent(std::atomic_bool& , unspents& ,
+    const hash_digest& , bool ) const NOEXCEPT
+{
+    return {};
+}
+
+// TODO: [address_balance.ipp]
+// ----------------------------------------------------------------------------
+// Balance queries (universal, unconfirmed conflict resolution arbitrary).
+
+TEMPLATE
+code CLASS::get_unconfirmed_balance(std::atomic_bool& , uint64_t& ,
+    const hash_digest& , bool ) const NOEXCEPT
+{
+    return {};
+}
+
+// server/native
+TEMPLATE
+code CLASS::get_confirmed_balance(std::atomic_bool& cancel, uint64_t& out,
+    const hash_digest& key, bool turbo) const NOEXCEPT
+{
+    outpoints outs{};
+    if (const auto ec = get_confirmed_unspent_outputs(cancel, outs, key, turbo))
+    {
+        out = zero;
+        return ec;
+    }
+
+    // Use of to_confirmed_unspent_outputs() provides necessary deduplication.
+    out = std::accumulate(outs.begin(), outs.end(), zero,
+        [](size_t total, const outpoint& out) NOEXCEPT
+        {
+            return system::ceilinged_add(total, out.value());
+        });
+
+    return error::success;
+}
+
+TEMPLATE
+code CLASS::get_balance(std::atomic_bool& , uint64_t& ,
+    uint64_t& , const hash_digest& ,
+    bool ) const NOEXCEPT
+{
+    return {};
 }
 
 } // namespace database
