@@ -62,7 +62,7 @@ struct fee_rate { size_t bytes{}; uint64_t fee{}; };
 using fee_rates = std::vector<fee_rate>;
 using fee_rate_sets = std::vector<fee_rates>;
 
-struct base16_less
+struct encode_hash_less
 {
     bool operator()(const hash_digest& a, const hash_digest& b) const NOEXCEPT
     {
@@ -70,15 +70,19 @@ struct base16_less
         constexpr auto hi = to_half(byte_bits);
         constexpr auto lo = sub1(power2<uint8_t>(hi));
 
-        for (size_t byte{}; byte < hash_size; ++byte)
+        // return encode_hash(a) < encode_hash(a)
+        for (auto byte{ hash_size }; !is_zero(byte); --byte)
         {
-            const auto hi_a = shift_right(a[byte], hi);
-            const auto hi_b = shift_right(b[byte], hi);
+            const auto byte_a = a[sub1(byte)];
+            const auto byte_b = b[sub1(byte)];
+
+            const auto hi_a = shift_right(byte_a, hi);
+            const auto hi_b = shift_right(byte_b, hi);
             if (hi_a != hi_b)
                 return hi_a < hi_b;
 
-            const auto lo_a = bit_and(a[byte], lo);
-            const auto lo_b = bit_and(b[byte], lo);
+            const auto lo_a = bit_and(byte_a, lo);
+            const auto lo_b = bit_and(byte_b, lo);
             if (lo_a != lo_b)
                 return lo_a < lo_b;
         }
@@ -111,7 +115,7 @@ struct history_less
             return a.position < b.position;
 
         // Both unconfirmed (0 or max), base16 lexical txid ascending.
-        return base16_less{}(a.tx.hash(), b.tx.hash());
+        return encode_hash_less{}(a.tx.hash(), b.tx.hash());
     }
 };
 using histories = std::set<history, history_less>;
