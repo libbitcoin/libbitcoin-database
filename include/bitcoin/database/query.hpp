@@ -320,6 +320,8 @@ public:
     tx_link top_tx(size_t bucket) const NOEXCEPT;
 
     /// outputs enumeration
+    code to_address_outputs(output_links& out,
+        const hash_digest& key) const NOEXCEPT;
     code to_address_outputs(std::atomic_bool& cancel, output_links& out,
         const hash_digest& key) const NOEXCEPT;
 
@@ -866,6 +868,11 @@ private:
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+#include <bitcoin/database/impl/query/address/address_balance.ipp>
+#include <bitcoin/database/impl/query/address/address_history.ipp>
+#include <bitcoin/database/impl/query/address/address_outpoints.ipp>
+#include <bitcoin/database/impl/query/address/address_unspent.ipp>
+
 #include <bitcoin/database/impl/query/archival/chain_reader.ipp>
 #include <bitcoin/database/impl/query/archival/chain_writer.ipp>
 #include <bitcoin/database/impl/query/archival/wire_reader.ipp>
@@ -888,7 +895,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/navigate/navigate_natural.ipp>
 #include <bitcoin/database/impl/query/navigate/navigate_reverse.ipp>
 
-#include <bitcoin/database/impl/query/address.ipp>
 #include <bitcoin/database/impl/query/amounts.ipp>
 #include <bitcoin/database/impl/query/confirmed.ipp>
 #include <bitcoin/database/impl/query/extent.ipp>

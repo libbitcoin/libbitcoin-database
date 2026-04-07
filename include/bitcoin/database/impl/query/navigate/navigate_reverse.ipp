@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_QUERY_NAVIGATE_REVERSE_IPP
 
 #include <algorithm>
+#include <atomic>
 #include <utility>
 #include <bitcoin/database/define.hpp>
 
@@ -39,6 +40,48 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 
     // Terminal implies genesis (no parent).
     return header.parent_fk;
+}
+
+// address->outputs[receivers]
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+code CLASS::to_address_outputs(output_links& out,
+    const hash_digest& key) const NOEXCEPT
+{
+    // Pushing into the vector is more efficient than precomputation of size.
+    out.clear();
+    for (auto it = store_.address.it(key); it; ++it)
+    {
+        table::address::record address{};
+        if (!store_.address.get(it, address))
+            return error::integrity;
+
+        out.push_back(address.output_fk);
+    }
+
+    return error::success;
+}
+
+TEMPLATE
+code CLASS::to_address_outputs(std::atomic_bool& cancel, output_links& out,
+    const hash_digest& key) const NOEXCEPT
+{
+    // Pushing into the vector is more efficient than precomputation of size.
+    out.clear();
+    for (auto it = store_.address.it(key); it; ++it)
+    {
+        if (cancel)
+            return error::canceled;
+
+        table::address::record address{};
+        if (!store_.address.get(it, address))
+            return error::integrity;
+
+        out.push_back(address.output_fk);
+    }
+
+    return error::success;
 }
 
 // input|output|prevout->tx[parent]
@@ -115,38 +158,6 @@ point_links CLASS::to_spenders(const point& point) const NOEXCEPT
     return points;
 }
 
-// utilities
-// ----------------------------------------------------------------------------
-// protected (presumed to not be externally useful)
-
-TEMPLATE
-uint32_t CLASS::to_input_index(const tx_link& parent_fk,
-    const point_link& point_fk) const NOEXCEPT
-{
-    uint32_t index{};
-    for (const auto& in_fk: to_points(parent_fk))
-    {
-        if (in_fk == point_fk) return index;
-        ++index;
-    }
-
-    return point::null_index;
-}
-
-TEMPLATE
-uint32_t CLASS::to_output_index(const tx_link& parent_fk,
-    const output_link& output_fk) const NOEXCEPT
-{
-    uint32_t index{};
-    for (const auto& out_fk: to_outputs(parent_fk))
-    {
-        if (out_fk == output_fk) return index;
-        ++index;
-    }
-
-    return point::null_index;
-}
-
 // tx.hash->txs (all instances of same tx by hash)
 // ----------------------------------------------------------------------------
 
@@ -177,6 +188,38 @@ header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
         return {};
 
     return strong.header_fk();
+}
+
+// utilities
+// ----------------------------------------------------------------------------
+// protected (presumed to not be externally useful)
+
+TEMPLATE
+uint32_t CLASS::to_input_index(const tx_link& parent_fk,
+    const point_link& point_fk) const NOEXCEPT
+{
+    uint32_t index{};
+    for (const auto& in_fk : to_points(parent_fk))
+    {
+        if (in_fk == point_fk) return index;
+        ++index;
+    }
+
+    return point::null_index;
+}
+
+TEMPLATE
+uint32_t CLASS::to_output_index(const tx_link& parent_fk,
+    const output_link& output_fk) const NOEXCEPT
+{
+    uint32_t index{};
+    for (const auto& out_fk : to_outputs(parent_fk))
+    {
+        if (out_fk == output_fk) return index;
+        ++index;
+    }
+
+    return point::null_index;
 }
 
 } // namespace database

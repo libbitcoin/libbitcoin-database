@@ -214,7 +214,10 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomap.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\address.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_balance.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_history.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_outpoints.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_unspent.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\amounts.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\chain_reader.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\chain_writer.ipp" />
