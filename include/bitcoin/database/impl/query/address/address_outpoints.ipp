@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_ADDRESS_IPP
-#define LIBBITCOIN_DATABASE_QUERY_ADDRESS_IPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_ADDRESS_OUTPOINTS_IPP
+#define LIBBITCOIN_DATABASE_QUERY_ADDRESS_OUTPOINTS_IPP
 
 #include <atomic>
 #include <algorithm>
@@ -27,35 +27,13 @@
 namespace libbitcoin {
 namespace database {
 
-// Address (natural-keyed).
-// TODO: [address_outpoints.ipp]
+// Address outpoints.
 // ----------------------------------------------------------------------------
 // Address table is populated during transaction archival.
 
-TEMPLATE
-code CLASS::to_address_outputs(std::atomic_bool& cancel, output_links& out,
-    const hash_digest& key) const NOEXCEPT
-{
-    // Pushing into the vector is more efficient than precomputation of size.
-    out.clear();
-    for (auto it = store_.address.it(key); it; ++it)
-    {
-        if (cancel)
-            return error::canceled;
-
-        table::address::record address{};
-        if (!store_.address.get(it, address))
-            return error::integrity;
-
-        out.push_back(address.output_fk);
-    }
-
-    return error::success;
-}
-
 // server/native
 TEMPLATE
-code CLASS::get_address_outputs(std::atomic_bool& cancel, outpoints& out,
+code CLASS::get_address_outputs(stopper& cancel, outpoints& out,
     const hash_digest& key, bool turbo) const NOEXCEPT
 {
     if (turbo && store_.turbo())
@@ -79,7 +57,7 @@ code CLASS::get_address_outputs(std::atomic_bool& cancel, outpoints& out,
 
 // protected
 TEMPLATE
-code CLASS::get_confirmed_unspent_outputs_turbo(std::atomic_bool& cancel,
+code CLASS::get_confirmed_unspent_outputs_turbo(stopper& cancel,
     outpoints& out, const hash_digest& key) const NOEXCEPT
 {
     out.clear();
@@ -101,7 +79,7 @@ code CLASS::get_confirmed_unspent_outputs_turbo(std::atomic_bool& cancel,
 
 // server/native
 TEMPLATE
-code CLASS::get_confirmed_unspent_outputs(std::atomic_bool& cancel,
+code CLASS::get_confirmed_unspent_outputs(stopper& cancel,
     outpoints& out, const hash_digest& key, bool turbo) const NOEXCEPT
 {
     if (turbo && store_.turbo())
@@ -126,7 +104,7 @@ code CLASS::get_confirmed_unspent_outputs(std::atomic_bool& cancel,
 
 // protected
 TEMPLATE
-code CLASS::get_minimum_unspent_outputs_turbo(std::atomic_bool& cancel,
+code CLASS::get_minimum_unspent_outputs_turbo(stopper& cancel,
     outpoints& out, const hash_digest& key, uint64_t minimum) const NOEXCEPT
 {
     out.clear();
@@ -158,7 +136,7 @@ code CLASS::get_minimum_unspent_outputs_turbo(std::atomic_bool& cancel,
 
 // unused
 TEMPLATE
-code CLASS::get_minimum_unspent_outputs(std::atomic_bool& cancel,
+code CLASS::get_minimum_unspent_outputs(stopper& cancel,
     outpoints& out, const hash_digest& key, uint64_t minimum,
     bool turbo) const NOEXCEPT
 {
@@ -195,12 +173,12 @@ code CLASS::get_minimum_unspent_outputs(std::atomic_bool& cancel,
 // private/static
 TEMPLATE
 template <typename Functor>
-inline code CLASS::parallel_address_transform(std::atomic_bool& cancel,
+inline code CLASS::parallel_address_transform(stopper& cancel,
     outpoints& out, const output_links& links, Functor&& functor) NOEXCEPT
 {
     constexpr auto parallel = poolstl::execution::par;
 
-    std::atomic_bool fail{};
+    stopper fail{};
     std::vector<outpoint> outpoints(links.size());
     std::transform(parallel, links.begin(), links.end(), outpoints.begin(),
         [&functor, &cancel, &fail](const auto& link) NOEXCEPT
@@ -223,7 +201,7 @@ inline code CLASS::parallel_address_transform(std::atomic_bool& cancel,
 
 // protected
 TEMPLATE
-code CLASS::get_address_outputs_turbo(std::atomic_bool& cancel, outpoints& out,
+code CLASS::get_address_outputs_turbo(stopper& cancel, outpoints& out,
     const hash_digest& key) const NOEXCEPT
 {
     out.clear();
@@ -239,100 +217,6 @@ code CLASS::get_address_outputs_turbo(std::atomic_bool& cancel, outpoints& out,
             fail = (outpoint.point().index() == point::null_index);
             return outpoint;
         });
-}
-
-// TODO: [address_history.ipp]
-// ----------------------------------------------------------------------------
-// Canonically-sorted/deduped address history:
-// root txs (height:zero) sorted before transitive (height:max) txs.
-// tied-height transactions sorted by base16 txid (not converted).
-
-TEMPLATE
-code CLASS::get_unconfirmed_address(std::atomic_bool& , histories& ,
-    const hash_digest& , bool ) const NOEXCEPT
-{
-    return {};
-}
-
-TEMPLATE
-code CLASS::get_confirmed_address(std::atomic_bool& , histories& ,
-    const hash_digest& , bool ) const NOEXCEPT
-{
-    return {};
-}
-
-TEMPLATE
-code CLASS::get_address(std::atomic_bool& , histories& ,
-    const hash_digest& , bool ) const NOEXCEPT
-{
-    return {};
-}
-
-// TODO: [address_unspent.ipp]
-// ----------------------------------------------------------------------------
-// A list of all unspent output transactions in canonical order.
-// Unconfirmed unspent are included at end of list in consistent order.
-
-TEMPLATE
-code CLASS::get_unconfirmed_unspent(std::atomic_bool& , histories& ,
-    const hash_digest& , bool ) const NOEXCEPT
-{
-    return {};
-}
-
-TEMPLATE
-code CLASS::get_confirmed_unspent(std::atomic_bool& , histories& ,
-    const hash_digest& , bool ) const NOEXCEPT
-{
-    return {};
-}
-
-TEMPLATE
-code CLASS::get_unspent(std::atomic_bool& , unspents& ,
-    const hash_digest& , bool ) const NOEXCEPT
-{
-    return {};
-}
-
-// TODO: [address_balance.ipp]
-// ----------------------------------------------------------------------------
-// Balance queries (universal, unconfirmed conflict resolution arbitrary).
-
-TEMPLATE
-code CLASS::get_unconfirmed_balance(std::atomic_bool& , uint64_t& ,
-    const hash_digest& , bool ) const NOEXCEPT
-{
-    return {};
-}
-
-// server/native
-TEMPLATE
-code CLASS::get_confirmed_balance(std::atomic_bool& cancel, uint64_t& out,
-    const hash_digest& key, bool turbo) const NOEXCEPT
-{
-    outpoints outs{};
-    if (const auto ec = get_confirmed_unspent_outputs(cancel, outs, key, turbo))
-    {
-        out = zero;
-        return ec;
-    }
-
-    // Use of to_confirmed_unspent_outputs() provides necessary deduplication.
-    out = std::accumulate(outs.begin(), outs.end(), zero,
-        [](size_t total, const outpoint& out) NOEXCEPT
-        {
-            return system::ceilinged_add(total, out.value());
-        });
-
-    return error::success;
-}
-
-TEMPLATE
-code CLASS::get_balance(std::atomic_bool& , uint64_t& ,
-    uint64_t& , const hash_digest& ,
-    bool ) const NOEXCEPT
-{
-    return {};
 }
 
 } // namespace database

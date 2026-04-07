@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_DEFINE_HPP
 #define LIBBITCOIN_DATABASE_DEFINE_HPP
 
-#include <bitcoin/system.hpp>
+#include <bitcoin/database/error.hpp>
 
 // map is able to support 32 bit, but because the database
 // requires a larger file this is neither validated nor supported.

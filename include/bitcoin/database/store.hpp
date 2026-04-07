@@ -19,17 +19,13 @@
 #ifndef LIBBITCOIN_DATABASE_STORE_HPP
 #define LIBBITCOIN_DATABASE_STORE_HPP
 
-#include <atomic>
 #include <filesystem>
 #include <shared_mutex>
 #include <unordered_map>
-#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/error.hpp>
-#include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/locks/locks.hpp>
-#include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/tables/tables.hpp>
+#include <bitcoin/database/settings.hpp>
+#include <bitcoin/database/types.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -137,11 +133,12 @@ public:
     table::filter_tx filter_tx;
 
 protected:
+    using path = std::filesystem::path;
+
     code open_load(const event_handler& handler) NOEXCEPT;
     code unload_close(const event_handler& handler) NOEXCEPT;
     code backup(const event_handler& handler, bool prune=false) NOEXCEPT;
-    code dump(const std::filesystem::path& folder,
-        const event_handler& handler) NOEXCEPT;
+    code dump(const path& folder, const event_handler& handler) NOEXCEPT;
 
     // These are thread safe.
     const settings& configuration_;
@@ -239,11 +236,9 @@ protected:
     std::shared_timed_mutex transactor_mutex_{};
 
     // This is thread safe.
-    std::atomic_bool dirty_{ true };
+    stopper dirty_{ true };
 
 private:
-    using path = std::filesystem::path;
-
     static inline path head(const path& folder, const std::string& name) NOEXCEPT
     {
         return folder / (name + schema::ext::head);

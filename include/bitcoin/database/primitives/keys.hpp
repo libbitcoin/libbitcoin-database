@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_KEYS_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_KEYS_HPP
 
-#include <bitcoin/database.hpp>
+#include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {

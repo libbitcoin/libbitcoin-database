@@ -16,36 +16,42 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_EVENT_HPP
-#define LIBBITCOIN_DATABASE_TABLES_EVENT_HPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_ADDRESS_UNSPENT_IPP
+#define LIBBITCOIN_DATABASE_QUERY_ADDRESS_UNSPENT_IPP
 
+#include <atomic>
+#include <algorithm>
+#include <utility>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-enum class event_t
+// Address unspent.
+// ----------------------------------------------------------------------------
+// A list of all unspent output transactions in canonical order.
+// Unconfirmed unspent are included at end of list in consistent order.
+
+TEMPLATE
+code CLASS::get_unconfirmed_unspent(stopper& , histories& ,
+    const hash_digest& , bool ) const NOEXCEPT
 {
-    create_file,
-    open_file,
-    load_file,
-    unload_file,
-    close_file,
+    return {};
+}
 
-    create_table,
-    verify_table,
-    close_table,
+TEMPLATE
+code CLASS::get_confirmed_unspent(stopper& , histories& ,
+    const hash_digest& , bool ) const NOEXCEPT
+{
+    return {};
+}
 
-    wait_lock,
-    flush_body,
-    prune_table,
-    backup_table,
-    copy_header,
-    archive_snapshot,
-
-    restore_table,
-    recover_snapshot
-};
+TEMPLATE
+code CLASS::get_unspent(stopper& , unspents& ,
+    const hash_digest& , bool ) const NOEXCEPT
+{
+    return {};
+}
 
 } // namespace database
 } // namespace libbitcoin

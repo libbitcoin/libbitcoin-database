@@ -53,7 +53,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     // One point set per tx.
     point_sets sets(txs.size());
     std::atomic<size_t> count{};
-    std::atomic_bool fault{};
+    stopper fault{};
 
     // Get points for each tx and the total count.
     std::transform(parallel, txs.begin(), txs.end(), sets.begin(), 

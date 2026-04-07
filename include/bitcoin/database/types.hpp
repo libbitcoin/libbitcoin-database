@@ -19,14 +19,22 @@
 #ifndef LIBBITCOIN_DATABASE_TYPES_HPP
 #define LIBBITCOIN_DATABASE_TYPES_HPP
 
+#include <atomic>
+#include <optional>
 #include <set>
+#include <utility>
 #include <bitcoin/database/define.hpp>
+
+// Types pulls in tables etc, query and store both pull in types.
 #include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// Database type aliases.
+/// Common table aliases.
+/// ---------------------------------------------------------------------------
+
+/// Singles.
 using height_link = table::height::link;
 using header_link = table::header::link;
 using output_link = table::output::link;
@@ -39,21 +47,45 @@ using filter_link = table::filter_tx::link;
 using strong_link = table::strong_tx::link;
 using address_link = table::address::link;
 
+/// Multiples.
 using header_links = std::vector<header_link::integer>;
 using tx_links = std::vector<tx_link::integer>;
 using input_links = std::vector<input_link::integer>;
 using output_links = std::vector<output_link::integer>;
 using point_links = std::vector<point_link::integer>;
-using two_counts = std::pair<size_t, size_t>;
 using point_key = table::point::key;
 
-using checkpoint = system::chain::checkpoint;
-using inpoint = system::chain::point;
-using inpoints = std::set<inpoint>;
-using outpoint = system::chain::outpoint;
-using outpoints = std::set<outpoint>;
+/// Point index (uint32_t).
+using index = table::transaction::ix::integer;
 
+/// Common std aliases.
+/// ---------------------------------------------------------------------------
+using stopper = std::atomic_bool;
+using hash_option = std::optional<hash_digest>;
+
+/// Common system aliases.
+/// ---------------------------------------------------------------------------
+
+using filter = system::data_chunk;
 using data_chunk = system::data_chunk;
+
+/// Common system::chain aliases.
+/// ---------------------------------------------------------------------------
+
+using checkpoint = system::chain::checkpoint;
+using outpoint = system::chain::outpoint;
+using inpoint = system::chain::point;
+
+/// Common carriers.
+/// ---------------------------------------------------------------------------
+
+/// Sorted and deduped.
+using outpoints = std::set<outpoint>;
+using inpoints = std::set<inpoint>;
+
+using counts = std::pair<size_t, size_t>;
+using sizes = std::pair<size_t, size_t>;
+using heights = std_vector<size_t>;
 
 struct header_state { header_link link; code ec; };
 using header_states = std::vector<header_state>;
@@ -62,97 +94,38 @@ struct fee_rate { size_t bytes{}; uint64_t fee{}; };
 using fee_rates = std::vector<fee_rate>;
 using fee_rate_sets = std::vector<fee_rates>;
 
-struct encode_hash_less
+struct span
 {
-    bool operator()(const hash_digest& a, const hash_digest& b) const NOEXCEPT
-    {
-        using namespace system;
-        constexpr auto hi = to_half(byte_bits);
-        constexpr auto lo = sub1(power2<uint8_t>(hi));
-
-        // return encode_hash(a) < encode_hash(a)
-        for (auto byte{ hash_size }; !is_zero(byte); --byte)
-        {
-            const auto byte_a = a[sub1(byte)];
-            const auto byte_b = b[sub1(byte)];
-
-            const auto hi_a = shift_right(byte_a, hi);
-            const auto hi_b = shift_right(byte_b, hi);
-            if (hi_a != hi_b)
-                return hi_a < hi_b;
-
-            const auto lo_a = bit_and(byte_a, lo);
-            const auto lo_b = bit_and(byte_b, lo);
-            if (lo_a != lo_b)
-                return lo_a < lo_b;
-        }
-
-        return false;
-    }
+    size_t size() const NOEXCEPT { return end - begin; }
+    size_t begin;
+    size_t end;
 };
 
-struct history { checkpoint tx{}; size_t position{}; uint64_t fee{}; };
-struct history_less
+struct BCD_API history
 {
-    bool operator()(const history& a, const history& b) const NOEXCEPT
+    struct less_than
     {
-        using namespace system;
-        const auto a_height = a.tx.height();
-        const auto b_height = b.tx.height();
-        const auto a_confirmed = !is_min(a_height) && !is_max(a_height);
-        const auto b_confirmed = !is_min(b_height) && !is_max(b_height);
+        bool operator()(const history& a, const history& b) NOEXCEPT;
+    };
 
-        // Confirmed before unconfirmed.
-        if (a_confirmed != b_confirmed)
-            return a_confirmed;
-
-        // Chain.block height ascending (0 < max | x < y).
-        if (a_height != b_height)
-            return a_height < b_height;
-
-        // Block.tx position ascending (positions must differ).
-        if (a_confirmed)
-            return a.position < b.position;
-
-        // Both unconfirmed (0 or max), base16 lexical txid ascending.
-        return encode_hash_less{}(a.tx.hash(), b.tx.hash());
-    }
+    checkpoint tx{};
+    uint64_t fee{};
+    size_t position{};
 };
-using histories = std::set<history, history_less>;
+using histories = std::set<history, history::less_than>;
 
-struct unspent { outpoint tx{}; size_t height{}; size_t position{}; };
-struct unspent_less
+struct BCD_API unspent
 {
-    bool operator()(const unspent& a, const unspent& b) const NOEXCEPT
+    struct less_than
     {
-        const auto a_point = a.tx.point();
-        const auto b_point = b.tx.point();
-        const bool a_confirmed = !is_zero(a.height);
-        const bool b_confirmed = !is_zero(b.height);
+        bool operator()(const unspent& a, const unspent& b) NOEXCEPT;
+    };
 
-        // Confirmed before unconfirmed.
-        if (a_confirmed != b_confirmed)
-            return a_confirmed;
-
-        if (a_confirmed)
-        {
-            // Chain.block height ascending (x < y).
-            if (a.height != b.height)
-                return a.height < b.height;
-
-            // Block.tx position ascending.
-            if (a.position != b.position)
-                return a.position < b.position;
-
-            // Tx.output index ascending.
-            return a_point.index() < b_point.index();
-        }
-
-        // Unconfirmed have 0 height and position, arbitrary sort (hash:index).
-        return a_point < b_point;
-    }
+    outpoint tx{};
+    size_t height{};
+    size_t position{};
 };
-using unspents = std::set<unspent, unspent_less>;
+using unspents = std::set<unspent, unspent::less_than>;
 
 } // namespace database
 } // namespace libbitcoin

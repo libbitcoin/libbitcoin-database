@@ -25,7 +25,6 @@
 #include <mutex>
 #include <shared_mutex>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/error.hpp>
 #include <bitcoin/database/file/file.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/interfaces/memory.hpp>

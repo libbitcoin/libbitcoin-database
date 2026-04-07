@@ -33,7 +33,6 @@
 #include <mutex>
 #include <shared_mutex>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/error.hpp>
 #include <bitcoin/database/file/file.hpp>
 
 #if defined(HAVE_APPLE)

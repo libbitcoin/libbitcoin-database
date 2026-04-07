@@ -100,7 +100,7 @@ bool CLASS::get_block_value(uint64_t& out,
     if (!store_.txs.at(to_txs(link), txs) || (txs.tx_fks.size() < one))
         return false;
 
-    std::atomic_bool fail{};
+    stopper fail{};
     const auto begin = std::next(txs.tx_fks.begin());
     constexpr auto parallel = poolstl::execution::par;
     constexpr auto relaxed = std::memory_order_relaxed;
@@ -131,7 +131,7 @@ bool CLASS::get_block_spend(uint64_t& out,
     if (!store_.txs.at(to_txs(link), txs) || (txs.tx_fks.size() < one))
         return false;
 
-    std::atomic_bool fail{};
+    stopper fail{};
     const auto begin = std::next(txs.tx_fks.begin());
     constexpr auto parallel = poolstl::execution::par;
     constexpr auto relaxed = std::memory_order_relaxed;

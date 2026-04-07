@@ -35,8 +35,10 @@ lib_LTLIBRARIES = src/libbitcoin-database.la
 src_libbitcoin_database_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 src_libbitcoin_database_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_database_la_SOURCES = \
+    src/define.cpp \
     src/error.cpp \
     src/settings.cpp \
+    src/types.cpp \
     src/file/rotator.cpp \
     src/file/utilities.cpp \
     src/locks/file_lock.cpp \
@@ -178,7 +180,6 @@ include_bitcoin_database_impl_primitives_HEADERS = \
 
 include_bitcoin_database_impl_querydir = ${includedir}/bitcoin/database/impl/query
 include_bitcoin_database_impl_query_HEADERS = \
-    include/bitcoin/database/impl/query/address.ipp \
     include/bitcoin/database/impl/query/amounts.ipp \
     include/bitcoin/database/impl/query/confirmed.ipp \
     include/bitcoin/database/impl/query/extent.ipp \
@@ -193,6 +194,13 @@ include_bitcoin_database_impl_query_HEADERS = \
     include/bitcoin/database/impl/query/query.ipp \
     include/bitcoin/database/impl/query/sequences.ipp \
     include/bitcoin/database/impl/query/sizes.ipp
+
+include_bitcoin_database_impl_query_addressdir = ${includedir}/bitcoin/database/impl/query/address
+include_bitcoin_database_impl_query_address_HEADERS = \
+    include/bitcoin/database/impl/query/address/address_balance.ipp \
+    include/bitcoin/database/impl/query/address/address_history.ipp \
+    include/bitcoin/database/impl/query/address/address_outpoints.ipp \
+    include/bitcoin/database/impl/query/address/address_unspent.ipp
 
 include_bitcoin_database_impl_query_archivaldir = ${includedir}/bitcoin/database/impl/query/archival
 include_bitcoin_database_impl_query_archival_HEADERS = \

@@ -22,10 +22,7 @@
 #include <atomic>
 #include <chrono>
 #include <unordered_map>
-#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/file/file.hpp>
-#include <bitcoin/database/tables/schema.hpp>
 
 // TODO: evaluate performance benefits of concurrency.
 

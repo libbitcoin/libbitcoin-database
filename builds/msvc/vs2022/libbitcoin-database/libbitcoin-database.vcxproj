@@ -121,6 +121,7 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\define.cpp" />
     <ClCompile Include="..\..\..\..\src\error.cpp" />
     <ClCompile Include="..\..\..\..\src\file\rotator.cpp" />
     <ClCompile Include="..\..\..\..\src\file\utilities.cpp">
@@ -137,6 +138,7 @@
       <ObjectFileName>$(IntDir)src_memory_utilities.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
+    <ClCompile Include="..\..\..\..\src\types.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
@@ -214,7 +216,10 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\linkage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomap.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\address.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_balance.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_history.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_outpoints.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_unspent.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\amounts.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\chain_reader.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\chain_writer.ipp" />

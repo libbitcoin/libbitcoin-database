@@ -19,14 +19,10 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_HPP
 #define LIBBITCOIN_DATABASE_QUERY_HPP
 
-#include <atomic>
 #include <mutex>
-#include <optional>
-#include <utility>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/error.hpp>
+#include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/types.hpp>
-#include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -38,7 +34,7 @@ class query
 public:
     DELETE_COPY_MOVE_DESTRUCT(query);
 
-    /// Query type aliases.
+    /// Chain type aliases.
     using block = system::chain::block;
     using point = system::chain::point;
     using input = system::chain::input;
@@ -55,10 +51,6 @@ public:
     using chain_state = system::chain::chain_state;
     using chain_state_cptr = system::chain::chain_state::cptr;
     using chain_context = system::chain::context;
-    using index = table::transaction::ix::integer;
-    using sizes = std::pair<size_t, size_t>;
-    using heights = std_vector<size_t>;
-    using filter = system::data_chunk;
 
     query(Store& store) NOEXCEPT;
 
@@ -206,10 +198,10 @@ public:
     /// Counters (archive slabs - txs/puts/filter_tx can be derived).
     size_t input_count(const tx_link& link) const NOEXCEPT;
     size_t output_count(const tx_link& link) const NOEXCEPT;
-    two_counts put_counts(const tx_link& link) const NOEXCEPT;
+    counts put_counts(const tx_link& link) const NOEXCEPT;
     size_t input_count(const tx_links& txs) const NOEXCEPT;
     size_t output_count(const tx_links& txs) const NOEXCEPT;
-    two_counts put_counts(const tx_links& txs) const NOEXCEPT;
+    counts put_counts(const tx_links& txs) const NOEXCEPT;
 
     /// Optional/configured table state.
     bool address_enabled() const NOEXCEPT;
@@ -320,7 +312,9 @@ public:
     tx_link top_tx(size_t bucket) const NOEXCEPT;
 
     /// outputs enumeration
-    code to_address_outputs(std::atomic_bool& cancel, output_links& out,
+    code to_address_outputs(output_links& out,
+        const hash_digest& key) const NOEXCEPT;
+    code to_address_outputs(stopper& cancel, output_links& out,
         const hash_digest& key) const NOEXCEPT;
 
     /// Archive reads.
@@ -444,8 +438,8 @@ public:
     /// Fee rate tuples by tx, block or branch.
     bool get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT;
     bool get_block_fees(fee_rates& out, const header_link& link) const NOEXCEPT;
-    bool get_branch_fees(std::atomic_bool& cancel, fee_rate_sets& out,
-        size_t start, size_t count) const NOEXCEPT;
+    bool get_branch_fees(stopper& cancel, fee_rate_sets& out, size_t start,
+        size_t count) const NOEXCEPT;
 
     /// Merkle.
     /// -----------------------------------------------------------------------
@@ -618,37 +612,36 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Native queries (deduped, arbitrary sort).
-    code get_minimum_unspent_outputs(std::atomic_bool& cancel, outpoints& out,
+    code get_minimum_unspent_outputs(stopper& cancel, outpoints& out,
         const hash_digest& key, uint64_t value, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_unspent_outputs(std::atomic_bool& cancel, outpoints& out,
+    code get_confirmed_unspent_outputs(stopper& cancel, outpoints& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_address_outputs(std::atomic_bool& cancel, outpoints& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
-
-    /// Electrum queries (deduped, electrum sort).
-    code get_unconfirmed_address(std::atomic_bool& cancel, histories& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_address(std::atomic_bool& cancel, histories& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_address(std::atomic_bool& cancel, histories& out,
+    code get_address_outputs(stopper& cancel, outpoints& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
 
     /// Electrum queries (deduped, electrum sort).
-    code get_unconfirmed_unspent(std::atomic_bool& cancel, histories& out,
+    code get_unconfirmed_address(stopper& cancel, histories& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_unspent(std::atomic_bool& cancel, histories& out,
+    code get_confirmed_address(stopper& cancel, histories& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_unspent(std::atomic_bool& cancel, unspents& out,
+    code get_address(stopper& cancel, histories& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+
+    /// Electrum queries (deduped, electrum sort).
+    code get_unconfirmed_unspent(stopper& cancel, histories& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_confirmed_unspent(stopper& cancel, histories& out,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_unspent(stopper& cancel, unspents& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
 
     /// Balance queries (universal, unconfirmed conflict resolution arbitrary).
-    code get_unconfirmed_balance(std::atomic_bool& cancel, uint64_t& out,
+    code get_unconfirmed_balance(stopper& cancel, uint64_t& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_balance(std::atomic_bool& cancel, uint64_t& out,
+    code get_confirmed_balance(stopper& cancel, uint64_t& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_balance(std::atomic_bool& cancel, uint64_t& confirmed,
-        uint64_t& combined, const hash_digest& key,
-        bool turbo=false) const NOEXCEPT;
+    code get_balance(stopper& cancel, uint64_t& confirmed, uint64_t& combined,
+        const hash_digest& key, bool turbo=false) const NOEXCEPT;
 
     /// Filters.
     /// -----------------------------------------------------------------------
@@ -671,14 +664,6 @@ public:
         const hash_digest& hash) NOEXCEPT;
 
 protected:
-    using hash_option = std::optional<hash_digest>;
-    struct span
-    {
-        size_t size() const NOEXCEPT { return end - begin; }
-        size_t begin;
-        size_t end;
-    };
-
     /// Network
     /// -----------------------------------------------------------------------
 
@@ -799,13 +784,12 @@ protected:
 
     /// address
     /// -----------------------------------------------------------------------
-    code get_address_outputs_turbo(std::atomic_bool& cancel,
-        outpoints& out, const hash_digest& key) const NOEXCEPT;
-    code get_confirmed_unspent_outputs_turbo(std::atomic_bool& cancel,
-        outpoints& out, const hash_digest& key) const NOEXCEPT;
-    code get_minimum_unspent_outputs_turbo(std::atomic_bool& cancel,
-        outpoints& out, const hash_digest& key,
-        uint64_t minimum) const NOEXCEPT;
+    code get_address_outputs_turbo(stopper& cancel, outpoints& out,
+        const hash_digest& key) const NOEXCEPT;
+    code get_confirmed_unspent_outputs_turbo(stopper& cancel, outpoints& out,
+        const hash_digest& key) const NOEXCEPT;
+    code get_minimum_unspent_outputs_turbo(stopper& cancel, outpoints& out,
+        const hash_digest& key, uint64_t minimum) const NOEXCEPT;
 
     /// merkle
     /// -----------------------------------------------------------------------
@@ -843,7 +827,7 @@ private:
     static inline bool push_bool(std_vector<Bool>& stack,
         const Bool& element) NOEXCEPT;
     template <typename Functor>
-    static inline code parallel_address_transform(std::atomic_bool& cancel,
+    static inline code parallel_address_transform(stopper& cancel,
         outpoints& out, const output_links& links, Functor&& functor) NOEXCEPT;
     static inline point::cptr make_point(hash_digest&& hash,
         uint32_t index) NOEXCEPT;
@@ -865,6 +849,11 @@ private:
 #define CLASS query<Store>
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+#include <bitcoin/database/impl/query/address/address_balance.ipp>
+#include <bitcoin/database/impl/query/address/address_history.ipp>
+#include <bitcoin/database/impl/query/address/address_outpoints.ipp>
+#include <bitcoin/database/impl/query/address/address_unspent.ipp>
 
 #include <bitcoin/database/impl/query/archival/chain_reader.ipp>
 #include <bitcoin/database/impl/query/archival/chain_writer.ipp>
@@ -888,7 +877,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/navigate/navigate_natural.ipp>
 #include <bitcoin/database/impl/query/navigate/navigate_reverse.ipp>
 
-#include <bitcoin/database/impl/query/address.ipp>
 #include <bitcoin/database/impl/query/amounts.ipp>
 #include <bitcoin/database/impl/query/confirmed.ipp>
 #include <bitcoin/database/impl/query/extent.ipp>

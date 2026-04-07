@@ -16,36 +16,44 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_EVENT_HPP
-#define LIBBITCOIN_DATABASE_TABLES_EVENT_HPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_ADDRESS_HISTORY_IPP
+#define LIBBITCOIN_DATABASE_QUERY_ADDRESS_HISTORY_IPP
 
+#include <atomic>
+#include <algorithm>
+#include <utility>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-enum class event_t
+// Address history
+// ----------------------------------------------------------------------------
+// Canonically-sorted/deduped address history.
+
+// root txs (height:zero) sorted before transitive (height:max) txs.
+// tied-height transactions sorted by base16 txid (not converted).
+
+TEMPLATE
+code CLASS::get_unconfirmed_address(stopper& , histories& ,
+    const hash_digest& , bool ) const NOEXCEPT
 {
-    create_file,
-    open_file,
-    load_file,
-    unload_file,
-    close_file,
+    return {};
+}
 
-    create_table,
-    verify_table,
-    close_table,
+TEMPLATE
+code CLASS::get_confirmed_address(stopper& , histories& ,
+    const hash_digest& , bool ) const NOEXCEPT
+{
+    return {};
+}
 
-    wait_lock,
-    flush_body,
-    prune_table,
-    backup_table,
-    copy_header,
-    archive_snapshot,
-
-    restore_table,
-    recover_snapshot
-};
+TEMPLATE
+code CLASS::get_address(stopper& , histories& ,
+    const hash_digest& , bool ) const NOEXCEPT
+{
+    return {};
+}
 
 } // namespace database
 } // namespace libbitcoin
