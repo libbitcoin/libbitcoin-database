@@ -147,31 +147,52 @@
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\nomap.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\archive_read.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\archive_write.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\confirm.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\consensus.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\context.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\address\address_balance.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\address\address_history.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\address\address_outpoints.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\address\address_unspent.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\amounts.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\archive\chain_reader.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\archive\chain_writer.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\archive\wire_reader.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\archive\wire_writer.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\confirmed.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_block.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_chain_state.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_compact.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_forks.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_populate.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_prevouts.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_states.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_strong.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_transaction.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\consensus\consensus_work.cpp" />
     <ClCompile Include="..\..\..\..\test\query\extent.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\fees.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\fee_rate.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\filters.cpp" />
     <ClCompile Include="..\..\..\..\test\query\height.cpp">
       <ObjectFileName>$(IntDir)test_query_height.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\initialize.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\locator.cpp" />
     <ClCompile Include="..\..\..\..\test\query\merkle.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\network.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\objects.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\optional.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\translate.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\validate.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\wire.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\navigate\navigate_arraymap.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\navigate\navigate_forward.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\navigate\navigate_hashmap.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\navigate\navigate_natural.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\navigate\navigate_reverse.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\properties_block.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\properties_tx.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\sequences.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\sizes.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\store.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\header.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\input.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\archives\ins.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\output.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\archives\outs.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\point.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\archives\puts.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\txs.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\duplicate.cpp" />
@@ -188,6 +209,7 @@
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <ObjectFileName>$(IntDir)test_test.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\types.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\test\mocks\blocks.hpp" />

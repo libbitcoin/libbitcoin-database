@@ -855,10 +855,10 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/address/address_outpoints.ipp>
 #include <bitcoin/database/impl/query/address/address_unspent.ipp>
 
-#include <bitcoin/database/impl/query/archival/chain_reader.ipp>
-#include <bitcoin/database/impl/query/archival/chain_writer.ipp>
-#include <bitcoin/database/impl/query/archival/wire_reader.ipp>
-#include <bitcoin/database/impl/query/archival/wire_writer.ipp>
+#include <bitcoin/database/impl/query/archive/chain_reader.ipp>
+#include <bitcoin/database/impl/query/archive/chain_writer.ipp>
+#include <bitcoin/database/impl/query/archive/wire_reader.ipp>
+#include <bitcoin/database/impl/query/archive/wire_writer.ipp>
 
 #include <bitcoin/database/impl/query/consensus/consensus_block.ipp>
 #include <bitcoin/database/impl/query/consensus/consensus_chain_state.ipp>

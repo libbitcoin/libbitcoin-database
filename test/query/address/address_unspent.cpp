@@ -16,17 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
-#include "../mocks/blocks.hpp"
-#include "../mocks/chunk_store.hpp"
+#include "../../test.hpp"
+#include "../../mocks/blocks.hpp"
+#include "../../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_objects_tests, test::directory_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_address_tests, test::directory_setup_fixture)
 
-////const auto events_handler = [](auto, auto) {};
-
-BOOST_AUTO_TEST_CASE(query_objects_test)
-{
-    BOOST_REQUIRE(true);
-}
+// get_unconfirmed_unspent
+// get_confirmed_unspent
+// get_unspent
 
 BOOST_AUTO_TEST_SUITE_END()

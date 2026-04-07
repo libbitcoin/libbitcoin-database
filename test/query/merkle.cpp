@@ -22,9 +22,6 @@
 
 BOOST_FIXTURE_TEST_SUITE(query_merkle_tests, test::directory_setup_fixture)
 
-// nop event handler.
-const auto events_handler = [](auto, auto) {};
-
 // Example vector from electrumx documentation.
 // electrumx.readthedocs.io/en/latest/protocol-methods.html#cp-height-example
 //{
@@ -216,7 +213,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__interval_span__11__2048)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK_EQUAL(query.interval_span(), 2048u);
 }
@@ -228,7 +225,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__interval_span__0__1)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK_EQUAL(query.interval_span(), 1u);
 }
@@ -242,7 +239,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_0__block_hash)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -273,7 +270,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_1__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -302,7 +299,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_2__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -324,7 +321,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__not_multiple__no_valu
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(query.interval_span(), system::power2(settings.interval_depth));
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(!query.get_confirmed_interval(0).has_value());
     BOOST_CHECK(!query.get_confirmed_interval(1).has_value());
@@ -342,7 +339,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__multiple__expected_va
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(query.interval_span(), system::power2(settings.interval_depth));
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -429,7 +426,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__no_confirmed_blocks__error_
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
 
     hashes proof{};
@@ -444,7 +441,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__target_in_first_interval__e
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -467,7 +464,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__multiple_intervals__expecte
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -497,7 +494,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__waypoint_zero__genesis)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
 
     hashes roots{};
@@ -515,7 +512,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__one_full_interval__expec
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -539,7 +536,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__full_and_partial_interva
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -573,7 +570,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_equals_wayp
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -599,7 +596,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_less_than_w
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
     BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
@@ -646,7 +643,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
@@ -682,7 +679,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
@@ -714,7 +711,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
@@ -744,7 +741,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
@@ -773,7 +770,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
@@ -801,7 +798,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
@@ -830,7 +827,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_8_depth_0__
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
@@ -866,7 +863,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__partial_interval_w
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(setup_eight_block_store(query));
 
     const auto root42 = system::sha256::double_hash(test::block4_hash, test::block4_hash);
@@ -900,7 +897,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_greater_tha
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
 
     hashes proof{};
@@ -916,7 +913,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__waypoint_beyond_to
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(events_handler), error::success);
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
 
     hashes proof{};

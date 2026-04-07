@@ -34,7 +34,7 @@
     <Filter Include="include\bitcoin\database\impl\query\address">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\database\impl\query\archival">
+    <Filter Include="include\bitcoin\database\impl\query\archive">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-000000000003}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\database\impl\query\consensus">
@@ -364,17 +364,17 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\amounts.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\chain_reader.ipp">
-      <Filter>include\bitcoin\database\impl\query\archival</Filter>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive\chain_reader.ipp">
+      <Filter>include\bitcoin\database\impl\query\archive</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\chain_writer.ipp">
-      <Filter>include\bitcoin\database\impl\query\archival</Filter>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive\chain_writer.ipp">
+      <Filter>include\bitcoin\database\impl\query\archive</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\wire_reader.ipp">
-      <Filter>include\bitcoin\database\impl\query\archival</Filter>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive\wire_reader.ipp">
+      <Filter>include\bitcoin\database\impl\query\archive</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archival\wire_writer.ipp">
-      <Filter>include\bitcoin\database\impl\query\archival</Filter>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\archive\wire_writer.ipp">
+      <Filter>include\bitcoin\database\impl\query\archive</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\confirmed.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>

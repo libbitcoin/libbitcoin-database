@@ -65,6 +65,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/store.cpp \
     test/test.cpp \
     test/test.hpp \
+    test/types.cpp \
     test/file/rotator.cpp \
     test/file/utilities.cpp \
     test/locks/file_lock.cpp \
@@ -88,27 +89,48 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
     test/primitives/nomap.cpp \
-    test/query/archive_read.cpp \
-    test/query/archive_write.cpp \
-    test/query/confirm.cpp \
-    test/query/consensus.cpp \
-    test/query/context.cpp \
+    test/query/amounts.cpp \
+    test/query/confirmed.cpp \
     test/query/extent.cpp \
-    test/query/fees.cpp \
+    test/query/fee_rate.cpp \
+    test/query/filters.cpp \
     test/query/height.cpp \
     test/query/initialize.cpp \
+    test/query/locator.cpp \
     test/query/merkle.cpp \
-    test/query/network.cpp \
-    test/query/objects.cpp \
-    test/query/optional.cpp \
-    test/query/translate.cpp \
-    test/query/validate.cpp \
-    test/query/wire.cpp \
+    test/query/properties_block.cpp \
+    test/query/properties_tx.cpp \
+    test/query/sequences.cpp \
+    test/query/sizes.cpp \
+    test/query/address/address_balance.cpp \
+    test/query/address/address_history.cpp \
+    test/query/address/address_outpoints.cpp \
+    test/query/address/address_unspent.cpp \
+    test/query/archive/chain_reader.cpp \
+    test/query/archive/chain_writer.cpp \
+    test/query/archive/wire_reader.cpp \
+    test/query/archive/wire_writer.cpp \
+    test/query/consensus/consensus_block.cpp \
+    test/query/consensus/consensus_chain_state.cpp \
+    test/query/consensus/consensus_compact.cpp \
+    test/query/consensus/consensus_forks.cpp \
+    test/query/consensus/consensus_populate.cpp \
+    test/query/consensus/consensus_prevouts.cpp \
+    test/query/consensus/consensus_states.cpp \
+    test/query/consensus/consensus_strong.cpp \
+    test/query/consensus/consensus_transaction.cpp \
+    test/query/consensus/consensus_work.cpp \
+    test/query/navigate/navigate_arraymap.cpp \
+    test/query/navigate/navigate_forward.cpp \
+    test/query/navigate/navigate_hashmap.cpp \
+    test/query/navigate/navigate_natural.cpp \
+    test/query/navigate/navigate_reverse.cpp \
     test/tables/archives/header.cpp \
     test/tables/archives/input.cpp \
+    test/tables/archives/ins.cpp \
     test/tables/archives/output.cpp \
+    test/tables/archives/outs.cpp \
     test/tables/archives/point.cpp \
-    test/tables/archives/puts.cpp \
     test/tables/archives/transaction.cpp \
     test/tables/archives/txs.cpp \
     test/tables/caches/duplicate.cpp \
@@ -202,12 +224,12 @@ include_bitcoin_database_impl_query_address_HEADERS = \
     include/bitcoin/database/impl/query/address/address_outpoints.ipp \
     include/bitcoin/database/impl/query/address/address_unspent.ipp
 
-include_bitcoin_database_impl_query_archivaldir = ${includedir}/bitcoin/database/impl/query/archival
-include_bitcoin_database_impl_query_archival_HEADERS = \
-    include/bitcoin/database/impl/query/archival/chain_reader.ipp \
-    include/bitcoin/database/impl/query/archival/chain_writer.ipp \
-    include/bitcoin/database/impl/query/archival/wire_reader.ipp \
-    include/bitcoin/database/impl/query/archival/wire_writer.ipp
+include_bitcoin_database_impl_query_archivedir = ${includedir}/bitcoin/database/impl/query/archive
+include_bitcoin_database_impl_query_archive_HEADERS = \
+    include/bitcoin/database/impl/query/archive/chain_reader.ipp \
+    include/bitcoin/database/impl/query/archive/chain_writer.ipp \
+    include/bitcoin/database/impl/query/archive/wire_reader.ipp \
+    include/bitcoin/database/impl/query/archive/wire_writer.ipp
 
 include_bitcoin_database_impl_query_consensusdir = ${includedir}/bitcoin/database/impl/query/consensus
 include_bitcoin_database_impl_query_consensus_HEADERS = \

@@ -24,10 +24,7 @@
 // get_tx_virtual_size
 // get_block_virtual_size
 
-BOOST_FIXTURE_TEST_SUITE(query_fees_tests, test::directory_setup_fixture)
-
-// nop event handler.
-const auto events_handler = [](auto, auto) {};
+BOOST_FIXTURE_TEST_SUITE(query_fee_rate_tests, test::directory_setup_fixture)
 
 // get_tx_fee
 // get_tx_fees
@@ -35,14 +32,14 @@ const auto events_handler = [](auto, auto) {};
 // get_tx_spend
 // get_tx_virtual_size
 
-BOOST_AUTO_TEST_CASE(query_fees__get_tx_fee__invalid__false)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__invalid__false)
 {
     uint64_t out{};
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(!query.get_tx_fee(out, 42));
     BOOST_CHECK(!query.get_tx_value(out, 42));
@@ -52,14 +49,14 @@ BOOST_AUTO_TEST_CASE(query_fees__get_tx_fee__invalid__false)
     BOOST_CHECK(!query.get_tx_fees(rate, 42));
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_tx_fee__missing_prevouts__false)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__missing_prevouts__false)
 {
     uint64_t out{};
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.get_tx_fee(out, 0));
     BOOST_CHECK_EQUAL(out, 0u);
@@ -85,14 +82,14 @@ BOOST_AUTO_TEST_CASE(query_fees__get_tx_fee__missing_prevouts__false)
     BOOST_CHECK(!query.get_tx_fees(rate, 3));
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_tx_fee__coinbase__zero)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__coinbase__zero)
 {
     uint64_t out{};
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
 
     // Coinbase fee and value are always zero.
@@ -107,14 +104,14 @@ BOOST_AUTO_TEST_CASE(query_fees__get_tx_fee__coinbase__zero)
     BOOST_CHECK(!query.get_tx_fees(rate, 0));
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_tx_fee__valid_non_coinbase__expected)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__valid_non_coinbase__expected)
 {
     uint64_t out{};
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1b, test::context, false, false));
     BOOST_CHECK(query.set(test::block_valid_spend_internal_2b, test::context, false, false));
@@ -141,14 +138,14 @@ BOOST_AUTO_TEST_CASE(query_fees__get_tx_fee__valid_non_coinbase__expected)
 // get_block_spend
 // get_block_virtual_size
 
-BOOST_AUTO_TEST_CASE(query_fees__get_block_fee__invalid__false)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_block_fee__invalid__false)
 {
     uint64_t out{};
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(!query.get_block_fee(out, 24));
 
@@ -156,14 +153,14 @@ BOOST_AUTO_TEST_CASE(query_fees__get_block_fee__invalid__false)
     BOOST_CHECK(!query.get_block_fees(rates, 24));
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_block_fee__block_missing_prevout__false)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_block_fee__block_missing_prevout__false)
 {
     uint64_t out{};
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1b, test::context, false, false));
     BOOST_CHECK(query.set(test::block_missing_prevout_2b, test::context, false, false));
@@ -173,14 +170,14 @@ BOOST_AUTO_TEST_CASE(query_fees__get_block_fee__block_missing_prevout__false)
     BOOST_CHECK(!query.get_block_fees(rates, 2));
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_block_fee__coinbases__zero)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_block_fee__coinbases__zero)
 {
     uint64_t out{};
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, test::context, false, false));
     BOOST_CHECK(query.set(test::block2, test::context, false, false));
@@ -192,14 +189,14 @@ BOOST_AUTO_TEST_CASE(query_fees__get_block_fee__coinbases__zero)
     BOOST_CHECK(rates.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_block_fee__valid__expected)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_block_fee__valid__expected)
 {
     uint64_t out{};
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1b, test::context, false, false));
     BOOST_CHECK(query.set(test::block_valid_spend_internal_2b, test::context, false, false));
@@ -220,14 +217,14 @@ BOOST_AUTO_TEST_CASE(query_fees__get_block_fee__valid__expected)
     BOOST_CHECK_EQUAL(rates.at(1).fee, 0xb0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_block_fee__genesis__zero)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_block_fee__genesis__zero)
 {
     uint64_t out{};
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.get_block_fee(out, 0));
     BOOST_CHECK_EQUAL(out, 0u);
@@ -239,13 +236,13 @@ BOOST_AUTO_TEST_CASE(query_fees__get_block_fee__genesis__zero)
 
 // get_branch_fees
 
-BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__zero__true_empty)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__zero__true_empty)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
 
     std::atomic_bool cancel{};
@@ -254,13 +251,13 @@ BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__zero__true_empty)
     BOOST_CHECK(rates_sets.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__genesis__true_one_empty)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__genesis__true_one_empty)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
 
     std::atomic_bool cancel{};
@@ -270,13 +267,13 @@ BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__genesis__true_one_empty)
     BOOST_CHECK(rates_sets.front().empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__unconfirmed_blocks__false)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__unconfirmed_blocks__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, test::context, false, false));
     BOOST_CHECK(query.set(test::block2, test::context, false, false));
@@ -286,13 +283,13 @@ BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__unconfirmed_blocks__false)
     BOOST_CHECK(!query.get_branch_fees(cancel, rates_sets, 0, 3));
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__confirmed_overflow__false)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_overflow__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, test::context, false, false));
     BOOST_CHECK(query.set(test::block2, test::context, false, false));
@@ -307,13 +304,13 @@ BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__confirmed_overflow__false)
     BOOST_CHECK(!query.get_branch_fees(cancel, rates_sets, 3, 1));
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__zero_over_top__true)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__zero_over_top__true)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
 
     // A start of 1 is over the chain top, but requested count is zero (ok).
@@ -322,13 +319,13 @@ BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__zero_over_top__true)
     BOOST_CHECK(query.get_branch_fees(cancel, rates_sets, 1, 0));
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__confirmed_empty_blocks__all_empty)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_empty_blocks__all_empty)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, test::context, false, false));
     BOOST_CHECK(query.set(test::block2, test::context, false, false));
@@ -359,13 +356,13 @@ BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__confirmed_empty_blocks__all_em
     BOOST_CHECK(rates_sets.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__confirmed_non_empty_blocks__all_expected)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_non_empty_blocks__all_expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1b, test::context, false, false));
     BOOST_CHECK(query.set(test::block_valid_spend_internal_2b, test::context, false, false));
@@ -409,13 +406,13 @@ BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__confirmed_non_empty_blocks__al
 }
 
 
-BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__cancel_zero__true_empty)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__cancel_zero__true_empty)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
 
     std::atomic_bool cancel{ true };
@@ -424,13 +421,13 @@ BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__cancel_zero__true_empty)
     BOOST_CHECK(rates_sets.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__cancel_genesis__false_empty)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__cancel_genesis__false_empty)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
 
     std::atomic_bool cancel{ true  };
@@ -439,13 +436,13 @@ BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__cancel_genesis__false_empty)
     BOOST_CHECK(rates_sets.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_fees__get_branch_fees__cancel_three_blocks__false_empty)
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__cancel_three_blocks__false_empty)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(events_handler));
+    BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.set(test::block1, test::context, false, false));
     BOOST_CHECK(query.set(test::block2, test::context, false, false));

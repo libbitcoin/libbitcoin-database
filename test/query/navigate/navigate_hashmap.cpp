@@ -16,18 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_ARCHIVAL_WIRE_WRITER_IPP
-#define LIBBITCOIN_DATABASE_QUERY_ARCHIVAL_WIRE_WRITER_IPP
+#include "../../test.hpp"
+#include "../../mocks/blocks.hpp"
+#include "../../mocks/chunk_store.hpp"
 
-#include <bitcoin/database/define.hpp>
+BOOST_FIXTURE_TEST_SUITE(query_navigate_tests, test::directory_setup_fixture)
 
-namespace libbitcoin {
-namespace database {
-
-// TODO: writer directly from wire-encoded buffer (network to store).
-// ----------------------------------------------------------------------------
-
-} // namespace database
-} // namespace libbitcoin
-
-#endif
+BOOST_AUTO_TEST_SUITE_END()

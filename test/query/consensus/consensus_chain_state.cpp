@@ -16,15 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
-#include "../mocks/blocks.hpp"
-#include "../mocks/chunk_store.hpp"
+#include "../../test.hpp"
+#include "../../mocks/blocks.hpp"
+#include "../../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_context_tests, test::directory_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(query_consensus_tests, test::directory_setup_fixture)
 
-const auto events_handler = [](auto, auto) {};
-
-BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__genesis__expected)
 {
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
@@ -41,7 +39,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__genesis__expected
     database_settings.path = TEST_DIRECTORY;
     test::chunk_store store{ database_settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     const auto state = query.get_candidate_chain_state(system_settings);
@@ -56,7 +54,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__genesis__expected
     BOOST_REQUIRE(state->context() == expected);
 }
 
-BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__block1__expected)
+BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expected)
 {
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
@@ -81,7 +79,7 @@ BOOST_AUTO_TEST_CASE(query_context__get_candidate_chain_state__block1__expected)
     database_settings.path = TEST_DIRECTORY;
     test::chunk_store store{ database_settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(events_handler), error::success);
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context, true, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
