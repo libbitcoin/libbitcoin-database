@@ -24,8 +24,6 @@
 #include <set>
 #include <utility>
 #include <bitcoin/database/define.hpp>
-
-// Types pulls in tables etc, query and store both pull in types.
 #include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
@@ -72,16 +70,12 @@ using data_chunk = system::data_chunk;
 /// Common system::chain aliases.
 /// ---------------------------------------------------------------------------
 
-using checkpoint = system::chain::checkpoint;
-using outpoint = system::chain::outpoint;
 using inpoint = system::chain::point;
+using outpoint = system::chain::outpoint;
+using checkpoint = system::chain::checkpoint;
 
 /// Common carriers.
 /// ---------------------------------------------------------------------------
-
-/// Sorted and deduped.
-using outpoints = std::set<outpoint>;
-using inpoints = std::set<inpoint>;
 
 using counts = std::pair<size_t, size_t>;
 using sizes = std::pair<size_t, size_t>;
@@ -96,9 +90,21 @@ using fee_rate_sets = std::vector<fee_rates>;
 
 struct span
 {
-    size_t size() const NOEXCEPT { return end - begin; }
+    inline size_t size() const NOEXCEPT { return end - begin; }
     size_t begin;
     size_t end;
+};
+
+struct BCD_API unspent
+{
+    struct less_than
+    {
+        bool operator()(const unspent& a, const unspent& b) NOEXCEPT;
+    };
+
+    outpoint tx{};
+    size_t height{};
+    size_t position{};
 };
 
 struct BCD_API history
@@ -112,20 +118,12 @@ struct BCD_API history
     uint64_t fee{};
     size_t position{};
 };
-using histories = std::set<history, history::less_than>;
 
-struct BCD_API unspent
-{
-    struct less_than
-    {
-        bool operator()(const unspent& a, const unspent& b) NOEXCEPT;
-    };
-
-    outpoint tx{};
-    size_t height{};
-    size_t position{};
-};
+/// Sorted and deduped.
+using inpoints = std::set<inpoint>;
+using outpoints = std::set<outpoint>;
 using unspents = std::set<unspent, unspent::less_than>;
+using histories = std::set<history, history::less_than>;
 
 } // namespace database
 } // namespace libbitcoin
