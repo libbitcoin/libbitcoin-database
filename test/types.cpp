@@ -97,24 +97,24 @@ BOOST_AUTO_TEST_CASE(types__unspent_less_than__unconfirmed_outpoint_ascending__e
 
 BOOST_AUTO_TEST_CASE(types__history_less_than__confirmed_before_unconfirmed__expected)
 {
-    const history a{ checkpoint{ {}, 42 }, 0, 7 };
-    const history b{ checkpoint{ {}, 0 }, 0, 0 };
+    const history a{ { hash_digest{}, 42 }, 0, 7 };
+    const history b{ { hash_digest{}, 0 }, 0, 0 };
     BOOST_REQUIRE( history::less_than{}(a, b));
     BOOST_REQUIRE(!history::less_than{}(b, a));
 }
 
 BOOST_AUTO_TEST_CASE(types__history_less_than__confirmed_height_ascending__expected)
 {
-    const history a{ checkpoint{ {}, 100 }, 0, 5 };
-    const history b{ checkpoint{ {}, 200 }, 0, 5 };
+    const history a{ { hash_digest{}, 100 }, 0, 5 };
+    const history b{ { hash_digest{}, 200 }, 0, 5 };
     BOOST_REQUIRE( history::less_than{}(a, b));
     BOOST_REQUIRE(!history::less_than{}(b, a));
 }
 
 BOOST_AUTO_TEST_CASE(types__history_less_than__confirmed_position_ascending__expected)
 {
-    const history a{ checkpoint{ {}, 100 }, 0, 3 };
-    const history b{ checkpoint{ {}, 100 }, 0, 10 };
+    const history a{ { hash_digest{}, 100 }, 0, 3 };
+    const history b{ { hash_digest{}, 100 }, 0, 10 };
     BOOST_REQUIRE( history::less_than{}(a, b));
     BOOST_REQUIRE(!history::less_than{}(b, a));
 }
