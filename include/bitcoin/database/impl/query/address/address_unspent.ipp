@@ -33,14 +33,14 @@ namespace database {
 // Unconfirmed unspent are included at end of list in consistent order.
 
 TEMPLATE
-code CLASS::get_unconfirmed_unspent(stopper& , histories& ,
-    const hash_digest& , bool ) const NOEXCEPT
+code CLASS::get_unconfirmed_unspent(stopper& cancel, unspents& out,
+    const hash_digest& hash, bool turbo) const NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-code CLASS::get_confirmed_unspent(stopper& , histories& ,
+code CLASS::get_confirmed_unspent(stopper& , unspents& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};

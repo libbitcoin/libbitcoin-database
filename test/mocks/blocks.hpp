@@ -30,6 +30,8 @@ using query_t = database::query<database::store<database::map>>;
 const auto events_handler = [](auto, auto) {};
 extern const database::context context;
 
+extern const system::hash_digest genesis_address;
+
 extern const system::hash_digest block0_hash;
 extern const system::hash_digest block1_hash;
 extern const system::hash_digest block2_hash;
@@ -101,7 +103,6 @@ extern const system::chain::block block_spend_internal_2b;
 extern const system::chain::block block_missing_prevout_2b;
 extern const system::chain::block block_valid_spend_internal_2b;
 
-system::hash_digest genesis_address() NOEXCEPT;
 bool setup_three_block_store(query_t& query) NOEXCEPT;
 bool setup_three_block_witness_store(query_t& query) NOEXCEPT;
 

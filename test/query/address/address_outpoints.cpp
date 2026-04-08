@@ -35,9 +35,9 @@ BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__turbo_genesis__expected
 
     outpoints out{};
     std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_address_outputs(cancel, out, test::genesis_address(), true));
+    BOOST_REQUIRE(!query.get_address_outputs(cancel, out, test::genesis_address, true));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
-    ////BOOST_REQUIRE_EQUAL(out.front(), query.to_output(0, 0));
+    BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
 }
 
 BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__genesis__expected)
@@ -51,9 +51,9 @@ BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__genesis__expected)
 
     outpoints out{};
     std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_address_outputs(cancel,  out, test::genesis_address()));
+    BOOST_REQUIRE(!query.get_address_outputs(cancel,  out, test::genesis_address));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
-    ////BOOST_REQUIRE_EQUAL(out.front(), query.to_output(0, 0));
+    BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
 }
 
 BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__cancel__canceled_false)
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__cancel__canceled_false)
 
     outpoints out{};
     std::atomic_bool cancel{ true };
-    BOOST_REQUIRE_EQUAL(query.get_address_outputs(cancel, out, test::genesis_address()), error::canceled);
+    BOOST_REQUIRE_EQUAL(query.get_address_outputs(cancel, out, test::genesis_address), error::canceled);
     BOOST_REQUIRE(out.empty());
 }
 
@@ -84,9 +84,9 @@ BOOST_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outputs__turbo_genesis
 
     outpoints out{};
     std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_confirmed_unspent_outputs(cancel, out, test::genesis_address(), true));
+    BOOST_REQUIRE(!query.get_confirmed_unspent_outputs(cancel, out, test::genesis_address, true));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
-    ////BOOST_REQUIRE_EQUAL(out.front(), 0);
+    BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
 }
 
 BOOST_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outputs__genesis__expected)
@@ -100,9 +100,9 @@ BOOST_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outputs__genesis__expe
 
     outpoints out{};
     std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_confirmed_unspent_outputs(cancel, out, test::genesis_address()));
+    BOOST_REQUIRE(!query.get_confirmed_unspent_outputs(cancel, out, test::genesis_address));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
-    ////BOOST_REQUIRE_EQUAL(out.front(), 0);
+    BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
 }
 
 // get_minimum_unspent_outputs
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outputs__turbo_above__ex
 
     outpoints out{};
     std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_minimum_unspent_outputs(cancel, out, test::genesis_address(), 5000000001, true));
+    BOOST_REQUIRE(!query.get_minimum_unspent_outputs(cancel, out, test::genesis_address, 5000000001, true));
     BOOST_REQUIRE(out.empty());
 }
 
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outputs__above__excluded
 
     outpoints out{};
     std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_minimum_unspent_outputs(cancel, out, test::genesis_address(), 5000000001));
+    BOOST_REQUIRE(!query.get_minimum_unspent_outputs(cancel, out, test::genesis_address, 5000000001));
     BOOST_REQUIRE(out.empty());
 }
 
@@ -148,9 +148,9 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outputs__at__included)
 
     outpoints out{};
     std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_minimum_unspent_outputs(cancel, out, test::genesis_address(), 5000000000));
+    BOOST_REQUIRE(!query.get_minimum_unspent_outputs(cancel, out, test::genesis_address, 5000000000));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
-    ////BOOST_REQUIRE_EQUAL(out.front(), 0);
+    BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
 }
 
 BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outputs__below__included)
@@ -164,12 +164,13 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outputs__below__included
 
     outpoints out{};
     std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_minimum_unspent_outputs(cancel, out, test::genesis_address(), 0));
+    BOOST_REQUIRE(!query.get_minimum_unspent_outputs(cancel, out, test::genesis_address, 0));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
-    ////BOOST_REQUIRE_EQUAL(out.front(), 0);
-    BOOST_REQUIRE(!query.get_minimum_unspent_outputs(cancel, out, test::genesis_address(), 4999999999));
+    BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
+
+    BOOST_REQUIRE(!query.get_minimum_unspent_outputs(cancel, out, test::genesis_address, 4999999999));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
-    ////BOOST_REQUIRE_EQUAL(out.front(), 0);
+    BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

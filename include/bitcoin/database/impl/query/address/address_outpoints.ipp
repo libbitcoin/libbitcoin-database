@@ -49,7 +49,9 @@ code CLASS::get_address_outputs(stopper& cancel, outpoints& out,
         if (!store_.address.get(it, address))
             return error::integrity;
 
-        out.insert(get_outpoint(address.output_fk));
+        auto outpoint = get_outpoint(address.output_fk);
+        if (outpoint.point().is_null()) return error::integrity;
+        out.insert(std::move(outpoint));
     }
 
     return error::success;
@@ -74,7 +76,11 @@ code CLASS::get_confirmed_unspent_outputs(stopper& cancel,
             return error::integrity;
 
         if (is_confirmed_unspent(address.output_fk))
-            out.insert(get_outpoint(address.output_fk));
+        {
+            auto outpoint = get_outpoint(address.output_fk);
+            if (outpoint.point().is_null()) return error::integrity;
+            out.insert(std::move(outpoint));
+        }
     }
 
     return error::success;
@@ -106,7 +112,11 @@ code CLASS::get_minimum_unspent_outputs(stopper& cancel,
                 return error::integrity;
 
             if (value >= minimum)
-                out.insert(get_outpoint(address.output_fk));
+            {
+                auto outpoint = get_outpoint(address.output_fk);
+                if (outpoint.point().is_null()) return error::integrity;
+                out.insert(std::move(outpoint));
+            }
         }
     }
 
@@ -148,6 +158,7 @@ code CLASS::get_confirmed_unspent_outputs_turbo(stopper& cancel,
     return parallel_address_transform(cancel, out, links,
         [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT
         {
+            // !is_confirmed_unspent must be filtered out.
             if (cancel || fail || !is_confirmed_unspent(link))
                 return outpoint{};
 
@@ -169,6 +180,7 @@ code CLASS::get_minimum_unspent_outputs_turbo(stopper& cancel,
     return parallel_address_transform(cancel, out, links,
         [this, minimum](const auto& link, auto& cancel, auto& fail) NOEXCEPT
         {
+            // !is_confirmed_unspent must be filtered out.
             if (cancel || fail || !is_confirmed_unspent(link))
                 return outpoint{};
 
@@ -179,6 +191,7 @@ code CLASS::get_minimum_unspent_outputs_turbo(stopper& cancel,
                 return outpoint{};
             }
 
+            // Must be filtered out.
             if (value < minimum)
                 return outpoint{};
 
@@ -214,6 +227,8 @@ inline code CLASS::parallel_address_transform(stopper& cancel,
     for (auto& outpoint: outpoints)
     {
         if (cancel) return error::canceled;
+
+        // Filter out non-failures.
         if (!outpoint.point().is_null())
             out.insert(std::move(outpoint));
     }

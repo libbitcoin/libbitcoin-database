@@ -25,6 +25,8 @@ using namespace system;
 constexpr hash_digest two_hash = from_uintx(uint256_t(two));
 constexpr database::context context{ 0x01020304, 0x11121314, 0x21222324 };
 
+constexpr hash_digest genesis_address = base16_hash("740485f380ff6379d11ef6fe7d7cdd68aea7f8bd0d953d9fdf3531fb7d531833");
+
 constexpr hash_digest block0_hash = base16_hash("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
 constexpr hash_digest block1_hash = base16_hash("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048");
 constexpr hash_digest block2_hash = base16_hash("000000006a625f06636b8bb6ac7b960a8d03705d1ace08b1a19da3fdcc99ddbd");
@@ -80,13 +82,6 @@ const block block6{ block6_data, true };
 const block block7{ block7_data, true };
 const block block8{ block8_data, true };
 const block block9{ block9_data, true };
-
-system::hash_digest genesis_address() NOEXCEPT
-{
-    static const auto address = genesis.transactions_ptr()->front()->
-        outputs_ptr()->front()->script().hash();
-    return address;
-}
 
 bool setup_three_block_store(query_t& query) NOEXCEPT
 {
