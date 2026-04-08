@@ -90,7 +90,11 @@ using fee_rate_sets = std::vector<fee_rates>;
 
 struct span
 {
-    inline size_t size() const NOEXCEPT { return end - begin; }
+    inline size_t size() const NOEXCEPT
+    {
+        return system::floored_subtract(end, begin);
+    }
+
     size_t begin;
     size_t end;
 };
