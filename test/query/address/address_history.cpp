@@ -22,8 +22,54 @@
 
 BOOST_FIXTURE_TEST_SUITE(query_address_tests, test::directory_setup_fixture)
 
-// get_unconfirmed_address
-// get_confirmed_address
-// get_address
+// get_unconfirmed_history
+// get_confirmed_history
+// get_history
+
+BOOST_AUTO_TEST_CASE(query_address__get_history__turbo_genesis__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    histories out{};
+    std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.get_unconfirmed_history(cancel, out, test::genesis_address, true));
+    BOOST_REQUIRE(out.empty());
+
+    out.clear();
+    BOOST_REQUIRE(!query.get_confirmed_history(cancel, out, test::genesis_address, true));
+    BOOST_REQUIRE(out.empty());
+
+    out.clear();
+    BOOST_REQUIRE(!query.get_history(cancel, out, test::genesis_address, true));
+    BOOST_REQUIRE(out.empty());
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_history__genesis__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    histories out{};
+    std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.get_unconfirmed_history(cancel, out, test::genesis_address));
+    BOOST_REQUIRE(out.empty());
+
+    out.clear();
+    BOOST_REQUIRE(!query.get_confirmed_history(cancel, out, test::genesis_address));
+    BOOST_REQUIRE(out.empty());
+
+    out.clear();
+    BOOST_REQUIRE(!query.get_history(cancel, out, test::genesis_address));
+    BOOST_REQUIRE(out.empty());
+}
 
 BOOST_AUTO_TEST_SUITE_END()

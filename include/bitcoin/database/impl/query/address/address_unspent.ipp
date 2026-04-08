@@ -33,14 +33,14 @@ namespace database {
 // Unconfirmed unspent are included at end of list in consistent order.
 
 TEMPLATE
-code CLASS::get_unconfirmed_unspent(stopper& , histories& ,
+code CLASS::get_unconfirmed_unspent(stopper& , unspents& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-code CLASS::get_confirmed_unspent(stopper& , histories& ,
+code CLASS::get_confirmed_unspent(stopper& , unspents& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};
@@ -52,6 +52,10 @@ code CLASS::get_unspent(stopper& , unspents& ,
 {
     return {};
 }
+
+// turbos
+// ----------------------------------------------------------------------------
+// protected
 
 } // namespace database
 } // namespace libbitcoin

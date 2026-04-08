@@ -336,7 +336,7 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-outpoint CLASS::get_spent(const output_link& link) const NOEXCEPT
+outpoint CLASS::get_outpoint(const output_link& link) const NOEXCEPT
 {
     table::output::get_parent_value out{};
     if (!store_.output.get(link, out))

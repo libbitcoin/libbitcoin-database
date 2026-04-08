@@ -414,7 +414,7 @@ public:
         bool witness) const NOEXCEPT;
 
     /// Inpoint and outpoint result sets.
-    outpoint get_spent(const output_link& link) const NOEXCEPT;
+    outpoint get_outpoint(const output_link& link) const NOEXCEPT;
     inpoint get_spender(const point_link& link) const NOEXCEPT;
     inpoints get_spenders(const point& point) const NOEXCEPT;
 
@@ -550,7 +550,7 @@ public:
     bool is_confirmed_tx(const tx_link& link) const NOEXCEPT;
     bool is_confirmed_input(const point_link& link) const NOEXCEPT;
     bool is_confirmed_output(const output_link& link) const NOEXCEPT;
-    bool is_spent_output(const output_link& link) const NOEXCEPT;
+    bool is_confirmed_spent_output(const output_link& link) const NOEXCEPT;
 
     /// Height index not used by these.
     bool is_strong_tx(const tx_link& link) const NOEXCEPT;
@@ -611,26 +611,28 @@ public:
     /// Address.
     /// -----------------------------------------------------------------------
 
-    /// Native queries (deduped, arbitrary sort).
-    code get_minimum_unspent_outputs(stopper& cancel, outpoints& out,
-        const hash_digest& key, uint64_t value, bool turbo=false) const NOEXCEPT;
+    /// Native queries (outpoints, deduped, arbitrary sort).
+    ////code get_unconfirmed_unspent_outputs(stopper& cancel, outpoints& out,
+    ////    const hash_digest& key, bool turbo=false) const NOEXCEPT;
     code get_confirmed_unspent_outputs(stopper& cancel, outpoints& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_minimum_unspent_outputs(stopper& cancel, outpoints& out,
+        const hash_digest& key, uint64_t value, bool turbo=false) const NOEXCEPT;
     code get_address_outputs(stopper& cancel, outpoints& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
 
-    /// Electrum queries (deduped, electrum sort).
-    code get_unconfirmed_address(stopper& cancel, histories& out,
+    /// Electrum queries (histories, deduped, electrum sort).
+    code get_unconfirmed_history(stopper& cancel, histories& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_address(stopper& cancel, histories& out,
+    code get_confirmed_history(stopper& cancel, histories& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_address(stopper& cancel, histories& out,
+    code get_history(stopper& cancel, histories& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
 
-    /// Electrum queries (deduped, electrum sort).
-    code get_unconfirmed_unspent(stopper& cancel, histories& out,
+    /// Electrum queries (unspents, deduped, electrum sort).
+    code get_unconfirmed_unspent(stopper& cancel, unspents& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_unspent(stopper& cancel, histories& out,
+    code get_confirmed_unspent(stopper& cancel, unspents& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
     code get_unspent(stopper& cancel, unspents& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
@@ -713,6 +715,7 @@ protected:
     /// Confirm.
     /// -----------------------------------------------------------------------
     bool is_confirmed_unspent(const output_link& link) const NOEXCEPT;
+    bool is_unconfirmed_unspent(const output_link& link) const NOEXCEPT;
 
     /// Consensus.
     /// -----------------------------------------------------------------------
@@ -782,15 +785,6 @@ protected:
     bool populate_with_metadata_(const transaction& tx,
         bool chain) const NOEXCEPT;
 
-    /// address
-    /// -----------------------------------------------------------------------
-    code get_address_outputs_turbo(stopper& cancel, outpoints& out,
-        const hash_digest& key) const NOEXCEPT;
-    code get_confirmed_unspent_outputs_turbo(stopper& cancel, outpoints& out,
-        const hash_digest& key) const NOEXCEPT;
-    code get_minimum_unspent_outputs_turbo(stopper& cancel, outpoints& out,
-        const hash_digest& key, uint64_t minimum) const NOEXCEPT;
-
     /// merkle
     /// -----------------------------------------------------------------------
     struct position { size_t sibling; size_t width; };
@@ -827,7 +821,7 @@ private:
     static inline bool push_bool(std_vector<Bool>& stack,
         const Bool& element) NOEXCEPT;
     template <typename Functor>
-    static inline code parallel_address_transform(stopper& cancel,
+    static inline code parallel_address_transform(stopper& cancel, bool turbo,
         outpoints& out, const output_links& links, Functor&& functor) NOEXCEPT;
     static inline point::cptr make_point(hash_digest&& hash,
         uint32_t index) NOEXCEPT;

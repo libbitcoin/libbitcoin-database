@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(query_address__to_address_outputs__genesis__expected)
 
     output_links out{};
     std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.to_address_outputs(cancel, out, test::genesis_address()));
+    BOOST_REQUIRE(!query.to_address_outputs(cancel, out, test::genesis_address));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
     BOOST_REQUIRE_EQUAL(out.front(), query.to_output(0, 0));
 }

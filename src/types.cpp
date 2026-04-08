@@ -33,8 +33,8 @@ inline bool hash_less_than(const hash_digest& a, const hash_digest& b) NOEXCEPT
     // return encode_hash(a) < encode_hash(a)
     for (auto byte{ hash_size }; !is_zero(byte); --byte)
     {
-        const auto byte_a = a[sub1(byte)];
-        const auto byte_b = b[sub1(byte)];
+        const auto byte_a = a.at(sub1(byte));
+        const auto byte_b = b.at(sub1(byte));
 
         const auto hi_a = shift_right(byte_a, hi);
         const auto hi_b = shift_right(byte_b, hi);

@@ -35,25 +35,29 @@ namespace database {
 // tied-height transactions sorted by base16 txid (not converted).
 
 TEMPLATE
-code CLASS::get_unconfirmed_address(stopper& , histories& ,
+code CLASS::get_unconfirmed_history(stopper& , histories& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-code CLASS::get_confirmed_address(stopper& , histories& ,
+code CLASS::get_confirmed_history(stopper& , histories& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};
 }
 
 TEMPLATE
-code CLASS::get_address(stopper& , histories& ,
+code CLASS::get_history(stopper& , histories& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};
 }
+
+// turbos
+// ----------------------------------------------------------------------------
+// protected
 
 } // namespace database
 } // namespace libbitcoin

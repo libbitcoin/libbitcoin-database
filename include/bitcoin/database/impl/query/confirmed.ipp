@@ -57,7 +57,7 @@ point_link CLASS::find_confirmed_spender(const point& prevout) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_confirmed_unspent(const output_link& link) const NOEXCEPT
 {
-    return is_confirmed_output(link) && !is_spent_output(link);
+    return is_confirmed_output(link) && !is_confirmed_spent_output(link);
 }
 
 TEMPLATE
@@ -111,7 +111,7 @@ bool CLASS::is_confirmed_output(const output_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_spent_output(const output_link& link) const NOEXCEPT
+bool CLASS::is_confirmed_spent_output(const output_link& link) const NOEXCEPT
 {
     // The spender is strong *and* its block is confirmed (by height).
     const auto ins = to_spenders(link);
