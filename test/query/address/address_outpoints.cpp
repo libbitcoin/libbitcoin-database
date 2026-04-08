@@ -22,55 +22,6 @@
 
 BOOST_FIXTURE_TEST_SUITE(query_address_tests, test::directory_setup_fixture)
 
-// get_address_outputs
-
-BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__turbo_genesis__expected)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    outpoints out{};
-    std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_address_outputs(cancel, out, test::genesis_address, true));
-    BOOST_REQUIRE_EQUAL(out.size(), 1u);
-    BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
-}
-
-BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__genesis__expected)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    outpoints out{};
-    std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_address_outputs(cancel,  out, test::genesis_address));
-    BOOST_REQUIRE_EQUAL(out.size(), 1u);
-    BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
-}
-
-BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__cancel__canceled_false)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    outpoints out{};
-    std::atomic_bool cancel{ true };
-    BOOST_REQUIRE_EQUAL(query.get_address_outputs(cancel, out, test::genesis_address), error::canceled);
-    BOOST_REQUIRE(out.empty());
-}
-
 // get_confirmed_unspent_outputs
 
 BOOST_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outputs__turbo_genesis__expected)
@@ -171,6 +122,55 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outputs__below__included
     BOOST_REQUIRE(!query.get_minimum_unspent_outputs(cancel, out, test::genesis_address, 4999999999));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
     BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
+}
+
+// get_address_outputs
+
+BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__turbo_genesis__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    outpoints out{};
+    std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.get_address_outputs(cancel, out, test::genesis_address, true));
+    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__genesis__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    outpoints out{};
+    std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.get_address_outputs(cancel, out, test::genesis_address));
+    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE(*out.begin() == query.get_outpoint(query.to_output(0, 0)));
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__cancel__canceled_false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    outpoints out{};
+    std::atomic_bool cancel{ true };
+    BOOST_REQUIRE_EQUAL(query.get_address_outputs(cancel, out, test::genesis_address), error::canceled);
+    BOOST_REQUIRE(out.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

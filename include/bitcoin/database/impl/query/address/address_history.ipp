@@ -55,6 +55,10 @@ code CLASS::get_history(stopper& , histories& ,
     return {};
 }
 
+// turbos
+// ----------------------------------------------------------------------------
+// protected
+
 } // namespace database
 } // namespace libbitcoin
 
