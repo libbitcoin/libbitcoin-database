@@ -198,12 +198,6 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_block__always__expected)
     BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
     BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
 
-    // for to_strong/to_strongs
-    const auto hash0 = test::genesis.transaction_hashes(false).front();
-    const auto hash1 = test::block1.transaction_hashes(false).front();
-    const auto hash2 = test::block2.transaction_hashes(false).front();
-    const auto hash3 = test::block3.transaction_hashes(false).front();
-
     // Either not strong or not found, except genesis.
     BOOST_REQUIRE(!query.to_block(0).is_terminal());
     BOOST_REQUIRE(query.to_block(1).is_terminal());
