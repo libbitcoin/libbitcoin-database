@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <ranges>
 #include <utility>
 #include <bitcoin/database/define.hpp>
 
@@ -44,6 +45,63 @@ header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
 
 // address->outputs[receivers]
 // ----------------------------------------------------------------------------
+// There can be multiple spenders of the same output (due to conflicts) and
+// multiple instances of an output under distinct links (due to tx dups).
+
+TEMPLATE
+code CLASS::to_touched_txs(tx_links& out,
+    const output_links& outputs) const NOEXCEPT
+{
+    // Reserve one for each output tx and one for spending input tx (estimate).
+    out.clear();
+    out.reserve(two * outputs.size());
+
+    // Orders are reversed due to expected tx_links reversal, for faster sort.
+    for (const auto& output: std::views::reverse(outputs))
+    {
+        out.push_back(to_output_tx(output));
+        if (out.back() == tx_link::terminal)
+            return error::integrity;
+
+        for (const auto& input: std::views::reverse(to_spenders(output)))
+        {
+            out.push_back(to_input_tx(input));
+            if (out.back() == tx_link::terminal)
+                return error::integrity;
+        }
+    }
+
+    return {};
+}
+
+TEMPLATE
+code CLASS::to_touched_txs(const stopper& cancel, tx_links& out,
+    const output_links& outputs) const NOEXCEPT
+{
+    // Reserve one for each output tx and one for spending input tx (estimate).
+    out.clear();
+    out.reserve(two * outputs.size());
+
+    // Orders are reversed due to expected tx_links reversal, for faster sort.
+    for (const auto& output: std::views::reverse(outputs))
+    {
+        if (cancel)
+            return error::canceled;
+
+        out.push_back(to_output_tx(output));
+        if (out.back() == tx_link::terminal)
+            return error::integrity;
+        
+        for (const auto& input: std::views::reverse(to_spenders(output)))
+        {
+            out.push_back(to_input_tx(input));
+            if (out.back() == tx_link::terminal)
+                return error::integrity;
+        }
+    }
+
+    return {};
+}
 
 TEMPLATE
 code CLASS::to_address_outputs(output_links& out,
@@ -64,7 +122,7 @@ code CLASS::to_address_outputs(output_links& out,
 }
 
 TEMPLATE
-code CLASS::to_address_outputs(stopper& cancel, output_links& out,
+code CLASS::to_address_outputs(const stopper& cancel, output_links& out,
     const hash_digest& key) const NOEXCEPT
 {
     // Pushing into the vector is more efficient than precomputation of size.
@@ -88,7 +146,7 @@ code CLASS::to_address_outputs(stopper& cancel, output_links& out,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-tx_link CLASS::to_spending_tx(const point_link& link) const NOEXCEPT
+tx_link CLASS::to_input_tx(const point_link& link) const NOEXCEPT
 {
     table::ins::get_parent ins{};
     if (!store_.ins.get(link, ins))
@@ -148,7 +206,7 @@ TEMPLATE
 point_links CLASS::to_spenders(const point& point) const NOEXCEPT
 {
     // Avoid returning spend links for coinbase inputs (not spenders).
-    if (point.index() == point::null_index)
+    if (point.is_null())
         return {};
 
     point_links points{};

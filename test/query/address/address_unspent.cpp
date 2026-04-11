@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_unspent__turbo_genesis__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     unspents out{};
-    std::atomic_bool cancel{};
+    const std::atomic_bool cancel{};
     BOOST_REQUIRE(!query.get_unconfirmed_unspent(cancel, out, genesis_address, true));
     BOOST_REQUIRE(out.empty());
 
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_unspent__genesis__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     unspents out{};
-    std::atomic_bool cancel{};
+    const std::atomic_bool cancel{};
     BOOST_REQUIRE(!query.get_unconfirmed_unspent(cancel, out, genesis_address));
     BOOST_REQUIRE(out.empty());
 

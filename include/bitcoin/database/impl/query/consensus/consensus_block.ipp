@@ -56,7 +56,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     stopper fault{};
 
     // Get points for each tx and the total count.
-    std::transform(parallel, txs.begin(), txs.end(), sets.begin(), 
+    std::transform(parallel, txs.cbegin(), txs.cend(), sets.begin(), 
         [this, &count, &fault](const tx_link& tx) NOEXCEPT
         {
             point_set set{};
@@ -80,7 +80,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     std::atomic<system::error::transaction_error_t> consensus{};
 
     // Checks all spends for spendability (strong, unlocked and mature).
-    if (std::all_of(parallel, sets.begin(), sets.end(),
+    if (std::all_of(parallel, sets.cbegin(), sets.cend(),
         [this, &ctx, &consensus](const point_set& set) NOEXCEPT
         {
             for (const auto& point: set.points)

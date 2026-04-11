@@ -30,29 +30,73 @@ namespace database {
 // Address history
 // ----------------------------------------------------------------------------
 // Canonically-sorted/deduped address history.
-
 // root txs (height:zero) sorted before transitive (height:max) txs.
 // tied-height transactions sorted by base16 txid (not converted).
+// All confirmed txs are root, unconfirmed may or may not not be root.
 
+// server/electrum
 TEMPLATE
-code CLASS::get_unconfirmed_history(stopper& , histories& ,
+code CLASS::get_unconfirmed_history(const stopper& , histories& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};
 }
 
+// ununsed
 TEMPLATE
-code CLASS::get_confirmed_history(stopper& , histories& ,
+code CLASS::get_confirmed_history(const stopper& , histories& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};
 }
 
+// server/electrum
 TEMPLATE
-code CLASS::get_history(stopper& , histories& ,
-    const hash_digest& , bool ) const NOEXCEPT
+code CLASS::get_history(const stopper& cancel, histories& out,
+    const hash_digest& key, bool /* turbo */) const NOEXCEPT
 {
-    return {};
+    output_links outs{};
+    if (const auto ec = to_address_outputs(cancel, outs, key))
+        return ec;
+
+    tx_links txs{};
+    if (const auto ec = to_touched_txs(cancel, txs, outs))
+        return ec;
+
+    // TODO: parallel transform (requires vector), then sort/dedup.
+    out.clear();
+    for (const auto& tx: txs)
+    {
+        if (cancel)
+            return error::canceled;
+
+        // Handles terminal tx values.
+        auto hash = get_tx_key(tx);
+        if (hash == system::null_hash)
+            return error::integrity;
+
+        // Possibly missing prevout.
+        uint64_t fee{};
+        if (!get_tx_fee(fee, tx))
+            return error::integrity;
+
+        // Optimized by sharing strong across both subqueries.
+        size_t height{}, position{};
+        if (const auto strong = find_strong(tx); !strong.is_terminal())
+        {
+            if (!get_height(height, strong) ||
+                !get_tx_position(position, tx, strong))
+                return error::integrity;
+        }
+        else
+        {
+            height = is_confirmed_all_prevouts(tx) ? zero : max_size_t;
+        }
+
+        out.insert({ { std::move(hash), height }, fee, position });
+    }
+
+    return error::success;
 }
 
 // turbos

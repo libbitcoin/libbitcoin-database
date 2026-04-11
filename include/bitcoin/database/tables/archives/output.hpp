@@ -200,8 +200,8 @@ struct output
 
             const auto& outs = *tx_.outputs_ptr();
             const auto other = outs.size() * value_parent_difference;
-            const auto outputs = std::accumulate(outs.begin(), outs.end(), zero,
-                [](size_t total, const auto& out) NOEXCEPT
+            const auto outputs = std::accumulate(outs.cbegin(), outs.cend(),
+                zero, [](size_t total, const auto& out) NOEXCEPT
                 {
                     // size cached, so this is free, includes sizeof(value).
                     return total + variable_size(out->value()) +
@@ -216,12 +216,13 @@ struct output
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             const auto& outs = *tx_.outputs_ptr();
-            std::for_each(outs.begin(), outs.end(), [&](const auto& out) NOEXCEPT
-            {
-                sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-                sink.write_variable(out->value());
-                out->script().to_data(sink, true);
-            });
+            std::for_each(outs.cbegin(), outs.cend(),
+                [&](const auto& out) NOEXCEPT
+                {
+                    sink.write_little_endian<tx::integer, tx::size>(parent_fk);
+                    sink.write_variable(out->value());
+                    out->script().to_data(sink, true);
+                });
 
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;

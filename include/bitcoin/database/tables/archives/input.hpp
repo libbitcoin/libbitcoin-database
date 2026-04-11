@@ -149,7 +149,7 @@ struct input
 
             const auto& ins = *tx_.inputs_ptr();
             const auto other = ins.size() * sequence_point_size;
-            const auto inputs = std::accumulate(ins.begin(), ins.end(), zero,
+            const auto inputs = std::accumulate(ins.cbegin(), ins.cend(), zero,
                 [](size_t total, const auto& in) NOEXCEPT
                 {
                     // sizes cached, so this is free.
@@ -163,7 +163,7 @@ struct input
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             const auto& ins = *tx_.inputs_ptr();
-            std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+            std::for_each(ins.cbegin(), ins.cend(), [&](const auto& in) NOEXCEPT
             {
                 in->script().to_data(sink, true);
                 in->witness().to_data(sink, true);

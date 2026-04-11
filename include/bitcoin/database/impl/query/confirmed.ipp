@@ -98,7 +98,7 @@ TEMPLATE
 bool CLASS::is_confirmed_input(const point_link& link) const NOEXCEPT
 {
     // The spend.tx is strong *and* its block is confirmed (by height).
-    const auto fk = to_spending_tx(link);
+    const auto fk = to_input_tx(link);
     return !fk.is_terminal() && is_confirmed_tx(fk);
 }
 
@@ -115,7 +115,18 @@ bool CLASS::is_confirmed_spent_output(const output_link& link) const NOEXCEPT
 {
     // The spender is strong *and* its block is confirmed (by height).
     const auto ins = to_spenders(link);
-    return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+    return std::any_of(ins.cbegin(), ins.cend(), [&](const auto& in) NOEXCEPT
+    {
+        return is_confirmed_input(in);
+    });
+}
+
+TEMPLATE
+bool CLASS::is_confirmed_all_prevouts(const tx_link& link) const NOEXCEPT
+{
+    // All prevouts of the tx's inputs are confirmed.
+    const auto ins = to_points(link);
+    return std::all_of(ins.cbegin(), ins.cend(), [&](const auto& in) NOEXCEPT
     {
         return is_confirmed_input(in);
     });

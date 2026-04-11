@@ -70,8 +70,8 @@ height_link CLASS::find_strong_spender_height(
     const point& point) const NOEXCEPT
 {
     size_t out{};
-    for (const auto& sp: to_spenders(point))
-        if (const auto tx = to_spending_tx(sp); get_tx_height(out, tx))
+    for (const auto& in: to_spenders(point))
+        if (const auto tx = to_input_tx(in); get_tx_height(out, tx))
             break;
 
     return { system::possible_narrow_cast<uint32_t>(out) };

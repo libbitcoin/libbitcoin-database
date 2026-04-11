@@ -134,7 +134,7 @@ bool CLASS::get_doubles(tx_links& out, const block& block) const NOEXCEPT
     if (txs.size() <= one)
         return true;
 
-    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+    for (auto tx = std::next(txs.cbegin()); tx != txs.cend(); ++tx)
         for (const auto& in: *(*tx)->inputs_ptr())
             if (!get_doubles(out, in->point()))
                 return false;

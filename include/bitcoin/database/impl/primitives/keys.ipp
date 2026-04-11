@@ -94,7 +94,7 @@ INLINE uint64_t hash(const Key& key) NOEXCEPT
         constexpr auto bytes = std::min(size<Key>(), sizeof(uint64_t));
 
         uint64_t hash{};
-        std::copy_n(key.begin(), bytes, byte_cast(hash).begin());
+        std::copy_n(key.cbegin(), bytes, byte_cast(hash).begin());
         return hash;
     }
 }
@@ -123,7 +123,7 @@ INLINE uint64_t thumb(const Key& key) NOEXCEPT
         constexpr auto offset = std::min(size<Key>() - bytes, bytes);
 
         uint64_t hash{};
-        const auto start = std::next(key.begin(), offset);
+        const auto start = std::next(key.cbegin(), offset);
         std::copy_n(start, bytes, byte_cast(hash).begin());
         return hash;
     }
@@ -160,7 +160,7 @@ INLINE bool compare(const Array& bytes, const Key& key) NOEXCEPT
     }
     else if constexpr (is_std_array<Key>)
     {
-        return std::equal(bytes.begin(), bytes.end(), key.begin());
+        return std::equal(bytes.cbegin(), bytes.cend(), key.begin());
     }
 }
 

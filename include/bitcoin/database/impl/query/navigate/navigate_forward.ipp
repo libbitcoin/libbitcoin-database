@@ -146,7 +146,7 @@ output_links CLASS::to_prevouts(const tx_links& txs) const NOEXCEPT
     output_links outs(ins.size());
     constexpr auto parallel = poolstl::execution::par;
 
-    std::transform(parallel, ins.begin(), ins.end(), outs.begin(),
+    std::transform(parallel, ins.cbegin(), ins.cend(), outs.begin(),
         [&](const auto& spend) NOEXCEPT
         {
             return to_previous_output(spend);

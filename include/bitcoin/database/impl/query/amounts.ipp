@@ -71,7 +71,7 @@ bool CLASS::get_tx_spend(uint64_t& out, const tx_link& link) const NOEXCEPT
     return !links.empty() && get_outputs_total_value(out, links);
 }
 
-// unused (disabled in get_tx_fees())
+// server/electrum
 TEMPLATE
 bool CLASS::get_tx_fee(uint64_t& out, const tx_link& link) const NOEXCEPT
 {
@@ -101,11 +101,11 @@ bool CLASS::get_block_value(uint64_t& out,
         return false;
 
     stopper fail{};
-    const auto begin = std::next(txs.tx_fks.begin());
+    const auto begin = std::next(txs.tx_fks.cbegin());
     constexpr auto parallel = poolstl::execution::par;
     constexpr auto relaxed = std::memory_order_relaxed;
 
-    out = std::transform_reduce(parallel, begin, txs.tx_fks.end(), 0_u64,
+    out = std::transform_reduce(parallel, begin, txs.tx_fks.cend(), 0_u64,
         [](uint64_t left, uint64_t right) NOEXCEPT
         {
             return system::ceilinged_add(left, right);
@@ -132,11 +132,11 @@ bool CLASS::get_block_spend(uint64_t& out,
         return false;
 
     stopper fail{};
-    const auto begin = std::next(txs.tx_fks.begin());
+    const auto begin = std::next(txs.tx_fks.cbegin());
     constexpr auto parallel = poolstl::execution::par;
     constexpr auto relaxed = std::memory_order_relaxed;
 
-    out = std::transform_reduce(parallel, begin, txs.tx_fks.end(), 0_u64,
+    out = std::transform_reduce(parallel, begin, txs.tx_fks.cend(), 0_u64,
         [](uint64_t left, uint64_t right) NOEXCEPT
         {
             return system::ceilinged_add(left, right);

@@ -33,7 +33,7 @@ namespace database {
 
 // server/native
 TEMPLATE
-code CLASS::get_confirmed_unspent_outputs(stopper& cancel,
+code CLASS::get_confirmed_unspent_outputs(const stopper& cancel,
     outpoints& out, const hash_digest& key, bool turbo) const NOEXCEPT
 {
     out.clear();
@@ -52,13 +52,11 @@ code CLASS::get_confirmed_unspent_outputs(stopper& cancel,
             fail = outpoint.point().is_null();
             return outpoint;
         });
-
-    return error::success;
 }
 
 // unused
 TEMPLATE
-code CLASS::get_minimum_unspent_outputs(stopper& cancel,
+code CLASS::get_minimum_unspent_outputs(const stopper& cancel,
     outpoints& out, const hash_digest& key, uint64_t minimum,
     bool turbo) const NOEXCEPT
 {
@@ -89,13 +87,11 @@ code CLASS::get_minimum_unspent_outputs(stopper& cancel,
             fail = outpoint.point().is_null();
             return outpoint;
         });
-
-    return error::success;
 }
 
 // server/native
 TEMPLATE
-code CLASS::get_address_outputs(stopper& cancel, outpoints& out,
+code CLASS::get_address_outputs(const stopper& cancel, outpoints& out,
     const hash_digest& key, bool turbo) const NOEXCEPT
 {
     out.clear();
@@ -111,8 +107,6 @@ code CLASS::get_address_outputs(stopper& cancel, outpoints& out,
             fail = outpoint.point().is_null();
             return outpoint;
         });
-
-    return error::success;
 }
 
 // utilities
@@ -121,14 +115,14 @@ code CLASS::get_address_outputs(stopper& cancel, outpoints& out,
 
 TEMPLATE
 template <typename Functor>
-inline code CLASS::parallel_address_transform(stopper& cancel, bool turbo,
+inline code CLASS::parallel_address_transform(const stopper& cancel, bool turbo,
     outpoints& out, const output_links& links, Functor&& functor) NOEXCEPT
 {
     out.clear();
     stopper fail{};
     std::vector<outpoint> outpoints(links.size());
     const auto policy = poolstl::execution::par_if(turbo);
-    std::transform(policy, links.begin(), links.end(), outpoints.begin(),
+    std::transform(policy, links.cbegin(), links.cend(), outpoints.begin(),
         [&functor, &cancel, &fail](const auto& link) NOEXCEPT
         {
             return functor(link, cancel, fail);
