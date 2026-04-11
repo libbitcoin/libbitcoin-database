@@ -106,7 +106,7 @@ struct BCD_API unspent
 {
     struct less_than
     {
-        bool operator()(const unspent& a, const unspent& b) NOEXCEPT;
+        bool operator()(const unspent& a, const unspent& b) const NOEXCEPT;
     };
 
     outpoint tx{};
@@ -118,7 +118,7 @@ struct BCD_API history
 {
     struct less_than
     {
-        bool operator()(const history& a, const history& b) NOEXCEPT;
+        bool operator()(const history& a, const history& b) const NOEXCEPT;
     };
 
     checkpoint tx{};
