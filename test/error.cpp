@@ -97,15 +97,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__integrity_block_confirmable2__true_expected_
     BOOST_REQUIRE_EQUAL(ec.message(), "store corrupted, block_confirmable2");
 }
 
-////BOOST_AUTO_TEST_CASE(error_t__code__integrity_spent_duplicates__true_expected_message)
-////{
-////    constexpr auto value = error::integrity_spent_duplicates;
-////    const auto ec = code(value);
-////    BOOST_REQUIRE(ec);
-////    BOOST_REQUIRE(ec == value);
-////    BOOST_REQUIRE_EQUAL(ec.message(), "store corrupted, spent_duplicates");
-////}
-
 // memory map
 
 BOOST_AUTO_TEST_CASE(error_t__code__open_open__true_expected_message)

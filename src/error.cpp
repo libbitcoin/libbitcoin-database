@@ -37,7 +37,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { integrity_get_prevouts, "store corrupted, get_prevouts" },
     { integrity_block_confirmable1, "store corrupted, block_confirmable1" },
     { integrity_block_confirmable2, "store corrupted, block_confirmable2" },
-        ////{ integrity_spent_duplicates, "store corrupted, spent_duplicates" },
 
     // memory map
     { open_open, "opening open file" },
