@@ -50,7 +50,7 @@ inline bool hash_less_than(const hash_digest& a, const hash_digest& b) NOEXCEPT
     return false;
 }
 
-bool history::less_than::operator()(const history& a, const history& b) NOEXCEPT
+bool history::less_than::operator()(const history& a, const history& b) const NOEXCEPT
 {
     using namespace system;
     const auto a_height = a.tx.height();
@@ -74,7 +74,7 @@ bool history::less_than::operator()(const history& a, const history& b) NOEXCEPT
     return hash_less_than(a.tx.hash(), b.tx.hash());
 }
 
-bool unspent::less_than::operator()(const unspent& a, const unspent& b) NOEXCEPT
+bool unspent::less_than::operator()(const unspent& a, const unspent& b) const NOEXCEPT
 {
     const auto a_point = a.tx.point();
     const auto b_point = b.tx.point();
