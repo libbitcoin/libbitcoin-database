@@ -67,7 +67,7 @@ hash_digest CLASS::get_merkle_root(size_t height) const NOEXCEPT
 
 // static/protected
 TEMPLATE
-CLASS::positions CLASS::merkle_branch(size_t leaf, size_t leaves,
+positions CLASS::merkle_branch(size_t leaf, size_t leaves,
     bool compress) NOEXCEPT
 {
     using namespace system;

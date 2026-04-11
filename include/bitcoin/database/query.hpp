@@ -787,8 +787,6 @@ protected:
 
     /// merkle
     /// -----------------------------------------------------------------------
-    struct position { size_t sibling; size_t width; };
-    using positions = std::vector<position>;
 
     // merkle related utilities
     static hash_digest partial_subroot(hashes&& tree, size_t span) NOEXCEPT;
