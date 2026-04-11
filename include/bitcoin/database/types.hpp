@@ -81,6 +81,9 @@ using counts = std::pair<size_t, size_t>;
 using sizes = std::pair<size_t, size_t>;
 using heights = std_vector<size_t>;
 
+struct position { size_t sibling; size_t width; };
+using positions = std::vector<position>;
+
 struct header_state { header_link link; code ec; };
 using header_states = std::vector<header_state>;
 

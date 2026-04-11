@@ -40,7 +40,6 @@ class merkle_accessor
 {
 public:
     using base = test::query_accessor;
-    using positions = base::positions;
     using base::base;
     using base::merkle_branch;
     using base::interval_span;
@@ -113,7 +112,7 @@ BOOST_AUTO_TEST_CASE(query_merkle___merkle_branch__seven__six_four_and_zero)
 
 BOOST_AUTO_TEST_CASE(block__merkle_branch__medium_power_of_two__expected)
 {
-    const merkle_accessor::positions expected{ { 14, 1 }, { 6, 2 }, { 2, 4 }, { 0, 8 } };
+    const positions expected{ { 14, 1 }, { 6, 2 }, { 2, 4 }, { 0, 8 } };
 
     auto branch = merkle_accessor::merkle_branch(15, 16, true);
     BOOST_REQUIRE_EQUAL(branch.size(), 4u);
