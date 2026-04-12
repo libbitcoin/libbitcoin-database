@@ -381,7 +381,7 @@ inpoints CLASS::get_spenders(const point& point) const NOEXCEPT
 
 TEMPLATE
 template <typename Bool>
-inline bool CLASS::push_bool(std_vector<Bool>& stack,
+bool CLASS::push_bool(std_vector<Bool>& stack,
     const Bool& element) NOEXCEPT
 {
     if (!element)

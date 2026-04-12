@@ -41,15 +41,17 @@ code CLASS::get_confirmed_unspent_outputs(const stopper& cancel,
     if (const code ec = to_address_outputs(cancel, links, key))
         return ec;
 
-    return parallel_address_transform(cancel, turbo, out, links,
-        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT
+    return parallel_outpoint_transform(cancel, turbo, out, links,
+        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> outpoint
         {
             // !is_confirmed_unspent must be filtered out.
             if (cancel || fail || !is_confirmed_unspent(link))
-                return outpoint{};
+                return {};
 
-            auto outpoint = get_outpoint(link);
-            fail = outpoint.point().is_null();
+            const auto outpoint = get_outpoint(link);
+            if (outpoint.point().is_null())
+                fail = true;
+
             return outpoint;
         });
 }
@@ -65,26 +67,29 @@ code CLASS::get_minimum_unspent_outputs(const stopper& cancel,
     if (const code ec = to_address_outputs(cancel, links, key))
         return ec;
 
-    return parallel_address_transform(cancel, turbo, out, links,
+    return parallel_outpoint_transform(cancel, turbo, out, links,
         [this, minimum](const auto& link, auto& cancel, auto& fail) NOEXCEPT
+            -> outpoint
         {
             // !is_confirmed_unspent must be filtered out.
             if (cancel || fail || !is_confirmed_unspent(link))
-                return outpoint{};
+                return {};
 
             uint64_t value{};
             if (!get_value(value, link))
             {
                 fail = true;
-                return outpoint{};
+                return {};
             }
 
             // Must be filtered out.
             if (value < minimum)
-                return outpoint{};
+                return {};
 
-            auto outpoint = get_outpoint(link);
-            fail = outpoint.point().is_null();
+            const auto outpoint = get_outpoint(link);
+            if (outpoint.point().is_null())
+                fail = true;
+
             return outpoint;
         });
 }
@@ -99,12 +104,16 @@ code CLASS::get_address_outputs(const stopper& cancel, outpoints& out,
     if (const code ec = to_address_outputs(cancel, links, key))
         return ec;
 
-    return parallel_address_transform(cancel, turbo, out, links,
-        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT
+    return parallel_outpoint_transform(cancel, turbo, out, links,
+        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> outpoint
         {
-            if (cancel || fail) return outpoint{};
-            auto outpoint = get_outpoint(link);
-            fail = outpoint.point().is_null();
+            if (cancel || fail)
+                return {};
+
+            const auto outpoint = get_outpoint(link);
+            if (outpoint.point().is_null())
+                fail = true;
+
             return outpoint;
         });
 }
@@ -115,13 +124,15 @@ code CLASS::get_address_outputs(const stopper& cancel, outpoints& out,
 
 TEMPLATE
 template <typename Functor>
-inline code CLASS::parallel_address_transform(const stopper& cancel, bool turbo,
+code CLASS::parallel_outpoint_transform(const stopper& cancel, bool turbo,
     outpoints& out, const output_links& links, Functor&& functor) NOEXCEPT
 {
-    out.clear();
-    stopper fail{};
-    std::vector<outpoint> outpoints(links.size());
     const auto policy = poolstl::execution::par_if(turbo);
+    stopper fail{};
+
+    out.clear();
+    std::vector<outpoint> outpoints(links.size());
+
     std::transform(policy, links.cbegin(), links.cend(), outpoints.begin(),
         [&functor, &cancel, &fail](const auto& link) NOEXCEPT
         {
@@ -134,6 +145,7 @@ inline code CLASS::parallel_address_transform(const stopper& cancel, bool turbo,
     if (cancel)
         return error::canceled;
 
+    // TODO: change outpoints to vector and avoid copy.
     for (auto& outpoint: outpoints)
     {
         if (cancel)

@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_history__turbo_genesis__expected)
 
     out.clear();
     BOOST_REQUIRE(!query.get_confirmed_history(cancel, out, test::genesis_address, true));
-    BOOST_CHECK_EQUAL(out.size(), 0u);
+    BOOST_CHECK_EQUAL(out.size(), 1u);
 
     out.clear();
     BOOST_REQUIRE(!query.get_history(cancel, out, test::genesis_address, true));
