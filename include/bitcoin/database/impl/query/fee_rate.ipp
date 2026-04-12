@@ -56,11 +56,11 @@ bool CLASS::get_block_fees(fee_rates& out,
         return false;
 
     out.resize(sub1(txs.tx_fks.size()));
-    const auto end = txs.tx_fks.end();
+    const auto end = txs.tx_fks.cend();
     auto rate = out.begin();
 
     // Skip coinbase.
-    for (auto tx = std::next(txs.tx_fks.begin()); tx != end; ++tx)
+    for (auto tx = std::next(txs.tx_fks.cbegin()); tx != end; ++tx)
         if (!get_tx_fees(*rate++, *tx))
             return false;
 
@@ -68,7 +68,7 @@ bool CLASS::get_block_fees(fee_rates& out,
 }
 
 TEMPLATE
-bool CLASS::get_branch_fees(stopper& cancel, fee_rate_sets& out,
+bool CLASS::get_branch_fees(const stopper& cancel, fee_rate_sets& out,
     size_t start, size_t count) const NOEXCEPT
 {
     out.clear();
@@ -87,7 +87,7 @@ bool CLASS::get_branch_fees(stopper& cancel, fee_rate_sets& out,
     constexpr auto relaxed = std::memory_order_relaxed;
 
     // Parallel execution saves ~50%.
-    std::for_each(parallel, offsets.begin(), offsets.end(),
+    std::for_each(parallel, offsets.cbegin(), offsets.cend(),
         [&](const size_t& offset) NOEXCEPT
         {
             if (fail.load(relaxed))

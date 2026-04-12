@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_balance__turbo_genesis__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     uint64_t combined{};
-    std::atomic_bool cancel{};
+    const std::atomic_bool cancel{};
     BOOST_REQUIRE(!query.get_unconfirmed_balance(cancel, combined, test::genesis_address, true));
     BOOST_REQUIRE_EQUAL(combined, 5000000000u);
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_balance__genesis__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     uint64_t combined{};
-    std::atomic_bool cancel{};
+    const std::atomic_bool cancel{};
     BOOST_REQUIRE(!query.get_unconfirmed_balance(cancel, combined, test::genesis_address));
     BOOST_REQUIRE_EQUAL(combined, 5000000000u);
 

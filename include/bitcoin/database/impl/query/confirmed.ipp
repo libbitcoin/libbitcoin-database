@@ -30,6 +30,16 @@ namespace database {
 // These ensure both strong and candidate/confirmed indexation.
 
 TEMPLATE
+header_link CLASS::find_confirmed_block(const tx_link& link) const NOEXCEPT
+{
+    const auto block = find_strong(link);
+    if (is_confirmed_block(block))
+        return block;
+
+    return {};
+}
+
+TEMPLATE
 header_link CLASS::find_confirmed_block(
     const hash_digest& tx_hash) const NOEXCEPT
 {
@@ -98,7 +108,7 @@ TEMPLATE
 bool CLASS::is_confirmed_input(const point_link& link) const NOEXCEPT
 {
     // The spend.tx is strong *and* its block is confirmed (by height).
-    const auto fk = to_spending_tx(link);
+    const auto fk = to_input_tx(link);
     return !fk.is_terminal() && is_confirmed_tx(fk);
 }
 
@@ -115,9 +125,28 @@ bool CLASS::is_confirmed_spent_output(const output_link& link) const NOEXCEPT
 {
     // The spender is strong *and* its block is confirmed (by height).
     const auto ins = to_spenders(link);
-    return std::any_of(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+    return std::any_of(ins.cbegin(), ins.cend(), [&](const auto& in) NOEXCEPT
     {
         return is_confirmed_input(in);
+    });
+}
+
+TEMPLATE
+bool CLASS::is_confirmed_all_prevouts(const tx_link& link) const NOEXCEPT
+{
+    // If tx is confirmed then all prevouts must be confirmed.
+    if (is_confirmed_tx(link))
+        return true;
+
+    // A coinbase must itself be confirmed (one input and null).
+    if (is_coinbase(link))
+        return false;
+
+    // All prevouts of the tx's inputs must be confirmed.
+    const auto outs = to_prevouts(link);
+    return std::all_of(outs.cbegin(), outs.cend(), [&](const auto& out) NOEXCEPT
+    {
+        return is_confirmed_output(out);
     });
 }
 

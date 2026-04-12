@@ -32,22 +32,25 @@ namespace database {
 // A list of all unspent output transactions in canonical order.
 // Unconfirmed unspent are included at end of list in consistent order.
 
+// ununsed
 TEMPLATE
-code CLASS::get_unconfirmed_unspent(stopper& , unspents& ,
+code CLASS::get_unconfirmed_unspent(const stopper& , unspents& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};
 }
 
+// ununsed
 TEMPLATE
-code CLASS::get_confirmed_unspent(stopper& , unspents& ,
+code CLASS::get_confirmed_unspent(const stopper& , unspents& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};
 }
 
+// server/electrum
 TEMPLATE
-code CLASS::get_unspent(stopper& , unspents& ,
+code CLASS::get_unspent(const stopper& , unspents& ,
     const hash_digest& , bool ) const NOEXCEPT
 {
     return {};

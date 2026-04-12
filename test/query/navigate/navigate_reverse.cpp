@@ -44,10 +44,9 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_parent__always__expected)
     BOOST_REQUIRE_EQUAL(query.to_parent(5), header_link::terminal);
 }
 
-// to_address_outputs1
-// to_address_outputs2
+// to_touched_txs1
 
-BOOST_AUTO_TEST_CASE(query_address__to_address_outputs__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs1__galways__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -55,15 +54,124 @@ BOOST_AUTO_TEST_CASE(query_address__to_address_outputs__genesis__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::tx4));
+    BOOST_REQUIRE(query.set(test::tx5));
+    BOOST_REQUIRE(query.set(test::block3a, test::context, false, false));
 
-    output_links out{};
-    std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.to_address_outputs(cancel, out, test::genesis_address));
-    BOOST_REQUIRE_EQUAL(out.size(), 1u);
-    BOOST_REQUIRE_EQUAL(out.front(), query.to_output(0, 0));
+    output_links links{};
+    BOOST_REQUIRE(!query.to_address_outputs(links, test::block1a_address1));
+
+    tx_links out{};
+    BOOST_REQUIRE(!query.to_touched_txs(out, links));
+    BOOST_REQUIRE_EQUAL(out.size(), 4u);
+
+    // owners
+    BOOST_REQUIRE_EQUAL(out.at(0), 1u); // block1a (tx1)
+
+    // spenders of (0)
+    BOOST_REQUIRE_EQUAL(out.at(1), 2u); // block2a (tx2/3)
+    BOOST_REQUIRE_EQUAL(out.at(2), 4u); // tx4
+    BOOST_REQUIRE_EQUAL(out.at(3), 6u); // block3a (tx6)
 }
 
-// to_spending_tx
+// to_touched_txs2
+
+BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs2__always__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::tx4));
+    BOOST_REQUIRE(query.set(test::tx5));
+    BOOST_REQUIRE(query.set(test::block3a, test::context, false, false));
+
+    output_links links{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.to_address_outputs(cancel, links, test::block1a_address0));
+
+    tx_links out{};
+    BOOST_REQUIRE(!query.to_touched_txs(cancel, out, links));
+    BOOST_REQUIRE_EQUAL(out.size(), 10u);
+
+    // owners
+    BOOST_REQUIRE_EQUAL(out.at(0), 1u); // block1a (tx1)
+
+    // spenders of (0)
+    BOOST_REQUIRE_EQUAL(out.at(1), 2u); // block2a (tx2/3)
+    BOOST_REQUIRE_EQUAL(out.at(2), 4u); // tx4
+    BOOST_REQUIRE_EQUAL(out.at(3), 5u); // tx5
+    BOOST_REQUIRE_EQUAL(out.at(4), 6u); // block3a (tx6)
+
+    // owners (unspent)
+    BOOST_REQUIRE_EQUAL(out.at(5), 2u); // block2a (tx2)    [duplicate]
+    BOOST_REQUIRE_EQUAL(out.at(6), 3u); // block2a (tx3)
+    BOOST_REQUIRE_EQUAL(out.at(7), 4u); // tx4              [duplicate]
+    BOOST_REQUIRE_EQUAL(out.at(8), 5u); // tx5              [duplicate]
+    BOOST_REQUIRE_EQUAL(out.at(9), 6u); // block3a (tx6)    [duplicate]
+}
+
+// to_address_outputs1
+
+BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs1__always__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::tx4));
+    BOOST_REQUIRE(query.set(test::tx5));
+    BOOST_REQUIRE(query.set(test::block3a, test::context, false, false));
+
+    output_links out{};
+    BOOST_REQUIRE(!query.to_address_outputs(out, test::block1a_address1));
+
+    // There is 1 instance of the `script{ { { opcode::roll } } }` output.
+    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE_EQUAL(out.front(), 88u);
+}
+
+// to_address_outputs2
+
+BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs2__always__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::tx4));
+    BOOST_REQUIRE(query.set(test::tx5));
+    BOOST_REQUIRE(query.set(test::block3a, test::context, false, false));
+
+    output_links out{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.to_address_outputs(cancel, out, test::block1a_address0));
+
+    // There are 6 instances of the `script{ { { opcode::pick } } }` output.
+    BOOST_REQUIRE_EQUAL(out.size(), 6u);
+    BOOST_REQUIRE_EQUAL(out.at(0), 123u);
+    BOOST_REQUIRE_EQUAL(out.at(1), 116u);
+    BOOST_REQUIRE_EQUAL(out.at(2), 109u);
+    BOOST_REQUIRE_EQUAL(out.at(3), 102u);
+    BOOST_REQUIRE_EQUAL(out.at(4), 95u);
+    BOOST_REQUIRE_EQUAL(out.at(5), 81u);
+}
+
+// to_input_tx
 // to_output_tx
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_output_tx__to_output__expected)

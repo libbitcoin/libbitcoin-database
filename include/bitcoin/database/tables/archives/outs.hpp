@@ -48,10 +48,11 @@ struct outs
 
         inline bool from_data(reader& source) NOEXCEPT
         {
-            std::for_each(out_fks.begin(), out_fks.end(), [&](auto& fk) NOEXCEPT
-            {
-                fk = source.read_little_endian<out::integer, out::size>();
-            });
+            std::for_each(out_fks.begin(), out_fks.end(),
+                [&](auto& fk) NOEXCEPT
+                {
+                    fk = source.read_little_endian<out::integer, out::size>();
+                });
 
             BC_ASSERT(!source || source.get_read_position() == count() * out::size);
             return source;
@@ -59,10 +60,11 @@ struct outs
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            std::for_each(out_fks.begin(), out_fks.end(), [&](const auto& fk) NOEXCEPT
-            {
-                sink.write_little_endian<out::integer, out::size>(fk);
-            });
+            std::for_each(out_fks.cbegin(), out_fks.cend(),
+                [&](const auto& fk) NOEXCEPT
+                {
+                    sink.write_little_endian<out::integer, out::size>(fk);
+                });
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
@@ -109,15 +111,16 @@ struct outs
 
             auto out_fk = output_fk;
             const auto& outs = *tx_.outputs_ptr();
-            std::for_each(outs.begin(), outs.end(), [&](const auto& out) NOEXCEPT
-            {
-                sink.write_little_endian<out::integer, out::size>(out_fk);
+            std::for_each(outs.cbegin(), outs.cend(),
+                [&](const auto& out) NOEXCEPT
+                {
+                    sink.write_little_endian<out::integer, out::size>(out_fk);
 
-                // Calculate next corresponding output fk from serialized size.
-                // (variable_size(value) + (value + script)) - (value - parent)
-                out_fk += (variable_size(out->value()) + out->serialized_size() -
-                    value_parent_diff);
-            });
+                    // Calculate next corresponding output fk from serialized size.
+                    // (variable_size(value) + (value + script)) - (value - parent)
+                    out_fk += (variable_size(out->value()) +
+                        out->serialized_size() - value_parent_diff);
+                });
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;

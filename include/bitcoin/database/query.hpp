@@ -246,7 +246,7 @@ public:
     /// put to tx (reverse navigation)
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
     tx_link to_prevout_tx(const point_link& link) const NOEXCEPT;
-    tx_link to_spending_tx(const point_link& link) const NOEXCEPT;
+    tx_link to_input_tx(const point_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
     point_link to_point(const tx_link& link,
@@ -267,6 +267,7 @@ public:
 
     /// find confirmed objects (reverse navigation)
     header_link find_confirmed_block(const hash_digest& tx_hash) const NOEXCEPT;
+    header_link find_confirmed_block(const tx_link& link) const NOEXCEPT;
     point_link find_confirmed_spender(const point& prevout) const NOEXCEPT;
 
     /// output to spenders (reverse navigation)
@@ -311,10 +312,14 @@ public:
     point_link top_point(size_t bucket) const NOEXCEPT;
     tx_link top_tx(size_t bucket) const NOEXCEPT;
 
-    /// outputs enumeration
+    /// address outputs enumeration (reverse navigation)
+    code to_touched_txs(tx_links& out,
+        const output_links& outputs) const NOEXCEPT;
+    code to_touched_txs(const stopper& cancel, tx_links& out,
+        const output_links& outputs) const NOEXCEPT;
     code to_address_outputs(output_links& out,
         const hash_digest& key) const NOEXCEPT;
-    code to_address_outputs(stopper& cancel, output_links& out,
+    code to_address_outputs(const stopper& cancel, output_links& out,
         const hash_digest& key) const NOEXCEPT;
 
     /// Archive reads.
@@ -438,7 +443,7 @@ public:
     /// Fee rate tuples by tx, block or branch.
     bool get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT;
     bool get_block_fees(fee_rates& out, const header_link& link) const NOEXCEPT;
-    bool get_branch_fees(stopper& cancel, fee_rate_sets& out, size_t start,
+    bool get_branch_fees(const stopper& cancel, fee_rate_sets& out, size_t start,
         size_t count) const NOEXCEPT;
 
     /// Merkle.
@@ -551,6 +556,7 @@ public:
     bool is_confirmed_input(const point_link& link) const NOEXCEPT;
     bool is_confirmed_output(const output_link& link) const NOEXCEPT;
     bool is_confirmed_spent_output(const output_link& link) const NOEXCEPT;
+    bool is_confirmed_all_prevouts(const tx_link& link) const NOEXCEPT;
 
     /// Height index not used by these.
     bool is_strong_tx(const tx_link& link) const NOEXCEPT;
@@ -612,37 +618,37 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Native queries (outpoints, deduped, arbitrary sort).
-    ////code get_unconfirmed_unspent_outputs(stopper& cancel, outpoints& out,
+    ////code get_unconfirmed_unspent_outputs(const stopper& cancel, outpoints& out,
     ////    const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_unspent_outputs(stopper& cancel, outpoints& out,
+    code get_confirmed_unspent_outputs(const stopper& cancel, outpoints& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_minimum_unspent_outputs(stopper& cancel, outpoints& out,
+    code get_minimum_unspent_outputs(const stopper& cancel, outpoints& out,
         const hash_digest& key, uint64_t value, bool turbo=false) const NOEXCEPT;
-    code get_address_outputs(stopper& cancel, outpoints& out,
+    code get_address_outputs(const stopper& cancel, outpoints& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
 
     /// Electrum queries (histories, deduped, electrum sort).
-    code get_unconfirmed_history(stopper& cancel, histories& out,
+    code get_unconfirmed_history(const stopper& cancel, histories& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_history(stopper& cancel, histories& out,
+    code get_confirmed_history(const stopper& cancel, histories& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_history(stopper& cancel, histories& out,
+    code get_history(const stopper& cancel, histories& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
 
     /// Electrum queries (unspents, deduped, electrum sort).
-    code get_unconfirmed_unspent(stopper& cancel, unspents& out,
+    code get_unconfirmed_unspent(const stopper& cancel, unspents& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_unspent(stopper& cancel, unspents& out,
+    code get_confirmed_unspent(const stopper& cancel, unspents& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_unspent(stopper& cancel, unspents& out,
+    code get_unspent(const stopper& cancel, unspents& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
 
     /// Balance queries (universal, unconfirmed conflict resolution arbitrary).
-    code get_unconfirmed_balance(stopper& cancel, uint64_t& out,
+    code get_unconfirmed_balance(const stopper& cancel, uint64_t& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_balance(stopper& cancel, uint64_t& out,
+    code get_confirmed_balance(const stopper& cancel, uint64_t& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_balance(stopper& cancel, uint64_t& confirmed, uint64_t& combined,
+    code get_balance(const stopper& cancel, uint64_t& confirmed, uint64_t& combined,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
 
     /// Filters.
@@ -719,11 +725,6 @@ protected:
 
     /// Consensus.
     /// -----------------------------------------------------------------------
-
-    /// Called by block_confirmable (check bip30)
-    bool is_spent_coinbase(const tx_link& link, size_t count) const NOEXCEPT;
-    code spent_duplicates(const header_link& coinbase,
-        const context& ctx) const NOEXCEPT;
 
     /// Called by block_confirmable (populate and check double spends).
     system::error::transaction_error_t spendable(const point_set::point& point,
@@ -816,12 +817,16 @@ private:
 
     // Chain objects.
     template <typename Bool>
-    static inline bool push_bool(std_vector<Bool>& stack,
+    static bool push_bool(std_vector<Bool>& stack,
         const Bool& element) NOEXCEPT;
     template <typename Functor>
-    static inline code parallel_address_transform(stopper& cancel, bool turbo,
+    static code parallel_outpoint_transform(const stopper& cancel, bool turbo,
         outpoints& out, const output_links& links, Functor&& functor) NOEXCEPT;
-    static inline point::cptr make_point(hash_digest&& hash,
+    template <typename Functor>
+    static code parallel_history_transform(const stopper& cancel, bool turbo,
+        histories& out, const tx_links& links, Functor&& functor) NOEXCEPT;
+
+    static point::cptr make_point(hash_digest&& hash,
         uint32_t index) NOEXCEPT;
 
     // Not thread safe.

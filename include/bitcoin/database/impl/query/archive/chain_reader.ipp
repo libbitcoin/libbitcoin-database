@@ -352,7 +352,7 @@ outpoint CLASS::get_outpoint(const output_link& link) const NOEXCEPT
 TEMPLATE
 inpoint CLASS::get_spender(const point_link& link) const NOEXCEPT
 {
-    const auto tx_fk = to_spending_tx(link);
+    const auto tx_fk = to_input_tx(link);
     if (tx_fk.is_terminal())
         return {};
 
@@ -381,7 +381,7 @@ inpoints CLASS::get_spenders(const point& point) const NOEXCEPT
 
 TEMPLATE
 template <typename Bool>
-inline bool CLASS::push_bool(std_vector<Bool>& stack,
+bool CLASS::push_bool(std_vector<Bool>& stack,
     const Bool& element) NOEXCEPT
 {
     if (!element)

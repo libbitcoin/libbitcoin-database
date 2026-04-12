@@ -33,7 +33,7 @@ namespace database {
 
 // unused
 TEMPLATE
-code CLASS::get_unconfirmed_balance(stopper& cancel, uint64_t& out,
+code CLASS::get_unconfirmed_balance(const stopper& cancel, uint64_t& out,
     const hash_digest& key, bool turbo) const NOEXCEPT
 {
     // While duplicates are easily filtered out, conflict resolution is murky.
@@ -46,7 +46,7 @@ code CLASS::get_unconfirmed_balance(stopper& cancel, uint64_t& out,
 
 // server/native
 TEMPLATE
-code CLASS::get_confirmed_balance(stopper& cancel, uint64_t& out,
+code CLASS::get_confirmed_balance(const stopper& cancel, uint64_t& out,
     const hash_digest& key, bool turbo) const NOEXCEPT
 {
     outpoints outs{};
@@ -57,7 +57,7 @@ code CLASS::get_confirmed_balance(stopper& cancel, uint64_t& out,
     }
 
     // Use of to_confirmed_unspent_outputs() provides necessary deduplication.
-    out = std::accumulate(outs.begin(), outs.end(), zero,
+    out = std::accumulate(outs.cbegin(), outs.cend(), zero,
         [](size_t total, const outpoint& out) NOEXCEPT
         {
             return system::ceilinged_add(total, out.value());
@@ -68,7 +68,7 @@ code CLASS::get_confirmed_balance(stopper& cancel, uint64_t& out,
 
 // server/electrum
 TEMPLATE
-code CLASS::get_balance(stopper& cancel, uint64_t& confirmed,
+code CLASS::get_balance(const stopper& cancel, uint64_t& confirmed,
     uint64_t& combined, const hash_digest& key, bool turbo) const NOEXCEPT
 {
     // See notes on get_unconfirmed_balance().

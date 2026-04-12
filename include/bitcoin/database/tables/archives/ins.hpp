@@ -113,7 +113,7 @@ struct ins
 
             auto in_fk = input_fk;
             const auto& ins = *tx_.inputs_ptr();
-            std::for_each(ins.begin(), ins.end(), [&](const auto& in) NOEXCEPT
+            std::for_each(ins.cbegin(), ins.cend(), [&](const auto& in) NOEXCEPT
             {
                 sink.write_little_endian<uint32_t>(in->sequence());
                 sink.write_little_endian<in::integer, in::size>(in_fk);

@@ -45,7 +45,6 @@ enum error_t : uint8_t
     integrity_get_prevouts,
     integrity_block_confirmable1,
     integrity_block_confirmable2,
-    ////integrity_spent_duplicates,
 
     /// memory map
     open_open,

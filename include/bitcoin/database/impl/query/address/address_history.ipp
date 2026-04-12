@@ -30,34 +30,169 @@ namespace database {
 // Address history
 // ----------------------------------------------------------------------------
 // Canonically-sorted/deduped address history.
-
 // root txs (height:zero) sorted before transitive (height:max) txs.
 // tied-height transactions sorted by base16 txid (not converted).
+// All confirmed txs are root, unconfirmed may or may not be root.
 
+// server/electrum
 TEMPLATE
-code CLASS::get_unconfirmed_history(stopper& , histories& ,
-    const hash_digest& , bool ) const NOEXCEPT
+code CLASS::get_unconfirmed_history(const stopper& cancel, histories& out,
+    const hash_digest& key, bool turbo) const NOEXCEPT
 {
-    return {};
+    output_links outs{};
+    if (const auto ec = to_address_outputs(cancel, outs, key))
+        return ec;
+
+    tx_links txs{};
+    if (const auto ec = to_touched_txs(cancel, txs, outs))
+        return ec;
+
+    out.clear();
+    out.resize(txs.size());
+    return parallel_history_transform(cancel, turbo, out, txs,
+        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> history
+        {
+            if (cancel)
+                return {};
+
+            if (const auto block = find_strong(link); is_confirmed_block(block))
+            {
+                constexpr auto excluded = history::excluded_position;
+                return { system::chain::checkpoint{}, {}, excluded };
+            }
+            else
+            {
+                uint64_t fee{};
+                auto hash = get_tx_key(link);
+                if (hash == system::null_hash || !get_tx_fee(fee, link))
+                {
+                    fail = true;
+                }
+
+                const auto height = is_confirmed_all_prevouts(link) ?
+                    history::rooted_height : history::unrooted_height;
+
+                constexpr auto unconfirmed = history::unconfirmed_position;
+                return { { std::move(hash), height }, fee, unconfirmed };
+            }
+        });
 }
 
+// ununsed
 TEMPLATE
-code CLASS::get_confirmed_history(stopper& , histories& ,
-    const hash_digest& , bool ) const NOEXCEPT
+code CLASS::get_confirmed_history(const stopper& cancel, histories& out,
+    const hash_digest& key, bool turbo) const NOEXCEPT
 {
-    return {};
+    output_links outs{};
+    if (const auto ec = to_address_outputs(cancel, outs, key))
+        return ec;
+
+    tx_links txs{};
+    if (const auto ec = to_touched_txs(cancel, txs, outs))
+        return ec;
+
+    out.clear();
+    out.resize(txs.size());
+    return parallel_history_transform(cancel, turbo, out, txs,
+        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> history
+        {
+            if (cancel)
+                return {};
+
+            if (const auto block = find_strong(link); is_confirmed_block(block))
+            {
+                uint64_t fee{};
+                size_t height{}, position{};
+                auto hash = get_tx_key(link);
+                if (hash == system::null_hash || !get_tx_fee(fee, link) ||
+                    !get_height(height, block) ||
+                    !get_tx_position(position, link, block))
+                {
+                    fail = true;
+                }
+
+                return { { std::move(hash), height }, fee, position };
+            }
+            else
+            {
+                constexpr auto exclude = history::excluded_position;
+                return { system::chain::checkpoint{}, {}, exclude };
+            }
+        });
 }
 
+// server/electrum
 TEMPLATE
-code CLASS::get_history(stopper& , histories& ,
-    const hash_digest& , bool ) const NOEXCEPT
+code CLASS::get_history(const stopper& cancel, histories& out,
+    const hash_digest& key, bool turbo) const NOEXCEPT
 {
-    return {};
+    output_links outs{};
+    if (const auto ec = to_address_outputs(cancel, outs, key))
+        return ec;
+
+    tx_links links{};
+    if (const auto ec = to_touched_txs(cancel, links, outs))
+        return ec;
+
+    out.clear();
+    out.resize(links.size());
+    return parallel_history_transform(cancel, turbo, out, links,
+        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> history
+        {
+            if (cancel)
+                return {};
+
+            uint64_t fee{};
+            auto hash = get_tx_key(link);
+            if (hash == system::null_hash || !get_tx_fee(fee, link))
+                fail = true;
+
+            size_t height{}, position{};
+            if (const auto block = find_strong(link); is_confirmed_block(block))
+            {
+                if (!get_height(height, block) ||
+                    !get_tx_position(position, link, block))
+                    fail = true;
+            }
+            else
+            {
+                height = is_confirmed_all_prevouts(link) ?
+                    history::rooted_height : history::unrooted_height;
+            }
+
+            return { { std::move(hash), height }, fee, position };
+        });
 }
 
-// turbos
+// utilities
 // ----------------------------------------------------------------------------
-// protected
+// private/static
+
+TEMPLATE
+template <typename Functor>
+code CLASS::parallel_history_transform(const stopper& cancel, bool turbo,
+    histories& out, const tx_links& txs, Functor&& functor) NOEXCEPT
+{
+    const auto policy = poolstl::execution::par_if(turbo);
+    stopper fail{};
+
+    out.clear();
+    out.resize(txs.size());
+    std::transform(policy, txs.cbegin(), txs.cend(), out.begin(),
+        [&functor, &cancel, &fail](const auto& tx) NOEXCEPT
+        {
+            return functor(tx, cancel, fail);
+        });
+
+    if (fail)
+        return error::integrity;
+
+    if (cancel)
+        return error::canceled;
+
+    history::sort_and_dedup(out);
+    return error::success;
+}
 
 } // namespace database
 } // namespace libbitcoin

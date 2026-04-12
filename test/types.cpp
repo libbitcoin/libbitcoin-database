@@ -146,4 +146,84 @@ BOOST_AUTO_TEST_CASE(types__history_less_than__unconfirmed_hash_identical__expec
     BOOST_REQUIRE(!history::less_than{}(value, value));
 }
 
+// history.sort_and_dedup()
+
+BOOST_AUTO_TEST_CASE(types__history_sort_and_dedup__unsorted_with_duplicates_mixed__sorted_and_deduped)
+{
+    constexpr auto h1 = base16_hash("0000000000000000000000000000000000000000000000000000000000000001");
+    constexpr auto h2 = base16_hash("0000000000000000000000000000000000000000000000000000000000000002");
+    std::vector<history> values
+    {
+        { { h2,              0 }, 0, 0 },               // unconfirmed
+        { { hash_digest{}, 200 }, 0, 5 },               // confirmed
+        { { h1,              0 }, 0, 0 },               // unconfirmed (duplicate will be removed)
+        { { h1,              0 }, 0, 0 },               // unconfirmed duplicate
+        { { hash_digest{}, 100 }, 0, 10 },              // confirmed
+        { { hash_digest{}, 100 }, 0, 10 }               // confirmed duplicate
+    };
+
+    history::sort_and_dedup(values);
+    BOOST_REQUIRE_EQUAL(values.size(), 4u);
+    BOOST_REQUIRE_EQUAL(values[0].tx.height(), 100u);   // confirmed, lowest height
+    BOOST_REQUIRE_EQUAL(values[1].tx.height(), 200u);   // confirmed
+    BOOST_REQUIRE_EQUAL(values[2].tx.height(), 0u);     // unconfirmed (h1)
+    BOOST_REQUIRE_EQUAL(values[3].tx.height(), 0u);     // unconfirmed (h2)
+}
+
+BOOST_AUTO_TEST_CASE(history__sort_and_dedup__exclusions__removes_excluded_items)
+{
+    std::vector<history> items
+    {
+        history{ { hash_digest{}, 1 }, 0, max_size_t }, // excluded
+        history{ { hash_digest{}, 2 }, 0, max_size_t }, // excluded
+        history{ { hash_digest{}, 3 }, 0, 10 },         // valid
+        history{ { hash_digest{}, 3 }, 0,  5 },         // valid (same height, lower position)
+        history{ { hash_digest{}, 3 }, 0, 10 }          // duplicate
+    };
+
+    history::sort_and_dedup(items);
+    BOOST_REQUIRE_EQUAL(items.size(), 2u);
+    BOOST_REQUIRE_EQUAL(items[0].position, 5u);
+    BOOST_REQUIRE_EQUAL(items[1].position, 10u);
+}
+
+// unspent.sort_and_dedup()
+
+BOOST_AUTO_TEST_CASE(types__unspent_sort_and_dedup__unsorted_with_duplicates_mixed__sorted_and_deduped)
+{
+    const outpoint lo{ { {}, 0 }, 0 };
+    const outpoint hi{ { {}, 5 }, 0 };
+    std::vector<unspent> values
+    {
+        { hi, 0,   0 },                                 // unconfirmed
+        { lo, 200, 3 },                                 // confirmed
+        { lo, 100, 5 },                                 // confirmed
+        { lo, 100, 5 },                                 // confirmed duplicate
+        { hi, 0,   0 }                                  // unconfirmed duplicate
+    };
+
+    unspent::sort_and_dedup(values);
+    BOOST_REQUIRE_EQUAL(values.size(), 3u);
+    BOOST_REQUIRE_EQUAL(values[0].height, 100u);        // confirmed, lowest height
+    BOOST_REQUIRE_EQUAL(values[1].height, 200u);        // confirmed
+    BOOST_REQUIRE_EQUAL(values[2].height, 0u);          // unconfirmed
+}
+
+BOOST_AUTO_TEST_CASE(unspent__sort_and_dedup__exclusions__removes_excluded_items)
+{
+    unspents items
+    {
+        unspent{ { {}, 1 },  10, max_size_t },          // excluded
+        unspent{ { {}, 2 }, 200, max_size_t },          // excluded
+        unspent{ { {}, 3 },  50, 10 },                  // valid confirmed
+        unspent{ { {}, 4 },  50,  5 },                  // valid confirmed (same height, lower position)
+        unspent{ { {}, 3 },  50, 10 }                   // duplicate
+    };
+
+    unspent::sort_and_dedup(items);
+    BOOST_REQUIRE_EQUAL(items.size(), 2u);
+    BOOST_REQUIRE_EQUAL(items[0].position, 5u);
+    BOOST_REQUIRE_EQUAL(items[1].position, 10u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

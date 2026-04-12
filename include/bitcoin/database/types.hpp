@@ -70,9 +70,13 @@ using data_chunk = system::data_chunk;
 /// Common system::chain aliases.
 /// ---------------------------------------------------------------------------
 
-using inpoint = system::chain::point;
-using outpoint = system::chain::outpoint;
 using checkpoint = system::chain::checkpoint;
+using outpoint = system::chain::outpoint;
+using inpoint = system::chain::point;
+
+/// Sorted and deduped.
+using outpoints = std::set<outpoint>;
+using inpoints = std::set<inpoint>;
 
 /// Common carriers.
 /// ---------------------------------------------------------------------------
@@ -104,33 +108,60 @@ struct span
 
 struct BCD_API unspent
 {
+    static constexpr size_t excluded_position = max_size_t;
+
     struct less_than
     {
         bool operator()(const unspent& a, const unspent& b) const NOEXCEPT;
     };
 
+    struct equal_to
+    {
+        bool operator()(const unspent& a, const unspent& b) const NOEXCEPT;
+    };
+
+    struct exclude
+    {
+        bool operator()(const unspent& element) const NOEXCEPT;
+    };
+
+    static void sort_and_dedup(std::vector<unspent>& unspent) NOEXCEPT;
+
     outpoint tx{};
     size_t height{};
     size_t position{};
 };
+using unspents = std::vector<unspent>;
 
 struct BCD_API history
 {
+    static constexpr size_t rooted_height = zero;
+    static constexpr size_t unrooted_height = max_size_t;
+    static constexpr size_t excluded_position = max_size_t;
+    static constexpr size_t unconfirmed_position = zero;
+
     struct less_than
     {
         bool operator()(const history& a, const history& b) const NOEXCEPT;
     };
 
+    struct equal_to
+    {
+        bool operator()(const history& a, const history& b) const NOEXCEPT;
+    };
+
+    struct exclude
+    {
+        bool operator()(const history& element) const NOEXCEPT;
+    };
+
+    static void sort_and_dedup(std::vector<history>& history) NOEXCEPT;
+
     checkpoint tx{};
     uint64_t fee{};
     size_t position{};
 };
-
-/// Sorted and deduped.
-using inpoints = std::set<inpoint>;
-using outpoints = std::set<outpoint>;
-using unspents = std::set<unspent, unspent::less_than>;
-using histories = std::set<history, history::less_than>;
+using histories = std::vector<history>;
 
 } // namespace database
 } // namespace libbitcoin

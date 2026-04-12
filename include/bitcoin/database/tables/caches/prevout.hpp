@@ -100,8 +100,8 @@ struct prevout
 
             // Count is written as a tx link so the table can remain an array.
             sink.write_variable(number);
-            std::for_each(cons.begin(), cons.end(), write_conflict);
-            std::for_each(std::next(txs.begin()), txs.end(), write_tx);
+            std::for_each(cons.cbegin(), cons.cend(), write_conflict);
+            std::for_each(std::next(txs.cbegin()), txs.cend(), write_tx);
 
             BC_ASSERT(!sink || (sink.get_write_position() == count()));
             return sink;

@@ -25,7 +25,9 @@ using namespace system;
 constexpr hash_digest two_hash = from_uintx(uint256_t(two));
 constexpr database::context context{ 0x01020304, 0x11121314, 0x21222324 };
 
-constexpr hash_digest genesis_address = base16_hash("740485f380ff6379d11ef6fe7d7cdd68aea7f8bd0d953d9fdf3531fb7d531833");
+constexpr hash_digest genesis_address  = base16_hash("740485f380ff6379d11ef6fe7d7cdd68aea7f8bd0d953d9fdf3531fb7d531833");
+constexpr hash_digest block1a_address0 = base16_hash("fab04811b1d0379bf78c2a41902368c200d675788e4bff8c88ff543836e4fca1");
+constexpr hash_digest block1a_address1 = base16_hash("067bd624c5840ed0d5b65597bafcde68f07fa9d87d3b43292b3199e49a514e59");
 
 constexpr hash_digest block0_hash = base16_hash("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
 constexpr hash_digest block1_hash = base16_hash("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048");
@@ -245,7 +247,7 @@ const block block1a
                 },
                 input
                 {
-                    point{ two_hash, 0x2b },            // missing prevout
+                    point{ two_hash, 0x2b },    // missing prevout
                     script{ { { opcode::op_return }, { opcode::roll } } },
                     witness{ "[424242]" },
                     0x19    // sequence

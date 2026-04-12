@@ -31,6 +31,8 @@ const auto events_handler = [](auto, auto) {};
 extern const database::context context;
 
 extern const system::hash_digest genesis_address;
+extern const system::hash_digest block1a_address0;
+extern const system::hash_digest block1a_address1;
 
 extern const system::hash_digest block0_hash;
 extern const system::hash_digest block1_hash;
