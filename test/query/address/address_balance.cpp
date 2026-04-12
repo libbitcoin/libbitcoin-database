@@ -35,19 +35,19 @@ BOOST_AUTO_TEST_CASE(query_address__get_balance__turbo_genesis__expected)
     BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    uint64_t combined{};
+    uint64_t unconfirmed{};
     const std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_unconfirmed_balance(cancel, combined, test::genesis_address, true));
-    BOOST_REQUIRE_EQUAL(combined, 5000000000u);
+    BOOST_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::genesis_address, true));
+    BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
 
     uint64_t confirmed{};
     BOOST_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::genesis_address, true));
     BOOST_REQUIRE_EQUAL(confirmed, 5000000000u);
 
-    confirmed = combined = 42;
-    BOOST_REQUIRE(!query.get_balance(cancel, confirmed, combined, test::genesis_address, true));
+    confirmed = unconfirmed = 42;
+    BOOST_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::genesis_address, true));
     BOOST_REQUIRE_EQUAL(confirmed, 5000000000u);
-    BOOST_REQUIRE_EQUAL(combined, 5000000000u);
+    BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
 }
 
 BOOST_AUTO_TEST_CASE(query_address__get_balance__genesis__expected)
@@ -59,19 +59,19 @@ BOOST_AUTO_TEST_CASE(query_address__get_balance__genesis__expected)
     BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    uint64_t combined{};
+    uint64_t unconfirmed{};
     const std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_unconfirmed_balance(cancel, combined, test::genesis_address));
-    BOOST_REQUIRE_EQUAL(combined, 5000000000u);
+    BOOST_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::genesis_address));
+    BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
 
     uint64_t confirmed{};
     BOOST_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::genesis_address));
     BOOST_REQUIRE_EQUAL(confirmed, 5000000000u);
 
-    confirmed = combined = 42;
-    BOOST_REQUIRE(!query.get_balance(cancel, confirmed, combined, test::genesis_address));
+    confirmed = unconfirmed = 42;
+    BOOST_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::genesis_address));
     BOOST_REQUIRE_EQUAL(confirmed, 5000000000u);
-    BOOST_REQUIRE_EQUAL(combined, 5000000000u);
+    BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

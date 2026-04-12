@@ -33,15 +33,16 @@ namespace database {
 
 // unused
 TEMPLATE
-code CLASS::get_unconfirmed_balance(const stopper& cancel, uint64_t& out,
-    const hash_digest& key, bool turbo) const NOEXCEPT
+code CLASS::get_unconfirmed_balance(const stopper& , uint64_t& out,
+    const hash_digest& , bool ) const NOEXCEPT
 {
     // While duplicates are easily filtered out, conflict resolution is murky.
     // An output may have multiple directly or indirectly conflicting spends,
     // and other spends and receives may not be visible. An unconfirmed balance
     // is therefore inherehtly ambiguous. Given the lack of tx pooling,
-    // presently we just return combined = confirmed (net zero unconfirmed).
-    return get_confirmed_balance(cancel, out, key, turbo);
+    // presently we just return zero unconfirmed.
+    out = zero;
+    return error::success;
 }
 
 // server/native
@@ -69,11 +70,11 @@ code CLASS::get_confirmed_balance(const stopper& cancel, uint64_t& out,
 // server/electrum
 TEMPLATE
 code CLASS::get_balance(const stopper& cancel, uint64_t& confirmed,
-    uint64_t& combined, const hash_digest& key, bool turbo) const NOEXCEPT
+    uint64_t& unconfirmed, const hash_digest& key, bool turbo) const NOEXCEPT
 {
     // See notes on get_unconfirmed_balance().
     const auto ec = get_confirmed_balance(cancel, confirmed, key, turbo);
-    combined = confirmed;
+    unconfirmed = zero;
     return ec;
 }
 
