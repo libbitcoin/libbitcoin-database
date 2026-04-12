@@ -692,4 +692,83 @@ BOOST_AUTO_TEST_CASE(query_confirmed__block_confirmable__unconfirmed_double_spen
     BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
 }
 
+// is_confirmed_all_prevouts
+
+BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__genesis__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.is_confirmed_all_prevouts(0));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__unconfirmed_coinbase__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    // Block 1b has single null input so archived as (strong) coinbase.
+    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }, false, true));
+    BOOST_REQUIRE(!query.is_confirmed_all_prevouts(1));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__confirmed_coinbase__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    // Block 1b has single null input so archived as (strong) coinbase.
+    BOOST_REQUIRE(query.set(test::block1b, context{ 0, 1, 0 }, false, true));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.is_confirmed_all_prevouts(1));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__missing_prevouts__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    // Tx1 is of block1a and consists of three inputs that do not exist.
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, true));
+    BOOST_REQUIRE(!query.is_confirmed_all_prevouts(1));
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__prevouts_confirmed__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    // Block 1a has 1 tx(1) with 2 outputs.
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, true));
+
+    // Block 2a first tx(2) spends both block 1a outputs.
+    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }, false, true));
+
+    // Block 1a tx(1) is strong and not confirmed.
+    BOOST_REQUIRE(!query.is_confirmed_all_prevouts(2));
+
+    // Block 1a tx(1) is strong and confirmed.
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.is_confirmed_all_prevouts(2));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

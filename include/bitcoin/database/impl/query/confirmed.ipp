@@ -124,11 +124,19 @@ bool CLASS::is_confirmed_spent_output(const output_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_confirmed_all_prevouts(const tx_link& link) const NOEXCEPT
 {
-    // All prevouts of the tx's inputs are confirmed.
-    const auto ins = to_points(link);
-    return std::all_of(ins.cbegin(), ins.cend(), [&](const auto& in) NOEXCEPT
+    // If tx is confirmed then all prevouts must be confirmed.
+    if (is_confirmed_tx(link))
+        return true;
+
+    // A coinbase must itself be confirmed (one input and null).
+    if (is_coinbase(link))
+        return false;
+
+    // All prevouts of the tx's inputs must be confirmed.
+    const auto outs = to_prevouts(link);
+    return std::all_of(outs.cbegin(), outs.cend(), [&](const auto& out) NOEXCEPT
     {
-        return is_confirmed_input(in);
+        return is_confirmed_output(out);
     });
 }
 
