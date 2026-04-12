@@ -247,7 +247,7 @@ const block block1a
                 },
                 input
                 {
-                    point{ two_hash, 0x2b },            // missing prevout
+                    point{ two_hash, 0x2b },    // missing prevout
                     script{ { { opcode::op_return }, { opcode::roll } } },
                     witness{ "[424242]" },
                     0x19    // sequence
