@@ -30,6 +30,16 @@ namespace database {
 // These ensure both strong and candidate/confirmed indexation.
 
 TEMPLATE
+header_link CLASS::find_confirmed_block(const tx_link& link) const NOEXCEPT
+{
+    const auto block = find_strong(link);
+    if (is_confirmed_block(block))
+        return block;
+
+    return {};
+}
+
+TEMPLATE
 header_link CLASS::find_confirmed_block(
     const hash_digest& tx_hash) const NOEXCEPT
 {

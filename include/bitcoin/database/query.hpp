@@ -267,6 +267,7 @@ public:
 
     /// find confirmed objects (reverse navigation)
     header_link find_confirmed_block(const hash_digest& tx_hash) const NOEXCEPT;
+    header_link find_confirmed_block(const tx_link& link) const NOEXCEPT;
     point_link find_confirmed_spender(const point& prevout) const NOEXCEPT;
 
     /// output to spenders (reverse navigation)
@@ -816,12 +817,16 @@ private:
 
     // Chain objects.
     template <typename Bool>
-    static inline bool push_bool(std_vector<Bool>& stack,
+    static bool push_bool(std_vector<Bool>& stack,
         const Bool& element) NOEXCEPT;
     template <typename Functor>
-    static inline code parallel_address_transform(const stopper& cancel, bool turbo,
+    static code parallel_outpoint_transform(const stopper& cancel, bool turbo,
         outpoints& out, const output_links& links, Functor&& functor) NOEXCEPT;
-    static inline point::cptr make_point(hash_digest&& hash,
+    template <typename Functor>
+    static code parallel_history_transform(const stopper& cancel, bool turbo,
+        histories& out, const tx_links& links, Functor&& functor) NOEXCEPT;
+
+    static point::cptr make_point(hash_digest&& hash,
         uint32_t index) NOEXCEPT;
 
     // Not thread safe.
