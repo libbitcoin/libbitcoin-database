@@ -37,15 +37,15 @@ BOOST_AUTO_TEST_CASE(query_address__get_history__turbo_genesis__expected)
 
     histories out{};
     const std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_unconfirmed_history(cancel, out, test::genesis_address, true));
+    BOOST_REQUIRE(!query.get_unconfirmed_history(cancel, out, test::genesis_address0, true));
     BOOST_REQUIRE(out.empty());
 
     out.clear();
-    BOOST_REQUIRE(!query.get_confirmed_history(cancel, out, test::genesis_address, true));
+    BOOST_REQUIRE(!query.get_confirmed_history(cancel, out, test::genesis_address0, true));
     BOOST_CHECK_EQUAL(out.size(), 1u);
 
     out.clear();
-    BOOST_REQUIRE(!query.get_history(cancel, out, test::genesis_address, true));
+    BOOST_REQUIRE(!query.get_history(cancel, out, test::genesis_address0, true));
     BOOST_CHECK_EQUAL(out.size(), 1u);
 }
 
@@ -60,15 +60,15 @@ BOOST_AUTO_TEST_CASE(query_address__get_history__genesis__expected)
 
     histories out{};
     const std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_unconfirmed_history(cancel, out, test::genesis_address));
+    BOOST_REQUIRE(!query.get_unconfirmed_history(cancel, out, test::genesis_address0));
     BOOST_CHECK_EQUAL(out.size(), 0u);
 
     out.clear();
-    BOOST_REQUIRE(!query.get_unconfirmed_history(cancel, out, test::genesis_address));
+    BOOST_REQUIRE(!query.get_unconfirmed_history(cancel, out, test::genesis_address0));
     BOOST_CHECK_EQUAL(out.size(), 0u);
 
     out.clear();
-    BOOST_REQUIRE(!query.get_history(cancel, out, test::genesis_address));
+    BOOST_REQUIRE(!query.get_history(cancel, out, test::genesis_address0));
     BOOST_CHECK_EQUAL(out.size(), 1u);
 }
 

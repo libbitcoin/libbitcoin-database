@@ -26,8 +26,6 @@ BOOST_FIXTURE_TEST_SUITE(query_address_tests, test::directory_setup_fixture)
 // get_confirmed_unspent
 // get_unspent
 
-const auto genesis_address = test::genesis_address;
-
 BOOST_AUTO_TEST_CASE(query_address__get_unspent__turbo_genesis__expected)
 {
     settings settings{};
@@ -39,15 +37,15 @@ BOOST_AUTO_TEST_CASE(query_address__get_unspent__turbo_genesis__expected)
 
     unspents out{};
     const std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_unconfirmed_unspent(cancel, out, genesis_address, true));
+    BOOST_REQUIRE(!query.get_unconfirmed_unspent(cancel, out, test::genesis_address0, true));
     BOOST_REQUIRE(out.empty());
 
     out.clear();
-    BOOST_REQUIRE(!query.get_confirmed_unspent(cancel, out, genesis_address, true));
+    BOOST_REQUIRE(!query.get_confirmed_unspent(cancel, out, test::genesis_address0, true));
     BOOST_REQUIRE(out.empty());
 
     out.clear();
-    BOOST_REQUIRE(!query.get_unspent(cancel, out, genesis_address, true));
+    BOOST_REQUIRE(!query.get_unspent(cancel, out, test::genesis_address0, true));
     BOOST_REQUIRE(out.empty());
 }
 
@@ -62,15 +60,15 @@ BOOST_AUTO_TEST_CASE(query_address__get_unspent__genesis__expected)
 
     unspents out{};
     const std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_unconfirmed_unspent(cancel, out, genesis_address));
+    BOOST_REQUIRE(!query.get_unconfirmed_unspent(cancel, out, test::genesis_address0));
     BOOST_REQUIRE(out.empty());
 
     out.clear();
-    BOOST_REQUIRE(!query.get_confirmed_unspent(cancel, out, genesis_address));
+    BOOST_REQUIRE(!query.get_confirmed_unspent(cancel, out, test::genesis_address0));
     BOOST_REQUIRE(out.empty());
 
     out.clear();
-    BOOST_REQUIRE(!query.get_unspent(cancel, out, genesis_address));
+    BOOST_REQUIRE(!query.get_unspent(cancel, out, test::genesis_address0));
     BOOST_REQUIRE(out.empty());
 }
 
