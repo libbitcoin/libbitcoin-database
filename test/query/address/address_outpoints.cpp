@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outputs__turbo_genesis
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     outpoints out{};
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outputs__genesis__expe
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     outpoints out{};
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outputs__turbo_above__ex
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     outpoints out{};
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outputs__above__excluded
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     outpoints out{};
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outputs__at__included)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     outpoints out{};
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outputs__below__included
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     outpoints out{};
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__turbo_genesis__expected
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     outpoints out{};
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__genesis__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     outpoints out{};
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_address_outputs__cancel__canceled_false)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     outpoints out{};

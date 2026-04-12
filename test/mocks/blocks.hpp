@@ -20,13 +20,14 @@
 #define LIBBITCOIN_DATABASE_TEST_MOCKS_BLOCKS_HPP
 
 #include "../test.hpp"
+#include "../mocks/chunk_store.hpp"
 
 namespace test {
-
+    
+using store_t = test::chunk_store;
+using query_t = test::query_accessor;
 using block_data = system::data_array<215>;
 using header_data = system::data_array<80>;
-using store_t = database::store<database::map>;
-using query_t = database::query<database::store<database::map>>;
 const auto events_handler = [](auto, auto) {};
 extern const database::context context;
 
@@ -107,6 +108,8 @@ extern const system::chain::block block_valid_spend_internal_2b;
 
 bool setup_three_block_store(query_t& query) NOEXCEPT;
 bool setup_three_block_witness_store(query_t& query) NOEXCEPT;
+bool setup_three_block_confirmed_address_store(query_t& query) NOEXCEPT;
+bool setup_three_block_unconfirmed_address_store(query_t& query) NOEXCEPT;
 
 } // namespace test
 

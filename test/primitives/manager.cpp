@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(manager__capacity__reserved__expected)
 
 BOOST_AUTO_TEST_CASE(manager__truncate__terminal_slab__false_unchanged)
 {
-    data_chunk buffer;
+    data_chunk buffer{};
     test::chunk_storage file(buffer);
     manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE(!instance.truncate(linkage<4>::terminal));
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(manager__truncate__half_full_slab__true_changed)
 
 BOOST_AUTO_TEST_CASE(manager__allocate__eof_slab__terminal_unchanged)
 {
-    data_chunk buffer;
+    data_chunk buffer{};
     test::chunk_storage file(buffer);
     manager<linkage<7>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(storage::eof), linkage<7>::terminal);
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__eof_slab__terminal_unchanged)
 
 BOOST_AUTO_TEST_CASE(manager__allocate__terminal_slab__terminal_unchanged)
 {
-    data_chunk buffer;
+    data_chunk buffer{};
     test::chunk_storage file(buffer);
     manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(linkage<4>::terminal), linkage<4>::terminal);
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__terminal_slab__terminal_unchanged)
 BOOST_AUTO_TEST_CASE(manager__allocate__empty_slab__expected)
 {
     constexpr auto expected = 42u;
-    data_chunk buffer;
+    data_chunk buffer{};
     test::chunk_storage file(buffer);
     manager<linkage<4>, key1, max_size_t> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(expected), zero);
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(manager__count__33_record__expected)
 
 BOOST_AUTO_TEST_CASE(manager__truncate__terminal_record__false_unchanged)
 {
-    data_chunk buffer;
+    data_chunk buffer{};
     test::chunk_storage file(buffer);
     manager<linkage<2>, key0, 5u> instance(file);
     BOOST_REQUIRE(!instance.truncate(linkage<2>::terminal));
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(manager__truncate__half_full_record__true_logical_size_chan
 
 BOOST_AUTO_TEST_CASE(manager__allocate__terminal_empty_record__terminal_unchanged)
 {
-    data_chunk buffer;
+    data_chunk buffer{};
     test::chunk_storage file(buffer);
     manager<linkage<2>, key0, 5u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(linkage<2>::terminal), linkage<2>::terminal);
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(manager__allocate__terminal_non_empty_record__expected)
 
 BOOST_AUTO_TEST_CASE(manager__allocate__empty_record__expected)
 {
-    data_chunk buffer;
+    data_chunk buffer{};
     test::chunk_storage file(buffer);
     manager<linkage<2>, key0, 5u> instance(file);
     BOOST_REQUIRE_EQUAL(instance.allocate(1), 0u);

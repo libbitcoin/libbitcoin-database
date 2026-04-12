@@ -51,7 +51,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(arrayhead__create__size__expected)
 {
-    data_chunk data;
+    data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__create__size__expected)
 
 BOOST_AUTO_TEST_CASE(arrayhead__verify__uncreated__false)
 {
-    data_chunk data;
+    data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
     ////BOOST_REQUIRE(head.create());
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__verify__uncreated__false)
 
 BOOST_AUTO_TEST_CASE(arrayhead__verify__created__false)
 {
-    data_chunk data;
+    data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__verify__created__false)
 
 BOOST_AUTO_TEST_CASE(arrayhead__get_body_count__created__zero)
 {
-    data_chunk data;
+    data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__get_body_count__created__zero)
 
 BOOST_AUTO_TEST_CASE(arrayhead__set_body_count__get_body_count__expected)
 {
-    data_chunk data;
+    data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__set_body_count__get_body_count__expected)
 
 BOOST_AUTO_TEST_CASE(arrayhead__clear__get_body_count__zero)
 {
-    data_chunk data;
+    data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
     BOOST_REQUIRE(head.create());

@@ -1134,17 +1134,12 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__get_point_key__always__expected)
     // tx4/5 prevouts are all block1a.tx1.
     BOOST_CHECK(query.set(test::tx4));
     BOOST_CHECK(query.set(test::tx5));
-    ////BOOST_CHECK_EQUAL(query.get_point_hash(0), test::block1a.transactions_ptr()->front()->hash(false));
     BOOST_CHECK_EQUAL(query.get_point_hash(1), test::block1a.transactions_ptr()->front()->hash(false));
     BOOST_CHECK_EQUAL(query.get_point_hash(2), test::block1a.transactions_ptr()->front()->hash(false));
-    ////BOOST_CHECK_EQUAL(query.get_point_hash(3), system::null_hash);
 
     // block1a adds three prevouts of two txs.
     BOOST_CHECK(query.set(test::block1a, context{}, false, false));
-    ////BOOST_CHECK_EQUAL(query.get_point_hash(3), system::one_hash);
     BOOST_CHECK_EQUAL(query.get_point_hash(4), system::one_hash);
-    ////BOOST_CHECK_EQUAL(query.get_point_hash(5), test::two_hash);
-    ////BOOST_CHECK_EQUAL(query.get_point_hash(6), system::null_hash);
 }
 
 BOOST_AUTO_TEST_CASE(query_chain_writer__get_tx_key__always__expected)
@@ -1494,85 +1489,15 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__get_spenders__unspent_or_not_found__exp
 
     // Caller should always test for nullptr.
     BOOST_CHECK(query.get_spenders(output_link::terminal, true)->empty());
-    ////BOOST_CHECK(query.get_spenders_index(tx_link::terminal, 0, true)->empty());
-    ////BOOST_CHECK(query.get_spenders_index(tx_link::terminal, 1, true)->empty());
-
     BOOST_CHECK(query.get_spenders(query.to_output(0, 0), true)->empty());
     BOOST_CHECK(query.get_spenders(query.to_output(0, 1), true)->empty());
-    ////BOOST_CHECK(query.get_spenders_index(0, 0, true)->empty());
-    ////BOOST_CHECK(query.get_spenders_index(0, 1, true)->empty());
-
     BOOST_CHECK(query.get_spenders(query.to_output(1, 0), true)->empty());
     BOOST_CHECK(query.get_spenders(query.to_output(1, 1), true)->empty());
-    ////BOOST_CHECK(query.get_spenders_index(1, 0, true)->empty());
-    ////BOOST_CHECK(query.get_spenders_index(1, 1, true)->empty());
-
     BOOST_CHECK(query.get_spenders(query.to_output(2, 0), true)->empty());
     BOOST_CHECK(query.get_spenders(query.to_output(2, 1), true)->empty());
-    ////BOOST_CHECK(query.get_spenders_index(2, 0, true)->empty());
-    ////BOOST_CHECK(query.get_spenders_index(2, 1, true)->empty());
-
     BOOST_CHECK(query.get_spenders(query.to_output(3, 0), true)->empty());
     BOOST_CHECK(query.get_spenders(query.to_output(3, 1), true)->empty());
-    ////BOOST_CHECK(query.get_spenders_index(3, 0, true)->empty());
-    ////BOOST_CHECK(query.get_spenders_index(3, 1, true)->empty());
 }
-
-////BOOST_AUTO_TEST_CASE(query_chain_writer__get_spenders__found_and_spent__expected)
-////{
-////    settings settings{};
-////    settings.path = TEST_DIRECTORY;
-////    test::chunk_store store{ settings };
-////    test::query_accessor query{ store };
-////    BOOST_CHECK(!store.create(test::events_handler));
-////    BOOST_CHECK(query.initialize(test::genesis));
-////
-////    // Neither of the two block1a outputs spent yet.
-////    BOOST_CHECK(query.set(test::block1a, test::context, false, false));
-////    BOOST_CHECK(query.get_spenders(query.to_output(1, 0), true)->empty());
-////    BOOST_CHECK(query.get_spenders(query.to_output(1, 1), true)->empty());
-////    BOOST_CHECK(query.get_spenders(query.to_output(1, 2), true)->empty());
-////    BOOST_CHECK(query.get_spenders_index(1, 0, true)->empty());
-////    BOOST_CHECK(query.get_spenders_index(1, 1, true)->empty());
-////    BOOST_CHECK(query.get_spenders_index(1, 2, true)->empty());
-////
-////    // Each of the two outputs of block1a spent once.
-////    BOOST_CHECK(query.set(test::block2a, test::context, false, false));
-////
-////    BOOST_CHECK_EQUAL(query.get_spenders(query.to_output(1, 0), true)->size(), 1u);
-////    BOOST_CHECK_EQUAL(query.get_spenders(query.to_output(1, 1), true)->size(), 1u);
-////    BOOST_CHECK(query.get_spenders(query.to_output(1, 2), true)->empty());
-////    BOOST_CHECK_EQUAL(query.get_spenders_index(1, 0, true)->size(), 1u);
-////    BOOST_CHECK_EQUAL(query.get_spenders_index(1, 1, true)->size(), 1u);
-////    BOOST_CHECK_EQUAL(query.get_spenders_index(1, 2, true)->size(), 0u);
-////
-////    // Match the two spenders.
-////    const auto block_inputs = test::block2a.transactions_ptr()->front()->inputs_ptr();
-////    BOOST_CHECK(*query.get_spenders(query.to_output(1, 0), true)->front() == *(*block_inputs).front());
-////    BOOST_CHECK(*query.get_spenders(query.to_output(1, 1), true)->front() == *(*block_inputs).back());
-////    BOOST_CHECK(*query.get_spenders(1, 0)->front() == *(*block_inputs).front());
-////    BOOST_CHECK(*query.get_spenders(1, 1)->front() == *(*block_inputs).back());
-////
-////    // Each of the two outputs of block1a spent twice (two unconfirmed double spends).
-////    BOOST_CHECK(query.set(test::tx4));
-////    BOOST_CHECK_EQUAL(query.get_spenders(query.to_output(1, 0), true)->size(), 2u);
-////    BOOST_CHECK_EQUAL(query.get_spenders(query.to_output(1, 1), true)->size(), 2u);
-////    BOOST_CHECK(query.get_spenders(query.to_output(1, 2), true)->empty());
-////    BOOST_CHECK_EQUAL(query.get_spenders_index(1, 0, true)->size(), 2u);
-////    BOOST_CHECK_EQUAL(query.get_spenders_index(1, 1, true)->size(), 2u);
-////    BOOST_CHECK_EQUAL(query.get_spenders_index(1, 2, true)->size(), 0u);
-////
-////    // Match the four spenders.
-////    const auto tx_inputs = test::tx4.inputs_ptr();
-////    BOOST_CHECK(*query.get_spenders(query.to_output(1, 0), true)->front() == *(*tx_inputs).front());
-////    BOOST_CHECK(*query.get_spenders(query.to_output(1, 1), true)->front() == *(*tx_inputs).back());
-////    BOOST_CHECK(*query.get_spenders(query.to_output(1, 0), true)->back() == *(*block_inputs).front());
-////    BOOST_CHECK(*query.get_spenders(query.to_output(1, 1), true)->back() == *(*block_inputs).back());
-////    BOOST_CHECK(*query.get_spenders_index(1, 0, true)->front() == *(*tx_inputs).front());
-////    BOOST_CHECK(*query.get_spenders_index(1, 1, true)->front() == *(*tx_inputs).back());
-////    BOOST_CHECK(*query.get_spenders_index(1, 0, true)->back() == *(*block_inputs).front());
-////    BOOST_CHECK(*query.get_spenders_index(1, 1, true)->back() == *(*block_inputs).back());
-////}
 
 BOOST_AUTO_TEST_CASE(query_chain_writer__get_value__genesis__expected)
 {

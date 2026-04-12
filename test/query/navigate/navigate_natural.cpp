@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_candidate__always__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
 
     // initialize pushes the genesis candidate. 
     BOOST_REQUIRE(query.initialize(test::genesis));
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_confirmed__always__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
 
     // initialize pushes the genesis confirmed. 
     BOOST_REQUIRE(query.initialize(test::genesis));
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_header__always__expected)
     test::query_accessor query{ store };
     header_link link{};
 
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE_EQUAL(query.to_header(test::genesis.hash()), header_link::terminal);
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE_EQUAL(query.to_header(test::genesis.hash()), 0u);
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_tx__transactions__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
     BOOST_REQUIRE(query.set(test::block2, test::context, false, false));

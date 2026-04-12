@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_txs__multiple__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
     BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
