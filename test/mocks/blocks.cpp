@@ -103,6 +103,29 @@ bool setup_three_block_witness_store(query_t& query) NOEXCEPT
         query.push_confirmed(query.to_header(block2a.hash()), false);
 }
 
+bool setup_three_block_confirmed_address_store(query_t& query) NOEXCEPT
+{
+    return query.initialize(genesis) &&
+        query.set(block1a, database::context{ 0, 1, 0 }, false, false) &&
+        query.set(block2a, database::context{ 0, 2, 0 }, false, false) &&
+        query.set(test::tx4) &&
+        query.set(test::tx5) &&
+        query.set(block3a, database::context{ 0, 3, 0 }, false, false) &&
+        query.push_confirmed(query.to_header(block1a.hash()), true) &&
+        query.push_confirmed(query.to_header(block2a.hash()), true) &&
+        query.push_confirmed(query.to_header(block2a.hash()), true);
+}
+
+bool setup_three_block_unconfirmed_address_store(query_t& query) NOEXCEPT
+{
+    return query.initialize(genesis) &&
+        query.set(block1a, database::context{ 0, 1, 0 }, false, false) &&
+        query.set(block2a, database::context{ 0, 2, 0 }, false, false) &&
+        query.set(test::tx4) &&
+        query.set(test::tx5) &&
+        query.set(block3a, database::context{ 0, 3, 0 }, false, false);
+}
+
 // Setting block metadata on a shared instance creates test side effects.
 // Chain objects such as blocks cannot be copied for side-effect-free metadata
 // tests, since block copy takes shared pointer references. So create new test

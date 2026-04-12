@@ -80,8 +80,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(nomap__record_get__terminal__invalid)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     const nomap<link5, little_record::size> instance{ head_store, body_store };
@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(nomap__record_get__terminal__invalid)
 
 BOOST_AUTO_TEST_CASE(nomap__record_get__empty__invalid)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     const nomap<link5, little_record::size> instance{ head_store, body_store };
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(nomap__record_get__empty__invalid)
 
 BOOST_AUTO_TEST_CASE(nomap__record_get__populated__valid)
 {
-    data_chunk head_file;
+    data_chunk head_file{};
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
@@ -120,8 +120,8 @@ BOOST_AUTO_TEST_CASE(nomap__record_get__populated__valid)
 
 BOOST_AUTO_TEST_CASE(nomap__record_put__get__expected)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     nomap<link5, big_record::size> instance{ head_store, body_store };
@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE(nomap__record_put__get__expected)
 
 BOOST_AUTO_TEST_CASE(nomap__record_count__truncate__expected)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     nomap<link5, big_record::size> instance{ head_store, body_store };
@@ -164,8 +164,8 @@ BOOST_AUTO_TEST_CASE(nomap__record_count__truncate__expected)
 
 BOOST_AUTO_TEST_CASE(nomap__record_put_link__multiple__expected)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     nomap<link5, big_record::size> instance{ head_store, body_store };
@@ -236,8 +236,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(nomap__slab_put__get__expected)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     nomap<link5, big_slab::size> instance{ head_store, body_store };
@@ -254,8 +254,8 @@ BOOST_AUTO_TEST_CASE(nomap__slab_put__get__expected)
 
 BOOST_AUTO_TEST_CASE(nomap__slab_count__truncate__expected)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     nomap<link5, big_slab::size> instance{ head_store, body_store };
@@ -280,8 +280,8 @@ BOOST_AUTO_TEST_CASE(nomap__slab_count__truncate__expected)
 
 BOOST_AUTO_TEST_CASE(nomap__slab_put_link__multiple__expected)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     nomap<link5, big_slab::size> instance{ head_store, body_store };
@@ -335,7 +335,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(nomap__record_get__excess__false)
 {
-    data_chunk head_file;
+    data_chunk head_file{};
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
@@ -348,8 +348,8 @@ BOOST_AUTO_TEST_CASE(nomap__record_get__excess__false)
 
 BOOST_AUTO_TEST_CASE(nomap__record_put_link__excess__false)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     nomap<link5, record_excess::size> instance{ head_store, body_store };
@@ -381,7 +381,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(nomap__slab_get__excess__true)
 {
-    data_chunk head_file;
+    data_chunk head_file{};
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
@@ -395,8 +395,8 @@ BOOST_AUTO_TEST_CASE(nomap__slab_get__excess__true)
 
 BOOST_AUTO_TEST_CASE(nomap__slab_put_link__excess__false)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     nomap<link5, slab_excess::size> instance{ head_store, body_store };
@@ -429,7 +429,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(nomap__slab_get__file_excess__false)
 {
-    data_chunk head_file;
+    data_chunk head_file{};
     data_chunk body_file{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
@@ -507,8 +507,8 @@ BOOST_AUTO_TEST_CASE(nomap__record_reserve__commit__expected)
 
 BOOST_AUTO_TEST_CASE(nomap__record_verify__empty_files__expected)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     record_table instance{ head_store, body_store };
@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(nomap__record_verify__empty_files__expected)
 BOOST_AUTO_TEST_CASE(nomap__record_create__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
-    data_chunk body_file;
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     record_table instance{ head_store, body_store };
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(nomap__record_create__non_empty_head_file__failure)
 
 BOOST_AUTO_TEST_CASE(nomap__record_create__non_empty_body_file__body_zeroed)
 {
-    data_chunk head_file;
+    data_chunk head_file{};
     data_chunk body_file{ 0x42 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
@@ -553,8 +553,8 @@ BOOST_AUTO_TEST_CASE(nomap__record_create__non_empty_body_file__body_zeroed)
 
 BOOST_AUTO_TEST_CASE(nomap__record_body_count__create__zero)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     record_table instance{ head_store, body_store };
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(nomap__record_body_count__create__zero)
 BOOST_AUTO_TEST_CASE(nomap__record_body_count__empty_close__zero)
 {
     auto head_file = base16_chunk("1234567890");
-    data_chunk body_file;
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     record_table instance{ head_store, body_store };
@@ -631,8 +631,8 @@ BOOST_AUTO_TEST_CASE(nomap__record_body_count__non_empty_restore__truncates)
 
 BOOST_AUTO_TEST_CASE(nomap__slab_verify__empty_files__expected)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     slab_table instance{ head_store, body_store };
@@ -647,7 +647,7 @@ BOOST_AUTO_TEST_CASE(nomap__slab_verify__empty_files__expected)
 BOOST_AUTO_TEST_CASE(nomap__slab_create__non_empty_head_file__failure)
 {
     data_chunk head_file{ 0x42 };
-    data_chunk body_file;
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     slab_table instance{ head_store, body_store };
@@ -660,7 +660,7 @@ BOOST_AUTO_TEST_CASE(nomap__slab_create__non_empty_head_file__failure)
 
 BOOST_AUTO_TEST_CASE(nomap__slab_create__non_empty_body_file__body_zeroed)
 {
-    data_chunk head_file;
+    data_chunk head_file{};
     data_chunk body_file{ 0x42 };
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
@@ -677,8 +677,8 @@ BOOST_AUTO_TEST_CASE(nomap__slab_create__non_empty_body_file__body_zeroed)
 
 BOOST_AUTO_TEST_CASE(nomap__slab_body_count__create__zero)
 {
-    data_chunk head_file;
-    data_chunk body_file;
+    data_chunk head_file{};
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     slab_table instance{ head_store, body_store };
@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE(nomap__slab_body_count__create__zero)
 BOOST_AUTO_TEST_CASE(nomap__slab_body_count__empty_close__zero)
 {
     auto head_file = base16_chunk("1234567890");
-    data_chunk body_file;
+    data_chunk body_file{};
     test::chunk_storage head_store{ head_file };
     test::chunk_storage body_store{ body_file };
     slab_table instance{ head_store, body_store };

@@ -648,8 +648,9 @@ public:
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
     code get_confirmed_balance(const stopper& cancel, uint64_t& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_balance(const stopper& cancel, uint64_t& confirmed, uint64_t& combined,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_balance(const stopper& cancel, uint64_t& confirmed,
+        uint64_t& unconfirmed, const hash_digest& key,
+        bool turbo=false) const NOEXCEPT;
 
     /// Filters.
     /// -----------------------------------------------------------------------
