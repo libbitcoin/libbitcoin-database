@@ -110,11 +110,11 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs2__always__expected)
     BOOST_REQUIRE_EQUAL(out.at(4), 6u); // block3a (tx6)
 
     // owners (unspent)
-    BOOST_REQUIRE_EQUAL(out.at(5), 2u); // block2a (tx2)
+    BOOST_REQUIRE_EQUAL(out.at(5), 2u); // block2a (tx2)    [duplicate]
     BOOST_REQUIRE_EQUAL(out.at(6), 3u); // block2a (tx3)
-    BOOST_REQUIRE_EQUAL(out.at(7), 4u); // tx4
-    BOOST_REQUIRE_EQUAL(out.at(8), 5u); // tx5
-    BOOST_REQUIRE_EQUAL(out.at(9), 6u); // block3a (tx6)
+    BOOST_REQUIRE_EQUAL(out.at(7), 4u); // tx4              [duplicate]
+    BOOST_REQUIRE_EQUAL(out.at(8), 5u); // tx5              [duplicate]
+    BOOST_REQUIRE_EQUAL(out.at(9), 6u); // block3a (tx6)    [duplicate]
 }
 
 // to_address_outputs1
