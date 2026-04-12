@@ -20,6 +20,8 @@
 #include "../../mocks/blocks.hpp"
 #include "../../mocks/chunk_store.hpp"
 
+// Unconfirmed balance is always zero in the current implementation.
+
 BOOST_FIXTURE_TEST_SUITE(query_address_tests, test::directory_setup_fixture)
 
 // get_unconfirmed_balance
