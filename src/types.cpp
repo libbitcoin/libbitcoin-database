@@ -18,10 +18,14 @@
  */
 #include <bitcoin/database/types.hpp>
 
+#include <algorithm>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
+
+// history
+// ----------------------------------------------------------------------------
 
 // local
 inline bool hash_less_than(const hash_digest& a, const hash_digest& b) NOEXCEPT
@@ -74,6 +78,22 @@ bool history::less_than::operator()(const history& a, const history& b) const NO
     return hash_less_than(a.tx.hash(), b.tx.hash());
 }
 
+bool history::equal_to::operator()(const history& a, const history& b) const NOEXCEPT
+{
+    history::less_than lesser;
+    return !lesser(a, b) && !lesser(b, a);
+}
+
+void history::sort_and_dedup(std::vector<history>& out) NOEXCEPT
+{
+    std::sort(out.begin(), out.end(), history::less_than{});
+    auto end = std::unique(out.begin(), out.end(), history::equal_to{});
+    out.erase(end, out.end());
+}
+
+// unspent
+// ----------------------------------------------------------------------------
+
 bool unspent::less_than::operator()(const unspent& a, const unspent& b) const NOEXCEPT
 {
     const auto a_point = a.tx.point();
@@ -101,6 +121,19 @@ bool unspent::less_than::operator()(const unspent& a, const unspent& b) const NO
 
     // Unconfirmed have 0 height/position, arbitrary sort (hash:index).
     return a_point < b_point;
+}
+
+bool unspent::equal_to::operator()(const unspent& a, const unspent& b) const NOEXCEPT
+{
+    unspent::less_than lesser;
+    return !lesser(a, b) && !lesser(b, a);
+}
+
+void unspent::sort_and_dedup(std::vector<unspent>& out) NOEXCEPT
+{
+    std::sort(out.begin(), out.end(), unspent::less_than{});
+    auto end = std::unique(out.begin(), out.end(), unspent::equal_to{});
+    out.erase(end, out.end());
 }
 
 } // namespace database
