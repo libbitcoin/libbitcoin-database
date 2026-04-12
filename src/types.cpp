@@ -84,17 +84,25 @@ bool history::equal_to::operator()(const history& a, const history& b) const NOE
     return !lesser(a, b) && !lesser(b, a);
 }
 
+bool history::exclude::operator()(const history& element) const NOEXCEPT
+{
+    return element.position == max_size_t;
+}
+
 void history::sort_and_dedup(std::vector<history>& out) NOEXCEPT
 {
+    auto excluded = std::remove_if(out.begin(), out.end(), history::exclude{});
+    out.erase(excluded, out.end());
     std::sort(out.begin(), out.end(), history::less_than{});
-    auto end = std::unique(out.begin(), out.end(), history::equal_to{});
-    out.erase(end, out.end());
+    auto duplicates = std::unique(out.begin(), out.end(), history::equal_to{});
+    out.erase(duplicates, out.end());
 }
 
 // unspent
 // ----------------------------------------------------------------------------
 
-bool unspent::less_than::operator()(const unspent& a, const unspent& b) const NOEXCEPT
+bool unspent::less_than::operator()(const unspent& a,
+    const unspent& b) const NOEXCEPT
 {
     const auto a_point = a.tx.point();
     const auto b_point = b.tx.point();
@@ -123,17 +131,25 @@ bool unspent::less_than::operator()(const unspent& a, const unspent& b) const NO
     return a_point < b_point;
 }
 
-bool unspent::equal_to::operator()(const unspent& a, const unspent& b) const NOEXCEPT
+bool unspent::equal_to::operator()(const unspent& a,
+    const unspent& b) const NOEXCEPT
 {
     unspent::less_than lesser;
     return !lesser(a, b) && !lesser(b, a);
 }
 
+bool unspent::exclude::operator()(const unspent& element) const NOEXCEPT
+{
+    return element.position == max_size_t;
+}
+
 void unspent::sort_and_dedup(std::vector<unspent>& out) NOEXCEPT
 {
+    auto excluded = std::remove_if(out.begin(), out.end(), unspent::exclude{});
+    out.erase(excluded, out.end());
     std::sort(out.begin(), out.end(), unspent::less_than{});
-    auto end = std::unique(out.begin(), out.end(), unspent::equal_to{});
-    out.erase(end, out.end());
+    auto duplicates = std::unique(out.begin(), out.end(), unspent::equal_to{});
+    out.erase(duplicates, out.end());
 }
 
 } // namespace database

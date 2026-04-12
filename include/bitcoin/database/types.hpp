@@ -108,6 +108,8 @@ struct span
 
 struct BCD_API unspent
 {
+    static constexpr size_t excluded_position = max_size_t;
+
     struct less_than
     {
         bool operator()(const unspent& a, const unspent& b) const NOEXCEPT;
@@ -116,6 +118,11 @@ struct BCD_API unspent
     struct equal_to
     {
         bool operator()(const unspent& a, const unspent& b) const NOEXCEPT;
+    };
+
+    struct exclude
+    {
+        bool operator()(const unspent& element) const NOEXCEPT;
     };
 
     static void sort_and_dedup(std::vector<unspent>& unspent) NOEXCEPT;
@@ -128,6 +135,11 @@ using unspents = std::vector<unspent>;
 
 struct BCD_API history
 {
+    static constexpr size_t rooted_height = zero;
+    static constexpr size_t unrooted_height = max_size_t;
+    static constexpr size_t excluded_position = max_size_t;
+    static constexpr size_t unconfirmed_position = zero;
+
     struct less_than
     {
         bool operator()(const history& a, const history& b) const NOEXCEPT;
@@ -136,6 +148,11 @@ struct BCD_API history
     struct equal_to
     {
         bool operator()(const history& a, const history& b) const NOEXCEPT;
+    };
+
+    struct exclude
+    {
+        bool operator()(const history& element) const NOEXCEPT;
     };
 
     static void sort_and_dedup(std::vector<history>& history) NOEXCEPT;
