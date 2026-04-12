@@ -94,7 +94,7 @@ code CLASS::get_confirmed_history(const stopper& cancel, histories& out,
     out.clear();
     out.resize(txs.size());
     return parallel_history_transform(cancel, turbo, out, txs,
-        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT->history
+        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> history
         {
             if (cancel)
                 return {};
