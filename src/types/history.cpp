@@ -16,16 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/types.hpp>
+#include <bitcoin/database/types/history.hpp>
 
 #include <algorithm>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-// history
-// ----------------------------------------------------------------------------
 
 // local
 inline bool hash_less_than(const hash_digest& a, const hash_digest& b) NOEXCEPT
@@ -54,7 +51,8 @@ inline bool hash_less_than(const hash_digest& a, const hash_digest& b) NOEXCEPT
     return false;
 }
 
-bool history::less_than::operator()(const history& a, const history& b) const NOEXCEPT
+bool history::less_than::operator()(const history& a,
+    const history& b) const NOEXCEPT
 {
     using namespace system;
     const auto a_height = a.tx.height();
@@ -78,10 +76,10 @@ bool history::less_than::operator()(const history& a, const history& b) const NO
     return hash_less_than(a.tx.hash(), b.tx.hash());
 }
 
-bool history::equal_to::operator()(const history& a, const history& b) const NOEXCEPT
+bool history::equal_to::operator()(const history& a,
+    const history& b) const NOEXCEPT
 {
-    history::less_than lesser;
-    return !lesser(a, b) && !lesser(b, a);
+    return !less_than{}(a, b) && !less_than{}(b, a);
 }
 
 bool history::exclude::operator()(const history& element) const NOEXCEPT
@@ -95,60 +93,6 @@ void history::sort_and_dedup(std::vector<history>& out) NOEXCEPT
     out.erase(excluded, out.end());
     std::sort(out.begin(), out.end(), history::less_than{});
     auto duplicates = std::unique(out.begin(), out.end(), history::equal_to{});
-    out.erase(duplicates, out.end());
-}
-
-// unspent
-// ----------------------------------------------------------------------------
-
-bool unspent::less_than::operator()(const unspent& a,
-    const unspent& b) const NOEXCEPT
-{
-    const auto a_point = a.tx.point();
-    const auto b_point = b.tx.point();
-    const bool a_confirmed = !is_zero(a.height);
-    const bool b_confirmed = !is_zero(b.height);
-
-    // Confirmed before unconfirmed.
-    if (a_confirmed != b_confirmed)
-        return a_confirmed;
-
-    if (a_confirmed)
-    {
-        // Chain.block height ascending (x < y).
-        if (a.height != b.height)
-            return a.height < b.height;
-
-        // Block.tx position ascending.
-        if (a.position != b.position)
-            return a.position < b.position;
-
-        // Tx.output index ascending.
-        return a_point.index() < b_point.index();
-    }
-
-    // Unconfirmed have 0 height/position, arbitrary sort (hash:index).
-    return a_point < b_point;
-}
-
-bool unspent::equal_to::operator()(const unspent& a,
-    const unspent& b) const NOEXCEPT
-{
-    unspent::less_than lesser;
-    return !lesser(a, b) && !lesser(b, a);
-}
-
-bool unspent::exclude::operator()(const unspent& element) const NOEXCEPT
-{
-    return !element.tx.is_valid();
-}
-
-void unspent::sort_and_dedup(std::vector<unspent>& out) NOEXCEPT
-{
-    auto excluded = std::remove_if(out.begin(), out.end(), unspent::exclude{});
-    out.erase(excluded, out.end());
-    std::sort(out.begin(), out.end(), unspent::less_than{});
-    auto duplicates = std::unique(out.begin(), out.end(), unspent::equal_to{});
     out.erase(duplicates, out.end());
 }
 

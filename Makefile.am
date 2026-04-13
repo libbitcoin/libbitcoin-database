@@ -38,7 +38,6 @@ src_libbitcoin_database_la_SOURCES = \
     src/define.cpp \
     src/error.cpp \
     src/settings.cpp \
-    src/types.cpp \
     src/file/rotator.cpp \
     src/file/utilities.cpp \
     src/locks/file_lock.cpp \
@@ -47,7 +46,9 @@ src_libbitcoin_database_la_SOURCES = \
     src/memory/map.cpp \
     src/memory/utilities.cpp \
     src/memory/mman-win32/mman.cpp \
-    src/memory/mman-win32/mman.hpp
+    src/memory/mman-win32/mman.hpp \
+    src/types/history.cpp \
+    src/types/unspent.cpp
 
 # local: test/libbitcoin-database-test
 #------------------------------------------------------------------------------
@@ -65,7 +66,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/store.cpp \
     test/test.cpp \
     test/test.hpp \
-    test/types.cpp \
     test/file/rotator.cpp \
     test/file/utilities.cpp \
     test/locks/file_lock.cpp \
@@ -141,7 +141,10 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/indexes/strong_tx.cpp \
     test/tables/optional/address.cpp \
     test/tables/optional/filter_bk.cpp \
-    test/tables/optional/filter_tx.cpp
+    test/tables/optional/filter_tx.cpp \
+    test/types/history.cpp \
+    test/types/span.cpp \
+    test/types/unspent.cpp
 
 endif WITH_TESTS
 
@@ -171,7 +174,6 @@ include_bitcoin_database_HEADERS = \
     include/bitcoin/database/query.hpp \
     include/bitcoin/database/settings.hpp \
     include/bitcoin/database/store.hpp \
-    include/bitcoin/database/types.hpp \
     include/bitcoin/database/version.hpp
 
 include_bitcoin_database_filedir = ${includedir}/bitcoin/database/file
@@ -328,6 +330,17 @@ include_bitcoin_database_tables_optionals_HEADERS = \
     include/bitcoin/database/tables/optionals/address.hpp \
     include/bitcoin/database/tables/optionals/filter_bk.hpp \
     include/bitcoin/database/tables/optionals/filter_tx.hpp
+
+include_bitcoin_database_typesdir = ${includedir}/bitcoin/database/types
+include_bitcoin_database_types_HEADERS = \
+    include/bitcoin/database/types/fee_rate.hpp \
+    include/bitcoin/database/types/header_state.hpp \
+    include/bitcoin/database/types/history.hpp \
+    include/bitcoin/database/types/position.hpp \
+    include/bitcoin/database/types/span.hpp \
+    include/bitcoin/database/types/type.hpp \
+    include/bitcoin/database/types/types.hpp \
+    include/bitcoin/database/types/unspent.hpp
 
 
 # Custom make targets.

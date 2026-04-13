@@ -209,7 +209,9 @@
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <ObjectFileName>$(IntDir)test_test.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\types.cpp" />
+    <ClCompile Include="..\..\..\..\test\types\history.cpp" />
+    <ClCompile Include="..\..\..\..\test\types\span.cpp" />
+    <ClCompile Include="..\..\..\..\test\types\unspent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\test\mocks\blocks.hpp" />

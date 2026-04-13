@@ -16,18 +16,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef LIBBITCOIN_DATABASE_TYPES_FEE_RATE_HPP
+#define LIBBITCOIN_DATABASE_TYPES_FEE_RATE_HPP
+
 #include <bitcoin/database/define.hpp>
 
-// version        : <generated>
-// boost          : version <bitcoin/system>
-// error          : boost
-// define         : error
-// settings       : define
-// /locks         : define
-// /file          : define
-// /memory        : /file
-// /primitives    : /memory
-// /tables        : /primitives
-// /types         : /tables
-// store          : /types settings /locks
-// query          : /types settings
+namespace libbitcoin {
+namespace database {
+
+struct fee_rate
+{
+    size_t bytes{};
+    uint64_t fee{};
+};
+
+using fee_rates = std::vector<fee_rate>;
+using fee_rate_sets = std::vector<fee_rates>;
+
+} // namespace database
+} // namespace libbitcoin
+
+#endif

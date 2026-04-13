@@ -29,31 +29,34 @@
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\query\address">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\query\archive">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\query\consensus">
+    <Filter Include="src\query\archive">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\query\navigate">
+    <Filter Include="src\query\consensus">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\query\navigate">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000C}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\tables">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\tables\archives">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\tables\caches">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\indexes">
+    <Filter Include="src\tables\caches">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\optional">
+    <Filter Include="src\tables\indexes">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tables\optional">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\types">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -288,8 +291,14 @@
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\types.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="..\..\..\..\test\types\history.cpp">
+      <Filter>src\types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\types\span.cpp">
+      <Filter>src\types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\types\unspent.cpp">
+      <Filter>src\types</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

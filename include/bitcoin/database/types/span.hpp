@@ -16,18 +16,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef LIBBITCOIN_DATABASE_TYPES_SPAN_HPP
+#define LIBBITCOIN_DATABASE_TYPES_SPAN_HPP
+
 #include <bitcoin/database/define.hpp>
 
-// version        : <generated>
-// boost          : version <bitcoin/system>
-// error          : boost
-// define         : error
-// settings       : define
-// /locks         : define
-// /file          : define
-// /memory        : /file
-// /primitives    : /memory
-// /tables        : /primitives
-// /types         : /tables
-// store          : /types settings /locks
-// query          : /types settings
+namespace libbitcoin {
+namespace database {
+
+struct span
+{
+    inline size_t size() const NOEXCEPT
+    {
+        return system::floored_subtract(end, begin);
+    }
+
+    size_t begin;
+    size_t end;
+};
+
+} // namespace database
+} // namespace libbitcoin
+
+#endif

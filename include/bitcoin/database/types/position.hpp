@@ -16,18 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef LIBBITCOIN_DATABASE_TYPES_POSITION_HPP
+#define LIBBITCOIN_DATABASE_TYPES_POSITION_HPP
+
 #include <bitcoin/database/define.hpp>
 
-// version        : <generated>
-// boost          : version <bitcoin/system>
-// error          : boost
-// define         : error
-// settings       : define
-// /locks         : define
-// /file          : define
-// /memory        : /file
-// /primitives    : /memory
-// /tables        : /primitives
-// /types         : /tables
-// store          : /types settings /locks
-// query          : /types settings
+namespace libbitcoin {
+namespace database {
+
+struct position
+{
+    size_t sibling;
+    size_t width;
+};
+
+using positions = std::vector<position>;
+
+} // namespace database
+} // namespace libbitcoin
+
+#endif
