@@ -44,13 +44,33 @@ code CLASS::get_unconfirmed_unspent(const stopper& cancel, unspents& out,
     out.clear();
     out.resize(outs.size());
     return parallel_unspent_transform(cancel, turbo, out, outs,
-        [this](const auto& , auto& cancel, auto& fail) NOEXCEPT -> unspent
+        [this](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
             if (cancel || fail)
-                return {};
+                return unspent{};
 
-            // TODO: return unconfirmed unspent outputs for address key.
-            return {};
+            table::output::get_parent_value out{};
+            if (!store_.output.get(link, out))
+            {
+                fail = true;
+                return unspent{};
+            }
+
+            // chain::outpoint invalid in default construction (filter).
+            const auto& tx = out.parent_fk;
+            if (is_confirmed_block(find_strong(tx)))
+                return unspent{};
+
+            auto hash = get_tx_key(tx);
+            const auto index = to_output_index(tx, link);
+            if ((index == point::null_index) || (hash == system::null_hash))
+            {
+                fail = true;
+                return unspent{};
+            }
+
+            return unspent{ { { std::move(hash), index }, out.value },
+                unspent::unconfirmed_height, unspent::unconfirmed_position };
         });
 }
 
@@ -66,13 +86,37 @@ code CLASS::get_confirmed_unspent(const stopper& cancel, unspents& out,
     out.clear();
     out.resize(outs.size());
     return parallel_unspent_transform(cancel, turbo, out, outs,
-        [this](const auto& , auto& cancel, auto& fail) NOEXCEPT -> unspent
+        [this](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
             if (cancel || fail)
-                return {};
+                return unspent{};
 
-            // TODO: return confirmed unspent outputs for address key.
-            return {};
+            table::output::get_parent_value out{};
+            if (!store_.output.get(link, out))
+            {
+                fail = true;
+                return unspent{};
+            }
+
+            // chain::outpoint invalid in default construction (filter).
+            const auto& tx = out.parent_fk;
+            const auto block = find_strong(tx);
+            if (!is_confirmed_block(block))
+                return unspent{};
+
+            size_t height{}, position{};
+            auto hash = get_tx_key(tx);
+            const auto index = to_output_index(tx, link);
+            if ((index == point::null_index) || (hash == system::null_hash) ||
+                !get_height(height, block) ||
+                !get_tx_position(position, tx, block))
+            {
+                fail = true;
+                return unspent{};
+            }
+
+            return unspent{ { { std::move(hash), index }, out.value }, height,
+                position };
         });
 }
 
@@ -88,13 +132,42 @@ code CLASS::get_unspent(const stopper& cancel, unspents& out,
     out.clear();
     out.resize(outs.size());
     return parallel_unspent_transform(cancel, turbo, out, outs,
-        [this](const auto& , auto& cancel, auto& fail) NOEXCEPT -> unspent
+        [this](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
             if (cancel || fail)
-                return {};
+                return unspent{};
 
-            // TODO: return unspent outputs for address key.
-            return {};
+            table::output::get_parent_value out{};
+            if (!store_.output.get(link, out))
+            {
+                fail = true;
+                return unspent{};
+            }
+
+            const auto& tx = out.parent_fk;
+            auto hash = get_tx_key(tx);
+            const auto index = to_output_index(tx, link);
+            if ((index == point::null_index) || (hash == system::null_hash))
+            {
+                fail = true;
+                return unspent{};
+            }
+
+            auto height = unspent::unconfirmed_height;
+            auto position = unspent::unconfirmed_position;
+            if (const auto block = find_strong(tx);
+                is_confirmed_block(block))
+            {
+                if (!get_height(height, block) ||
+                    !get_tx_position(position, tx, block))
+                {
+                    fail = true;
+                    return unspent{};
+                }
+            }
+
+            return unspent{ { { std::move(hash), index }, out.value }, height,
+                position };
         });
 }
 
@@ -124,7 +197,7 @@ code CLASS::parallel_unspent_transform(const stopper& cancel, bool turbo,
     if (cancel)
         return error::canceled;
 
-    unspent::sort_and_dedup(out);
+    unspent::filter_sort_and_dedup(out);
     return error::success;
 }
 

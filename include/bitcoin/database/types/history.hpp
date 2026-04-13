@@ -32,7 +32,7 @@ struct BCD_API history
     static constexpr size_t missing_prevout = max_uint64;
     static constexpr size_t unconfirmed_position = zero;
 
-    static void sort_and_dedup(std::vector<history>& history) NOEXCEPT;
+    static void filter_sort_and_dedup(std::vector<history>& history) NOEXCEPT;
 
     bool operator<(const history& other) const NOEXCEPT;
     bool operator==(const history& other) const NOEXCEPT;

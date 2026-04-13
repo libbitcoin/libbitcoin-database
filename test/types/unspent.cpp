@@ -70,8 +70,8 @@ BOOST_AUTO_TEST_CASE(unspent__less_than__unconfirmed_outpoint_ascending__expecte
 
 BOOST_AUTO_TEST_CASE(unspent__equality__distinct__false)
 {
-    const outpoint p1{ { { 42, 0 }, 7 }, 42 };
-    const outpoint p2{ { { 24, 1 }, 5 }, 19 };
+    const outpoint p1{ { {}, 0 }, 7 };
+    const outpoint p2{ { {}, 1 }, 5 };
     const unspent a{ p1, 101, 10 };
     const unspent b{ p2, 100, 11 };
     BOOST_REQUIRE(!(a == b));
@@ -80,14 +80,14 @@ BOOST_AUTO_TEST_CASE(unspent__equality__distinct__false)
 
 BOOST_AUTO_TEST_CASE(unspent__equality__same__true)
 {
-    const outpoint point{ { { 42, 0 }, 5 }, 42 };
+    const outpoint point{ { {}, 0 }, 5 };
     const unspent a{ point, 100, 10 };
     BOOST_REQUIRE(a == a);
 }
 
-// sort_and_dedup
+// filter_sort_and_dedup
 
-BOOST_AUTO_TEST_CASE(unspent__sort_and_dedup__unsorted_with_duplicates_mixed__sorted_and_deduped)
+BOOST_AUTO_TEST_CASE(unspent__filter_sort_and_dedup__unsorted_with_duplicates_mixed__sorted_and_deduped)
 {
     const outpoint lo{ { {}, 0 }, 0 };
     const outpoint hi{ { {}, 5 }, 0 };
@@ -100,14 +100,14 @@ BOOST_AUTO_TEST_CASE(unspent__sort_and_dedup__unsorted_with_duplicates_mixed__so
         { hi, 0,   0 }                                  // unconfirmed duplicate
     };
 
-    unspent::sort_and_dedup(values);
+    unspent::filter_sort_and_dedup(values);
     BOOST_REQUIRE_EQUAL(values.size(), 3u);
     BOOST_REQUIRE_EQUAL(values[0].height, 100u);        // confirmed, lowest height
     BOOST_REQUIRE_EQUAL(values[1].height, 200u);        // confirmed
     BOOST_REQUIRE_EQUAL(values[2].height, 0u);          // unconfirmed
 }
 
-BOOST_AUTO_TEST_CASE(unspent__sort_and_dedup__exclusions__removes_excluded_items)
+BOOST_AUTO_TEST_CASE(unspent__filter_sort_and_dedup__exclusions__removes_excluded_items)
 {
     unspents items
     {
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(unspent__sort_and_dedup__exclusions__removes_excluded_items
         unspent{ { {}, 3 },   50, 10 }                  // duplicate
     };
 
-    unspent::sort_and_dedup(items);
+    unspent::filter_sort_and_dedup(items);
     BOOST_REQUIRE_EQUAL(items.size(), 2u);
     BOOST_REQUIRE_EQUAL(items[0].position, 5u);
     BOOST_REQUIRE_EQUAL(items[1].position, 10u);

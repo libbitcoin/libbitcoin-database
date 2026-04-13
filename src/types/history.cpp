@@ -86,7 +86,7 @@ bool history::operator==(const history& other) const NOEXCEPT
     return !(*this < other) && !(other < *this);
 }
 
-void history::sort_and_dedup(std::vector<history>& out) NOEXCEPT
+void history::filter_sort_and_dedup(std::vector<history>& out) NOEXCEPT
 {
     const auto excluded = std::remove_if(out.begin(), out.end(),
         [](const history& element) NOEXCEPT

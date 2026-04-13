@@ -92,9 +92,9 @@ BOOST_AUTO_TEST_CASE(history__equality__same__true)
     BOOST_REQUIRE(a == a);
 }
 
-// sort_and_dedup
+// filter_sort_and_dedup
 
-BOOST_AUTO_TEST_CASE(history__sort_and_dedup__unsorted_with_duplicates_mixed__sorted_and_deduped)
+BOOST_AUTO_TEST_CASE(history__filter_sort_and_dedup__unsorted_with_duplicates_mixed__sorted_and_deduped)
 {
     constexpr hash_digest h1{ 0x01 };
     constexpr hash_digest h2{ 0x02 };
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(history__sort_and_dedup__unsorted_with_duplicates_mixed__so
         { { hash_digest{}, 100 }, 0, 10 }               // confirmed duplicate
     };
 
-    history::sort_and_dedup(values);
+    history::filter_sort_and_dedup(values);
     BOOST_REQUIRE_EQUAL(values.size(), 4u);
     BOOST_REQUIRE_EQUAL(values[0].tx.height(), 100u);   // confirmed, lowest height
     BOOST_REQUIRE_EQUAL(values[1].tx.height(), 200u);   // confirmed
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(history__sort_and_dedup__unsorted_with_duplicates_mixed__so
     BOOST_REQUIRE_EQUAL(values[3].tx.height(), 0u);     // unconfirmed (h2)
 }
 
-BOOST_AUTO_TEST_CASE(history__sort_and_dedup__exclusions__removes_excluded_items)
+BOOST_AUTO_TEST_CASE(history__filter_sort_and_dedup__exclusions__removes_excluded_items)
 {
     std::vector<history> items
     {
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(history__sort_and_dedup__exclusions__removes_excluded_items
         history{ { hash_digest{}, 3 }, 0, 10 }          // duplicate
     };
 
-    history::sort_and_dedup(items);
+    history::filter_sort_and_dedup(items);
     BOOST_REQUIRE_EQUAL(items.size(), 2u);
     BOOST_REQUIRE_EQUAL(items[0].position, 5u);
     BOOST_REQUIRE_EQUAL(items[1].position, 10u);
