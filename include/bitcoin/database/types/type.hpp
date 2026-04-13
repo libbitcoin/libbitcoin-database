@@ -81,7 +81,8 @@ using outpoints = std::vector<outpoint>;
 /// ---------------------------------------------------------------------------
 /// Also: position, header_state, fee_rate, span, unspent, history.
 
-using heights = std::vector<size_t>;
+// std_vector required for network::messages compat.
+using heights = std_vector<size_t>;
 using sizes = std::pair<size_t, size_t>;
 using counts = std::pair<size_t, size_t>;
 
