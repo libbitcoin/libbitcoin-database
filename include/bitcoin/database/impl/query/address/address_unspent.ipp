@@ -34,31 +34,100 @@ namespace database {
 
 // ununsed
 TEMPLATE
-code CLASS::get_unconfirmed_unspent(const stopper& , unspents& ,
-    const hash_digest& , bool ) const NOEXCEPT
+code CLASS::get_unconfirmed_unspent(const stopper& cancel, unspents& out,
+    const hash_digest& key, bool turbo) const NOEXCEPT
 {
-    return {};
+    output_links outs{};
+    if (const auto ec = to_address_outputs(cancel, outs, key))
+        return ec;
+
+    out.clear();
+    out.resize(outs.size());
+    return parallel_unspent_transform(cancel, turbo, out, outs,
+        [this](const auto& , auto& cancel, auto& fail) NOEXCEPT -> unspent
+        {
+            if (cancel || fail)
+                return {};
+
+            // TODO: return unconfirmed unspent outputs for address key.
+            return {};
+        });
 }
 
 // ununsed
 TEMPLATE
-code CLASS::get_confirmed_unspent(const stopper& , unspents& ,
-    const hash_digest& , bool ) const NOEXCEPT
+code CLASS::get_confirmed_unspent(const stopper& cancel, unspents& out,
+    const hash_digest& key, bool turbo) const NOEXCEPT
 {
-    return {};
+    output_links outs{};
+    if (const auto ec = to_address_outputs(cancel, outs, key))
+        return ec;
+
+    out.clear();
+    out.resize(outs.size());
+    return parallel_unspent_transform(cancel, turbo, out, outs,
+        [this](const auto& , auto& cancel, auto& fail) NOEXCEPT -> unspent
+        {
+            if (cancel || fail)
+                return {};
+
+            // TODO: return confirmed unspent outputs for address key.
+            return {};
+        });
 }
 
 // server/electrum
 TEMPLATE
-code CLASS::get_unspent(const stopper& , unspents& ,
-    const hash_digest& , bool ) const NOEXCEPT
+code CLASS::get_unspent(const stopper& cancel, unspents& out,
+    const hash_digest& key, bool turbo) const NOEXCEPT
 {
-    return {};
+    output_links outs{};
+    if (const auto ec = to_address_outputs(cancel, outs, key))
+        return ec;
+
+    out.clear();
+    out.resize(outs.size());
+    return parallel_unspent_transform(cancel, turbo, out, outs,
+        [this](const auto& , auto& cancel, auto& fail) NOEXCEPT -> unspent
+        {
+            if (cancel || fail)
+                return {};
+
+            // TODO: return unspent outputs for address key.
+            return {};
+        });
 }
 
-// turbos
+// utilities
 // ----------------------------------------------------------------------------
-// protected
+// private/static
+
+TEMPLATE
+template <typename Functor>
+code CLASS::parallel_unspent_transform(const stopper& cancel, bool turbo,
+    unspents& out, const output_links& outs, Functor&& functor) NOEXCEPT
+{
+    const auto policy = poolstl::execution::par_if(turbo);
+    stopper fail{};
+
+    out.clear();
+    out.resize(outs.size());
+    std::transform(policy, outs.cbegin(), outs.cend(), out.begin(),
+        [&functor, &cancel, &fail](const auto& output) NOEXCEPT
+        {
+            return functor(output, cancel, fail);
+        });
+
+    if (fail)
+        return error::integrity;
+
+    if (cancel)
+        return error::canceled;
+
+    unspent::sort_and_dedup(out);
+    return error::success;
+}
+
 
 } // namespace database
 } // namespace libbitcoin

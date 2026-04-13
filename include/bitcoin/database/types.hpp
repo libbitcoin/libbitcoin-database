@@ -21,7 +21,6 @@
 
 #include <atomic>
 #include <optional>
-#include <set>
 #include <utility>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/tables.hpp>
@@ -70,13 +69,11 @@ using data_chunk = system::data_chunk;
 /// Common system::chain aliases.
 /// ---------------------------------------------------------------------------
 
-using checkpoint = system::chain::checkpoint;
-using outpoint = system::chain::outpoint;
 using inpoint = system::chain::point;
-
-/// Sorted and deduped.
-using outpoints = std::set<outpoint>;
-using inpoints = std::set<inpoint>;
+using outpoint = system::chain::outpoint;
+using inpoints = std::vector<inpoint>;
+using outpoints = std::vector<outpoint>;
+using checkpoint = system::chain::checkpoint;
 
 /// Common carriers.
 /// ---------------------------------------------------------------------------
