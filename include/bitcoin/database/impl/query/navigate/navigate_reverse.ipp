@@ -52,26 +52,8 @@ TEMPLATE
 code CLASS::to_touched_txs(tx_links& out,
     const output_links& outputs) const NOEXCEPT
 {
-    // Reserve one for each output tx and one for spending input tx (estimate).
-    out.clear();
-    out.reserve(two * outputs.size());
-
-    // Orders are reversed due to expected tx_links reversal, for faster sort.
-    for (const auto& output: std::views::reverse(outputs))
-    {
-        out.push_back(to_output_tx(output));
-        if (out.back() == tx_link::terminal)
-            return error::integrity;
-
-        for (const auto& input: std::views::reverse(to_spenders(output)))
-        {
-            out.push_back(to_input_tx(input));
-            if (out.back() == tx_link::terminal)
-                return error::integrity;
-        }
-    }
-
-    return {};
+    const stopper cancel{};
+    return to_touched_txs(cancel, out, outputs);
 }
 
 TEMPLATE
@@ -88,37 +70,29 @@ code CLASS::to_touched_txs(const stopper& cancel, tx_links& out,
         if (cancel)
             return error::canceled;
 
-        out.push_back(to_output_tx(output));
-        if (out.back() == tx_link::terminal)
+        if (const auto tx = to_output_tx(output); tx.is_terminal())
             return error::integrity;
+        else
+            out.push_back(tx);
         
         for (const auto& input: std::views::reverse(to_spenders(output)))
         {
-            out.push_back(to_input_tx(input));
-            if (out.back() == tx_link::terminal)
+            if (const auto tx = to_input_tx(input); tx.is_terminal())
                 return error::integrity;
+            else
+                out.push_back(tx);
         }
     }
 
-    return {};
+    return error::success;
 }
 
 TEMPLATE
 code CLASS::to_address_outputs(output_links& out,
     const hash_digest& key) const NOEXCEPT
 {
-    // Pushing into the vector is more efficient than precomputation of size.
-    out.clear();
-    for (auto it = store_.address.it(key); it; ++it)
-    {
-        table::address::record address{};
-        if (!store_.address.get(it, address))
-            return error::integrity;
-
-        out.push_back(address.output_fk);
-    }
-
-    return error::success;
+    const stopper cancel{};
+    return to_address_outputs(cancel, out, key);
 }
 
 TEMPLATE

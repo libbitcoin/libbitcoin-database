@@ -445,7 +445,7 @@ const transaction tx4
     {
         output
         {
-            0x85,   // value
+            0x08,   // value
             script{ { { opcode::pick } } }
         }
     },
