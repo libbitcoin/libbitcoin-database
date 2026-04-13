@@ -51,8 +51,8 @@ inline bool hash_less_than(const hash_digest& a, const hash_digest& b) NOEXCEPT
     return false;
 }
 
-bool history::less_than::operator()(const history& a,
-    const history& b) const NOEXCEPT
+// local
+inline bool less_than(const history& a, const history& b) NOEXCEPT
 {
     using namespace system;
     const auto a_height = a.tx.height();
@@ -76,24 +76,27 @@ bool history::less_than::operator()(const history& a,
     return hash_less_than(a.tx.hash(), b.tx.hash());
 }
 
-bool history::equal_to::operator()(const history& a,
-    const history& b) const NOEXCEPT
+bool history::operator<(const history& other) const NOEXCEPT
 {
-    return !less_than{}(a, b) && !less_than{}(b, a);
+    return less_than(*this, other);
 }
 
-bool history::exclude::operator()(const history& element) const NOEXCEPT
+bool history::operator==(const history& other) const NOEXCEPT
 {
-    return !element.tx.is_valid();
+    return !(*this < other) && !(other < *this);
 }
 
 void history::sort_and_dedup(std::vector<history>& out) NOEXCEPT
 {
-    auto excluded = std::remove_if(out.begin(), out.end(), history::exclude{});
+    const auto excluded = std::remove_if(out.begin(), out.end(),
+        [](const history& element) NOEXCEPT
+        {
+            return !element.tx.is_valid();
+        });
+
     out.erase(excluded, out.end());
-    std::sort(out.begin(), out.end(), history::less_than{});
-    auto duplicates = std::unique(out.begin(), out.end(), history::equal_to{});
-    out.erase(duplicates, out.end());
+    std::sort(out.begin(), out.end());
+    out.erase(std::unique(out.begin(), out.end()), out.end());
 }
 
 } // namespace database

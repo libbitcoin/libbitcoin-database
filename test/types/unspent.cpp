@@ -28,23 +28,24 @@ BOOST_AUTO_TEST_CASE(unspent__less_than__confirmed_before_unconfirmed__expected)
 {
     const unspent a{ {}, 42, 7 };
     const unspent b{ {}, 0, 0 };
-    BOOST_REQUIRE( unspent::less_than{}(a, b));
-    BOOST_REQUIRE(!unspent::less_than{}(b, a));
+    BOOST_REQUIRE(a < b);
+    BOOST_REQUIRE(!(b < a));
 }
 
 BOOST_AUTO_TEST_CASE(unspent__less_than__confirmed_height_ascending__expected)
 {
     const unspent a{ {}, 100, 5 };
     const unspent b{ {}, 200, 5 };
-    BOOST_REQUIRE( unspent::less_than{}(a, b));
-    BOOST_REQUIRE(!unspent::less_than{}(b, a));
+    BOOST_REQUIRE(a < b);
+    BOOST_REQUIRE(!(b < a));
 }
 
 BOOST_AUTO_TEST_CASE(unspent__less_than__confirmed_position_ascending__expected)
 {
     const unspent a{ {}, 100, 3 };
     const unspent b{ {}, 100, 10 };
-    BOOST_REQUIRE(unspent::less_than{}(a, b));
+    BOOST_REQUIRE(a < b);
+    BOOST_REQUIRE(!(b < a));
 }
 
 BOOST_AUTO_TEST_CASE(unspent__less_than__confirmed_output_index_ascending__expected)
@@ -53,8 +54,8 @@ BOOST_AUTO_TEST_CASE(unspent__less_than__confirmed_output_index_ascending__expec
     const outpoint p2{ { {}, 5 }, 0 };
     const unspent a{ p1, 100, 10 };
     const unspent b{ p2, 100, 10 };
-    BOOST_REQUIRE( unspent::less_than{}(a, b));
-    BOOST_REQUIRE(!unspent::less_than{}(b, b));
+    BOOST_REQUIRE(a < b);
+    BOOST_REQUIRE(!(b < a));
 }
 
 BOOST_AUTO_TEST_CASE(unspent__less_than__unconfirmed_outpoint_ascending__expected)
@@ -63,8 +64,25 @@ BOOST_AUTO_TEST_CASE(unspent__less_than__unconfirmed_outpoint_ascending__expecte
     const outpoint p2{ { {}, 8 }, 0 };
     const unspent a{ p1, 0, 0 };
     const unspent b{ p2, 0, 0 };
-    BOOST_REQUIRE( unspent::less_than{}(a, b));
-    BOOST_REQUIRE(!unspent::less_than{}(b, a));
+    BOOST_REQUIRE(a < b);
+    BOOST_REQUIRE(!(b < a));
+}
+
+BOOST_AUTO_TEST_CASE(unspent__equality__distinct__false)
+{
+    const outpoint p1{ { { 42, 0 }, 7 }, 42 };
+    const outpoint p2{ { { 24, 1 }, 5 }, 19 };
+    const unspent a{ p1, 101, 10 };
+    const unspent b{ p2, 100, 11 };
+    BOOST_REQUIRE(!(a == b));
+    BOOST_REQUIRE(!(b == a));
+}
+
+BOOST_AUTO_TEST_CASE(unspent__equality__same__true)
+{
+    const outpoint point{ { { 42, 0 }, 5 }, 42 };
+    const unspent a{ point, 100, 10 };
+    BOOST_REQUIRE(a == a);
 }
 
 // sort_and_dedup

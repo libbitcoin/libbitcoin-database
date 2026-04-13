@@ -24,8 +24,8 @@
 namespace libbitcoin {
 namespace database {
 
-bool unspent::less_than::operator()(const unspent& a,
-    const unspent& b) const NOEXCEPT
+// local
+bool less_than(const unspent& a, const unspent& b) NOEXCEPT
 {
     const auto a_point = a.tx.point();
     const auto b_point = b.tx.point();
@@ -54,24 +54,27 @@ bool unspent::less_than::operator()(const unspent& a,
     return a_point < b_point;
 }
 
-bool unspent::equal_to::operator()(const unspent& a,
-    const unspent& b) const NOEXCEPT
+bool unspent::operator<(const unspent& other) const NOEXCEPT
 {
-    return !less_than{}(a, b) && !less_than{}(b, a);
+    return less_than(*this, other);
 }
 
-bool unspent::exclude::operator()(const unspent& element) const NOEXCEPT
+bool unspent::operator==(const unspent& other) const NOEXCEPT
 {
-    return !element.tx.is_valid();
+    return !(*this < other) && !(other < *this);
 }
 
 void unspent::sort_and_dedup(std::vector<unspent>& out) NOEXCEPT
 {
-    auto excluded = std::remove_if(out.begin(), out.end(), unspent::exclude{});
+    const auto excluded = std::remove_if(out.begin(), out.end(),
+        [](const unspent& element) NOEXCEPT
+        {
+            return !element.tx.is_valid();
+        });
+
     out.erase(excluded, out.end());
-    std::sort(out.begin(), out.end(), unspent::less_than{});
-    auto duplicates = std::unique(out.begin(), out.end(), unspent::equal_to{});
-    out.erase(duplicates, out.end());
+    std::sort(out.begin(), out.end());
+    out.erase(std::unique(out.begin(), out.end()), out.end());
 }
 
 } // namespace database

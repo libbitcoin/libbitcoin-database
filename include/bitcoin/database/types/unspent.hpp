@@ -29,22 +29,10 @@ struct BCD_API unspent
 {
     static constexpr size_t excluded_position = max_size_t;
 
-    struct less_than
-    {
-        bool operator()(const unspent& a, const unspent& b) const NOEXCEPT;
-    };
-
-    struct equal_to
-    {
-        bool operator()(const unspent& a, const unspent& b) const NOEXCEPT;
-    };
-
-    struct exclude
-    {
-        bool operator()(const unspent& element) const NOEXCEPT;
-    };
-
     static void sort_and_dedup(std::vector<unspent>& unspent) NOEXCEPT;
+
+    bool operator<(const unspent& other) const NOEXCEPT;
+    bool operator==(const unspent& other) const NOEXCEPT;
 
     outpoint tx{};
     size_t height{};

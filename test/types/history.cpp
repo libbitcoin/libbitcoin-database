@@ -28,24 +28,24 @@ BOOST_AUTO_TEST_CASE(history__less_than__confirmed_before_unconfirmed__expected)
 {
     const history a{ { hash_digest{}, 42 }, 0, 7 };
     const history b{ { hash_digest{}, 0 }, 0, 0 };
-    BOOST_REQUIRE( history::less_than{}(a, b));
-    BOOST_REQUIRE(!history::less_than{}(b, a));
+    BOOST_REQUIRE(a < b);
+    BOOST_REQUIRE(!(b < a));
 }
 
 BOOST_AUTO_TEST_CASE(history__less_than__confirmed_height_ascending__expected)
 {
     const history a{ { hash_digest{}, 100 }, 0, 5 };
     const history b{ { hash_digest{}, 200 }, 0, 5 };
-    BOOST_REQUIRE( history::less_than{}(a, b));
-    BOOST_REQUIRE(!history::less_than{}(b, a));
+    BOOST_REQUIRE(a < b);
+    BOOST_REQUIRE(!(b < a));
 }
 
 BOOST_AUTO_TEST_CASE(history__less_than__confirmed_position_ascending__expected)
 {
     const history a{ { hash_digest{}, 100 }, 0, 3 };
     const history b{ { hash_digest{}, 100 }, 0, 10 };
-    BOOST_REQUIRE( history::less_than{}(a, b));
-    BOOST_REQUIRE(!history::less_than{}(b, a));
+    BOOST_REQUIRE(a < b);
+    BOOST_REQUIRE(!(b < a));
 }
 
 BOOST_AUTO_TEST_CASE(history__less_than__unconfirmed_hash_high_nibble_difference__expected)
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(history__less_than__unconfirmed_hash_high_nibble_difference
     constexpr hash_digest hash2{ 0x10 };
     const history a{ { hash1, 0 }, 0, 0 };
     const history b{ { hash2, 0 }, 0, 0 };
-    BOOST_REQUIRE( history::less_than{}(a, b));
-    BOOST_REQUIRE(!history::less_than{}(b, a));
+    BOOST_REQUIRE(a < b);
+    BOOST_REQUIRE(!(b < a));
 }
 
 BOOST_AUTO_TEST_CASE(history__less_than__unconfirmed_hash_low_nibble_difference__expected)
@@ -64,15 +64,32 @@ BOOST_AUTO_TEST_CASE(history__less_than__unconfirmed_hash_low_nibble_difference_
     constexpr hash_digest hash2{ 0x01 };
     const history a{ { hash1, 0 }, 0, 0 };
     const history b{ { hash2, 0 }, 0, 0 };
-    BOOST_REQUIRE( history::less_than{}(a, b));
-    BOOST_REQUIRE(!history::less_than{}(b, a));
+    BOOST_REQUIRE(a < b);
+    BOOST_REQUIRE(!(b < a));
 }
 
 BOOST_AUTO_TEST_CASE(history__less_than__unconfirmed_hash_identical__expected)
 {
     constexpr hash_digest hash{ 0x00 };
     const history value{ { hash, 0 }, 0, 0 };
-    BOOST_REQUIRE(!history::less_than{}(value, value));
+    BOOST_REQUIRE(!(value < value));
+}
+
+BOOST_AUTO_TEST_CASE(history__equality__distinct__false)
+{
+    constexpr hash_digest hash1{ 0x00 };
+    constexpr hash_digest hash2{ 0x01 };
+    const history a{ { hash1, 0 }, 0, 0 };
+    const history b{ { hash2, 0 }, 0, 0 };
+    BOOST_REQUIRE(!(a == b));
+    BOOST_REQUIRE(!(b == a));
+}
+
+BOOST_AUTO_TEST_CASE(history__equality__same__true)
+{
+    constexpr hash_digest hash{ 0x01 };
+    const history a{ { hash, 1 }, 2, 3 };
+    BOOST_REQUIRE(a == a);
 }
 
 // sort_and_dedup
