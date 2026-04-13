@@ -826,6 +826,9 @@ private:
     template <typename Functor>
     static code parallel_history_transform(const stopper& cancel, bool turbo,
         histories& out, const tx_links& links, Functor&& functor) NOEXCEPT;
+    template <typename Functor>
+    static code parallel_unspent_transform(const stopper& cancel, bool turbo,
+        unspents& out, const output_links& outs, Functor&& functor) NOEXCEPT;
 
     static point::cptr make_point(hash_digest&& hash,
         uint32_t index) NOEXCEPT;
