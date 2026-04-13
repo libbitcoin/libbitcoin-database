@@ -131,9 +131,9 @@ code CLASS::parallel_outpoint_transform(const stopper& cancel, bool turbo,
     stopper fail{};
 
     out.clear();
-    std::vector<outpoint> outpoints(links.size());
+    out.resize(links.size());
 
-    std::transform(policy, links.cbegin(), links.cend(), outpoints.begin(),
+    std::transform(policy, links.cbegin(), links.cend(), out.begin(),
         [&functor, &cancel, &fail](const auto& link) NOEXCEPT
         {
             return functor(link, cancel, fail);
@@ -145,17 +145,16 @@ code CLASS::parallel_outpoint_transform(const stopper& cancel, bool turbo,
     if (cancel)
         return error::canceled;
 
-    // TODO: change outpoints to vector and avoid copy.
-    for (auto& outpoint: outpoints)
-    {
-        if (cancel)
-            return error::canceled;
+    // Remove default/null points.
+    out.erase(std::remove_if(out.begin(), out.end(),
+        [](const auto& outpoint) NOEXCEPT
+        {
+            return outpoint.point().is_null();
+        }), out.end());
 
-        // Filter out non-failures.
-        if (!outpoint.point().is_null())
-            out.insert(std::move(outpoint));
-    }
-
+    // Sort (arbitrary - by index and then binary hash) and remove duplicates.
+    std::sort(out.begin(), out.end());
+    out.erase(std::unique(out.begin(), out.end()), out.end());
     return error::success;
 }
 

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_ARCHIVE_CHAIN_READER_IPP
 #define LIBBITCOIN_DATABASE_QUERY_ARCHIVE_CHAIN_READER_IPP
 
+#include <algorithm>
 #include <utility>
 #include <bitcoin/database/define.hpp>
 
@@ -368,9 +369,11 @@ inpoints CLASS::get_spenders(const point& point) const NOEXCEPT
 {
     inpoints ins{};
     for (const auto& point_fk: to_spenders(point))
-        ins.insert(get_spender(point_fk));
+        ins.push_back(get_spender(point_fk));
 
-    // std::set (lexically sorted/deduped).
+    // Sort (arbitrary - by index and then binary hash) and remove duplicates.
+    std::sort(ins.begin(), ins.end());
+    ins.erase(std::unique(ins.begin(), ins.end()), ins.end());
     return ins;
 }
 
