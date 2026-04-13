@@ -27,8 +27,8 @@ namespace database {
 
 struct BCD_API unspent
 {
-    static constexpr size_t unconfirmed_height = zero;
-    static constexpr size_t unconfirmed_position = zero;
+    static constexpr size_t unused_height = zero;
+    static constexpr size_t unconfirmed_position = max_size_t;
 
     static void filter_sort_and_dedup(std::vector<unspent>& unspent) NOEXCEPT;
 

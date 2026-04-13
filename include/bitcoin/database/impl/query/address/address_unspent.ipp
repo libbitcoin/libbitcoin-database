@@ -70,7 +70,7 @@ code CLASS::get_unconfirmed_unspent(const stopper& cancel, unspents& out,
             }
 
             return unspent{ { { std::move(hash), index }, out.value },
-                unspent::unconfirmed_height, unspent::unconfirmed_position };
+                unspent::unused_height, unspent::unconfirmed_position };
         });
 }
 
@@ -153,7 +153,7 @@ code CLASS::get_unspent(const stopper& cancel, unspents& out,
                 return unspent{};
             }
 
-            auto height = unspent::unconfirmed_height;
+            auto height = unspent::unused_height;
             auto position = unspent::unconfirmed_position;
             if (const auto block = find_strong(tx);
                 is_confirmed_block(block))

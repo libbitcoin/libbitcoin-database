@@ -25,12 +25,13 @@ namespace libbitcoin {
 namespace database {
 
 // local
+// zero is unconfirmed height, but cannot be a sentinel for unconfirmed.
 bool less_than(const unspent& a, const unspent& b) NOEXCEPT
 {
     const auto a_point = a.out.point();
     const auto b_point = b.out.point();
-    const bool a_confirmed = !is_zero(a.height);
-    const bool b_confirmed = !is_zero(b.height);
+    const auto a_confirmed = (a.position != unspent::unconfirmed_position);
+    const auto b_confirmed = (b.position != unspent::unconfirmed_position);
 
     // Confirmed before unconfirmed.
     if (a_confirmed != b_confirmed)
@@ -50,7 +51,7 @@ bool less_than(const unspent& a, const unspent& b) NOEXCEPT
         return a_point.index() < b_point.index();
     }
 
-    // Unconfirmed have 0 height/position, arbitrary sort (hash:index).
+    // Arbitrary sort (hash:index).
     return a_point < b_point;
 }
 

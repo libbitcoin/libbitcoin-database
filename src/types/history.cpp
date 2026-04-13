@@ -54,11 +54,10 @@ inline bool hash_less_than(const hash_digest& a, const hash_digest& b) NOEXCEPT
 // local
 inline bool less_than(const history& a, const history& b) NOEXCEPT
 {
-    using namespace system;
     const auto a_height = a.tx.height();
     const auto b_height = b.tx.height();
-    const auto a_confirmed = !is_min(a_height) && !is_max(a_height);
-    const auto b_confirmed = !is_min(b_height) && !is_max(b_height);
+    const auto a_confirmed = (a.position != history::unconfirmed_position);
+    const auto b_confirmed = (b.position != history::unconfirmed_position);
 
     // Confirmed before unconfirmed.
     if (a_confirmed != b_confirmed)

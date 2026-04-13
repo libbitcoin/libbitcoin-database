@@ -27,7 +27,7 @@ using namespace system;
 BOOST_AUTO_TEST_CASE(unspent__less_than__confirmed_before_unconfirmed__expected)
 {
     const unspent a{ {}, 42, 7 };
-    const unspent b{ {}, 0, 0 };
+    const unspent b{ {}, 0, unspent::unconfirmed_position };
     BOOST_REQUIRE(a < b);
     BOOST_REQUIRE(!(b < a));
 }
@@ -50,8 +50,8 @@ BOOST_AUTO_TEST_CASE(unspent__less_than__confirmed_position_ascending__expected)
 
 BOOST_AUTO_TEST_CASE(unspent__less_than__confirmed_output_index_ascending__expected)
 {
-    const outpoint p1{ { {}, 0 }, 0 };
-    const outpoint p2{ { {}, 5 }, 0 };
+    const outpoint p1{ { {}, 0 }, 42 };
+    const outpoint p2{ { {}, 5 }, 42 };
     const unspent a{ p1, 100, 10 };
     const unspent b{ p2, 100, 10 };
     BOOST_REQUIRE(a < b);
@@ -60,18 +60,18 @@ BOOST_AUTO_TEST_CASE(unspent__less_than__confirmed_output_index_ascending__expec
 
 BOOST_AUTO_TEST_CASE(unspent__less_than__unconfirmed_outpoint_ascending__expected)
 {
-    const outpoint p1{ { {}, 3 }, 0 };
-    const outpoint p2{ { {}, 8 }, 0 };
-    const unspent a{ p1, 0, 0 };
-    const unspent b{ p2, 0, 0 };
+    const outpoint p1{ { {}, 3 }, 42 };
+    const outpoint p2{ { {}, 8 }, 42 };
+    const unspent a{ p1, 0, unspent::unconfirmed_position };
+    const unspent b{ p2, 0, unspent::unconfirmed_position };
     BOOST_REQUIRE(a < b);
     BOOST_REQUIRE(!(b < a));
 }
 
 BOOST_AUTO_TEST_CASE(unspent__equality__distinct__false)
 {
-    const outpoint p1{ { {}, 0 }, 7 };
-    const outpoint p2{ { {}, 1 }, 5 };
+    const outpoint p1{ { {}, 0 }, 42 };
+    const outpoint p2{ { {}, 1 }, 42 };
     const unspent a{ p1, 101, 10 };
     const unspent b{ p2, 100, 11 };
     BOOST_REQUIRE(!(a == b));
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(unspent__equality__distinct__false)
 
 BOOST_AUTO_TEST_CASE(unspent__equality__same__true)
 {
-    const outpoint point{ { {}, 0 }, 5 };
+    const outpoint point{ { {}, 0 }, 42 };
     const unspent a{ point, 100, 10 };
     BOOST_REQUIRE(a == a);
 }
@@ -89,33 +89,33 @@ BOOST_AUTO_TEST_CASE(unspent__equality__same__true)
 
 BOOST_AUTO_TEST_CASE(unspent__filter_sort_and_dedup__unsorted_with_duplicates_mixed__sorted_and_deduped)
 {
-    const outpoint lo{ { {}, 0 }, 0 };
-    const outpoint hi{ { {}, 5 }, 0 };
+    const outpoint lo{ { {}, 0 }, 42 };
+    const outpoint hi{ { {}, 5 }, 42 };
     std::vector<unspent> values
     {
-        { hi, 0,   0 },                                 // unconfirmed
-        { lo, 200, 3 },                                 // confirmed
-        { lo, 100, 5 },                                 // confirmed
-        { lo, 100, 5 },                                 // confirmed duplicate
-        { hi, 0,   0 }                                  // unconfirmed duplicate
+        { hi, 0, unspent::unconfirmed_position },   // unconfirmed
+        { lo, 200, 3 },                             // confirmed
+        { lo, 100, 5 },                             // confirmed
+        { lo, 100, 5 },                             // confirmed duplicate
+        { hi, 0, unspent::unconfirmed_position }    // unconfirmed duplicate
     };
 
     unspent::filter_sort_and_dedup(values);
     BOOST_REQUIRE_EQUAL(values.size(), 3u);
-    BOOST_REQUIRE_EQUAL(values[0].height, 100u);        // confirmed, lowest height
-    BOOST_REQUIRE_EQUAL(values[1].height, 200u);        // confirmed
-    BOOST_REQUIRE_EQUAL(values[2].height, 0u);          // unconfirmed
+    BOOST_REQUIRE_EQUAL(values[0].height, 100u);                    // confirmed, lowest height
+    BOOST_REQUIRE_EQUAL(values[1].height, 200u);                    // confirmed
+    BOOST_REQUIRE_EQUAL(values[2].height, unspent::unused_height);  // unconfirmed
 }
 
 BOOST_AUTO_TEST_CASE(unspent__filter_sort_and_dedup__exclusions__removes_excluded_items)
 {
     unspents items
     {
-        unspent{ outpoint{},  10, max_size_t },         // excluded (default outpoint)
-        unspent{ outpoint{}, 200, max_size_t },         // excluded (default outpoint)
-        unspent{ { {}, 3 },   50, 10 },                 // valid confirmed
-        unspent{ { {}, 4 },   50,  5 },                 // valid confirmed (same height, lower position)
-        unspent{ { {}, 3 },   50, 10 }                  // duplicate
+        unspent{ outpoint{},  10, 42 },             // excluded (default outpoint)
+        unspent{ outpoint{}, 200, 42 },             // excluded (default outpoint)
+        unspent{ { {}, 3 },   50, 10 },             // valid confirmed
+        unspent{ { {}, 4 },   50,  5 },             // valid confirmed (same height, lower position)
+        unspent{ { {}, 3 },   50, 10 }              // duplicate
     };
 
     unspent::filter_sort_and_dedup(items);
