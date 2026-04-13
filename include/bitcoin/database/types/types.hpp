@@ -16,18 +16,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/define.hpp>
+#ifndef LIBBITCOIN_DATABASE_TYPES_TYPES_HPP
+#define LIBBITCOIN_DATABASE_TYPES_TYPES_HPP
 
-// version        : <generated>
-// boost          : version <bitcoin/system>
-// error          : boost
-// define         : error
-// settings       : define
-// /locks         : define
-// /file          : define
-// /memory        : /file
-// /primitives    : /memory
-// /tables        : /primitives
-// /types         : /tables
-// store          : /types settings /locks
-// query          : /types settings
+#include <bitcoin/database/types/fee_rate.hpp>
+#include <bitcoin/database/types/header_state.hpp>
+#include <bitcoin/database/types/history.hpp>
+#include <bitcoin/database/types/position.hpp>
+#include <bitcoin/database/types/span.hpp>
+#include <bitcoin/database/types/type.hpp>
+#include <bitcoin/database/types/unspent.hpp>
+
+#endif

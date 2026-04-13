@@ -16,18 +16,35 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/define.hpp>
+#ifndef LIBBITCOIN_DATABASE_TYPES_HISTORY_HPP
+#define LIBBITCOIN_DATABASE_TYPES_HISTORY_HPP
 
-// version        : <generated>
-// boost          : version <bitcoin/system>
-// error          : boost
-// define         : error
-// settings       : define
-// /locks         : define
-// /file          : define
-// /memory        : /file
-// /primitives    : /memory
-// /tables        : /primitives
-// /types         : /tables
-// store          : /types settings /locks
-// query          : /types settings
+#include <bitcoin/database/define.hpp>
+#include <bitcoin/database/types/type.hpp>
+
+namespace libbitcoin {
+namespace database {
+
+struct BCD_API history
+{
+    static constexpr size_t rooted_height = zero;
+    static constexpr size_t unrooted_height = max_size_t;
+    static constexpr size_t missing_prevout = max_uint64;
+    static constexpr size_t unconfirmed_position = zero;
+
+    static void sort_and_dedup(std::vector<history>& history) NOEXCEPT;
+
+    bool operator<(const history& other) const NOEXCEPT;
+    bool operator==(const history& other) const NOEXCEPT;
+
+    checkpoint tx{};
+    uint64_t fee{};
+    size_t position{};
+};
+
+using histories = std::vector<history>;
+
+} // namespace database
+} // namespace libbitcoin
+
+#endif

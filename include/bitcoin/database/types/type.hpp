@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TYPES_HPP
-#define LIBBITCOIN_DATABASE_TYPES_HPP
+#ifndef LIBBITCOIN_DATABASE_TYPES_TYPE_HPP
+#define LIBBITCOIN_DATABASE_TYPES_TYPE_HPP
 
 #include <atomic>
 #include <optional>
@@ -69,96 +69,21 @@ using data_chunk = system::data_chunk;
 /// Common system::chain aliases.
 /// ---------------------------------------------------------------------------
 
-using inpoint = system::chain::point;
-using outpoint = system::chain::outpoint;
-using inpoints = std::vector<inpoint>;
-using outpoints = std::vector<outpoint>;
 using checkpoint = system::chain::checkpoint;
 
-/// Common carriers.
+using inpoint = system::chain::point;
+using inpoints = std::vector<inpoint>;
+
+using outpoint = system::chain::outpoint;
+using outpoints = std::vector<outpoint>;
+
+/// Custom data carriers.
 /// ---------------------------------------------------------------------------
+/// Also: position, header_state, fee_rate, span, unspent, history.
 
-using counts = std::pair<size_t, size_t>;
+using heights = std::vector<size_t>;
 using sizes = std::pair<size_t, size_t>;
-using heights = std_vector<size_t>;
-
-struct position { size_t sibling; size_t width; };
-using positions = std::vector<position>;
-
-struct header_state { header_link link; code ec; };
-using header_states = std::vector<header_state>;
-
-struct fee_rate { size_t bytes{}; uint64_t fee{}; };
-using fee_rates = std::vector<fee_rate>;
-using fee_rate_sets = std::vector<fee_rates>;
-
-struct span
-{
-    inline size_t size() const NOEXCEPT
-    {
-        return system::floored_subtract(end, begin);
-    }
-
-    size_t begin;
-    size_t end;
-};
-
-struct BCD_API unspent
-{
-    static constexpr size_t excluded_position = max_size_t;
-
-    struct less_than
-    {
-        bool operator()(const unspent& a, const unspent& b) const NOEXCEPT;
-    };
-
-    struct equal_to
-    {
-        bool operator()(const unspent& a, const unspent& b) const NOEXCEPT;
-    };
-
-    struct exclude
-    {
-        bool operator()(const unspent& element) const NOEXCEPT;
-    };
-
-    static void sort_and_dedup(std::vector<unspent>& unspent) NOEXCEPT;
-
-    outpoint tx{};
-    size_t height{};
-    size_t position{};
-};
-using unspents = std::vector<unspent>;
-
-struct BCD_API history
-{
-    static constexpr size_t rooted_height = zero;
-    static constexpr size_t unrooted_height = max_size_t;
-    static constexpr size_t missing_prevout = max_uint64;
-    static constexpr size_t unconfirmed_position = zero;
-
-    struct less_than
-    {
-        bool operator()(const history& a, const history& b) const NOEXCEPT;
-    };
-
-    struct equal_to
-    {
-        bool operator()(const history& a, const history& b) const NOEXCEPT;
-    };
-
-    struct exclude
-    {
-        bool operator()(const history& element) const NOEXCEPT;
-    };
-
-    static void sort_and_dedup(std::vector<history>& history) NOEXCEPT;
-
-    checkpoint tx{};
-    uint64_t fee{};
-    size_t position{};
-};
-using histories = std::vector<history>;
+using counts = std::pair<size_t, size_t>;
 
 } // namespace database
 } // namespace libbitcoin

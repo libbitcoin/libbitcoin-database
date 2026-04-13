@@ -16,18 +16,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/define.hpp>
+#include "../test.hpp"
 
-// version        : <generated>
-// boost          : version <bitcoin/system>
-// error          : boost
-// define         : error
-// settings       : define
-// /locks         : define
-// /file          : define
-// /memory        : /file
-// /primitives    : /memory
-// /tables        : /primitives
-// /types         : /tables
-// store          : /types settings /locks
-// query          : /types settings
+BOOST_AUTO_TEST_SUITE(span_tests)
+
+using namespace system;
+
+BOOST_AUTO_TEST_CASE(span__size__default__zero)
+{
+    const span instance{};
+    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(span__size__empty_range__zero)
+{
+    const span instance{ 5, 5 };
+    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(span__size__non_empty_range__expected)
+{
+    const span instance{ 10, 25 };
+    BOOST_REQUIRE_EQUAL(instance.size(), 15u);
+}
+
+BOOST_AUTO_TEST_CASE(span__size__negative_range__zero)
+{
+    const span instance{ 100, 30 };
+    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

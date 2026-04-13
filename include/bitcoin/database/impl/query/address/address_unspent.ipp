@@ -128,7 +128,6 @@ code CLASS::parallel_unspent_transform(const stopper& cancel, bool turbo,
     return error::success;
 }
 
-
 } // namespace database
 } // namespace libbitcoin
 

@@ -16,18 +16,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/define.hpp>
+#ifndef LIBBITCOIN_DATABASE_TYPES_UNSPENT_HPP
+#define LIBBITCOIN_DATABASE_TYPES_UNSPENT_HPP
 
-// version        : <generated>
-// boost          : version <bitcoin/system>
-// error          : boost
-// define         : error
-// settings       : define
-// /locks         : define
-// /file          : define
-// /memory        : /file
-// /primitives    : /memory
-// /tables        : /primitives
-// /types         : /tables
-// store          : /types settings /locks
-// query          : /types settings
+#include <bitcoin/database/define.hpp>
+#include <bitcoin/database/types/type.hpp>
+
+namespace libbitcoin {
+namespace database {
+
+struct BCD_API unspent
+{
+    static constexpr size_t excluded_position = max_size_t;
+
+    static void sort_and_dedup(std::vector<unspent>& unspent) NOEXCEPT;
+
+    bool operator<(const unspent& other) const NOEXCEPT;
+    bool operator==(const unspent& other) const NOEXCEPT;
+
+    outpoint tx{};
+    size_t height{};
+    size_t position{};
+};
+
+using unspents = std::vector<unspent>;
+
+} // namespace database
+} // namespace libbitcoin
+
+#endif

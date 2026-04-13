@@ -22,7 +22,7 @@
 #include <mutex>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
-#include <bitcoin/database/types.hpp>
+#include <bitcoin/database/types/types.hpp>
 
 namespace libbitcoin {
 namespace database {

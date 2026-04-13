@@ -138,7 +138,8 @@
       <ObjectFileName>$(IntDir)src_memory_utilities.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
-    <ClCompile Include="..\..\..\..\src\types.cpp" />
+    <ClCompile Include="..\..\..\..\src\types\history.cpp" />
+    <ClCompile Include="..\..\..\..\src\types\unspent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\database.hpp" />
@@ -201,7 +202,14 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\states.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\tables.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\types.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\fee_rate.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\header_state.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\history.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\position.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\span.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\type.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\types.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\unspent.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
     <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.hpp" />
   </ItemGroup>
