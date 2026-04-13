@@ -86,7 +86,7 @@ bool history::equal_to::operator()(const history& a, const history& b) const NOE
 
 bool history::exclude::operator()(const history& element) const NOEXCEPT
 {
-    return element.position == max_size_t;
+    return !element.tx.is_valid();
 }
 
 void history::sort_and_dedup(std::vector<history>& out) NOEXCEPT
@@ -140,7 +140,7 @@ bool unspent::equal_to::operator()(const unspent& a,
 
 bool unspent::exclude::operator()(const unspent& element) const NOEXCEPT
 {
-    return element.position == max_size_t;
+    return !element.tx.is_valid();
 }
 
 void unspent::sort_and_dedup(std::vector<unspent>& out) NOEXCEPT
