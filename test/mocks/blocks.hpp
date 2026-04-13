@@ -31,7 +31,8 @@ using header_data = system::data_array<80>;
 const auto events_handler = [](auto, auto) {};
 extern const database::context context;
 
-extern const system::hash_digest genesis_address;
+// block1a_address0 is the same address as: bk2a0/bk2a1/tx4/tx5/bk3a0.
+extern const system::hash_digest genesis_address0;
 extern const system::hash_digest block1a_address0;
 extern const system::hash_digest block1a_address1;
 
@@ -93,12 +94,12 @@ extern const system::chain::block block9;
 extern const system::chain::block bogus_block;
 extern const system::chain::block block1a;
 extern const system::chain::block block2a;
+extern const system::chain::block block3a;
 extern const system::chain::transaction tx4;
 extern const system::chain::transaction tx5;
 extern const system::chain::block block_spend_1a;
 extern const system::chain::transaction tx_spend_genesis;
 extern const system::chain::block block_spend_genesis;
-extern const system::chain::block block3a;
 extern const system::chain::block block1b;
 extern const system::chain::block block2b;
 extern const system::chain::transaction tx2b;

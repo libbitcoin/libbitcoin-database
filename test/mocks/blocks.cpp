@@ -25,7 +25,7 @@ using namespace system;
 constexpr hash_digest two_hash = from_uintx(uint256_t(two));
 constexpr database::context context{ 0x01020304, 0x11121314, 0x21222324 };
 
-constexpr hash_digest genesis_address  = base16_hash("740485f380ff6379d11ef6fe7d7cdd68aea7f8bd0d953d9fdf3531fb7d531833");
+constexpr hash_digest genesis_address0 = base16_hash("740485f380ff6379d11ef6fe7d7cdd68aea7f8bd0d953d9fdf3531fb7d531833");
 constexpr hash_digest block1a_address0 = base16_hash("fab04811b1d0379bf78c2a41902368c200d675788e4bff8c88ff543836e4fca1");
 constexpr hash_digest block1a_address1 = base16_hash("067bd624c5840ed0d5b65597bafcde68f07fa9d87d3b43292b3199e49a514e59");
 
@@ -111,9 +111,11 @@ bool setup_three_block_confirmed_address_store(query_t& query) NOEXCEPT
         query.set(test::tx4) &&
         query.set(test::tx5) &&
         query.set(block3a, database::context{ 0, 3, 0 }, false, false) &&
+        query.set(block1b, database::context{ 0, 1, 0 }, false, false) &&
+        query.set(block2b, database::context{ 0, 2, 0 }, false, false) &&
         query.push_confirmed(query.to_header(block1a.hash()), true) &&
         query.push_confirmed(query.to_header(block2a.hash()), true) &&
-        query.push_confirmed(query.to_header(block2a.hash()), true);
+        query.push_confirmed(query.to_header(block3a.hash()), true);
 }
 
 bool setup_three_block_unconfirmed_address_store(query_t& query) NOEXCEPT
@@ -136,7 +138,7 @@ const block bogus_block
     {
         0x31323334,
         null_hash,
-        one_hash,
+        hash_digest{ 0xbb },
         0x41424344,
         0x51525354,
         0x61626364
@@ -241,7 +243,7 @@ const block block1a
     {
         0x31323334,         // version
         block0_hash,        // previous_block_hash
-        null_hash,          // merkle_root
+        hash_digest{ 0x1a },// merkle_root
         0x41424344,         // timestamp
         0x51525354,         // bits
         0x61626364          // nonce
@@ -299,7 +301,7 @@ const block block2a
     {
         0x31323334,         // version
         block1a.hash(),     // previous_block_hash
-        one_hash,           // merkle_root
+        hash_digest{ 0x2a },// merkle_root
         0x41424344,         // timestamp
         0x51525354,         // bits
         0x61626364          // nonce
@@ -371,122 +373,13 @@ const block block2a
         }
     }
 };
-const transaction tx4
-{
-    0xa5,           // version
-    inputs
-    {
-        input
-        {
-            point{ block1a.transactions_ptr()->front()->hash(false), 0x00 },
-            script{ { { opcode::checkmultisig }, { opcode::pick } } },
-            witness{ "[252525]" },
-            0xa5    // sequence
-        },
-        input
-        {
-            point{ block1a.transactions_ptr()->front()->hash(false), 0x01 },
-            script{ { { opcode::checkmultisig }, { opcode::roll } } },
-            witness{ "[353535]" },
-            0x85    // sequence
-        }
-    },
-    outputs
-    {
-        output
-        {
-            0x85,   // value
-            script{ { { opcode::pick } } }
-        }
-    },
-    0x85            // locktime
-};
-const transaction tx5
-{
-    0xa5,           // version
-    inputs
-    {
-        input
-        {
-            point{ block1a.transactions_ptr()->front()->hash(false), 0x00 },
-            script{ { { opcode::checkmultisig }, { opcode::pick } } },
-            witness{ "[252525]" },
-            0xa5    // sequence
-        }
-    },
-    outputs
-    {
-        output
-        {
-            0x85,   // value
-            script{ { { opcode::pick } } }
-        }
-    },
-    0x85            // locktime
-};
-const block block_spend_1a
-{
-    header
-    {
-        0x31323334,         // version
-        block1a.hash(),     // previous_block_hash
-        two_hash,           // merkle_root (two_hash allows double spend)
-        0x41424344,         // timestamp
-        0x51525354,         // bits
-        0x61626364          // nonce
-    },
-    transactions
-    {
-        tx4
-    }
-};
-const transaction tx_spend_genesis
-{
-    0xa6,
-    inputs
-    {
-        input
-        {
-            // Spend genesis.
-            point{ genesis.transactions_ptr()->front()->hash(false), 0x00 },
-            script{ { { opcode::checkmultisig }, { opcode::pick } } },
-            witness{ "[262626]" },
-            0xa6
-        }
-    },
-    outputs
-    {
-        output
-        {
-            0x86,
-            script{ { { opcode::pick } } }
-        }
-    },
-    0x86
-};
-const block block_spend_genesis
-{
-    header
-    {
-        0x31323334,         // version
-        block0_hash,        // previous_block_hash
-        null_hash,          // merkle_root
-        0x41424344,         // timestamp
-        0x51525354,         // bits
-        0x61626364          // nonce
-    },
-    transactions
-    {
-        tx_spend_genesis
-    }
-};
 const block block3a
 {
     header
     {
         0x31323334,         // version
         block2a.hash(),     // previous_block_hash
-        two_hash,   // merkle_root
+        hash_digest{ 0x3a },// merkle_root
         0x41424344,         // timestamp
         0x51525354,         // bits
         0x61626364          // nonce
@@ -528,13 +421,122 @@ const block block3a
         }
     }
 };
+const transaction tx4
+{
+    0xa5,           // version
+    inputs
+    {
+        input
+        {
+            point{ block1a.transactions_ptr()->front()->hash(false), 0x00 },
+            script{ { { opcode::checkmultisig }, { opcode::pick } } },
+            witness{ "[252525]" },
+            0xa5    // sequence
+        },
+        input
+        {
+            point{ block1a.transactions_ptr()->front()->hash(false), 0x01 },
+            script{ { { opcode::checkmultisig }, { opcode::roll } } },
+            witness{ "[353535]" },
+            0x85    // sequence
+        }
+    },
+    outputs
+    {
+        output
+        {
+            0x08,   // value
+            script{ { { opcode::pick } } }
+        }
+    },
+    0x85            // locktime
+};
+const transaction tx5
+{
+    0xa5,           // version
+    inputs
+    {
+        input
+        {
+            point{ block1a.transactions_ptr()->front()->hash(false), 0x00 },
+            script{ { { opcode::checkmultisig }, { opcode::pick } } },
+            witness{ "[252525]" },
+            0xa5    // sequence
+        }
+    },
+    outputs
+    {
+        output
+        {
+            0x85,   // value
+            script{ { { opcode::pick } } }
+        }
+    },
+    0x85            // locktime
+};
+const block block_spend_1a
+{
+    header
+    {
+        0x31323334,         // version
+        block1a.hash(),     // previous_block_hash
+        hash_digest{ 0x2c },// merkle_root (???? allows double spend)
+        0x41424344,         // timestamp
+        0x51525354,         // bits
+        0x61626364          // nonce
+    },
+    transactions
+    {
+        tx4
+    }
+};
+const transaction tx_spend_genesis
+{
+    0xa6,
+    inputs
+    {
+        input
+        {
+            // Spend genesis.
+            point{ genesis.transactions_ptr()->front()->hash(false), 0x00 },
+            script{ { { opcode::checkmultisig }, { opcode::pick } } },
+            witness{ "[262626]" },
+            0xa6
+        }
+    },
+    outputs
+    {
+        output
+        {
+            0x86,
+            script{ { { opcode::pick } } }
+        }
+    },
+    0x86
+};
+const block block_spend_genesis
+{
+    header
+    {
+        0x31323334,         // version
+        block0_hash,        // previous_block_hash
+        hash_digest{ 0x1c },// merkle_root
+        0x41424344,         // timestamp
+        0x51525354,         // bits
+        0x61626364          // nonce
+    },
+    transactions
+    {
+        tx_spend_genesis
+    }
+};
 const block block1b
 {
     header
     {
         0x31323334,         // version
         block0_hash,        // previous_block_hash
-        null_hash,          // merkle_root
+        hash_digest{ 0x1b },// merkle_root
         0x41424344,         // timestamp
         0x51525354,         // bits
         0x61626364          // nonce
@@ -578,7 +580,7 @@ const block block2b
     {
         0x31323334,         // version
         block1b.hash(),     // previous_block_hash
-        one_hash,           // merkle_root
+        hash_digest{ 0x2b },// merkle_root
         0x41424344,         // timestamp
         0x51525354,         // bits
         0x61626364          // nonce
@@ -651,7 +653,7 @@ const block block_spend_internal_2b
     {
         0x31323334,         // version
         block1b.hash(),     // previous_block_hash
-        one_hash,           // merkle_root
+        hash_digest{ 0x3c },// merkle_root
         0x41424344,         // timestamp
         0x51525354,         // bits
         0x61626364          // nonce
@@ -691,7 +693,7 @@ const block block_missing_prevout_2b
     {
         0x31323334,         // version
         block1b.hash(),     // previous_block_hash
-        one_hash,           // merkle_root
+        hash_digest{ 0x3d },// merkle_root
         0x41424344,         // timestamp
         0x51525354,         // bits
         0x61626364          // nonce
@@ -731,7 +733,7 @@ const block block_valid_spend_internal_2b
     {
         0x31323334,         // version
         block1b.hash(),     // previous_block_hash
-        one_hash,           // merkle_root
+        hash_digest{ 0x3e },// merkle_root
         0x41424344,         // timestamp
         0x51525354,         // bits
         0x61626364          // nonce

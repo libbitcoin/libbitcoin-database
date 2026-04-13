@@ -20,57 +20,95 @@
 #include "../../mocks/blocks.hpp"
 #include "../../mocks/chunk_store.hpp"
 
+// Unconfirmed balance is always zero in the current implementation.
+
 BOOST_FIXTURE_TEST_SUITE(query_address_tests, test::directory_setup_fixture)
 
 // get_unconfirmed_balance
 // get_confirmed_balance
 // get_balance
 
-BOOST_AUTO_TEST_CASE(query_address__get_balance__turbo_genesis__expected)
+BOOST_AUTO_TEST_CASE(query_address__get_balance__turbo_block1a_address0_confirmed_blocks__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    // block1a_address0 has 9 instances `script{ { { opcode::pick } } }`.
+    // block1a_address0 has 4 confirmed instances (blocks 1a/2a/3a).
+    // block1a (value: 0x18) is confirmed spent by block2a0.
+    // block2a (value: 0x81) is confirmed unspent.
+    // block2a (value: 0x81) is confirmed unspent.
+    // block3a (value: 0x83) is confirmed unspent.
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
 
     uint64_t unconfirmed{};
     const std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::genesis_address, true));
+    BOOST_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::block1a_address0, true));
     BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
 
     uint64_t confirmed{};
-    BOOST_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::genesis_address, true));
-    BOOST_REQUIRE_EQUAL(confirmed, 5000000000u);
+    BOOST_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address0, true));
+    BOOST_REQUIRE_EQUAL(confirmed, 389u);
 
     confirmed = unconfirmed = 42;
-    BOOST_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::genesis_address, true));
-    BOOST_REQUIRE_EQUAL(confirmed, 5000000000u);
+    BOOST_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, true));
+    BOOST_REQUIRE_EQUAL(confirmed, 389u);
     BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_address__get_balance__genesis__expected)
+BOOST_AUTO_TEST_CASE(query_address__get_balance__turbo_block1a_address0_unconfirmed_blocks__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    // block1a_address0 has 6 instances `script{ { { opcode::pick } } }`.
+    BOOST_REQUIRE(test::setup_three_block_unconfirmed_address_store(query));
 
     uint64_t unconfirmed{};
     const std::atomic_bool cancel{};
-    BOOST_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::genesis_address));
+    BOOST_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::block1a_address0, true));
     BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
 
     uint64_t confirmed{};
-    BOOST_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::genesis_address));
-    BOOST_REQUIRE_EQUAL(confirmed, 5000000000u);
+    BOOST_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address0, true));
+    BOOST_REQUIRE_EQUAL(confirmed, 0u);
 
     confirmed = unconfirmed = 42;
-    BOOST_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::genesis_address));
-    BOOST_REQUIRE_EQUAL(confirmed, 5000000000u);
+    BOOST_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, true));
+    BOOST_REQUIRE_EQUAL(confirmed, 0u);
+    BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_balance__block1a_address1_confirmed_blocks__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+
+    // block1a_address1 is unique to that output instance `script{ { { opcode::roll } } }`.
+    // block1a_address1 is spent by block2a1, tx4-1, and (confirmed double spent by) block3a1.
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    uint64_t unconfirmed{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::block1a_address1));
+    BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
+
+    uint64_t confirmed{};
+    BOOST_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address1));
+    BOOST_REQUIRE_EQUAL(confirmed, 0u);
+
+    confirmed = unconfirmed = 42;
+    BOOST_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address1));
+    BOOST_REQUIRE_EQUAL(confirmed, 0u);
     BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
 }
 

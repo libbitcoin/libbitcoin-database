@@ -174,8 +174,8 @@ BOOST_AUTO_TEST_CASE(history__sort_and_dedup__exclusions__removes_excluded_items
 {
     std::vector<history> items
     {
-        history{ { hash_digest{}, 1 }, 0, max_size_t }, // excluded
-        history{ { hash_digest{}, 2 }, 0, max_size_t }, // excluded
+        history{ checkpoint{}, 0, max_size_t },         // excluded (default checkpoint)
+        history{ checkpoint{}, 0, max_size_t },         // excluded (default checkpoint)
         history{ { hash_digest{}, 3 }, 0, 10 },         // valid
         history{ { hash_digest{}, 3 }, 0,  5 },         // valid (same height, lower position)
         history{ { hash_digest{}, 3 }, 0, 10 }          // duplicate
@@ -213,11 +213,11 @@ BOOST_AUTO_TEST_CASE(unspent__sort_and_dedup__exclusions__removes_excluded_items
 {
     unspents items
     {
-        unspent{ { {}, 1 },  10, max_size_t },          // excluded
-        unspent{ { {}, 2 }, 200, max_size_t },          // excluded
-        unspent{ { {}, 3 },  50, 10 },                  // valid confirmed
-        unspent{ { {}, 4 },  50,  5 },                  // valid confirmed (same height, lower position)
-        unspent{ { {}, 3 },  50, 10 }                   // duplicate
+        unspent{ outpoint{},  10, max_size_t },         // excluded (default outpoint)
+        unspent{ outpoint{}, 200, max_size_t },         // excluded (default outpoint)
+        unspent{ { {}, 3 },   50, 10 },                 // valid confirmed
+        unspent{ { {}, 4 },   50,  5 },                 // valid confirmed (same height, lower position)
+        unspent{ { {}, 3 },   50, 10 }                  // duplicate
     };
 
     unspent::sort_and_dedup(items);

@@ -52,29 +52,30 @@ code CLASS::get_unconfirmed_history(const stopper& cancel, histories& out,
     return parallel_history_transform(cancel, turbo, out, txs,
         [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> history
         {
-            if (cancel)
+            if (cancel || fail)
                 return {};
 
-            if (const auto block = find_strong(link); is_confirmed_block(block))
-            {
-                constexpr auto excluded = history::excluded_position;
-                return { system::chain::checkpoint{}, {}, excluded };
-            }
-            else
-            {
-                uint64_t fee{};
-                auto hash = get_tx_key(link);
-                if (hash == system::null_hash || !get_tx_fee(fee, link))
-                {
-                    fail = true;
-                }
+            // chain::checkpoint invalid in default construction (filter).
+            const auto block = find_strong(link);
+            if (is_confirmed_block(block))
+                return {};
 
-                const auto height = is_confirmed_all_prevouts(link) ?
-                    history::rooted_height : history::unrooted_height;
-
-                constexpr auto unconfirmed = history::unconfirmed_position;
-                return { { std::move(hash), height }, fee, unconfirmed };
+            auto hash = get_tx_key(link);
+            if (hash == system::null_hash)
+            {
+                fail = true;
+                return {};
             }
+
+            uint64_t fee{};
+            auto height = history::unrooted_height;
+            if (!get_tx_fee(fee, link))
+                fee = history::missing_prevout;
+            else if (is_confirmed_all_prevouts(link))
+                height = history::rooted_height;
+
+            return { { std::move(hash), height }, fee,
+                history::unconfirmed_position };
         });
 }
 
@@ -96,28 +97,29 @@ code CLASS::get_confirmed_history(const stopper& cancel, histories& out,
     return parallel_history_transform(cancel, turbo, out, txs,
         [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> history
         {
-            if (cancel)
+            if (cancel || fail)
                 return {};
 
-            if (const auto block = find_strong(link); is_confirmed_block(block))
-            {
-                uint64_t fee{};
-                size_t height{}, position{};
-                auto hash = get_tx_key(link);
-                if (hash == system::null_hash || !get_tx_fee(fee, link) ||
-                    !get_height(height, block) ||
-                    !get_tx_position(position, link, block))
-                {
-                    fail = true;
-                }
+            // chain::checkpoint invalid in default construction (filter).
+            const auto block = find_strong(link);
+            if (!is_confirmed_block(block))
+                return {};
 
-                return { { std::move(hash), height }, fee, position };
-            }
-            else
+            size_t height{}, position{};
+            auto hash = get_tx_key(link);
+            if (hash == system::null_hash ||
+                !get_height(height, block) ||
+                !get_tx_position(position, link, block))
             {
-                constexpr auto exclude = history::excluded_position;
-                return { system::chain::checkpoint{}, {}, exclude };
+                fail = true;
+                return {};
             }
+
+            uint64_t fee{};
+            if (!get_tx_fee(fee, link))
+                fee = history::missing_prevout;
+
+            return { { std::move(hash), height }, fee, position };
         });
 }
 
@@ -139,25 +141,36 @@ code CLASS::get_history(const stopper& cancel, histories& out,
     return parallel_history_transform(cancel, turbo, out, links,
         [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> history
         {
-            if (cancel)
+            if (cancel || fail)
                 return {};
 
-            uint64_t fee{};
             auto hash = get_tx_key(link);
-            if (hash == system::null_hash || !get_tx_fee(fee, link))
+            if (hash == system::null_hash)
+            {
                 fail = true;
+                return {};
+            }
 
-            size_t height{}, position{};
-            if (const auto block = find_strong(link); is_confirmed_block(block))
+            uint64_t fee{};
+            if (!get_tx_fee(fee, link))
+                fee = history::missing_prevout;
+
+            auto height = history::unrooted_height;
+            auto position = history::unconfirmed_position;
+            if (const auto block = find_strong(link);
+                is_confirmed_block(block))
             {
                 if (!get_height(height, block) ||
                     !get_tx_position(position, link, block))
+                {
                     fail = true;
+                    return {};
+                }
             }
             else
             {
-                height = is_confirmed_all_prevouts(link) ?
-                    history::rooted_height : history::unrooted_height;
+                if (is_confirmed_all_prevouts(link))
+                    height = history::rooted_height;
             }
 
             return { { std::move(hash), height }, fee, position };
