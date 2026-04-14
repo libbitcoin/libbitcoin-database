@@ -34,6 +34,9 @@ struct BCD_API history
 
     static void filter_sort_and_dedup(std::vector<history>& history) NOEXCEPT;
 
+    bool valid() const NOEXCEPT;
+    bool rooted() const NOEXCEPT;
+    bool confirmed() const NOEXCEPT;
     bool operator<(const history& other) const NOEXCEPT;
     bool operator==(const history& other) const NOEXCEPT;
 

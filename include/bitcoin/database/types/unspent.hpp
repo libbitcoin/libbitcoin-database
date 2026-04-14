@@ -32,6 +32,8 @@ struct BCD_API unspent
 
     static void filter_sort_and_dedup(std::vector<unspent>& unspent) NOEXCEPT;
 
+    bool valid() const NOEXCEPT;
+    bool confirmed() const NOEXCEPT;
     bool operator<(const unspent& other) const NOEXCEPT;
     bool operator==(const unspent& other) const NOEXCEPT;
 

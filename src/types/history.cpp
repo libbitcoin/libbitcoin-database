@@ -56,8 +56,8 @@ inline bool less_than(const history& a, const history& b) NOEXCEPT
 {
     const auto a_height = a.tx.height();
     const auto b_height = b.tx.height();
-    const auto a_confirmed = (a.position != history::unconfirmed_position);
-    const auto b_confirmed = (b.position != history::unconfirmed_position);
+    const auto a_confirmed = a.confirmed();
+    const auto b_confirmed = b.confirmed();
 
     // Confirmed before unconfirmed.
     if (a_confirmed != b_confirmed)
@@ -75,6 +75,22 @@ inline bool less_than(const history& a, const history& b) NOEXCEPT
     return hash_less_than(a.tx.hash(), b.tx.hash());
 }
 
+bool history::valid() const NOEXCEPT
+{
+    return tx.is_valid();
+}
+
+// Only applies when !confirmed, and only other option is unrooted_height.
+bool history::rooted() const NOEXCEPT
+{
+    return tx.height() == rooted_height;
+}
+
+bool history::confirmed() const NOEXCEPT
+{
+    return position != unconfirmed_position;
+}
+
 bool history::operator<(const history& other) const NOEXCEPT
 {
     return less_than(*this, other);
@@ -90,7 +106,7 @@ void history::filter_sort_and_dedup(std::vector<history>& out) NOEXCEPT
     const auto excluded = std::remove_if(out.begin(), out.end(),
         [](const history& element) NOEXCEPT
         {
-            return !element.tx.is_valid();
+            return !element.valid();
         });
 
     out.erase(excluded, out.end());

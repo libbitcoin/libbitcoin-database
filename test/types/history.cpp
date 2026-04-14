@@ -98,8 +98,35 @@ BOOST_AUTO_TEST_CASE(history__equality__distinct__false)
 BOOST_AUTO_TEST_CASE(history__equality__same__true)
 {
     constexpr hash_digest hash{ 0x01 };
-    const history a{ { hash, 1 }, 2, 3 };
-    BOOST_REQUIRE(a == a);
+    const history value{ { hash, 1 }, 2, 3 };
+    BOOST_REQUIRE(value == value);
+}
+
+BOOST_AUTO_TEST_CASE(history__valid__always__expected)
+{
+    const auto valid = history{ { hash_digest{}, 42 }, 2, 3 }.valid();
+    BOOST_REQUIRE(valid);
+
+    const auto invalid = !history{ checkpoint{}, 2, 3 }.valid();
+    BOOST_REQUIRE(invalid);
+}
+
+BOOST_AUTO_TEST_CASE(history__rooted__always__expected)
+{
+    const auto rooted = history{ { hash_digest{}, history::rooted_height }, 2, history::unconfirmed_position }.rooted();
+    BOOST_REQUIRE(rooted);
+
+    const auto unrooted = !history{ { hash_digest{}, history::unrooted_height }, 2, history::unconfirmed_position }.rooted();
+    BOOST_REQUIRE(unrooted);
+}
+
+BOOST_AUTO_TEST_CASE(history__confirmed__always__expected)
+{
+    const auto confirmed = history{ { hash_digest{}, 42 }, 2, 3 }.confirmed();
+    BOOST_REQUIRE(confirmed);
+
+    const auto unconfirmed = !history{ { hash_digest{}, 42 }, 2, history::unconfirmed_position }.confirmed();
+    BOOST_REQUIRE(unconfirmed);
 }
 
 // filter_sort_and_dedup
@@ -120,10 +147,21 @@ BOOST_AUTO_TEST_CASE(history__filter_sort_and_dedup__unsorted_with_duplicates_mi
 
     history::filter_sort_and_dedup(values);
     BOOST_REQUIRE_EQUAL(values.size(), 4u);
+
     BOOST_REQUIRE_EQUAL(values[0].tx.height(), 100u);                   // confirmed, lowest height
     BOOST_REQUIRE_EQUAL(values[1].tx.height(), 200u);                   // confirmed
     BOOST_REQUIRE_EQUAL(values[2].tx.height(), 0u);                     // unconfirmed (h1)
     BOOST_REQUIRE_EQUAL(values[3].tx.height(), 0u);                     // unconfirmed (h2)
+
+    BOOST_REQUIRE( values[0].confirmed());
+    BOOST_REQUIRE( values[1].confirmed());
+    BOOST_REQUIRE(!values[2].confirmed());
+    BOOST_REQUIRE(!values[3].confirmed());
+
+    BOOST_REQUIRE(values[0].valid());
+    BOOST_REQUIRE(values[1].valid());
+    BOOST_REQUIRE(values[2].valid());
+    BOOST_REQUIRE(values[3].valid());
 }
 
 BOOST_AUTO_TEST_CASE(history__filter_sort_and_dedup__exclusions__removes_excluded_items)

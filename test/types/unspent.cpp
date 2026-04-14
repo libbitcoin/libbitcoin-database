@@ -81,8 +81,26 @@ BOOST_AUTO_TEST_CASE(unspent__equality__distinct__false)
 BOOST_AUTO_TEST_CASE(unspent__equality__same__true)
 {
     const outpoint point{ { {}, 0 }, 42 };
-    const unspent a{ point, 100, 10 };
-    BOOST_REQUIRE(a == a);
+    const unspent value{ point, 100, 10 };
+    BOOST_REQUIRE(value == value);
+}
+
+BOOST_AUTO_TEST_CASE(unspent__valid__always__expected)
+{
+    const auto valid = unspent{ { { hash_digest{}, 0 }, 42 }, 2, 3 }.valid();
+    BOOST_REQUIRE(valid);
+
+    const auto invalid = !unspent{ {}, 2, 3 }.valid();
+    BOOST_REQUIRE(invalid);
+}
+
+BOOST_AUTO_TEST_CASE(unspent__confirmed__always__expected)
+{
+    const auto confirmed = unspent{ { { hash_digest{}, 0 }, 42 }, 2, 3 }.confirmed();
+    BOOST_REQUIRE(confirmed);
+
+    const auto unconfirmed = !unspent{ { { hash_digest{}, 0 }, 42 }, 2, unspent::unconfirmed_position }.confirmed();
+    BOOST_REQUIRE(unconfirmed);
 }
 
 // filter_sort_and_dedup
