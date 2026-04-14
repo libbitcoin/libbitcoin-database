@@ -33,6 +33,7 @@ namespace database {
 // Unconfirmed unspent are included at end of list in consistent order.
 
 // ununsed
+// Only unconfirmed outputs that are not spent (by an unconfirmed tx).
 TEMPLATE
 code CLASS::get_unconfirmed_unspent(const stopper& cancel, unspents& out,
     const hash_digest& key, bool turbo) const NOEXCEPT
@@ -46,7 +47,10 @@ code CLASS::get_unconfirmed_unspent(const stopper& cancel, unspents& out,
     return parallel_unspent_transform(cancel, turbo, out, outs,
         [this](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
-            if (cancel || fail)
+            // Exclude if spent by any tx. Given that output must be confirmed
+            // this is only unconfirmeds, but checking both via is_spent() is
+            // much faster than calling is_unconfirmed_spent().
+            if (cancel || fail || is_spent(link))
                 return unspent{};
 
             table::output::get_parent_value out{};
@@ -75,6 +79,7 @@ code CLASS::get_unconfirmed_unspent(const stopper& cancel, unspents& out,
 }
 
 // ununsed
+// Only confirmed outputs that are not spent by a confirmed tx.
 TEMPLATE
 code CLASS::get_confirmed_unspent(const stopper& cancel, unspents& out,
     const hash_digest& key, bool turbo) const NOEXCEPT
@@ -88,7 +93,8 @@ code CLASS::get_confirmed_unspent(const stopper& cancel, unspents& out,
     return parallel_unspent_transform(cancel, turbo, out, outs,
         [this](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
-            if (cancel || fail)
+            // Exclude if spent by confirmed tx, ignore unconfirmed spenders.
+            if (cancel || fail || is_confirmed_spent(link))
                 return unspent{};
 
             table::output::get_parent_value out{};
@@ -121,6 +127,7 @@ code CLASS::get_confirmed_unspent(const stopper& cancel, unspents& out,
 }
 
 // server/electrum
+// All outputs that are not spent by any tx (confirmed or unconfirmed).
 TEMPLATE
 code CLASS::get_unspent(const stopper& cancel, unspents& out,
     const hash_digest& key, bool turbo) const NOEXCEPT
@@ -134,7 +141,8 @@ code CLASS::get_unspent(const stopper& cancel, unspents& out,
     return parallel_unspent_transform(cancel, turbo, out, outs,
         [this](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
-            if (cancel || fail)
+            // Exclude if spent by any tx, confirmed or unconfirmed.
+            if (cancel || fail || is_spent(link))
                 return unspent{};
 
             table::output::get_parent_value out{};
