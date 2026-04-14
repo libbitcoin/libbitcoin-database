@@ -333,22 +333,25 @@ typename CLASS::inputs_ptr CLASS::get_spenders(
     return inputs;
 }
 
-// output_link_->outpoint, point_link->inpoint, point->inpoints
+// (out)point->inpoints[spenders]
 // ----------------------------------------------------------------------------
+// sorted and deduped
 
 TEMPLATE
-outpoint CLASS::get_outpoint(const output_link& link) const NOEXCEPT
+inpoints CLASS::get_spenders(const point& point) const NOEXCEPT
 {
-    table::output::get_parent_value out{};
-    if (!store_.output.get(link, out))
-        return {};
+    inpoints ins{};
+    for (const auto& point_fk: to_spenders(point))
+        ins.push_back(get_spender(point_fk));
 
-    const auto index = to_output_index(out.parent_fk, link);
-    if (index == point::null_index)
-        return {};
-
-    return { { get_tx_key(out.parent_fk), index }, out.value };
+    // Sort (arbitrary - by index and then binary hash) and remove duplicates.
+    std::sort(ins.begin(), ins.end());
+    ins.erase(std::unique(ins.begin(), ins.end()), ins.end());
+    return ins;
 }
+
+// point_link->inpoint[spender]
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 inpoint CLASS::get_spender(const point_link& link) const NOEXCEPT
@@ -364,17 +367,21 @@ inpoint CLASS::get_spender(const point_link& link) const NOEXCEPT
     return { get_tx_key(tx_fk), index };
 }
 
-TEMPLATE
-inpoints CLASS::get_spenders(const point& point) const NOEXCEPT
-{
-    inpoints ins{};
-    for (const auto& point_fk: to_spenders(point))
-        ins.push_back(get_spender(point_fk));
+// output_link_->outpoint
+// ----------------------------------------------------------------------------
 
-    // Sort (arbitrary - by index and then binary hash) and remove duplicates.
-    std::sort(ins.begin(), ins.end());
-    ins.erase(std::unique(ins.begin(), ins.end()), ins.end());
-    return ins;
+TEMPLATE
+outpoint CLASS::get_outpoint(const output_link& link) const NOEXCEPT
+{
+    table::output::get_parent_value out{};
+    if (!store_.output.get(link, out))
+        return {};
+
+    const auto index = to_output_index(out.parent_fk, link);
+    if (index == point::null_index)
+        return {};
+
+    return { { get_tx_key(out.parent_fk), index }, out.value };
 }
 
 // utility

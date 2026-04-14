@@ -25,12 +25,13 @@ namespace libbitcoin {
 namespace database {
 
 // local
+// zero is unconfirmed height, but cannot be a sentinel for unconfirmed.
 bool less_than(const unspent& a, const unspent& b) NOEXCEPT
 {
-    const auto a_point = a.tx.point();
-    const auto b_point = b.tx.point();
-    const bool a_confirmed = !is_zero(a.height);
-    const bool b_confirmed = !is_zero(b.height);
+    const auto a_point = a.out.point();
+    const auto b_point = b.out.point();
+    const auto a_confirmed = a.confirmed();
+    const auto b_confirmed = b.confirmed();
 
     // Confirmed before unconfirmed.
     if (a_confirmed != b_confirmed)
@@ -50,8 +51,18 @@ bool less_than(const unspent& a, const unspent& b) NOEXCEPT
         return a_point.index() < b_point.index();
     }
 
-    // Unconfirmed have 0 height/position, arbitrary sort (hash:index).
+    // Arbitrary sort (hash:index).
     return a_point < b_point;
+}
+
+bool unspent::valid() const NOEXCEPT
+{
+    return out.is_valid();
+}
+
+bool unspent::confirmed() const NOEXCEPT
+{
+    return position != unconfirmed_position;
 }
 
 bool unspent::operator<(const unspent& other) const NOEXCEPT
@@ -64,12 +75,12 @@ bool unspent::operator==(const unspent& other) const NOEXCEPT
     return !(*this < other) && !(other < *this);
 }
 
-void unspent::sort_and_dedup(std::vector<unspent>& out) NOEXCEPT
+void unspent::filter_sort_and_dedup(std::vector<unspent>& out) NOEXCEPT
 {
     const auto excluded = std::remove_if(out.begin(), out.end(),
         [](const unspent& element) NOEXCEPT
         {
-            return !element.tx.is_valid();
+            return !element.valid();
         });
 
     out.erase(excluded, out.end());

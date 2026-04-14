@@ -54,11 +54,10 @@ inline bool hash_less_than(const hash_digest& a, const hash_digest& b) NOEXCEPT
 // local
 inline bool less_than(const history& a, const history& b) NOEXCEPT
 {
-    using namespace system;
     const auto a_height = a.tx.height();
     const auto b_height = b.tx.height();
-    const auto a_confirmed = !is_min(a_height) && !is_max(a_height);
-    const auto b_confirmed = !is_min(b_height) && !is_max(b_height);
+    const auto a_confirmed = a.confirmed();
+    const auto b_confirmed = b.confirmed();
 
     // Confirmed before unconfirmed.
     if (a_confirmed != b_confirmed)
@@ -76,6 +75,22 @@ inline bool less_than(const history& a, const history& b) NOEXCEPT
     return hash_less_than(a.tx.hash(), b.tx.hash());
 }
 
+bool history::valid() const NOEXCEPT
+{
+    return tx.is_valid();
+}
+
+// Only applies when !confirmed, and only other option is unrooted_height.
+bool history::rooted() const NOEXCEPT
+{
+    return tx.height() == rooted_height;
+}
+
+bool history::confirmed() const NOEXCEPT
+{
+    return position != unconfirmed_position;
+}
+
 bool history::operator<(const history& other) const NOEXCEPT
 {
     return less_than(*this, other);
@@ -86,12 +101,12 @@ bool history::operator==(const history& other) const NOEXCEPT
     return !(*this < other) && !(other < *this);
 }
 
-void history::sort_and_dedup(std::vector<history>& out) NOEXCEPT
+void history::filter_sort_and_dedup(std::vector<history>& out) NOEXCEPT
 {
     const auto excluded = std::remove_if(out.begin(), out.end(),
         [](const history& element) NOEXCEPT
         {
-            return !element.tx.is_valid();
+            return !element.valid();
         });
 
     out.erase(excluded, out.end());

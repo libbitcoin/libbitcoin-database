@@ -42,11 +42,17 @@ BOOST_AUTO_TEST_CASE(query_address__get_history__genesis__expected)
 
     out.clear();
     BOOST_REQUIRE(!query.get_confirmed_history(cancel, out, test::genesis_address0));
-    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE_EQUAL(out.at(0).fee, 0u);
+    BOOST_REQUIRE_EQUAL(out.at(0).position, 0u);
+    BOOST_REQUIRE_EQUAL(out.at(0).tx.height(), 0u);
+    BOOST_REQUIRE_EQUAL(out.at(0).tx.hash(), test::genesis.transactions_ptr()->at(0)->hash(false));
 
     out.clear();
     BOOST_REQUIRE(!query.get_history(cancel, out, test::genesis_address0));
-    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE_EQUAL(out.at(0).fee, 0u);
+    BOOST_REQUIRE_EQUAL(out.at(0).position, 0u);
+    BOOST_REQUIRE_EQUAL(out.at(0).tx.height(), 0u);
+    BOOST_REQUIRE_EQUAL(out.at(0).tx.hash(), test::genesis.transactions_ptr()->at(0)->hash(false));
 }
 
 // block1a_address0 has 9 instances `script{ { { opcode::pick } } }`.
@@ -114,8 +120,8 @@ BOOST_AUTO_TEST_CASE(query_address__get_unconfirmed_history__turbo_block1a_addre
     BOOST_REQUIRE(encode_hash(out.at(2).tx.hash()) < encode_hash(out.at(3).tx.hash()));
 
     // Fee (not part of sort).
-    BOOST_REQUIRE_EQUAL(out.at(0).fee, system::floored_subtract(0x18u + 0x2au, 0x08u));
-    BOOST_REQUIRE_EQUAL(out.at(1).fee, system::floored_subtract(0xb1u + 0xb1u, 0xb2u));
+    BOOST_REQUIRE_EQUAL(out.at(0).fee, floored_subtract(0x18u + 0x2au, 0x08u));
+    BOOST_REQUIRE_EQUAL(out.at(1).fee, floored_subtract(0xb1u + 0xb1u, 0xb2u));
     BOOST_REQUIRE_EQUAL(out.at(2).fee, history::missing_prevout);           // spend exceeds value (treated as missing prevout).
     BOOST_REQUIRE_EQUAL(out.at(3).fee, 0u);                                 // coinbase (archived with null single point).
 }
@@ -129,7 +135,6 @@ BOOST_AUTO_TEST_CASE(query_address__get_confirmed_history__turbo_block1a_address
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
 
-    using namespace system;
     histories out{};
     const std::atomic_bool cancel{};
     BOOST_REQUIRE(!query.get_confirmed_history(cancel, out, test::block1a_address0, true));
@@ -150,18 +155,18 @@ BOOST_AUTO_TEST_CASE(query_address__get_confirmed_history__turbo_block1a_address
     // Unconfirmed rooted before unrooted (not part of sort).
 
     // Confirmed height by block position.
-    BOOST_REQUIRE_EQUAL(out.at(0).position, history::unconfirmed_position); // confirmed, spend exceeds value (with missing prevout).
-    BOOST_REQUIRE_EQUAL(out.at(1).position, history::unconfirmed_position); // confirmed, spend exceeds value.
-    BOOST_REQUIRE_EQUAL(out.at(2).position, 1u);                            // confirmed, at position (with missing prevout).
-    BOOST_REQUIRE_EQUAL(out.at(3).position, history::unconfirmed_position); // confirmed, spend exceeds value.
+    BOOST_REQUIRE_EQUAL(out.at(0).position, 0u);
+    BOOST_REQUIRE_EQUAL(out.at(1).position, 0u);
+    BOOST_REQUIRE_EQUAL(out.at(2).position, 1u);
+    BOOST_REQUIRE_EQUAL(out.at(3).position, 0u);
 
     // Unconfirmed system::encode_hash(hash) lexically sorted (not part of sort).
 
     // Fee (not part of sort).
-    BOOST_REQUIRE_EQUAL(out.at(0).fee, history::missing_prevout);           // spend exceeds value (treated as missing prevout).
-    BOOST_REQUIRE_EQUAL(out.at(1).fee, history::missing_prevout);           // spend exceeds value (treated as missing prevout).
-    BOOST_REQUIRE_EQUAL(out.at(2).fee, history::missing_prevout);           // missing prevout.
-    BOOST_REQUIRE_EQUAL(out.at(3).fee, history::missing_prevout);           // spend exceeds value (treated as missing prevout).
+    BOOST_REQUIRE_EQUAL(out.at(0).fee, history::missing_prevout); // spend exceeds value (treated as missing prevout).
+    BOOST_REQUIRE_EQUAL(out.at(1).fee, history::missing_prevout); // spend exceeds value (treated as missing prevout).
+    BOOST_REQUIRE_EQUAL(out.at(2).fee, history::missing_prevout); // missing prevout.
+    BOOST_REQUIRE_EQUAL(out.at(3).fee, history::missing_prevout); // spend exceeds value (treated as missing prevout).
 }
 
 BOOST_AUTO_TEST_CASE(query_address__get_history__turbo_block1a_address0__expected)
@@ -194,27 +199,27 @@ BOOST_AUTO_TEST_CASE(query_address__get_history__turbo_block1a_address0__expecte
     // NOTE: at(5) is spend exceeds value, which is returned as unrooted_height in get_unconfirmed_history()
     // NOTE: but as rooted_height in get_history(). This is a consequence of the optimized processing order
     // NOTE: and does not affect valid confirmed/unconfirmed txs.
-    BOOST_REQUIRE_EQUAL(out.at(0).tx.height(), 1u);                                     // tx1
-    BOOST_REQUIRE_EQUAL(out.at(1).tx.height(), 2u);                                     // tx2
-    BOOST_REQUIRE_EQUAL(out.at(2).tx.height(), 2u);                                     // tx3
-    BOOST_REQUIRE_EQUAL(out.at(3).tx.height(), 3u);                                     // tx6
-    BOOST_REQUIRE_EQUAL(out.at(4).tx.height(), history::rooted_height);                 // tx5/tx4
-    BOOST_REQUIRE_EQUAL(out.at(5).tx.height(), history::rooted_height);                 // tx4/tx8
-    BOOST_REQUIRE_EQUAL(out.at(6).tx.height(), history::unrooted_height);               // tx8/tx5
-    BOOST_REQUIRE_EQUAL(out.at(7).tx.height(), history::unrooted_height);               // tx7
+    BOOST_REQUIRE_EQUAL(out.at(0).tx.height(), 1u);                         // tx1
+    BOOST_REQUIRE_EQUAL(out.at(1).tx.height(), 2u);                         // tx2
+    BOOST_REQUIRE_EQUAL(out.at(2).tx.height(), 2u);                         // tx3
+    BOOST_REQUIRE_EQUAL(out.at(3).tx.height(), 3u);                         // tx6
+    BOOST_REQUIRE_EQUAL(out.at(4).tx.height(), history::rooted_height);     // tx5/tx4
+    BOOST_REQUIRE_EQUAL(out.at(5).tx.height(), history::rooted_height);     // tx4/tx8
+    BOOST_REQUIRE_EQUAL(out.at(6).tx.height(), history::unrooted_height);   // tx8/tx5
+    BOOST_REQUIRE_EQUAL(out.at(7).tx.height(), history::unrooted_height);   // tx7
 
-    // Confirmed height by block position (not part of sort).
-    BOOST_REQUIRE_EQUAL(out.at(0).position, history::unconfirmed_position);             // tx1
-    BOOST_REQUIRE_EQUAL(out.at(1).position, history::unconfirmed_position);             // tx2
-    BOOST_REQUIRE_EQUAL(out.at(2).position, 1u);                                        // tx3
-    BOOST_REQUIRE_EQUAL(out.at(3).position, history::unconfirmed_position);             // tx6
-    BOOST_REQUIRE_EQUAL(out.at(4).position, history::unconfirmed_position);             // tx5/tx4
-    BOOST_REQUIRE_EQUAL(out.at(5).position, history::unconfirmed_position);             // tx4/tx8
-    BOOST_REQUIRE_EQUAL(out.at(6).position, history::unconfirmed_position);             // tx8/tx5
-    BOOST_REQUIRE_EQUAL(out.at(7).position, history::unconfirmed_position);             // tx7
+    // Confirmed height by block position.
+    BOOST_REQUIRE_EQUAL(out.at(0).position, 0u);                              // tx1
+    BOOST_REQUIRE_EQUAL(out.at(1).position, 0u);                              // tx2
+    BOOST_REQUIRE_EQUAL(out.at(2).position, 1u);                              // tx3
+    BOOST_REQUIRE_EQUAL(out.at(3).position, 0u);                              // tx6
+    BOOST_REQUIRE_EQUAL(out.at(4).position, history::unconfirmed_position);   // tx5/tx4
+    BOOST_REQUIRE_EQUAL(out.at(5).position, history::unconfirmed_position);   // tx4/tx8
+    BOOST_REQUIRE_EQUAL(out.at(6).position, history::unconfirmed_position);   // tx8/tx5
+    BOOST_REQUIRE_EQUAL(out.at(7).position, history::unconfirmed_position);   // tx7
 
     // Unconfirmed system::encode_hash(hash) lexically sorted.
-    BOOST_REQUIRE(encode_hash(out.at(6).tx.hash()) < encode_hash(out.at(7).tx.hash()));
+    BOOST_CHECK(encode_hash(out.at(6).tx.hash()) < encode_hash(out.at(7).tx.hash()));
 
     // Fee (not part of sort).
     BOOST_REQUIRE_EQUAL(out.at(0).fee, history::missing_prevout);                       // tx1
@@ -222,8 +227,8 @@ BOOST_AUTO_TEST_CASE(query_address__get_history__turbo_block1a_address0__expecte
     BOOST_REQUIRE_EQUAL(out.at(2).fee, history::missing_prevout);                       // tx3
     BOOST_REQUIRE_EQUAL(out.at(3).fee, history::missing_prevout);                       // tx6
     BOOST_REQUIRE_EQUAL(out.at(4).fee, history::missing_prevout);                       // tx5/tx4
-    BOOST_REQUIRE_EQUAL(out.at(5).fee, system::floored_subtract(0x18u + 0x2au, 0x08u)); // tx4/tx8
-    BOOST_REQUIRE_EQUAL(out.at(6).fee, system::floored_subtract(0xb1u + 0xb1u, 0xb2u)); // tx8/tx5
+    BOOST_REQUIRE_EQUAL(out.at(5).fee, floored_subtract(0x18u + 0x2au, 0x08u)); // tx4/tx8
+    BOOST_REQUIRE_EQUAL(out.at(6).fee, floored_subtract(0xb1u + 0xb1u, 0xb2u)); // tx8/tx5
     BOOST_REQUIRE_EQUAL(out.at(7).fee, 0u);                                             // tx7
 }
 

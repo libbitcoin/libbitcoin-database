@@ -42,17 +42,17 @@ code CLASS::get_confirmed_unspent_outputs(const stopper& cancel,
         return ec;
 
     return parallel_outpoint_transform(cancel, turbo, out, links,
-        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> outpoint
+        [this](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
             // !is_confirmed_unspent must be filtered out.
             if (cancel || fail || !is_confirmed_unspent(link))
-                return {};
+                return outpoint{};
 
-            const auto outpoint = get_outpoint(link);
-            if (outpoint.point().is_null())
+            const auto point = get_outpoint(link);
+            if (!point.point().is_valid())
                 fail = true;
 
-            return outpoint;
+            return point;
         });
 }
 
@@ -68,29 +68,28 @@ code CLASS::get_minimum_unspent_outputs(const stopper& cancel,
         return ec;
 
     return parallel_outpoint_transform(cancel, turbo, out, links,
-        [this, minimum](const auto& link, auto& cancel, auto& fail) NOEXCEPT
-            -> outpoint
+        [this, minimum](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
             // !is_confirmed_unspent must be filtered out.
             if (cancel || fail || !is_confirmed_unspent(link))
-                return {};
+                return outpoint{};
 
             uint64_t value{};
             if (!get_value(value, link))
             {
                 fail = true;
-                return {};
+                return outpoint{};
             }
 
             // Must be filtered out.
             if (value < minimum)
-                return {};
+                return outpoint{};
 
-            const auto outpoint = get_outpoint(link);
-            if (outpoint.point().is_null())
+            const auto point = get_outpoint(link);
+            if (!point.point().is_valid())
                 fail = true;
 
-            return outpoint;
+            return point;
         });
 }
 
@@ -105,16 +104,16 @@ code CLASS::get_address_outputs(const stopper& cancel, outpoints& out,
         return ec;
 
     return parallel_outpoint_transform(cancel, turbo, out, links,
-        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> outpoint
+        [this](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
             if (cancel || fail)
-                return {};
+                return outpoint{};
 
-            const auto outpoint = get_outpoint(link);
-            if (outpoint.point().is_null())
+            const auto point = get_outpoint(link);
+            if (!point.point().is_valid())
                 fail = true;
 
-            return outpoint;
+            return point;
         });
 }
 

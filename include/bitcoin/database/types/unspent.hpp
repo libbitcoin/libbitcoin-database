@@ -27,14 +27,17 @@ namespace database {
 
 struct BCD_API unspent
 {
-    static constexpr size_t excluded_position = max_size_t;
+    static constexpr size_t unused_height = zero;
+    static constexpr size_t unconfirmed_position = max_size_t;
 
-    static void sort_and_dedup(std::vector<unspent>& unspent) NOEXCEPT;
+    static void filter_sort_and_dedup(std::vector<unspent>& unspent) NOEXCEPT;
 
+    bool valid() const NOEXCEPT;
+    bool confirmed() const NOEXCEPT;
     bool operator<(const unspent& other) const NOEXCEPT;
     bool operator==(const unspent& other) const NOEXCEPT;
 
-    outpoint tx{};
+    outpoint out{};
     size_t height{};
     size_t position{};
 };

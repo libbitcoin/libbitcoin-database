@@ -67,7 +67,7 @@ point_link CLASS::find_confirmed_spender(const point& prevout) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_confirmed_unspent(const output_link& link) const NOEXCEPT
 {
-    return is_confirmed_output(link) && !is_confirmed_spent_output(link);
+    return is_confirmed_output(link) && !is_confirmed_spent(link);
 }
 
 TEMPLATE
@@ -121,17 +121,6 @@ bool CLASS::is_confirmed_output(const output_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_confirmed_spent_output(const output_link& link) const NOEXCEPT
-{
-    // The spender is strong *and* its block is confirmed (by height).
-    const auto ins = to_spenders(link);
-    return std::any_of(ins.cbegin(), ins.cend(), [&](const auto& in) NOEXCEPT
-    {
-        return is_confirmed_input(in);
-    });
-}
-
-TEMPLATE
 bool CLASS::is_confirmed_all_prevouts(const tx_link& link) const NOEXCEPT
 {
     // If tx is confirmed then all prevouts must be confirmed.
@@ -148,6 +137,38 @@ bool CLASS::is_confirmed_all_prevouts(const tx_link& link) const NOEXCEPT
     {
         return is_confirmed_output(out);
     });
+}
+
+TEMPLATE
+bool CLASS::is_confirmed_spent(const output_link& link) const NOEXCEPT
+{
+    // At least one spender is strong *and* its block is confirmed (by height).
+    const auto ins = to_spenders(link);
+    return !ins.empty() && std::any_of(ins.cbegin(), ins.cend(),
+        [&](const auto& in) NOEXCEPT
+        {
+            return is_confirmed_input(in);
+        });
+}
+
+TEMPLATE
+bool CLASS::is_unconfirmed_spent(const output_link& link) const NOEXCEPT
+{
+    // At least one spender and no spender is in a confirmed block (by height).
+    const auto ins = to_spenders(link);
+    return !ins.empty() && std::none_of(ins.cbegin(), ins.cend(),
+        [&](const auto& in) NOEXCEPT
+        {
+            return is_confirmed_input(in);
+        });
+}
+
+TEMPLATE
+bool CLASS::is_spent(const output_link& link) const NOEXCEPT
+{
+    // *Any* tx spends the output. Note that this could even be a tx that is in
+    // conflict with another long-confirmed tx, or a valid tx in invalid block.
+    return store_.point.exists(get_outpoint(link).point());
 }
 
 } // namespace database

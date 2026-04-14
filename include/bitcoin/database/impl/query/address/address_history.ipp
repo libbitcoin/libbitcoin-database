@@ -50,21 +50,20 @@ code CLASS::get_unconfirmed_history(const stopper& cancel, histories& out,
     out.clear();
     out.resize(txs.size());
     return parallel_history_transform(cancel, turbo, out, txs,
-        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> history
+        [this](const tx_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
             if (cancel || fail)
-                return {};
+                return history{};
 
             // chain::checkpoint invalid in default construction (filter).
-            const auto block = find_strong(link);
-            if (is_confirmed_block(block))
-                return {};
+            if (is_confirmed_block(find_strong(link)))
+                return history{};
 
             auto hash = get_tx_key(link);
             if (hash == system::null_hash)
             {
                 fail = true;
-                return {};
+                return history{};
             }
 
             uint64_t fee{};
@@ -74,7 +73,7 @@ code CLASS::get_unconfirmed_history(const stopper& cancel, histories& out,
             else if (is_confirmed_all_prevouts(link))
                 height = history::rooted_height;
 
-            return { { std::move(hash), height }, fee,
+            return history{ { std::move(hash), height }, fee,
                 history::unconfirmed_position };
         });
 }
@@ -95,15 +94,15 @@ code CLASS::get_confirmed_history(const stopper& cancel, histories& out,
     out.clear();
     out.resize(txs.size());
     return parallel_history_transform(cancel, turbo, out, txs,
-        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> history
+        [this](const tx_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
             if (cancel || fail)
-                return {};
+                return history{};
 
             // chain::checkpoint invalid in default construction (filter).
             const auto block = find_strong(link);
             if (!is_confirmed_block(block))
-                return {};
+                return history{};
 
             size_t height{}, position{};
             auto hash = get_tx_key(link);
@@ -112,14 +111,14 @@ code CLASS::get_confirmed_history(const stopper& cancel, histories& out,
                 !get_tx_position(position, link, block))
             {
                 fail = true;
-                return {};
+                return history{};
             }
 
             uint64_t fee{};
             if (!get_tx_fee(fee, link))
                 fee = history::missing_prevout;
 
-            return { { std::move(hash), height }, fee, position };
+            return history{ { std::move(hash), height }, fee, position };
         });
 }
 
@@ -139,16 +138,16 @@ code CLASS::get_history(const stopper& cancel, histories& out,
     out.clear();
     out.resize(links.size());
     return parallel_history_transform(cancel, turbo, out, links,
-        [this](const auto& link, auto& cancel, auto& fail) NOEXCEPT -> history
+        [this](const tx_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
             if (cancel || fail)
-                return {};
+                return history{};
 
             auto hash = get_tx_key(link);
             if (hash == system::null_hash)
             {
                 fail = true;
-                return {};
+                return history{};
             }
 
             uint64_t fee{};
@@ -164,7 +163,7 @@ code CLASS::get_history(const stopper& cancel, histories& out,
                     !get_tx_position(position, link, block))
                 {
                     fail = true;
-                    return {};
+                    return history{};
                 }
             }
             else
@@ -173,7 +172,7 @@ code CLASS::get_history(const stopper& cancel, histories& out,
                     height = history::rooted_height;
             }
 
-            return { { std::move(hash), height }, fee, position };
+            return history{ { std::move(hash), height }, fee, position };
         });
 }
 
@@ -203,7 +202,7 @@ code CLASS::parallel_history_transform(const stopper& cancel, bool turbo,
     if (cancel)
         return error::canceled;
 
-    history::sort_and_dedup(out);
+    history::filter_sort_and_dedup(out);
     return error::success;
 }
 

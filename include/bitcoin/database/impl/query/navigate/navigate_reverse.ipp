@@ -231,7 +231,7 @@ uint32_t CLASS::to_input_index(const tx_link& parent_fk,
     const point_link& point_fk) const NOEXCEPT
 {
     uint32_t index{};
-    for (const auto& in_fk : to_points(parent_fk))
+    for (const auto& in_fk: to_points(parent_fk))
     {
         if (in_fk == point_fk) return index;
         ++index;
@@ -245,7 +245,7 @@ uint32_t CLASS::to_output_index(const tx_link& parent_fk,
     const output_link& output_fk) const NOEXCEPT
 {
     uint32_t index{};
-    for (const auto& out_fk : to_outputs(parent_fk))
+    for (const auto& out_fk: to_outputs(parent_fk))
     {
         if (out_fk == output_fk) return index;
         ++index;
