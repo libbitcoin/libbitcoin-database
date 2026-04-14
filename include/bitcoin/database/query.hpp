@@ -555,8 +555,10 @@ public:
     bool is_confirmed_tx(const tx_link& link) const NOEXCEPT;
     bool is_confirmed_input(const point_link& link) const NOEXCEPT;
     bool is_confirmed_output(const output_link& link) const NOEXCEPT;
-    bool is_confirmed_spent_output(const output_link& link) const NOEXCEPT;
     bool is_confirmed_all_prevouts(const tx_link& link) const NOEXCEPT;
+    bool is_unconfirmed_spent(const output_link& link) const NOEXCEPT;
+    bool is_confirmed_spent(const output_link& link) const NOEXCEPT;
+    bool is_spent(const output_link& link) const NOEXCEPT;
 
     /// Height index not used by these.
     bool is_strong_tx(const tx_link& link) const NOEXCEPT;
