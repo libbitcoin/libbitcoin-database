@@ -654,6 +654,12 @@ public:
         uint64_t& unconfirmed, const hash_digest& key,
         bool turbo=false) const NOEXCEPT;
 
+    /// History queries.
+    history get_tx_history(const tx_link& link) const NOEXCEPT;
+    history get_tx_history(const hash_digest& key) const NOEXCEPT;
+    histories get_spenders_history(const hash_digest& key,
+        uint32_t index) const NOEXCEPT;
+
     /// Filters.
     /// -----------------------------------------------------------------------
 
@@ -813,6 +819,12 @@ protected:
     /// -----------------------------------------------------------------------
     code set_code(const tx_link& tx_fk, const transaction& tx,
         bool bypass) NOEXCEPT;
+
+    /// History.
+    /// -----------------------------------------------------------------------
+
+    history get_tx_history(hash_digest&& key,
+        const tx_link& link) const NOEXCEPT;
 
 private:
     // This value should never be read, but may be useful in debugging.
