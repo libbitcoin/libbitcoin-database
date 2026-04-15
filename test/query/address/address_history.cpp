@@ -199,37 +199,220 @@ BOOST_AUTO_TEST_CASE(query_address__get_history__turbo_block1a_address0__expecte
     // NOTE: at(5) is spend exceeds value, which is returned as unrooted_height in get_unconfirmed_history()
     // NOTE: but as rooted_height in get_history(). This is a consequence of the optimized processing order
     // NOTE: and does not affect valid confirmed/unconfirmed txs.
-    BOOST_REQUIRE_EQUAL(out.at(0).tx.height(), 1u);                         // tx1
-    BOOST_REQUIRE_EQUAL(out.at(1).tx.height(), 2u);                         // tx2
-    BOOST_REQUIRE_EQUAL(out.at(2).tx.height(), 2u);                         // tx3
-    BOOST_REQUIRE_EQUAL(out.at(3).tx.height(), 3u);                         // tx6
-    BOOST_REQUIRE_EQUAL(out.at(4).tx.height(), history::rooted_height);     // tx5/tx4
-    BOOST_REQUIRE_EQUAL(out.at(5).tx.height(), history::rooted_height);     // tx4/tx8
-    BOOST_REQUIRE_EQUAL(out.at(6).tx.height(), history::unrooted_height);   // tx8/tx5
-    BOOST_REQUIRE_EQUAL(out.at(7).tx.height(), history::unrooted_height);   // tx7
+    BOOST_REQUIRE_EQUAL(out.at(0).tx.height(), 1u);                             // tx1
+    BOOST_REQUIRE_EQUAL(out.at(1).tx.height(), 2u);                             // tx2
+    BOOST_REQUIRE_EQUAL(out.at(2).tx.height(), 2u);                             // tx3
+    BOOST_REQUIRE_EQUAL(out.at(3).tx.height(), 3u);                             // tx6
+    BOOST_REQUIRE_EQUAL(out.at(4).tx.height(), history::rooted_height);         // tx5/tx4
+    BOOST_REQUIRE_EQUAL(out.at(5).tx.height(), history::rooted_height);         // tx4/tx8
+    BOOST_REQUIRE_EQUAL(out.at(6).tx.height(), history::unrooted_height);       // tx8/tx5
+    BOOST_REQUIRE_EQUAL(out.at(7).tx.height(), history::unrooted_height);       // tx7
 
     // Confirmed height by block position.
-    BOOST_REQUIRE_EQUAL(out.at(0).position, 0u);                              // tx1
-    BOOST_REQUIRE_EQUAL(out.at(1).position, 0u);                              // tx2
-    BOOST_REQUIRE_EQUAL(out.at(2).position, 1u);                              // tx3
-    BOOST_REQUIRE_EQUAL(out.at(3).position, 0u);                              // tx6
-    BOOST_REQUIRE_EQUAL(out.at(4).position, history::unconfirmed_position);   // tx5/tx4
-    BOOST_REQUIRE_EQUAL(out.at(5).position, history::unconfirmed_position);   // tx4/tx8
-    BOOST_REQUIRE_EQUAL(out.at(6).position, history::unconfirmed_position);   // tx8/tx5
-    BOOST_REQUIRE_EQUAL(out.at(7).position, history::unconfirmed_position);   // tx7
+    BOOST_REQUIRE_EQUAL(out.at(0).position, 0u);                                // tx1
+    BOOST_REQUIRE_EQUAL(out.at(1).position, 0u);                                // tx2
+    BOOST_REQUIRE_EQUAL(out.at(2).position, 1u);                                // tx3
+    BOOST_REQUIRE_EQUAL(out.at(3).position, 0u);                                // tx6
+    BOOST_REQUIRE_EQUAL(out.at(4).position, history::unconfirmed_position);     // tx5/tx4
+    BOOST_REQUIRE_EQUAL(out.at(5).position, history::unconfirmed_position);     // tx4/tx8
+    BOOST_REQUIRE_EQUAL(out.at(6).position, history::unconfirmed_position);     // tx8/tx5
+    BOOST_REQUIRE_EQUAL(out.at(7).position, history::unconfirmed_position);     // tx7
 
     // Unconfirmed system::encode_hash(hash) lexically sorted.
-    BOOST_CHECK(encode_hash(out.at(6).tx.hash()) < encode_hash(out.at(7).tx.hash()));
+    BOOST_REQUIRE(encode_hash(out.at(6).tx.hash()) < encode_hash(out.at(7).tx.hash()));
 
     // Fee (not part of sort).
-    BOOST_REQUIRE_EQUAL(out.at(0).fee, history::missing_prevout);                       // tx1
-    BOOST_REQUIRE_EQUAL(out.at(1).fee, history::missing_prevout);                       // tx2
-    BOOST_REQUIRE_EQUAL(out.at(2).fee, history::missing_prevout);                       // tx3
-    BOOST_REQUIRE_EQUAL(out.at(3).fee, history::missing_prevout);                       // tx6
-    BOOST_REQUIRE_EQUAL(out.at(4).fee, history::missing_prevout);                       // tx5/tx4
+    BOOST_REQUIRE_EQUAL(out.at(0).fee, history::missing_prevout);               // tx1
+    BOOST_REQUIRE_EQUAL(out.at(1).fee, history::missing_prevout);               // tx2
+    BOOST_REQUIRE_EQUAL(out.at(2).fee, history::missing_prevout);               // tx3
+    BOOST_REQUIRE_EQUAL(out.at(3).fee, history::missing_prevout);               // tx6
+    BOOST_REQUIRE_EQUAL(out.at(4).fee, history::missing_prevout);               // tx5/tx4
     BOOST_REQUIRE_EQUAL(out.at(5).fee, floored_subtract(0x18u + 0x2au, 0x08u)); // tx4/tx8
     BOOST_REQUIRE_EQUAL(out.at(6).fee, floored_subtract(0xb1u + 0xb1u, 0xb2u)); // tx8/tx5
-    BOOST_REQUIRE_EQUAL(out.at(7).fee, 0u);                                             // tx7
+    BOOST_REQUIRE_EQUAL(out.at(7).fee, 0u);                                     // tx7
+}
+
+// get_tx_history1
+// get_tx_history2
+
+BOOST_AUTO_TEST_CASE(query_address__get_tx_history__bogus__invalid)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    const auto history = query.get_tx_history(hash_digest{ 0x42 });
+    BOOST_REQUIRE(!history.valid());
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_tx_history__genesis__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    const auto hash = test::genesis.transactions_ptr()->at(0)->hash(false);
+    auto history = query.get_tx_history(0);
+    BOOST_REQUIRE(history.valid());
+    BOOST_REQUIRE_EQUAL(history.fee, 0u);
+    BOOST_REQUIRE_EQUAL(history.position, 0u);
+    BOOST_REQUIRE_EQUAL(history.tx.height(), 0u);
+    BOOST_REQUIRE_EQUAL(history.tx.hash(), hash);
+
+    history = query.get_tx_history(hash);
+    BOOST_REQUIRE(history.valid());
+    BOOST_REQUIRE_EQUAL(history.fee, 0u);
+    BOOST_REQUIRE_EQUAL(history.position, 0u);
+    BOOST_REQUIRE_EQUAL(history.tx.height(), 0u);
+    BOOST_REQUIRE_EQUAL(history.tx.hash(), hash);
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_tx_history__confirmed__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    const auto hash = test::block2a.transactions_ptr()->at(0)->hash(false);
+    const auto history = query.get_tx_history(hash);
+    BOOST_REQUIRE(history.valid());
+    BOOST_REQUIRE_EQUAL(history.fee, history::missing_prevout); // spend > value
+    BOOST_REQUIRE_EQUAL(history.position, 0u);
+    BOOST_REQUIRE_EQUAL(history.tx.height(), 2u);
+    BOOST_REQUIRE_EQUAL(history.tx.hash(), hash);
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_tx_history__confirmed_missing_prevout__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    const auto hash = test::block2a.transactions_ptr()->at(1)->hash(false);
+    const auto history = query.get_tx_history(hash);
+    BOOST_REQUIRE(history.valid());
+    BOOST_REQUIRE_EQUAL(history.fee, history::missing_prevout); // missing prevout
+    BOOST_REQUIRE_EQUAL(history.position, 1u);
+    BOOST_REQUIRE_EQUAL(history.tx.height(), 2u);
+    BOOST_REQUIRE_EQUAL(history.tx.hash(), hash);
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_tx_history__rooted__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    using namespace system;
+    const auto hash = test::tx4.hash(false);
+    const auto history = query.get_tx_history(hash);
+    BOOST_REQUIRE(history.valid());
+    BOOST_REQUIRE_EQUAL(history.fee, floored_subtract(0x18u + 0x2au, 0x08u));
+    BOOST_REQUIRE_EQUAL(history.position, history::unconfirmed_position);
+    BOOST_REQUIRE_EQUAL(history.tx.height(), history::rooted_height);
+    BOOST_REQUIRE_EQUAL(history.tx.hash(), hash);
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_tx_history__unrooted__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    using namespace system;
+    const auto hash = test::block2b.transactions_ptr()->at(0)->hash(false);
+    const auto history = query.get_tx_history(hash);
+    BOOST_REQUIRE(history.valid());
+    BOOST_REQUIRE_EQUAL(history.fee, floored_subtract(0xb1u + 0xb1u, 0xb2u));
+    BOOST_REQUIRE_EQUAL(history.position, history::unconfirmed_position);
+    BOOST_REQUIRE_EQUAL(history.tx.height(), history::unrooted_height);
+    BOOST_REQUIRE_EQUAL(history.tx.hash(), hash);
+}
+
+// get_spenders_history
+
+BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__bogus__empty)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    const auto histories = query.get_spenders_history({ 0x42 }, 0);
+    BOOST_REQUIRE(histories.empty());
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__genesis__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    const auto hash = test::genesis.transactions_ptr()->at(0)->hash(false);
+    const auto histories = query.get_spenders_history(hash, 0);
+    BOOST_REQUIRE_EQUAL(histories.size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__confirmed__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    using namespace system;
+    const auto hash = test::block1a.transactions_ptr()->at(0)->hash(false);
+    const auto histories = query.get_spenders_history(hash, 0);
+    BOOST_REQUIRE_EQUAL(histories.size(), 4u);
+
+    BOOST_REQUIRE(histories.at(0).valid());
+    BOOST_REQUIRE_EQUAL(histories.at(0).fee, history::missing_prevout); // spend > value
+    BOOST_REQUIRE_EQUAL(histories.at(0).position, 0u);
+    BOOST_REQUIRE_EQUAL(histories.at(0).tx.height(), 2u);
+    BOOST_REQUIRE_EQUAL(histories.at(0).tx.hash(), test::block2a.transactions_ptr()->at(0)->hash(false));
+
+    BOOST_REQUIRE(histories.at(1).valid());
+    BOOST_REQUIRE_EQUAL(histories.at(1).fee, history::missing_prevout); // spend > value
+    BOOST_REQUIRE_EQUAL(histories.at(1).position, 0u);
+    BOOST_REQUIRE_EQUAL(histories.at(1).tx.height(), 3u);
+    BOOST_REQUIRE_EQUAL(histories.at(1).tx.hash(), test::block3a.transactions_ptr()->at(0)->hash(false));
+
+    BOOST_REQUIRE(histories.at(2).valid());
+    BOOST_REQUIRE_EQUAL(histories.at(2).fee, history::missing_prevout); // spend > value
+    BOOST_REQUIRE_EQUAL(histories.at(2).position, history::unconfirmed_position);
+    BOOST_REQUIRE_EQUAL(histories.at(2).tx.height(), history::rooted_height);
+    BOOST_REQUIRE_EQUAL(histories.at(2).tx.hash(), test::tx5.hash(false));
+
+    BOOST_REQUIRE(histories.at(3).valid());
+    BOOST_REQUIRE_EQUAL(histories.at(3).fee, floored_subtract(0x18u + 0x2au, 0x08u));
+    BOOST_REQUIRE_EQUAL(histories.at(3).position, history::unconfirmed_position);
+    BOOST_REQUIRE_EQUAL(histories.at(3).tx.height(), history::rooted_height);
+    BOOST_REQUIRE_EQUAL(histories.at(3).tx.hash(), test::tx4.hash(false));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

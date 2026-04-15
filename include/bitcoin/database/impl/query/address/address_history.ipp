@@ -21,6 +21,7 @@
 
 #include <atomic>
 #include <algorithm>
+#include <ranges>
 #include <utility>
 #include <bitcoin/database/define.hpp>
 
@@ -143,37 +144,70 @@ code CLASS::get_history(const stopper& cancel, histories& out,
             if (cancel || fail)
                 return history{};
 
-            auto hash = get_tx_key(link);
-            if (hash == system::null_hash)
-            {
+            const auto out = get_tx_history(link);
+            if (!out.valid())
                 fail = true;
-                return history{};
-            }
 
-            uint64_t fee{};
-            if (!get_tx_fee(fee, link))
-                fee = history::missing_prevout;
-
-            auto height = history::unrooted_height;
-            auto position = history::unconfirmed_position;
-            if (const auto block = find_strong(link);
-                is_confirmed_block(block))
-            {
-                if (!get_height(height, block) ||
-                    !get_tx_position(position, link, block))
-                {
-                    fail = true;
-                    return history{};
-                }
-            }
-            else
-            {
-                if (is_confirmed_all_prevouts(link))
-                    height = history::rooted_height;
-            }
-
-            return history{ { std::move(hash), height }, fee, position };
+            return out;
         });
+}
+
+// History queries.
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+history CLASS::get_tx_history(const tx_link& link) const NOEXCEPT
+{
+    return get_tx_history(get_tx_key(link), link);
+}
+
+TEMPLATE
+history CLASS::get_tx_history(const hash_digest& key) const NOEXCEPT
+{
+    const auto link = to_tx(key);
+    return get_tx_history(hash_digest{ key }, link);
+}
+
+// private
+TEMPLATE
+history CLASS::get_tx_history(hash_digest&& key,
+    const tx_link& link) const NOEXCEPT
+{
+    if (link.is_terminal())
+        return {};
+
+    uint64_t fee{};
+    if (!get_tx_fee(fee, link))
+        fee = history::missing_prevout;
+
+    auto height = history::unrooted_height;
+    auto position = history::unconfirmed_position;
+    if (const auto block = find_confirmed_block(link); !block.is_terminal())
+    {
+        if (!get_height(height, block) ||
+            !get_tx_position(position, link, block))
+            return {};
+    }
+    else
+    {
+        if (is_confirmed_all_prevouts(link))
+            height = history::rooted_height;
+    }
+
+    return { { std::move(key), height }, fee, position };
+}
+
+TEMPLATE
+histories CLASS::get_spenders_history(const hash_digest& key,
+    uint32_t index) const NOEXCEPT
+{
+    const auto ins = to_spenders(key, index);
+    histories out(ins.size());
+    for (const auto& in: std::views::reverse(ins))
+        out.push_back(get_tx_history(to_input_tx(in)));
+
+    history::filter_sort_and_dedup(out);
+    return out;
 }
 
 // utilities
