@@ -97,12 +97,13 @@ extern const system::chain::block block2a;
 extern const system::chain::block block3a;
 extern const system::chain::transaction tx4;
 extern const system::chain::transaction tx5;
-extern const system::chain::block block_spend_1a;
-extern const system::chain::transaction tx_spend_genesis;
-extern const system::chain::block block_spend_genesis;
 extern const system::chain::block block1b;
 extern const system::chain::block block2b;
 extern const system::chain::transaction tx2b;
+
+extern const system::chain::block block_spend_1a;
+extern const system::chain::transaction tx_spend_genesis;
+extern const system::chain::block block_spend_genesis;
 extern const system::chain::block block_spend_internal_2b;
 extern const system::chain::block block_missing_prevout_2b;
 extern const system::chain::block block_valid_spend_internal_2b;

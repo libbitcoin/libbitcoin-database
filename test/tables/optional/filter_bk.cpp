@@ -150,13 +150,13 @@ BOOST_AUTO_TEST_CASE(filter_bk__put__disordered__expected)
         "0300000000000000000000000000000000000000000000000000000000000000""0700000000000000000000000000000000000000000000000000000000000000"
     );
 
-    constexpr auto two_hash = from_uintx(uint256_t(2));
-    constexpr auto three_hash = from_uintx(uint256_t(3));
-    constexpr auto four_hash = from_uintx(uint256_t(4));
-    constexpr auto five_hash = from_uintx(uint256_t(5));
-    constexpr auto six_hash = from_uintx(uint256_t(6));
-    constexpr auto seven_hash = from_uintx(uint256_t(7));
-    constexpr auto eight_hash = from_uintx(uint256_t(8));
+    constexpr hash_digest two_hash{ 0x02 };
+    constexpr hash_digest three_hash{ 0x03 };
+    constexpr hash_digest four_hash{ 0x04 };
+    constexpr hash_digest five_hash{ 0x05 };
+    constexpr hash_digest six_hash{ 0x06 };
+    constexpr hash_digest seven_hash{ 0x07 };
+    constexpr hash_digest eight_hash{ 0x08 };
 
     const table::filter_bk::put_ref put0{ {}, null_hash, null_hash };
     const table::filter_bk::put_ref put1{ {}, one_hash, five_hash };
