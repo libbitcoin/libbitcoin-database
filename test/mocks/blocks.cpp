@@ -22,7 +22,6 @@
 namespace test {
 
 using namespace system;
-constexpr hash_digest two_hash = from_uintx(uint256_t(two));
 constexpr database::context context{ 0x01020304, 0x11121314, 0x21222324 };
 
 constexpr hash_digest genesis_address0 = base16_hash("740485f380ff6379d11ef6fe7d7cdd68aea7f8bd0d953d9fdf3531fb7d531833");
@@ -258,21 +257,21 @@ const block block1a
             {
                 input
                 {
-                    point{ one_hash, 0x18 },    // missing prevout
+                    point{ one_hash, 0x18 },            // missing prevout
                     script{ { { opcode::op_return }, { opcode::pick } } },
                     witness{ "[242424]" },
                     0x2a    // sequence
                 },
                 input
                 {
-                    point{ one_hash, 0x2a },    // missing prevout
+                    point{ one_hash, 0x2a },            // missing prevout
                     script{ { { opcode::op_return }, { opcode::roll } } },
                     witness{ "[313131]" },
                     0x18    // sequence
                 },
                 input
                 {
-                    point{ two_hash, 0x2b },    // missing prevout
+                    point{ hash_digest{ 0x02 }, 0x2b }, // missing prevout
                     script{ { { opcode::op_return }, { opcode::roll } } },
                     witness{ "[424242]" },
                     0x19    // sequence
@@ -474,62 +473,6 @@ const transaction tx5
     },
     0x85            // locktime
 };
-const block block_spend_1a
-{
-    header
-    {
-        0x31323334,         // version
-        block1a.hash(),     // previous_block_hash
-        hash_digest{ 0x2c },// merkle_root (???? allows double spend)
-        0x41424344,         // timestamp
-        0x51525354,         // bits
-        0x61626364          // nonce
-    },
-    transactions
-    {
-        tx4
-    }
-};
-const transaction tx_spend_genesis
-{
-    0xa6,
-    inputs
-    {
-        input
-        {
-            // Spend genesis.
-            point{ genesis.transactions_ptr()->front()->hash(false), 0x00 },
-            script{ { { opcode::checkmultisig }, { opcode::pick } } },
-            witness{ "[262626]" },
-            0xa6
-        }
-    },
-    outputs
-    {
-        output
-        {
-            0x86,
-            script{ { { opcode::pick } } }
-        }
-    },
-    0x86
-};
-const block block_spend_genesis
-{
-    header
-    {
-        0x31323334,         // version
-        block0_hash,        // previous_block_hash
-        hash_digest{ 0x1c },// merkle_root
-        0x41424344,         // timestamp
-        0x51525354,         // bits
-        0x61626364          // nonce
-    },
-    transactions
-    {
-        tx_spend_genesis
-    }
-};
 const block block1b
 {
     header
@@ -645,6 +588,62 @@ const transaction tx2b
             }
         },
         0xb1
+    }
+};
+const block block_spend_1a
+{
+    header
+    {
+        0x31323334,         // version
+        block1a.hash(),     // previous_block_hash
+        hash_digest{ 0x2c },// merkle_root (???? allows double spend)
+        0x41424344,         // timestamp
+        0x51525354,         // bits
+        0x61626364          // nonce
+    },
+    transactions
+    {
+        tx4
+    }
+};
+const transaction tx_spend_genesis
+{
+    0xa6,
+    inputs
+    {
+        input
+        {
+            // Spend genesis.
+            point{ genesis.transactions_ptr()->front()->hash(false), 0x00 },
+            script{ { { opcode::checkmultisig }, { opcode::pick } } },
+            witness{ "[262626]" },
+            0xa6
+        }
+    },
+    outputs
+    {
+        output
+        {
+            0x86,
+            script{ { { opcode::pick } } }
+        }
+    },
+    0x86
+};
+const block block_spend_genesis
+{
+    header
+    {
+        0x31323334,         // version
+        block0_hash,        // previous_block_hash
+        hash_digest{ 0x1c },// merkle_root
+        0x41424344,         // timestamp
+        0x51525354,         // bits
+        0x61626364          // nonce
+    },
+    transactions
+    {
+        tx_spend_genesis
     }
 };
 const block block_spend_internal_2b
