@@ -622,11 +622,11 @@ public:
     /// Native queries (outpoints, deduped, arbitrary sort).
     ////code get_unconfirmed_unspent_outputs(const stopper& cancel, outpoints& out,
     ////    const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_confirmed_unspent_outputs(const stopper& cancel, outpoints& out,
+    code get_confirmed_unspent_outpoints(const stopper& cancel, outpoints& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
-    code get_minimum_unspent_outputs(const stopper& cancel, outpoints& out,
+    code get_minimum_unspent_outpoints(const stopper& cancel, outpoints& out,
         const hash_digest& key, uint64_t value, bool turbo=false) const NOEXCEPT;
-    code get_address_outputs(const stopper& cancel, outpoints& out,
+    code get_address_outpoints(const stopper& cancel, outpoints& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
 
     /// Electrum queries (histories, deduped, electrum sort).
