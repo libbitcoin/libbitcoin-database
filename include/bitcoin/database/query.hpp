@@ -657,6 +657,7 @@ public:
     /// History queries.
     history get_tx_history(const tx_link& link) const NOEXCEPT;
     history get_tx_history(const hash_digest& key) const NOEXCEPT;
+    histories get_spenders_history(const point& prevout) const NOEXCEPT;
     histories get_spenders_history(const hash_digest& key,
         uint32_t index) const NOEXCEPT;
 

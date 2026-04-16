@@ -347,7 +347,8 @@ BOOST_AUTO_TEST_CASE(query_address__get_tx_history__unrooted__expected)
     BOOST_REQUIRE_EQUAL(history.tx.hash(), hash);
 }
 
-// get_spenders_history
+// get_spenders_history1
+// get_spenders_history2
 
 BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__bogus__empty)
 {
@@ -358,7 +359,10 @@ BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__bogus__empty)
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
 
-    const auto histories = query.get_spenders_history({ 0x42 }, 0);
+    auto histories = query.get_spenders_history({ 0x42 }, 0);
+    BOOST_REQUIRE(histories.empty());
+
+    histories = query.get_spenders_history({ { 0x42 }, 0 });
     BOOST_REQUIRE(histories.empty());
 }
 
@@ -372,8 +376,11 @@ BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__genesis__expected)
     BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
 
     const auto hash = test::genesis.transactions_ptr()->at(0)->hash(false);
-    const auto histories = query.get_spenders_history(hash, 0);
-    BOOST_REQUIRE_EQUAL(histories.size(), 0u);
+    auto histories = query.get_spenders_history(hash, 0);
+    BOOST_REQUIRE(histories.empty());
+
+    histories = query.get_spenders_history({ hash, 0 });
+    BOOST_REQUIRE(histories.empty());
 }
 
 BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__confirmed__expected)
