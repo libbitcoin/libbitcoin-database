@@ -198,16 +198,23 @@ history CLASS::get_tx_history(hash_digest&& key,
 }
 
 TEMPLATE
-histories CLASS::get_spenders_history(const hash_digest& key,
-    uint32_t index) const NOEXCEPT
+histories CLASS::get_spenders_history(
+    const system::chain::point& prevout) const NOEXCEPT
 {
-    const auto ins = to_spenders(key, index);
+    const auto ins = to_spenders(prevout);
     histories out(ins.size());
     for (const auto& in: std::views::reverse(ins))
         out.push_back(get_tx_history(to_input_tx(in)));
 
     history::filter_sort_and_dedup(out);
     return out;
+}
+
+TEMPLATE
+histories CLASS::get_spenders_history(const hash_digest& key,
+    uint32_t index) const NOEXCEPT
+{
+    return get_spenders_history({ key , index });
 }
 
 // utilities

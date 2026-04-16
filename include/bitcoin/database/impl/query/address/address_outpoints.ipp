@@ -33,7 +33,7 @@ namespace database {
 
 // server/native
 TEMPLATE
-code CLASS::get_confirmed_unspent_outputs(const stopper& cancel,
+code CLASS::get_confirmed_unspent_outpoints(const stopper& cancel,
     outpoints& out, const hash_digest& key, bool turbo) const NOEXCEPT
 {
     out.clear();
@@ -58,7 +58,7 @@ code CLASS::get_confirmed_unspent_outputs(const stopper& cancel,
 
 // unused
 TEMPLATE
-code CLASS::get_minimum_unspent_outputs(const stopper& cancel,
+code CLASS::get_minimum_unspent_outpoints(const stopper& cancel,
     outpoints& out, const hash_digest& key, uint64_t minimum,
     bool turbo) const NOEXCEPT
 {
@@ -95,7 +95,7 @@ code CLASS::get_minimum_unspent_outputs(const stopper& cancel,
 
 // server/native
 TEMPLATE
-code CLASS::get_address_outputs(const stopper& cancel, outpoints& out,
+code CLASS::get_address_outpoints(const stopper& cancel, outpoints& out,
     const hash_digest& key, bool turbo) const NOEXCEPT
 {
     out.clear();

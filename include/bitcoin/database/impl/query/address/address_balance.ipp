@@ -51,7 +51,8 @@ code CLASS::get_confirmed_balance(const stopper& cancel, uint64_t& out,
     const hash_digest& key, bool turbo) const NOEXCEPT
 {
     outpoints outs{};
-    if (const auto ec = get_confirmed_unspent_outputs(cancel, outs, key, turbo))
+    if (const auto ec = get_confirmed_unspent_outpoints(cancel, outs, key,
+        turbo))
     {
         out = zero;
         return ec;
