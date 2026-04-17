@@ -151,6 +151,127 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs2__always__expected)
     BOOST_REQUIRE_EQUAL(out.at(5), 81u);
 }
 
+// to_address_outputs3
+
+BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__terminal__not_reduced)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(setup_three_block_unconfirmed_address_store(query));
+
+    output_links out{};
+    address_link end{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.to_address_outputs(cancel, end, out, test::block1a_address0));
+
+    // There are 6 instances of the `script{ { { opcode::pick } } }` output.
+    BOOST_REQUIRE_EQUAL(out.size(), 6u);
+    BOOST_REQUIRE_EQUAL(out.at(0), 123u);
+    BOOST_REQUIRE_EQUAL(out.at(1), 116u);
+    BOOST_REQUIRE_EQUAL(out.at(2), 109u);
+    BOOST_REQUIRE_EQUAL(out.at(3), 102u);
+    BOOST_REQUIRE_EQUAL(out.at(4), 95u);
+    BOOST_REQUIRE_EQUAL(out.at(5), 81u);
+}
+
+BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__stop_mismatch__populated_not_found)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(setup_three_block_unconfirmed_address_store(query));
+
+    output_links out{};
+    address_link cursor{ 4242 };
+    const std::atomic_bool cancel{};
+    const auto ec = query.to_address_outputs(cancel, cursor, out, test::block1a_address0);
+    BOOST_REQUIRE_EQUAL(ec, error::not_found);
+
+    // The end was not found but the full list is returned.
+    BOOST_REQUIRE_EQUAL(out.size(), 6u);
+    BOOST_REQUIRE_EQUAL(out.at(0), 123u);
+    BOOST_REQUIRE_EQUAL(out.at(1), 116u);
+    BOOST_REQUIRE_EQUAL(out.at(2), 109u);
+    BOOST_REQUIRE_EQUAL(out.at(3), 102u);
+    BOOST_REQUIRE_EQUAL(out.at(4), 95u);
+    BOOST_REQUIRE_EQUAL(out.at(5), 81u);
+}
+
+BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__stop_match__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(setup_three_block_unconfirmed_address_store(query));
+
+    output_links out{};
+    address_link cursor{ 3 };
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.to_address_outputs(cancel, cursor, out, test::block1a_address0));
+    BOOST_REQUIRE_EQUAL(cursor.value, 7u);
+
+    // The stop was found so partial list is returned.
+    BOOST_REQUIRE_EQUAL(out.size(), 4u);
+    BOOST_REQUIRE_EQUAL(out.at(0), 123u);
+    BOOST_REQUIRE_EQUAL(out.at(1), 116u);
+    BOOST_REQUIRE_EQUAL(out.at(2), 109u);
+    BOOST_REQUIRE_EQUAL(out.at(3), 102u);
+}
+
+BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__progression__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+
+    output_links out{};
+    address_link cursor{};
+    const std::atomic_bool cancel{};
+
+    // Add three unconfirmed blocks and two txs, with 7 outputs, 6 matching address.
+    BOOST_REQUIRE(setup_three_block_unconfirmed_address_store(query));
+    BOOST_REQUIRE(!query.to_address_outputs(cancel, cursor, out, test::block1a_address0));
+    BOOST_REQUIRE_EQUAL(cursor.value, 7u);
+    BOOST_REQUIRE_EQUAL(out.size(), 6u);
+    BOOST_REQUIRE_EQUAL(out.at(0), 123u);
+    BOOST_REQUIRE_EQUAL(out.at(1), 116u);
+    BOOST_REQUIRE_EQUAL(out.at(2), 109u);
+    BOOST_REQUIRE_EQUAL(out.at(3), 102u);
+    BOOST_REQUIRE_EQUAL(out.at(4), 95u);
+    BOOST_REQUIRE_EQUAL(out.at(5), 81u);
+
+    // Add two unconfirmed blocks with 3 outputs, all matching address.
+    BOOST_REQUIRE(query.set(test::block1b, database::context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2b, database::context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(!query.to_address_outputs(cancel, cursor, out, test::block1a_address0));
+    BOOST_REQUIRE_EQUAL(cursor.value, 10u);
+    BOOST_REQUIRE_EQUAL(out.size(), 3u);
+    BOOST_REQUIRE_EQUAL(out.at(0), 144u);
+    BOOST_REQUIRE_EQUAL(out.at(1), 137u);
+    BOOST_REQUIRE_EQUAL(out.at(2), 130u);
+
+    // Add one tx with one output, matching address.
+    BOOST_REQUIRE(query.set(test::tx2b));
+    BOOST_REQUIRE(!query.to_address_outputs(cancel, cursor, out, test::block1a_address0));
+    BOOST_REQUIRE_EQUAL(cursor.value, 11u);
+    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE_EQUAL(out.at(0), 151u);
+
+    // No changes to this address since cursor.
+    BOOST_REQUIRE(!query.to_address_outputs(cancel, cursor, out, test::block1a_address0));
+    BOOST_REQUIRE_EQUAL(cursor.value, 11u);
+    BOOST_REQUIRE(out.empty());
+}
+
 // to_input_tx
 // to_output_tx
 
