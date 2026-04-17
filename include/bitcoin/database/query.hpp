@@ -321,6 +321,8 @@ public:
         const hash_digest& key) const NOEXCEPT;
     code to_address_outputs(const stopper& cancel, output_links& out,
         const hash_digest& key) const NOEXCEPT;
+    code to_address_outputs(const stopper& cancel, address_link& cursor,
+        output_links& out, const hash_digest& key) const NOEXCEPT;
 
     /// Archive reads.
     /// -----------------------------------------------------------------------

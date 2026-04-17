@@ -99,12 +99,24 @@ TEMPLATE
 code CLASS::to_address_outputs(const stopper& cancel, output_links& out,
     const hash_digest& key) const NOEXCEPT
 {
-    // Pushing into the vector is more efficient than precomputation of size.
+    address_link cursor{};
+    return to_address_outputs(cancel, cursor, out, key);
+}
+
+TEMPLATE
+code CLASS::to_address_outputs(const stopper& cancel, address_link& cursor,
+    output_links& out, const hash_digest& key) const NOEXCEPT
+{
     out.clear();
-    for (auto it = store_.address.it(key); it; ++it)
+    const auto end = cursor;
+    auto it = store_.address.it(key);
+    for (cursor = it.get(); it; ++it)
     {
         if (cancel)
             return error::canceled;
+
+        if (it.get() == end)
+            return error::success;
 
         table::address::record address{};
         if (!store_.address.get(it, address))
@@ -113,7 +125,7 @@ code CLASS::to_address_outputs(const stopper& cancel, output_links& out,
         out.push_back(address.output_fk);
     }
 
-    return error::success;
+    return end.is_terminal() ? error::success : error::not_found;
 }
 
 // input|output|prevout->tx[parent]
