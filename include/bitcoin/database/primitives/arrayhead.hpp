@@ -95,7 +95,7 @@ private:
     {
         using namespace system;
         BC_ASSERT(!is_multiply_overflow<size_t>(index, bucket_size));
-        BC_ASSERT(!is_add_overflow(bucket_size, index * bucket_size));
+        BC_ASSERT(!is_add_overflow<size_t>(bucket_size, index * bucket_size));
         return possible_narrow_cast<size_t>(add1(index) * bucket_size);
     }
 
