@@ -130,7 +130,7 @@ private:
     {
         using namespace system;
         BC_ASSERT(!is_multiply_overflow<size_t>(index, cell_size));
-        BC_ASSERT(!is_add_overflow(cell_size, index * cell_size));
+        BC_ASSERT(!is_add_overflow<size_t>(cell_size, index * cell_size));
         return possible_narrow_cast<size_t>(add1(index) * cell_size);
     }
 
