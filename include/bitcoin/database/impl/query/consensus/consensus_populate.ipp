@@ -79,8 +79,9 @@ bool CLASS::populate_with_metadata(const input& input,
     // Null point would return nullptr and be interpreted as missing.
     BC_ASSERT(!input.point().is_null());
 
-    // input.metadata.point_link must be defaulted to max_uint32.
-    BC_ASSERT(input.metadata.point_link == max_uint32);
+    // If read via the store for store confirmation, then...
+    // input.metadata.point_link is set earlier in get_input().
+    ////BC_ASSERT(input.metadata.point_link == max_uint32);
 
     if (input.prevout)
         return true;
@@ -132,9 +133,6 @@ bool CLASS::populate_with_metadata(const input& input,
         }
     }
 
-    // If read via the store for store confirmation, then...
-    // input.metadata.point_link must be set earlier in get_input().
-    ////BC_ASSERT(input.metadata.point_link != max_uint32);
     return !is_null(input.prevout);
 }
 
