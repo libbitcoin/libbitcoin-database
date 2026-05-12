@@ -81,6 +81,7 @@ bool CLASS::populate_with_metadata(const input& input,
 
     // If read via the store for store confirmation, then...
     // input.metadata.point_link is set earlier in get_input().
+    // So this assertion no longer holds.
     ////BC_ASSERT(input.metadata.point_link == max_uint32);
 
     if (input.prevout)

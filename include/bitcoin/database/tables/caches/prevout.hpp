@@ -54,8 +54,10 @@ struct prevout
     static constexpr tx::integer merge(
         const system::chain::prevout& metadata) NOEXCEPT
     {
-        //BC_ASSERT((metadata.parent_tx == max_uint32) ==
-        //    (metadata.point_link == max_uint32));
+        // input.metadata.point_link is always set in get_input(), so this
+        // assertion no longer holds.
+        ////BC_ASSERT((metadata.parent_tx == max_uint32) ==
+        ////    (metadata.point_link == max_uint32));
 
         // parent_tx metadata default (max) implies block-internal spend.
         return metadata.parent_tx == max_uint32 ? tx::terminal :
