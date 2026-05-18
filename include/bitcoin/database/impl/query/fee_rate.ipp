@@ -87,8 +87,8 @@ bool CLASS::get_branch_fees(const stopper& cancel, fee_rate_sets& out,
     constexpr auto relaxed = std::memory_order_relaxed;
 
     // Parallel execution saves ~50%.
-    std::for_each(parallel, offsets.cbegin(), offsets.cend(),
-        [&](const size_t& offset) NOEXCEPT
+    std::for_each(offsets.cbegin(), offsets.cend(),
+        [&](size_t offset) NOEXCEPT
         {
             if (fail.load(relaxed))
                 return;
