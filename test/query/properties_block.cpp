@@ -107,6 +107,9 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_context__genesis__default)
 
     system::chain::context chain_ctx{};
     BOOST_REQUIRE(query.get_context(chain_ctx, 0));
+    BOOST_REQUIRE_EQUAL(chain_ctx.timestamp, 0x495fab29_u32);
+
+    chain_ctx.timestamp = {};
     BOOST_REQUIRE(chain_ctx == system::chain::context{});
 }
 
@@ -147,7 +150,8 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_context__block1__expected)
     BOOST_REQUIRE(ctx == expected);
 
     system::chain::context chain_ctx{};
-    const system::chain::context chain_expected{ expected.flags, 0, expected.mtp, expected.height, 0, 0 };
+    constexpr auto expected_timestamp = 0x4966bc61_u32;
+    const system::chain::context chain_expected{ expected.flags, expected_timestamp, expected.mtp, expected.height, 0, 0 };
     BOOST_REQUIRE(query.get_context(chain_ctx, 1));
     BOOST_REQUIRE(chain_ctx == chain_expected);
 }
