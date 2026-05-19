@@ -139,20 +139,31 @@ TEMPLATE
 bool CLASS::get_context(system::chain::context& ctx,
     const header_link& link) const NOEXCEPT
 {
-    table::header::record_context header{};
+    table::header::record_context_timestamp header{};
     if (!store_.header.get(link, header))
         return false;
 
-    // Context for block/header.check and header.accept are filled from
-    // chain_state, not from the store.
+    // Context for header.check and header.accept are filled from chain_state.
+    // So these are not populated here as they are not expected to be used.
     ctx =
     {
-        header.ctx.flags,     // [block.check, block.accept & block.connect]
-        {},                   // [block.check] timestamp
-        header.ctx.mtp,       // [block.check, header.accept]
-        header.ctx.height,    // [block.check & block.accept]
-        {},                   // [header.accept] minimum_block_version
-        {}                    // [header.accept] work_required
+        // [block.check, .accept, .connect]
+        .flags = header.ctx.flags,
+
+        // [block.check]
+        .timestamp = header.timestamp,
+
+        // [block.check, header.accept]
+        .median_time_past = header.ctx.mtp,
+
+        // [block.check & block.accept]
+        .height = header.ctx.height
+
+        // [header.accept]
+        // .minimum_block_version
+
+        // [header.accept]
+        // .work_required
     };
 
     return true;
