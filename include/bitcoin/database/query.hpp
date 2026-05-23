@@ -36,6 +36,7 @@ public:
 
     /// Chain type aliases.
     using block = system::chain::block;
+    using block_view = system::chain::block_view;
     using point = system::chain::point;
     using input = system::chain::input;
     using output = system::chain::output;
@@ -44,6 +45,7 @@ public:
     using witness = system::chain::witness;
     using headers = system::chain::header_cptrs;
     using transaction = system::chain::transaction;
+    using transaction_view = system::chain::transaction_view;
     using transactions = system::chain::transaction_cptrs;
     using inputs_ptr = system::chain::inputs_ptr;
     using outputs_ptr = system::chain::outputs_ptr;
@@ -504,6 +506,13 @@ public:
     code set_code(const block& block, const header_link& key, bool strong,
         bool bypass, size_t height) NOEXCEPT;
 
+    /// Set block_view (wire).
+    code set_code(const block_view& block, bool strong, bool bypass) NOEXCEPT;
+    code set_code(header_link& out_fk, const block_view& block, bool strong,
+        bool bypass) NOEXCEPT;
+    code set_code(const block_view& block, const header_link& key, bool strong,
+        bool bypass, size_t height) NOEXCEPT;
+
     /// Context.
     /// -----------------------------------------------------------------------
 
@@ -837,6 +846,8 @@ protected:
     /// tx_fk must be allocated.
     /// -----------------------------------------------------------------------
     code set_code(const tx_link& tx_fk, const transaction& tx,
+        bool bypass) NOEXCEPT;
+    code set_code(const tx_link& tx_fk, const transaction_view& tx,
         bool bypass) NOEXCEPT;
 
     /// History.

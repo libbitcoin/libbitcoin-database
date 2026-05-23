@@ -107,7 +107,7 @@ struct outs
         {
             using namespace system;
             static_assert(tx::size <= sizeof(uint64_t));
-            constexpr auto value_parent_diff = sizeof(uint64_t) - tx::size;
+            constexpr auto value_parent = sizeof(uint64_t) - tx::size;
 
             auto out_fk = output_fk;
             const auto& outs = *tx_.outputs_ptr();
@@ -119,7 +119,7 @@ struct outs
                     // Calculate next corresponding output fk from serialized size.
                     // (variable_size(value) + (value + script)) - (value - parent)
                     out_fk += (variable_size(out->value()) +
-                        out->serialized_size() - value_parent_diff);
+                        out->serialized_size() - value_parent);
                 });
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
@@ -128,6 +128,43 @@ struct outs
 
         const out::integer output_fk{};
         const system::chain::transaction& tx_{};
+    };
+
+    struct put_view
+      : public schema::outs
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(tx_.outputs());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using namespace system;
+            static_assert(tx::size <= sizeof(uint64_t));
+            constexpr auto value_parent = sizeof(uint64_t) - tx::size;
+
+            auto out_fk = output_fk;
+            auto stream = tx_.get_outputs_stream();
+            read::bytes::fast source{ stream };
+            for (size_t out{}; out < tx_.outputs(); ++out)
+            {
+                sink.write_little_endian<out::integer, out::size>(out_fk);
+
+                const auto start = source.get_read_position();
+                const auto value = source.read_variable();
+                source.skip_bytes(source.read_size());
+                const auto output_size = source.get_read_position() - start;
+                out_fk += (variable_size(value) + output_size - value_parent);
+            }
+
+            BC_ASSERT(source);
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink && source;
+        }
+
+        const out::integer output_fk{};
+        const system::chain::transaction_view& tx_;
     };
 };
 

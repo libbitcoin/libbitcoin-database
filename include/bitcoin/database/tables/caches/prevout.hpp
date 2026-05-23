@@ -85,7 +85,7 @@ struct prevout
             const auto write_tx = [&](const auto& tx) NOEXCEPT
             {
                 const auto& ins = tx->inputs_ptr();
-                return std::for_each(ins->begin(), ins->end(),
+                return std::for_each(ins->cbegin(), ins->cend(),
                     [&](const auto& in) NOEXCEPT
                     {
                         const auto value = merge(in->metadata);
