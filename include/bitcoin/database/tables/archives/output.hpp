@@ -195,17 +195,15 @@ struct output
         {
             using namespace system;
             static_assert(tx::size <= sizeof(uint64_t));
-            constexpr auto value_parent_difference = sizeof(uint64_t) -
-                tx::size;
+            constexpr auto value_parent = sizeof(uint64_t) - tx::size;
 
             const auto& outs = *tx_.outputs_ptr();
-            const auto other = outs.size() * value_parent_difference;
+            const auto other = outs.size() * value_parent;
             const auto outputs = std::accumulate(outs.cbegin(), outs.cend(),
                 zero, [](size_t total, const auto& out) NOEXCEPT
                 {
-                    // size cached, so this is free, includes sizeof(value).
-                    return total + variable_size(out->value()) +
-                        out->serialized_size();
+                    const auto output_size = out->serialized_size();
+                    return total + variable_size(out->value()) + output_size;
                 });
 
             // Converts value from fixed size wire encoding to variable.
@@ -230,6 +228,44 @@ struct output
 
         const tx::integer parent_fk{};
         const system::chain::transaction& tx_{};
+    };
+
+    struct put_view
+      : public schema::output
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            static_assert(tx::size <= sizeof(uint64_t));
+            constexpr auto value_size = sizeof(uint64_t);
+            constexpr auto value_parent = value_size - tx::size;
+
+            size_t outputs{};
+            const auto other = tx_.outputs() * value_parent;
+
+            auto stream = tx_.get_outputs_stream();
+            read::bytes::fast source{ stream };
+            for (size_t out{}; out < tx_.outputs(); ++out)
+            {
+                const auto start = source.get_read_position();
+                const auto value = source.read_8_bytes_little_endian();
+                source.skip_bytes(value_size + source.read_size());
+                const auto output_size = source.get_read_position() - start;
+                outputs += variable_size(value) + output_size;
+            }
+
+            // Converts value from fixed size wire encoding to variable.
+            // (variable_size(value) + (value + script)) - (value - parent)
+            return possible_narrow_cast<link::integer>(outputs - other);
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            return sink;
+        }
+
+        const tx::integer parent_fk{};
+        const system::chain::transaction_view& tx_;
     };
 
     struct wire_script

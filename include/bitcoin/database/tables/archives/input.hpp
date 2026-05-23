@@ -152,7 +152,7 @@ struct input
             const auto inputs = std::accumulate(ins.cbegin(), ins.cend(), zero,
                 [](size_t total, const auto& in) NOEXCEPT
                 {
-                    // sizes cached, so this is free.
+                    // Includes zero stack size write for non-segregated inputs.
                     return total + in->serialized_size(true);
                 });
 
@@ -174,6 +174,76 @@ struct input
         }
 
         const system::chain::transaction& tx_{};
+    };
+
+    struct put_view
+      : public schema::input
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            constexpr auto sequence_size = sizeof(uint32_t);
+            constexpr auto sequence_point_size = sequence_size +
+                chain::point::serialized_size();
+
+            size_t total{};
+
+            auto istream = tx_.get_inputs_stream();
+            read::bytes::fast isource{ istream };
+            for (size_t in{}; in < tx_.inputs(); ++in)
+            {
+                const auto start = isource.get_read_position();
+                isource.skip_bytes(chain::point::serialized_size());
+                isource.skip_bytes(isource.read_size() + sequence_size);
+                const auto input_size = isource.get_read_position() - start;
+                total += (input_size - sequence_point_size);
+            }
+
+            if (!tx_.is_segregated())
+            {
+                // Optimize out stream and loop for non-segregated.
+                total += (tx_.inputs() * variable_size(zero));
+            }
+            else
+            {
+                auto wstream = tx_.get_witnesses_stream();
+                read::bytes::fast wsource{ wstream };
+                for (size_t in{}; in < tx_.inputs(); ++in)
+                {
+                    const auto stack = wsource.read_size();
+                    total += variable_size(stack);
+                    for (size_t element{}; element < stack; ++element)
+                    {
+                        const auto element_size = wsource.read_size();
+                        wsource.skip_bytes(element_size);
+                        total += variable_size(element_size) + element_size;
+                    }
+                }
+            }
+
+            return possible_narrow_cast<link::integer>(total);
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using namespace system;
+            auto istream = tx_.get_inputs_stream();
+            auto wstream = tx_.get_witnesses_stream();
+            read::bytes::fast isource{ istream };
+            read::bytes::fast wsource{ wstream };
+            for (size_t in{}; in < tx_.inputs(); ++in)
+            {
+                // input (without point) + witness stack (or zero).
+                tx_.write_input_script(sink, isource);
+                tx_.write_witness(sink, wsource);
+            }
+
+            BC_ASSERT(isource && wsource);
+            BC_ASSERT(!sink || sink.get_write_position() == count());
+            return sink && isource && wsource;
+        }
+
+        const system::chain::transaction_view& tx_;
     };
 
     struct wire_script

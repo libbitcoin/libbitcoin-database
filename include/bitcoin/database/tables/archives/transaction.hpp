@@ -186,6 +186,38 @@ struct transaction
         outs::integer outs_fk{};
     };
 
+    struct put_view
+      : public schema::transaction
+    {
+        inline bool to_data(finalizer& sink) const NOEXCEPT
+        {
+            using namespace system;
+
+            // is_coinbase() is computed over the point.
+            const auto coinbase = tx.is_coinbase();
+            const auto light_ = tx.serialized_size(false);
+            const auto heavy_ = tx.serialized_size(true);
+            const auto light = possible_narrow_cast<bytes::integer>(light_);
+            const auto heavy = possible_narrow_cast<bytes::integer>(heavy_);
+            sink.write_little_endian<bytes::integer, bytes::size>(merge(coinbase, light));
+            sink.write_little_endian<bytes::integer, bytes::size>(heavy);
+            sink.write_little_endian<uint32_t>(tx.locktime());
+            sink.write_little_endian<uint32_t>(tx.version());
+            sink.write_little_endian<ix::integer, ix::size>(ins_count);
+            sink.write_little_endian<ix::integer, ix::size>(outs_count);
+            sink.write_little_endian<ins::integer, ins::size>(point_fk);
+            sink.write_little_endian<outs::integer, outs::size>(outs_fk);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const system::chain::transaction_view& tx;
+        ix::integer ins_count{};
+        ix::integer outs_count{};
+        ins::integer point_fk{};
+        outs::integer outs_fk{};
+    };
+
     struct only_with_sk
       : public only
     {

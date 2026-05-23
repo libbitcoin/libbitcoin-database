@@ -133,12 +133,51 @@ struct ins
         const system::chain::transaction& tx_{};
     };
 
+    struct put_view
+      : public schema::ins
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(tx_.inputs());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using namespace system;
+            constexpr auto sequence_point_size = sizeof(uint32_t) +
+                chain::point::serialized_size();
+
+            auto in_fk = input_fk;
+            auto stream = tx_.get_inputs_stream();
+            read::bytes::fast source{ stream };
+            for (size_t in{}; in < tx_.inputs(); ++in)
+            {
+                const auto start = source.get_read_position();
+                source.skip_bytes(chain::point::serialized_size());
+                source.skip_bytes(source.read_size());
+                sink.write_little_endian(source.read_little_endian<uint32_t>());
+                sink.write_little_endian<in::integer, in::size>(in_fk);
+                sink.write_little_endian<tx::integer, tx::size>(parent_fk);
+                const auto input_size = source.get_read_position() - start;
+                in_fk += (input_size - sequence_point_size);
+            }
+
+            BC_ASSERT(source);
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink && source;
+        }
+
+        const in::integer input_fk{};
+        const tx::integer parent_fk{};
+        const system::chain::transaction_view& tx_;
+    };
+
     struct wire_sequence
       : public schema::ins
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            const auto sequence_size = sizeof(uint32_t);
+            constexpr auto sequence_size = sizeof(uint32_t);
             sink.write_bytes(source.read_bytes(sequence_size));
             return source;
         }
