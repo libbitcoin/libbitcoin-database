@@ -35,7 +35,9 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
     using namespace system;
     using ix = linkage<schema::index>;
 
-    if (tx.is_empty())
+    // View parser treats empty as invalid, so there is no empty state.
+    // As a result this condition should never be hit (deserialization fails).
+    if (!tx.is_valid())
         return error::tx_empty;
 
     const auto inputs = possible_narrow_cast<ix::integer>(tx.inputs());

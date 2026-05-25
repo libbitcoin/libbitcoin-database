@@ -249,7 +249,7 @@ struct output
             {
                 const auto start = source.get_read_position();
                 const auto value = source.read_8_bytes_little_endian();
-                source.skip_bytes(value_size + source.read_size());
+                source.skip_bytes(source.read_size());
                 const auto output_size = source.get_read_position() - start;
                 outputs += variable_size(value) + output_size;
             }
@@ -261,6 +261,18 @@ struct output
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
+            using namespace system;
+            auto stream = tx_.get_outputs_stream();
+            read::bytes::fast source{ stream };
+            for (size_t out{}; out < tx_.outputs(); ++out)
+            {
+                // tx view output writer not used due to variable value.
+                sink.write_little_endian<tx::integer, tx::size>(parent_fk);
+                sink.write_variable(source.read_8_bytes_little_endian());
+                sink.write_bytes(source.read_bytes(source.read_size()));
+            }
+
+            BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
 
