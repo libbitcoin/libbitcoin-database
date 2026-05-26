@@ -86,6 +86,9 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
         return error::tx_tx_set;
     }
 
+    auto ins = tx.get_inputs_stream();
+    read::bytes::fast isource{ ins };
+
     // Commit points (hashmap).
     if (coinbase)
     {
@@ -93,19 +96,16 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
         if (!store_.point.expand(ins_fk + inputs))
             return error::tx_point_allocate;
 
-        auto source = tx.get_inputs_stream();
-        read::bytes::fast ins{ source };
-
         for (size_t in{}; in < inputs; ++in)
         {
             // Should always be a null point - but could be invalid.
-            if (!store_.point.put(ins_fk++, chain::point(ins),
+            if (!store_.point.put(ins_fk++, chain::point(isource),
                 table::point::record{}))
                 return error::tx_null_point_put;
 
             // Skip script and sequence.
-            ins.skip_bytes(ins.read_size());
-            ins.skip_bytes(sizeof(uint32_t));
+            isource.skip_bytes(isource.read_size());
+            isource.skip_bytes(sizeof(uint32_t));
         }
     }
     else
@@ -120,25 +120,23 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
             // Collect duplicates to store in duplicate table.
             std::vector<chain::point> twins{};
             auto ptr = store_.point.get_memory();
-            auto source = tx.get_inputs_stream();
-            read::bytes::fast ins{ source };
 
             for (size_t in{}; in < inputs; ++in)
             {
                 bool duplicate{};
                 if (!store_.point.put(duplicate, ptr, ins_fk++,
-                    chain::point(ins), table::point::record{}))
+                    chain::point(isource), table::point::record{}))
                     return error::tx_point_put;
             
                 if (duplicate)
                 {
-                    ins.rewind_bytes(chain::point::serialized_size());
-                    twins.push_back(chain::point(ins));
+                    isource.rewind_bytes(chain::point::serialized_size());
+                    twins.push_back(chain::point(isource));
                 }
 
                 // Skip script and sequence.
-                ins.skip_bytes(ins.read_size());
-                ins.skip_bytes(sizeof(uint32_t));
+                isource.skip_bytes(isource.read_size());
+                isource.skip_bytes(sizeof(uint32_t));
             }
 
             ptr.reset();
@@ -153,23 +151,25 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
         else
         {
             auto ptr = store_.point.get_memory();
-            auto source = tx.get_inputs_stream();
-            read::bytes::fast ins{ source };
 
             for (size_t in{}; in < inputs; ++in)
             {
-                if (!store_.point.put(ptr, ins_fk++, chain::point(ins),
+                if (!store_.point.put(ptr, ins_fk++, chain::point(isource),
                     table::point::record{}))
                     return error::tx_point_put;
 
                 // Skip script and sequence.
-                ins.skip_bytes(ins.read_size());
-                ins.skip_bytes(sizeof(uint32_t));
+                isource.skip_bytes(isource.read_size());
+                isource.skip_bytes(sizeof(uint32_t));
             }
 
             ptr.reset();
         }
     }
+
+    BC_ASSERT(isource);
+    if (!isource)
+        return error::tx_null_point_put;
 
     // Commit address index records (hashmap).
     if (address_enabled())
@@ -178,27 +178,28 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
         if (ad_fk.is_terminal())
             return error::tx_address_allocate;
 
-        constexpr auto value_parent = sizeof(uint64_t) - tx_link::size;
         const auto ptr = store_.address.get_memory();
-        auto source = tx.get_outputs_stream();
-        read::bytes::fast ous{ source };
+        auto outs = tx.get_outputs_stream();
+        read::bytes::fast osource{ outs };
 
         for (size_t out{}; out < outputs; ++out)
         {
-            const auto start = ous.get_read_position();
-            const auto value = ous.read_variable();
+            const auto value = osource.read_8_bytes_little_endian();
+            const auto bytes = osource.read_size();
 
             if (!store_.address.put(ptr, ad_fk++,
-                sha256_hash(ous.read_bytes(ous.read_size())),
+                sha256_hash(osource.read_bytes(bytes)),
                 table::address::record{ {}, out_fk }))
                 return error::tx_address_put;
 
-            // See outs::put_ref.
-            // Calculate next corresponding output fk from serialized size.
-            // (variable_size(value) + (value + script)) - (value - parent)
-            const auto output_size = ous.get_read_position() - start;
-            out_fk.value += (variable_size(value) + output_size - value_parent);
+            out_fk.value += possible_narrow_cast<output_link::integer>(
+                tx_link::size + variable_size(value) + variable_size(bytes) +
+                bytes);
         }
+
+        BC_ASSERT(osource);
+        if (!osource)
+            return error::tx_address_put;
     }
 
     // Commit tx to search (hashmap).
