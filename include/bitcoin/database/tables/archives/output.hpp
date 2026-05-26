@@ -236,27 +236,21 @@ struct output
         inline link count() const NOEXCEPT
         {
             using namespace system;
-            static_assert(tx::size <= sizeof(uint64_t));
-            constexpr auto value_size = sizeof(uint64_t);
-            constexpr auto value_parent = value_size - tx::size;
-
-            size_t outputs{};
-            const auto other = tx_.outputs() * value_parent;
-
             auto stream = tx_.get_outputs_stream();
             read::bytes::fast source{ stream };
+            size_t total{};
+
             for (size_t out{}; out < tx_.outputs(); ++out)
             {
-                const auto start = source.get_read_position();
                 const auto value = source.read_8_bytes_little_endian();
-                source.skip_bytes(source.read_size());
-                const auto output_size = source.get_read_position() - start;
-                outputs += variable_size(value) + output_size;
+                const auto bytes = source.read_size();
+                source.skip_bytes(bytes);
+                total += tx::size + variable_size(value) + 
+                    variable_size(bytes) + bytes;
             }
 
             // Converts value from fixed size wire encoding to variable.
-            // (variable_size(value) + (value + script)) - (value - parent)
-            return possible_narrow_cast<link::integer>(outputs - other);
+            return possible_narrow_cast<link::integer>(total);
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
@@ -264,14 +258,18 @@ struct output
             using namespace system;
             auto stream = tx_.get_outputs_stream();
             read::bytes::fast source{ stream };
+
             for (size_t out{}; out < tx_.outputs(); ++out)
             {
                 // tx view output writer not used due to variable value.
                 sink.write_little_endian<tx::integer, tx::size>(parent_fk);
                 sink.write_variable(source.read_8_bytes_little_endian());
-                sink.write_bytes(source.read_bytes(source.read_size()));
+                const auto bytes = source.read_size();
+                sink.write_variable(bytes);
+                sink.write_bytes(source.read_bytes(bytes));
             }
 
+            BC_ASSERT(source);
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }

@@ -95,6 +95,7 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
 
         auto source = tx.get_inputs_stream();
         read::bytes::fast ins{ source };
+
         for (size_t in{}; in < inputs; ++in)
         {
             // Should always be a null point - but could be invalid.
@@ -102,8 +103,9 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
                 table::point::record{}))
                 return error::tx_null_point_put;
 
-            // Skip script.
+            // Skip script and sequence.
             ins.skip_bytes(ins.read_size());
+            ins.skip_bytes(sizeof(uint32_t));
         }
     }
     else
@@ -120,6 +122,7 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
             auto ptr = store_.point.get_memory();
             auto source = tx.get_inputs_stream();
             read::bytes::fast ins{ source };
+
             for (size_t in{}; in < inputs; ++in)
             {
                 bool duplicate{};
@@ -133,8 +136,9 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
                     twins.push_back(chain::point(ins));
                 }
 
-                // Skip script.
+                // Skip script and sequence.
                 ins.skip_bytes(ins.read_size());
+                ins.skip_bytes(sizeof(uint32_t));
             }
 
             ptr.reset();
@@ -151,14 +155,16 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
             auto ptr = store_.point.get_memory();
             auto source = tx.get_inputs_stream();
             read::bytes::fast ins{ source };
+
             for (size_t in{}; in < inputs; ++in)
             {
                 if (!store_.point.put(ptr, ins_fk++, chain::point(ins),
                     table::point::record{}))
                     return error::tx_point_put;
 
-                // Skip script.
+                // Skip script and sequence.
                 ins.skip_bytes(ins.read_size());
+                ins.skip_bytes(sizeof(uint32_t));
             }
 
             ptr.reset();
@@ -176,10 +182,12 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
         const auto ptr = store_.address.get_memory();
         auto source = tx.get_outputs_stream();
         read::bytes::fast ous{ source };
+
         for (size_t out{}; out < outputs; ++out)
         {
             const auto start = ous.get_read_position();
             const auto value = ous.read_variable();
+
             if (!store_.address.put(ptr, ad_fk++,
                 sha256_hash(ous.read_bytes(ous.read_size())),
                 table::address::record{ {}, out_fk }))

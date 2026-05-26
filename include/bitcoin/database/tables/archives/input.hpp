@@ -182,43 +182,32 @@ struct input
         inline link count() const NOEXCEPT
         {
             using namespace system;
-            constexpr auto sequence_size = sizeof(uint32_t);
-            constexpr auto sequence_point_size = sequence_size +
-                chain::point::serialized_size();
-
             size_t total{};
-
             auto istream = tx_.get_inputs_stream();
             read::bytes::fast isource{ istream };
+
+            // inputs
             for (size_t in{}; in < tx_.inputs(); ++in)
             {
-                const auto start = isource.get_read_position();
                 isource.skip_bytes(chain::point::serialized_size());
-                isource.skip_bytes(isource.read_size() + sequence_size);
-                const auto input_size = isource.get_read_position() - start;
-                total += (input_size - sequence_point_size);
+                const auto bytes = isource.read_size();
+                isource.skip_bytes(bytes + sizeof(uint32_t));
+                total += variable_size(bytes) + bytes;
             }
 
-            if (!tx_.is_segregated())
-            {
-                // Optimize out stream and loop for non-segregated.
-                total += (tx_.inputs() * variable_size(zero));
-            }
-            else
+            // witnesses
+            if (tx_.is_segregated())
             {
                 auto wstream = tx_.get_witnesses_stream();
                 read::bytes::fast wsource{ wstream };
+
                 for (size_t in{}; in < tx_.inputs(); ++in)
-                {
-                    const auto stack = wsource.read_size();
-                    total += variable_size(stack);
-                    for (size_t element{}; element < stack; ++element)
-                    {
-                        const auto element_size = wsource.read_size();
-                        wsource.skip_bytes(element_size);
-                        total += variable_size(element_size) + element_size;
-                    }
-                }
+                    total += tx_.read_witness_size(wsource);
+            }
+            else
+            {
+                // Optimize out stream and loop for non-segregated.
+                total += (tx_.inputs() * variable_size(zero));
             }
 
             return possible_narrow_cast<link::integer>(total);
@@ -228,19 +217,38 @@ struct input
         {
             using namespace system;
             auto istream = tx_.get_inputs_stream();
-            auto wstream = tx_.get_witnesses_stream();
             read::bytes::fast isource{ istream };
-            read::bytes::fast wsource{ wstream };
-            for (size_t in{}; in < tx_.inputs(); ++in)
+
+            if (tx_.is_segregated())
             {
-                // input (without point) + witness stack (or zero).
-                tx_.write_input_script(sink, isource);
-                tx_.write_witness(sink, wsource);
+                auto wstream = tx_.get_witnesses_stream();
+                read::bytes::fast wsource{ wstream };
+
+                for (size_t in{}; in < tx_.inputs(); ++in)
+                {
+                    // input script + witness stack
+                    tx_.write_input_script(sink, isource);
+                    isource.skip_bytes(sizeof(uint32_t));
+                    tx_.write_witness(sink, wsource);
+                }
+
+                if (!wsource)
+                    isource.invalidate();
+            }
+            else
+            {
+                for (size_t in{}; in < tx_.inputs(); ++in)
+                {
+                    // input script + empty witness stack
+                    tx_.write_input_script(sink, isource);
+                    isource.skip_bytes(sizeof(uint32_t));
+                    sink.write_variable(zero);
+                }
             }
 
-            BC_ASSERT(isource && wsource);
+            BC_ASSERT(isource);
             BC_ASSERT(!sink || sink.get_write_position() == count());
-            return sink && isource && wsource;
+            return sink && isource;
         }
 
         const system::chain::transaction_view& tx_;
