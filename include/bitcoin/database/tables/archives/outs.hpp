@@ -141,21 +141,17 @@ struct outs
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             using namespace system;
-            static_assert(tx::size <= sizeof(uint64_t));
-            constexpr auto value_parent = sizeof(uint64_t) - tx::size;
-
             auto out_fk = output_fk;
             auto stream = tx_.get_outputs_stream();
             read::bytes::fast source{ stream };
             for (size_t out{}; out < tx_.outputs(); ++out)
             {
                 sink.write_little_endian<out::integer, out::size>(out_fk);
-
-                const auto start = source.get_read_position();
-                const auto value = source.read_variable();
-                source.skip_bytes(source.read_size());
-                const auto output_size = source.get_read_position() - start;
-                out_fk += (variable_size(value) + output_size - value_parent);
+                const auto value = source.read_8_bytes_little_endian();
+                const auto bytes = source.read_size();
+                source.skip_bytes(bytes);
+                out_fk += tx::size + variable_size(value)
+                    + variable_size(bytes) + bytes;
             }
 
             BC_ASSERT(source);

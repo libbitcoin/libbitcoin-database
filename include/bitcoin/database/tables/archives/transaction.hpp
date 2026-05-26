@@ -193,7 +193,6 @@ struct transaction
         {
             using namespace system;
 
-            // is_coinbase() is computed over the point.
             const auto coinbase = tx.is_coinbase();
             const auto light_ = tx.serialized_size(false);
             const auto heavy_ = tx.serialized_size(true);

@@ -144,22 +144,47 @@ struct ins
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             using namespace system;
-            constexpr auto sequence_point_size = sizeof(uint32_t) +
-                chain::point::serialized_size();
-
             auto in_fk = input_fk;
             auto stream = tx_.get_inputs_stream();
             read::bytes::fast source{ stream };
-            for (size_t in{}; in < tx_.inputs(); ++in)
+
+            if (tx_.is_segregated())
             {
-                const auto start = source.get_read_position();
-                source.skip_bytes(chain::point::serialized_size());
-                source.skip_bytes(source.read_size());
-                sink.write_little_endian(source.read_little_endian<uint32_t>());
-                sink.write_little_endian<in::integer, in::size>(in_fk);
-                sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-                const auto input_size = source.get_read_position() - start;
-                in_fk += (input_size - sequence_point_size);
+                auto wstream = tx_.get_witnesses_stream();
+                read::bytes::fast wsource{ wstream };
+
+                for (size_t in{}; in < tx_.inputs(); ++in)
+                {
+                    source.skip_bytes(chain::point::serialized_size());
+                    const auto bytes = source.read_size();
+                    source.skip_bytes(bytes);
+                    const auto sequence = source.read_little_endian<uint32_t>();
+
+                    sink.write_little_endian<uint32_t>(sequence);
+                    sink.write_little_endian<in::integer, in::size>(in_fk);
+                    sink.write_little_endian<tx::integer, tx::size>(parent_fk);
+
+                    // Advance by size stored in input table for this input.
+                    in_fk += variable_size(bytes) + bytes +
+                        tx_.read_witness_size(wsource);
+                }
+            }
+            else
+            {
+                for (size_t in{}; in < tx_.inputs(); ++in)
+                {
+                    source.skip_bytes(chain::point::serialized_size());
+                    const auto bytes = source.read_size();
+                    source.skip_bytes(bytes);
+                    const auto sequence = source.read_little_endian<uint32_t>();
+
+                    sink.write_little_endian<uint32_t>(sequence);
+                    sink.write_little_endian<in::integer, in::size>(in_fk);
+                    sink.write_little_endian<tx::integer, tx::size>(parent_fk);
+
+                    // Advance by size stored in input table for this input.
+                    in_fk += variable_size(bytes) + bytes + variable_size(zero);
+                }
             }
 
             BC_ASSERT(source);
