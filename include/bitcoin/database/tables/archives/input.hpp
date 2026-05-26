@@ -182,35 +182,7 @@ struct input
         inline link count() const NOEXCEPT
         {
             using namespace system;
-            size_t total{};
-            auto istream = tx_.get_inputs_stream();
-            read::bytes::fast isource{ istream };
-
-            // inputs
-            for (size_t in{}; in < tx_.inputs(); ++in)
-            {
-                isource.skip_bytes(chain::point::serialized_size());
-                const auto bytes = isource.read_size();
-                isource.skip_bytes(bytes + sizeof(uint32_t));
-                total += variable_size(bytes) + bytes;
-            }
-
-            // witnesses
-            if (tx_.is_segregated())
-            {
-                auto wstream = tx_.get_witnesses_stream();
-                read::bytes::fast wsource{ wstream };
-
-                for (size_t in{}; in < tx_.inputs(); ++in)
-                    total += tx_.read_witness_size(wsource);
-            }
-            else
-            {
-                // Optimize out stream and loop for non-segregated.
-                total += (tx_.inputs() * variable_size(zero));
-            }
-
-            return possible_narrow_cast<link::integer>(total);
+            return possible_narrow_cast<link::integer>(tx_.input_table_size());
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT

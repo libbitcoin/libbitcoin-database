@@ -236,21 +236,9 @@ struct output
         inline link count() const NOEXCEPT
         {
             using namespace system;
-            auto stream = tx_.get_outputs_stream();
-            read::bytes::fast source{ stream };
-            size_t total{};
-
-            for (size_t out{}; out < tx_.outputs(); ++out)
-            {
-                const auto value = source.read_8_bytes_little_endian();
-                const auto bytes = source.read_size();
-                source.skip_bytes(bytes);
-                total += tx::size + variable_size(value) + 
-                    variable_size(bytes) + bytes;
-            }
-
-            // Converts value from fixed size wire encoding to variable.
-            return possible_narrow_cast<link::integer>(total);
+            const auto parents_size = tx_.outputs() * tx::size;
+            return possible_narrow_cast<link::integer>(parents_size +
+                tx_.output_table_size());
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
