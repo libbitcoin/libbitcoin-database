@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// validated_bk is a slab arraymap of block state, indexed by header.fk.
+/// validated_bk is a record arraymap of block state, indexed by header.fk.
 struct validated_bk
   : public array_map<schema::validated_bk>
 {
