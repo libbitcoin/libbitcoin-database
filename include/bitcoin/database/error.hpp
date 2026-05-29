@@ -38,8 +38,6 @@ enum error_t : uint8_t
 
     /// integrity (internal fault)
     integrity,
-    integrity2,
-    integrity3,
     integrity_spendable,
     integrity_get_prevouts,
     integrity_block_confirmable1,
