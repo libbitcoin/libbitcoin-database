@@ -27,7 +27,7 @@ const table::strong_tx::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
 const table::strong_tx::record strong1{ {}, table::strong_tx::merge(true, 0x0078f87f) };
 const table::strong_tx::record strong2{ {}, table::strong_tx::merge(false, 0x0078f87f) };
 
-const data_chunk expected_head = base16_chunk
+const auto expected_head = base16_chunk
 (
     "00000000"
     "ffffffff"
@@ -39,7 +39,7 @@ const data_chunk expected_head = base16_chunk
     "ffffffff"
     "ffffffff"
 );
-const data_chunk closed_head = base16_chunk
+const auto closed_head = base16_chunk
 (
     "02000000"
     "ffffffff"
@@ -51,7 +51,7 @@ const data_chunk closed_head = base16_chunk
     "ffffffff"
     "ffffffff"
 );
-const data_chunk expected_body = base16_chunk
+const auto expected_body = base16_chunk
 (
     "ffffffff" // next->end
     "01020304" // key1

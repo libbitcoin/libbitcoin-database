@@ -28,7 +28,7 @@ const table::address::record in1{ {}, 0x1234567890abcdef };
 const table::address::record in2{ {}, 0xabcdef1234567890 };
 const table::address::record out1{ {}, 0x0000007890abcdef };
 const table::address::record out2{ {}, 0x0000001234567890 };
-const data_chunk expected_head = base16_chunk
+const auto expected_head = base16_chunk
 (
     "00000000"
     "01000000"
@@ -40,7 +40,7 @@ const data_chunk expected_head = base16_chunk
     "ffffffff"
     "ffffffff"
 );
-const data_chunk closed_head = base16_chunk
+const auto closed_head = base16_chunk
 (
     "02000000"
     "01000000"
@@ -52,7 +52,7 @@ const data_chunk closed_head = base16_chunk
     "ffffffff"
     "ffffffff"
 );
-const data_chunk expected_body = base16_chunk
+const auto expected_body = base16_chunk
 (
     "ffffffff"   // next->end
     "100000000000000000000000000000000000000000000000000000000000000a" // key1

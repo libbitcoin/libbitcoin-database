@@ -25,7 +25,7 @@ using namespace system;
 
 BOOST_AUTO_TEST_CASE(filter_tx__put__ordered__expected)
 {
-    const data_chunk expected_head = base16_chunk
+    const auto expected_head = base16_chunk
     (
         "0000000000"
         "0000000000"
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(filter_tx__put__ordered__expected)
         "ffffffffff"
         "ffffffffff"
     );
-    const data_chunk closed_head = base16_chunk
+    const auto closed_head = base16_chunk
     (
         "a500000000"
         "0000000000"
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(filter_tx__put__ordered__expected)
         "ffffffffff"
         "ffffffffff"
     );
-    const data_chunk expected_body = base16_chunk
+    const auto expected_body = base16_chunk
     (
         "20""0000000000000000000000000000000000000000000000000000000000000000"
         "20""0100000000000000000000000000000000000000000000000000000000000000"

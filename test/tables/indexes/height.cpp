@@ -26,15 +26,15 @@ const table::height::record in1{ {}, 0x12345678 };
 const table::height::record in2{ {}, 0xabcdef12 };
 const table::height::record out1{ {}, 0x00345678 };
 const table::height::record out2{ {}, 0x00cdef12 };
-const data_chunk expected_head = base16_chunk
+const auto expected_head = base16_chunk
 (
     "000000"
 );
-const data_chunk closed_head = base16_chunk
+const auto closed_head = base16_chunk
 (
     "020000"
 );
-const data_chunk expected_body = base16_chunk
+const auto expected_body = base16_chunk
 (
     "785634" // header_fk1
     "12efcd" // header_fk2
