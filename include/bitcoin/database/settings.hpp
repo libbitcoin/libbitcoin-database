@@ -95,6 +95,12 @@ struct BCD_API settings
     /// Caches.
     /// -----------------------------------------------------------------------
 
+    uint64_t ecdsa_size;
+    uint16_t ecdsa_rate;
+
+    uint64_t schnorr_size;
+    uint16_t schnorr_rate;
+
     // This one is 16 bit (could use table link::integer) for these.
     uint16_t duplicate_buckets;
     uint64_t duplicate_size;

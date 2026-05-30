@@ -169,6 +169,26 @@ public:
 
     // Caches.
 
+    inline const path& ecdsa_head_file() const NOEXCEPT
+    {
+        return ecdsa_head_.file();
+    }
+
+    inline const path& ecdsa_body_file() const NOEXCEPT
+    {
+        return ecdsa_body_.file();
+    }
+
+    inline const path& schnorr_head_file() const NOEXCEPT
+    {
+        return schnorr_head_.file();
+    }
+
+    inline const path& schnorr_body_file() const NOEXCEPT
+    {
+        return schnorr_body_.file();
+    }
+
     inline const path& duplicate_head_file() const NOEXCEPT
     {
         return duplicate_head_.file();

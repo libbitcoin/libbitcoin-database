@@ -57,6 +57,8 @@ namespace indexes
 
 namespace caches
 {
+    constexpr auto ecdsa = "ecdsa";
+    constexpr auto schnorr = "schnorr";
     constexpr auto duplicate = "duplicate";
     constexpr auto prevout = "prevout";
     constexpr auto validated_bk = "validated_bk";

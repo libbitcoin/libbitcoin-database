@@ -69,6 +69,12 @@ enum class table_t
     strong_tx_body,
 
     /// Caches.
+    ecdsa_table,
+    ecdsa_head,
+    ecdsa_body,
+    schnorr_table,
+    schnorr_head,
+    schnorr_body,
     duplicate_table,
     duplicate_head,
     duplicate_body,

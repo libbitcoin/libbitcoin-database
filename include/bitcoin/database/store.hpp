@@ -122,6 +122,8 @@ public:
     table::strong_tx strong_tx;
 
     /// Caches.
+    table::ecdsa ecdsa;
+    table::schnorr schnorr;
     table::duplicate duplicate;
     table::prevout prevout;
     table::validated_bk validated_bk;
@@ -196,11 +198,19 @@ protected:
     /// Caches.
     /// -----------------------------------------------------------------------
 
-    // bloc arraymap
+    // array
+    Storage ecdsa_head_;
+    Storage ecdsa_body_;
+
+    // array
+    Storage schnorr_head_;
+    Storage schnorr_body_;
+
+    // blob arraymap
     Storage duplicate_head_;
     Storage duplicate_body_;
 
-    // bloc arraymap
+    // blob arraymap
     Storage prevout_head_;
     Storage prevout_body_;
 

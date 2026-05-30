@@ -59,10 +59,10 @@ struct schnorr
 
         inline bool operator==(const record& other) const NOEXCEPT
         {
-            return digest == other.digest;
-            return public_key == other.public_key;
-            return signature == other.signature;
-            return header_fk == other.header_fk;
+            return digest == other.digest
+                && public_key == other.public_key
+                && signature == other.signature
+                && header_fk == other.header_fk;
         }
 
         system::hash_digest digest{};

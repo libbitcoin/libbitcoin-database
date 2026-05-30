@@ -71,6 +71,12 @@ settings::settings() NOEXCEPT
 
     // Caches.
 
+    ecdsa_size{ 1 },
+    ecdsa_rate{ 50 },
+
+    schnorr_size{ 1 },
+    schnorr_rate{ 50 },
+
     duplicate_buckets{ 128 },
     duplicate_size{ 1 },
     duplicate_rate{ 50 },
