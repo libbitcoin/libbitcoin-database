@@ -103,37 +103,6 @@ public:
     /// Dump all error/full conditions to handler.
     void report(const error_handler& handler) const NOEXCEPT;
 
-    /// Tables.
-    /// -----------------------------------------------------------------------
-
-    /// Archives.
-    table::header header;
-    table::input input;
-    table::output output;
-    table::point point;
-    table::ins ins;
-    table::outs outs;
-    table::transaction tx;
-    table::txs txs;
-
-    /// Indexes.
-    table::height candidate;
-    table::height confirmed;
-    table::strong_tx strong_tx;
-
-    /// Caches.
-    table::ecdsa ecdsa;
-    table::schnorr schnorr;
-    table::duplicate duplicate;
-    table::prevout prevout;
-    table::validated_bk validated_bk;
-    table::validated_tx validated_tx;
-
-    /// Optionals.
-    table::address address;
-    table::filter_bk filter_bk;
-    table::filter_tx filter_tx;
-
 protected:
     using path = std::filesystem::path;
 
@@ -263,6 +232,38 @@ private:
     {
         return folder / (name + schema::ext::lock);
     }
+
+public:
+    /// Tables.
+    /// -----------------------------------------------------------------------
+
+    /// Archives.
+    table::header header;
+    table::input input;
+    table::output output;
+    table::point point;
+    table::ins ins;
+    table::outs outs;
+    table::transaction tx;
+    table::txs txs;
+
+    /// Indexes.
+    table::height candidate;
+    table::height confirmed;
+    table::strong_tx strong_tx;
+
+    /// Caches.
+    table::ecdsa ecdsa;
+    table::schnorr schnorr;
+    table::duplicate duplicate;
+    table::prevout prevout;
+    table::validated_bk validated_bk;
+    table::validated_tx validated_tx;
+
+    /// Optionals.
+    table::address address;
+    table::filter_bk filter_bk;
+    table::filter_tx filter_tx;
 };
 
 } // namespace database

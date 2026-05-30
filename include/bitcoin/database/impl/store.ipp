@@ -143,98 +143,105 @@ CLASS::store(const settings& config) NOEXCEPT
 
     header_head_(head(config.path / schema::dir::heads, schema::archive::header), 1, 0, random),
     header_body_(body(config.path, schema::archive::header), config.header_size, config.header_rate, sequential),
-    header(header_head_, header_body_, config.header_buckets),
 
     input_head_(head(config.path / schema::dir::heads, schema::archive::input), 1, 0, random),
     input_body_(body(config.path, schema::archive::input), config.input_size, config.input_rate, sequential),
-    input(input_head_, input_body_),
 
     output_head_(head(config.path / schema::dir::heads, schema::archive::output), 1, 0, random),
     output_body_(body(config.path, schema::archive::output), config.output_size, config.output_rate, sequential),
-    output(output_head_, output_body_),
 
     point_head_(head(config.path / schema::dir::heads, schema::archive::point), 1, 0, random),
     point_body_(body(config.path, schema::archive::point), config.point_size, config.point_rate, sequential),
-    point(point_head_, point_body_, config.point_buckets),
 
     ins_head_(head(config.path / schema::dir::heads, schema::archive::ins), 1, 0, random),
     ins_body_(body(config.path, schema::archive::ins), config.ins_size, config.ins_rate, sequential),
-    ins(ins_head_, ins_body_),
 
     outs_head_(head(config.path / schema::dir::heads, schema::archive::outs), 1, 0, random),
     outs_body_(body(config.path, schema::archive::outs), config.outs_size, config.outs_rate, sequential),
-    outs(outs_head_, outs_body_),
 
     tx_head_(head(config.path / schema::dir::heads, schema::archive::tx), 1, 0, random),
     tx_body_(body(config.path, schema::archive::tx), config.tx_size, config.tx_rate, sequential),
-    tx(tx_head_, tx_body_, config.tx_buckets),
 
     txs_head_(head(config.path / schema::dir::heads, schema::archive::txs), 1, 0, random),
     txs_body_(body(config.path, schema::archive::txs), config.txs_size, config.txs_rate, sequential),
-    txs(txs_head_, txs_body_, config.txs_buckets),
 
     // Indexes.
     // ------------------------------------------------------------------------
 
     candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate), 1, 0, random),
     candidate_body_(body(config.path, schema::indexes::candidate), config.candidate_size, config.candidate_rate, sequential),
-    candidate(candidate_head_, candidate_body_),
 
     confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed), 1, 0, random),
     confirmed_body_(body(config.path, schema::indexes::confirmed), config.confirmed_size, config.confirmed_rate, sequential),
-    confirmed(confirmed_head_, confirmed_body_),
 
     strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx), 1, 0, random),
     strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx_size, config.strong_tx_rate, sequential),
-    strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_buckets),
 
     // Caches.
     // ------------------------------------------------------------------------
 
     ecdsa_head_(head(config.path / schema::dir::heads, schema::caches::ecdsa), 1, 0, random),
     ecdsa_body_(body(config.path, schema::caches::ecdsa), config.ecdsa_size, config.ecdsa_rate, sequential),
-    ecdsa(ecdsa_head_, ecdsa_body_),
 
     schnorr_head_(head(config.path / schema::dir::heads, schema::caches::schnorr), 1, 0, random),
     schnorr_body_(body(config.path, schema::caches::schnorr), config.schnorr_size, config.schnorr_rate, sequential),
-    schnorr(schnorr_head_, schnorr_body_),
 
     duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate), 1, 0, random),
     duplicate_body_(body(config.path, schema::caches::duplicate), config.duplicate_size, config.duplicate_rate, sequential),
-    duplicate(duplicate_head_, duplicate_body_, config.duplicate_buckets),
 
     prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout), 1, 0, random),
     prevout_body_(body(config.path, schema::caches::prevout), config.prevout_size, config.prevout_rate, sequential),
-    prevout(prevout_head_, prevout_body_, config.prevout_buckets),
 
     validated_bk_head_(head(config.path / schema::dir::heads, schema::caches::validated_bk), 1, 0, random),
     validated_bk_body_(body(config.path, schema::caches::validated_bk), config.validated_bk_size, config.validated_bk_rate, sequential),
-    validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),
 
     validated_tx_head_(head(config.path / schema::dir::heads, schema::caches::validated_tx), 1, 0, random),
     validated_tx_body_(body(config.path, schema::caches::validated_tx), config.validated_tx_size, config.validated_tx_rate, sequential),
-    validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx_buckets),
 
     // Optionals.
     // ------------------------------------------------------------------------
 
     address_head_(head(config.path / schema::dir::heads, schema::optionals::address), 1, 0, random),
     address_body_(body(config.path, schema::optionals::address), config.address_size, config.address_rate, sequential),
-    address(address_head_, address_body_, config.address_buckets),
 
     filter_bk_head_(head(config.path / schema::dir::heads, schema::optionals::filter_bk), 1, 0, random),
     filter_bk_body_(body(config.path, schema::optionals::filter_bk), config.filter_bk_size, config.filter_bk_rate, sequential),
-    filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk_buckets),
 
     filter_tx_head_(head(config.path / schema::dir::heads, schema::optionals::filter_tx), 1, 0, random),
     filter_tx_body_(body(config.path, schema::optionals::filter_tx), config.filter_tx_size, config.filter_tx_rate, sequential),
-    filter_tx(filter_tx_head_, filter_tx_body_, config.filter_tx_buckets),
 
     // Locks.
     // ------------------------------------------------------------------------
 
     flush_lock_(lock(config.path, schema::locks::flush)),
-    process_lock_(lock(config.path, schema::locks::process))
+    process_lock_(lock(config.path, schema::locks::process)),
+
+    // Tables.
+    // ------------------------------------------------------------------------
+
+    header(header_head_, header_body_, config.header_buckets),
+    input(input_head_, input_body_),
+    output(output_head_, output_body_),
+    point(point_head_, point_body_, config.point_buckets),
+    ins(ins_head_, ins_body_),
+    outs(outs_head_, outs_body_),
+    tx(tx_head_, tx_body_, config.tx_buckets),
+    txs(txs_head_, txs_body_, config.txs_buckets),
+
+    candidate(candidate_head_, candidate_body_),
+    confirmed(confirmed_head_, confirmed_body_),
+    strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_buckets),
+
+    ecdsa(ecdsa_head_, ecdsa_body_),
+    schnorr(schnorr_head_, schnorr_body_),
+    duplicate(duplicate_head_, duplicate_body_, config.duplicate_buckets),
+    prevout(prevout_head_, prevout_body_, config.prevout_buckets),
+    validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),
+    validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx_buckets),
+
+    address(address_head_, address_body_, config.address_buckets),
+    filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk_buckets),
+    filter_tx(filter_tx_head_, filter_tx_body_, config.filter_tx_buckets)
 {
 }
 
