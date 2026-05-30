@@ -269,7 +269,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\duplicate.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\ecdsa.hpp">
+      <Filter>include\bitcoin\database\tables\caches</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevout.hpp">
+      <Filter>include\bitcoin\database\tables\caches</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\schnorr.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp">

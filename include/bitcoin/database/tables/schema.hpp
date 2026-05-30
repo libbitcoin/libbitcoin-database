@@ -221,7 +221,7 @@ struct txs
 /// Index tables.
 /// ---------------------------------------------------------------------------
 
-// candidate and confirmed arrays
+// array (candidate and confirmed)
 struct height
 {
     static constexpr size_t pk = schema::header::pk;
@@ -258,6 +258,44 @@ struct strong_tx
 
 /// Cache tables.
 /// ---------------------------------------------------------------------------
+
+// array
+struct ecdsa
+{
+    static constexpr size_t pk = schema::header::pk;
+    using link = schema::header::link;
+    static constexpr size_t minsize =
+        system::hash_size +
+        system::ec_compressed_size +
+        system::ec_signature_size +
+        schema::header::pk;
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 132u);
+    static_assert(minrow == 132u);
+    static_assert(link::size == 3u);
+    static_assert(minrow - link::size == 129u);
+};
+
+// array
+struct schnorr
+{
+    static constexpr size_t pk = schema::header::pk;
+    using link = schema::header::link;
+    static constexpr size_t minsize =
+        system::hash_size +
+        system::ec_xonly_size +
+        system::ec_signature_size +
+        schema::header::pk;
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 131u);
+    static_assert(minrow == 131u);
+    static_assert(link::size == 3u);
+    static_assert(minrow - link::size == 128u);
+};
 
 // record hashmap
 struct duplicate

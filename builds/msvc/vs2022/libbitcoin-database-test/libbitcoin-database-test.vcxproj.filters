@@ -264,7 +264,13 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\duplicate.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\ecdsa.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\prevout.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\schnorr.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp">
