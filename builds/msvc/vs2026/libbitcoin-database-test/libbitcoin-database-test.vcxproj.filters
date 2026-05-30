@@ -228,6 +228,9 @@
     <ClCompile Include="..\..\..\..\test\query\sequences.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\signatures.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\sizes.cpp">
       <Filter>src\query</Filter>
     </ClCompile>

@@ -101,6 +101,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/properties_block.cpp \
     test/query/properties_tx.cpp \
     test/query/sequences.cpp \
+    test/query/signatures.cpp \
     test/query/sizes.cpp \
     test/query/address/address_balance.cpp \
     test/query/address/address_history.cpp \
@@ -219,6 +220,7 @@ include_bitcoin_database_impl_query_HEADERS = \
     include/bitcoin/database/impl/query/properties_tx.ipp \
     include/bitcoin/database/impl/query/query.ipp \
     include/bitcoin/database/impl/query/sequences.ipp \
+    include/bitcoin/database/impl/query/signatures.ipp \
     include/bitcoin/database/impl/query/sizes.ipp
 
 include_bitcoin_database_impl_query_addressdir = ${includedir}/bitcoin/database/impl/query/address

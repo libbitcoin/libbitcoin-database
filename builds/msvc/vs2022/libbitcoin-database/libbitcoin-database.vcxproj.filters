@@ -493,6 +493,9 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\sequences.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\signatures.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\sizes.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>

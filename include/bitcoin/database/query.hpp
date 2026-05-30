@@ -949,6 +949,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/properties_tx.ipp>
 #include <bitcoin/database/impl/query/query.ipp>
 #include <bitcoin/database/impl/query/sequences.ipp>
+#include <bitcoin/database/impl/query/signatures.ipp>
 #include <bitcoin/database/impl/query/sizes.ipp>
 
 BC_POP_WARNING()

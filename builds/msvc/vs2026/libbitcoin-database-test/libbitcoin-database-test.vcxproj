@@ -184,6 +184,7 @@
     <ClCompile Include="..\..\..\..\test\query\properties_block.cpp" />
     <ClCompile Include="..\..\..\..\test\query\properties_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\query\sequences.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\signatures.cpp" />
     <ClCompile Include="..\..\..\..\test\query\sizes.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\store.cpp" />
