@@ -40,7 +40,7 @@ struct schnorr
         inline bool from_data(reader& source) NOEXCEPT
         {
             digest = source.read_hash();
-            public_key = source.read_forward<system::ec_xonly_size>();
+            point = source.read_forward<system::ec_xonly_size>();
             signature = source.read_forward<system::ec_signature_size>();
             header_fk = source.read_little_endian<header::integer, header::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
@@ -50,7 +50,7 @@ struct schnorr
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             sink.write_bytes(digest);
-            sink.write_bytes(public_key);
+            sink.write_bytes(point);
             sink.write_bytes(signature);
             sink.write_little_endian<header::integer, header::size>(header_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
@@ -60,17 +60,23 @@ struct schnorr
         inline bool operator==(const record& other) const NOEXCEPT
         {
             return digest == other.digest
-                && public_key == other.public_key
+                && point == other.point
                 && signature == other.signature
                 && header_fk == other.header_fk;
         }
 
         system::hash_digest digest{};
-        system::ec_xonly public_key{};
+        system::ec_xonly point{};
         system::ec_signature signature{};
         header::integer header_fk{};
     };
 };
+
+static_assert(offsetof(system::schnorr::triple, digest) == 0);
+static_assert(offsetof(system::schnorr::triple, point) == 32);
+static_assert(offsetof(system::schnorr::triple, signature) == 64);
+static_assert(offsetof(system::schnorr::triple, identifier) == 128);
+static_assert(sizeof(system::schnorr::triple) == 32 + 32 + 64 + 3);
 
 } // namespace table
 } // namespace database
