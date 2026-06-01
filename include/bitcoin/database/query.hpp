@@ -312,6 +312,7 @@ public:
     constexpr size_t to_validated_bk(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_bk(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_tx(const header_link& link) const NOEXCEPT;
+    constexpr size_t to_silent(const header_link& link) const NOEXCEPT;
     constexpr size_t to_prevout(const header_link& link) const NOEXCEPT;
     constexpr size_t to_txs(const header_link& link) const NOEXCEPT;
 
@@ -714,6 +715,18 @@ public:
     bool set_filter_head(const header_link& link, const hash_digest& head,
         const hash_digest& hash) NOEXCEPT;
 
+    /// Silent payment scan index.
+    /// -----------------------------------------------------------------------
+
+    bool is_silent_indexed(const header_link& link) const NOEXCEPT;
+    bool get_silent(silent& out, const header_link& link) const NOEXCEPT;
+    bool set_silent(silent& out, const tx_link& link,
+        const transaction& tx) const NOEXCEPT;
+    bool set_silent(const header_link& link, const block& block)
+        NOEXCEPT;
+    bool set_silent(const header_link& link,
+        const silent& value) NOEXCEPT;
+
 protected:
     /// Network
     /// -----------------------------------------------------------------------
@@ -948,6 +961,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/query.ipp>
 #include <bitcoin/database/impl/query/sequences.ipp>
 #include <bitcoin/database/impl/query/sizes.ipp>
+#include <bitcoin/database/impl/query/silent.ipp>
 
 BC_POP_WARNING()
 

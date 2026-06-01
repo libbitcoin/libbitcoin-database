@@ -26,13 +26,14 @@
 namespace libbitcoin {
 namespace database {
 
-using silent_output = system::wallet::silent_payment::scan_output;
+using pay_witness_taproot_output =
+    system::wallet::silent_payment::pay_witness_taproot_output;
 
 struct BCD_API silent_record
 {
     table::transaction::link tx{};
-    system::ec_compressed tweak_key{};
-    std_vector<silent_output> outputs{};
+    system::ec_compressed prevouts_summary{};
+    std_vector<pay_witness_taproot_output> outputs{};
 };
 
 struct BCD_API silent

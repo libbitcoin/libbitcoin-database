@@ -69,7 +69,8 @@ struct silent
                 const auto tx_value =
                     source.read_little_endian<tx::integer, tx::size>();
                 record.tx = tx{ tx_value };
-                record.tweak_key = source.read_forward<system::ec_compressed_size>();
+                record.prevouts_summary =
+                    source.read_forward<system::ec_compressed_size>();
 
                 record.outputs.resize(source.read_variable());
 
@@ -103,7 +104,7 @@ struct silent
             {
                 sink.write_little_endian<tx::integer, tx::size>(
                     record.tx.value);
-                sink.write_bytes(record.tweak_key);
+                sink.write_bytes(record.prevouts_summary);
                 sink.write_variable(record.outputs.size());
 
                 for (const auto& output: record.outputs)
