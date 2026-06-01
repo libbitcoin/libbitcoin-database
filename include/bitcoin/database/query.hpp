@@ -124,6 +124,7 @@ public:
     size_t validated_tx_head_size() const NOEXCEPT;
     size_t filter_bk_head_size() const NOEXCEPT;
     size_t filter_tx_head_size() const NOEXCEPT;
+    size_t silent_head_size() const NOEXCEPT;
     size_t address_head_size() const NOEXCEPT;
 
     /// Table body logical byte sizes.
@@ -145,6 +146,7 @@ public:
     size_t validated_tx_body_size() const NOEXCEPT;
     size_t filter_bk_body_size() const NOEXCEPT;
     size_t filter_tx_body_size() const NOEXCEPT;
+    size_t silent_body_size() const NOEXCEPT;
     size_t address_body_size() const NOEXCEPT;
 
     /// Table (head + body) logical byte sizes.
@@ -166,6 +168,7 @@ public:
     size_t validated_tx_size() const NOEXCEPT;
     size_t filter_bk_size() const NOEXCEPT;
     size_t filter_tx_size() const NOEXCEPT;
+    size_t silent_size() const NOEXCEPT;
     size_t address_size() const NOEXCEPT;
 
     /// Buckets (hashmap + arraymap).
@@ -181,6 +184,7 @@ public:
     size_t validated_tx_buckets() const NOEXCEPT;
     size_t filter_bk_buckets() const NOEXCEPT;
     size_t filter_tx_buckets() const NOEXCEPT;
+    size_t silent_buckets() const NOEXCEPT;
     size_t address_buckets() const NOEXCEPT;
 
     /// Records.
@@ -208,6 +212,8 @@ public:
     /// Optional/configured table state.
     bool address_enabled() const NOEXCEPT;
     bool filter_enabled() const NOEXCEPT;
+    bool silent_enabled() const NOEXCEPT;
+    size_t silent_start_height() const NOEXCEPT;
     size_t interval_span() const NOEXCEPT;
 
     /// Initialization (natural-keyed).

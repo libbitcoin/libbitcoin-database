@@ -57,6 +57,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.validated_tx_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.filter_bk_body_size(), schema::filter_bk::minrow);
     BOOST_REQUIRE_EQUAL(query.filter_tx_body_size(), 5u);
+    BOOST_REQUIRE_EQUAL(query.silent_body_size(), schema::silent::minrow);
     BOOST_REQUIRE_EQUAL(query.address_body_size(), schema::address::minrow);
 }
 
@@ -81,6 +82,7 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.validated_bk_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.filter_tx_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.filter_bk_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.silent_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.address_buckets(), 128u);
 }
 
@@ -136,6 +138,7 @@ BOOST_AUTO_TEST_CASE(query_extent__optionals_enabled__default__true)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.address_enabled());
     BOOST_REQUIRE(query.filter_enabled());
+    BOOST_REQUIRE(query.silent_enabled());
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
@@ -149,6 +152,7 @@ BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(!query.address_enabled());
     BOOST_REQUIRE(query.filter_enabled());
+    BOOST_REQUIRE(query.silent_enabled());
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__filter_enabled__disabled__false)
@@ -162,6 +166,21 @@ BOOST_AUTO_TEST_CASE(query_extent__filter_enabled__disabled__false)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.address_enabled());
     BOOST_REQUIRE(!query.filter_enabled());
+    BOOST_REQUIRE(query.silent_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(query_extent__silent_enabled__disabled__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    settings.silent_buckets = 0;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.address_enabled());
+    BOOST_REQUIRE(query.filter_enabled());
+    BOOST_REQUIRE(!query.silent_enabled());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

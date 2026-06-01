@@ -126,6 +126,11 @@ struct BCD_API settings
     uint32_t filter_tx_buckets;
     uint64_t filter_tx_size;
     uint16_t filter_tx_rate;
+
+    uint32_t silent_buckets;
+    uint64_t silent_size;
+    uint16_t silent_rate;
+    size_t silent_start_height;
 };
 
 } // namespace database

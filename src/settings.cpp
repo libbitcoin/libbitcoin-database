@@ -99,7 +99,12 @@ settings::settings() NOEXCEPT
 
     filter_tx_buckets{ 128 },
     filter_tx_size{ 1 },
-    filter_tx_rate{ 50 }
+    filter_tx_rate{ 50 },
+
+    silent_buckets{ 128 },
+    silent_size{ 1 },
+    silent_rate{ 50 },
+    silent_start_height{ 0 }
 {
 }
 

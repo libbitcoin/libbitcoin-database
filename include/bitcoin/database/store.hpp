@@ -60,6 +60,9 @@ public:
     /// Depth of electrum merkle tree interval caching.
     uint8_t interval_depth() const NOEXCEPT;
 
+    /// First height at which the silent payment index is required.
+    size_t silent_start_height() const NOEXCEPT;
+
     /// Methods.
     /// -----------------------------------------------------------------------
 
@@ -131,6 +134,7 @@ public:
     table::address address;
     table::filter_bk filter_bk;
     table::filter_tx filter_tx;
+    table::silent silent;
 
 protected:
     using path = std::filesystem::path;
@@ -226,6 +230,10 @@ protected:
     // slab
     Storage filter_tx_head_;
     Storage filter_tx_body_;
+
+    // slab
+    Storage silent_head_;
+    Storage silent_body_;
 
     /// Locks.
     /// -----------------------------------------------------------------------

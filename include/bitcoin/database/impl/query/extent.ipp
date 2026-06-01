@@ -97,7 +97,8 @@ size_t CLASS::store_body_size() const NOEXCEPT
         + validated_tx_body_size()
         + address_body_size()
         + filter_bk_body_size()
-        + filter_tx_body_size();
+        + filter_tx_body_size()
+        + silent_body_size();
 }
 
 TEMPLATE
@@ -126,7 +127,8 @@ size_t CLASS::store_head_size() const NOEXCEPT
         + validated_tx_head_size()
         + address_head_size()
         + filter_bk_head_size()
-        + filter_tx_head_size();
+        + filter_tx_head_size()
+        + silent_head_size();
 }
 
 // Sizes.
@@ -150,6 +152,7 @@ DEFINE_SIZES(validated_bk)
 DEFINE_SIZES(validated_tx)
 DEFINE_SIZES(filter_bk)
 DEFINE_SIZES(filter_tx)
+DEFINE_SIZES(silent)
 DEFINE_SIZES(address)
 
 // Buckets (hashmap + arraymap).
@@ -167,6 +170,7 @@ DEFINE_BUCKETS(validated_bk)
 DEFINE_BUCKETS(validated_tx)
 DEFINE_BUCKETS(filter_bk)
 DEFINE_BUCKETS(filter_tx)
+DEFINE_BUCKETS(silent)
 DEFINE_BUCKETS(address)
 
 // Records (arrays).
@@ -253,6 +257,18 @@ TEMPLATE
 bool CLASS::filter_enabled() const NOEXCEPT
 {
     return store_.filter_bk.enabled() && store_.filter_tx.enabled();
+}
+
+TEMPLATE
+bool CLASS::silent_enabled() const NOEXCEPT
+{
+    return store_.silent.enabled();
+}
+
+TEMPLATE
+size_t CLASS::silent_start_height() const NOEXCEPT
+{
+    return store_.silent_start_height();
 }
 
 } // namespace database
