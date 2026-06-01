@@ -74,7 +74,7 @@ height_link CLASS::find_strong_spender_height(
         if (const auto tx = to_input_tx(in); get_tx_height(out, tx))
             break;
 
-    return { system::possible_narrow_cast<uint32_t>(out) };
+    return { system::possible_narrow_cast<height_link::integer>(out) };
 }
 
 // find_strong (block)

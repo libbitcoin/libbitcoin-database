@@ -117,7 +117,7 @@ header_links CLASS::get_confirmed_fork(const header_link& fork) const NOEXCEPT
 // node/confirmer
 TEMPLATE
 header_states CLASS::get_validated_fork(size_t& fork_point,
-    size_t top_checkpoint, bool filter) const NOEXCEPT
+    size_t top_checkpoint) const NOEXCEPT
 {
     // Reservation may limit allocation to most common scenario.
     header_states out{};
@@ -125,7 +125,7 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     code ec{};
 
     // Disable filter constraint if filtering is disabled.
-    filter &= filter_enabled();
+    const auto filter = filter_enabled();
 
     ///////////////////////////////////////////////////////////////////////////
     std::shared_lock interlock{ candidate_reorganization_mutex_ };
