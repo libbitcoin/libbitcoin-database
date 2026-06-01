@@ -68,6 +68,7 @@ namespace optionals
     constexpr auto address = "address";
     constexpr auto filter_bk = "filter_bk";
     constexpr auto filter_tx = "filter_tx";
+    constexpr auto silent = "silent";
 }
 
 namespace locks

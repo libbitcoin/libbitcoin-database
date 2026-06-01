@@ -75,10 +75,12 @@
 #include <bitcoin/database/tables/optionals/address.hpp>
 #include <bitcoin/database/tables/optionals/filter_bk.hpp>
 #include <bitcoin/database/tables/optionals/filter_tx.hpp>
+#include <bitcoin/database/tables/optionals/silent.hpp>
 #include <bitcoin/database/types/fee_rate.hpp>
 #include <bitcoin/database/types/header_state.hpp>
 #include <bitcoin/database/types/history.hpp>
 #include <bitcoin/database/types/position.hpp>
+#include <bitcoin/database/types/silent.hpp>
 #include <bitcoin/database/types/span.hpp>
 #include <bitcoin/database/types/type.hpp>
 #include <bitcoin/database/types/types.hpp>

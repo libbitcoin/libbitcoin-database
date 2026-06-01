@@ -50,6 +50,7 @@ constexpr size_t tx = 4;        // ->tx record.
 constexpr size_t block = 3;     // ->header record.
 constexpr size_t tx_slab = 5;   // ->validated_tx record.
 constexpr size_t filter_ = 5;   // ->filter record.
+constexpr size_t silent_ = 5;   // ->silent record.
 constexpr size_t doubles_ = 4;  // doubles bucket (no actual keys).
 
 /// Archive tables.
@@ -382,6 +383,22 @@ struct filter_tx
 {
     static constexpr size_t align = false;
     static constexpr size_t pk = schema::filter_;
+    using link = linkage<pk, to_bits(pk)>;
+    static constexpr size_t minsize =
+        one;
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = max_size_t;
+    static inline link count() NOEXCEPT;
+    static_assert(minsize == 1u);
+    static_assert(minrow == 1u);
+    static_assert(link::size == 5u);
+};
+
+// slab arraymap
+struct silent
+{
+    static constexpr size_t align = false;
+    static constexpr size_t pk = schema::silent_;
     using link = linkage<pk, to_bits(pk)>;
     static constexpr size_t minsize =
         one;
