@@ -72,9 +72,9 @@ height_link CLASS::find_strong_spender_height(
     size_t out{};
     for (const auto& in: to_spenders(point))
         if (const auto tx = to_input_tx(in); get_tx_height(out, tx))
-            break;
+            return { system::possible_narrow_cast<height_link::integer>(out) };
 
-    return { system::possible_narrow_cast<height_link::integer>(out) };
+    return {};
 }
 
 // find_strong (block)
@@ -84,7 +84,7 @@ TEMPLATE
 header_link CLASS::find_strong(const tx_link& link) const NOEXCEPT
 {
     // Shortcuircuit hash-based search by testing self.
-    if (const auto fk = to_block(link); !link.is_terminal())
+    if (const auto fk = to_block(link); !fk.is_terminal())
         return fk;
 
     return find_strong(get_tx_key(link));
