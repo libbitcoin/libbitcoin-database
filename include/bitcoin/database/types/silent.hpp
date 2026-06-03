@@ -16,16 +16,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TYPES_TYPES_HPP
-#define LIBBITCOIN_DATABASE_TYPES_TYPES_HPP
+#ifndef LIBBITCOIN_DATABASE_TYPES_SILENT_HPP
+#define LIBBITCOIN_DATABASE_TYPES_SILENT_HPP
 
-#include <bitcoin/database/types/fee_rate.hpp>
-#include <bitcoin/database/types/header_state.hpp>
-#include <bitcoin/database/types/history.hpp>
-#include <bitcoin/database/types/position.hpp>
-#include <bitcoin/database/types/span.hpp>
-#include <bitcoin/database/types/silent.hpp>
-#include <bitcoin/database/types/type.hpp>
-#include <bitcoin/database/types/unspent.hpp>
+#include <bitcoin/database/define.hpp>
+#include <bitcoin/database/tables/archives/transaction.hpp>
+#include <bitcoin/system/wallet/addresses/silent_payment.hpp>
+
+namespace libbitcoin {
+namespace database {
+
+using pay_witness_taproot_output =
+    system::wallet::silent_payment::pay_witness_taproot_output;
+
+struct BCD_API silent_record
+{
+    table::transaction::link tx{};
+    system::ec_compressed prevouts_summary{};
+    std_vector<pay_witness_taproot_output> outputs{};
+};
+
+struct BCD_API silent
+{
+    std_vector<silent_record> records{};
+};
+
+} // namespace database
+} // namespace libbitcoin
 
 #endif

@@ -302,6 +302,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\filter_tx.hpp">
       <Filter>include\bitcoin\database\tables\optionals</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\silent.hpp">
+      <Filter>include\bitcoin\database\tables\optionals</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\point_set.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
@@ -327,6 +330,9 @@
       <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\position.hpp">
+      <Filter>include\bitcoin\database\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\silent.hpp">
       <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\span.hpp">
@@ -485,6 +491,9 @@
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\sequences.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\silent.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\sizes.ipp">

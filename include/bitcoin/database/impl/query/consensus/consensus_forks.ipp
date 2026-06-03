@@ -124,8 +124,10 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     out.reserve(one);
     code ec{};
 
-    // Disable filter constraint if filtering is disabled.
+    // Disable optional constraints when the indexes are disabled.
     const auto filter = filter_enabled();
+    const auto silent = silent_enabled();
+    const auto silent_start = silent_start_height();
 
     ///////////////////////////////////////////////////////////////////////////
     std::shared_lock interlock{ candidate_reorganization_mutex_ };
@@ -134,7 +136,8 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     auto height = add1(fork_point);
     auto link = to_candidate(height);
     while (is_block_validated(ec, link, height, top_checkpoint) &&
-        (!filter || is_filtered_body(link)))
+        (!filter || is_filtered_body(link)) &&
+        (!silent || height < silent_start || is_silent_indexed(link)))
     {
         out.emplace_back(link, ec);
         link = to_candidate(++height);

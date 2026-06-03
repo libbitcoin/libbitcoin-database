@@ -125,7 +125,10 @@ const std::unordered_map<table_t, std::string> CLASS::tables
     { table_t::filter_bk_body, "filter_bk_body" },
     { table_t::filter_tx_table, "filter_tx_table" },
     { table_t::filter_tx_head, "filter_tx_head" },
-    { table_t::filter_tx_body, "filter_tx_body" }
+    { table_t::filter_tx_body, "filter_tx_body" },
+    { table_t::silent_table, "silent_table" },
+    { table_t::silent_head, "silent_head" },
+    { table_t::silent_body, "silent_body" }
 };
 
 TEMPLATE
@@ -216,6 +219,10 @@ CLASS::store(const settings& config) NOEXCEPT
     filter_tx_body_(body(config.path, schema::optionals::filter_tx), config.filter_tx_size, config.filter_tx_rate, sequential),
     filter_tx(filter_tx_head_, filter_tx_body_, config.filter_tx_buckets),
 
+    silent_head_(head(config.path / schema::dir::heads, schema::optionals::silent), 1, 0, random),
+    silent_body_(body(config.path, schema::optionals::silent), config.silent_size, config.silent_rate, sequential),
+    silent(silent_head_, silent_body_, config.silent_buckets),
+
     // Locks.
     // ------------------------------------------------------------------------
 
@@ -236,6 +243,12 @@ uint8_t CLASS::interval_depth() const NOEXCEPT
     // Configuration uses uint16_t because of boost parser bug for single byte.
     // But 2^255 is sufficient given that interval is limited by chain length.
     return system::limit<uint8_t>(configuration_.interval_depth);
+}
+
+TEMPLATE
+size_t CLASS::silent_start_height() const NOEXCEPT
+{
+    return configuration_.silent_start_height;
 }
 
 TEMPLATE
@@ -309,6 +322,8 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     create(ec, filter_bk_body_, table_t::filter_bk_body);
     create(ec, filter_tx_head_, table_t::filter_tx_head);
     create(ec, filter_tx_body_, table_t::filter_tx_body);
+    create(ec, silent_head_, table_t::silent_head);
+    create(ec, silent_body_, table_t::silent_body);
 
     const auto populate = [&handler](code& ec, auto& storage,
         table_t table) NOEXCEPT
@@ -345,6 +360,7 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     populate(ec, address, table_t::address_table);
     populate(ec, filter_bk, table_t::filter_bk_table);
     populate(ec, filter_tx, table_t::filter_tx_table);
+    populate(ec, silent, table_t::silent_table);
 
     if (ec)
     {
@@ -418,6 +434,7 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, address, table_t::address_table);
     verify(ec, filter_bk, table_t::filter_bk_table);
     verify(ec, filter_tx, table_t::filter_tx_table);
+    verify(ec, silent, table_t::silent_table);
 
     if (ec)
     {
@@ -534,6 +551,7 @@ code CLASS::snapshot(const event_handler& handler, bool prune) NOEXCEPT
     flush(ec, address_body_, table_t::address_body);
     flush(ec, filter_bk_body_, table_t::filter_bk_body);
     flush(ec, filter_tx_body_, table_t::filter_tx_body);
+    flush(ec, silent_body_, table_t::silent_body);
 
     if (!ec) ec = backup(handler, prune);
     if (!prune) transactor_mutex_.unlock();
@@ -603,6 +621,8 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, filter_bk_body_, table_t::filter_bk_body);
     reload(ec, filter_tx_head_, table_t::filter_tx_head);
     reload(ec, filter_tx_body_, table_t::filter_tx_body);
+    reload(ec, silent_head_, table_t::silent_head);
+    reload(ec, silent_body_, table_t::silent_body);
 
     transactor_mutex_.unlock();
     return ec;
@@ -649,6 +669,7 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     close(ec, address, table_t::address_table);
     close(ec, filter_bk, table_t::filter_bk_table);
     close(ec, filter_tx, table_t::filter_tx_table);
+    close(ec, silent, table_t::silent_table);
 
     if (!ec) ec = unload_close(handler);
 
@@ -721,6 +742,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, filter_bk_body_, table_t::filter_bk_body);
     open(ec, filter_tx_head_, table_t::filter_tx_head);
     open(ec, filter_tx_body_, table_t::filter_tx_body);
+    open(ec, silent_head_, table_t::silent_head);
+    open(ec, silent_body_, table_t::silent_body);
 
     const auto load = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
@@ -770,6 +793,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, filter_bk_body_, table_t::filter_bk_body);
     load(ec, filter_tx_head_, table_t::filter_tx_head);
     load(ec, filter_tx_body_, table_t::filter_tx_body);
+    load(ec, silent_head_, table_t::silent_head);
+    load(ec, silent_body_, table_t::silent_body);
 
     // create, open, and restore each invoke open_load.
     const auto dirty = header_body_.size() > schema::header::minrow;
@@ -829,6 +854,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, filter_bk_body_, table_t::filter_bk_body);
     unload(ec, filter_tx_head_, table_t::filter_tx_head);
     unload(ec, filter_tx_body_, table_t::filter_tx_body);
+    unload(ec, silent_head_, table_t::silent_head);
+    unload(ec, silent_body_, table_t::silent_body);
 
     const auto close = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
@@ -878,6 +905,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, filter_bk_body_, table_t::filter_bk_body);
     close(ec, filter_tx_head_, table_t::filter_tx_head);
     close(ec, filter_tx_body_, table_t::filter_tx_body);
+    close(ec, silent_head_, table_t::silent_head);
+    close(ec, silent_body_, table_t::silent_body);
 
     return ec;
 }
@@ -918,6 +947,7 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
     backup(ec, address, table_t::address_table);
     backup(ec, filter_bk, table_t::filter_bk_table);
     backup(ec, filter_tx, table_t::filter_tx_table);
+    backup(ec, silent, table_t::silent_table);
 
     if (ec) return ec;
 
@@ -983,6 +1013,7 @@ code CLASS::dump(const path& folder,
     auto address_buffer = address_head_.get();
     auto filter_bk_buffer = filter_bk_head_.get();
     auto filter_tx_buffer = filter_tx_head_.get();
+    auto silent_buffer = silent_head_.get();
 
     if (!header_buffer) return error::unloaded_file;
     if (!input_buffer) return error::unloaded_file;
@@ -1005,6 +1036,7 @@ code CLASS::dump(const path& folder,
     if (!address_buffer) return error::unloaded_file;
     if (!filter_bk_buffer) return error::unloaded_file;
     if (!filter_tx_buffer) return error::unloaded_file;
+    if (!silent_buffer) return error::unloaded_file;
 
     code ec{ error::success };
     const auto dump = [&handler, &folder](code& ec, const auto& storage,
@@ -1039,6 +1071,7 @@ code CLASS::dump(const path& folder,
     dump(ec, address_buffer, schema::optionals::address, table_t::address_head);
     dump(ec, filter_bk_buffer, schema::optionals::filter_bk, table_t::filter_bk_head);
     dump(ec, filter_tx_buffer, schema::optionals::filter_tx, table_t::filter_tx_head);
+    dump(ec, silent_buffer, schema::optionals::silent, table_t::silent_head);
 
     return ec;
 }
@@ -1132,6 +1165,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, address, table_t::address_table);
         restore(ec, filter_bk, table_t::filter_bk_table);
         restore(ec, filter_tx, table_t::filter_tx_table);
+        restore(ec, silent, table_t::silent_table);
 
         if (ec)
             /* code */ unload_close(handler);
@@ -1194,6 +1228,7 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = address_body_.get_fault())) return ec;
     if ((ec = filter_bk_body_.get_fault())) return ec;
     if ((ec = filter_tx_body_.get_fault())) return ec;
+    if ((ec = silent_body_.get_fault())) return ec;
     return ec;
 }
 
@@ -1224,6 +1259,7 @@ size_t CLASS::get_space() const NOEXCEPT
     space(address_body_);
     space(filter_bk_body_);
     space(filter_tx_body_);
+    space(silent_body_);
 
     return total;
 }
@@ -1258,6 +1294,7 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(address_body_, table_t::address_body);
     report(filter_bk_body_, table_t::filter_bk_body);
     report(filter_tx_body_, table_t::filter_tx_body);
+    report(silent_body_, table_t::silent_body);
 }
 
 BC_POP_WARNING()

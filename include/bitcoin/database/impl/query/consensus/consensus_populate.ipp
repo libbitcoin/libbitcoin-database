@@ -139,10 +139,8 @@ bool CLASS::populate_with_metadata(const input& input,
 
 // populate_without_metadata
 // ----------------------------------------------------------------------------
-// These are used when not performing confirmation. This also implies that
-// validation is not being performed, so is used for populating prevouts for
-// the purpose of computing client filters in the validation stage. So these
-// are not used for in consensus but are kept here for close similarity.
+// These are used outside confirmation, so validation is not being performed.
+// They only populate prevouts and are kept here for close similarity.
 
 TEMPLATE
 bool CLASS::populate_without_metadata(const block& block) const NOEXCEPT

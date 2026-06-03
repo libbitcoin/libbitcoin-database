@@ -82,6 +82,10 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.filter_tx_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.filter_tx_size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.filter_tx_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.silent_buckets, 128u);
+    BOOST_REQUIRE_EQUAL(configuration.silent_size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.silent_rate, 50u);
+    BOOST_REQUIRE_EQUAL(configuration.silent_start_height, 0u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

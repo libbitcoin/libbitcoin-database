@@ -39,6 +39,7 @@
 #include <bitcoin/database/tables/optionals/address.hpp>
 #include <bitcoin/database/tables/optionals/filter_bk.hpp>
 #include <bitcoin/database/tables/optionals/filter_tx.hpp>
+#include <bitcoin/database/tables/optionals/silent.hpp>
 
 #include <bitcoin/database/tables/association.hpp>
 #include <bitcoin/database/tables/associations.hpp>

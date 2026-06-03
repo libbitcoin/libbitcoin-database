@@ -91,7 +91,10 @@ enum class table_t
     filter_bk_body,
     filter_tx_table,
     filter_tx_head,
-    filter_tx_body
+    filter_tx_body,
+    silent_table,
+    silent_head,
+    silent_body
 };
 
 } // namespace database

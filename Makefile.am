@@ -101,6 +101,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/properties_block.cpp \
     test/query/properties_tx.cpp \
     test/query/sequences.cpp \
+    test/query/silent.cpp \
     test/query/sizes.cpp \
     test/query/address/address_balance.cpp \
     test/query/address/address_history.cpp \
@@ -217,6 +218,7 @@ include_bitcoin_database_impl_query_HEADERS = \
     include/bitcoin/database/impl/query/properties_tx.ipp \
     include/bitcoin/database/impl/query/query.ipp \
     include/bitcoin/database/impl/query/sequences.ipp \
+    include/bitcoin/database/impl/query/silent.ipp \
     include/bitcoin/database/impl/query/sizes.ipp
 
 include_bitcoin_database_impl_query_addressdir = ${includedir}/bitcoin/database/impl/query/address
@@ -329,7 +331,8 @@ include_bitcoin_database_tables_optionalsdir = ${includedir}/bitcoin/database/ta
 include_bitcoin_database_tables_optionals_HEADERS = \
     include/bitcoin/database/tables/optionals/address.hpp \
     include/bitcoin/database/tables/optionals/filter_bk.hpp \
-    include/bitcoin/database/tables/optionals/filter_tx.hpp
+    include/bitcoin/database/tables/optionals/filter_tx.hpp \
+    include/bitcoin/database/tables/optionals/silent.hpp
 
 include_bitcoin_database_typesdir = ${includedir}/bitcoin/database/types
 include_bitcoin_database_types_HEADERS = \
@@ -337,6 +340,7 @@ include_bitcoin_database_types_HEADERS = \
     include/bitcoin/database/types/header_state.hpp \
     include/bitcoin/database/types/history.hpp \
     include/bitcoin/database/types/position.hpp \
+    include/bitcoin/database/types/silent.hpp \
     include/bitcoin/database/types/span.hpp \
     include/bitcoin/database/types/type.hpp \
     include/bitcoin/database/types/types.hpp \
