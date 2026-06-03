@@ -53,6 +53,9 @@ public:
     using chain_state = system::chain::chain_state;
     using chain_state_cptr = system::chain::chain_state::cptr;
     using chain_context = system::chain::context;
+    using ec_compressed = system::ec_compressed;
+    using ec_signature = system::ec_signature;
+    using ec_xonly = system::ec_xonly;
 
     query(Store& store) NOEXCEPT;
 
@@ -566,6 +569,12 @@ public:
     bool set_tx_disconnected(const tx_link& link, const context& ctx) NOEXCEPT;
     bool set_tx_connected(const tx_link& link, const context& ctx,
         uint64_t fee, size_t sigops) NOEXCEPT;
+
+    /// Set signature (ecdsa/schnorr) table entry.
+    bool set_signature(const hash_digest& digest, const ec_compressed& point,
+        const ec_signature& signature, const header_link& link) NOEXCEPT;
+    bool set_signature(const hash_digest& digest, const ec_xonly& point,
+        const ec_signature& signature, const header_link& link) NOEXCEPT;
 
     /// Confirmation.
     /// -----------------------------------------------------------------------
