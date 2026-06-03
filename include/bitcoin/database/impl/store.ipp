@@ -103,6 +103,12 @@ const std::unordered_map<table_t, std::string> CLASS::tables
     { table_t::strong_tx_body, "strong_tx_body" },
 
     // Caches.
+    { table_t::ecdsa_table, "ecdsa_table" },
+    { table_t::ecdsa_head, "ecdsa_head" },
+    { table_t::ecdsa_body, "ecdsa_body" },
+    { table_t::schnorr_table, "schnorr_table" },
+    { table_t::schnorr_head, "schnorr_head" },
+    { table_t::schnorr_body, "schnorr_body" },
     { table_t::duplicate_table, "duplicate_table" },
     { table_t::duplicate_head, "duplicate_head" },
     { table_t::duplicate_body, "duplicate_body" },
@@ -137,90 +143,105 @@ CLASS::store(const settings& config) NOEXCEPT
 
     header_head_(head(config.path / schema::dir::heads, schema::archive::header), 1, 0, random),
     header_body_(body(config.path, schema::archive::header), config.header_size, config.header_rate, sequential),
-    header(header_head_, header_body_, config.header_buckets),
 
     input_head_(head(config.path / schema::dir::heads, schema::archive::input), 1, 0, random),
     input_body_(body(config.path, schema::archive::input), config.input_size, config.input_rate, sequential),
-    input(input_head_, input_body_),
 
     output_head_(head(config.path / schema::dir::heads, schema::archive::output), 1, 0, random),
     output_body_(body(config.path, schema::archive::output), config.output_size, config.output_rate, sequential),
-    output(output_head_, output_body_),
 
     point_head_(head(config.path / schema::dir::heads, schema::archive::point), 1, 0, random),
     point_body_(body(config.path, schema::archive::point), config.point_size, config.point_rate, sequential),
-    point(point_head_, point_body_, config.point_buckets),
 
     ins_head_(head(config.path / schema::dir::heads, schema::archive::ins), 1, 0, random),
     ins_body_(body(config.path, schema::archive::ins), config.ins_size, config.ins_rate, sequential),
-    ins(ins_head_, ins_body_),
 
     outs_head_(head(config.path / schema::dir::heads, schema::archive::outs), 1, 0, random),
     outs_body_(body(config.path, schema::archive::outs), config.outs_size, config.outs_rate, sequential),
-    outs(outs_head_, outs_body_),
 
     tx_head_(head(config.path / schema::dir::heads, schema::archive::tx), 1, 0, random),
     tx_body_(body(config.path, schema::archive::tx), config.tx_size, config.tx_rate, sequential),
-    tx(tx_head_, tx_body_, config.tx_buckets),
 
     txs_head_(head(config.path / schema::dir::heads, schema::archive::txs), 1, 0, random),
     txs_body_(body(config.path, schema::archive::txs), config.txs_size, config.txs_rate, sequential),
-    txs(txs_head_, txs_body_, config.txs_buckets),
 
     // Indexes.
     // ------------------------------------------------------------------------
 
     candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate), 1, 0, random),
     candidate_body_(body(config.path, schema::indexes::candidate), config.candidate_size, config.candidate_rate, sequential),
-    candidate(candidate_head_, candidate_body_),
 
     confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed), 1, 0, random),
     confirmed_body_(body(config.path, schema::indexes::confirmed), config.confirmed_size, config.confirmed_rate, sequential),
-    confirmed(confirmed_head_, confirmed_body_),
 
     strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx), 1, 0, random),
     strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx_size, config.strong_tx_rate, sequential),
-    strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_buckets),
 
     // Caches.
     // ------------------------------------------------------------------------
 
+    ecdsa_head_(head(config.path / schema::dir::heads, schema::caches::ecdsa), 1, 0, random),
+    ecdsa_body_(body(config.path, schema::caches::ecdsa), config.ecdsa_size, config.ecdsa_rate, sequential),
+
+    schnorr_head_(head(config.path / schema::dir::heads, schema::caches::schnorr), 1, 0, random),
+    schnorr_body_(body(config.path, schema::caches::schnorr), config.schnorr_size, config.schnorr_rate, sequential),
+
     duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate), 1, 0, random),
     duplicate_body_(body(config.path, schema::caches::duplicate), config.duplicate_size, config.duplicate_rate, sequential),
-    duplicate(duplicate_head_, duplicate_body_, config.duplicate_buckets),
 
     prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout), 1, 0, random),
     prevout_body_(body(config.path, schema::caches::prevout), config.prevout_size, config.prevout_rate, sequential),
-    prevout(prevout_head_, prevout_body_, config.prevout_buckets),
 
     validated_bk_head_(head(config.path / schema::dir::heads, schema::caches::validated_bk), 1, 0, random),
     validated_bk_body_(body(config.path, schema::caches::validated_bk), config.validated_bk_size, config.validated_bk_rate, sequential),
-    validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),
 
     validated_tx_head_(head(config.path / schema::dir::heads, schema::caches::validated_tx), 1, 0, random),
     validated_tx_body_(body(config.path, schema::caches::validated_tx), config.validated_tx_size, config.validated_tx_rate, sequential),
-    validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx_buckets),
 
     // Optionals.
     // ------------------------------------------------------------------------
 
     address_head_(head(config.path / schema::dir::heads, schema::optionals::address), 1, 0, random),
     address_body_(body(config.path, schema::optionals::address), config.address_size, config.address_rate, sequential),
-    address(address_head_, address_body_, config.address_buckets),
 
     filter_bk_head_(head(config.path / schema::dir::heads, schema::optionals::filter_bk), 1, 0, random),
     filter_bk_body_(body(config.path, schema::optionals::filter_bk), config.filter_bk_size, config.filter_bk_rate, sequential),
-    filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk_buckets),
 
     filter_tx_head_(head(config.path / schema::dir::heads, schema::optionals::filter_tx), 1, 0, random),
     filter_tx_body_(body(config.path, schema::optionals::filter_tx), config.filter_tx_size, config.filter_tx_rate, sequential),
-    filter_tx(filter_tx_head_, filter_tx_body_, config.filter_tx_buckets),
 
     // Locks.
     // ------------------------------------------------------------------------
 
     flush_lock_(lock(config.path, schema::locks::flush)),
-    process_lock_(lock(config.path, schema::locks::process))
+    process_lock_(lock(config.path, schema::locks::process)),
+
+    // Tables.
+    // ------------------------------------------------------------------------
+
+    header(header_head_, header_body_, config.header_buckets),
+    input(input_head_, input_body_),
+    output(output_head_, output_body_),
+    point(point_head_, point_body_, config.point_buckets),
+    ins(ins_head_, ins_body_),
+    outs(outs_head_, outs_body_),
+    tx(tx_head_, tx_body_, config.tx_buckets),
+    txs(txs_head_, txs_body_, config.txs_buckets),
+
+    candidate(candidate_head_, candidate_body_),
+    confirmed(confirmed_head_, confirmed_body_),
+    strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx_buckets),
+
+    ecdsa(ecdsa_head_, ecdsa_body_),
+    schnorr(schnorr_head_, schnorr_body_),
+    duplicate(duplicate_head_, duplicate_body_, config.duplicate_buckets),
+    prevout(prevout_head_, prevout_body_, config.prevout_buckets),
+    validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),
+    validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx_buckets),
+
+    address(address_head_, address_body_, config.address_buckets),
+    filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk_buckets),
+    filter_tx(filter_tx_head_, filter_tx_body_, config.filter_tx_buckets)
 {
 }
 
@@ -294,6 +315,10 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     create(ec, strong_tx_head_, table_t::strong_tx_head);
     create(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    create(ec, ecdsa_head_, table_t::ecdsa_head);
+    create(ec, ecdsa_body_, table_t::ecdsa_body);
+    create(ec, schnorr_head_, table_t::schnorr_head);
+    create(ec, schnorr_body_, table_t::schnorr_body);
     create(ec, duplicate_head_, table_t::duplicate_head);
     create(ec, duplicate_body_, table_t::duplicate_body);
     create(ec, prevout_head_, table_t::prevout_head);
@@ -337,6 +362,8 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     populate(ec, confirmed, table_t::confirmed_table);
     populate(ec, strong_tx, table_t::strong_tx_table);
 
+    populate(ec, ecdsa, table_t::ecdsa_table);
+    populate(ec, schnorr, table_t::schnorr_table);
     populate(ec, duplicate, table_t::duplicate_table);
     populate(ec, prevout, table_t::prevout_table);
     populate(ec, validated_bk, table_t::validated_bk_table);
@@ -410,6 +437,8 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, confirmed, table_t::confirmed_table);
     verify(ec, strong_tx, table_t::strong_tx_table);
 
+    verify(ec, ecdsa, table_t::ecdsa_table);
+    verify(ec, schnorr, table_t::schnorr_table);
     verify(ec, duplicate, table_t::duplicate_table);
     verify(ec, prevout, table_t::prevout_table);
     verify(ec, validated_bk, table_t::validated_bk_table);
@@ -526,6 +555,8 @@ code CLASS::snapshot(const event_handler& handler, bool prune) NOEXCEPT
     flush(ec, confirmed_body_, table_t::confirmed_body);
     flush(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    flush(ec, ecdsa_body_, table_t::ecdsa_body);
+    flush(ec, schnorr_body_, table_t::schnorr_body);
     flush(ec, duplicate_body_, table_t::duplicate_body);
     if (!prune) flush(ec, prevout_body_, table_t::prevout_body);
     flush(ec, validated_bk_body_, table_t::validated_bk_body);
@@ -588,6 +619,10 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, strong_tx_head_, table_t::strong_tx_head);
     reload(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    reload(ec, ecdsa_head_, table_t::ecdsa_head);
+    reload(ec, ecdsa_body_, table_t::ecdsa_body);
+    reload(ec, schnorr_head_, table_t::schnorr_head);
+    reload(ec, schnorr_body_, table_t::schnorr_body);
     reload(ec, duplicate_head_, table_t::duplicate_head);
     reload(ec, duplicate_body_, table_t::duplicate_body);
     reload(ec, prevout_head_, table_t::prevout_head);
@@ -641,6 +676,8 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     close(ec, confirmed, table_t::confirmed_table);
     close(ec, strong_tx, table_t::strong_tx_table);
 
+    close(ec, ecdsa, table_t::ecdsa_table);
+    close(ec, schnorr, table_t::schnorr_table);
     close(ec, duplicate, table_t::duplicate_table);
     close(ec, prevout, table_t::prevout_table);
     close(ec, validated_bk, table_t::validated_bk_table);
@@ -706,6 +743,10 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, strong_tx_head_, table_t::strong_tx_head);
     open(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    open(ec, ecdsa_head_, table_t::ecdsa_head);
+    open(ec, ecdsa_body_, table_t::ecdsa_body);
+    open(ec, schnorr_head_, table_t::schnorr_head);
+    open(ec, schnorr_body_, table_t::schnorr_body);
     open(ec, duplicate_head_, table_t::duplicate_head);
     open(ec, duplicate_body_, table_t::duplicate_body);
     open(ec, prevout_head_, table_t::prevout_head);
@@ -755,6 +796,10 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, strong_tx_head_, table_t::strong_tx_head);
     load(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    load(ec, ecdsa_head_, table_t::ecdsa_head);
+    load(ec, ecdsa_body_, table_t::ecdsa_body);
+    load(ec, schnorr_head_, table_t::schnorr_head);
+    load(ec, schnorr_body_, table_t::schnorr_body);
     load(ec, duplicate_head_, table_t::duplicate_head);
     load(ec, duplicate_body_, table_t::duplicate_body);
     load(ec, prevout_head_, table_t::prevout_head);
@@ -814,6 +859,10 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, strong_tx_head_, table_t::strong_tx_head);
     unload(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    unload(ec, ecdsa_head_, table_t::ecdsa_head);
+    unload(ec, ecdsa_body_, table_t::ecdsa_body);
+    unload(ec, schnorr_head_, table_t::schnorr_head);
+    unload(ec, schnorr_body_, table_t::schnorr_body);
     unload(ec, duplicate_head_, table_t::duplicate_head);
     unload(ec, duplicate_body_, table_t::duplicate_body);
     unload(ec, prevout_head_, table_t::prevout_head);
@@ -863,6 +912,10 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, strong_tx_head_, table_t::strong_tx_head);
     close(ec, strong_tx_body_, table_t::strong_tx_body);
 
+    close(ec, ecdsa_head_, table_t::ecdsa_head);
+    close(ec, ecdsa_body_, table_t::ecdsa_body);
+    close(ec, schnorr_head_, table_t::schnorr_head);
+    close(ec, schnorr_body_, table_t::schnorr_body);
     close(ec, duplicate_head_, table_t::duplicate_head);
     close(ec, duplicate_body_, table_t::duplicate_body);
     close(ec, prevout_head_, table_t::prevout_head);
@@ -910,6 +963,8 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
     backup(ec, confirmed, table_t::confirmed_table);
     backup(ec, strong_tx, table_t::strong_tx_table);
 
+    backup(ec, ecdsa, table_t::ecdsa_table);
+    backup(ec, schnorr, table_t::schnorr_table);
     backup(ec, duplicate, table_t::duplicate_table);
     backup(ec, prevout, table_t::prevout_table, prune);
     backup(ec, validated_bk, table_t::validated_bk_table);
@@ -975,6 +1030,8 @@ code CLASS::dump(const path& folder,
     auto confirmed_buffer = confirmed_head_.get();
     auto strong_tx_buffer = strong_tx_head_.get();
 
+    auto ecdsa_buffer = ecdsa_head_.get();
+    auto schnorr_buffer = schnorr_head_.get();
     auto duplicate_buffer = duplicate_head_.get();
     auto prevout_buffer = prevout_head_.get();
     auto validated_bk_buffer = validated_bk_head_.get();
@@ -997,6 +1054,8 @@ code CLASS::dump(const path& folder,
     if (!confirmed_buffer) return error::unloaded_file;
     if (!strong_tx_buffer) return error::unloaded_file;
 
+    if (!ecdsa_buffer) return error::unloaded_file;
+    if (!schnorr_buffer) return error::unloaded_file;
     if (!duplicate_buffer) return error::unloaded_file;
     if (!prevout_buffer) return error::unloaded_file;
     if (!validated_bk_buffer) return error::unloaded_file;
@@ -1031,6 +1090,8 @@ code CLASS::dump(const path& folder,
     dump(ec, confirmed_buffer, schema::indexes::confirmed, table_t::confirmed_head);
     dump(ec, strong_tx_buffer, schema::indexes::strong_tx, table_t::strong_tx_head);
 
+    dump(ec, ecdsa_buffer, schema::caches::ecdsa, table_t::ecdsa_head);
+    dump(ec, schnorr_buffer, schema::caches::schnorr, table_t::schnorr_head);
     dump(ec, duplicate_buffer, schema::caches::duplicate, table_t::duplicate_head);
     dump(ec, prevout_buffer, schema::caches::prevout, table_t::prevout_head);
     dump(ec, validated_bk_buffer, schema::caches::validated_bk, table_t::validated_bk_head);
@@ -1124,6 +1185,8 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, confirmed, table_t::confirmed_table);
         restore(ec, strong_tx, table_t::strong_tx_table);
 
+        restore(ec, ecdsa, table_t::ecdsa_table);
+        restore(ec, schnorr, table_t::schnorr_table);
         restore(ec, duplicate, table_t::duplicate_table);
         restore(ec, prevout, table_t::prevout_table);
         restore(ec, validated_bk, table_t::validated_bk_table);
@@ -1187,6 +1250,8 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = candidate_body_.get_fault())) return ec;
     if ((ec = confirmed_body_.get_fault())) return ec;
     if ((ec = strong_tx_body_.get_fault())) return ec;
+    if ((ec = ecdsa_body_.get_fault())) return ec;
+    if ((ec = schnorr_body_.get_fault())) return ec;
     if ((ec = duplicate_body_.get_fault())) return ec;
     if ((ec = prevout_body_.get_fault())) return ec;
     if ((ec = validated_bk_body_.get_fault())) return ec;
@@ -1217,6 +1282,8 @@ size_t CLASS::get_space() const NOEXCEPT
     space(candidate_body_);
     space(confirmed_body_);
     space(strong_tx_body_);
+    space(ecdsa_body_);
+    space(schnorr_body_);
     space(duplicate_body_);
     space(prevout_body_);
     space(validated_bk_body_);
@@ -1251,6 +1318,8 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(candidate_body_, table_t::candidate_body);
     report(confirmed_body_, table_t::confirmed_body);
     report(strong_tx_body_, table_t::strong_tx_body);
+    report(ecdsa_body_, table_t::ecdsa_body);
+    report(schnorr_body_, table_t::schnorr_body);
     report(duplicate_body_, table_t::duplicate_body);
     report(prevout_body_, table_t::prevout_body);
     report(validated_bk_body_, table_t::validated_bk_body);

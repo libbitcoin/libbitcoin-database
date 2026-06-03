@@ -1,0 +1,85 @@
+/**
+ * Copyright (c) 2011-2026 libbitcoin developers (see AUTHORS)
+ *
+ * This file is part of libbitcoin.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_SCHNORR_HPP
+#define LIBBITCOIN_DATABASE_TABLES_CACHES_SCHNORR_HPP
+
+#include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/schema.hpp>
+
+namespace libbitcoin {
+namespace database {
+namespace table {
+
+/// schnorr is an array of schnorr signature validation records.
+struct schnorr
+  : public no_map<schema::schnorr>
+{
+    using header = schema::header::link;
+    using no_map<schema::schnorr>::nomap;
+
+    struct record
+      : public schema::schnorr
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            digest = source.read_hash();
+            point = source.read_forward<system::ec_xonly_size>();
+            signature = source.read_forward<system::ec_signature_size>();
+            header_fk = source.read_little_endian<header::integer, header::size>();
+            BC_ASSERT(!source || source.get_read_position() == minrow);
+            return source;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_bytes(digest);
+            sink.write_bytes(point);
+            sink.write_bytes(signature);
+            sink.write_little_endian<header::integer, header::size>(header_fk);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        inline bool operator==(const record& other) const NOEXCEPT
+        {
+            return digest == other.digest
+                && point == other.point
+                && signature == other.signature
+                && header_fk == other.header_fk;
+        }
+
+        system::hash_digest digest{};
+        system::ec_xonly point{};
+        system::ec_signature signature{};
+        header::integer header_fk{};
+    };
+};
+
+static_assert(offsetof(system::schnorr::triple, digest) == 0);
+static_assert(offsetof(system::schnorr::triple, point) == 32);
+static_assert(offsetof(system::schnorr::triple, signature) == 64);
+static_assert(offsetof(system::schnorr::triple, identifier) == 128);
+static_assert(sizeof(system::schnorr::triple) == 32 + 32 + 64 + 3);
+
+} // namespace table
+} // namespace database
+} // namespace libbitcoin
+
+#endif

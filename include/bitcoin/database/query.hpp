@@ -53,6 +53,9 @@ public:
     using chain_state = system::chain::chain_state;
     using chain_state_cptr = system::chain::chain_state::cptr;
     using chain_context = system::chain::context;
+    using ec_compressed = system::ec_compressed;
+    using ec_signature = system::ec_signature;
+    using ec_xonly = system::ec_xonly;
 
     query(Store& store) NOEXCEPT;
 
@@ -118,6 +121,8 @@ public:
     size_t candidate_head_size() const NOEXCEPT;
     size_t confirmed_head_size() const NOEXCEPT;
     size_t strong_tx_head_size() const NOEXCEPT;
+    size_t ecdsa_head_size() const NOEXCEPT;
+    size_t schnorr_head_size() const NOEXCEPT;
     size_t duplicate_head_size() const NOEXCEPT;
     size_t prevout_head_size() const NOEXCEPT;
     size_t validated_bk_head_size() const NOEXCEPT;
@@ -139,6 +144,8 @@ public:
     size_t candidate_body_size() const NOEXCEPT;
     size_t confirmed_body_size() const NOEXCEPT;
     size_t strong_tx_body_size() const NOEXCEPT;
+    size_t ecdsa_body_size() const NOEXCEPT;
+    size_t schnorr_body_size() const NOEXCEPT;
     size_t duplicate_body_size() const NOEXCEPT;
     size_t prevout_body_size() const NOEXCEPT;
     size_t validated_bk_body_size() const NOEXCEPT;
@@ -160,6 +167,8 @@ public:
     size_t candidate_size() const NOEXCEPT;
     size_t confirmed_size() const NOEXCEPT;
     size_t strong_tx_size() const NOEXCEPT;
+    size_t ecdsa_size() const NOEXCEPT;
+    size_t schnorr_size() const NOEXCEPT;
     size_t duplicate_size() const NOEXCEPT;
     size_t prevout_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
@@ -193,6 +202,8 @@ public:
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;
+    size_t ecdsa_records() const NOEXCEPT;
+    size_t schnorr_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
     size_t address_records() const NOEXCEPT;
@@ -558,6 +569,12 @@ public:
     bool set_tx_disconnected(const tx_link& link, const context& ctx) NOEXCEPT;
     bool set_tx_connected(const tx_link& link, const context& ctx,
         uint64_t fee, size_t sigops) NOEXCEPT;
+
+    /// Set signature (ecdsa/schnorr) table entry.
+    bool set_signature(const hash_digest& digest, const ec_compressed& point,
+        const ec_signature& signature, const header_link& link) NOEXCEPT;
+    bool set_signature(const hash_digest& digest, const ec_xonly& point,
+        const ec_signature& signature, const header_link& link) NOEXCEPT;
 
     /// Confirmation.
     /// -----------------------------------------------------------------------
@@ -941,6 +958,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/properties_tx.ipp>
 #include <bitcoin/database/impl/query/query.ipp>
 #include <bitcoin/database/impl/query/sequences.ipp>
+#include <bitcoin/database/impl/query/signatures.ipp>
 #include <bitcoin/database/impl/query/sizes.ipp>
 
 BC_POP_WARNING()

@@ -72,7 +72,7 @@ const table::validated_tx::slab out2
     0x0000000000000042, // fee
     0x00000055          // sigops
 };
-const data_chunk expected_head = base16_chunk
+const auto expected_head = base16_chunk
 (
     "0000000000"
     "ffffffffff"
@@ -84,7 +84,7 @@ const data_chunk expected_head = base16_chunk
     "ffffffffff"
     "ffffffffff"
 );
-const data_chunk closed_head = base16_chunk
+const auto closed_head = base16_chunk
 (
     "3a00000000"
     "ffffffffff"
@@ -96,7 +96,7 @@ const data_chunk closed_head = base16_chunk
     "ffffffffff"
     "ffffffffff"
 );
-const data_chunk expected_body = base16_chunk
+const auto expected_body = base16_chunk
 (
     "ffffffffff"         // next->end
     "01020304"           // key1

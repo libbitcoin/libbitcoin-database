@@ -25,7 +25,7 @@ using namespace system;
 
 BOOST_AUTO_TEST_CASE(filter_bk__put__ordered__expected)
 {
-    const data_chunk expected_head = base16_chunk
+    const auto expected_head = base16_chunk
     (
         "000000"
         "000000"
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(filter_bk__put__ordered__expected)
         "ffffff"
         "ffffff"
     );
-    const data_chunk closed_head = base16_chunk
+    const auto closed_head = base16_chunk
     (
         "050000"
         "000000"
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(filter_bk__put__ordered__expected)
         "ffffff"
         "ffffff"
     );
-    const data_chunk expected_body = base16_chunk
+    const auto expected_body = base16_chunk
     (
         // hash, head
         "0000000000000000000000000000000000000000000000000000000000000000""0000000000000000000000000000000000000000000000000000000000000000"

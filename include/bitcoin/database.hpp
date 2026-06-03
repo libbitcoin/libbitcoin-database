@@ -67,7 +67,9 @@
 #include <bitcoin/database/tables/archives/transaction.hpp>
 #include <bitcoin/database/tables/archives/txs.hpp>
 #include <bitcoin/database/tables/caches/duplicate.hpp>
+#include <bitcoin/database/tables/caches/ecdsa.hpp>
 #include <bitcoin/database/tables/caches/prevout.hpp>
+#include <bitcoin/database/tables/caches/schnorr.hpp>
 #include <bitcoin/database/tables/caches/validated_bk.hpp>
 #include <bitcoin/database/tables/caches/validated_tx.hpp>
 #include <bitcoin/database/tables/indexes/height.hpp>

@@ -101,6 +101,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/properties_block.cpp \
     test/query/properties_tx.cpp \
     test/query/sequences.cpp \
+    test/query/signatures.cpp \
     test/query/sizes.cpp \
     test/query/address/address_balance.cpp \
     test/query/address/address_history.cpp \
@@ -134,7 +135,9 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/archives/transaction.cpp \
     test/tables/archives/txs.cpp \
     test/tables/caches/duplicate.cpp \
+    test/tables/caches/ecdsa.cpp \
     test/tables/caches/prevout.cpp \
+    test/tables/caches/schnorr.cpp \
     test/tables/caches/validated_bk.cpp \
     test/tables/caches/validated_tx.cpp \
     test/tables/indexes/height.cpp \
@@ -217,6 +220,7 @@ include_bitcoin_database_impl_query_HEADERS = \
     include/bitcoin/database/impl/query/properties_tx.ipp \
     include/bitcoin/database/impl/query/query.ipp \
     include/bitcoin/database/impl/query/sequences.ipp \
+    include/bitcoin/database/impl/query/signatures.ipp \
     include/bitcoin/database/impl/query/sizes.ipp
 
 include_bitcoin_database_impl_query_addressdir = ${includedir}/bitcoin/database/impl/query/address
@@ -316,7 +320,9 @@ include_bitcoin_database_tables_archives_HEADERS = \
 include_bitcoin_database_tables_cachesdir = ${includedir}/bitcoin/database/tables/caches
 include_bitcoin_database_tables_caches_HEADERS = \
     include/bitcoin/database/tables/caches/duplicate.hpp \
+    include/bitcoin/database/tables/caches/ecdsa.hpp \
     include/bitcoin/database/tables/caches/prevout.hpp \
+    include/bitcoin/database/tables/caches/schnorr.hpp \
     include/bitcoin/database/tables/caches/validated_bk.hpp \
     include/bitcoin/database/tables/caches/validated_tx.hpp
 

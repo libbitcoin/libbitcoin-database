@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_SUITE(validated_bk_tests)
 using namespace system;
 const table::validated_bk::record record1{ {}, 0x42 };
 const table::validated_bk::record record2{ {}, 0xab };
-const data_chunk expected_head = base16_chunk
+const auto expected_head = base16_chunk
 (
     "000000"
     "000000"
@@ -36,7 +36,7 @@ const data_chunk expected_head = base16_chunk
     "ffffff"
     "ffffff"
 );
-const data_chunk closed_head = base16_chunk
+const auto closed_head = base16_chunk
 (
     "020000"
     "000000"
@@ -48,7 +48,7 @@ const data_chunk closed_head = base16_chunk
     "ffffff"
     "ffffff"
 );
-const data_chunk expected_body = base16_chunk
+const auto expected_body = base16_chunk
 (
     "42"                 // code1
     "ab"                 // code2

@@ -148,6 +148,26 @@ public:
 
     // Caches.
 
+    system::data_chunk& ecdsa_head() NOEXCEPT
+    {
+        return ecdsa_head_.buffer();
+    }
+
+    system::data_chunk& ecdsa_body() NOEXCEPT
+    {
+        return ecdsa_body_.buffer();
+    }
+
+    system::data_chunk& schnorr_head() NOEXCEPT
+    {
+        return schnorr_head_.buffer();
+    }
+
+    system::data_chunk& schnorr_body() NOEXCEPT
+    {
+        return schnorr_body_.buffer();
+    }
+
     system::data_chunk& duplicate_head() NOEXCEPT
     {
         return duplicate_head_.buffer();
