@@ -770,9 +770,9 @@ protected:
     /// Setters.
     /// -----------------------------------------------------------------------
     bool set_block_state(const header_link& link,
-        schema::block_state state) NOEXCEPT;
+        block_state state) NOEXCEPT;
     bool set_tx_state(const tx_link& link, const context& ctx,
-        uint64_t fee, size_t sigops, schema::tx_state state) NOEXCEPT;
+        uint64_t fee, size_t sigops, tx_state state) NOEXCEPT;
 
     /// Confirm.
     /// -----------------------------------------------------------------------

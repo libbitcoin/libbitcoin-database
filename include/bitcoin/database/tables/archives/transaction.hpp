@@ -22,7 +22,6 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
-#include <bitcoin/database/tables/point_set.hpp>
 #include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
@@ -41,6 +40,15 @@ struct transaction
     using hash_map<schema::transaction>::hashmap;
     static constexpr auto offset = bytes::bits;
     static_assert(offset < to_bits(bytes::size));
+
+    /// From header->prevouts cache.
+    struct in_point
+    {
+        link tx{};
+        bool coinbase{};
+        uint32_t sequence{};
+    };
+    using in_points = std::vector<in_point>;
 
     static constexpr size_t skip_to_locktime =
         bytes::size +
@@ -288,12 +296,13 @@ struct transaction
         inline bool from_data(reader& source) NOEXCEPT
         {
             source.skip_bytes(skip_to_version);
-            set.version = source.read_little_endian<uint32_t>();
-            set.points.resize(source.read_little_endian<ix::integer, ix::size>());
+            version = source.read_little_endian<uint32_t>();
+            points.resize(source.read_little_endian<ix::integer, ix::size>());
             return source;
         }
 
-        point_set& set;
+        uint32_t& version;
+        in_points& points;
     };
 
     struct get_point

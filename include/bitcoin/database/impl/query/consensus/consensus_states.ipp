@@ -55,20 +55,20 @@ inline code CLASS::to_block_code(
     switch (value)
     {
         // Transitional: Satisfies validation rules (prevouts unverified).
-        case schema::block_state::valid:
+        case block_state::valid:
             return error::block_valid;
 
         // Final: Satisfies confirmation rules (prevouts confirmable).
-        case schema::block_state::confirmable:
+        case block_state::confirmable:
             return error::block_confirmable;
 
         // Final: Does not satisfy either validation or confirmation rules.
-        case schema::block_state::unconfirmable:
+        case block_state::unconfirmable:
             return error::block_unconfirmable;
 
         // Fault: Has no state, should not happen when read from store.
         // block_unknown also used to reset a state (debugging).
-        case schema::block_state::block_unknown:
+        case block_state::block_unknown:
         default:
             return error::unknown_state;
     }
@@ -85,16 +85,16 @@ inline code CLASS::to_tx_code(
     switch (value)
     {
         // Final: Is valid (passed check, accept, and connect).
-        case schema::tx_state::connected:
+        case tx_state::connected:
             return error::tx_connected;
 
         // Final: Is not valid (failed check, accept, or connect).
-        case schema::tx_state::disconnected:
+        case tx_state::disconnected:
             return error::tx_disconnected;
 
         // Fault: Has no state, should not happen when read from store.
         // tx_unknown also used to reset a state (debugging).
-        case schema::tx_state::tx_unknown:
+        case tx_state::tx_unknown:
         default:
             return error::unknown_state;
     }
@@ -224,31 +224,31 @@ code CLASS::get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
 TEMPLATE
 bool CLASS::set_block_valid(const header_link& link) NOEXCEPT
 {
-    return set_block_state(link, schema::block_state::valid);
+    return set_block_state(link, block_state::valid);
 }
 
 TEMPLATE
 bool CLASS::set_block_confirmable(const header_link& link) NOEXCEPT
 {
-    return set_block_state(link, schema::block_state::confirmable);
+    return set_block_state(link, block_state::confirmable);
 }
 
 TEMPLATE
 bool CLASS::set_block_unconfirmable(const header_link& link) NOEXCEPT
 {
-    return set_block_state(link, schema::block_state::unconfirmable);
+    return set_block_state(link, block_state::unconfirmable);
 }
 
 TEMPLATE
 bool CLASS::set_block_unknown(const header_link& link) NOEXCEPT
 {
-    return set_block_state(link, schema::block_state::block_unknown);
+    return set_block_state(link, block_state::block_unknown);
 }
 
 // private
 TEMPLATE
 bool CLASS::set_block_state(const header_link& link,
-    schema::block_state state) NOEXCEPT
+    block_state state) NOEXCEPT
 {
     const auto record = to_validated_bk(link);
 
@@ -264,27 +264,27 @@ bool CLASS::set_block_state(const header_link& link,
 TEMPLATE
 bool CLASS::set_tx_unknown(const tx_link& link) NOEXCEPT
 {
-    return set_tx_state(link, {}, {}, {}, schema::tx_state::tx_unknown);
+    return set_tx_state(link, {}, {}, {}, tx_state::tx_unknown);
 }
 
 TEMPLATE
 bool CLASS::set_tx_disconnected(const tx_link& link,
     const context& ctx) NOEXCEPT
 {
-    return set_tx_state(link, ctx, {}, {}, schema::tx_state::disconnected);
+    return set_tx_state(link, ctx, {}, {}, tx_state::disconnected);
 }
 
 TEMPLATE
 bool CLASS::set_tx_connected(const tx_link& link, const context& ctx,
     uint64_t fee, size_t sigops) NOEXCEPT
 {
-    return set_tx_state(link, ctx, fee, sigops, schema::tx_state::connected);
+    return set_tx_state(link, ctx, fee, sigops, tx_state::connected);
 }
 
 // private
 TEMPLATE
 bool CLASS::set_tx_state(const tx_link& link, const context& ctx,
-    uint64_t fee, size_t sigops, schema::tx_state state) NOEXCEPT
+    uint64_t fee, size_t sigops, tx_state state) NOEXCEPT
 {
     using sigs = linkage<schema::sigops>;
 

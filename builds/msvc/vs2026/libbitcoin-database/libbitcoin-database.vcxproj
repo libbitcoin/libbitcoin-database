@@ -184,8 +184,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\point.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\transaction.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\txs.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\association.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\associations.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\duplicate.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\ecdsa.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\multisig.hpp" />
@@ -201,17 +199,20 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\filter_bk.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\filter_tx.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\point_set.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\states.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\table.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\tables.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\association.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\associations.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\block_state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\fee_rate.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\header_state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\history.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\multisig_view.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\point_set.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\position.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\span.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\tx_state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\type.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\unspent.hpp" />
@@ -281,7 +282,7 @@
     <Import Project="$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets')" />
-    <Import Project="$(NuGetPackageRoot)secp256k1_vc145.0.6.1\build\native\secp256k1_vc145.targets" Condition="Exists('$(NuGetPackageRoot)secp256k1_vc145.0.6.1\build\native\secp256k1_vc145.targets')" />
+    <Import Project="$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets" Condition="Exists('$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -295,7 +296,7 @@
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets'))" />
-    <Error Condition="!Exists('$(NuGetPackageRoot)secp256k1_vc145.0.6.1\build\native\secp256k1_vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)secp256k1_vc145.0.6.1\build\native\secp256k1_vc145.targets'))" />
+    <Error Condition="!Exists('$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets'))" />
   </Target>
   <ItemGroup>
     <Natvis Include="..\..\debug.natvis" />

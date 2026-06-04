@@ -76,7 +76,7 @@ static_assert(offsetof(system::ecdsa::triple, digest) == 0);
 static_assert(offsetof(system::ecdsa::triple, point) == 32);
 static_assert(offsetof(system::ecdsa::triple, signature) == 65);
 static_assert(offsetof(system::ecdsa::triple, identifier) == 129);
-static_assert(sizeof(system::ecdsa::triple) == 32 + 33 + 64 + 3);
+static_assert(sizeof(system::ecdsa::triple) == schema::ecdsa::minrow);
 
 } // namespace table
 } // namespace database

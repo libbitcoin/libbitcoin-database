@@ -16,42 +16,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_ASSOCIATION_HPP
-#define LIBBITCOIN_DATABASE_TABLES_ASSOCIATION_HPP
+#ifndef LIBBITCOIN_DATABASE_TYPES_BLOCK_STATE_HPP
+#define LIBBITCOIN_DATABASE_TYPES_BLOCK_STATE_HPP
 
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/schema.hpp>
-#include <bitcoin/database/primitives/primitives.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// Association between block hash and context.
-struct association
+enum block_state : uint8_t
 {
-    schema::height::link::integer link;
-    system::hash_digest hash;
-    system::chain::context context;
+    /// final
+    confirmable = 0,
 
-    struct key{};
-    struct pos{};
+    /// transitional
+    valid = 1,
 
-    struct name_extractor
-    {
-        using result_type = size_t;
+    /// final
+    unconfirmable = 2,
 
-        inline const result_type& operator()(
-            const association& item) const NOEXCEPT
-        {
-            return item.context.height;
-        }
-
-        inline result_type& operator()(association* item) const NOEXCEPT
-        {
-            BC_ASSERT_MSG(item, "null pointer");
-            return item->context.height;
-        }
-    };
+    /// transitional (debug)
+    block_unknown = 42
 };
 
 } // namespace database

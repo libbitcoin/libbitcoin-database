@@ -42,14 +42,10 @@
 #include <bitcoin/database/tables/optionals/filter_bk.hpp>
 #include <bitcoin/database/tables/optionals/filter_tx.hpp>
 
-#include <bitcoin/database/tables/association.hpp>
-#include <bitcoin/database/tables/associations.hpp>
 #include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/event.hpp>
 #include <bitcoin/database/tables/names.hpp>
-#include <bitcoin/database/tables/point_set.hpp>
 #include <bitcoin/database/tables/schema.hpp>
-#include <bitcoin/database/tables/states.hpp>
 #include <bitcoin/database/tables/table.hpp>
 
 #endif

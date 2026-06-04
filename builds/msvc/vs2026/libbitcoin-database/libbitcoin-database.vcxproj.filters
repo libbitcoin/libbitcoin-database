@@ -263,12 +263,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\txs.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\association.hpp">
-      <Filter>include\bitcoin\database\tables</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\associations.hpp">
-      <Filter>include\bitcoin\database\tables</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\duplicate.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
@@ -314,13 +308,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\filter_tx.hpp">
       <Filter>include\bitcoin\database\tables\optionals</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\point_set.hpp">
-      <Filter>include\bitcoin\database\tables</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\schema.hpp">
-      <Filter>include\bitcoin\database\tables</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\states.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\table.hpp">
@@ -328,6 +316,15 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\tables.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\association.hpp">
+      <Filter>include\bitcoin\database\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\associations.hpp">
+      <Filter>include\bitcoin\database\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\block_state.hpp">
+      <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\fee_rate.hpp">
       <Filter>include\bitcoin\database\types</Filter>
@@ -341,10 +338,16 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\multisig_view.hpp">
       <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\point_set.hpp">
+      <Filter>include\bitcoin\database\types</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\position.hpp">
       <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\span.hpp">
+      <Filter>include\bitcoin\database\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\tx_state.hpp">
       <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\type.hpp">
