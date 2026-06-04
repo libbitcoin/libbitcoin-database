@@ -31,7 +31,7 @@ constexpr size_t bit = 1;       // single bit flag.
 constexpr size_t code = 1;      // validation state.
 constexpr size_t size = 3;      // tx/block size/weight.
 constexpr size_t height_ = 3;   // height record.
-constexpr size_t count_ = 2;    // txs count.
+constexpr size_t count_ = 2;    // txs/block count, inputs/block count.
 constexpr size_t index = 3;     // input/output index.
 constexpr size_t sigops = 3;    // signature op count.
 constexpr size_t flags = 4;     // fork flags.
@@ -292,6 +292,26 @@ struct schnorr
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 131u);
     static_assert(minrow == 131u);
+    static_assert(link::size == 4u);
+};
+
+// array
+struct multisig
+{
+    static constexpr size_t pk = schema::outs::pk;
+    using link = schema::outs::link;
+    static constexpr size_t minsize =
+        system::hash_size +
+        system::ec_compressed_size +
+        system::ec_signature_size +
+        schema::header::pk +
+        count_ +                // input (within block) correlation counter.
+        one;                    // [m|n] pairing merged to one byte (max 16).
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 135u);
+    static_assert(minrow == 135u);
     static_assert(link::size == 4u);
 };
 
