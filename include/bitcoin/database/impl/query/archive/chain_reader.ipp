@@ -391,7 +391,7 @@ outpoint CLASS::get_outpoint(const output_link& link) const NOEXCEPT
 
 TEMPLATE
 template <typename Bool>
-bool CLASS::push_bool(std_vector<Bool>& stack,
+bool CLASS::push_bool(std::vector<Bool>& stack,
     const Bool& element) NOEXCEPT
 {
     if (!element)

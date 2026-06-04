@@ -887,7 +887,7 @@ private:
 
     // Chain objects.
     template <typename Bool>
-    static bool push_bool(std_vector<Bool>& stack,
+    static bool push_bool(std::vector<Bool>& stack,
         const Bool& element) NOEXCEPT;
     template <typename Functor>
     static code parallel_outpoint_transform(const stopper& cancel, bool turbo,
