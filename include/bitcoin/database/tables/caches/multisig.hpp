@@ -42,9 +42,9 @@ struct multisig
             digest = source.read_hash();
             point = source.read_forward<system::ec_compressed_size>();
             signature = source.read_forward<system::ec_signature_size>();
-            header_fk = source.read_little_endian<header::integer, header::size>();
-            set = source.read_2_bytes_little_endian();
             pair = source.read_byte();
+            set = source.read_2_bytes_little_endian();
+            header_fk = source.read_little_endian<header::integer, header::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
@@ -54,9 +54,9 @@ struct multisig
             sink.write_bytes(digest);
             sink.write_bytes(point);
             sink.write_bytes(signature);
-            sink.write_little_endian<header::integer, header::size>(header_fk);
-            sink.write_little_endian<uint16_t>(set);
             sink.write_byte(pair);
+            sink.write_little_endian<uint16_t>(set);
+            sink.write_little_endian<header::integer, header::size>(header_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
@@ -66,27 +66,27 @@ struct multisig
             return digest == other.digest
                 && point == other.point
                 && signature == other.signature
-                && header_fk == other.header_fk
+                && pair == other.pair
                 && set == other.set
-                && pair == other.pair;
+                && header_fk == other.header_fk;
         }
 
         system::hash_digest digest{};
         system::ec_compressed point{};
         system::ec_signature signature{};
-        header::integer header_fk{};
-        uint16_t set{};
         uint8_t pair{};
+        uint16_t set{};
+        header::integer header_fk{};
     };
 };
 
 static_assert(offsetof(system::multisig::triple, digest) == 0);
 static_assert(offsetof(system::multisig::triple, point) == 32);
 static_assert(offsetof(system::multisig::triple, signature) == 65);
-static_assert(offsetof(system::multisig::triple, identifier) == 129);
-static_assert(offsetof(system::multisig::triple, set) == 132);
-static_assert(offsetof(system::multisig::triple, pair) == 134);
-static_assert(sizeof(system::multisig::triple) == 32 + 33 + 64 + 3 + 2 + 1);
+static_assert(offsetof(system::multisig::triple, pair) == 129);
+static_assert(offsetof(system::multisig::triple, set) == 130);
+static_assert(offsetof(system::multisig::triple, identifier) == 132);
+static_assert(sizeof(system::multisig::triple) == 32 + 33 + 64 + 1 + 2 + 3);
 
 } // namespace table
 } // namespace database
