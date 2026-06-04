@@ -41,8 +41,8 @@ const table::ecdsa::record record2
     0x00cdef12_u32
 };
 
-const auto expected_head = base16_chunk("000000");
-const auto closed_head = base16_chunk("020000");
+const auto expected_head = base16_chunk("00000000");
+const auto closed_head = base16_chunk("02000000");
 const auto expected_body = base16_chunk
 (
     // record 1
