@@ -48,6 +48,7 @@ src_libbitcoin_database_la_SOURCES = \
     src/memory/mman-win32/mman.cpp \
     src/memory/mman-win32/mman.hpp \
     src/types/history.cpp \
+    src/types/multisig_view.cpp \
     src/types/unspent.cpp
 
 # local: test/libbitcoin-database-test
@@ -344,6 +345,7 @@ include_bitcoin_database_types_HEADERS = \
     include/bitcoin/database/types/fee_rate.hpp \
     include/bitcoin/database/types/header_state.hpp \
     include/bitcoin/database/types/history.hpp \
+    include/bitcoin/database/types/multisig_view.hpp \
     include/bitcoin/database/types/position.hpp \
     include/bitcoin/database/types/span.hpp \
     include/bitcoin/database/types/type.hpp \

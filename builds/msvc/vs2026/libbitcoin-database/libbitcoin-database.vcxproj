@@ -139,6 +139,7 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
     <ClCompile Include="..\..\..\..\src\types\history.cpp" />
+    <ClCompile Include="..\..\..\..\src\types\multisig_view.cpp" />
     <ClCompile Include="..\..\..\..\src\types\unspent.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -208,6 +209,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\fee_rate.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\header_state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\history.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\multisig_view.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\position.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\span.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\type.hpp" />

@@ -132,6 +132,9 @@
     <ClCompile Include="..\..\..\..\src\types\history.cpp">
       <Filter>src\types</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\types\multisig_view.cpp">
+      <Filter>src\types</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\types\unspent.cpp">
       <Filter>src\types</Filter>
     </ClCompile>
@@ -333,6 +336,9 @@
       <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\history.hpp">
+      <Filter>include\bitcoin\database\types</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\multisig_view.hpp">
       <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\position.hpp">

@@ -16,16 +16,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TYPES_TYPES_HPP
-#define LIBBITCOIN_DATABASE_TYPES_TYPES_HPP
+#ifndef LIBBITCOIN_DATABASE_TYPES_MULTISIG_VIEW_HPP
+#define LIBBITCOIN_DATABASE_TYPES_MULTISIG_VIEW_HPP
 
-#include <bitcoin/database/types/fee_rate.hpp>
-#include <bitcoin/database/types/header_state.hpp>
-#include <bitcoin/database/types/history.hpp>
-#include <bitcoin/database/types/multisig_view.hpp>
-#include <bitcoin/database/types/position.hpp>
-#include <bitcoin/database/types/span.hpp>
-#include <bitcoin/database/types/type.hpp>
-#include <bitcoin/database/types/unspent.hpp>
+#include <bitcoin/database/define.hpp>
+
+namespace libbitcoin {
+namespace database {
+
+/// Non-owning writable view of a partial signature tuple.
+/// m of n limited each to 4 bits (16) packed in upper/lower nibbles.
+struct BCD_API multisig_view
+{
+    multisig_view(const system::ec_compressed& point,
+        const system::ec_signature& signature, size_t m, size_t n) NOEXCEPT;
+
+    void to_data(system::bytewriter& sink) const NOEXCEPT;
+
+private:
+    uint8_t pair_;
+    const system::ec_compressed& point_;
+    const system::ec_signature& signature_;
+};
+
+using multisig_views = std::vector<multisig_view>;
+
+} // namespace database
+} // namespace libbitcoin
 
 #endif
