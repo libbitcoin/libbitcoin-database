@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_ASSOCIATIONS_HPP
-#define LIBBITCOIN_DATABASE_TABLES_ASSOCIATIONS_HPP
+#ifndef LIBBITCOIN_DATABASE_TYPES_ASSOCIATIONS_HPP
+#define LIBBITCOIN_DATABASE_TYPES_ASSOCIATIONS_HPP
 
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/association.hpp>
+#include <bitcoin/database/types/association.hpp>
 
 namespace libbitcoin {
 namespace database {

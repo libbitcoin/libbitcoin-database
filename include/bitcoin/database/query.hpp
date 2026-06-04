@@ -770,9 +770,9 @@ protected:
     /// Setters.
     /// -----------------------------------------------------------------------
     bool set_block_state(const header_link& link,
-        schema::block_state state) NOEXCEPT;
+        block_state state) NOEXCEPT;
     bool set_tx_state(const tx_link& link, const context& ctx,
-        uint64_t fee, size_t sigops, schema::tx_state state) NOEXCEPT;
+        uint64_t fee, size_t sigops, tx_state state) NOEXCEPT;
 
     /// Confirm.
     /// -----------------------------------------------------------------------
@@ -887,7 +887,7 @@ private:
 
     // Chain objects.
     template <typename Bool>
-    static bool push_bool(std_vector<Bool>& stack,
+    static bool push_bool(std::vector<Bool>& stack,
         const Bool& element) NOEXCEPT;
     template <typename Functor>
     static code parallel_outpoint_transform(const stopper& cancel, bool turbo,

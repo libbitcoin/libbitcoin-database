@@ -86,7 +86,7 @@ static_assert(offsetof(system::multisig::triple, signature) == 65);
 static_assert(offsetof(system::multisig::triple, pair) == 129);
 static_assert(offsetof(system::multisig::triple, set) == 130);
 static_assert(offsetof(system::multisig::triple, identifier) == 132);
-static_assert(sizeof(system::multisig::triple) == 32 + 33 + 64 + 1 + 2 + 3);
+static_assert(sizeof(system::multisig::triple) == schema::multisig::minrow);
 
 } // namespace table
 } // namespace database

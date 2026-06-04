@@ -16,32 +16,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_POINT_SET_HPP
-#define LIBBITCOIN_DATABASE_TABLES_POINT_SET_HPP
+#ifndef LIBBITCOIN_DATABASE_TYPES_TX_STATE_HPP
+#define LIBBITCOIN_DATABASE_TYPES_TX_STATE_HPP
 
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-struct point_set
+enum tx_state : uint8_t
 {
-    using tx_link = schema::transaction::link;
+    /// final
+    connected = 0,
 
-    struct point
-    {
-        // From header->prevouts cache.
-        tx_link tx{};
-        bool coinbase{};
-        uint32_t sequence{};
-    };
+    /// final
+    disconnected = 1,
 
-    // From block->txs->tx get version and points.resize(count).
-    uint32_t version{};
-    std::vector<point> points{};
+    /// transitional (debug)
+    tx_unknown = 42
 };
-using point_sets = std::vector<point_set>;
 
 } // namespace database
 } // namespace libbitcoin

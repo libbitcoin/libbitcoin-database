@@ -23,6 +23,7 @@
 #include <atomic>
 #include <ranges>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/types/types.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -60,7 +61,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         [this, &count, &fault](const tx_link& tx) NOEXCEPT
         {
             point_set set{};
-            table::transaction::get_set_ref get{ {}, set };
+            table::transaction::get_set_ref get{ {}, set.version, set.points };
             if (!store_.tx.get(tx, get))
                 fault.store(true, relaxed);
 

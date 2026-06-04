@@ -297,14 +297,10 @@ include_bitcoin_database_primitives_HEADERS = \
 
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
 include_bitcoin_database_tables_HEADERS = \
-    include/bitcoin/database/tables/association.hpp \
-    include/bitcoin/database/tables/associations.hpp \
     include/bitcoin/database/tables/context.hpp \
     include/bitcoin/database/tables/event.hpp \
     include/bitcoin/database/tables/names.hpp \
-    include/bitcoin/database/tables/point_set.hpp \
     include/bitcoin/database/tables/schema.hpp \
-    include/bitcoin/database/tables/states.hpp \
     include/bitcoin/database/tables/table.hpp \
     include/bitcoin/database/tables/tables.hpp
 
@@ -342,12 +338,17 @@ include_bitcoin_database_tables_optionals_HEADERS = \
 
 include_bitcoin_database_typesdir = ${includedir}/bitcoin/database/types
 include_bitcoin_database_types_HEADERS = \
+    include/bitcoin/database/types/association.hpp \
+    include/bitcoin/database/types/associations.hpp \
+    include/bitcoin/database/types/block_state.hpp \
     include/bitcoin/database/types/fee_rate.hpp \
     include/bitcoin/database/types/header_state.hpp \
     include/bitcoin/database/types/history.hpp \
     include/bitcoin/database/types/multisig_view.hpp \
+    include/bitcoin/database/types/point_set.hpp \
     include/bitcoin/database/types/position.hpp \
     include/bitcoin/database/types/span.hpp \
+    include/bitcoin/database/types/tx_state.hpp \
     include/bitcoin/database/types/type.hpp \
     include/bitcoin/database/types/types.hpp \
     include/bitcoin/database/types/unspent.hpp
