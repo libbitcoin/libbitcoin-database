@@ -25,7 +25,7 @@
 namespace libbitcoin {
 namespace database {
 
-struct header_state
+struct BCD_API header_state
 {
     header_link link;
     code ec;

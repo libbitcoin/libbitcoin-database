@@ -24,7 +24,7 @@
 namespace libbitcoin {
 namespace database {
 
-struct position
+struct BCD_API position
 {
     size_t sibling;
     size_t width;

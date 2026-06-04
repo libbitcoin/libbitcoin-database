@@ -24,7 +24,7 @@
 namespace libbitcoin {
 namespace database {
 
-struct fee_rate
+struct BCD_API fee_rate
 {
     size_t bytes{};
     uint64_t fee{};
