@@ -20,9 +20,29 @@
 #define LIBBITCOIN_DATABASE_QUERY_SIGNATURES_IPP
 
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/types/types.hpp>
 
 namespace libbitcoin {
 namespace database {
+
+TEMPLATE
+bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
+    const ec_signature& signature, const header_link& link) NOEXCEPT
+{
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    return store_.schnorr.put(table::schnorr::record
+    {
+        {},
+        digest,
+        point,
+        signature,
+        link
+    });
+    // ========================================================================
+}
 
 TEMPLATE
 bool CLASS::set_signature(const hash_digest& digest, const ec_compressed& point,
@@ -44,22 +64,28 @@ bool CLASS::set_signature(const hash_digest& digest, const ec_compressed& point,
 }
 
 TEMPLATE
-bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
-    const ec_signature& signature, const header_link& link) NOEXCEPT
+bool CLASS::set_signatures(const hash_digest& ,
+    const multisig_views& , uint16_t , const header_link& ) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    // TODO: allocate and then iterate.
+
     // Clean single allocation failure (e.g. disk full).
-    return store_.schnorr.put(table::schnorr::record
-    {
-        {},
-        digest,
-        point,
-        signature,
-        link
-    });
+    ////return store_.multisig.put(table::multisig::record
+    ////{
+    ////    {},
+    ////    digest,
+    ////    point,
+    ////    signature,
+    ////    pair,
+    ////    link,
+    ////    set
+    ////});
     // ========================================================================
+
+    return {};
 }
 
 } // namespace database

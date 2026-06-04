@@ -16,23 +16,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TYPES_POSITION_HPP
-#define LIBBITCOIN_DATABASE_TYPES_POSITION_HPP
+#include <bitcoin/database/types/multisig_view.hpp>
 
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-struct BCD_API position
+multisig_view::multisig_view(const system::ec_compressed& point,
+    const system::ec_signature& signature, size_t m, size_t n) NOEXCEPT
+  : point_(point),
+    signature_(signature),
+    pair_(system::pack_word<uint8_t>(m, n))
 {
-    size_t sibling;
-    size_t width;
-};
+    BC_DEBUG_ONLY(constexpr auto half = system::power2(to_half(byte_bits));)
+    BC_ASSERT(m < half && n < half);
+}
 
-using positions = std::vector<position>;
+void multisig_view::to_data(system::bytewriter& sink) const NOEXCEPT
+{
+    sink.write_bytes(point_);
+    sink.write_bytes(signature_);
+    sink.write_byte(pair_);
+    BC_ASSERT(sink);
+}
 
 } // namespace database
 } // namespace libbitcoin
-
-#endif

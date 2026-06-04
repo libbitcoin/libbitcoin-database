@@ -19,25 +19,29 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(ecdsa_tests)
+BOOST_AUTO_TEST_SUITE(multisig_tests)
 
 using namespace system;
 
-const table::ecdsa::record record1
+const table::multisig::record record1
 {
     {},
     base16_hash("1111111111111111111111111111111111111111111111111111111111111111"),
     base16_array("222222222222222222222222222222222222222222222222222222222222222222"),
     base16_array("33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"),
+    0xcd_u8,
+    0xbbaa_u16,
     0x00345678_u32
 };
 
-const table::ecdsa::record record2
+const table::multisig::record record2
 {
     {},
     base16_hash("4444444444444444444444444444444444444444444444444444444444444444"),
     base16_array("555555555555555555555555555555555555555555555555555555555555555555"),
     base16_array("66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"),
+    0x89_u8,
+    0x3412_u16,
     0x00cdef12_u32
 };
 
@@ -49,27 +53,27 @@ const auto expected_body = base16_chunk
     "1111111111111111111111111111111111111111111111111111111111111111"
     "222222222222222222222222222222222222222222222222222222222222222222"
     "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
-    "785634"
+    "cdaabb785634"
 
     // record 2
     "4444444444444444444444444444444444444444444444444444444444444444"
     "555555555555555555555555555555555555555555555555555555555555555555"
     "66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"
-    "12efcd"
+    "89123412efcd"
 );
 
-BOOST_AUTO_TEST_CASE(ecdsa__put__two__expected)
+BOOST_AUTO_TEST_CASE(multisig__put__two__expected)
 {
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
-    table::ecdsa instance{ head_store, body_store };
+    table::multisig instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
 
-    table::ecdsa::link link1{};
+    table::multisig::link link1{};
     BOOST_REQUIRE(instance.put_link(link1, record1));
     BOOST_REQUIRE_EQUAL(link1, 0u);
 
-    table::ecdsa::link link2{};
+    table::multisig::link link2{};
     BOOST_REQUIRE(instance.put_link(link2, record2));
     BOOST_REQUIRE_EQUAL(link2, 1u);
 
@@ -79,17 +83,17 @@ BOOST_AUTO_TEST_CASE(ecdsa__put__two__expected)
     BOOST_REQUIRE_EQUAL(head_store.buffer(), closed_head);
 }
 
-BOOST_AUTO_TEST_CASE(ecdsa__get__two__expected)
+BOOST_AUTO_TEST_CASE(multisig__get__two__expected)
 {
     auto head = expected_head;
     auto body = expected_body;
     test::chunk_storage head_store{ head };
     test::chunk_storage body_store{ body };
-    table::ecdsa instance{ head_store, body_store };
+    table::multisig instance{ head_store, body_store };
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
-    table::ecdsa::record out{};
+    table::multisig::record out{};
     BOOST_REQUIRE(instance.get(0u, out));
     BOOST_REQUIRE(out == record1);
     BOOST_REQUIRE(instance.get(1u, out));

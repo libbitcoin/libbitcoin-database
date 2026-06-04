@@ -22,6 +22,7 @@
 #include <bitcoin/database/types/fee_rate.hpp>
 #include <bitcoin/database/types/header_state.hpp>
 #include <bitcoin/database/types/history.hpp>
+#include <bitcoin/database/types/multisig_view.hpp>
 #include <bitcoin/database/types/position.hpp>
 #include <bitcoin/database/types/span.hpp>
 #include <bitcoin/database/types/type.hpp>

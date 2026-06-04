@@ -48,6 +48,7 @@ src_libbitcoin_database_la_SOURCES = \
     src/memory/mman-win32/mman.cpp \
     src/memory/mman-win32/mman.hpp \
     src/types/history.cpp \
+    src/types/multisig_view.cpp \
     src/types/unspent.cpp
 
 # local: test/libbitcoin-database-test
@@ -136,6 +137,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/archives/txs.cpp \
     test/tables/caches/duplicate.cpp \
     test/tables/caches/ecdsa.cpp \
+    test/tables/caches/multisig.cpp \
     test/tables/caches/prevout.cpp \
     test/tables/caches/schnorr.cpp \
     test/tables/caches/validated_bk.cpp \
@@ -321,6 +323,7 @@ include_bitcoin_database_tables_cachesdir = ${includedir}/bitcoin/database/table
 include_bitcoin_database_tables_caches_HEADERS = \
     include/bitcoin/database/tables/caches/duplicate.hpp \
     include/bitcoin/database/tables/caches/ecdsa.hpp \
+    include/bitcoin/database/tables/caches/multisig.hpp \
     include/bitcoin/database/tables/caches/prevout.hpp \
     include/bitcoin/database/tables/caches/schnorr.hpp \
     include/bitcoin/database/tables/caches/validated_bk.hpp \
@@ -342,6 +345,7 @@ include_bitcoin_database_types_HEADERS = \
     include/bitcoin/database/types/fee_rate.hpp \
     include/bitcoin/database/types/header_state.hpp \
     include/bitcoin/database/types/history.hpp \
+    include/bitcoin/database/types/multisig_view.hpp \
     include/bitcoin/database/types/position.hpp \
     include/bitcoin/database/types/span.hpp \
     include/bitcoin/database/types/type.hpp \

@@ -24,7 +24,7 @@
 namespace libbitcoin {
 namespace database {
 
-struct span
+struct BCD_API span
 {
     inline size_t size() const NOEXCEPT
     {

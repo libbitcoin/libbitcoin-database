@@ -570,11 +570,13 @@ public:
     bool set_tx_connected(const tx_link& link, const context& ctx,
         uint64_t fee, size_t sigops) NOEXCEPT;
 
-    /// Set signature (ecdsa/schnorr) table entry.
-    bool set_signature(const hash_digest& digest, const ec_compressed& point,
-        const ec_signature& signature, const header_link& link) NOEXCEPT;
+    /// Set signature (schnorr/ecdsa/multisig) table entry.
     bool set_signature(const hash_digest& digest, const ec_xonly& point,
         const ec_signature& signature, const header_link& link) NOEXCEPT;
+    bool set_signature(const hash_digest& digest, const ec_compressed& point,
+        const ec_signature& signature, const header_link& link) NOEXCEPT;
+    bool set_signatures(const hash_digest& digest, const multisig_views& pairs,
+        uint16_t set, const header_link& link) NOEXCEPT;
 
     /// Confirmation.
     /// -----------------------------------------------------------------------
