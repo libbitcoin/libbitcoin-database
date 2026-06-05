@@ -72,10 +72,6 @@ struct schnorr
     };
 };
 
-////static_assert(offsetof(system::schnorr::triple, digest) == 0);
-////static_assert(offsetof(system::schnorr::triple, point) == 32);
-////static_assert(offsetof(system::schnorr::triple, signature) == 64);
-////static_assert(offsetof(system::schnorr::triple, identifier) == 128);
 static_assert(sizeof(system::schnorr::triple) == schema::schnorr::minrow);
 
 } // namespace table

@@ -80,12 +80,6 @@ struct multisig
     };
 };
 
-////static_assert(offsetof(system::multisig::triple, digest) == 0);
-////static_assert(offsetof(system::multisig::triple, point) == 32);
-////static_assert(offsetof(system::multisig::triple, signature) == 65);
-////static_assert(offsetof(system::multisig::triple, pair) == 129);
-////static_assert(offsetof(system::multisig::triple, set) == 130);
-////static_assert(offsetof(system::multisig::triple, identifier) == 132);
 static_assert(sizeof(system::multisig::triple) == schema::multisig::minrow);
 
 } // namespace table
