@@ -72,7 +72,7 @@ struct ecdsa
     };
 };
 
-static_assert(sizeof(system::ecdsa::triple) == schema::ecdsa::minrow);
+static_assert(sizeof(system::ecdsa::signatures) == schema::ecdsa::minrow);
 
 } // namespace table
 } // namespace database

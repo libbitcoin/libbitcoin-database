@@ -78,9 +78,58 @@ struct multisig
         uint16_t set{};
         header::integer header_fk{};
     };
+
+    struct put_ref
+      : public schema::multisig
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            const auto m = sigs.size();
+            const auto n = keys.size();
+
+            BC_ASSERT(!is_subtract_overflow(n, m));
+            BC_ASSERT(!is_add_overflow(n - m, one));
+            BC_ASSERT(!is_multiply_overflow(m, add1(n - m)));
+            return possible_narrow_cast<link::integer>(m * add1(n - m));
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using namespace system;
+            const auto m = sigs.size();
+            const auto n = keys.size();
+            constexpr auto max = power2(to_half(byte_bits));
+            if (is_zero(m) || is_zero(n) || n > max || m > n)
+                return false;
+
+            for (size_t sig{}; sig < m; ++sig)
+            {
+                for (auto key = sig; key <= n - (m - sig); ++key)
+                {
+                    sink.write_bytes(digest);
+                    sink.write_bytes(keys.at(key));
+                    sink.write_bytes(sigs.at(sig));
+                    sink.write_byte(pack_word<uint8_t>(m, n));
+                    sink.write_little_endian<uint16_t>(set);
+                    sink.write_little_endian<header::integer, header::size>(
+                        header_fk);
+                }
+            }
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const hash_digest& digest;
+        const system::ec_compresseds& keys;
+        const system::ec_signatures& sigs;
+        const uint16_t set{};
+        const header::integer header_fk{};
+    };
 };
 
-static_assert(sizeof(system::multisig::triple) == schema::multisig::minrow);
+static_assert(sizeof(system::multisig::signatures) == schema::multisig::minrow);
 
 } // namespace table
 } // namespace database

@@ -304,9 +304,9 @@ struct multisig
         system::hash_size +
         system::ec_compressed_size +
         system::ec_signature_size +
-        schema::header::pk +
-        count_ +                // input (within block) correlation counter.
-        one;                    // [m|n] pairing merged to one byte (max 16).
+        one +       // [m|n] pairing merged to one byte (max 16).
+        count_ +    // input (within block) correlation counter.
+        schema::header::pk;
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
     static constexpr link count() NOEXCEPT { return 1; }

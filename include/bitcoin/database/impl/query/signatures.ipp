@@ -64,24 +64,21 @@ bool CLASS::set_signature(const hash_digest& digest, const ec_compressed& point,
 }
 
 TEMPLATE
-bool CLASS::set_signatures(const hash_digest& ,
-    const multisig_views& , uint16_t , const header_link& ) NOEXCEPT
+bool CLASS::set_signatures(const hash_digest& , const ec_compresseds& ,
+    const ec_signatures& , uint16_t , const header_link& ) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // TODO: allocate and then iterate.
-
     // Clean single allocation failure (e.g. disk full).
-    ////return store_.multisig.put(table::multisig::record
+    ////return store_.multisig.put(table::multisig::put_ref
     ////{
     ////    {},
     ////    digest,
-    ////    point,
-    ////    signature,
-    ////    pair,
-    ////    link,
-    ////    set
+    ////    keys,
+    ////    sigs,
+    ////    set,
+    ////    link
     ////});
     // ========================================================================
 

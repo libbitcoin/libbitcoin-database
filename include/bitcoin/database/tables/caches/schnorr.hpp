@@ -72,7 +72,7 @@ struct schnorr
     };
 };
 
-static_assert(sizeof(system::schnorr::triple) == schema::schnorr::minrow);
+static_assert(sizeof(system::schnorr::signatures) == schema::schnorr::minrow);
 
 } // namespace table
 } // namespace database
