@@ -189,6 +189,16 @@ public:
         return schnorr_body_.file();
     }
 
+    inline const path& multisig_head_file() const NOEXCEPT
+    {
+        return multisig_head_.file();
+    }
+
+    inline const path& multisig_body_file() const NOEXCEPT
+    {
+        return multisig_body_.file();
+    }
+
     inline const path& duplicate_head_file() const NOEXCEPT
     {
         return duplicate_head_.file();

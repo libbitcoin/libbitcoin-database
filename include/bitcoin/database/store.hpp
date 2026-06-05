@@ -175,6 +175,10 @@ protected:
     Storage schnorr_head_;
     Storage schnorr_body_;
 
+    // array
+    Storage multisig_head_;
+    Storage multisig_body_;
+
     // blob arraymap
     Storage duplicate_head_;
     Storage duplicate_body_;
@@ -255,6 +259,7 @@ public:
     /// Caches.
     table::ecdsa ecdsa;
     table::schnorr schnorr;
+    table::multisig multisig;
     table::duplicate duplicate;
     table::prevout prevout;
     table::validated_bk validated_bk;

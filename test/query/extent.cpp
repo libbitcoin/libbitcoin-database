@@ -53,6 +53,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.strong_tx_body_size(), schema::strong_tx::minrow);
     BOOST_REQUIRE_EQUAL(query.ecdsa_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.schnorr_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query.multisig_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.duplicate_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.prevout_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.validated_bk_body_size(), zero);
@@ -105,6 +106,7 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.strong_tx_records(), one);
     BOOST_REQUIRE_EQUAL(query.ecdsa_records(), zero);
     BOOST_REQUIRE_EQUAL(query.schnorr_records(), zero);
+    BOOST_REQUIRE_EQUAL(query.multisig_records(), zero);
     BOOST_REQUIRE_EQUAL(query.duplicate_records(), zero);
     BOOST_REQUIRE_EQUAL(query.filter_bk_records(), one);
     BOOST_REQUIRE_EQUAL(query.address_records(), one);

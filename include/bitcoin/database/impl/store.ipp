@@ -109,6 +109,9 @@ const std::unordered_map<table_t, std::string> CLASS::tables
     { table_t::schnorr_table, "schnorr_table" },
     { table_t::schnorr_head, "schnorr_head" },
     { table_t::schnorr_body, "schnorr_body" },
+    { table_t::multisig_table, "multisig_table" },
+    { table_t::multisig_head, "multisig_head" },
+    { table_t::multisig_body, "multisig_body" },
     { table_t::duplicate_table, "duplicate_table" },
     { table_t::duplicate_head, "duplicate_head" },
     { table_t::duplicate_body, "duplicate_body" },
@@ -186,6 +189,9 @@ CLASS::store(const settings& config) NOEXCEPT
     schnorr_head_(head(config.path / schema::dir::heads, schema::caches::schnorr), 1, 0, random),
     schnorr_body_(body(config.path, schema::caches::schnorr), config.schnorr_size, config.schnorr_rate, sequential),
 
+    multisig_head_(head(config.path / schema::dir::heads, schema::caches::multisig), 1, 0, random),
+    multisig_body_(body(config.path, schema::caches::multisig), config.multisig_size, config.multisig_rate, sequential),
+
     duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate), 1, 0, random),
     duplicate_body_(body(config.path, schema::caches::duplicate), config.duplicate_size, config.duplicate_rate, sequential),
 
@@ -234,6 +240,7 @@ CLASS::store(const settings& config) NOEXCEPT
 
     ecdsa(ecdsa_head_, ecdsa_body_),
     schnorr(schnorr_head_, schnorr_body_),
+    multisig(multisig_head_, multisig_body_),
     duplicate(duplicate_head_, duplicate_body_, config.duplicate_buckets),
     prevout(prevout_head_, prevout_body_, config.prevout_buckets),
     validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),
@@ -319,6 +326,8 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     create(ec, ecdsa_body_, table_t::ecdsa_body);
     create(ec, schnorr_head_, table_t::schnorr_head);
     create(ec, schnorr_body_, table_t::schnorr_body);
+    create(ec, multisig_head_, table_t::multisig_head);
+    create(ec, multisig_body_, table_t::multisig_body);
     create(ec, duplicate_head_, table_t::duplicate_head);
     create(ec, duplicate_body_, table_t::duplicate_body);
     create(ec, prevout_head_, table_t::prevout_head);
@@ -364,6 +373,7 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
 
     populate(ec, ecdsa, table_t::ecdsa_table);
     populate(ec, schnorr, table_t::schnorr_table);
+    populate(ec, multisig, table_t::multisig_table);
     populate(ec, duplicate, table_t::duplicate_table);
     populate(ec, prevout, table_t::prevout_table);
     populate(ec, validated_bk, table_t::validated_bk_table);
@@ -439,6 +449,7 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
 
     verify(ec, ecdsa, table_t::ecdsa_table);
     verify(ec, schnorr, table_t::schnorr_table);
+    verify(ec, multisig, table_t::multisig_table);
     verify(ec, duplicate, table_t::duplicate_table);
     verify(ec, prevout, table_t::prevout_table);
     verify(ec, validated_bk, table_t::validated_bk_table);
@@ -557,6 +568,7 @@ code CLASS::snapshot(const event_handler& handler, bool prune) NOEXCEPT
 
     flush(ec, ecdsa_body_, table_t::ecdsa_body);
     flush(ec, schnorr_body_, table_t::schnorr_body);
+    flush(ec, multisig_body_, table_t::multisig_body);
     flush(ec, duplicate_body_, table_t::duplicate_body);
     if (!prune) flush(ec, prevout_body_, table_t::prevout_body);
     flush(ec, validated_bk_body_, table_t::validated_bk_body);
@@ -623,6 +635,8 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, ecdsa_body_, table_t::ecdsa_body);
     reload(ec, schnorr_head_, table_t::schnorr_head);
     reload(ec, schnorr_body_, table_t::schnorr_body);
+    reload(ec, multisig_head_, table_t::multisig_head);
+    reload(ec, multisig_body_, table_t::multisig_body);
     reload(ec, duplicate_head_, table_t::duplicate_head);
     reload(ec, duplicate_body_, table_t::duplicate_body);
     reload(ec, prevout_head_, table_t::prevout_head);
@@ -678,6 +692,7 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
 
     close(ec, ecdsa, table_t::ecdsa_table);
     close(ec, schnorr, table_t::schnorr_table);
+    close(ec, multisig, table_t::multisig_table);
     close(ec, duplicate, table_t::duplicate_table);
     close(ec, prevout, table_t::prevout_table);
     close(ec, validated_bk, table_t::validated_bk_table);
@@ -747,6 +762,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, ecdsa_body_, table_t::ecdsa_body);
     open(ec, schnorr_head_, table_t::schnorr_head);
     open(ec, schnorr_body_, table_t::schnorr_body);
+    open(ec, multisig_head_, table_t::multisig_head);
+    open(ec, multisig_body_, table_t::multisig_body);
     open(ec, duplicate_head_, table_t::duplicate_head);
     open(ec, duplicate_body_, table_t::duplicate_body);
     open(ec, prevout_head_, table_t::prevout_head);
@@ -800,6 +817,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, ecdsa_body_, table_t::ecdsa_body);
     load(ec, schnorr_head_, table_t::schnorr_head);
     load(ec, schnorr_body_, table_t::schnorr_body);
+    load(ec, multisig_head_, table_t::multisig_head);
+    load(ec, multisig_body_, table_t::multisig_body);
     load(ec, duplicate_head_, table_t::duplicate_head);
     load(ec, duplicate_body_, table_t::duplicate_body);
     load(ec, prevout_head_, table_t::prevout_head);
@@ -863,6 +882,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, ecdsa_body_, table_t::ecdsa_body);
     unload(ec, schnorr_head_, table_t::schnorr_head);
     unload(ec, schnorr_body_, table_t::schnorr_body);
+    unload(ec, multisig_head_, table_t::multisig_head);
+    unload(ec, multisig_body_, table_t::multisig_body);
     unload(ec, duplicate_head_, table_t::duplicate_head);
     unload(ec, duplicate_body_, table_t::duplicate_body);
     unload(ec, prevout_head_, table_t::prevout_head);
@@ -916,6 +937,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, ecdsa_body_, table_t::ecdsa_body);
     close(ec, schnorr_head_, table_t::schnorr_head);
     close(ec, schnorr_body_, table_t::schnorr_body);
+    close(ec, multisig_head_, table_t::multisig_head);
+    close(ec, multisig_body_, table_t::multisig_body);
     close(ec, duplicate_head_, table_t::duplicate_head);
     close(ec, duplicate_body_, table_t::duplicate_body);
     close(ec, prevout_head_, table_t::prevout_head);
@@ -965,6 +988,7 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
 
     backup(ec, ecdsa, table_t::ecdsa_table);
     backup(ec, schnorr, table_t::schnorr_table);
+    backup(ec, multisig, table_t::multisig_table);
     backup(ec, duplicate, table_t::duplicate_table);
     backup(ec, prevout, table_t::prevout_table, prune);
     backup(ec, validated_bk, table_t::validated_bk_table);
@@ -1032,6 +1056,7 @@ code CLASS::dump(const path& folder,
 
     auto ecdsa_buffer = ecdsa_head_.get();
     auto schnorr_buffer = schnorr_head_.get();
+    auto multisig_buffer = multisig_head_.get();
     auto duplicate_buffer = duplicate_head_.get();
     auto prevout_buffer = prevout_head_.get();
     auto validated_bk_buffer = validated_bk_head_.get();
@@ -1056,6 +1081,7 @@ code CLASS::dump(const path& folder,
 
     if (!ecdsa_buffer) return error::unloaded_file;
     if (!schnorr_buffer) return error::unloaded_file;
+    if (!multisig_buffer) return error::unloaded_file;
     if (!duplicate_buffer) return error::unloaded_file;
     if (!prevout_buffer) return error::unloaded_file;
     if (!validated_bk_buffer) return error::unloaded_file;
@@ -1092,6 +1118,7 @@ code CLASS::dump(const path& folder,
 
     dump(ec, ecdsa_buffer, schema::caches::ecdsa, table_t::ecdsa_head);
     dump(ec, schnorr_buffer, schema::caches::schnorr, table_t::schnorr_head);
+    dump(ec, multisig_buffer, schema::caches::multisig, table_t::multisig_head);
     dump(ec, duplicate_buffer, schema::caches::duplicate, table_t::duplicate_head);
     dump(ec, prevout_buffer, schema::caches::prevout, table_t::prevout_head);
     dump(ec, validated_bk_buffer, schema::caches::validated_bk, table_t::validated_bk_head);
@@ -1187,6 +1214,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
 
         restore(ec, ecdsa, table_t::ecdsa_table);
         restore(ec, schnorr, table_t::schnorr_table);
+        restore(ec, multisig, table_t::multisig_table);
         restore(ec, duplicate, table_t::duplicate_table);
         restore(ec, prevout, table_t::prevout_table);
         restore(ec, validated_bk, table_t::validated_bk_table);
@@ -1252,6 +1280,7 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = strong_tx_body_.get_fault())) return ec;
     if ((ec = ecdsa_body_.get_fault())) return ec;
     if ((ec = schnorr_body_.get_fault())) return ec;
+    if ((ec = multisig_body_.get_fault())) return ec;
     if ((ec = duplicate_body_.get_fault())) return ec;
     if ((ec = prevout_body_.get_fault())) return ec;
     if ((ec = validated_bk_body_.get_fault())) return ec;
@@ -1284,6 +1313,7 @@ size_t CLASS::get_space() const NOEXCEPT
     space(strong_tx_body_);
     space(ecdsa_body_);
     space(schnorr_body_);
+    space(multisig_body_);
     space(duplicate_body_);
     space(prevout_body_);
     space(validated_bk_body_);
@@ -1320,6 +1350,7 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(strong_tx_body_, table_t::strong_tx_body);
     report(ecdsa_body_, table_t::ecdsa_body);
     report(schnorr_body_, table_t::schnorr_body);
+    report(multisig_body_, table_t::multisig_body);
     report(duplicate_body_, table_t::duplicate_body);
     report(prevout_body_, table_t::prevout_body);
     report(validated_bk_body_, table_t::validated_bk_body);

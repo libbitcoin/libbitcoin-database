@@ -77,6 +77,9 @@ settings::settings() NOEXCEPT
     schnorr_size{ 1 },
     schnorr_rate{ 50 },
 
+    multisig_size{ 1 },
+    multisig_rate{ 50 },
+
     duplicate_buckets{ 128 },
     duplicate_size{ 1 },
     duplicate_rate{ 50 },
