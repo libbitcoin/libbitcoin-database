@@ -87,11 +87,19 @@ struct multisig
             using namespace system;
             const auto m = sigs.size();
             const auto n = keys.size();
+            if (is_subtract_overflow(n, m))
+                return {};
 
-            BC_ASSERT(!is_subtract_overflow(n, m));
-            BC_ASSERT(!is_add_overflow(n - m, one));
-            BC_ASSERT(!is_multiply_overflow(m, add1(n - m)));
-            return possible_narrow_cast<link::integer>(m * add1(n - m));
+            const auto gap = n - m;
+            if (is_add_overflow(gap, one))
+                return {};
+
+            const auto sum = add1(gap);
+            if (is_multiply_overflow(m, sum))
+                return {};
+
+            // Terminal count fails the write attempt, so to_data() is guarded.
+            return possible_narrow_cast<link::integer>(m * sum);
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
