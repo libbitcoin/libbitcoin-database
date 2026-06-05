@@ -129,7 +129,7 @@ struct multisig
     };
 };
 
-static_assert(sizeof(system::multisig::signatures) == schema::multisig::minrow);
+static_assert(sizeof(system::multisig::batch) == schema::multisig::minrow);
 
 } // namespace table
 } // namespace database
