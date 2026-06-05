@@ -53,7 +53,9 @@ public:
     using chain_state = system::chain::chain_state;
     using chain_state_cptr = system::chain::chain_state::cptr;
     using chain_context = system::chain::context;
+    using ec_compresseds = system::ec_compresseds;
     using ec_compressed = system::ec_compressed;
+    using ec_signatures = system::ec_signatures;
     using ec_signature = system::ec_signature;
     using ec_xonly = system::ec_xonly;
 
@@ -575,8 +577,8 @@ public:
         const ec_signature& signature, const header_link& link) NOEXCEPT;
     bool set_signature(const hash_digest& digest, const ec_compressed& point,
         const ec_signature& signature, const header_link& link) NOEXCEPT;
-    bool set_signatures(const hash_digest& digest, const multisig_views& pairs,
-        uint16_t set, const header_link& link) NOEXCEPT;
+    bool set_signatures(const hash_digest& digest, const ec_compresseds& keys,
+        const ec_signatures& sigs, uint16_t set, const header_link& link) NOEXCEPT;
 
     /// Confirmation.
     /// -----------------------------------------------------------------------
