@@ -845,14 +845,14 @@ protected:
     /// merkle
     /// -----------------------------------------------------------------------
 
-    // merkle related utilities
+    /// merkle related utilities
     static hash_digest partial_subroot(hashes&& tree, size_t span) NOEXCEPT;
     static void merge_merkle(hashes& path, hashes&& leaves, size_t first,
         size_t lift) NOEXCEPT;
     static positions merkle_branch(size_t leaf, size_t leaves,
         bool compress=false) NOEXCEPT;
 
-    // merkle related configuration
+    /// merkle related configuration
     size_t interval_depth() const NOEXCEPT;
     size_t initialize_span() const NOEXCEPT;
 
