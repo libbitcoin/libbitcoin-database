@@ -43,7 +43,7 @@ struct multisig
             point = source.read_forward<system::ec_compressed_size>();
             signature = source.read_forward<system::ec_signature_size>();
             pair = source.read_byte();
-            set = source.read_2_bytes_little_endian();
+            group = source.read_2_bytes_little_endian();
             header_fk = source.read_little_endian<header::integer, header::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
@@ -55,7 +55,7 @@ struct multisig
             sink.write_bytes(point);
             sink.write_bytes(signature);
             sink.write_byte(pair);
-            sink.write_little_endian<uint16_t>(set);
+            sink.write_little_endian<uint16_t>(group);
             sink.write_little_endian<header::integer, header::size>(header_fk);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
@@ -67,7 +67,7 @@ struct multisig
                 && point == other.point
                 && signature == other.signature
                 && pair == other.pair
-                && set == other.set
+                && group == other.group
                 && header_fk == other.header_fk;
         }
 
@@ -75,7 +75,7 @@ struct multisig
         system::ec_compressed point{};
         system::ec_signature signature{};
         uint8_t pair{};
-        uint16_t set{};
+        uint16_t group{};
         header::integer header_fk{};
     };
 
@@ -87,11 +87,19 @@ struct multisig
             using namespace system;
             const auto m = sigs.size();
             const auto n = keys.size();
+            if (is_subtract_overflow(n, m))
+                return {};
 
-            BC_ASSERT(!is_subtract_overflow(n, m));
-            BC_ASSERT(!is_add_overflow(n - m, one));
-            BC_ASSERT(!is_multiply_overflow(m, add1(n - m)));
-            return possible_narrow_cast<link::integer>(m * add1(n - m));
+            const auto gap = n - m;
+            if (is_add_overflow(gap, one))
+                return {};
+
+            const auto sum = add1(gap);
+            if (is_multiply_overflow(m, sum))
+                return {};
+
+            // Terminal count fails the write attempt, so to_data() is guarded.
+            return possible_narrow_cast<link::integer>(m * sum);
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
@@ -111,7 +119,7 @@ struct multisig
                     sink.write_bytes(keys.at(key));
                     sink.write_bytes(sigs.at(sig));
                     sink.write_byte(pack_word<uint8_t>(m, n));
-                    sink.write_little_endian<uint16_t>(set);
+                    sink.write_little_endian<uint16_t>(group);
                     sink.write_little_endian<header::integer, header::size>(
                         header_fk);
                 }
@@ -124,7 +132,7 @@ struct multisig
         const hash_digest& digest;
         const system::ec_compresseds& keys;
         const system::ec_signatures& sigs;
-        const uint16_t set{};
+        const uint16_t group{};
         const header::integer header_fk{};
     };
 };

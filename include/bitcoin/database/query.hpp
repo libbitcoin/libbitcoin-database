@@ -125,6 +125,7 @@ public:
     size_t strong_tx_head_size() const NOEXCEPT;
     size_t ecdsa_head_size() const NOEXCEPT;
     size_t schnorr_head_size() const NOEXCEPT;
+    size_t multisig_head_size() const NOEXCEPT;
     size_t duplicate_head_size() const NOEXCEPT;
     size_t prevout_head_size() const NOEXCEPT;
     size_t validated_bk_head_size() const NOEXCEPT;
@@ -148,6 +149,7 @@ public:
     size_t strong_tx_body_size() const NOEXCEPT;
     size_t ecdsa_body_size() const NOEXCEPT;
     size_t schnorr_body_size() const NOEXCEPT;
+    size_t multisig_body_size() const NOEXCEPT;
     size_t duplicate_body_size() const NOEXCEPT;
     size_t prevout_body_size() const NOEXCEPT;
     size_t validated_bk_body_size() const NOEXCEPT;
@@ -171,6 +173,7 @@ public:
     size_t strong_tx_size() const NOEXCEPT;
     size_t ecdsa_size() const NOEXCEPT;
     size_t schnorr_size() const NOEXCEPT;
+    size_t multisig_size() const NOEXCEPT;
     size_t duplicate_size() const NOEXCEPT;
     size_t prevout_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
@@ -206,6 +209,7 @@ public:
     size_t strong_tx_records() const NOEXCEPT;
     size_t ecdsa_records() const NOEXCEPT;
     size_t schnorr_records() const NOEXCEPT;
+    size_t multisig_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
     size_t address_records() const NOEXCEPT;
@@ -578,7 +582,8 @@ public:
     bool set_signature(const hash_digest& digest, const ec_compressed& point,
         const ec_signature& signature, const header_link& link) NOEXCEPT;
     bool set_signatures(const hash_digest& digest, const ec_compresseds& keys,
-        const ec_signatures& sigs, uint16_t set, const header_link& link) NOEXCEPT;
+        const ec_signatures& sigs, uint16_t group,
+        const header_link& link) NOEXCEPT;
 
     /// Confirmation.
     /// -----------------------------------------------------------------------
