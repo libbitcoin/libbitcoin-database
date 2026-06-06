@@ -50,27 +50,27 @@ namespace archive
 
 namespace indexes
 {
-    constexpr auto candidate = "candidate";
-    constexpr auto confirmed = "confirmed";
-    constexpr auto strong_tx = "strong_tx";
+    constexpr auto candidate = "index_candidate";
+    constexpr auto confirmed = "index_confirmed";
+    constexpr auto strong_tx = "index_strong";
 }
 
 namespace caches
 {
-    constexpr auto ecdsa = "ecdsa";
-    constexpr auto schnorr = "schnorr";
-    constexpr auto multisig = "multisig";
-    constexpr auto duplicate = "duplicate";
-    constexpr auto prevout = "prevout";
+    constexpr auto ecdsa = "batch_ecdsa";
+    constexpr auto schnorr = "batch_schnorr";
+    constexpr auto multisig = "batch_multisig";
+    constexpr auto duplicate = "cache_duplicate";
+    constexpr auto prevout = "cache_prevout";
     constexpr auto validated_bk = "validated_bk";
     constexpr auto validated_tx = "validated_tx";
 }
 
 namespace optionals
 {
-    constexpr auto address = "address";
-    constexpr auto filter_bk = "filter_bk";
-    constexpr auto filter_tx = "filter_tx";
+    constexpr auto address = "option_address";
+    constexpr auto filter_bk = "option_filter_bk";
+    constexpr auto filter_tx = "option_filter_tx";
 }
 
 namespace locks
