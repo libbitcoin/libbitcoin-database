@@ -168,16 +168,6 @@ public:
         return schnorr_body_.buffer();
     }
 
-    system::data_chunk& multisig_head() NOEXCEPT
-    {
-        return multisig_head_.buffer();
-    }
-
-    system::data_chunk& multisig_body() NOEXCEPT
-    {
-        return multisig_body_.buffer();
-    }
-
     system::data_chunk& duplicate_head() NOEXCEPT
     {
         return duplicate_head_.buffer();
