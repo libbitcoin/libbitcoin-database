@@ -26,41 +26,47 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
-    const ec_signature& signature, const header_link& link) NOEXCEPT
+bool CLASS::set_signature(const hash_digest& , const ec_compressed& ,
+    const ec_signature& , const header_link& ) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean single allocation failure (e.g. disk full).
-    return store_.schnorr.put(table::schnorr::record
-    {
-        {},
-        digest,
-        point,
-        signature,
-        link
-    });
+    ////// Clean single allocation failure (e.g. disk full).
+    ////return store_.ecdsa.put(table::ecdsa::record
+    ////{
+    ////    {},
+    ////    digest,
+    ////    point,
+    ////    signature,
+    ////    link
+    ////});
     // ========================================================================
+
+    // false will result in local signature validation (performance).
+    return true;
 }
 
 TEMPLATE
-bool CLASS::set_signature(const hash_digest& digest, const ec_compressed& point,
-    const ec_signature& signature, const header_link& link) NOEXCEPT
+bool CLASS::set_signature(const hash_digest& , const ec_xonly& ,
+    const ec_signature& , const header_link& ) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean single allocation failure (e.g. disk full).
-    return store_.ecdsa.put(table::ecdsa::record
-    {
-        {},
-        digest,
-        point,
-        signature,
-        link
-    });
+    ////// Clean single allocation failure (e.g. disk full).
+    ////return store_.schnorr.put(table::schnorr::record
+    ////{
+    ////    {},
+    ////    digest,
+    ////    point,
+    ////    signature,
+    ////    link
+    ////});
     // ========================================================================
+
+    // false will result in local signature validation (performance).
+    return true;
 }
 
 TEMPLATE
