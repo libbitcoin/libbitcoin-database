@@ -559,7 +559,7 @@ public:
     bool get_work(uint256_t& work, const header_link& link) const NOEXCEPT;
     bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
-    bool get_context(system::chain::context& ctx,
+    bool get_context(chain_context& ctx,
         const header_link& link) const NOEXCEPT;
 
     /// Setters.
