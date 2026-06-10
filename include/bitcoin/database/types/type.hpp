@@ -70,6 +70,7 @@ using data_chunk = system::data_chunk;
 /// Common system::chain aliases.
 /// ---------------------------------------------------------------------------
 
+using threshold = system::chain::signatures::threshold_entries;
 using checkpoint = system::chain::checkpoint;
 
 using inpoint = system::chain::point;

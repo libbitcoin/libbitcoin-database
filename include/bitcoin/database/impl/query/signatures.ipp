@@ -64,8 +64,8 @@ bool CLASS::set_signature(const hash_digest& digest, const ec_compressed& point,
 }
 
 TEMPLATE
-bool CLASS::set_signatures(const hash_digest& , const ec_compresseds& ,
-    const ec_signatures& , uint16_t , const header_link& ) NOEXCEPT
+bool CLASS::set_signatures(const hash_digest&, const ec_compresseds&,
+    const ec_signatures&, size_t, const header_link&) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
@@ -82,7 +82,31 @@ bool CLASS::set_signatures(const hash_digest& , const ec_compresseds& ,
     ////});
     // ========================================================================
 
-    return {};
+    // false will result in local signature validation (performance).
+    return true;
+}
+
+TEMPLATE
+bool CLASS::set_signatures(const threshold& , size_t ,
+    const header_link& ) NOEXCEPT
+{
+    // ========================================================================
+    const auto scope = store_.get_transactor();
+
+    ////// Clean single allocation failure (e.g. disk full).
+    ////return store_.multisig.put(table::multisig::put_ref
+    ////{
+    ////    {},
+    ////    digest,
+    ////    keys,
+    ////    sigs,
+    ////    group,
+    ////    link
+    ////});
+    // ========================================================================
+
+    // false will result in script validation failure (consensus).
+    return true;
 }
 
 } // namespace database

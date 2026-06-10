@@ -578,7 +578,8 @@ public:
     bool set_signature(const hash_digest& digest, const ec_compressed& point,
         const ec_signature& signature, const header_link& link) NOEXCEPT;
     bool set_signatures(const hash_digest& digest, const ec_compresseds& keys,
-        const ec_signatures& sigs, uint16_t group,
+        const ec_signatures& sigs, size_t set, const header_link& link) NOEXCEPT;
+    bool set_signatures(const threshold& group, size_t set,
         const header_link& link) NOEXCEPT;
 
     /// Confirmation.
