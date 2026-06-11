@@ -30,7 +30,8 @@ const table::validated_tx::slab in1
     {
         0x11223344, // flags
         0x55667788, // height
-        0x99aabbcc  // mtp
+        0x99aabbcc, // mtp
+        0x00202021  // pt
     },
     0x42,               // code
     0x1122334455667788, // fee
@@ -42,7 +43,8 @@ const table::validated_tx::slab in2
     {
         0xaabbccdd, // flags
         0x44332211, // height
-        0xabcdef99  // mtp
+        0xabcdef99, // mtp
+        0x01202022  // pt
     },
     0xab,               // code
     0x0000000000000042, // fee
@@ -54,7 +56,8 @@ const table::validated_tx::slab out1
     {
         0x11223344, // flags
         0x00667788, // height
-        0x99aabbcc  // mtp
+        0x99aabbcc, // mtp
+        0x00202021  // pt
     },
     0x42,               // code
     0x1122334455667788, // fee
@@ -66,7 +69,8 @@ const table::validated_tx::slab out2
     {
         0xaabbccdd, // flags
         0x00332211, // height
-        0xabcdef99  // mtp
+        0xabcdef99, // mtp
+        0x01202022  // pt
     },
     0xab,               // code
     0x0000000000000042, // fee
@@ -76,7 +80,7 @@ const auto expected_head = base16_chunk
 (
     "0000000000"
     "ffffffffff"
-    "2300000000"
+    "2700000000"
     "ffffffffff"
     "ffffffffff"
     "ffffffffff"
@@ -86,9 +90,9 @@ const auto expected_head = base16_chunk
 );
 const auto closed_head = base16_chunk
 (
-    "3a00000000"
+    "4200000000"
     "ffffffffff"
-    "2300000000"
+    "2700000000"
     "ffffffffff"
     "ffffffffff"
     "ffffffffff"
@@ -103,6 +107,7 @@ const auto expected_body = base16_chunk
     "44332211"           // flags1
     "887766"             // height1
     "ccbbaa99"           // mtp1
+    "21202000"           // pt1
     "42"                 // code1
     "ff8877665544332211" // fees1
     "fe78563412"         // sigops1
@@ -112,6 +117,7 @@ const auto expected_body = base16_chunk
     "ddccbbaa"           // flags2
     "112233"             // height2
     "99efcdab"           // mtp2
+    "22202001"           // pt2
     "ab"                 // code2
     "42"                 // sigops2
     "55"                 // fees2
@@ -130,7 +136,7 @@ BOOST_AUTO_TEST_CASE(validated_tx__put__two__expected)
 
     table::validated_tx::link link2{};
     BOOST_REQUIRE(instance.put_link(link2, key2, in2));
-    BOOST_REQUIRE_EQUAL(link2, 0x23u);
+    BOOST_REQUIRE_EQUAL(link2, 0x27u);
 
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
@@ -151,7 +157,7 @@ BOOST_AUTO_TEST_CASE(validated_tx__get__two__expected)
     table::validated_tx::slab out{};
     BOOST_REQUIRE(instance.get(0, out));
     BOOST_REQUIRE(out == out1);
-    BOOST_REQUIRE(instance.get(0x23, out));
+    BOOST_REQUIRE(instance.get(0x27, out));
     BOOST_REQUIRE(out == out2);
 }
 

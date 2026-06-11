@@ -45,8 +45,12 @@ struct header
         skip_to_height +
         context::height_t::size;
 
-    static constexpr size_t skip_to_parent =
+    static constexpr size_t skip_to_pt =
         skip_to_mtp +
+        sizeof(uint32_t);
+
+    static constexpr size_t skip_to_parent =
+        skip_to_pt +
         sizeof(uint32_t);
 
     static constexpr size_t skip_to_version =

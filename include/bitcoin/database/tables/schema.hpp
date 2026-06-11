@@ -70,6 +70,7 @@ struct header
         schema::flags +         // context.flags
         schema::height_ +       // context.height
         sizeof(uint32_t) +      // context.mtp
+        sizeof(uint32_t) +      // context.pt
         ///schema::bit +        // milestone (merged into parent pk)
         pk +                    // parent.pk
         sizeof(uint32_t) +      // version
@@ -81,8 +82,8 @@ struct header
     static constexpr size_t size = minsize;
     static constexpr size_t cell = sizeof(unsigned_type<link::size>);
     static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 62u);
-    static_assert(minrow == 97u);
+    static_assert(minsize == 66u);
+    static_assert(minrow == 101u);
     static_assert(link::size == 3u);
     static_assert(cell == 4u);
 };

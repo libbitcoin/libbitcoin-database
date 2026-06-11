@@ -157,13 +157,16 @@ bool CLASS::get_context(system::chain::context& ctx,
         .median_time_past = header.ctx.mtp,
 
         // [block.check & block.accept]
-        .height = header.ctx.height
+        .height = header.ctx.height,
 
         // [header.accept]
         // .minimum_block_version
 
         // [header.accept]
         // .work_required
+
+        // [header.accept]
+        .previous_timestamp = header.ctx.pt
     };
 
     return true;

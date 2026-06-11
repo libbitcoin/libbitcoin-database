@@ -113,6 +113,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_header__is_header__expected)
         "04030201" // flags
         "141312"   // height
         "24232221" // mtp
+        "00000000" // pt
         "ffffff"   // previous_block_hash (header_fk - not found) (milestone true)
         "34333231" // version
         "44434241" // timestamp
@@ -144,6 +145,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_header__is_header__expected)
     BOOST_CHECK_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
     BOOST_CHECK_EQUAL(element1.ctx.flags, test::context.flags);
     BOOST_CHECK_EQUAL(element1.ctx.mtp, test::context.mtp);
+    BOOST_CHECK_EQUAL(element1.ctx.pt, test::context.pt);
     BOOST_CHECK_EQUAL(element1.milestone, milestone);
     BOOST_CHECK_EQUAL(element1.version, header.version());
     BOOST_CHECK_EQUAL(element1.parent_fk, schema::header::link::terminal);
@@ -457,6 +459,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
         "04030201"     // flags
         "141312"       // height
         "24232221"     // mtp
+        "00000000"     // pt
         "ffffff"       // previous_block_hash (header_fk - not found) (milestone true)
         "01000000"     // version
         "29ab5f49"     // timestamp
@@ -604,6 +607,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
         "04030201"     // flags
         "141312"       // height
         "24232221"     // mtp
+        "00000000"     // pt
         "ffffff"       // previous_block_hash (header_fk - not found) (milestone true)
         "01000000"     // version
         "29ab5f49"     // timestamp
@@ -1007,6 +1011,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__get_header__invalid_parent__expected)
         "14131211" // flags
         "040302"   // height
         "24232221" // mtp
+        "12312311" // pt
         "424242"   // previous_block_hash (header_fk - invalid) (milestone false)
         "34333231" // version
         "44434241" // timestamp
@@ -1069,6 +1074,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__get_header__default__expected)
         "14131211" // flags
         "040302"   // height
         "24232221" // mtp
+        "00000000" // pt
         "ffffff"   // previous_block_hash (header_fk - terminal) (milestone true)
         "34333231" // version
         "44434241" // timestamp

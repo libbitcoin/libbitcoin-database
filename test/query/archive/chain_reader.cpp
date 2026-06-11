@@ -120,6 +120,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__default__expected)
         "14131211" // flags
         "040302"   // height
         "24232221" // mtp
+        "12312311" // pt
         "ffffff"   // previous_block_hash (header_fk - terminal) (milestone true)
         "34333231" // version
         "44434241" // timestamp
@@ -136,7 +137,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__default__expected)
 
     ////store.header_head() = expected_header_head;
     ////store.header_body() = expected_header_body;
-    BOOST_CHECK(query.set(header, context{ 0x11121314, 0x01020304, 0x21222324 }, true));
+    BOOST_CHECK(query.set(header, context{ 0x11121314, 0x01020304, 0x21222324, 0x11233112 }, true));
     BOOST_CHECK_EQUAL(store.header_head(), expected_header_head);
     BOOST_CHECK_EQUAL(store.header_body(), expected_header_body);
 

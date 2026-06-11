@@ -32,6 +32,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__genesis__expect
         0u,
         0u,
         0u,
+        0u,
         0u
     };
 
@@ -49,6 +50,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__genesis__expect
     BOOST_REQUIRE_EQUAL(state->timestamp(), expected.timestamp);
     BOOST_REQUIRE_EQUAL(state->work_required(), expected.work_required);
     BOOST_REQUIRE_EQUAL(state->median_time_past(), expected.median_time_past);
+    BOOST_REQUIRE_EQUAL(state->previous_timestamp(), expected.previous_timestamp);
     BOOST_REQUIRE_EQUAL(state->minimum_block_version(), expected.minimum_block_version);
     BOOST_REQUIRE_EQUAL(state->cumulative_work(), test::genesis.header().proof());
     BOOST_REQUIRE(state->context() == expected);
@@ -64,7 +66,8 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expecte
         test::genesis.header().timestamp(), // mtp
         1u,                                 // height
         0u,                                 // minimum_block_version
-        486604799u                          // work_required
+        486604799u,                         // work_required
+        test::genesis.header().timestamp()  // pt
     };
 
     // Not actually contributory.
@@ -72,7 +75,8 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expecte
     {
         expected.flags,
         system::possible_narrow_cast<uint32_t>(expected.height),
-        expected.median_time_past
+        expected.median_time_past,
+        expected.previous_timestamp
     };
 
     database::settings database_settings{};
@@ -91,6 +95,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expecte
     BOOST_REQUIRE_EQUAL(state->timestamp(), expected.timestamp);
     BOOST_REQUIRE_EQUAL(state->work_required(), expected.work_required);
     BOOST_REQUIRE_EQUAL(state->median_time_past(), expected.median_time_past);
+    BOOST_REQUIRE_EQUAL(state->previous_timestamp(), expected.previous_timestamp);
     BOOST_REQUIRE_EQUAL(state->minimum_block_version(), expected.minimum_block_version);
     BOOST_REQUIRE_EQUAL(state->cumulative_work(), test::genesis.header().proof() + test::block1.header().proof());
     BOOST_REQUIRE(state->context() == expected);

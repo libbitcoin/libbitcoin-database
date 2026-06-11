@@ -31,13 +31,15 @@ struct context
     using height_t = linkage<schema::height_>;
     using flag_t = linkage<schema::flags>;
     using mtp_t = uint32_t;
-    static constexpr auto size = flag_t::size + height_t::size + sizeof(mtp_t);
+    using pt_t = uint32_t;
+    static constexpr auto size = flag_t::size + height_t::size + sizeof(mtp_t) + sizeof(pt_t);
 
     static inline void from_data(reader& source, context& context) NOEXCEPT
     {
         context.flags  = source.template read_little_endian<flag_t::integer, flag_t::size>();
         context.height = source.template read_little_endian<height_t::integer, height_t::size>();
         context.mtp    = source.template read_little_endian<uint32_t>();
+        context.pt     = source.template read_little_endian<uint32_t>();
     };
 
     static inline void to_data(finalizer& sink, const context& context) NOEXCEPT
@@ -45,6 +47,7 @@ struct context
         sink.template write_little_endian<flag_t::integer, flag_t::size>(context.flags);
         sink.template write_little_endian<height_t::integer, height_t::size>(context.height);
         sink.template write_little_endian<mtp_t>(context.mtp);
+        sink.template write_little_endian<pt_t>(context.pt);
     };
 
     constexpr bool is_enabled(system::chain::flags rule) const NOEXCEPT
@@ -56,12 +59,14 @@ struct context
     {
         return flags  == other.flags
             && height == other.height
-            && mtp    == other.mtp;
+            && mtp    == other.mtp
+            && pt     == other.pt;
     }
 
     height_t::integer flags{};
     flag_t::integer height{};
     mtp_t mtp{};
+    pt_t pt{};
 };
 
 } // namespace database

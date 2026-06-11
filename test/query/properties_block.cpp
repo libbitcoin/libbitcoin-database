@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_context__block1__expected)
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    const context expected{ 12, 34, 56 };
+    const context expected{ 12, 34, 56, 78 };
     BOOST_REQUIRE(query.set(test::block1, expected, false, false));
 
     context ctx{};
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_context__block1__expected)
 
     system::chain::context chain_ctx{};
     constexpr auto expected_timestamp = 0x4966bc61_u32;
-    const system::chain::context chain_expected{ expected.flags, expected_timestamp, expected.mtp, expected.height, 0, 0 };
+    const system::chain::context chain_expected{ expected.flags, expected_timestamp, expected.mtp, expected.height, 0, 0, expected.pt };
     BOOST_REQUIRE(query.get_context(chain_ctx, 1));
     BOOST_REQUIRE(chain_ctx == chain_expected);
 }

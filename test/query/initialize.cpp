@@ -330,16 +330,18 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate_
     {
         0x01020302, // flags
         0x00121312, // height (3 bytes)
-        0x21222322  // mtp
+        0x00121312, // mtp
+        0x00121412  // pt
     };
     constexpr database::context context3
     {
         0x01020303, // flags
         0x00121313, // height (3 bytes)
-        0x21222323  // mtp
+        0x00121313, // mtp
+        0x00121413  // pt
     };
-    BOOST_REQUIRE(query.initialize(test::genesis));            // associated
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));     // associated
+    BOOST_REQUIRE(query.initialize(test::genesis));                      // associated
+    BOOST_REQUIRE(query.set(test::block1, test::context, false, false)); // associated
     BOOST_REQUIRE(query.set(test::block2.header(), context2, false)); // header only
     BOOST_REQUIRE(query.set(test::block3.header(), context3, false)); // header only
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
@@ -367,6 +369,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate_
     BOOST_REQUIRE_EQUAL(it2->context.flags, context2.flags);
     BOOST_REQUIRE_EQUAL(it2->context.timestamp, test::block2.header().timestamp());
     BOOST_REQUIRE_EQUAL(it2->context.median_time_past, context2.mtp);
+    BOOST_REQUIRE_EQUAL(it2->context.previous_timestamp, context2.pt);
     BOOST_REQUIRE_EQUAL(it2->context.height, context2.height);
 
     const auto it3 = unassociated0.find(test::block3.hash());
@@ -375,6 +378,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate_
     BOOST_REQUIRE_EQUAL(it3->context.flags, context3.flags);
     BOOST_REQUIRE_EQUAL(it3->context.timestamp, test::block3.header().timestamp());
     BOOST_REQUIRE_EQUAL(it3->context.median_time_past, context3.mtp);
+    BOOST_REQUIRE_EQUAL(it3->context.previous_timestamp, context3.pt);
     BOOST_REQUIRE_EQUAL(it3->context.height, context3.height);
 
     const auto unassociated1 = query.get_unassociated_above(1);
@@ -387,6 +391,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate_
     BOOST_REQUIRE_EQUAL(it2s->context.flags, context2.flags);
     BOOST_REQUIRE_EQUAL(it2s->context.timestamp, test::block2.header().timestamp());
     BOOST_REQUIRE_EQUAL(it2s->context.median_time_past, context2.mtp);
+    BOOST_REQUIRE_EQUAL(it2s->context.previous_timestamp, context2.pt);
     BOOST_REQUIRE_EQUAL(it2s->context.height, context2.height);
 
     const auto it3s = unassociated1.find(context3.height);
@@ -394,6 +399,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate_
     BOOST_REQUIRE_EQUAL(it3s->context.flags, context3.flags);
     BOOST_REQUIRE_EQUAL(it3s->context.timestamp, test::block3.header().timestamp());
     BOOST_REQUIRE_EQUAL(it3s->context.median_time_past, context3.mtp);
+    BOOST_REQUIRE_EQUAL(it3s->context.previous_timestamp, context3.pt);
     BOOST_REQUIRE_EQUAL(it3s->context.height, context3.height);
     BOOST_REQUIRE_EQUAL(unassociated1.top().height, context3.height);
 
@@ -405,6 +411,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate_
     BOOST_REQUIRE_EQUAL(it3a->context.flags, context3.flags);
     BOOST_REQUIRE_EQUAL(it3a->context.timestamp, test::block3.header().timestamp());
     BOOST_REQUIRE_EQUAL(it3a->context.median_time_past, context3.mtp);
+    BOOST_REQUIRE_EQUAL(it3a->context.previous_timestamp, context3.pt);
     BOOST_REQUIRE_EQUAL(it3a->context.height, context3.height);
     BOOST_REQUIRE_EQUAL(unassociated2.top().height, context3.height);
 

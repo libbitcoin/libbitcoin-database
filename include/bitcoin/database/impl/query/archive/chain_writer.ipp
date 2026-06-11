@@ -265,7 +265,8 @@ code CLASS::set_code(header_link& out_fk, const header& header,
     {
         system::possible_narrow_cast<context::flag_t::integer>(ctx.flags),
         system::possible_narrow_cast<context::height_t::integer>(ctx.height),
-        ctx.median_time_past
+        ctx.median_time_past,
+        ctx.previous_timestamp
     }, milestone);
 }
 
@@ -328,7 +329,8 @@ code CLASS::set_code(header_link& out_fk, const block& block,
     {
         system::possible_narrow_cast<context::flag_t::integer>(ctx.flags),
         system::possible_narrow_cast<context::height_t::integer>(ctx.height),
-        ctx.median_time_past
+        ctx.median_time_past,
+        ctx.previous_timestamp
     }, milestone, strong);
 }
 
