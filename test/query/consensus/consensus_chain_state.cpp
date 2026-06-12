@@ -64,7 +64,8 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expecte
         test::genesis.header().timestamp(), // mtp
         1u,                                 // height
         0u,                                 // minimum_block_version
-        486604799u                          // work_required
+        486604799u,                         // work_required
+        test::genesis.header().timestamp()  // previous timestamp
     };
 
     // Not actually contributory.
@@ -92,6 +93,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expecte
     BOOST_REQUIRE_EQUAL(state->work_required(), expected.work_required);
     BOOST_REQUIRE_EQUAL(state->median_time_past(), expected.median_time_past);
     BOOST_REQUIRE_EQUAL(state->minimum_block_version(), expected.minimum_block_version);
+    BOOST_REQUIRE_EQUAL(state->previous_timestamp(), expected.previous_timestamp);
     BOOST_REQUIRE_EQUAL(state->cumulative_work(), test::genesis.header().proof() + test::block1.header().proof());
     BOOST_REQUIRE(state->context() == expected);
 }
