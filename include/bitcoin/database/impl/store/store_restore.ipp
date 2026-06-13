@@ -78,6 +78,14 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         ec = error::missing_snapshot;
     }
 
+    // BUGBUG: height indexes are not append only, resulting in failure to
+    // recover and allowing insidious integrity failure after recovery,
+    // specifically orphaned header links in the index due to write below snap.
+    // Regarding height index recovery there are two criteria for the fix.
+    // (1) we must accept the existing body size if smaller than head indicates
+    // (reset head), and (2) prune the body (with head indicator) to highest
+    // contiguous set of links that do not exceed the header table count
+    // (orphaned by snapshot restore). This requires a scan upon restore.
     const auto restore = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
     {
         if (!ec)
