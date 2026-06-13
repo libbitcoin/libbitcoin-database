@@ -8,40 +8,40 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="src">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000000}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\file">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\locks">
+    <Filter Include="src\file">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\memory">
+    <Filter Include="src\locks">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\mocks">
+    <Filter Include="src\memory">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\primitives">
+    <Filter Include="src\mocks">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\query">
+    <Filter Include="src\primitives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000006}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\query">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000007}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\query\address">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000009}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\query\archive">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000A}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000009}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\query\consensus">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000B}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000A}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\query\navigate">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000C}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000B}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\tables">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000007}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000C}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\tables\archives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000D}</UniqueIdentifier>
@@ -56,7 +56,7 @@
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000001}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\types">
-      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000002}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
