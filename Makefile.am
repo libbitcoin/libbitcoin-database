@@ -187,10 +187,6 @@ include_bitcoin_database_file_HEADERS = \
     include/bitcoin/database/file/rotator.hpp \
     include/bitcoin/database/file/utilities.hpp
 
-include_bitcoin_database_impldir = ${includedir}/bitcoin/database/impl
-include_bitcoin_database_impl_HEADERS = \
-    include/bitcoin/database/impl/store.ipp
-
 include_bitcoin_database_impl_memorydir = ${includedir}/bitcoin/database/impl/memory
 include_bitcoin_database_impl_memory_HEADERS = \
     include/bitcoin/database/impl/memory/accessor.ipp
@@ -259,6 +255,22 @@ include_bitcoin_database_impl_query_navigate_HEADERS = \
     include/bitcoin/database/impl/query/navigate/navigate_hashmap.ipp \
     include/bitcoin/database/impl/query/navigate/navigate_natural.ipp \
     include/bitcoin/database/impl/query/navigate/navigate_reverse.ipp
+
+include_bitcoin_database_impl_storedir = ${includedir}/bitcoin/database/impl/store
+include_bitcoin_database_impl_store_HEADERS = \
+    include/bitcoin/database/impl/store/store.ipp \
+    include/bitcoin/database/impl/store/store_backup.ipp \
+    include/bitcoin/database/impl/store/store_close.ipp \
+    include/bitcoin/database/impl/store/store_create.ipp \
+    include/bitcoin/database/impl/store/store_dump.ipp \
+    include/bitcoin/database/impl/store/store_open.ipp \
+    include/bitcoin/database/impl/store/store_open_load.ipp \
+    include/bitcoin/database/impl/store/store_prune.ipp \
+    include/bitcoin/database/impl/store/store_reload.ipp \
+    include/bitcoin/database/impl/store/store_report.ipp \
+    include/bitcoin/database/impl/store/store_restore.ipp \
+    include/bitcoin/database/impl/store/store_snapshot.ipp \
+    include/bitcoin/database/impl/store/store_unload_close.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
 include_bitcoin_database_locks_HEADERS = \

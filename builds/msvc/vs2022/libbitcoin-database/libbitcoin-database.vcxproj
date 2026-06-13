@@ -268,7 +268,19 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\sequences.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\signatures.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\sizes.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\store.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_backup.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_close.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_create.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_dump.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_open.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_open_load.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_prune.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_reload.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_report.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_restore.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_snapshot.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_unload_close.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

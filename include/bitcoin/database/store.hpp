@@ -44,21 +44,14 @@ public:
     typedef std::function<void(const code&, table_t)> error_handler;
     typedef std::shared_lock<std::shared_timed_mutex> transactor;
 
-    // event and table names, useful for internal logging.
-    static const std::unordered_map<event_t, std::string> events;
-    static const std::unordered_map<table_t, std::string> tables;
+    /// Event and table names, useful for internal logging.
+    using event_map = std::unordered_map<event_t, std::string>;
+    using table_map = std::unordered_map<table_t, std::string>;
+    static const event_map events;
+    static const table_map tables;
 
     /// Construct a store from settings.
     store(const settings& config) NOEXCEPT;
-
-    /// Properties
-    /// -----------------------------------------------------------------------
-
-    /// Allow full throttle concurrent query execution (may use 100% CPU).
-    bool turbo() const NOEXCEPT;
-
-    /// Depth of electrum merkle tree interval caching.
-    uint8_t interval_depth() const NOEXCEPT;
 
     /// Methods.
     /// -----------------------------------------------------------------------
@@ -81,14 +74,20 @@ public:
     /// Continue from a disk full condition (from unloaded, leaves loaded).
     code reload(const event_handler& handler) NOEXCEPT;
 
+    /// Dump all error/full conditions to handler.
+    void report(const error_handler& handler) const NOEXCEPT;
+
     /// Unload and close the set of tables, clear locks.
     code close(const event_handler& handler) NOEXCEPT;
 
     /// Context.
     /// -----------------------------------------------------------------------
 
-    /// Get a transactor object.
-    const transactor get_transactor() NOEXCEPT;
+    /// Allows full throttle concurrent query execution (may use 100% CPU).
+    bool turbo() const NOEXCEPT;
+
+    /// Depth of electrum merkle tree interval caching.
+    uint8_t interval_depth() const NOEXCEPT;
 
     /// Determine if the store is non-empty/initialized.
     bool is_dirty() const NOEXCEPT;
@@ -100,22 +99,24 @@ public:
     /// Get the space required to clear the disk full condition.
     size_t get_space() const NOEXCEPT;
 
-    /// Dump all error/full conditions to handler.
-    void report(const error_handler& handler) const NOEXCEPT;
+    /// Get a transactor object.
+    const transactor get_transactor() NOEXCEPT;
 
 protected:
     using path = std::filesystem::path;
 
+    /// Method helpers.
     code open_load(const event_handler& handler) NOEXCEPT;
     code unload_close(const event_handler& handler) NOEXCEPT;
     code backup(const event_handler& handler, bool prune=false) NOEXCEPT;
     code dump(const path& folder, const event_handler& handler) NOEXCEPT;
 
-    // These are thread safe.
+    // This is thread safe.
     const settings& configuration_;
 
     /// Archives.
     /// -----------------------------------------------------------------------
+    // These are thread safe.
 
     // record hashmap
     Storage header_head_;
@@ -218,6 +219,9 @@ protected:
     stopper dirty_{ true };
 
 private:
+    static constexpr bool random = true;
+    static constexpr bool sequential = false;
+
     static inline path head(const path& folder, const std::string& name) NOEXCEPT
     {
         return folder / (name + schema::ext::head);
@@ -272,7 +276,27 @@ public:
 #define TEMPLATE template <typename Storage, if_base_of<storage, Storage> If>
 #define CLASS store<Storage, If>
 
-#include <bitcoin/database/impl/store.ipp>
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+#include <bitcoin/database/impl/store/store.ipp>
+
+// Public methods.
+#include <bitcoin/database/impl/store/store_create.ipp>
+#include <bitcoin/database/impl/store/store_open.ipp>
+#include <bitcoin/database/impl/store/store_prune.ipp>
+#include <bitcoin/database/impl/store/store_snapshot.ipp>
+#include <bitcoin/database/impl/store/store_restore.ipp>
+#include <bitcoin/database/impl/store/store_reload.ipp>
+#include <bitcoin/database/impl/store/store_report.ipp>
+#include <bitcoin/database/impl/store/store_close.ipp>
+
+// Protected methods.
+#include <bitcoin/database/impl/store/store_open_load.ipp>
+#include <bitcoin/database/impl/store/store_unload_close.ipp>
+#include <bitcoin/database/impl/store/store_backup.ipp>
+#include <bitcoin/database/impl/store/store_dump.ipp>
+
+BC_POP_WARNING()
 
 #undef CLASS
 #undef TEMPLATE

@@ -35,7 +35,7 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
     if (link.is_terminal())
         return false;
 
-    // Reserve-commit commit for deferred access.
+    // Reserve-commit to ensure disk full safety and deferred access.
     if (!store_.candidate.reserve(one))
         return false;
 
