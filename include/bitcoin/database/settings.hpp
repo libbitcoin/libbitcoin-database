@@ -42,6 +42,9 @@ struct BCD_API settings
     /// Enable concurrency in individual client-server queries.
     bool turbo{ false };
 
+    /// Mark blocks as unconfirmable (disorganize vs. stall).
+    bool mark_unconfirmable{ true };
+
     /// Depth of electrum merkle tree interval caching.
     uint16_t interval_depth{ max_uint8 };
 

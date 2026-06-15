@@ -86,6 +86,9 @@ public:
     /// Allows full throttle concurrent query execution (may use 100% CPU).
     bool turbo() const NOEXCEPT;
 
+    /// Mark blocks as unconfirmable (disorganize vs. stall), configuration.
+    bool mark_unconfirmable() const NOEXCEPT;
+
     /// Depth of electrum merkle tree interval caching.
     uint8_t interval_depth() const NOEXCEPT;
 

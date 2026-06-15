@@ -239,6 +239,12 @@ bool CLASS::turbo() const NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::mark_unconfirmable() const NOEXCEPT
+{
+    return configuration_.mark_unconfirmable;
+}
+
+TEMPLATE
 uint8_t CLASS::interval_depth() const NOEXCEPT
 {
     // Configuration uses uint16_t because of boost parser bug for single byte.
