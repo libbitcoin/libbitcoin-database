@@ -96,4 +96,28 @@ BOOST_AUTO_TEST_CASE(ecdsa__get__two__expected)
     BOOST_REQUIRE(out == record2);
 }
 
+BOOST_AUTO_TEST_CASE(ecdsa__truncate__from_two__expected)
+{
+    auto head = expected_head;
+    auto body = expected_body;
+    test::chunk_storage head_store{ head };
+    test::chunk_storage body_store{ body };
+    table::ecdsa instance{ head_store, body_store };
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
+
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE(instance.truncate(1));
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+
+    table::ecdsa::record out{};
+    BOOST_REQUIRE(!instance.get(1u, out));
+    BOOST_REQUIRE(instance.get(0u, out));
+    BOOST_REQUIRE(out == record1);
+
+    BOOST_REQUIRE(instance.truncate(0));
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE(!instance.get(0u, out));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

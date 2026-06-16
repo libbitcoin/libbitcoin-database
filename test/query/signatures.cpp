@@ -22,4 +22,26 @@
 
 BOOST_FIXTURE_TEST_SUITE(query_signatures_tests, test::directory_setup_fixture)
 
+BOOST_AUTO_TEST_CASE(query__verify_ecdsa_signatures__empty__empty)
+{
+    const settings configuration{};
+    test::chunk_store store{ configuration };
+    test::query_accessor query{ store };
+
+    header_links links{};
+    BOOST_REQUIRE(query.verify_ecdsa_signatures(links));
+    BOOST_REQUIRE(links.empty());
+}
+
+BOOST_AUTO_TEST_CASE(query__verify_schnorr_signatures__empty__empty)
+{
+    const settings configuration{};
+    test::chunk_store store{ configuration };
+    test::query_accessor query{ store };
+
+    header_links links{};
+    BOOST_REQUIRE(query.verify_schnorr_signatures(links));
+    BOOST_REQUIRE(links.empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
