@@ -582,13 +582,11 @@ public:
     bool set_signatures(const threshold& group, size_t set,
         const header_link& link) NOEXCEPT;
 
-    // TODO:
-    bool purge_signatures() NOEXCEPT { return {}; };
-    bool purge_ecdsa_signatures() NOEXCEPT { return {}; };
-    bool purge_schnorr_signatures() NOEXCEPT { return {}; };
-    ////bool verify_signatures(header_links& ) NOEXCEPT { return {}; };
-    bool verify_ecdsa_signatures(header_links&) NOEXCEPT { return {}; };
-    bool verify_schnorr_signatures(header_links&) NOEXCEPT { return {}; };
+    /// Signature verification.
+    bool purge_ecdsa_signatures() NOEXCEPT;
+    bool purge_schnorr_signatures() NOEXCEPT;
+    bool verify_ecdsa_signatures(header_links&) NOEXCEPT;
+    bool verify_schnorr_signatures(header_links&) NOEXCEPT;
 
     /// Confirmation.
     /// -----------------------------------------------------------------------

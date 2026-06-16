@@ -62,7 +62,7 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
             {
                 // zeroize table body, set logical body count to zero.
                 handler(event_t::prune_table, table_t::prevout_body);
-                if (!prevout_body_.truncate(zero))
+                if (!prevout_body_.truncate(0))
                 {
                     ec = error::prune_table;
                 }
