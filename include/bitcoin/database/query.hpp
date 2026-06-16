@@ -582,6 +582,10 @@ public:
     bool set_signatures(const threshold& group, size_t set,
         const header_link& link) NOEXCEPT;
 
+    // TODO:
+    bool purge_signatures() NOEXCEPT { return {}; };
+    bool verify_signatures(header_links& ) NOEXCEPT { return {}; };
+
     /// Confirmation.
     /// -----------------------------------------------------------------------
     /// These are not used in consensus confirmation.
