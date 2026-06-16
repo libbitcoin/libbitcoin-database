@@ -584,7 +584,11 @@ public:
 
     // TODO:
     bool purge_signatures() NOEXCEPT { return {}; };
-    bool verify_signatures(header_links& ) NOEXCEPT { return {}; };
+    bool purge_ecdsa_signatures() NOEXCEPT { return {}; };
+    bool purge_schnorr_signatures() NOEXCEPT { return {}; };
+    ////bool verify_signatures(header_links& ) NOEXCEPT { return {}; };
+    bool verify_ecdsa_signatures(header_links&) NOEXCEPT { return {}; };
+    bool verify_schnorr_signatures(header_links&) NOEXCEPT { return {}; };
 
     /// Confirmation.
     /// -----------------------------------------------------------------------
