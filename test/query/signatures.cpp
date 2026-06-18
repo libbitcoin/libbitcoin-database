@@ -84,21 +84,24 @@ BOOST_AUTO_TEST_CASE(query__verify_ecdsa_signatures__various__expected_links)
     test::query_accessor query{ store };
     constexpr auto expected1 = 42u;
     constexpr auto expected2 = 24u;
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 42));
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 42));
+    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 1));
+    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 2));
     BOOST_REQUIRE(query.set_signature(sighash_bad,   ecdsa_compressed, ecdsa_signature, expected1));
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 42));
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 42));
+    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 3));
+    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 4));
     BOOST_REQUIRE(query.set_signature(sighash_bad,   ecdsa_compressed, ecdsa_signature, expected2));
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 42));
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 42));
+    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 5));
+    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 6));
 
     header_links links{};
     BOOST_REQUIRE_EQUAL(query.ecdsa_records(), 8u);
     BOOST_REQUIRE(query.verify_ecdsa_signatures(links));
     BOOST_REQUIRE_EQUAL(links.size(), 2u);
-    BOOST_REQUIRE_EQUAL(links.front(), expected1);
-    BOOST_REQUIRE_EQUAL(links.back(), expected2);
+
+    // Order is not guaranteed.
+    const auto back = links.back();
+    const auto front = links.front();
+    BOOST_REQUIRE((front == expected1 && back == expected2) || (front == expected2 && back == expected1));
 }
 
 // schnorr
@@ -159,21 +162,24 @@ BOOST_AUTO_TEST_CASE(query__verify_schnorr_signatures__various__expected_links)
     test::query_accessor query{ store };
     constexpr auto expected1 = 42u;
     constexpr auto expected2 = 24u;
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 1));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 2));
     BOOST_REQUIRE(query.set_signature(sighash_bad,     schnorr_xonly, schnorr_signature, expected1));
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 3));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 4));
     BOOST_REQUIRE(query.set_signature(sighash_bad,     schnorr_xonly, schnorr_signature, expected2));
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 5));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 6));
 
     header_links links{};
     BOOST_REQUIRE_EQUAL(query.schnorr_records(), 8u);
     BOOST_REQUIRE(query.verify_schnorr_signatures(links));
     BOOST_REQUIRE_EQUAL(links.size(), 2u);
-    BOOST_REQUIRE_EQUAL(links.front(), expected1);
-    BOOST_REQUIRE_EQUAL(links.back(), expected2);
+
+    // Order is not guaranteed.
+    const auto back = links.back();
+    const auto front = links.front();
+    BOOST_REQUIRE((front == expected1 && back == expected2) || (front == expected2 && back == expected1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
