@@ -26,25 +26,29 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-bool CLASS::verify_ecdsa_signatures(header_links& links) NOEXCEPT
+bool CLASS::verify_ecdsa_signatures(const stopper& cancel,
+    header_links& links) NOEXCEPT
 {
+    // False return only implies canceled.
     using batch = system::ecdsa::batch;
     const auto count = store_.ecdsa.count().value;
     const auto ptr = store_.ecdsa.get_memory();
     const auto rows = system::pointer_cast<const batch>(ptr->data());
-    links = batch::verify({ rows, count }, store_.turbo());
-    return true;
+    links = batch::verify(cancel, { rows, count });
+    return !cancel;
 }
 
 TEMPLATE
-bool CLASS::verify_schnorr_signatures(header_links& links) NOEXCEPT
+bool CLASS::verify_schnorr_signatures(const stopper& cancel,
+    header_links& links) NOEXCEPT
 {
+    // False return only implies canceled.
     using batch = system::schnorr::batch;
     const auto count = store_.schnorr.count().value;
     const auto ptr = store_.schnorr.get_memory();
     const auto rows = system::pointer_cast<const batch>(ptr->data());
-    links = batch::verify({ rows, count }, store_.turbo());
-    return true;
+    links = batch::verify(cancel, { rows, count });
+    return !cancel;
 }
 
 // setters
