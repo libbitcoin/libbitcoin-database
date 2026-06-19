@@ -58,7 +58,6 @@ using index = table::transaction::ix::integer;
 /// Common std aliases.
 /// ---------------------------------------------------------------------------
 
-using stopper = std::atomic_bool;
 using hash_option = std::optional<hash_digest>;
 
 /// Common system aliases.

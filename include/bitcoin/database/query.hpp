@@ -585,8 +585,8 @@ public:
     /// Signature verification.
     bool purge_ecdsa_signatures() NOEXCEPT;
     bool purge_schnorr_signatures() NOEXCEPT;
-    bool verify_ecdsa_signatures(header_links&) NOEXCEPT;
-    bool verify_schnorr_signatures(header_links&) NOEXCEPT;
+    bool verify_ecdsa_signatures(const stopper& cancel,header_links&) NOEXCEPT;
+    bool verify_schnorr_signatures(const stopper& cancel, header_links&) NOEXCEPT;
 
     /// Confirmation.
     /// -----------------------------------------------------------------------
