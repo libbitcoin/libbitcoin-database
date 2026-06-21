@@ -268,12 +268,14 @@ struct ecdsa
         system::hash_size +
         system::ec_compressed_size +
         system::ec_signature_size +
+        one +      // [m|n] in one byte (m in first row, n in second).
+        count_ +   // input (within block) correlation counter.
         schema::header::pk;
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
-    static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 132u);
-    static_assert(minrow == 132u);
+    ////static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 135u);
+    static_assert(minrow == 135u);
     static_assert(link::size == 4u);
 };
 
@@ -286,12 +288,15 @@ struct schnorr
         system::hash_size +
         system::ec_xonly_size +
         system::ec_signature_size +
+        one +      // category (see system::chain::signatures::category).
+        two +      // [min|max] in two bytes (min in first row, max in second).
+        count_ +   // input (within block) correlation counter.
         schema::header::pk;
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
-    static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 131u);
-    static_assert(minrow == 131u);
+    ////static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 136u);
+    static_assert(minrow == 136u);
     static_assert(link::size == 4u);
 };
 
