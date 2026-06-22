@@ -85,6 +85,7 @@ struct ecdsa
         header::integer header_fk{};
     };
 
+    /// Writer for one row single-sig (0|0 packed in one row, 1-of-1).
     struct put_single_ref
       : public schema::ecdsa
     {
@@ -106,7 +107,6 @@ struct ecdsa
             return sink;
         }
 
-        /// pair: m (row 0, for all), n (row 1, for n > 1).
         const system::hash_digest& digest;
         const system::ec_compressed& point;
         const system::ec_signature& signature;
@@ -114,11 +114,12 @@ struct ecdsa
         header::integer header_fk{};
     };
 
-    /// Writer for one row multisig, writes as if a single sig.
-    /// Writer for multisig groups (denormalized m|n in first two rows).
+    /// Writer for 1-of-1 multisig (0|0 packed in one row).
+    /// Writer for multisig groups (sig|key packed in each row).
     struct put_multiple_ref
       : public schema::ecdsa
     {
+        // Terminal count fails the write attempt, so to_data() is guarded.
         inline link count() const NOEXCEPT
         {
             using namespace system;
@@ -132,7 +133,6 @@ struct ecdsa
             if (is_multiply_overflow(m, sum))
                 return {};
 
-            // Terminal count fails the write attempt, so to_data() is guarded.
             return possible_narrow_cast<link::integer>(m * sum);
         }
 
