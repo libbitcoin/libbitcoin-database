@@ -572,24 +572,35 @@ public:
     bool set_tx_connected(const tx_link& link, const context& ctx,
         uint64_t fee, size_t sigops) NOEXCEPT;
 
-    /// Set signature (ecdsa/schnorr/multisig) table entry.
+    /// Signature Batching.
+    /// -----------------------------------------------------------------------
+
+    /// Set single ecdsa signature row.
     bool set_signature(const hash_digest& digest, const ec_compressed& point,
         const ec_signature& signature, uint16_t id,
         const header_link& link) NOEXCEPT;
+
+    /// Set single schnorr signature row.
     bool set_signature(const hash_digest& digest, const ec_xonly& point,
         const ec_signature& signature, uint16_t id,
         const header_link& link) NOEXCEPT;
+
+    /// Set ecdsa multisig rows.
     bool set_signatures(const hash_digest& digest, const ec_compresseds& keys,
         const ec_signatures& sigs, uint16_t id,
         const header_link& link) NOEXCEPT;
+
+    /// Set schnorr threshold signature rows.
     bool set_signatures(const threshold& batch, uint16_t id,
         const header_link& link) NOEXCEPT;
 
-    /// Signature verification.
+    /// Verify all signatures in table.
+    bool verify_ecdsa_signatures(const stopper& cancel, header_links&) NOEXCEPT;
+    bool verify_schnorr_signatures(const stopper& cancel, header_links&) NOEXCEPT;
+
+    /// Purge all signatures in table.
     bool purge_ecdsa_signatures() NOEXCEPT;
     bool purge_schnorr_signatures() NOEXCEPT;
-    bool verify_ecdsa_signatures(const stopper& cancel,header_links&) NOEXCEPT;
-    bool verify_schnorr_signatures(const stopper& cancel, header_links&) NOEXCEPT;
 
     /// Confirmation.
     /// -----------------------------------------------------------------------

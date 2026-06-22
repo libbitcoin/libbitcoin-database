@@ -184,7 +184,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\txs.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\duplicate.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\ecdsa.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\multisig.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevout.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\schnorr.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp" />
