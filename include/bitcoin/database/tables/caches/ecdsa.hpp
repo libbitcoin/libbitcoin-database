@@ -93,7 +93,7 @@ struct ecdsa
             return 1;
         }
 
-        /// Writer used for single-sig row, should always write pair = 1.
+        /// Writer used for single-sig row, should always write pair = 0.
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             sink.write_bytes(digest);
