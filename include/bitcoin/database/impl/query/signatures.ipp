@@ -74,92 +74,81 @@ bool CLASS::purge_schnorr_signatures() NOEXCEPT
 
 TEMPLATE
 bool CLASS::set_signature(const hash_digest& digest, const ec_compressed& point,
-    const ec_signature& signature, const header_link& link) NOEXCEPT
+    const ec_signature& signature, uint16_t id, const header_link& link) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.ecdsa.put(table::ecdsa::record
+    return store_.ecdsa.put(table::ecdsa::put_single_ref
     {
         {},
         digest,
         point,
         signature,
+        id,
         link
     });
     // ========================================================================
-
-    return true;
 }
 
 TEMPLATE
 bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
-    const ec_signature& signature, const header_link& link) NOEXCEPT
+    const ec_signature& signature, uint16_t id, const header_link& link) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.schnorr.put(table::schnorr::record
+    return store_.schnorr.put(table::schnorr::put_single_ref
     {
         {},
         digest,
         point,
         signature,
+        id,
         link
     });
     // ========================================================================
-
-    return true;
 }
 
 TEMPLATE
-bool CLASS::set_signatures(const hash_digest&, const ec_compresseds&,
-    const ec_signatures&, size_t, const header_link&) NOEXCEPT
+bool CLASS::set_signatures(const hash_digest& digest,
+    const ec_compresseds& keys, const ec_signatures& sigs, uint16_t id,
+    const header_link& link) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // TODO: flatten via store_.ecdsa.put();
-
-    ////// Clean single allocation failure (e.g. disk full).
-    ////return store_.multisig.put(table::multisig::put_ref
-    ////{
-    ////    {},
-    ////    digest,
-    ////    keys,
-    ////    sigs,
-    ////    group,
-    ////    link
-    ////});
+    // Clean single allocation failure (e.g. disk full).
+    return store_.ecdsa.put(table::ecdsa::put_multiple_ref
+    {
+        {},
+        digest,
+        keys,
+        sigs,
+        id,
+        link
+    });
     // ========================================================================
-
-    return true;
 }
 
 TEMPLATE
-bool CLASS::set_signatures(const threshold& , size_t ,
-    const header_link& ) NOEXCEPT
+bool CLASS::set_signatures(const threshold& batch, uint16_t id,
+    const header_link& link) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // TODO: flatten via store_.schnorr.put();
-
-    ////// Clean single allocation failure (e.g. disk full).
-    ////return store_.multisig.put(table::multisig::put_ref
-    ////{
-    ////    {},
-    ////    digest,
-    ////    keys,
-    ////    sigs,
-    ////    group,
-    ////    link
-    ////});
+    // Clean single allocation failure (e.g. disk full).
+    return store_.schnorr.put(table::schnorr::put_multiple_ref
+    {
+        {},
+        batch,
+        id,
+        link
+    });
     // ========================================================================
-
-    return true;
 }
 
 } // namespace database

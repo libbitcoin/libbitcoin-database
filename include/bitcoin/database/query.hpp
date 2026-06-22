@@ -574,12 +574,15 @@ public:
 
     /// Set signature (ecdsa/schnorr/multisig) table entry.
     bool set_signature(const hash_digest& digest, const ec_compressed& point,
-        const ec_signature& signature, const header_link& link) NOEXCEPT;
+        const ec_signature& signature, uint16_t id,
+        const header_link& link) NOEXCEPT;
     bool set_signature(const hash_digest& digest, const ec_xonly& point,
-        const ec_signature& signature, const header_link& link) NOEXCEPT;
+        const ec_signature& signature, uint16_t id,
+        const header_link& link) NOEXCEPT;
     bool set_signatures(const hash_digest& digest, const ec_compresseds& keys,
-        const ec_signatures& sigs, size_t set, const header_link& link) NOEXCEPT;
-    bool set_signatures(const threshold& group, size_t set,
+        const ec_signatures& sigs, uint16_t id,
+        const header_link& link) NOEXCEPT;
+    bool set_signatures(const threshold& batch, uint16_t id,
         const header_link& link) NOEXCEPT;
 
     /// Signature verification.

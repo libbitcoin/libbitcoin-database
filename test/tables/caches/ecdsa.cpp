@@ -29,7 +29,9 @@ const table::ecdsa::record record1
     base16_hash("1111111111111111111111111111111111111111111111111111111111111111"),
     base16_array("222222222222222222222222222222222222222222222222222222222222222222"),
     base16_array("33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"),
-    0x00345678_u32
+    0x78,           // pair
+    0x5678_u16,     // group (16-bit)
+    0x00345678_u32  // header_fk (3 bytes used)
 };
 
 const table::ecdsa::record record2
@@ -38,24 +40,31 @@ const table::ecdsa::record record2
     base16_hash("4444444444444444444444444444444444444444444444444444444444444444"),
     base16_array("555555555555555555555555555555555555555555555555555555555555555555"),
     base16_array("66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"),
-    0x00cdef12_u32
+    0x12,           // pair
+    0xcdef_u16,     // group
+    0x00cdef12_u32  // header_fk
 };
 
 const auto expected_head = base16_chunk("00000000");
-const auto closed_head = base16_chunk("02000000");
+const auto closed_head   = base16_chunk("02000000");
+
 const auto expected_body = base16_chunk
 (
     // record 1
     "1111111111111111111111111111111111111111111111111111111111111111"
     "222222222222222222222222222222222222222222222222222222222222222222"
     "33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
-    "785634"
+    "78"            // pair
+    "7856"          // group (little-endian, 2 bytes)
+    "785634"        // header_fk (3 bytes)
 
     // record 2
     "4444444444444444444444444444444444444444444444444444444444444444"
     "555555555555555555555555555555555555555555555555555555555555555555"
     "66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"
-    "12efcd"
+    "12"            // pair
+    "efcd"          // group
+    "12efcd"        // header_fk
 );
 
 BOOST_AUTO_TEST_CASE(ecdsa__put__two__expected)
@@ -86,8 +95,6 @@ BOOST_AUTO_TEST_CASE(ecdsa__get__two__expected)
     test::chunk_storage head_store{ head };
     test::chunk_storage body_store{ body };
     table::ecdsa instance{ head_store, body_store };
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
     table::ecdsa::record out{};
     BOOST_REQUIRE(instance.get(0u, out));
@@ -103,8 +110,6 @@ BOOST_AUTO_TEST_CASE(ecdsa__truncate__from_two__expected)
     test::chunk_storage head_store{ head };
     test::chunk_storage body_store{ body };
     table::ecdsa instance{ head_store, body_store };
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE(instance.truncate(1));
