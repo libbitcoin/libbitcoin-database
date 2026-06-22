@@ -268,7 +268,7 @@ struct ecdsa
         system::hash_size +
         system::ec_compressed_size +
         system::ec_signature_size +
-        one +      // [m|n] in one byte (m in first row, n in second).
+        one +      // [m|n] packed 16x16 in one byte in first row.
         count_ +   // input (within block) correlation counter.
         schema::header::pk;
     static constexpr size_t minrow = minsize;
@@ -288,7 +288,7 @@ struct schnorr
         system::hash_size +
         system::ec_xonly_size +
         system::ec_signature_size +
-        one +      // category (see system::chain::signatures::category).
+        one +      // to_value(system::chain::signatures::category).
         two +      // [min|max] in two bytes (min in first row, max in second).
         count_ +   // input (within block) correlation counter.
         schema::header::pk;
@@ -297,26 +297,6 @@ struct schnorr
     ////static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 136u);
     static_assert(minrow == 136u);
-    static_assert(link::size == 4u);
-};
-
-// array
-struct multisig
-{
-    static constexpr size_t pk = schema::outs::pk;
-    using link = schema::outs::link;
-    static constexpr size_t minsize =
-        system::hash_size +
-        system::ec_compressed_size +
-        system::ec_signature_size +
-        one +       // [m|n] pairing merged to one byte (max 16).
-        count_ +    // input (within block) correlation counter.
-        schema::header::pk;
-    static constexpr size_t minrow = minsize;
-    static constexpr size_t size = minsize;
-    static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 135u);
-    static_assert(minrow == 135u);
     static_assert(link::size == 4u);
 };
 
