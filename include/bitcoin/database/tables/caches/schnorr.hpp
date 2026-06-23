@@ -174,6 +174,7 @@ struct schnorr
                     header_fk);
             }
 
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
 

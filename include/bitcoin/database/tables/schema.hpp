@@ -298,7 +298,7 @@ struct ecdsa
         system::hash_size +
         system::ec_compressed_size +
         system::ec_signature_size +
-        one +      // [m|n] packed 16x16 in one byte in first row.
+        one +      // [m|n] packed 16x16 in one byte in 1st row.
         count_ +   // input (within block) correlation counter.
         schema::header::pk;
     static constexpr size_t minrow = minsize;
@@ -318,8 +318,8 @@ struct schnorr
         system::hash_size +
         system::ec_xonly_size +
         system::ec_signature_size +
-        one +      // to_value(system::chain::signatures::category).
-        two +      // [min|max] in two bytes (min in first row, max in second).
+        one +      // to_value(system::chain::signatures::category), 1st row.
+        two +      // [min][max] two bytes each (min 1st row, max 2nd row).
         count_ +   // input (within block) correlation counter.
         schema::header::pk;
     static constexpr size_t minrow = minsize;
