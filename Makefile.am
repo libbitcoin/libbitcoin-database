@@ -139,6 +139,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/caches/ecdsa.cpp \
     test/tables/caches/prevout.cpp \
     test/tables/caches/schnorr.cpp \
+    test/tables/caches/silent.cpp \
     test/tables/caches/validated_bk.cpp \
     test/tables/caches/validated_tx.cpp \
     test/tables/indexes/height.cpp \
@@ -332,6 +333,7 @@ include_bitcoin_database_tables_caches_HEADERS = \
     include/bitcoin/database/tables/caches/ecdsa.hpp \
     include/bitcoin/database/tables/caches/prevout.hpp \
     include/bitcoin/database/tables/caches/schnorr.hpp \
+    include/bitcoin/database/tables/caches/silent.hpp \
     include/bitcoin/database/tables/caches/validated_bk.hpp \
     include/bitcoin/database/tables/caches/validated_tx.hpp
 

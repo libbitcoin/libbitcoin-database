@@ -35,6 +35,7 @@ constexpr size_t count_ = 2;    // txs/block count, inputs/block count.
 constexpr size_t index = 3;     // input/output index.
 constexpr size_t sigops = 3;    // signature op count.
 constexpr size_t flags = 4;     // fork flags.
+constexpr size_t prefix = 8;    // silent payment output prefix.
 constexpr size_t hash = system::hash_size;
 
 /// Primary keys.
@@ -259,7 +260,36 @@ struct strong_tx
 /// Cache tables.
 /// ---------------------------------------------------------------------------
 
+#define TABLE_COLUMN(name, bytes) \
+struct name \
+{ \
+    static constexpr size_t pk = schema::outs::pk; \
+    using link = schema::outs::link; \
+    static constexpr size_t minsize = bytes; \
+    static constexpr size_t minrow = minsize; \
+    static constexpr size_t size = minsize; \
+}
+
 // array
+TABLE_COLUMN(ecdsa_digest, system::hash_size);
+TABLE_COLUMN(ecdsa_compressed, system::ec_compressed_size);
+TABLE_COLUMN(ecdsa_signature, system::ec_signature_size);
+TABLE_COLUMN(ecdsa_correlate, one + count_ + schema::header::pk);
+
+// array
+TABLE_COLUMN(schnorr_digest, system::hash_size);
+TABLE_COLUMN(schnorr_xonly, system::ec_xonly_size);
+TABLE_COLUMN(schnorr_signature, system::ec_signature_size);
+TABLE_COLUMN(schnorr_correlate, one + two + count_ + schema::header::pk);
+
+// array
+TABLE_COLUMN(silent_prefix, schema::prefix);
+TABLE_COLUMN(silent_compressed, system::ec_compressed_size);
+TABLE_COLUMN(silent_correlate, schema::transaction::pk);
+
+#undef TABLE_COLUMN
+
+// array, deprecated
 struct ecdsa
 {
     static constexpr size_t pk = schema::outs::pk;
@@ -268,7 +298,7 @@ struct ecdsa
         system::hash_size +
         system::ec_compressed_size +
         system::ec_signature_size +
-        one +      // [m|n] packed 16x16 in one byte in first row.
+        one +      // [m|n] packed 16x16 in one byte in 1st row.
         count_ +   // input (within block) correlation counter.
         schema::header::pk;
     static constexpr size_t minrow = minsize;
@@ -279,7 +309,7 @@ struct ecdsa
     static_assert(link::size == 4u);
 };
 
-// array
+// array, deprecated
 struct schnorr
 {
     static constexpr size_t pk = schema::outs::pk;
@@ -288,8 +318,8 @@ struct schnorr
         system::hash_size +
         system::ec_xonly_size +
         system::ec_signature_size +
-        one +      // to_value(system::chain::signatures::category).
-        two +      // [min|max] in two bytes (min in first row, max in second).
+        one +      // to_value(system::chain::signatures::category), 1st row.
+        two +      // [min][max] two bytes each (min 1st row, max 2nd row).
         count_ +   // input (within block) correlation counter.
         schema::header::pk;
     static constexpr size_t minrow = minsize;
@@ -297,6 +327,23 @@ struct schnorr
     ////static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 136u);
     static_assert(minrow == 136u);
+    static_assert(link::size == 4u);
+};
+
+// array, deprecated
+struct silent
+{
+    static constexpr size_t pk = schema::outs::pk;
+    using link = schema::outs::link;
+    static constexpr size_t minsize =
+        schema::prefix +
+        system::ec_compressed_size +
+        schema::transaction::pk;
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    ////static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 45u);
+    static_assert(minrow == 45u);
     static_assert(link::size == 4u);
 };
 
