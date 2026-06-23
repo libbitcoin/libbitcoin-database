@@ -120,6 +120,10 @@
     <Import Project="$(ProjectDir)..\..\properties\Output.props" />
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLIB|x64'">
+    <Linkage-secp256k1 />
+    <Linkage-ultrafast>static</Linkage-ultrafast>
+  </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\define.cpp" />
     <ClCompile Include="..\..\..\..\src\error.cpp" />

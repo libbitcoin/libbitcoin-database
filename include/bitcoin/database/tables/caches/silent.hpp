@@ -73,7 +73,7 @@ struct silent
         tx::integer tx_fk{};
     };
 
-    struct put_ref
+    struct records
       : public schema::silent
     {
         inline link count() const NOEXCEPT
