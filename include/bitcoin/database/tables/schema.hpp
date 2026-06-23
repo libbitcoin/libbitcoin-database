@@ -260,7 +260,36 @@ struct strong_tx
 /// Cache tables.
 /// ---------------------------------------------------------------------------
 
+#define TABLE_COLUMN(name, bytes) \
+struct name \
+{ \
+    static constexpr size_t pk = schema::outs::pk; \
+    using link = schema::outs::link; \
+    static constexpr size_t minsize = bytes; \
+    static constexpr size_t minrow = minsize; \
+    static constexpr size_t size = minsize; \
+}
+
 // array
+TABLE_COLUMN(ecdsa_digest, system::hash_size);
+TABLE_COLUMN(ecdsa_compressed, system::ec_compressed_size);
+TABLE_COLUMN(ecdsa_signature, system::ec_signature_size);
+TABLE_COLUMN(ecdsa_correlate, one + count_ + schema::header::pk);
+
+// array
+TABLE_COLUMN(schnorr_digest, system::hash_size);
+TABLE_COLUMN(schnorr_xonly, system::ec_xonly_size);
+TABLE_COLUMN(schnorr_signature, system::ec_signature_size);
+TABLE_COLUMN(schnorr_correlate, one + two + count_ + schema::header::pk);
+
+// array
+TABLE_COLUMN(silent_prefix, schema::prefix);
+TABLE_COLUMN(silent_compressed, system::ec_compressed_size);
+TABLE_COLUMN(silent_correlate, schema::transaction::pk);
+
+#undef TABLE_COLUMN
+
+// array, deprecated
 struct ecdsa
 {
     static constexpr size_t pk = schema::outs::pk;
@@ -280,7 +309,7 @@ struct ecdsa
     static_assert(link::size == 4u);
 };
 
-// array
+// array, deprecated
 struct schnorr
 {
     static constexpr size_t pk = schema::outs::pk;
