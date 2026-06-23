@@ -35,6 +35,7 @@ constexpr size_t count_ = 2;    // txs/block count, inputs/block count.
 constexpr size_t index = 3;     // input/output index.
 constexpr size_t sigops = 3;    // signature op count.
 constexpr size_t flags = 4;     // fork flags.
+constexpr size_t prefix = 8;    // silent payment output prefix.
 constexpr size_t hash = system::hash_size;
 
 /// Primary keys.
@@ -297,6 +298,23 @@ struct schnorr
     ////static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 136u);
     static_assert(minrow == 136u);
+    static_assert(link::size == 4u);
+};
+
+// array, deprecated
+struct silent
+{
+    static constexpr size_t pk = schema::outs::pk;
+    using link = schema::outs::link;
+    static constexpr size_t minsize =
+        schema::prefix +
+        system::ec_compressed_size +
+        schema::transaction::pk;
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    ////static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 45u);
+    static_assert(minrow == 45u);
     static_assert(link::size == 4u);
 };
 

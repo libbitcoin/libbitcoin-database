@@ -275,6 +275,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\schnorr.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\silent.hpp">
+      <Filter>include\bitcoin\database\tables\caches</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>

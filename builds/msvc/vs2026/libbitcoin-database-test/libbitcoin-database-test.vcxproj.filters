@@ -276,6 +276,9 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\schnorr.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\silent.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
