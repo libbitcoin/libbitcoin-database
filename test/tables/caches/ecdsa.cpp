@@ -125,4 +125,141 @@ BOOST_AUTO_TEST_CASE(ecdsa__truncate__from_two__expected)
     BOOST_REQUIRE(!instance.get(0u, out));
 }
 
+// ecdsa_digest
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(ecdsa_digest__put_ref__repeated_digest__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::ecdsa_digest instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    const auto expected = base16_chunk
+    (
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    );
+
+    constexpr auto digest = base16_hash("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+
+    using putter = table::ecdsa_digest::put_ref;
+    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, 1_size, digest }));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
+}
+
+// ecdsa_compressed
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(ecdsa_compressed__put_ref__selected_keys__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::ecdsa_compressed instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    const auto expected = base16_chunk
+    (
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    );
+
+    const system::ec_compresseds keys
+    {
+        base16_array("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+        base16_array("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+    };
+
+    using putter = table::ecdsa_compressed::put_ref;
+    BOOST_REQUIRE(instance.put(putter{ {}, keys, 1_size }));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
+}
+
+// ecdsa_signature
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(ecdsa_signature__put_ref__selected_sigs__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::ecdsa_signature instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    const auto expected = base16_chunk
+    (
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    );
+
+    const system::ec_signatures signatures
+    {
+        base16_array
+        (
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ),
+        base16_array
+        (
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        )
+    };
+
+    using putter = table::ecdsa_signature::put_ref;
+    BOOST_REQUIRE(instance.put(putter{ {}, 2_size, signatures }));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
+}
+
+// ecdsa_correlate (writer + reader)
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(ecdsa_correlate__put_ref__packed_pairs__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::ecdsa_correlate instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    const auto expected = base16_chunk
+    (
+        "00" "7856" "785634"   // pair 0|0
+        "01" "7856" "785634"   // pair 0|1
+        "02" "7856" "785634"   // pair 0|2
+    );
+
+    using putter = table::ecdsa_correlate::put_ref;
+    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, 1_size, 0x5678_u16, 0x00345678_u32 }));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
+}
+
+BOOST_AUTO_TEST_CASE(ecdsa_correlate__get__using_record__expected)
+{
+    auto head = base16_chunk("03000000");
+    auto body = base16_chunk
+    (
+        "00" "7856" "785634"   // pair 0|0
+        "01" "7856" "785634"   // pair 0|1
+        "10" "7856" "785634"   // pair 1|1
+    );
+
+    test::chunk_storage head_store{ head };
+    test::chunk_storage body_store{ body };
+    table::ecdsa_correlate instance{ head_store, body_store };
+
+    table::ecdsa_correlate::record out{};
+    BOOST_REQUIRE(instance.get(0u, out));
+    BOOST_REQUIRE_EQUAL(out.pair, 0x00);
+    BOOST_REQUIRE_EQUAL(out.group, 0x5678_u16);
+    BOOST_REQUIRE_EQUAL(out.header_fk, 0x00345678_u32);
+
+    BOOST_REQUIRE(instance.get(1u, out));
+    BOOST_REQUIRE_EQUAL(out.pair, 0x01);
+
+    BOOST_REQUIRE(instance.get(2u, out));
+    BOOST_REQUIRE_EQUAL(out.pair, 0x10);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
