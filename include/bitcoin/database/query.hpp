@@ -57,7 +57,11 @@ public:
     using ec_compressed = system::ec_compressed;
     using ec_signatures = system::ec_signatures;
     using ec_signature = system::ec_signature;
+    using ec_secret = system::ec_secret;
     using ec_xonly = system::ec_xonly;
+
+    /// Callback for long-running silent payment scan.
+    using silent_handler = std::function<void(const code&, const tx_link&)>;
 
     query(Store& store) NOEXCEPT;
 
@@ -572,8 +576,12 @@ public:
     bool set_tx_connected(const tx_link& link, const context& ctx,
         uint64_t fee, size_t sigops) NOEXCEPT;
 
-    /// Signature Batching.
+    /// Batching.
     /// -----------------------------------------------------------------------
+
+    /// Set silent payment rows.
+    bool set_silent(const std::vector<uint64_t>& prefixes,
+        const ec_compressed& compressed, const tx_link& link) NOEXCEPT;
 
     /// Set single ecdsa signature row.
     bool set_signature(const hash_digest& digest, const ec_compressed& point,
@@ -593,6 +601,13 @@ public:
     /// Set schnorr threshold signature rows.
     bool set_signatures(const threshold& batch, uint16_t id,
         const header_link& link) NOEXCEPT;
+
+    /// Scans the full silent payments table using the given scan private key.
+    /// Invokes callback for each candidate match with tx_link of match. Upon
+    /// cancellation or error returns associated code. Return indicates
+    /// completion of scan without store integrity error (cancel returns true).
+    bool scan_silent(const stopper& cancel, const ec_secret& scan_key,
+        const silent_handler& callback) NOEXCEPT;
 
     /// Verify all signatures in table.
     bool verify_ecdsa_signatures(const stopper& cancel, header_links&) NOEXCEPT;
@@ -954,6 +969,10 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/archive/wire_reader.ipp>
 #include <bitcoin/database/impl/query/archive/wire_writer.ipp>
 
+#include <bitcoin/database/impl/query/batch/ecdsa.ipp>
+#include <bitcoin/database/impl/query/batch/schnorr.ipp>
+#include <bitcoin/database/impl/query/batch/silent.ipp>
+
 #include <bitcoin/database/impl/query/consensus/consensus_block.ipp>
 #include <bitcoin/database/impl/query/consensus/consensus_chain_state.ipp>
 #include <bitcoin/database/impl/query/consensus/consensus_compact.ipp>
@@ -984,7 +1003,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/properties_tx.ipp>
 #include <bitcoin/database/impl/query/query.ipp>
 #include <bitcoin/database/impl/query/sequences.ipp>
-#include <bitcoin/database/impl/query/signatures.ipp>
 #include <bitcoin/database/impl/query/sizes.ipp>
 
 BC_POP_WARNING()
