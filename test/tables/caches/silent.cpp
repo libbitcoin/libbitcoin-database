@@ -26,29 +26,27 @@ using namespace system;
 const table::silent::record record1
 {
     {},
-    0x1122334455667788_u64, // prefix
+    0x1122334455667788_u64,
     base16_array("222222222222222222222222222222222222222222222222222222222222222222"),
-    0xabcdef12_u32          // tx_fk
+    0xabcdef12_u32
 };
 
 const table::silent::record record2
 {
     {},
-    0xabcdef0123456789_u64, // prefix
+    0xabcdef0123456789_u64,
     base16_array("444444444444444444444444444444444444444444444444444444444444444444"),
-    0x12345678_u32          // tx_fk
+    0x12345678_u32
 };
 
 const auto expected_head = base16_chunk("00000000");
-const auto closed_head   = base16_chunk("02000000");
+const auto closed_head = base16_chunk("02000000");
 const auto expected_body = base16_chunk
 (
-    // record 1
     "8877665544332211"
     "222222222222222222222222222222222222222222222222222222222222222222"
     "12efcdab"
 
-    // record 2
     "8967452301efcdab"
     "444444444444444444444444444444444444444444444444444444444444444444"
     "78563412"
@@ -88,6 +86,95 @@ BOOST_AUTO_TEST_CASE(silent__get__two__expected)
     BOOST_REQUIRE(out == record1);
     BOOST_REQUIRE(instance.get(1u, out));
     BOOST_REQUIRE(out == record2);
+}
+
+// silent_prefix
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(silent_prefix__put__multiple_prefixes__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::silent_prefix instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    const auto expected = base16_chunk
+    (
+        "1111111111111111"
+        "2222222222222222"
+        "3333333333333333"
+    );
+
+    const std::vector<uint64_t> prefixes
+    {
+        0x1111111111111111_u64,
+        0x2222222222222222_u64,
+        0x3333333333333333_u64
+    };
+
+    using putter = table::silent_prefix::put_ref;
+    BOOST_REQUIRE(instance.put(putter{ {}, prefixes }));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
+}
+
+// silent_compressed
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(silent_compressed__put__repeated_compressed__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::silent_compressed instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    const auto expected = base16_chunk
+    (
+        "111111111111111111111111111111111111111111111111111111111111111111"
+        "111111111111111111111111111111111111111111111111111111111111111111"
+    );
+
+    constexpr auto compressed = base16_array(
+        "111111111111111111111111111111111111111111111111111111111111111111");
+
+    using putter = table::silent_compressed::put_ref;
+    BOOST_REQUIRE(instance.put(putter{ {}, 2_size, compressed }));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
+}
+
+// silent_correlate (writer + reader)
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(silent_correlate__put__repeated_tx_fk__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::silent_correlate instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    const auto expected = base16_chunk("443322114433221144332211");
+
+    using putter = table::silent_correlate::records;
+    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, 0x11223344_u32 }));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
+}
+
+BOOST_AUTO_TEST_CASE(silent_correlate__get__using_record__expected)
+{
+    auto head = base16_chunk("03000000");
+    auto body = base16_chunk("44aa221144bb221144cc2211");
+    test::chunk_storage head_store{ head };
+    test::chunk_storage body_store{ body };
+    table::silent_correlate instance{ head_store, body_store };
+
+    table::silent_correlate::record out{};
+    BOOST_REQUIRE(instance.get(0u, out));
+    BOOST_REQUIRE_EQUAL(out.tx_fk, 0x1122aa44_u32);
+
+    BOOST_REQUIRE(instance.get(1u, out));
+    BOOST_REQUIRE_EQUAL(out.tx_fk, 0x1122bb44_u32);
+
+    BOOST_REQUIRE(instance.get(2u, out));
+    BOOST_REQUIRE_EQUAL(out.tx_fk, 0x1122cc44_u32);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

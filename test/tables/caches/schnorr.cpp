@@ -128,4 +128,168 @@ BOOST_AUTO_TEST_CASE(schnorr__truncate__from_two__expected)
     BOOST_REQUIRE(!instance.get(0u, out));
 }
 
+// schnorr_digest
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(schnorr_digest__put_ref__multiple_digests__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::schnorr_digest instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    const auto expected = base16_chunk
+    (
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    );
+
+    const ec_xonly dummy_point{};
+    const ec_signature dummy_sig{};
+    constexpr auto hash1 = base16_hash("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    constexpr auto hash2 = base16_hash("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+
+    const chain::threshold::tuples_t tuples
+    {
+        { hash1, dummy_point, dummy_sig },
+        { hash2, dummy_point, dummy_sig }
+    };
+
+    using putter = table::schnorr_digest::put_ref;
+    BOOST_REQUIRE(instance.put(putter{ {}, tuples }));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
+}
+
+// schnorr_xonly
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(schnorr_xonly__put_ref__multiple_points__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::schnorr_xonly instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    const auto expected = base16_chunk
+    (
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    );
+
+    const ec_signature dummy_sig{};
+    constexpr auto xonly1 = base16_array("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    constexpr auto xonly2 = base16_array("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+
+    const chain::threshold::tuples_t tuples
+    {
+        { null_hash, xonly1, dummy_sig },
+        { null_hash, xonly2, dummy_sig }
+    };
+
+    using putter = table::schnorr_xonly::put_ref;
+    BOOST_REQUIRE(instance.put(putter{ {}, tuples }));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
+}
+
+// schnorr_signature
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(schnorr_signature__put_ref__multiple_signatures__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::schnorr_signature instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    const auto expected = base16_chunk
+    (
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    );
+
+    const ec_xonly dummy_point{};
+    constexpr auto signature1 = base16_array
+    (
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    );
+    constexpr auto signature2 = base16_array
+    (
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    );
+
+    const chain::threshold::tuples_t tuples
+    {
+        { null_hash, dummy_point, signature1 },
+        { null_hash, dummy_point, signature2 }
+    };
+
+    using putter = table::schnorr_signature::put_ref;
+    BOOST_REQUIRE(instance.put(putter{ {}, tuples }));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
+}
+
+// schnorr_correlate (writer + reader)
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(schnorr_correlate__put_ref__single_category__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    table::schnorr_correlate instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    const auto expected = base16_chunk
+    (
+        "01" "0000" "3412" "efcdab"
+        "00" "0000" "3412" "efcdab"
+        "00" "0000" "3412" "efcdab"
+    );
+
+    const ec_xonly dummy_point{};
+    const ec_signature dummy_sig{};
+    const chain::threshold batch
+    {
+        .tuples =
+        {
+            { null_hash, dummy_point, dummy_sig },
+            { null_hash, dummy_point, dummy_sig },
+            { null_hash, dummy_point, dummy_sig }
+        },
+        .category = chain::threshold::category_t::single
+    };
+
+    using putter = table::schnorr_correlate::put_ref;
+    BOOST_REQUIRE(instance.put(putter{ {}, batch, 0x1234_u16, 0x00abcdef_u32 }));
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
+}
+
+BOOST_AUTO_TEST_CASE(schnorr_correlate__get__using_record__expected)
+{
+    auto head = base16_chunk("02000000");
+    auto body = base16_chunk
+    (
+        "01" "0000" "3412" "efcdab"
+        "02" "0000" "3412" "efcdab"
+    );
+
+    test::chunk_storage head_store{ head };
+    test::chunk_storage body_store{ body };
+    table::schnorr_correlate instance{ head_store, body_store };
+
+    table::schnorr_correlate::record out{};
+    BOOST_REQUIRE(instance.get(0u, out));
+    BOOST_REQUIRE_EQUAL(out.category, chain::threshold::category_t::single);
+    BOOST_REQUIRE_EQUAL(out.pair, 0_u16);
+    BOOST_REQUIRE_EQUAL(out.group, 0x1234_u16);
+    BOOST_REQUIRE_EQUAL(out.header_fk, 0x00abcdef_u32);
+
+    BOOST_REQUIRE(instance.get(1u, out));
+    BOOST_REQUIRE_EQUAL(out.category, chain::threshold::category_t::equal);
+    BOOST_REQUIRE_EQUAL(out.pair, 0_u16);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -26,8 +26,31 @@
 namespace libbitcoin {
 namespace database {
 namespace table {
+    
+/// Utilities
+/// ---------------------------------------------------------------------------
+constexpr auto ecdsa_max = system::power2(to_half(byte_bits));
 
-/// ecdsa is an array of ecdsa signature validation records.
+constexpr bool ecdsa_check(size_t m, size_t n) NOEXCEPT
+{
+    return !is_zero(m) && !is_zero(n) && !(n > ecdsa_max) && !(m > n);
+}
+
+constexpr size_t ecdsa_count(size_t m, size_t n) NOEXCEPT
+{
+    using namespace system;
+    const auto gap = n - m;
+    if (is_subtract_overflow(n, m) || is_add_overflow(gap, one))
+        return {};
+
+    const auto sum = add1(gap);
+    if (is_multiply_overflow(m, sum))
+        return {};
+
+    return m * sum;
+}
+
+/// DEPRECATED: ecdsa is an array of ecdsa signature validation records.
 struct ecdsa
   : public no_map<schema::ecdsa>
 {
@@ -76,7 +99,6 @@ struct ecdsa
                 && header_fk == other.header_fk;
         }
 
-        /// pair: m (row 0, for all), n (row 1, for n > 1).
         system::hash_digest digest{};
         system::ec_compressed point{};
         system::ec_signature signature{};
@@ -110,8 +132,8 @@ struct ecdsa
         const system::hash_digest& digest;
         const system::ec_compressed& point;
         const system::ec_signature& signature;
-        uint16_t group{};
-        header::integer header_fk{};
+        const uint16_t group{};
+        const header::integer header_fk{};
     };
 
     /// Writer for 1-of-1 multisig (0|0 packed in one row).
@@ -122,37 +144,26 @@ struct ecdsa
         // Terminal count fails the write attempt, so to_data() is guarded.
         inline link count() const NOEXCEPT
         {
-            using namespace system;
-            const auto m = sigs.size();
-            const auto n = keys.size();
-            const auto gap = n - m;
-            if (is_subtract_overflow(n, m) || is_add_overflow(gap, one))
-                return {};
-
-            const auto sum = add1(gap);
-            if (is_multiply_overflow(m, sum))
-                return {};
-
-            return possible_narrow_cast<link::integer>(m * sum);
+            return system::possible_narrow_cast<link::integer>(
+                ecdsa_count(sigs.size(), keys.size()));
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            using namespace system;
-            constexpr auto max = power2(to_half(byte_bits));
             const auto m = sigs.size();
             const auto n = keys.size();
-            if (is_zero(m) || is_zero(n) || n > max || m > n)
+            if (!ecdsa_check(m, n))
                 return false;
 
+            const auto gap = (n - m);
             for (size_t sig{}; sig < m; ++sig)
             {
-                for (auto key = sig; key <= n - (m - sig); ++key)
+                for (auto key = sig; key <= gap + sig; ++key)
                 {
                     sink.write_bytes(digest);
                     sink.write_bytes(keys.at(key));
                     sink.write_bytes(sigs.at(sig));
-                    sink.write_byte(pack_word<uint8_t>(sig, key));
+                    sink.write_byte(system::pack_word<uint8_t>(sig, key));
                     sink.write_little_endian<uint16_t>(group);
                     sink.write_little_endian<header::integer, header::size>(
                         header_fk);
@@ -166,6 +177,177 @@ struct ecdsa
         const hash_digest& digest;
         const system::ec_compresseds& keys;
         const system::ec_signatures& sigs;
+        const uint16_t group{};
+        const header::integer header_fk{};
+    };
+};
+
+/// ecdsa_digest is an array of ecdsa verification record signature hashes.
+struct ecdsa_digest
+  : public no_map<schema::ecdsa_digest>
+{
+    using no_map<schema::ecdsa_digest>::nomap;
+
+    struct put_ref
+      : public schema::ecdsa_digest
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                ecdsa_count(sigs, keys));
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            // ecdsa multisig capture is limited to common signature hash.
+            for (size_t row{}; row < count(); ++row)
+                sink.write_bytes(digest);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const size_t keys{};
+        const size_t sigs{};
+        const hash_digest& digest;
+    };
+};
+
+/// ecdsa_compressed is an array of ecdsa verification compressed public keys.
+struct ecdsa_compressed
+  : public no_map<schema::ecdsa_compressed>
+{
+    using no_map<schema::ecdsa_compressed>::nomap;
+
+    struct put_ref
+      : public schema::ecdsa_compressed
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                ecdsa_count(sigs, keys.size()));
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            const auto m = sigs;
+            const auto n = keys.size();
+            if (!ecdsa_check(m, n))
+                return false;
+
+            const auto gap = (n - m);
+            for (size_t sig{}; sig < m; ++sig)
+                for (auto key = sig; key <= gap + sig; ++key)
+                    sink.write_bytes(keys.at(key));
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const system::ec_compresseds& keys;
+        const size_t sigs{};
+    };
+};
+
+/// ecdsa_signature is an array of ecdsa verification signatures.
+struct ecdsa_signature
+  : public no_map<schema::ecdsa_signature>
+{
+    using no_map<schema::ecdsa_signature>::nomap;
+
+    struct put_ref
+      : public schema::ecdsa_signature
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                ecdsa_count(sigs.size(), keys));
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            const auto m = sigs.size();
+            const auto n = keys;
+            if (!ecdsa_check(m, n))
+                return false;
+
+            const auto gap = (n - m);
+            for (size_t sig{}; sig < m; ++sig)
+                for (auto key = sig; key <= gap + sig; ++key)
+                    sink.write_bytes(sigs.at(sig));
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const size_t keys{};
+        const system::ec_signatures& sigs;
+    };
+};
+
+/// ecdsa_correlate is an array of ecdsa correlation records.
+struct ecdsa_correlate
+  : public no_map<schema::ecdsa_correlate>
+{
+    using header = schema::header::link;
+    using no_map<schema::ecdsa_correlate>::nomap;
+
+    struct record
+      : public schema::ecdsa_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return 1;
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            pair = source.read_byte();
+            group = source.read_little_endian<uint16_t>();
+            header_fk = source.read_little_endian<header::integer, header::size>();
+            BC_ASSERT(!source || source.get_read_position() == minrow);
+            return source;
+        }
+
+        uint8_t pair{};
+        uint16_t group{};
+        header::integer header_fk{};
+    };
+
+    struct put_ref
+      : public schema::ecdsa_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                ecdsa_count(sigs, keys));
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            const auto m = sigs;
+            const auto n = keys;
+            if (!ecdsa_check(m, n))
+                return false;
+
+            const auto gap = (n - m);
+            for (size_t sig{}; sig < m; ++sig)
+            {
+                for (auto key = sig; key <= gap + sig; ++key)
+                {
+                    sink.write_byte(system::pack_word<uint8_t>(sig, key));
+                    sink.write_little_endian<uint16_t>(group);
+                    sink.write_little_endian<header::integer, header::size>(
+                        header_fk);
+                }
+            }
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const size_t keys{};
+        const size_t sigs{};
         const uint16_t group{};
         const header::integer header_fk{};
     };
