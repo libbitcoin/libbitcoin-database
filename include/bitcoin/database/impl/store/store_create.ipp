@@ -85,6 +85,8 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     create(ec, ecdsa_body_, table_t::ecdsa_body);
     create(ec, schnorr_head_, table_t::schnorr_head);
     create(ec, schnorr_body_, table_t::schnorr_body);
+    create(ec, silent_head_, table_t::silent_head);
+    create(ec, silent_body_, table_t::silent_body);
     create(ec, duplicate_head_, table_t::duplicate_head);
     create(ec, duplicate_body_, table_t::duplicate_body);
     create(ec, prevout_head_, table_t::prevout_head);
@@ -130,6 +132,7 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
 
     populate(ec, ecdsa, table_t::ecdsa_table);
     populate(ec, schnorr, table_t::schnorr_table);
+    populate(ec, silent, table_t::silent_table);
     populate(ec, duplicate, table_t::duplicate_table);
     populate(ec, prevout, table_t::prevout_table);
     populate(ec, validated_bk, table_t::validated_bk_table);

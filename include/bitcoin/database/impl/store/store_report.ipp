@@ -54,6 +54,7 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(strong_tx_body_, table_t::strong_tx_body);
     report(ecdsa_body_, table_t::ecdsa_body);
     report(schnorr_body_, table_t::schnorr_body);
+    report(silent_body_, table_t::silent_body);
     report(duplicate_body_, table_t::duplicate_body);
     report(prevout_body_, table_t::prevout_body);
     report(validated_bk_body_, table_t::validated_bk_body);
@@ -81,6 +82,7 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = strong_tx_body_.get_fault())) return ec;
     if ((ec = ecdsa_body_.get_fault())) return ec;
     if ((ec = schnorr_body_.get_fault())) return ec;
+    if ((ec = silent_body_.get_fault())) return ec;
     if ((ec = duplicate_body_.get_fault())) return ec;
     if ((ec = prevout_body_.get_fault())) return ec;
     if ((ec = validated_bk_body_.get_fault())) return ec;
@@ -114,6 +116,7 @@ size_t CLASS::get_space() const NOEXCEPT
     space(strong_tx_body_);
     space(ecdsa_body_);
     space(schnorr_body_);
+    space(silent_body_);
     space(duplicate_body_);
     space(prevout_body_);
     space(validated_bk_body_);

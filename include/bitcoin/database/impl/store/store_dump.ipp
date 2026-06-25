@@ -46,6 +46,7 @@ code CLASS::dump(const path& folder,
 
     auto ecdsa_buffer = ecdsa_head_.get();
     auto schnorr_buffer = schnorr_head_.get();
+    auto silent_buffer = silent_head_.get();
     auto duplicate_buffer = duplicate_head_.get();
     auto prevout_buffer = prevout_head_.get();
     auto validated_bk_buffer = validated_bk_head_.get();
@@ -70,6 +71,7 @@ code CLASS::dump(const path& folder,
 
     if (!ecdsa_buffer) return error::unloaded_file;
     if (!schnorr_buffer) return error::unloaded_file;
+    if (!silent_buffer) return error::unloaded_file;
     if (!duplicate_buffer) return error::unloaded_file;
     if (!prevout_buffer) return error::unloaded_file;
     if (!validated_bk_buffer) return error::unloaded_file;
@@ -106,6 +108,7 @@ code CLASS::dump(const path& folder,
 
     dump(ec, ecdsa_buffer, schema::caches::ecdsa, table_t::ecdsa_head);
     dump(ec, schnorr_buffer, schema::caches::schnorr, table_t::schnorr_head);
+    dump(ec, silent_buffer, schema::caches::silent, table_t::silent_head);
     dump(ec, duplicate_buffer, schema::caches::duplicate, table_t::duplicate_head);
     dump(ec, prevout_buffer, schema::caches::prevout, table_t::prevout_head);
     dump(ec, validated_bk_buffer, schema::caches::validated_bk, table_t::validated_bk_head);

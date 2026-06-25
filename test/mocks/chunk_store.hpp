@@ -168,6 +168,16 @@ public:
         return schnorr_body_.buffer();
     }
 
+    system::data_chunk& silent_head() NOEXCEPT
+    {
+        return silent_head_.buffer();
+    }
+
+    system::data_chunk& silent_body() NOEXCEPT
+    {
+        return silent_body_.buffer();
+    }
+
     system::data_chunk& duplicate_head() NOEXCEPT
     {
         return duplicate_head_.buffer();

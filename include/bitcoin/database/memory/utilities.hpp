@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_UTILITIES_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_UTILITIES_HPP
 
+#include <atomic>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -29,6 +30,20 @@ BCD_API size_t page_size() NOEXCEPT;
 
 /// The bytes of physical memory, zero if failed.
 BCD_API uint64_t system_memory() NOEXCEPT;
+
+/// C++26: std::atomic<size_t>::fetch_max
+template <typename Integral, if_integral_integer<Integral> = true>
+Integral fetch_max(std::atomic<Integral>& atomic, Integral value) NOEXCEPT
+{
+    constexpr auto relaxed = std::memory_order_relaxed;
+
+    auto atom = atomic.load(relaxed);
+    while (value > atom && !atomic.compare_exchange_weak(atom, value, relaxed))
+    {
+    }
+
+    return atom;
+}
 
 } // namespace database
 } // namespace libbitcoin

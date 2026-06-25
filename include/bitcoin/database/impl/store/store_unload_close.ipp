@@ -66,6 +66,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, ecdsa_body_, table_t::ecdsa_body);
     unload(ec, schnorr_head_, table_t::schnorr_head);
     unload(ec, schnorr_body_, table_t::schnorr_body);
+    unload(ec, silent_head_, table_t::silent_head);
+    unload(ec, silent_body_, table_t::silent_body);
     unload(ec, duplicate_head_, table_t::duplicate_head);
     unload(ec, duplicate_body_, table_t::duplicate_body);
     unload(ec, prevout_head_, table_t::prevout_head);
@@ -119,6 +121,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, ecdsa_body_, table_t::ecdsa_body);
     close(ec, schnorr_head_, table_t::schnorr_head);
     close(ec, schnorr_body_, table_t::schnorr_body);
+    close(ec, silent_head_, table_t::silent_head);
+    close(ec, silent_body_, table_t::silent_body);
     close(ec, duplicate_head_, table_t::duplicate_head);
     close(ec, duplicate_body_, table_t::duplicate_body);
     close(ec, prevout_head_, table_t::prevout_head);

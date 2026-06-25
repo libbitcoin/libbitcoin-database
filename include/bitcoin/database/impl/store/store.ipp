@@ -96,6 +96,9 @@ const CLASS::table_map CLASS::tables
     { table_t::schnorr_table, "schnorr_table" },
     { table_t::schnorr_head, "schnorr_head" },
     { table_t::schnorr_body, "schnorr_body" },
+    { table_t::silent_table, "silent_table" },
+    { table_t::silent_head, "silent_head" },
+    { table_t::silent_body, "silent_body" },
     { table_t::duplicate_table, "duplicate_table" },
     { table_t::duplicate_head, "duplicate_head" },
     { table_t::duplicate_body, "duplicate_body" },
@@ -173,6 +176,9 @@ CLASS::store(const settings& config) NOEXCEPT
     schnorr_head_(head(config.path / schema::dir::heads, schema::caches::schnorr), 1, 0, random),
     schnorr_body_(body(config.path, schema::caches::schnorr), config.schnorr_size, config.schnorr_rate, sequential),
 
+    silent_head_(head(config.path / schema::dir::heads, schema::caches::silent), 1, 0, random),
+    silent_body_(body(config.path, schema::caches::silent), config.silent_size, config.silent_rate, sequential),
+
     duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate), 1, 0, random),
     duplicate_body_(body(config.path, schema::caches::duplicate), config.duplicate_size, config.duplicate_rate, sequential),
 
@@ -221,6 +227,7 @@ CLASS::store(const settings& config) NOEXCEPT
 
     ecdsa(ecdsa_head_, ecdsa_body_),
     schnorr(schnorr_head_, schnorr_body_),
+    silent(silent_head_, silent_body_),
     duplicate(duplicate_head_, duplicate_body_, config.duplicate_buckets),
     prevout(prevout_head_, prevout_body_, config.prevout_buckets),
     validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),

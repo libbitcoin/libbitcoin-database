@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-bool CLASS::scan_silent(const stopper& cancel, const ec_compressed& scan_key,
+bool CLASS::scan_silent(const stopper& cancel, const ec_secret& scan_key,
     const silent_handler& callback) NOEXCEPT
 {
     // False return only implies canceled.
@@ -43,7 +43,7 @@ bool CLASS::scan_silent(const stopper& cancel, const ec_compressed& scan_key,
 // Caller (node) controls which txs are indexed (e.g. by confirmed height).
 
 TEMPLATE
-bool CLASS::set_silent(const block& block, const header_link& link) NOEXCEPT
+bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
 {
     const auto& txs = block.transactions_ptr();
     const auto count = txs->size();
@@ -67,7 +67,7 @@ bool CLASS::set_silent(const block& block, const header_link& link) NOEXCEPT
         if (fail.load(relaxed))
             return;
 
-        if (!set_silent(*txs->at(index), links.at(index)))
+        if (!set_silent(links.at(index), *txs->at(index)))
             fail.store(true, relaxed);
     });
     
@@ -75,9 +75,9 @@ bool CLASS::set_silent(const block& block, const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_silent(const transaction& tx, const tx_link& link) NOEXCEPT
+bool CLASS::set_silent(const tx_link& link, const transaction& ) NOEXCEPT
 {
-    BC_ASSERT(!tx.is_coinbase());
+    ////BC_ASSERT(!tx.is_coinbase());
     if (link.is_terminal())
         return false;
 
@@ -87,17 +87,37 @@ bool CLASS::set_silent(const transaction& tx, const tx_link& link) NOEXCEPT
     ////if (!silent_payment::compute_scan_record(record, tx))
     ////    return true;
 
+    // TODO: aliases for record above;
+    ////const ec_compressed key{};
+    ////const std::vector<uint64_t> prefixes{};
+
+    ////using silent_prefix = table::silent_prefix::put_ref;
+    ////using silent_compressed = table::silent_compressed::put_ref;
+    ////using silent_correlate = table::silent_correlate::records;
+
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    // Clean single allocation failure (e.g. disk full).
-    return store_.silent.put(table::silent::put_ref
-    {
-        {},
-        {}, ////record.prefixes,
-        {}, ////record.summary,
-        link
-    });
+    ////silent_link fk{};
+    ////const auto rows = prefixes.size();
+
+    ////// Allocate contiguous rows at fk and fill with link (x rows).
+    ////store_.silent_correlate.put_link(fk, silent_correlate{ {}, rows, link });
+
+    ////// Expand subordinate tables to same size, as necessary.
+    ////if (!store_.silent_prefix.expand(fk + rows) ||
+    ////    !store_.silent_compressed.expand(fk + rows))
+    ////    return false;
+
+    ////// Write prefixes (rows) into corresponding fk position.
+    ////if (!store_.silent_prefix.put(fk, silent_prefix{ {}, prefixes }))
+    ////    return false;
+
+    ////// Write compressed (x rows) into corresponding fk position.
+    ////if (!store_.silent_compressed.put(fk, silent_compressed{ {}, rows, key }))
+    ////    return false;
+
+    return true;
     // ========================================================================
 }
 

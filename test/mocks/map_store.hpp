@@ -189,6 +189,16 @@ public:
         return schnorr_body_.file();
     }
 
+    inline const path& silent_head_file() const NOEXCEPT
+    {
+        return silent_head_.file();
+    }
+
+    inline const path& silent_body_file() const NOEXCEPT
+    {
+        return silent_body_.file();
+    }
+
     inline const path& duplicate_head_file() const NOEXCEPT
     {
         return duplicate_head_.file();

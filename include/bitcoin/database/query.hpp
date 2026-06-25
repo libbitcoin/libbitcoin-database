@@ -126,6 +126,7 @@ public:
     size_t strong_tx_head_size() const NOEXCEPT;
     size_t ecdsa_head_size() const NOEXCEPT;
     size_t schnorr_head_size() const NOEXCEPT;
+    size_t silent_head_size() const NOEXCEPT;
     size_t duplicate_head_size() const NOEXCEPT;
     size_t prevout_head_size() const NOEXCEPT;
     size_t validated_bk_head_size() const NOEXCEPT;
@@ -149,6 +150,7 @@ public:
     size_t strong_tx_body_size() const NOEXCEPT;
     size_t ecdsa_body_size() const NOEXCEPT;
     size_t schnorr_body_size() const NOEXCEPT;
+    size_t silent_body_size() const NOEXCEPT;
     size_t duplicate_body_size() const NOEXCEPT;
     size_t prevout_body_size() const NOEXCEPT;
     size_t validated_bk_body_size() const NOEXCEPT;
@@ -172,6 +174,7 @@ public:
     size_t strong_tx_size() const NOEXCEPT;
     size_t ecdsa_size() const NOEXCEPT;
     size_t schnorr_size() const NOEXCEPT;
+    size_t silent_size() const NOEXCEPT;
     size_t duplicate_size() const NOEXCEPT;
     size_t prevout_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
@@ -207,6 +210,7 @@ public:
     size_t strong_tx_records() const NOEXCEPT;
     size_t ecdsa_records() const NOEXCEPT;
     size_t schnorr_records() const NOEXCEPT;
+    size_t silent_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
     size_t address_records() const NOEXCEPT;
@@ -577,8 +581,8 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Set silent payment records.
-    bool set_silent(const transaction& tx, const tx_link& link) NOEXCEPT;
-    bool set_silent(const block& block, const header_link& link) NOEXCEPT;
+    bool set_silent(const tx_link& link, const transaction& tx) NOEXCEPT;
+    bool set_silent(const header_link& link, const block& block) NOEXCEPT;
 
     /// Set single ecdsa signature row.
     bool set_signature(const hash_digest& digest, const ec_compressed& point,
@@ -600,7 +604,7 @@ public:
         const header_link& link) NOEXCEPT;
 
     /// Invoke callback for each candidate match, false implies cancel.
-    bool scan_silent(const stopper& cancel, const ec_compressed& scan_key,
+    bool scan_silent(const stopper& cancel, const ec_secret& scan_key,
         const silent_handler& callback) NOEXCEPT;
 
     /// Verify all signatures in table, false implies cancel.

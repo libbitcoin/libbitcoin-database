@@ -19,12 +19,14 @@
 #ifndef LIBBITCOIN_DATABASE_STORE_HPP
 #define LIBBITCOIN_DATABASE_STORE_HPP
 
+#include <atomic>
 #include <filesystem>
 #include <shared_mutex>
 #include <unordered_map>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/settings.hpp>
+#include <bitcoin/database/tables/tables.hpp>
 #include <bitcoin/database/types/types.hpp>
 
 namespace libbitcoin {
@@ -179,6 +181,10 @@ protected:
     Storage schnorr_head_;
     Storage schnorr_body_;
 
+    // array
+    Storage silent_head_;
+    Storage silent_body_;
+
     // blob arraymap
     Storage duplicate_head_;
     Storage duplicate_body_;
@@ -262,6 +268,7 @@ public:
     /// Caches.
     table::ecdsa ecdsa;
     table::schnorr schnorr;
+    table::silent silent;
     table::duplicate duplicate;
     table::prevout prevout;
     table::validated_bk validated_bk;
