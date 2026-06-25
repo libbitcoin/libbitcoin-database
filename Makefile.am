@@ -218,7 +218,6 @@ include_bitcoin_database_impl_query_HEADERS = \
     include/bitcoin/database/impl/query/properties_tx.ipp \
     include/bitcoin/database/impl/query/query.ipp \
     include/bitcoin/database/impl/query/sequences.ipp \
-    include/bitcoin/database/impl/query/signatures.ipp \
     include/bitcoin/database/impl/query/sizes.ipp
 
 include_bitcoin_database_impl_query_addressdir = ${includedir}/bitcoin/database/impl/query/address
@@ -234,6 +233,12 @@ include_bitcoin_database_impl_query_archive_HEADERS = \
     include/bitcoin/database/impl/query/archive/chain_writer.ipp \
     include/bitcoin/database/impl/query/archive/wire_reader.ipp \
     include/bitcoin/database/impl/query/archive/wire_writer.ipp
+
+include_bitcoin_database_impl_query_batchdir = ${includedir}/bitcoin/database/impl/query/batch
+include_bitcoin_database_impl_query_batch_HEADERS = \
+    include/bitcoin/database/impl/query/batch/ecdsa.ipp \
+    include/bitcoin/database/impl/query/batch/schnorr.ipp \
+    include/bitcoin/database/impl/query/batch/silent.ipp
 
 include_bitcoin_database_impl_query_consensusdir = ${includedir}/bitcoin/database/impl/query/consensus
 include_bitcoin_database_impl_query_consensus_HEADERS = \

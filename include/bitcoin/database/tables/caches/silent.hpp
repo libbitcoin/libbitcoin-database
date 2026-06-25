@@ -73,7 +73,7 @@ struct silent
         tx::integer tx_fk{};
     };
 
-    struct records
+    struct put_ref
       : public schema::silent
     {
         inline link count() const NOEXCEPT
@@ -98,8 +98,8 @@ struct silent
             return sink;
         }
 
-        const std::vector<uint64_t> prefixes{};
-        const system::ec_compressed compressed{};
+        const std::vector<uint64_t>& prefixes;
+        const system::ec_compressed& compressed;
         const tx::integer tx_fk{};
     };
 };

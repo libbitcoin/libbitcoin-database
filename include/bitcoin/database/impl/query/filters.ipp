@@ -37,7 +37,7 @@ bool CLASS::is_filtered_body(const header_link& link) const NOEXCEPT
     return store_.filter_tx.exists(to_filter_tx(link));
 }
 
-// node/fitler-out
+// node/filter-out
 TEMPLATE
 bool CLASS::get_filter_body(filter& out, const header_link& link) const NOEXCEPT
 {
@@ -58,7 +58,7 @@ bool CLASS::is_filtered_head(const header_link& link) const NOEXCEPT
     return store_.filter_bk.exists(to_filter_bk(link));
 }
 
-// node/fitler-out
+// node/filter-out
 TEMPLATE
 bool CLASS::get_filter_head(hash_digest& out,
     const header_link& link) const NOEXCEPT
@@ -71,7 +71,7 @@ bool CLASS::get_filter_head(hash_digest& out,
     return true;
 }
 
-// node/fitler-out
+// node/filter-out
 TEMPLATE
 bool CLASS::get_filter_hash(hash_digest& out,
     const header_link& link) const NOEXCEPT
@@ -84,7 +84,7 @@ bool CLASS::get_filter_hash(hash_digest& out,
     return true;
 }
 
-// node/fitler-out
+// node/filter-out
 TEMPLATE
 bool CLASS::get_filter_hashes(hashes& filter_hashes,
     hash_digest& previous_header, const header_link& stop_link,
@@ -98,7 +98,7 @@ bool CLASS::get_filter_hashes(hashes& filter_hashes,
     filter_hashes.resize(count);
     auto link = stop_link;
 
-    // Reversal allows ancenstry population into forward vector.
+    // Reversal allows ancestry population into forward vector.
     for (auto& hash: std::views::reverse(filter_hashes))
     {
         // Implies that stop_link is not a filtered block.
@@ -124,13 +124,15 @@ bool CLASS::get_filter_hashes(hashes& filter_hashes,
     return get_filter_head(previous_header, link);
 }
 
-// node/fitler-out
+// node/filter-out
 TEMPLATE
 bool CLASS::get_filter_heads(hashes& filter_heads,
     size_t stop_height, size_t interval) const NOEXCEPT
 {
     size_t height{};
     filter_heads.resize(system::floored_divide(stop_height, interval));
+
+    // TODO: could be parallel.
     for (auto& head: filter_heads)
         if (!get_filter_head(head, to_confirmed((height += interval))))
             return false;
