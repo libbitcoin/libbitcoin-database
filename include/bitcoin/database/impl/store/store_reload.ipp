@@ -78,6 +78,8 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, ecdsa_body_, table_t::ecdsa_body);
     reload(ec, schnorr_head_, table_t::schnorr_head);
     reload(ec, schnorr_body_, table_t::schnorr_body);
+    reload(ec, silent_head_, table_t::silent_head);
+    reload(ec, silent_body_, table_t::silent_body);
     reload(ec, duplicate_head_, table_t::duplicate_head);
     reload(ec, duplicate_body_, table_t::duplicate_body);
     reload(ec, prevout_head_, table_t::prevout_head);

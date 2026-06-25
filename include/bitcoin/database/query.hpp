@@ -126,6 +126,7 @@ public:
     size_t strong_tx_head_size() const NOEXCEPT;
     size_t ecdsa_head_size() const NOEXCEPT;
     size_t schnorr_head_size() const NOEXCEPT;
+    size_t silent_head_size() const NOEXCEPT;
     size_t duplicate_head_size() const NOEXCEPT;
     size_t prevout_head_size() const NOEXCEPT;
     size_t validated_bk_head_size() const NOEXCEPT;
@@ -149,6 +150,7 @@ public:
     size_t strong_tx_body_size() const NOEXCEPT;
     size_t ecdsa_body_size() const NOEXCEPT;
     size_t schnorr_body_size() const NOEXCEPT;
+    size_t silent_body_size() const NOEXCEPT;
     size_t duplicate_body_size() const NOEXCEPT;
     size_t prevout_body_size() const NOEXCEPT;
     size_t validated_bk_body_size() const NOEXCEPT;
@@ -172,6 +174,7 @@ public:
     size_t strong_tx_size() const NOEXCEPT;
     size_t ecdsa_size() const NOEXCEPT;
     size_t schnorr_size() const NOEXCEPT;
+    size_t silent_size() const NOEXCEPT;
     size_t duplicate_size() const NOEXCEPT;
     size_t prevout_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
@@ -207,6 +210,7 @@ public:
     size_t strong_tx_records() const NOEXCEPT;
     size_t ecdsa_records() const NOEXCEPT;
     size_t schnorr_records() const NOEXCEPT;
+    size_t silent_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
     size_t address_records() const NOEXCEPT;

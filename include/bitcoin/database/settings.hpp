@@ -104,6 +104,9 @@ struct BCD_API settings
     uint64_t schnorr_size;
     uint16_t schnorr_rate;
 
+    uint64_t silent_size;
+    uint16_t silent_rate;
+
     // This one is 16 bit (could use table link::integer) for these.
     uint16_t duplicate_buckets;
     uint64_t duplicate_size;

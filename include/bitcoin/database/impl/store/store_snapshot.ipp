@@ -60,6 +60,7 @@ code CLASS::snapshot(const event_handler& handler, bool prune) NOEXCEPT
 
     flush(ec, ecdsa_body_, table_t::ecdsa_body);
     flush(ec, schnorr_body_, table_t::schnorr_body);
+    flush(ec, silent_body_, table_t::silent_body);
     flush(ec, duplicate_body_, table_t::duplicate_body);
     if (!prune) flush(ec, prevout_body_, table_t::prevout_body);
     flush(ec, validated_bk_body_, table_t::validated_bk_body);

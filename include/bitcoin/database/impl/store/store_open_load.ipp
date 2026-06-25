@@ -66,6 +66,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, ecdsa_body_, table_t::ecdsa_body);
     open(ec, schnorr_head_, table_t::schnorr_head);
     open(ec, schnorr_body_, table_t::schnorr_body);
+    open(ec, silent_head_, table_t::silent_head);
+    open(ec, silent_body_, table_t::silent_body);
     open(ec, duplicate_head_, table_t::duplicate_head);
     open(ec, duplicate_body_, table_t::duplicate_body);
     open(ec, prevout_head_, table_t::prevout_head);
@@ -119,6 +121,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, ecdsa_body_, table_t::ecdsa_body);
     load(ec, schnorr_head_, table_t::schnorr_head);
     load(ec, schnorr_body_, table_t::schnorr_body);
+    load(ec, silent_head_, table_t::silent_head);
+    load(ec, silent_body_, table_t::silent_body);
     load(ec, duplicate_head_, table_t::duplicate_head);
     load(ec, duplicate_body_, table_t::duplicate_body);
     load(ec, prevout_head_, table_t::prevout_head);
