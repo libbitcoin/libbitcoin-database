@@ -60,9 +60,6 @@ public:
     using ec_secret = system::ec_secret;
     using ec_xonly = system::ec_xonly;
 
-    /// Callback for long-running silent payment scan.
-    using silent_handler = std::function<void(const code&, const tx_link&)>;
-
     query(Store& store) NOEXCEPT;
 
     /// Store management from query-holder (not store owner) context.
@@ -579,9 +576,9 @@ public:
     /// Batching.
     /// -----------------------------------------------------------------------
 
-    /// Set silent payment rows.
-    bool set_silent(const std::vector<uint64_t>& prefixes,
-        const ec_compressed& compressed, const tx_link& link) NOEXCEPT;
+    /// Set silent payment records.
+    bool set_silent(const transaction& tx, const tx_link& link) NOEXCEPT;
+    bool set_silent(const block& block, const header_link& link) NOEXCEPT;
 
     /// Set single ecdsa signature row.
     bool set_signature(const hash_digest& digest, const ec_compressed& point,

@@ -68,6 +68,7 @@ using hash_option = std::optional<hash_digest>;
 
 using filter = system::data_chunk;
 using data_chunk = system::data_chunk;
+using silent_handler = system::silent::batch::handler;
 
 /// Common system::chain aliases.
 /// ---------------------------------------------------------------------------
