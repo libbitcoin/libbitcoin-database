@@ -81,22 +81,21 @@ bool CLASS::get_branch_fees(const stopper& cancel, fee_rate_sets& out,
 
     out.resize(count);
     stopper fail{};
-    std::vector<size_t> offsets(count);
-    std::iota(offsets.begin(), offsets.end(), zero);
+    std::vector<size_t> it(count);
+    std::iota(it.begin(), it.end(), zero);
     constexpr auto parallel = poolstl::execution::par;
     constexpr auto relaxed = std::memory_order_relaxed;
 
     // Parallel execution saves ~50%.
-    std::for_each(parallel, offsets.cbegin(), offsets.cend(),
-        [&](size_t offset) NOEXCEPT
-        {
-            if (fail.load(relaxed))
-                return;
+    std::for_each(parallel, it.cbegin(), it.cend(), [&](size_t offset) NOEXCEPT
+    {
+        if (fail.load(relaxed))
+            return;
 
-            if (cancel.load(relaxed) || !get_block_fees(out.at(offset),
-                to_confirmed(start + offset)))
-                fail.store(true, relaxed);
-        });
+        if (cancel.load(relaxed) || !get_block_fees(out.at(offset),
+            to_confirmed(start + offset)))
+            fail.store(true, relaxed);
+    });
 
     const auto failed = fail.load(relaxed);
     if (failed) out.clear();

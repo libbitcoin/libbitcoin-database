@@ -602,14 +602,11 @@ public:
     bool set_signatures(const threshold& batch, uint16_t id,
         const header_link& link) NOEXCEPT;
 
-    /// Scans the full silent payments table using the given scan private key.
-    /// Invokes callback for each candidate match with tx_link of match. Upon
-    /// cancellation or error returns associated code. Return indicates
-    /// completion of scan without store integrity error (cancel returns true).
-    bool scan_silent(const stopper& cancel, const ec_secret& scan_key,
+    /// Invoke callback for each candidate match, false implies cancel.
+    bool scan_silent(const stopper& cancel, const ec_compressed& scan_key,
         const silent_handler& callback) NOEXCEPT;
 
-    /// Verify all signatures in table.
+    /// Verify all signatures in table, false implies cancel.
     bool verify_ecdsa_signatures(const stopper& cancel, header_links&) NOEXCEPT;
     bool verify_schnorr_signatures(const stopper& cancel, header_links&) NOEXCEPT;
 
