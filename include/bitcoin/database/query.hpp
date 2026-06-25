@@ -604,7 +604,7 @@ public:
         const header_link& link) NOEXCEPT;
 
     /// Invoke callback for each candidate match, false implies cancel.
-    bool scan_silent(const stopper& cancel, const ec_compressed& scan_key,
+    bool scan_silent(const stopper& cancel, const ec_secret& scan_key,
         const silent_handler& callback) NOEXCEPT;
 
     /// Verify all signatures in table, false implies cancel.

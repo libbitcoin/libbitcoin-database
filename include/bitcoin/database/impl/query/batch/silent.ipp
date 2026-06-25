@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-bool CLASS::scan_silent(const stopper& cancel, const ec_compressed& scan_key,
+bool CLASS::scan_silent(const stopper& cancel, const ec_secret& scan_key,
     const silent_handler& callback) NOEXCEPT
 {
     // False return only implies canceled.
