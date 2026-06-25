@@ -43,7 +43,7 @@ bool CLASS::scan_silent(const stopper& cancel, const ec_secret& scan_key,
 // Caller (node) controls which txs are indexed (e.g. by confirmed height).
 
 TEMPLATE
-bool CLASS::set_silent(const block& block, const header_link& link) NOEXCEPT
+bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
 {
     const auto& txs = block.transactions_ptr();
     const auto count = txs->size();
@@ -67,7 +67,7 @@ bool CLASS::set_silent(const block& block, const header_link& link) NOEXCEPT
         if (fail.load(relaxed))
             return;
 
-        if (!set_silent(*txs->at(index), links.at(index)))
+        if (!set_silent(links.at(index), *txs->at(index)))
             fail.store(true, relaxed);
     });
     
@@ -75,7 +75,7 @@ bool CLASS::set_silent(const block& block, const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_silent(const transaction& tx, const tx_link& link) NOEXCEPT
+bool CLASS::set_silent(const tx_link& link, const transaction& tx) NOEXCEPT
 {
     BC_ASSERT(!tx.is_coinbase());
     if (link.is_terminal())

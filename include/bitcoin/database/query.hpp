@@ -581,8 +581,8 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Set silent payment records.
-    bool set_silent(const transaction& tx, const tx_link& link) NOEXCEPT;
-    bool set_silent(const block& block, const header_link& link) NOEXCEPT;
+    bool set_silent(const tx_link& link, const transaction& tx) NOEXCEPT;
+    bool set_silent(const header_link& link, const block& block) NOEXCEPT;
 
     /// Set single ecdsa signature row.
     bool set_signature(const hash_digest& digest, const ec_compressed& point,
