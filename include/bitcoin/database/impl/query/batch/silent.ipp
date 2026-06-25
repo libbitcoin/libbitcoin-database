@@ -75,9 +75,9 @@ bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_silent(const tx_link& link, const transaction& tx) NOEXCEPT
+bool CLASS::set_silent(const tx_link& link, const transaction& ) NOEXCEPT
 {
-    BC_ASSERT(!tx.is_coinbase());
+    ////BC_ASSERT(!tx.is_coinbase());
     if (link.is_terminal())
         return false;
 
@@ -88,34 +88,34 @@ bool CLASS::set_silent(const tx_link& link, const transaction& tx) NOEXCEPT
     ////    return true;
 
     // TODO: aliases for record above;
-    const ec_compressed key{};
-    const std::vector<uint64_t> prefixes{};
+    ////const ec_compressed key{};
+    ////const std::vector<uint64_t> prefixes{};
 
-    using silent_prefix = table::silent_prefix::put_ref;
-    using silent_compressed = table::silent_compressed::put_ref;
-    using silent_correlate = table::silent_correlate::records;
+    ////using silent_prefix = table::silent_prefix::put_ref;
+    ////using silent_compressed = table::silent_compressed::put_ref;
+    ////using silent_correlate = table::silent_correlate::records;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    silent_link fk{};
-    const auto rows = prefixes.size();
+    ////silent_link fk{};
+    ////const auto rows = prefixes.size();
 
-    // Allocate contiguous rows at fk and fill with link (x rows).
-    store_.silent_correlate.put_link(fk, silent_correlate{ {}, rows, link });
+    ////// Allocate contiguous rows at fk and fill with link (x rows).
+    ////store_.silent_correlate.put_link(fk, silent_correlate{ {}, rows, link });
 
-    // Expand subordinate tables to same size, as necessary.
-    if (!store_.silent_prefix.expand(fk + rows) ||
-        !store_.silent_compressed.expand(fk + rows))
-        return false;
+    ////// Expand subordinate tables to same size, as necessary.
+    ////if (!store_.silent_prefix.expand(fk + rows) ||
+    ////    !store_.silent_compressed.expand(fk + rows))
+    ////    return false;
 
-    // Write prefixes (rows) into corresponding fk position.
-    if (!store_.silent_prefix.put(fk, silent_prefix{ {}, prefixes }))
-        return false;
+    ////// Write prefixes (rows) into corresponding fk position.
+    ////if (!store_.silent_prefix.put(fk, silent_prefix{ {}, prefixes }))
+    ////    return false;
 
-    // Write compressed (x rows) into corresponding fk position.
-    if (!store_.silent_compressed.put(fk, silent_compressed{ {}, rows, key }))
-        return false;
+    ////// Write compressed (x rows) into corresponding fk position.
+    ////if (!store_.silent_compressed.put(fk, silent_compressed{ {}, rows, key }))
+    ////    return false;
 
     return true;
     // ========================================================================
