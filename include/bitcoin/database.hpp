@@ -48,6 +48,7 @@
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/primitives/nomap.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/aggregate.hpp>
 #include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/event.hpp>
 #include <bitcoin/database/tables/names.hpp>
