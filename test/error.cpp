@@ -90,6 +90,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__integrity_block_confirmable2__true_expected_
 
 // memory map
 
+BOOST_AUTO_TEST_CASE(error_t__code__create_open__true_expected_message)
+{
+    constexpr auto value = error::create_open;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "creating open file");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__open_open__true_expected_message)
 {
     constexpr auto value = error::open_open;

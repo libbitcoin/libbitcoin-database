@@ -38,12 +38,14 @@ public:
     system::data_chunk& buffer() NOEXCEPT;
 
     // storage interface.
+    code create() const NOEXCEPT override;
     code open() NOEXCEPT override;
     code close() NOEXCEPT override;
     code load() NOEXCEPT override;
     code reload() NOEXCEPT override;
     code flush() NOEXCEPT override;
     code unload() NOEXCEPT override;
+    code dump(const std::filesystem::path& path) const NOEXCEPT override;
     const std::filesystem::path& file() const NOEXCEPT override;
     size_t capacity() const NOEXCEPT override;
     size_t size() const NOEXCEPT override;

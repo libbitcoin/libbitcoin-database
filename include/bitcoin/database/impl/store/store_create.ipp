@@ -44,13 +44,13 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
         return error::flush_lock;
     }
 
-    const auto create = [&handler](code& ec, const auto& storage,
+    const auto create = [&handler](code& ec, const auto& file,
         table_t table) NOEXCEPT
     {
         if (!ec)
         {
             handler(event_t::create_file, table);
-            ec = file::create_file_ex(storage.file());
+            ec = file.create();
         }
     };
 
@@ -103,13 +103,13 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     create(ec, filter_tx_head_, table_t::filter_tx_head);
     create(ec, filter_tx_body_, table_t::filter_tx_body);
 
-    const auto populate = [&handler](code& ec, auto& storage,
+    const auto populate = [&handler](code& ec, auto& logical,
         table_t table) NOEXCEPT
     {
         if (!ec)
         {
             handler(event_t::create_table, table);
-            if (!storage.create())
+            if (!logical.create())
                 ec = error::create_table;
         }
     };

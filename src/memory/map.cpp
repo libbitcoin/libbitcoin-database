@@ -69,6 +69,14 @@ const std::filesystem::path& map::file() const NOEXCEPT
     return filename_;
 }
 
+code map::create() const NOEXCEPT
+{
+    if (opened_ != file::invalid)
+        return error::create_open;
+
+    return file::create_file_ex(file());
+}
+
 code map::open() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
@@ -209,6 +217,16 @@ bool map::is_loaded() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
     return loaded_;
+}
+
+// Used to copy headers in snapshot.
+code map::dump(const std::filesystem::path& path) const NOEXCEPT
+{
+    const auto ptr = get();
+    if (!ptr)
+        return error::unloaded_file;
+
+    return file::create_file_ex(path, ptr->begin(), ptr->size());
 }
 
 // Interface.

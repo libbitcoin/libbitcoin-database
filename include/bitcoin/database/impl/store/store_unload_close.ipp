@@ -29,12 +29,12 @@ TEMPLATE
 code CLASS::unload_close(const event_handler& handler) NOEXCEPT
 {
     code ec{ error::success };
-    const auto unload = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
+    const auto unload = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
     {
         if (!ec)
         {
             handler(event_t::unload_file, table);
-            ec = storage.unload();
+            ec = file.unload();
         }
     };
 
@@ -84,12 +84,12 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, filter_tx_head_, table_t::filter_tx_head);
     unload(ec, filter_tx_body_, table_t::filter_tx_body);
 
-    const auto close = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
+    const auto close = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
     {
         if (!ec)
         {
             handler(event_t::close_file, table);
-            ec = storage.close();
+            ec = file.close();
         }
     };
 

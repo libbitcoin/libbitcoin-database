@@ -86,12 +86,13 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     // (reset head), and (2) prune the body (with head indicator) to highest
     // contiguous set of links that do not exceed the header table count
     // (orphaned by snapshot restore). This requires a scan upon restore.
-    const auto restore = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
+    const auto restore = [&handler](code& ec, auto& logical,
+        table_t table) NOEXCEPT
     {
         if (!ec)
         {
             handler(event_t::restore_table, table);
-            if (!storage.restore())
+            if (!logical.restore())
                 ec = error::restore_table;
         }
     };
