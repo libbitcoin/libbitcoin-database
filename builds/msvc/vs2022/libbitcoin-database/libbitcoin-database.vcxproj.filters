@@ -535,6 +535,9 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_dump.ipp">
       <Filter>include\bitcoin\database\impl\store</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_events.ipp">
+      <Filter>include\bitcoin\database\impl\store</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_open.ipp">
       <Filter>include\bitcoin\database\impl\store</Filter>
     </None>
@@ -554,6 +557,9 @@
       <Filter>include\bitcoin\database\impl\store</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_snapshot.ipp">
+      <Filter>include\bitcoin\database\impl\store</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_tables.ipp">
       <Filter>include\bitcoin\database\impl\store</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_unload_close.ipp">

@@ -268,6 +268,7 @@ include_bitcoin_database_impl_store_HEADERS = \
     include/bitcoin/database/impl/store/store_close.ipp \
     include/bitcoin/database/impl/store/store_create.ipp \
     include/bitcoin/database/impl/store/store_dump.ipp \
+    include/bitcoin/database/impl/store/store_events.ipp \
     include/bitcoin/database/impl/store/store_open.ipp \
     include/bitcoin/database/impl/store/store_open_load.ipp \
     include/bitcoin/database/impl/store/store_prune.ipp \
@@ -275,6 +276,7 @@ include_bitcoin_database_impl_store_HEADERS = \
     include/bitcoin/database/impl/store/store_report.ipp \
     include/bitcoin/database/impl/store/store_restore.ipp \
     include/bitcoin/database/impl/store/store_snapshot.ipp \
+    include/bitcoin/database/impl/store/store_tables.ipp \
     include/bitcoin/database/impl/store/store_unload_close.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks

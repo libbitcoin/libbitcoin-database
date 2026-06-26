@@ -290,6 +290,10 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 #include <bitcoin/database/impl/store/store.ipp>
 
+// Public enums.
+#include <bitcoin/database/impl/store/store_events.ipp>
+#include <bitcoin/database/impl/store/store_tables.ipp>
+
 // Public methods.
 #include <bitcoin/database/impl/store/store_create.ipp>
 #include <bitcoin/database/impl/store/store_open.ipp>
