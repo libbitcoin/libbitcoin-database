@@ -38,7 +38,7 @@ template <class Link, size_t RowSize, bool Align>
 class arraymap
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(arraymap);
+    DELETE_COPY_MOVE_DESTRUCT(arraymap);
 
     using link = Link;
 

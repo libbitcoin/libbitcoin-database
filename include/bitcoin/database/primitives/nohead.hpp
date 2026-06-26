@@ -16,28 +16,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYHEAD_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_ARRAYHEAD_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_NOHEAD_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_NOHEAD_HPP
 
 #include <atomic>
-#include <shared_mutex>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-/// Dynamically expanding array map header.
-template <class Link, bool Align>
-class arrayhead
+/// Fixed single word unguarded array header.
+template <class Link>
+class nohead
 {
 public:
-    DELETE_COPY_MOVE_DESTRUCT(arrayhead);
+    DEFAULT_COPY_MOVE_DESTRUCT(nohead);
 
     using bytes = typename Link::bytes;
 
     /// An array head is disabled if it has one or less buckets.
-    arrayhead(storage& head, const Link& buckets) NOEXCEPT;
+    nohead(storage& head, const Link& buckets) NOEXCEPT;
 
     /// Sizing is dynamic (thread safe).
     inline size_t size() const NOEXCEPT;
@@ -59,22 +58,11 @@ public:
     bool get_body_count(Link& count) const NOEXCEPT;
     bool set_body_count(const Link& count) NOEXCEPT;
 
-    /// Convert natural key to head bucket index (unvalidated).
-    inline Link index(size_t key) const NOEXCEPT;
-
-    /// Unsafe if verify false.
-    Link at(size_t key) const NOEXCEPT;
-
-    /// Assign link value to bucket index.
-    bool push(const Link& link, const Link& index) NOEXCEPT;
-
 private:
     using link = Link::integer;
     using body = manager<Link, system::data_array<zero>, Link::size>;
-    static_assert(std::atomic<link>::is_always_lock_free);
-    static_assert(is_nonzero(Link::size));
-    static constexpr auto bucket_size = Align ? sizeof(link) : Link::size;
-    static constexpr bool aligned = (bucket_size == sizeof(link));
+    static constexpr auto bucket_size = Link::size;
+    static_assert(is_nonzero(bucket_size));
 
     template <size_t Bytes>
     INLINE static auto& to_array(memory::iterator it) NOEXCEPT
@@ -102,16 +90,15 @@ private:
     // These are thread safe.
     storage& file_;
     const Link initial_buckets_;
-    mutable std::shared_mutex mutex_{};
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <class Link, bool Align>
-#define CLASS arrayhead<Link, Align>
+#define TEMPLATE template <class Link>
+#define CLASS nohead<Link>
 
-#include <bitcoin/database/impl/primitives/arrayhead.ipp>
+#include <bitcoin/database/impl/primitives/nohead.ipp>
 
 #undef CLASS
 #undef TEMPLATE

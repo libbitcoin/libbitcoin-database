@@ -30,6 +30,8 @@ template <size_t Size, size_t Bits = to_bits(Size),
     if_not_greater<Bits, to_bits(Size)> If = true>
 struct linkage
 {
+    DEFAULT_COPY_MOVE_DESTRUCT(linkage);
+
     using integer = unsigned_type<Size>;
     using bytes = std_array<uint8_t, Size>;
     using self = linkage<Size, Bits, If>;

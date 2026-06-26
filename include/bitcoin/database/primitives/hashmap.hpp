@@ -40,7 +40,7 @@ template <class Link, class Key, size_t RowSize, size_t CellSize = Link::size>
 class hashmap
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(hashmap);
+    DELETE_COPY_MOVE_DESTRUCT(hashmap);
 
     using key = Key;
     using link = Link;

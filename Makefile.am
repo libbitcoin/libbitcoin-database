@@ -89,6 +89,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/keys.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
+    test/primitives/nohead.cpp \
     test/primitives/nomap.cpp \
     test/query/amounts.cpp \
     test/query/confirmed.cpp \
@@ -201,6 +202,7 @@ include_bitcoin_database_impl_primitives_HEADERS = \
     include/bitcoin/database/impl/primitives/keys.ipp \
     include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp \
+    include/bitcoin/database/impl/primitives/nohead.ipp \
     include/bitcoin/database/impl/primitives/nomap.ipp
 
 include_bitcoin_database_impl_querydir = ${includedir}/bitcoin/database/impl/query
@@ -311,6 +313,7 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/keys.hpp \
     include/bitcoin/database/primitives/linkage.hpp \
     include/bitcoin/database/primitives/manager.hpp \
+    include/bitcoin/database/primitives/nohead.hpp \
     include/bitcoin/database/primitives/nomap.hpp \
     include/bitcoin/database/primitives/primitives.hpp
 
