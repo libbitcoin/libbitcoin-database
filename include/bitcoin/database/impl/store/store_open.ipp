@@ -47,13 +47,13 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
         return error::flush_lock;
     }
 
-    const auto verify = [&handler](code& ec, auto& storage,
+    const auto verify = [&handler](code& ec, auto& logical,
         table_t table) NOEXCEPT
     {
         if (!ec)
         {
             handler(event_t::verify_table, table);
-            if (!storage.verify())
+            if (!logical.verify())
                 ec = error::verify_table;
         }
     };

@@ -19,14 +19,20 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
 
-#include <bitcoin/database/primitives/arrayhead.hpp>
-#include <bitcoin/database/primitives/arraymap.hpp>
-#include <bitcoin/database/primitives/hashhead.hpp>
-#include <bitcoin/database/primitives/hashmap.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
+
+// heads
+#include <bitcoin/database/primitives/arrayhead.hpp>
+#include <bitcoin/database/primitives/hashhead.hpp>
+#include <bitcoin/database/primitives/nohead.hpp>
+
+// tables
+#include <bitcoin/database/primitives/arraymap.hpp>
+#include <bitcoin/database/primitives/hashmap.hpp>
 #include <bitcoin/database/primitives/nomap.hpp>
+#include <bitcoin/database/primitives/nomaps.hpp>
 
 #endif

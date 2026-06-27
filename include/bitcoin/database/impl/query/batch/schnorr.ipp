@@ -27,14 +27,14 @@ namespace database {
 
 TEMPLATE
 bool CLASS::verify_schnorr_signatures(const stopper& cancel,
-    header_links& links) NOEXCEPT
+    header_links& ) NOEXCEPT
 {
     // False return only implies canceled.
-    using batch = system::schnorr::batch;
-    const auto count = store_.schnorr.count().value;
-    const auto ptr = store_.schnorr.get_memory();
-    const auto rows = system::pointer_cast<const batch>(ptr->data());
-    links = batch::verify(cancel, { rows, count });
+    ////using batch = system::schnorr::batch;
+    ////const auto count = store_.schnorr.count().value;
+    ////const auto ptr = store_.schnorr.get_memory();
+    ////const auto rows = system::pointer_cast<const batch>(ptr->data());
+    ////links = batch::verify(cancel, { rows, count });
     return !cancel;
 }
 
@@ -46,46 +46,48 @@ bool CLASS::purge_schnorr_signatures() NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
-    return store_.schnorr.truncate(0);
+    return false; ////store_.schnorr.truncate(0);
     // ========================================================================
 }
 
 
 TEMPLATE
-bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
-    const ec_signature& signature, uint16_t id, const header_link& link) NOEXCEPT
+bool CLASS::set_signature(const hash_digest& , const ec_xonly& ,
+    const ec_signature& , uint16_t , const header_link& ) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.schnorr.put(table::schnorr::put_single_ref
-    {
-        {},
-        digest,
-        point,
-        signature,
-        id,
-        link
-    });
+    ////return store_.schnorr.put(table::schnorr::put_single_ref
+    ////{
+    ////    {},
+    ////    digest,
+    ////    point,
+    ////    signature,
+    ////    id,
+    ////    link
+    ////});
+    return {};
     // ========================================================================
 }
 
 TEMPLATE
-bool CLASS::set_signatures(const threshold& batch, uint16_t id,
-    const header_link& link) NOEXCEPT
+bool CLASS::set_signatures(const threshold& , uint16_t ,
+    const header_link& ) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.schnorr.put(table::schnorr::put_multiple_ref
-    {
-        {},
-        batch,
-        id,
-        link
-    });
+    ////return store_.schnorr.put(table::schnorr::put_multiple_ref
+    ////{
+    ////    {},
+    ////    batch,
+    ////    id,
+    ////    link
+    ////});
+    return {};
     // ========================================================================
 }
 

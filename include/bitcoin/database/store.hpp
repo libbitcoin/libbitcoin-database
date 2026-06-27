@@ -173,17 +173,17 @@ protected:
     /// Caches.
     /// -----------------------------------------------------------------------
 
-    // array
-    Storage ecdsa_head_;
-    Storage ecdsa_body_;
+    // aggregate
+    table::ecdsa_storage<Storage> ecdsa_head_;
+    table::ecdsa_storage<Storage> ecdsa_body_;
 
-    // array
-    Storage schnorr_head_;
-    Storage schnorr_body_;
+    // aggregate
+    table::schnorr_storage<Storage> schnorr_head_;
+    table::schnorr_storage<Storage> schnorr_body_;
 
-    // array
-    Storage silent_head_;
-    Storage silent_body_;
+    // aggregate
+    table::silent_storage<Storage> silent_head_;
+    table::silent_storage<Storage> silent_body_;
 
     // blob arraymap
     Storage duplicate_head_;
@@ -266,9 +266,9 @@ public:
     table::strong_tx strong_tx;
 
     /// Caches.
-    table::ecdsa ecdsa;
-    table::schnorr schnorr;
-    table::silent silent;
+    table::ecdsa<Storage> ecdsa;
+    table::schnorr<Storage> schnorr;
+    table::silent<Storage> silent;
     table::duplicate duplicate;
     table::prevout prevout;
     table::validated_bk validated_bk;
@@ -289,6 +289,10 @@ public:
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 #include <bitcoin/database/impl/store/store.ipp>
+
+// Public enums.
+#include <bitcoin/database/impl/store/store_events.ipp>
+#include <bitcoin/database/impl/store/store_tables.ipp>
 
 // Public methods.
 #include <bitcoin/database/impl/store/store_create.ipp>

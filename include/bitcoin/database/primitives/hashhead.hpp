@@ -36,7 +36,7 @@ template <class Link, class Key, size_t CellSize = Link::size,
 class hashhead
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(hashhead);
+    DELETE_COPY_MOVE_DESTRUCT(hashhead);
 
     using bytes = typename Link::bytes;
 

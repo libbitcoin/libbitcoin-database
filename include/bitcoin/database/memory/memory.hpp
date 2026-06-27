@@ -24,6 +24,7 @@
 #include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/memory/map.hpp>
+#include <bitcoin/database/memory/maps.hpp>
 #include <bitcoin/database/memory/streamers.hpp>
 
 #endif

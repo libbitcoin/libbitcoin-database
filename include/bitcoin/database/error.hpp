@@ -44,6 +44,7 @@ enum error_t : uint8_t
     integrity_block_confirmable2,
 
     /// memory map
+    create_open,
     open_open,
     size_failure,
     close_loaded,
