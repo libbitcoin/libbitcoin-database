@@ -43,7 +43,6 @@
 #include <bitcoin/database/tables/optionals/filter_bk.hpp>
 #include <bitcoin/database/tables/optionals/filter_tx.hpp>
 
-#include <bitcoin/database/tables/aggregate.hpp>
 #include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/event.hpp>
 #include <bitcoin/database/tables/names.hpp>

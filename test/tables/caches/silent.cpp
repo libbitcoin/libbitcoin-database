@@ -22,88 +22,35 @@
 BOOST_AUTO_TEST_SUITE(silent_tests)
 
 using namespace system;
+using namespace test;
 
-const table::silent::record record1
-{
-    {},
-    0x1122334455667788_u64,
-    base16_array("222222222222222222222222222222222222222222222222222222222222222222"),
-    0xabcdef12_u32
-};
-
-const table::silent::record record2
-{
-    {},
-    0xabcdef0123456789_u64,
-    base16_array("444444444444444444444444444444444444444444444444444444444444444444"),
-    0x12345678_u32
-};
-
-const auto expected_head = base16_chunk("00000000");
-const auto closed_head = base16_chunk("02000000");
-const auto expected_body = base16_chunk
-(
-    "8877665544332211"
-    "222222222222222222222222222222222222222222222222222222222222222222"
-    "12efcdab"
-
-    "8967452301efcdab"
-    "444444444444444444444444444444444444444444444444444444444444444444"
-    "78563412"
-);
-
-BOOST_AUTO_TEST_CASE(silent__put__two__expected)
-{
-    test::chunk_storage head_store{};
-    test::chunk_storage body_store{};
-    table::silent instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.create());
-
-    table::silent::link link1{};
-    BOOST_REQUIRE(instance.put_link(link1, record1));
-    BOOST_REQUIRE_EQUAL(link1, 0u);
-
-    table::silent::link link2{};
-    BOOST_REQUIRE(instance.put_link(link2, record2));
-    BOOST_REQUIRE_EQUAL(link2, 1u);
-
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
-    BOOST_REQUIRE(instance.close());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), closed_head);
-}
-
-BOOST_AUTO_TEST_CASE(silent__get__two__expected)
-{
-    auto head = expected_head;
-    auto body = expected_body;
-    test::chunk_storage head_store{ head };
-    test::chunk_storage body_store{ body };
-    table::silent instance{ head_store, body_store };
-
-    table::silent::record out{};
-    BOOST_REQUIRE(instance.get(0u, out));
-    BOOST_REQUIRE(out == record1);
-    BOOST_REQUIRE(instance.get(1u, out));
-    BOOST_REQUIRE(out == record2);
-}
-
-// silent_prefix
+// silent (aggregate)
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(silent_prefix__put__multiple_prefixes__expected)
+using silent_table = table::silent<chunk_storage>;
+using silent_storage = default_storage<table::silent_storage<chunk_storage>>;
+
+BOOST_AUTO_TEST_CASE(silent__create_verify_close__aggregate__expected)
 {
-    test::chunk_storage head_store{};
-    test::chunk_storage body_store{};
-    table::silent_prefix instance{ head_store, body_store };
+    silent_storage head{ "head" };
+    silent_storage body{ "body" };
+    silent_table instance{ head, body };
+
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+    BOOST_REQUIRE(instance.close());
+}
+
+BOOST_AUTO_TEST_CASE(silent__put_columns__three_rows__expected)
+{
+    silent_storage head{ "head" };
+    silent_storage body{ "body" };
+    silent_table instance{ head, body };
     BOOST_REQUIRE(instance.create());
 
-    const auto expected = base16_chunk
-    (
-        "1111111111111111"
-        "2222222222222222"
-        "3333333333333333"
-    );
+    constexpr auto rows = 3_size;
+    constexpr auto tx_fk = 0x11223344_u32;
+    constexpr auto compressed = base16_array("111111111111111111111111111111111111111111111111111111111111111111");
 
     const std::vector<uint64_t> prefixes
     {
@@ -112,69 +59,44 @@ BOOST_AUTO_TEST_CASE(silent_prefix__put__multiple_prefixes__expected)
         0x3333333333333333_u64
     };
 
-    using putter = table::silent_prefix::put_ref;
-    BOOST_REQUIRE(instance.put(putter{ {}, prefixes }));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
-}
+    // Allocate correlate rows for one tx_fk, returns base fk.
+    silent_link fk{};
+    const table::silent_correlate::records correlate{ {}, rows, tx_fk };
+    BOOST_REQUIRE(instance.correlate.put_link(fk, correlate));
+    BOOST_REQUIRE_EQUAL(fk, 0u);
 
-// silent_compressed
-// ----------------------------------------------------------------------------
+    // Expand subordinate columns to match correlate row count.
+    BOOST_REQUIRE(instance.prefix.expand(fk + rows));
+    BOOST_REQUIRE(instance.compressed.expand(fk + rows));
 
-BOOST_AUTO_TEST_CASE(silent_compressed__put__repeated_compressed__expected)
-{
-    test::chunk_storage head_store{};
-    test::chunk_storage body_store{};
-    table::silent_compressed instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.create());
+    const table::silent_prefix::put_ref prefix{ {}, prefixes };
+    const table::silent_compressed::put_ref compress{ {}, rows, compressed };
+    BOOST_REQUIRE(instance.prefix.put(fk, prefix));
+    BOOST_REQUIRE(instance.compressed.put(fk, compress));
 
-    const auto expected = base16_chunk
+    const auto expected_correlate = base16_chunk
     (
+        "44332211"
+        "44332211"
+        "44332211"
+    );
+    const auto expected_prefix = base16_chunk
+    (
+        "1111111111111111"
+        "2222222222222222"
+        "3333333333333333"
+    );
+    const auto expected_compressed = base16_chunk
+    (
+        "111111111111111111111111111111111111111111111111111111111111111111"
         "111111111111111111111111111111111111111111111111111111111111111111"
         "111111111111111111111111111111111111111111111111111111111111111111"
     );
 
-    constexpr auto compressed = base16_array(
-        "111111111111111111111111111111111111111111111111111111111111111111");
-
-    using putter = table::silent_compressed::put_ref;
-    BOOST_REQUIRE(instance.put(putter{ {}, 2_size, compressed }));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
-}
-
-// silent_correlate (writer + reader)
-// ----------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(silent_correlate__put__repeated_tx_fk__expected)
-{
-    test::chunk_storage head_store{};
-    test::chunk_storage body_store{};
-    table::silent_correlate instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.create());
-
-    const auto expected = base16_chunk("443322114433221144332211");
-
-    using putter = table::silent_correlate::records;
-    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, 0x11223344_u32 }));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
-}
-
-BOOST_AUTO_TEST_CASE(silent_correlate__get__using_record__expected)
-{
-    auto head = base16_chunk("03000000");
-    auto body = base16_chunk("44aa221144bb221144cc2211");
-    test::chunk_storage head_store{ head };
-    test::chunk_storage body_store{ body };
-    table::silent_correlate instance{ head_store, body_store };
-
-    table::silent_correlate::record out{};
-    BOOST_REQUIRE(instance.get(0u, out));
-    BOOST_REQUIRE_EQUAL(out.tx_fk, 0x1122aa44_u32);
-
-    BOOST_REQUIRE(instance.get(1u, out));
-    BOOST_REQUIRE_EQUAL(out.tx_fk, 0x1122bb44_u32);
-
-    BOOST_REQUIRE(instance.get(2u, out));
-    BOOST_REQUIRE_EQUAL(out.tx_fk, 0x1122cc44_u32);
+    BOOST_REQUIRE_EQUAL(body.correlate.buffer(), expected_correlate);
+    BOOST_REQUIRE_EQUAL(body.prefix.buffer(), expected_prefix);
+    BOOST_REQUIRE_EQUAL(body.compressed.buffer(), expected_compressed);
+    BOOST_REQUIRE(instance.close());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

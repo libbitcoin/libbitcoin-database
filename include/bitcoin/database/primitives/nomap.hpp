@@ -27,16 +27,18 @@
 
 namespace libbitcoin {
 namespace database {
-    
+
 /// Caution: reader/writer hold body remap lock until disposed.
 /// These handles should be used for serialization and immediately disposed.
-template <class Link, size_t Size>
+template <class Link, size_t Size, auto Suffix = ""_t>
 class nomap
 {
 public:
     DEFAULT_COPY_MOVE_DESTRUCT(nomap);
 
     using link = Link;
+    static constexpr auto width = Size;
+    static constexpr auto suffix = Suffix;
 
     nomap(storage& header, storage& body) NOEXCEPT;
 
@@ -140,14 +142,14 @@ private:
     manager manager_;
 };
 
-template <class Element>
-using no_map = nomap<typename Element::link, Element::size>;
+template <class Schema>
+using no_map = nomap<typename Schema::link, Schema::size, Schema::suffix>;
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <class Link, size_t Size>
-#define CLASS nomap<Link, Size>
+#define TEMPLATE template <class Link, size_t Size, auto Suffix>
+#define CLASS nomap<Link, Size, Suffix>
 
 #include <bitcoin/database/impl/primitives/nomap.ipp>
 

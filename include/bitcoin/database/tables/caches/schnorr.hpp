@@ -27,156 +27,6 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// DEPRECATED: schnorr is an array of schnorr signature verification records.
-struct schnorr
-  : public no_map<schema::schnorr>
-{
-    using header = schema::header::link;
-    using category_t = system::chain::threshold::category_t;
-    using no_map<schema::schnorr>::nomap;
-
-    struct record
-      : public schema::schnorr
-    {
-        inline link count() const NOEXCEPT
-        {
-            return 1;
-        }
-
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            digest = source.read_hash();
-            point = source.read_forward<system::ec_xonly_size>();
-            signature = source.read_forward<system::ec_signature_size>();
-            category = static_cast<category_t>(source.read_byte());
-            pair = source.read_little_endian<uint16_t>();
-            group = source.read_little_endian<uint16_t>();
-            header_fk = source.read_little_endian<header::integer, header::size>();
-            BC_ASSERT(!source || source.get_read_position() == minrow);
-            return source;
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            sink.write_bytes(digest);
-            sink.write_bytes(point);
-            sink.write_bytes(signature);
-            sink.write_byte(to_value(category));
-            sink.write_little_endian<uint16_t>(pair);
-            sink.write_little_endian<uint16_t>(group);
-            sink.write_little_endian<header::integer, header::size>(header_fk);
-            BC_ASSERT(!sink || sink.get_write_position() == minrow);
-            return sink;
-        }
-
-        inline bool operator==(const record& other) const NOEXCEPT
-        {
-            return digest == other.digest
-                && point == other.point
-                && signature == other.signature
-                && category == other.category
-                && pair == other.pair
-                && group == other.group
-                && header_fk == other.header_fk;
-        }
-
-        /// pair: min (row 0, for all), max (row 1, for category::between).
-        system::hash_digest digest{};
-        system::ec_xonly point{};
-        system::ec_signature signature{};
-        category_t category{};
-        uint16_t pair{};
-        uint16_t group{};
-        header::integer header_fk{};
-    };
-
-    struct put_single_ref
-      : public schema::schnorr
-    {
-        inline link count() const NOEXCEPT
-        {
-            return 1;
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            constexpr auto category = to_value(category_t::single);
-            sink.write_bytes(digest);
-            sink.write_bytes(point);
-            sink.write_bytes(signature);
-            sink.write_byte(category);
-            sink.write_little_endian<uint16_t>(1);
-            sink.write_little_endian<uint16_t>(group);
-            sink.write_little_endian<header::integer, header::size>(header_fk);
-            BC_ASSERT(!sink || sink.get_write_position() == minrow);
-            return sink;
-        }
-
-        /// pair: min (row 0, for all), max (row 1, for category::between).
-        const system::hash_digest& digest;
-        const system::ec_xonly& point;
-        const system::ec_signature& signature;
-        uint16_t group{};
-        header::integer header_fk{};
-    };
-
-    /// Writer for threshold groups (denormalized min/max in first two rows).
-    struct put_multiple_ref
-      : public schema::schnorr
-    {
-        inline link count() const NOEXCEPT
-        {
-            using namespace system;
-            return possible_narrow_cast<link::integer>(batch.tuples.size());
-        }
-
-        /// min in first row, max in second row (for within only).
-        inline uint16_t to_pair(size_t index, size_t count, bool between,
-            uint16_t min, uint16_t max) const NOEXCEPT
-        {
-            if (is_zero(index))
-                return min;
-
-            if (between && is_one(index) && count > one)
-                return max;
-
-            return {};
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            const auto rows = count();
-            const auto min = batch.minimum;
-            const auto max = batch.maximum;
-            const auto cat = batch.category;
-            const bool between = (cat == category_t::between);
-
-            for (size_t row{}; row < rows; ++row)
-            {
-                const auto category = is_zero(row) ? to_value(cat) : 0_u8;
-                const auto pair = to_pair(row, rows, between, min, max);
-                const auto& tuple = batch.tuples.at(row);
-
-                sink.write_bytes(tuple.digest);
-                sink.write_bytes(tuple.point.get());
-                sink.write_bytes(tuple.sig.get());
-                sink.write_byte(category);
-                sink.write_little_endian<uint16_t>(pair);
-                sink.write_little_endian<uint16_t>(group);
-                sink.write_little_endian<header::integer, header::size>(
-                    header_fk);
-            }
-
-            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
-            return sink;
-        }
-
-        const system::chain::threshold& batch;
-        uint16_t group{};
-        header::integer header_fk{};
-    };
-};
-
 /// schnorr_digest is an array of schnorr verification record signature hashes.
 struct schnorr_digest
   : public no_map<schema::schnorr_digest>
@@ -343,6 +193,67 @@ struct schnorr_correlate
         const uint16_t group{};
         const header::integer header_fk{};
     };
+};
+
+/// Aggregate (files)
+/// ---------------------------------------------------------------------------
+
+template <typename Storage>
+using schnorr_files = maps
+<
+    Storage,
+    schnorr_correlate,
+    schnorr_digest,
+    schnorr_xonly,
+    schnorr_signature
+>;
+
+template <typename Storage>
+class schnorr_storage
+  : public schnorr_files<Storage>
+{
+public:
+    schnorr_storage(const std::filesystem::path& path, size_t size,
+        size_t rate, bool random_access) NOEXCEPT
+      : schnorr_files<Storage>(path, size, rate, random_access)
+    {
+    }
+
+    Storage& correlate = std::get<0>(this->files_);
+    Storage& digest = std::get<1>(this->files_);
+    Storage& xonly = std::get<2>(this->files_);
+    Storage& signature = std::get<3>(this->files_);
+};
+
+/// Aggregate (table)
+/// ---------------------------------------------------------------------------
+
+template <typename Storage>
+using schnorr_table = nomaps
+<
+    Storage,
+    schnorr_correlate,
+    schnorr_digest,
+    schnorr_xonly,
+    schnorr_signature
+>;
+
+template <typename Storage>
+class schnorr
+  : public schnorr_table<Storage>
+{
+public:
+    using storage = schnorr_storage<Storage>;
+
+    schnorr(storage& head, storage& body) NOEXCEPT
+      : schnorr_table<Storage>(head, body)
+    {
+    }
+
+    schnorr_correlate& correlate = std::get<0>(this->tables_);
+    schnorr_digest& digest = std::get<1>(this->tables_);
+    schnorr_xonly& xonly = std::get<2>(this->tables_);
+    schnorr_signature& signature = std::get<3>(this->tables_);
 };
 
 } // namespace table

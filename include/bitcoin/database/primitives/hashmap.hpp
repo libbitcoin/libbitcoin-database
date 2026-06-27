@@ -242,9 +242,9 @@ private:
     std::atomic<size_t> positive_{};
 };
 
-template <typename Element>
-using hash_map = hashmap<typename Element::link, typename Element::key,
-    Element::size, Element::cell>;
+template <typename Schema>
+using hash_map = hashmap<typename Schema::link, typename Schema::key,
+    Schema::size, Schema::cell>;
 
 } // namespace database
 } // namespace libbitcoin

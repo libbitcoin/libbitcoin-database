@@ -38,7 +38,7 @@ public:
         return backup([](auto, auto) {});
     }
 
-    inline code dump_(const std::filesystem::path& folder) NOEXCEPT
+    inline code dump_(const path& folder) NOEXCEPT
     {
         return dump(folder, [](auto, auto) {});
     }
@@ -169,34 +169,114 @@ public:
 
     // Caches.
 
-    inline const path& ecdsa_head_file() const NOEXCEPT
+    inline const path& ecdsa_head_correlate_file() const NOEXCEPT
     {
-        return ecdsa_head_.file();
+        return ecdsa_head_.correlate.file();
     }
 
-    inline const path& ecdsa_body_file() const NOEXCEPT
+    inline const path& ecdsa_body_correlate_file() const NOEXCEPT
     {
-        return ecdsa_body_.file();
+        return ecdsa_body_.correlate.file();
     }
 
-    inline const path& schnorr_head_file() const NOEXCEPT
+    inline const path& ecdsa_head_digest_file() const NOEXCEPT
     {
-        return schnorr_head_.file();
+        return ecdsa_head_.digest.file();
     }
 
-    inline const path& schnorr_body_file() const NOEXCEPT
+    inline const path& ecdsa_body_digest_file() const NOEXCEPT
     {
-        return schnorr_body_.file();
+        return ecdsa_body_.digest.file();
     }
 
-    inline const path& silent_head_file() const NOEXCEPT
+    inline const path& ecdsa_head_compressed_file() const NOEXCEPT
     {
-        return silent_head_.file();
+        return ecdsa_head_.compressed.file();
     }
 
-    inline const path& silent_body_file() const NOEXCEPT
+    inline const path& ecdsa_body_compressed_file() const NOEXCEPT
     {
-        return silent_body_.file();
+        return ecdsa_body_.compressed.file();
+    }
+
+    inline const path& ecdsa_head_signature_file() const NOEXCEPT
+    {
+        return ecdsa_head_.signature.file();
+    }
+
+    inline const path& ecdsa_body_signature_file() const NOEXCEPT
+    {
+        return ecdsa_body_.signature.file();
+    }
+
+    inline const path& schnorr_head_correlate_file() const NOEXCEPT
+    {
+        return schnorr_head_.correlate.file();
+    }
+
+    inline const path& schnorr_body_correlate_file() const NOEXCEPT
+    {
+        return schnorr_body_.correlate.file();
+    }
+
+    inline const path& schnorr_head_digest_file() const NOEXCEPT
+    {
+        return schnorr_head_.digest.file();
+    }
+
+    inline const path& schnorr_body_digest_file() const NOEXCEPT
+    {
+        return schnorr_body_.digest.file();
+    }
+
+    inline const path& schnorr_head_xonly_file() const NOEXCEPT
+    {
+        return schnorr_head_.xonly.file();
+    }
+
+    inline const path& schnorr_body_xonly_file() const NOEXCEPT
+    {
+        return schnorr_body_.xonly.file();
+    }
+
+    inline const path& schnorr_head_signature_file() const NOEXCEPT
+    {
+        return schnorr_head_.signature.file();
+    }
+
+    inline const path& schnorr_body_signature_file() const NOEXCEPT
+    {
+        return schnorr_body_.signature.file();
+    }
+
+    inline const path& silent_head_correlate_file() const NOEXCEPT
+    {
+        return silent_head_.correlate.file();
+    }
+
+    inline const path& silent_body_correlate_file() const NOEXCEPT
+    {
+        return silent_body_.correlate.file();
+    }
+
+    inline const path& silent_head_prefix_file() const NOEXCEPT
+    {
+        return silent_head_.prefix.file();
+    }
+
+    inline const path& silent_body_prefix_file() const NOEXCEPT
+    {
+        return silent_body_.prefix.file();
+    }
+
+    inline const path& silent_head_compressed_file() const NOEXCEPT
+    {
+        return silent_head_.compressed.file();
+    }
+
+    inline const path& silent_body_compressed_file() const NOEXCEPT
+    {
+        return silent_body_.compressed.file();
     }
 
     inline const path& duplicate_head_file() const NOEXCEPT

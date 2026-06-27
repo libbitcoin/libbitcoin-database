@@ -50,138 +50,6 @@ constexpr size_t ecdsa_count(size_t m, size_t n) NOEXCEPT
     return m * sum;
 }
 
-/// DEPRECATED: ecdsa is an array of ecdsa signature validation records.
-struct ecdsa
-  : public no_map<schema::ecdsa>
-{
-    using header = schema::header::link;
-    using no_map<schema::ecdsa>::nomap;
-
-    struct record
-      : public schema::ecdsa
-    {
-        inline link count() const NOEXCEPT
-        {
-            return 1;
-        }
-
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            digest = source.read_hash();
-            point = source.read_forward<system::ec_compressed_size>();
-            signature = source.read_forward<system::ec_signature_size>();
-            pair = source.read_byte();
-            group = source.read_little_endian<uint16_t>();
-            header_fk = source.read_little_endian<header::integer, header::size>();
-            BC_ASSERT(!source || source.get_read_position() == minrow);
-            return source;
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            sink.write_bytes(digest);
-            sink.write_bytes(point);
-            sink.write_bytes(signature);
-            sink.write_byte(pair);
-            sink.write_little_endian<uint16_t>(group);
-            sink.write_little_endian<header::integer, header::size>(header_fk);
-            BC_ASSERT(!sink || sink.get_write_position() == minrow);
-            return sink;
-        }
-
-        inline bool operator==(const record& other) const NOEXCEPT
-        {
-            return digest == other.digest
-                && point == other.point
-                && signature == other.signature
-                && pair == other.pair
-                && group == other.group
-                && header_fk == other.header_fk;
-        }
-
-        system::hash_digest digest{};
-        system::ec_compressed point{};
-        system::ec_signature signature{};
-        uint8_t pair{};
-        uint16_t group{};
-        header::integer header_fk{};
-    };
-
-    /// Writer for one row single-sig (0|0 packed in one row, 1-of-1).
-    struct put_single_ref
-      : public schema::ecdsa
-    {
-        inline link count() const NOEXCEPT
-        {
-            return 1;
-        }
-
-        /// Writer used for single-sig row, should always write pair = 0.
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            sink.write_bytes(digest);
-            sink.write_bytes(point);
-            sink.write_bytes(signature);
-            sink.write_byte(0);
-            sink.write_little_endian<uint16_t>(group);
-            sink.write_little_endian<header::integer, header::size>(header_fk);
-            BC_ASSERT(!sink || sink.get_write_position() == minrow);
-            return sink;
-        }
-
-        const system::hash_digest& digest;
-        const system::ec_compressed& point;
-        const system::ec_signature& signature;
-        const uint16_t group{};
-        const header::integer header_fk{};
-    };
-
-    /// Writer for 1-of-1 multisig (0|0 packed in one row).
-    /// Writer for multisig groups (sig|key packed in each row).
-    struct put_multiple_ref
-      : public schema::ecdsa
-    {
-        // Terminal count fails the write attempt, so to_data() is guarded.
-        inline link count() const NOEXCEPT
-        {
-            return system::possible_narrow_cast<link::integer>(
-                ecdsa_count(sigs.size(), keys.size()));
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            const auto m = sigs.size();
-            const auto n = keys.size();
-            if (!ecdsa_check(m, n))
-                return false;
-
-            const auto gap = (n - m);
-            for (size_t sig{}; sig < m; ++sig)
-            {
-                for (auto key = sig; key <= gap + sig; ++key)
-                {
-                    sink.write_bytes(digest);
-                    sink.write_bytes(keys.at(key));
-                    sink.write_bytes(sigs.at(sig));
-                    sink.write_byte(system::pack_word<uint8_t>(sig, key));
-                    sink.write_little_endian<uint16_t>(group);
-                    sink.write_little_endian<header::integer, header::size>(
-                        header_fk);
-                }
-            }
-
-            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
-            return sink;
-        }
-
-        const hash_digest& digest;
-        const system::ec_compresseds& keys;
-        const system::ec_signatures& sigs;
-        const uint16_t group{};
-        const header::integer header_fk{};
-    };
-};
-
 /// ecdsa_digest is an array of ecdsa verification record signature hashes.
 struct ecdsa_digest
   : public no_map<schema::ecdsa_digest>
@@ -351,6 +219,66 @@ struct ecdsa_correlate
         const uint16_t group{};
         const header::integer header_fk{};
     };
+};
+
+/// Aggregate (files)
+/// ---------------------------------------------------------------------------
+
+template <typename Storage>
+using ecdsa_files = maps
+<
+    Storage,
+    ecdsa_correlate,
+    ecdsa_digest,
+    ecdsa_compressed,
+    ecdsa_signature
+>;
+
+template <typename Storage>
+class ecdsa_storage
+    : public ecdsa_files<Storage>
+{
+public:
+    ecdsa_storage(const std::filesystem::path& path, size_t size,
+        size_t rate, bool random_access) NOEXCEPT
+        : ecdsa_files<Storage>(path, size, rate, random_access)
+    {}
+
+    Storage& correlate = std::get<0>(this->files_);
+    Storage& digest = std::get<1>(this->files_);
+    Storage& compressed = std::get<2>(this->files_);
+    Storage& signature = std::get<3>(this->files_);
+};
+
+/// Aggregate (table)
+/// ---------------------------------------------------------------------------
+
+template <typename Storage>
+using ecdsa_table = nomaps
+<
+    Storage,
+    ecdsa_correlate,
+    ecdsa_digest,
+    ecdsa_compressed,
+    ecdsa_signature
+>;
+
+template <typename Storage>
+class ecdsa
+  : public ecdsa_table<Storage>
+{
+public:
+    using storage = ecdsa_storage<Storage>;
+
+    ecdsa(storage& head, storage& body) NOEXCEPT
+      : ecdsa_table<Storage>(head, body)
+    {
+    }
+
+    ecdsa_correlate& correlate = std::get<0>(this->tables_);
+    ecdsa_digest& digest = std::get<1>(this->tables_);
+    ecdsa_compressed& compressed = std::get<2>(this->tables_);
+    ecdsa_signature& signature = std::get<3>(this->tables_);
 };
 
 } // namespace table

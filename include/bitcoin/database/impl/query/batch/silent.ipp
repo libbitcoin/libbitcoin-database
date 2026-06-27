@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_QUERY_BATCH_SILENT_IPP
 
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/tables/tables.hpp>
 #include <bitcoin/database/types/types.hpp>
 
 namespace libbitcoin {
@@ -29,12 +30,31 @@ TEMPLATE
 bool CLASS::scan_silent(const stopper& cancel, const ec_secret& scan_key,
     const silent_handler& callback) NOEXCEPT
 {
+    const auto prefix_ptr = store_.silent.prefix.get_memory();
+    const auto compressed_ptr = store_.silent.compressed.get_memory();
+    const auto correlate_ptr = store_.silent.correlate.get_memory();
+
+    using prefix_t = const table::silent_prefix::span;
+    using compressed_t = const table::silent_compressed::span;
+    using correlate_t = const table::silent_correlate::span;
+
+    using namespace system;
+    const auto prefix = pointer_cast<prefix_t>(prefix_ptr->data());
+    const auto compressed = pointer_cast<compressed_t>(compressed_ptr->data());
+    const auto correlate = pointer_cast<correlate_t>(correlate_ptr->data());
+
+    // Shortest column.
+    const auto count = store_.silent.count();
+    const silent::batch batch
+    {
+        .prefixes = { prefix, count },
+        .compresseds = { compressed, count },
+        .correlates = { correlate, count }
+    };
+
     // False return only implies canceled.
-    using batch = system::silent::batch;
-    const auto count = store_.silent.count().value;
-    const auto ptr = store_.silent.get_memory();
-    const auto rows = system::pointer_cast<const batch>(ptr->data());
-    batch::scan(cancel, { rows, count }, scan_key, callback);
+    // Callbacks invoked on caller thread if turbo is false.
+    silent::batch::scan(cancel, batch, scan_key, callback, store_.turbo());
     return !cancel;
 }
 
@@ -75,9 +95,9 @@ bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_silent(const tx_link& link, const transaction& ) NOEXCEPT
+bool CLASS::set_silent(const tx_link& link, const transaction& tx) NOEXCEPT
 {
-    ////BC_ASSERT(!tx.is_coinbase());
+    BC_ASSERT(!tx.is_coinbase());
     if (link.is_terminal())
         return false;
 
@@ -88,34 +108,34 @@ bool CLASS::set_silent(const tx_link& link, const transaction& ) NOEXCEPT
     ////    return true;
 
     // TODO: aliases for record above;
-    ////const ec_compressed key{};
-    ////const std::vector<uint64_t> prefixes{};
+    const ec_compressed key{};
+    const std::vector<uint64_t> prefixes{};
 
-    ////using silent_prefix = table::silent_prefix::put_ref;
-    ////using silent_compressed = table::silent_compressed::put_ref;
-    ////using silent_correlate = table::silent_correlate::records;
+    using silent_prefix = table::silent_prefix::put_ref;
+    using silent_compressed = table::silent_compressed::put_ref;
+    using silent_correlate = table::silent_correlate::records;
+    using namespace system;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    ////silent_link fk{};
-    ////const auto rows = prefixes.size();
+    silent_link fk{};
+    const auto rows = possible_narrow_cast<tx_link::integer>(prefixes.size());
 
-    ////// Allocate contiguous rows at fk and fill with link (x rows).
-    ////store_.silent_correlate.put_link(fk, silent_correlate{ {}, rows, link });
+    // Allocate contiguous rows and write link to each (x rows), returns fk.
+    if (!store_.silent.correlate.put_link(fk, silent_correlate{ {}, rows, link }))
+        return false;
 
-    ////// Expand subordinate tables to same size, as necessary.
-    ////if (!store_.silent_prefix.expand(fk + rows) ||
-    ////    !store_.silent_compressed.expand(fk + rows))
-    ////    return false;
+    // Expand subordinate tables to same size, as necessary.
+    if (!store_.silent.prefix.expand(fk + rows) ||
+        !store_.silent.compressed.expand(fk + rows))
+        return false;
 
-    ////// Write prefixes (rows) into corresponding fk position.
-    ////if (!store_.silent_prefix.put(fk, silent_prefix{ {}, prefixes }))
-    ////    return false;
-
-    ////// Write compressed (x rows) into corresponding fk position.
-    ////if (!store_.silent_compressed.put(fk, silent_compressed{ {}, rows, key }))
-    ////    return false;
+    // Write prefixes (rows) into corresponding fk position.
+    // Write compressed (x rows) into corresponding fk position.
+    if (!store_.silent.prefix.put(fk, silent_prefix{ {}, prefixes }) ||
+        !store_.silent.compressed.put(fk, silent_compressed{ {}, rows, key }))
+        return false;
 
     return true;
     // ========================================================================
