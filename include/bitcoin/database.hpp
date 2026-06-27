@@ -32,6 +32,7 @@
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/finalizer.hpp>
 #include <bitcoin/database/memory/map.hpp>
+#include <bitcoin/database/memory/maps.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/reader.hpp>
 #include <bitcoin/database/memory/streamers.hpp>
@@ -48,8 +49,8 @@
 #include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/primitives/nohead.hpp>
 #include <bitcoin/database/primitives/nomap.hpp>
+#include <bitcoin/database/primitives/nomaps.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
-#include <bitcoin/database/tables/aggregate.hpp>
 #include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/event.hpp>
 #include <bitcoin/database/tables/names.hpp>

@@ -125,8 +125,8 @@ private:
     body body_;
 };
 
-template <typename Element>
-using array_map = arraymap<typename Element::link, Element::size, Element::align>;
+template <typename Schema>
+using array_map = arraymap<typename Schema::link, Schema::size, Schema::align>;
 
 } // namespace database
 } // namespace libbitcoin

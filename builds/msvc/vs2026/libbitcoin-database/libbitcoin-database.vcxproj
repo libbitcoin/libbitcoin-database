@@ -157,6 +157,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\maps.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\streamers.hpp" />
@@ -171,11 +172,11 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\nohead.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\nomap.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\nomaps.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\query.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\store.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\aggregate.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\input.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\ins.hpp" />
