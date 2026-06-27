@@ -95,7 +95,8 @@ bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_silent(const tx_link& link, const transaction& tx) NOEXCEPT
+bool CLASS::set_silent(const tx_link& link,
+    const transaction& BC_DEBUG_ONLY(tx)) NOEXCEPT
 {
     BC_ASSERT(!tx.is_coinbase());
     if (link.is_terminal())
