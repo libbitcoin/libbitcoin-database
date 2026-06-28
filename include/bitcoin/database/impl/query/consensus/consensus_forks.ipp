@@ -164,7 +164,7 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     code ec{};
 
     // Disable filter constraint if filtering is disabled.
-    const auto filter = filter_enabled();
+    ////const auto filter = filter_enabled();
 
     ///////////////////////////////////////////////////////////////////////////
     std::shared_lock interlock{ candidate_reorganization_mutex_ };
