@@ -569,6 +569,7 @@ public:
 
     /// Setters.
     bool set_block_valid(const header_link& link) NOEXCEPT;
+    bool set_block_prevalid(const header_link& link) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_confirmable(const header_link& link) NOEXCEPT;
     bool set_block_unknown(const header_link& link) NOEXCEPT;
@@ -665,6 +666,7 @@ public:
     header_links get_confirmed_headers(size_t first,
         size_t limit) const NOEXCEPT;
 
+    header_links get_prevalids(size_t fork_point) const NOEXCEPT;
     height_link get_confirmed_height(const header_link& link) const NOEXCEPT;
     header_links get_confirmed_fork(const header_link& fork) const NOEXCEPT;
     header_links get_candidate_fork(size_t& fork_point) const NOEXCEPT;

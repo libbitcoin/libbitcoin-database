@@ -98,6 +98,7 @@ enum error_t : uint8_t
     tx_connected,
     tx_disconnected,
     block_valid,
+    block_prevalid,
     block_confirmable,
     block_unconfirmable,
     unassociated,

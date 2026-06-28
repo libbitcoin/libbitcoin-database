@@ -25,6 +25,45 @@
 namespace libbitcoin {
 namespace database {
 
+// get_prevalids
+// ----------------------------------------------------------------------------
+// startup query (reorg safety not required)
+
+TEMPLATE
+header_links CLASS::get_prevalids(size_t fork_point) const NOEXCEPT
+{
+    header_links out{};
+    auto height = fork_point;
+
+    while (true)
+    {
+        const auto link = to_candidate(++height);
+        if (link.is_terminal())
+            break;
+
+        switch (get_block_state(link).value())
+        {
+            case error::block_prevalid:
+            {
+                out.push_back(link);
+                break;
+            }
+
+            case error::unassociated:
+            case error::block_unconfirmable:
+                return out;
+
+            ////case error::bypassed:
+            ////case error::unvalidated:
+            ////case error::block_valid:
+            ////case error::block_confirmable:
+            default:;
+        }
+    }
+
+    return out;
+}
+
 // get_confirmed
 // ----------------------------------------------------------------------------
 
@@ -133,8 +172,10 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     fork_point = get_fork_();
     auto height = add1(fork_point);
     auto link = to_candidate(height);
-    while (is_block_validated(ec, link, height, top_checkpoint) &&
-        (!filter || is_filtered_body(link)))
+
+    // Filter body always written before validated, so the check is redundant.
+    while (is_block_validated(ec, link, height, top_checkpoint)
+        /*&& (!filter || is_filtered_body(link))*/)
     {
         out.emplace_back(link, ec);
         link = to_candidate(++height);
