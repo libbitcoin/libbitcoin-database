@@ -103,7 +103,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/properties_block.cpp \
     test/query/properties_tx.cpp \
     test/query/sequences.cpp \
-    test/query/signatures.cpp \
     test/query/sizes.cpp \
     test/query/address/address_balance.cpp \
     test/query/address/address_history.cpp \
@@ -113,6 +112,9 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/archive/chain_writer.cpp \
     test/query/archive/wire_reader.cpp \
     test/query/archive/wire_writer.cpp \
+    test/query/batch/ecdsa.cpp \
+    test/query/batch/schnorr.cpp \
+    test/query/batch/silent.cpp \
     test/query/consensus/consensus_block.cpp \
     test/query/consensus/consensus_chain_state.cpp \
     test/query/consensus/consensus_compact.cpp \

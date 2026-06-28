@@ -39,6 +39,24 @@ struct schnorr_digest
     {
         inline link count() const NOEXCEPT
         {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_bytes(digest);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const system::hash_digest& digest;
+    };
+
+    struct put_refs
+      : public schema::schnorr_digest
+    {
+        inline link count() const NOEXCEPT
+        {
             return system::possible_narrow_cast<link::integer>(tuples.size());
         }
 
@@ -63,6 +81,24 @@ struct schnorr_xonly
     using no_map<schema::schnorr_xonly>::nomap;
 
     struct put_ref
+      : public schema::schnorr_xonly
+    {
+        inline link count() const NOEXCEPT
+        {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_bytes(point);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const system::ec_xonly& point;
+    };
+
+    struct put_refs
       : public schema::schnorr_xonly
     {
         inline link count() const NOEXCEPT
@@ -95,6 +131,24 @@ struct schnorr_signature
     {
         inline link count() const NOEXCEPT
         {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_bytes(signature);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const system::ec_signature& signature;
+    };
+
+    struct put_refs
+      : public schema::schnorr_signature
+    {
+        inline link count() const NOEXCEPT
+        {
             return system::possible_narrow_cast<link::integer>(tuples.size());
         }
 
@@ -115,7 +169,7 @@ struct schnorr_signature
 struct schnorr_correlate
   : public no_map<schema::schnorr_correlate>
 {
-    using header = schema::header::link;
+    using hd = schema::header::link;
     using category_t = system::chain::threshold::category_t;
     using no_map<schema::schnorr_correlate>::nomap;
 
@@ -129,21 +183,85 @@ struct schnorr_correlate
 
         inline bool from_data(reader& source) NOEXCEPT
         {
+            header_fk = source.read_little_endian<hd::integer, hd::size>();
             category = static_cast<category_t>(source.read_byte());
             pair = source.read_little_endian<uint16_t>();
             group = source.read_little_endian<uint16_t>();
-            header_fk = source.read_little_endian<header::integer, header::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
+        hd::integer header_fk{};
         category_t category{};
         uint16_t pair{};
         uint16_t group{};
-        header::integer header_fk{};
+    };
+
+    struct allocate1
+      : public schema::schnorr_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_little_endian<hd::integer, hd::size>(hd::terminal);
+            return sink;
+        }
+    };
+
+    struct allocate
+      : public schema::schnorr_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(rows);
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            constexpr auto skip = one + sizeof(uint16_t) + sizeof(uint16_t);
+
+            for (size_t row{}; row < rows; ++row)
+            {
+                sink.write_little_endian<hd::integer, hd::size>(hd::terminal);
+                sink.skip_bytes(skip);
+            }
+
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const size_t rows{};
     };
 
     struct put_ref
+      : public schema::schnorr_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            // 1 is required for single sig.
+            constexpr uint16_t pair = 1;
+            sink.write_little_endian<hd::integer, hd::size>(header_fk);
+            sink.write_byte(to_value(category_t::single));
+            sink.write_little_endian<uint16_t>(pair);
+            sink.write_little_endian<uint16_t>(group);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const hd::integer header_fk{};
+        const uint16_t group{};
+    };
+
+    struct put_refs
       : public schema::schnorr_correlate
     {
         inline link count() const NOEXCEPT
@@ -178,11 +296,10 @@ struct schnorr_correlate
                 const auto category = is_zero(row) ? to_value(cat) : 0_u8;
                 const auto pair = to_pair(row, rows, between, min, max);
 
+                sink.write_little_endian<hd::integer, hd::size>(header_fk);
                 sink.write_byte(category);
                 sink.write_little_endian<uint16_t>(pair);
                 sink.write_little_endian<uint16_t>(group);
-                sink.write_little_endian<header::integer, header::size>(
-                    header_fk);
             }
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
@@ -190,8 +307,8 @@ struct schnorr_correlate
         }
 
         const system::chain::threshold& batch;
+        const hd::integer header_fk{};
         const uint16_t group{};
-        const header::integer header_fk{};
     };
 };
 
@@ -255,6 +372,9 @@ public:
     schnorr_xonly& xonly = std::get<2>(this->tables_);
     schnorr_signature& signature = std::get<3>(this->tables_);
 };
+
+static_assert(sizeof(system::schnorr::batch::correlate_t) ==
+    schnorr_correlate::width);
 
 } // namespace table
 } // namespace database

@@ -192,8 +192,10 @@ public:
     silent_compressed& compressed = std::get<2>(this->tables_);
 };
 
-static_assert(is_same_type<silent_prefix::span, system::silent::batch::prefix>);
-static_assert(is_same_type<silent_correlate::span, system::silent::batch::tx_link>);
+static_assert(is_same_type<silent_prefix::span,
+    system::silent::batch::prefix>);
+static_assert(is_same_type<silent_correlate::span,
+    system::silent::batch::tx_link>);
 
 } // namespace table
 } // namespace database

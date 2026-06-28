@@ -153,6 +153,15 @@
     <ClCompile Include="..\..\..\..\test\query\archive\chain_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\query\archive\wire_reader.cpp" />
     <ClCompile Include="..\..\..\..\test\query\archive\wire_writer.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\batch\ecdsa.cpp">
+      <ObjectFileName>$(IntDir)test_query_batch_ecdsa.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\batch\schnorr.cpp">
+      <ObjectFileName>$(IntDir)test_query_batch_schnorr.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\batch\silent.cpp">
+      <ObjectFileName>$(IntDir)test_query_batch_silent.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\confirmed.cpp" />
     <ClCompile Include="..\..\..\..\test\query\consensus\consensus_block.cpp" />
     <ClCompile Include="..\..\..\..\test\query\consensus\consensus_chain_state.cpp" />
@@ -181,7 +190,6 @@
     <ClCompile Include="..\..\..\..\test\query\properties_block.cpp" />
     <ClCompile Include="..\..\..\..\test\query\properties_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\query\sequences.cpp" />
-    <ClCompile Include="..\..\..\..\test\query\signatures.cpp" />
     <ClCompile Include="..\..\..\..\test\query\sizes.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\store.cpp" />
@@ -194,10 +202,16 @@
     <ClCompile Include="..\..\..\..\test\tables\archives\transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\txs.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\duplicate.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\caches\ecdsa.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\caches\ecdsa.cpp">
+      <ObjectFileName>$(IntDir)test_tables_caches_ecdsa.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\prevout.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\caches\schnorr.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\caches\silent.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\caches\schnorr.cpp">
+      <ObjectFileName>$(IntDir)test_tables_caches_schnorr.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\silent.cpp">
+      <ObjectFileName>$(IntDir)test_tables_caches_silent.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">

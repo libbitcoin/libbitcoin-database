@@ -61,6 +61,24 @@ struct ecdsa_digest
     {
         inline link count() const NOEXCEPT
         {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_bytes(digest);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const hash_digest& digest;
+    };
+
+    struct put_refs
+      : public schema::ecdsa_digest
+    {
+        inline link count() const NOEXCEPT
+        {
             return system::possible_narrow_cast<link::integer>(
                 ecdsa_count(sigs, keys));
         }
@@ -88,6 +106,24 @@ struct ecdsa_compressed
     using no_map<schema::ecdsa_compressed>::nomap;
 
     struct put_ref
+      : public schema::ecdsa_compressed
+    {
+        inline link count() const NOEXCEPT
+        {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_bytes(key);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const system::ec_compressed& key;
+    };
+
+    struct put_refs
       : public schema::ecdsa_compressed
     {
         inline link count() const NOEXCEPT
@@ -128,6 +164,24 @@ struct ecdsa_signature
     {
         inline link count() const NOEXCEPT
         {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_bytes(signature);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const system::ec_signature& signature;
+    };
+
+    struct put_refs
+      : public schema::ecdsa_signature
+    {
+        inline link count() const NOEXCEPT
+        {
             return system::possible_narrow_cast<link::integer>(
                 ecdsa_count(sigs.size(), keys));
         }
@@ -157,7 +211,7 @@ struct ecdsa_signature
 struct ecdsa_correlate
   : public no_map<schema::ecdsa_correlate>
 {
-    using header = schema::header::link;
+    using hd = schema::header::link;
     using no_map<schema::ecdsa_correlate>::nomap;
 
     struct record
@@ -170,19 +224,82 @@ struct ecdsa_correlate
 
         inline bool from_data(reader& source) NOEXCEPT
         {
+            header_fk = source.read_little_endian<hd::integer, hd::size>();
             pair = source.read_byte();
             group = source.read_little_endian<uint16_t>();
-            header_fk = source.read_little_endian<header::integer, header::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
+        hd::integer header_fk{};
         uint8_t pair{};
         uint16_t group{};
-        header::integer header_fk{};
+    };
+
+    struct allocate1
+      : public schema::ecdsa_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_little_endian<hd::integer, hd::size>(hd::terminal);
+            return sink;
+        }
+    };
+
+    struct allocate
+      : public schema::ecdsa_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(rows);
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            constexpr auto skip = one + sizeof(uint16_t);
+
+            for (size_t row{}; row < rows; ++row)
+            {
+                sink.write_little_endian<hd::integer, hd::size>(hd::terminal);
+                sink.skip_bytes(skip);
+            }
+
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const size_t rows{};
     };
 
     struct put_ref
+      : public schema::ecdsa_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            // 0 is required for single sig (0|0 -> 1 of 1).
+            constexpr uint8_t pair = 0;
+            sink.write_little_endian<hd::integer, hd::size>(header_fk);
+            sink.write_byte(pair);
+            sink.write_little_endian<uint16_t>(group);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const hd::integer header_fk{};
+        const uint16_t group{};
+    };
+
+    struct put_refs
       : public schema::ecdsa_correlate
     {
         inline link count() const NOEXCEPT
@@ -203,10 +320,9 @@ struct ecdsa_correlate
             {
                 for (auto key = sig; key <= gap + sig; ++key)
                 {
+                    sink.write_little_endian<hd::integer, hd::size>(header_fk);
                     sink.write_byte(system::pack_word<uint8_t>(sig, key));
                     sink.write_little_endian<uint16_t>(group);
-                    sink.write_little_endian<header::integer, header::size>(
-                        header_fk);
                 }
             }
 
@@ -214,10 +330,10 @@ struct ecdsa_correlate
             return sink;
         }
 
+        const hd::integer header_fk{};
         const size_t keys{};
         const size_t sigs{};
         const uint16_t group{};
-        const header::integer header_fk{};
     };
 };
 
@@ -280,6 +396,9 @@ public:
     ecdsa_compressed& compressed = std::get<2>(this->tables_);
     ecdsa_signature& signature = std::get<3>(this->tables_);
 };
+
+static_assert(sizeof(system::ecdsa::batch::correlate_t) ==
+    ecdsa_correlate::width);
 
 } // namespace table
 } // namespace database

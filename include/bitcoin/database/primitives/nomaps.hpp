@@ -77,6 +77,17 @@ public:
     }
 
     /// Macro not used because of parameter.
+    bool truncate(auto count) NOEXCEPT
+    {
+        bool success{ true };
+        std::apply([&](auto&... column)
+        {
+            ((success &= column.truncate(count)), ...);
+        }, tables_);
+        return success;
+    }
+
+    /// Macro not used because of parameter.
     bool backup(bool prune) NOEXCEPT
     {
         bool success{ true };

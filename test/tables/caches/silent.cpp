@@ -50,7 +50,10 @@ BOOST_AUTO_TEST_CASE(silent__put_columns__three_rows__expected)
 
     constexpr auto rows = 3_size;
     constexpr auto tx_fk = 0x11223344_u32;
-    constexpr auto compressed = base16_array("111111111111111111111111111111111111111111111111111111111111111111");
+    constexpr auto compressed = base16_array
+    (
+        "111111111111111111111111111111111111111111111111111111111111111111"
+    );
 
     const std::vector<uint64_t> prefixes
     {
