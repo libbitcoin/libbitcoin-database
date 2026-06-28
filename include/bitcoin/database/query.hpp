@@ -569,6 +569,7 @@ public:
 
     /// Setters.
     bool set_block_valid(const header_link& link) NOEXCEPT;
+    bool set_block_prevalid(const header_link& link) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_confirmable(const header_link& link) NOEXCEPT;
     bool set_block_unknown(const header_link& link) NOEXCEPT;
