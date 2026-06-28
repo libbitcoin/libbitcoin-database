@@ -36,12 +36,12 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     }
 
     code ec{ error::success };
-    const auto close = [&handler](code& ec, auto& storage, table_t table) NOEXCEPT
+    const auto close = [&handler](code& ec, auto& logical, table_t table) NOEXCEPT
     {
         if (!ec)
         {
             handler(event_t::close_table, table);
-            if (!storage.close())
+            if (!logical.close())
                 ec = error::close_table;
         }
     };

@@ -32,10 +32,10 @@ namespace database {
 TEMPLATE
 void CLASS::report(const error_handler& handler) const NOEXCEPT
 {
-    const auto report = [&handler](const auto& storage, table_t table) NOEXCEPT
+    const auto report = [&handler](const auto& file, table_t table) NOEXCEPT
     {
-        auto ec = storage.get_fault();
-        if (!ec && to_bool(storage.get_space()))
+        auto ec = file.get_fault();
+        if (!ec && to_bool(file.get_space()))
             ec = error::disk_full;
 
         handler(ec, table);

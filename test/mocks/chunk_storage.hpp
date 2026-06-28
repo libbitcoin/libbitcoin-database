@@ -24,27 +24,45 @@
 
 namespace test {
 
+template <typename Storage>
+class default_storage
+  : public Storage
+{
+public:
+    using path = std::filesystem::path;
+
+    default_storage(const path& filename="test", size_t minimum=1,
+        size_t expansion=0, bool random=true) NOEXCEPT
+      : Storage(filename, minimum, expansion, random)
+    {
+    }
+};
+
 // A thread safe storage implementation built on data_chunk.
 class chunk_storage
   : public database::storage
 {
 public:
+    using path = std::filesystem::path;
+
     chunk_storage() NOEXCEPT;
     chunk_storage(system::data_chunk& reference) NOEXCEPT;
-    chunk_storage(const std::filesystem::path& filename, size_t minimum=1,
-        size_t expansion=0, bool random=true) NOEXCEPT;
+    chunk_storage(const path& filename, size_t minimum=1, size_t expansion=0,
+        bool random=true) NOEXCEPT;
 
     // test side door.
     system::data_chunk& buffer() NOEXCEPT;
 
     // storage interface.
+    code create() const NOEXCEPT override;
     code open() NOEXCEPT override;
     code close() NOEXCEPT override;
     code load() NOEXCEPT override;
     code reload() NOEXCEPT override;
     code flush() NOEXCEPT override;
     code unload() NOEXCEPT override;
-    const std::filesystem::path& file() const NOEXCEPT override;
+    code dump(const path& path) const NOEXCEPT override;
+    const path& file() const NOEXCEPT override;
     size_t capacity() const NOEXCEPT override;
     size_t size() const NOEXCEPT override;
     bool truncate(size_t size) NOEXCEPT override;
@@ -65,7 +83,7 @@ private:
     size_t logical_;
 
     // These are thread safe.
-    const std::filesystem::path path_;
+    const path path_;
     mutable std::shared_mutex field_mutex_{};
     mutable std::shared_mutex map_mutex_{};
 };

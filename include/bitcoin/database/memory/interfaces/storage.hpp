@@ -32,6 +32,9 @@ class storage
 public:
     static constexpr auto eof = system::bit_all<size_t>;
 
+    /// Create empty file, must not exist.
+    virtual code create() const NOEXCEPT = 0;
+
     /// Open file, must be closed.
     virtual code open() NOEXCEPT = 0;
 
@@ -49,6 +52,9 @@ public:
 
     /// Flush, unmap and truncate to logical, restartable, idempotent.
     virtual code unload() NOEXCEPT = 0;
+
+    /// Dump current logical map to a new file in path, must not exist.
+    virtual code dump(const std::filesystem::path& path) const NOEXCEPT = 0;
 
     /// The filesystem path of the backing storage.
     virtual const std::filesystem::path& file() const NOEXCEPT = 0;

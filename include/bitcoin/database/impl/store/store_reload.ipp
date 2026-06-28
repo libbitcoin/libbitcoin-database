@@ -35,16 +35,16 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     }
 
     code ec{ error::success };
-    const auto reload = [&handler, this](code& ec, auto& storage,
+    const auto reload = [&handler, this](code& ec, auto& file,
         table_t table) NOEXCEPT
     {
         if (!ec)
         {
             // If any storage has a fault it will return as failure code.
-            if (to_bool(storage.get_space()))
+            if (to_bool(file.get_space()))
             {
                 handler(event_t::load_file, table);
-                ec = storage.reload();
+                ec = file.reload();
                 this->dirty_.store(true, std::memory_order_relaxed);
             }
         }

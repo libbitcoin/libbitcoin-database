@@ -191,6 +191,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\maps.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
@@ -227,7 +230,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\manager.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\nohead.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\nomap.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\nomaps.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\primitives.hpp">
@@ -397,6 +406,9 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp">
       <Filter>include\bitcoin\database\impl\primitives</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nohead.ipp">
+      <Filter>include\bitcoin\database\impl\primitives</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomap.ipp">
       <Filter>include\bitcoin\database\impl\primitives</Filter>
     </None>
@@ -535,6 +547,9 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_dump.ipp">
       <Filter>include\bitcoin\database\impl\store</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_events.ipp">
+      <Filter>include\bitcoin\database\impl\store</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_open.ipp">
       <Filter>include\bitcoin\database\impl\store</Filter>
     </None>
@@ -554,6 +569,9 @@
       <Filter>include\bitcoin\database\impl\store</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_snapshot.ipp">
+      <Filter>include\bitcoin\database\impl\store</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_tables.ipp">
       <Filter>include\bitcoin\database\impl\store</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\store\store_unload_close.ipp">

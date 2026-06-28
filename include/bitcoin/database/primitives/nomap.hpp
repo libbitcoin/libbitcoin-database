@@ -21,22 +21,25 @@
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-#include <bitcoin/database/primitives/arrayhead.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
 #include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/primitives/nohead.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
+
 /// Caution: reader/writer hold body remap lock until disposed.
 /// These handles should be used for serialization and immediately disposed.
-template <class Link, size_t Size>
+template <class Link, size_t Size, auto Suffix = ""_t>
 class nomap
 {
 public:
     DEFAULT_COPY_MOVE_DESTRUCT(nomap);
 
     using link = Link;
+    using span = system::data_array<Size>;
+    static constexpr auto width = Size;
+    static constexpr auto suffix = Suffix;
 
     nomap(storage& header, storage& body) NOEXCEPT;
 
@@ -130,7 +133,7 @@ public:
 private:
     static constexpr auto is_slab = (Size == max_size_t);
     using manager = database::manager<Link, system::data_array<zero>, Size>;
-    using head = database::arrayhead<Link, false>;
+    using head = database::nohead<Link>;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).
@@ -140,14 +143,14 @@ private:
     manager manager_;
 };
 
-template <class Element>
-using no_map = nomap<typename Element::link, Element::size>;
+template <class Schema>
+using no_map = nomap<typename Schema::link, Schema::size, Schema::suffix>;
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <class Link, size_t Size>
-#define CLASS nomap<Link, Size>
+#define TEMPLATE template <class Link, size_t Size, auto Suffix>
+#define CLASS nomap<Link, Size, Suffix>
 
 #include <bitcoin/database/impl/primitives/nomap.ipp>
 

@@ -38,6 +38,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { integrity_block_confirmable2, "store corrupted, block_confirmable2" },
 
     // memory map
+    { create_open, "creating open file" },
     { open_open, "opening open file" },
     { size_failure, "filure obtaining file size" },
     { close_loaded, "closing loaded file" },

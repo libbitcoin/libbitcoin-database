@@ -27,14 +27,14 @@ namespace database {
 
 TEMPLATE
 bool CLASS::verify_ecdsa_signatures(const stopper& cancel,
-    header_links& links) NOEXCEPT
+    header_links& ) NOEXCEPT
 {
     // False return only implies canceled.
-    using batch = system::ecdsa::batch;
-    const auto count = store_.ecdsa.count().value;
-    const auto ptr = store_.ecdsa.get_memory();
-    const auto rows = system::pointer_cast<const batch>(ptr->data());
-    links = batch::verify(cancel, { rows, count });
+    ////using batch = system::ecdsa::batch;
+    ////const auto count = store_.ecdsa.count().value;
+    ////const auto ptr = store_.ecdsa.get_memory();
+    ////const auto rows = system::pointer_cast<const batch>(ptr->data());
+    ////links = batch::verify(cancel, { rows, count });
     return !cancel;
 }
 
@@ -46,48 +46,50 @@ bool CLASS::purge_ecdsa_signatures() NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
-    return store_.ecdsa.truncate(0);
+    return true; ////store_.ecdsa.truncate(0);
     // ========================================================================
 }
 
 TEMPLATE
-bool CLASS::set_signature(const hash_digest& digest, const ec_compressed& point,
-    const ec_signature& signature, uint16_t id, const header_link& link) NOEXCEPT
+bool CLASS::set_signature(const hash_digest& , const ec_compressed& ,
+    const ec_signature& , uint16_t , const header_link& ) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.ecdsa.put(table::ecdsa::put_single_ref
-    {
-        {},
-        digest,
-        point,
-        signature,
-        id,
-        link
-    });
+    ////return store_.ecdsa.put(table::ecdsa::put_single_ref
+    ////{
+    ////    {},
+    ////    digest,
+    ////    point,
+    ////    signature,
+    ////    id,
+    ////    link
+    ////});
+    return {};
     // ========================================================================
 }
 
 TEMPLATE
-bool CLASS::set_signatures(const hash_digest& digest,
-    const ec_compresseds& keys, const ec_signatures& sigs, uint16_t id,
-    const header_link& link) NOEXCEPT
+bool CLASS::set_signatures(const hash_digest& ,
+    const ec_compresseds& , const ec_signatures& , uint16_t ,
+    const header_link& ) NOEXCEPT
 {
     // ========================================================================
     const auto scope = store_.get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.ecdsa.put(table::ecdsa::put_multiple_ref
-    {
-        {},
-        digest,
-        keys,
-        sigs,
-        id,
-        link
-    });
+    ////return store_.ecdsa.put(table::ecdsa::put_multiple_ref
+    ////{
+    ////    {},
+    ////    digest,
+    ////    keys,
+    ////    sigs,
+    ////    id,
+    ////    link
+    ////});
+    return {};
     // ========================================================================
 }
 

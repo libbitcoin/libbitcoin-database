@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_TABLES_SCHEMA_HPP
 
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/tables/names.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -126,6 +127,7 @@ struct input
         one;                    // witness size (variable)
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;
+    static constexpr auto suffix = "input"_t;
     static_assert(minsize == 2u);
     static_assert(minrow == 2u);
     static_assert(link::size == 5u);
@@ -143,6 +145,7 @@ struct output
         one;                        // script size (variable)
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;
+    static constexpr auto suffix = "output"_t;
     static_assert(minsize == 6u);
     static_assert(minrow == 6u);
     static_assert(link::size == 5u);
@@ -178,6 +181,7 @@ struct ins
         schema::transaction::pk;// parent->tx (spend navigation)
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
+    static constexpr auto suffix = "ins"_t;
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 13u);
     static_assert(minrow == 13u);
@@ -193,6 +197,7 @@ struct outs
         schema::output::pk;
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
+    static constexpr auto suffix = "outs"_t;
     ////static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 5u);
     static_assert(minrow == 5u);
@@ -231,6 +236,7 @@ struct height
         schema::header::pk;
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
+    static constexpr auto suffix = "height"_t;
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 3u);
     static_assert(minrow == 3u);
@@ -260,14 +266,15 @@ struct strong_tx
 /// Cache tables.
 /// ---------------------------------------------------------------------------
 
-#define TABLE_COLUMN(name, bytes) \
-struct name \
+#define TABLE_COLUMN(table, bytes) \
+struct table \
 { \
     static constexpr size_t pk = schema::outs::pk; \
     using link = schema::outs::link; \
     static constexpr size_t minsize = bytes; \
     static constexpr size_t minrow = minsize; \
     static constexpr size_t size = minsize; \
+    static constexpr auto suffix = schema::caches::table; \
 }
 
 // array
@@ -327,23 +334,6 @@ struct schnorr
     ////static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 136u);
     static_assert(minrow == 136u);
-    static_assert(link::size == 4u);
-};
-
-// array, deprecated
-struct silent
-{
-    static constexpr size_t pk = schema::outs::pk;
-    using link = schema::outs::link;
-    static constexpr size_t minsize =
-        schema::prefix +
-        system::ec_compressed_size +
-        schema::transaction::pk;
-    static constexpr size_t minrow = minsize;
-    static constexpr size_t size = minsize;
-    ////static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 45u);
-    static_assert(minrow == 45u);
     static_assert(link::size == 4u);
 };
 

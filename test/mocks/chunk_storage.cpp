@@ -50,6 +50,11 @@ system::data_chunk& chunk_storage::buffer() NOEXCEPT
     return buffer_;
 }
 
+code chunk_storage::create() const NOEXCEPT
+{
+    return error::success;
+}
+
 code chunk_storage::open() NOEXCEPT
 {
     return error::success;
@@ -76,6 +81,11 @@ code chunk_storage::flush() NOEXCEPT
 }
 
 code chunk_storage::unload() NOEXCEPT
+{
+    return error::success;
+}
+
+code chunk_storage::dump(const std::filesystem::path&) const NOEXCEPT
 {
     return error::success;
 }

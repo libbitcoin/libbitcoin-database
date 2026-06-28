@@ -142,6 +142,7 @@
     <ClCompile Include="..\..\..\..\test\primitives\keys.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\nohead.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\nomap.cpp" />
     <ClCompile Include="..\..\..\..\test\query\address\address_balance.cpp" />
     <ClCompile Include="..\..\..\..\test\query\address\address_history.cpp" />

@@ -89,6 +89,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/primitives/keys.cpp \
     test/primitives/linkage.cpp \
     test/primitives/manager.cpp \
+    test/primitives/nohead.cpp \
     test/primitives/nomap.cpp \
     test/query/amounts.cpp \
     test/query/confirmed.cpp \
@@ -201,6 +202,7 @@ include_bitcoin_database_impl_primitives_HEADERS = \
     include/bitcoin/database/impl/primitives/keys.ipp \
     include/bitcoin/database/impl/primitives/linkage.ipp \
     include/bitcoin/database/impl/primitives/manager.ipp \
+    include/bitcoin/database/impl/primitives/nohead.ipp \
     include/bitcoin/database/impl/primitives/nomap.ipp
 
 include_bitcoin_database_impl_querydir = ${includedir}/bitcoin/database/impl/query
@@ -268,6 +270,7 @@ include_bitcoin_database_impl_store_HEADERS = \
     include/bitcoin/database/impl/store/store_close.ipp \
     include/bitcoin/database/impl/store/store_create.ipp \
     include/bitcoin/database/impl/store/store_dump.ipp \
+    include/bitcoin/database/impl/store/store_events.ipp \
     include/bitcoin/database/impl/store/store_open.ipp \
     include/bitcoin/database/impl/store/store_open_load.ipp \
     include/bitcoin/database/impl/store/store_prune.ipp \
@@ -275,6 +278,7 @@ include_bitcoin_database_impl_store_HEADERS = \
     include/bitcoin/database/impl/store/store_report.ipp \
     include/bitcoin/database/impl/store/store_restore.ipp \
     include/bitcoin/database/impl/store/store_snapshot.ipp \
+    include/bitcoin/database/impl/store/store_tables.ipp \
     include/bitcoin/database/impl/store/store_unload_close.ipp
 
 include_bitcoin_database_locksdir = ${includedir}/bitcoin/database/locks
@@ -289,6 +293,7 @@ include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/accessor.hpp \
     include/bitcoin/database/memory/finalizer.hpp \
     include/bitcoin/database/memory/map.hpp \
+    include/bitcoin/database/memory/maps.hpp \
     include/bitcoin/database/memory/memory.hpp \
     include/bitcoin/database/memory/reader.hpp \
     include/bitcoin/database/memory/streamers.hpp \
@@ -309,7 +314,9 @@ include_bitcoin_database_primitives_HEADERS = \
     include/bitcoin/database/primitives/keys.hpp \
     include/bitcoin/database/primitives/linkage.hpp \
     include/bitcoin/database/primitives/manager.hpp \
+    include/bitcoin/database/primitives/nohead.hpp \
     include/bitcoin/database/primitives/nomap.hpp \
+    include/bitcoin/database/primitives/nomaps.hpp \
     include/bitcoin/database/primitives/primitives.hpp
 
 include_bitcoin_database_tablesdir = ${includedir}/bitcoin/database/tables
