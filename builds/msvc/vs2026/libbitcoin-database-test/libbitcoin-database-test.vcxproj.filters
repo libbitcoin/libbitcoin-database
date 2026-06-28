@@ -34,29 +34,32 @@
     <Filter Include="src\query\archive">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\query\consensus">
+    <Filter Include="src\query\batch">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\query\navigate">
+    <Filter Include="src\query\consensus">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables">
+    <Filter Include="src\query\navigate">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\archives">
+    <Filter Include="src\tables">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\caches">
+    <Filter Include="src\tables\archives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\indexes">
+    <Filter Include="src\tables\caches">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\optional">
+    <Filter Include="src\tables\indexes">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\types">
+    <Filter Include="src\tables\optional">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\types">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000002}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +156,15 @@
     <ClCompile Include="..\..\..\..\test\query\archive\wire_writer.cpp">
       <Filter>src\query\archive</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\batch\ecdsa.cpp">
+      <Filter>src\query\batch</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\batch\schnorr.cpp">
+      <Filter>src\query\batch</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\batch\silent.cpp">
+      <Filter>src\query\batch</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\confirmed.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
@@ -229,9 +241,6 @@
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\sequences.cpp">
-      <Filter>src\query</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\signatures.cpp">
       <Filter>src\query</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\sizes.cpp">

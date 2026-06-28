@@ -34,22 +34,22 @@ bool CLASS::scan_silent(const stopper& cancel, const ec_secret& scan_key,
     const auto compressed_ptr = store_.silent.compressed.get_memory();
     const auto correlate_ptr = store_.silent.correlate.get_memory();
 
+    using correlate_t = const table::silent_correlate::span;
     using prefix_t = const table::silent_prefix::span;
     using compressed_t = const table::silent_compressed::span;
-    using correlate_t = const table::silent_correlate::span;
 
     using namespace system;
+    const auto correlate = pointer_cast<correlate_t>(correlate_ptr->data());
     const auto prefix = pointer_cast<prefix_t>(prefix_ptr->data());
     const auto compressed = pointer_cast<compressed_t>(compressed_ptr->data());
-    const auto correlate = pointer_cast<correlate_t>(correlate_ptr->data());
 
     // Shortest column.
     const auto count = store_.silent.count();
     const silent::batch batch
     {
+        .correlates = { correlate, count },
         .prefixes = { prefix, count },
-        .compresseds = { compressed, count },
-        .correlates = { correlate, count }
+        .points = { compressed, count }
     };
 
     // False return only implies canceled.
@@ -112,33 +112,30 @@ bool CLASS::set_silent(const tx_link& link,
     const ec_compressed key{};
     const std::vector<uint64_t> prefixes{};
 
-    using silent_prefix = table::silent_prefix::put_ref;
-    using silent_compressed = table::silent_compressed::put_ref;
-    using silent_correlate = table::silent_correlate::records;
+    using correlate_t = table::silent_correlate::records;
+    using prefix_t = table::silent_prefix::put_ref;
+    using compressed_t = table::silent_compressed::put_ref;
     using namespace system;
 
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    auto rows = possible_narrow_cast<silent_link::integer>(prefixes.size());
+    constexpr auto term = silent_link::terminal;
     silent_link fk{};
-    const auto rows = possible_narrow_cast<tx_link::integer>(prefixes.size());
 
-    // Allocate contiguous rows and write link to each (x rows), returns fk.
-    if (!store_.silent.correlate.put_link(fk, silent_correlate{ {}, rows, link }))
-        return false;
-
-    // Expand subordinate tables to same size, as necessary.
-    if (!store_.silent.prefix.expand(fk + rows) ||
+    // Allocate contiguous correlate rows and write terminal to each, gets fk.
+    // Then expand (as necessary) subordinate tables to same size.
+    if (!store_.silent.correlate.put_link(fk, correlate_t{ {}, rows, term }) ||
+        !store_.silent.prefix.expand(fk + rows) ||
         !store_.silent.compressed.expand(fk + rows))
         return false;
 
-    // Write prefixes (rows) into corresponding fk position.
-    // Write compressed (x rows) into corresponding fk position.
-    if (!store_.silent.prefix.put(fk, silent_prefix{ {}, prefixes }) ||
-        !store_.silent.compressed.put(fk, silent_compressed{ {}, rows, key }))
-        return false;
-
-    return true;
+    // Write one value to each column in corresponding positions.
+    return
+        store_.silent.correlate.put(fk, correlate_t{ {}, rows, link }) &&
+        store_.silent.prefix.put(fk, prefix_t{ {}, prefixes }) &&
+        store_.silent.compressed.put(fk, compressed_t{ {}, rows, key });
     // ========================================================================
 }
 
