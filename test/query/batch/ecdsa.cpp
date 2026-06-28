@@ -24,10 +24,10 @@ BOOST_FIXTURE_TEST_SUITE(query_batch_ecdsa_tests, test::directory_setup_fixture)
 
 using namespace system;
 
-const hash_digest sighash_bad = base16_array
-(
-    "4242424242424242424242424242424242424242424242424242424242424242"
-);
+////const hash_digest sighash_bad = base16_array
+////(
+////    "4242424242424242424242424242424242424242424242424242424242424242"
+////);
 const hash_digest ecdsa_sighash = base16_array
 (
     "504d68beac187dd0b259ddd6ed6d5d6348150b9b23ee6dfdb43e87f74dd3c547"
