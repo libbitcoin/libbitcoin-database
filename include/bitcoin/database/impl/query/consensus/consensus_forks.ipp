@@ -172,8 +172,10 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     fork_point = get_fork_();
     auto height = add1(fork_point);
     auto link = to_candidate(height);
-    while (is_block_validated(ec, link, height, top_checkpoint) &&
-        (!filter || is_filtered_body(link)))
+
+    // Filter body always written before validated, so the check is redundant.
+    while (is_block_validated(ec, link, height, top_checkpoint)
+        /*&& (!filter || is_filtered_body(link))*/)
     {
         out.emplace_back(link, ec);
         link = to_candidate(++height);
