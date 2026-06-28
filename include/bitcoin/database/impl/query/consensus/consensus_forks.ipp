@@ -25,6 +25,45 @@
 namespace libbitcoin {
 namespace database {
 
+// get_prevalids
+// ----------------------------------------------------------------------------
+// startup query (reorg safety not required)
+
+TEMPLATE
+header_links CLASS::get_prevalids(size_t fork_point) const NOEXCEPT
+{
+    header_links out{};
+    auto height = fork_point;
+
+    while (true)
+    {
+        const auto link = to_candidate(++height);
+        if (link.is_terminal())
+            break;
+
+        switch (get_block_state(link).value())
+        {
+            case error::block_prevalid:
+            {
+                out.push_back(link);
+                break;
+            }
+
+            case error::unassociated:
+            case error::block_unconfirmable:
+                return out;
+
+            ////case error::bypassed:
+            ////case error::unvalidated:
+            ////case error::block_valid:
+            ////case error::block_confirmable:
+            default:;
+        }
+    }
+
+    return out;
+}
+
 // get_confirmed
 // ----------------------------------------------------------------------------
 

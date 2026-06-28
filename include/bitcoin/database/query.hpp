@@ -666,6 +666,7 @@ public:
     header_links get_confirmed_headers(size_t first,
         size_t limit) const NOEXCEPT;
 
+    header_links get_prevalids(size_t fork_point) const NOEXCEPT;
     height_link get_confirmed_height(const header_link& link) const NOEXCEPT;
     header_links get_confirmed_fork(const header_link& fork) const NOEXCEPT;
     header_links get_candidate_fork(size_t& fork_point) const NOEXCEPT;
