@@ -22,6 +22,17 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/names.hpp>
 
+#define TABLE_COLUMN(table, bytes) \
+struct table \
+{ \
+    static constexpr size_t pk = schema::outs::pk; \
+    using link = schema::outs::link; \
+    static constexpr size_t minsize = bytes; \
+    static constexpr size_t minrow = minsize; \
+    static constexpr size_t size = minsize; \
+    static constexpr auto suffix = schema::caches::table; \
+}
+
 namespace libbitcoin {
 namespace database {
 namespace schema {
@@ -266,17 +277,6 @@ struct strong_tx
 /// Cache tables.
 /// ---------------------------------------------------------------------------
 
-#define TABLE_COLUMN(table, bytes) \
-struct table \
-{ \
-    static constexpr size_t pk = schema::outs::pk; \
-    using link = schema::outs::link; \
-    static constexpr size_t minsize = bytes; \
-    static constexpr size_t minrow = minsize; \
-    static constexpr size_t size = minsize; \
-    static constexpr auto suffix = schema::caches::table; \
-}
-
 // array
 TABLE_COLUMN(ecdsa_digest, system::hash_size);
 TABLE_COLUMN(ecdsa_compressed, system::ec_compressed_size);
@@ -434,5 +434,7 @@ struct filter_tx
 } // namespace schema
 } // namespace database
 } // namespace libbitcoin
+
+#undef TABLE_COLUMN
 
 #endif
