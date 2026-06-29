@@ -237,7 +237,7 @@ struct height
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
     static constexpr auto suffix = "height"_t;
-    static constexpr link count() NOEXCEPT { return 1; }
+    ////static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 3u);
     static_assert(minrow == 3u);
     static_assert(link::size == 3u);
@@ -294,7 +294,8 @@ TABLE_COLUMN(silent_prefix, schema::prefix);
 TABLE_COLUMN(silent_compressed, system::ec_compressed_size);
 TABLE_COLUMN(silent_correlate, schema::transaction::pk);
 
-#undef TABLE_COLUMN
+// array (same as candidate and confirmed)
+using prevalid = height;
 
 // record hashmap
 struct duplicate
