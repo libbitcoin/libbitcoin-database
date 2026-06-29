@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_BATCH_SILENT_IPP
 #define LIBBITCOIN_DATABASE_QUERY_BATCH_SILENT_IPP
 
+#include <algorithm>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 #include <bitcoin/database/types/types.hpp>

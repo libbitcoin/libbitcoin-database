@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_INPUT_HPP
 #define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_INPUT_HPP
 
+#include <algorithm>
 #include <memory>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -163,7 +164,7 @@ struct input
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             const auto& ins = *tx_.inputs_ptr();
-            std::for_each(ins.cbegin(), ins.cend(), [&](const auto& in) NOEXCEPT
+            std::ranges::for_each(ins, [&](const auto& in) NOEXCEPT
             {
                 in->script().to_data(sink, true);
                 in->witness().to_data(sink, true);

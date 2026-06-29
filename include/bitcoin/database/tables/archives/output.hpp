@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_OUTPUT_HPP
 #define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_OUTPUT_HPP
 
+#include <algorithm>
 #include <memory>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -214,13 +215,12 @@ struct output
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             const auto& outs = *tx_.outputs_ptr();
-            std::for_each(outs.cbegin(), outs.cend(),
-                [&](const auto& out) NOEXCEPT
-                {
-                    sink.write_little_endian<tx::integer, tx::size>(parent_fk);
-                    sink.write_variable(out->value());
-                    out->script().to_data(sink, true);
-                });
+            std::ranges::for_each(outs, [&](const auto& out) NOEXCEPT
+            {
+                sink.write_little_endian<tx::integer, tx::size>(parent_fk);
+                sink.write_variable(out->value());
+                out->script().to_data(sink, true);
+            });
 
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
