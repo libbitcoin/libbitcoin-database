@@ -569,7 +569,6 @@ public:
 
     /// Setters.
     bool set_block_valid(const header_link& link) NOEXCEPT;
-    bool set_block_prevalid(const header_link& link) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_confirmable(const header_link& link) NOEXCEPT;
     bool set_block_unknown(const header_link& link) NOEXCEPT;
@@ -612,7 +611,7 @@ public:
     bool verify_ecdsa_signatures(const stopper& cancel, header_links&) NOEXCEPT;
     bool verify_schnorr_signatures(const stopper& cancel, header_links&) NOEXCEPT;
 
-    /// Purge all signatures in table.
+    /// Purge all entries in table.
     bool purge_ecdsa_signatures() NOEXCEPT;
     bool purge_schnorr_signatures() NOEXCEPT;
 
@@ -666,7 +665,6 @@ public:
     header_links get_confirmed_headers(size_t first,
         size_t limit) const NOEXCEPT;
 
-    header_links get_prevalids(size_t fork_point) const NOEXCEPT;
     height_link get_confirmed_height(const header_link& link) const NOEXCEPT;
     header_links get_confirmed_fork(const header_link& fork) const NOEXCEPT;
     header_links get_candidate_fork(size_t& fork_point) const NOEXCEPT;

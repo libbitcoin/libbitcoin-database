@@ -240,21 +240,6 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__valid__block_valid
     BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_valid);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__prevalid__block_prevalid)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
-
-    BOOST_REQUIRE(query.set_block_prevalid(1));
-    BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_prevalid);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_prevalid);
-}
-
 BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__unconfirmable__block_unconfirmable)
 {
     settings settings{};

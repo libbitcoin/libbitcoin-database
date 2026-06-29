@@ -43,7 +43,6 @@ bool CLASS::is_validateable(size_t height) const NOEXCEPT
     return
         (ec == database::error::unvalidated) ||
         (ec == database::error::block_valid) ||
-        (ec == database::error::block_prevalid) ||
         (ec == database::error::unknown_state) ||
         (ec == database::error::block_confirmable);
 }
@@ -58,10 +57,6 @@ inline code CLASS::to_block_code(
         // Transitional: Satisfies validation rules (prevouts unverified).
         case block_state::valid:
             return error::block_valid;
-
-        // Transitional: Satisfies validation rules if signatures verify.
-        case block_state::prevalid:
-            return error::block_prevalid;
 
         // Final: Satisfies confirmation rules (prevouts confirmable).
         case block_state::confirmable:
@@ -139,7 +134,6 @@ code CLASS::get_header_state(const header_link& link) const NOEXCEPT
 // unassociated
 // unvalidated
 // block_valid
-// block_prevalid
 // block_confirmable
 // block_unconfirmable
 TEMPLATE
@@ -231,12 +225,6 @@ TEMPLATE
 bool CLASS::set_block_valid(const header_link& link) NOEXCEPT
 {
     return set_block_state(link, block_state::valid);
-}
-
-TEMPLATE
-bool CLASS::set_block_prevalid(const header_link& link) NOEXCEPT
-{
-    return set_block_state(link, block_state::prevalid);
 }
 
 TEMPLATE
