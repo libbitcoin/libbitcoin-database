@@ -104,7 +104,7 @@ protected:
         files_{ Storage
         {
             to_subpath(base_path, suffixes[Index]),
-            size, ////system::ceilinged_multiply(size, widths[Index]) / stride,
+            std::max(system::ceilinged_multiply(size, widths[Index]) / stride, one),
             rate,
             random_access
         }... }
