@@ -615,6 +615,12 @@ public:
     bool purge_ecdsa_signatures() NOEXCEPT;
     bool purge_schnorr_signatures() NOEXCEPT;
 
+    // TODO: new table.
+    /// Cache all prevalids (shutdown/startup only).
+    header_links get_prevalids() const NOEXCEPT { return {}; };
+    bool set_prevalids(const header_links& ) NOEXCEPT { return true; };
+    bool purge_prevalids() NOEXCEPT { return true; };
+
     /// Confirmation.
     /// -----------------------------------------------------------------------
     /// These are not used in consensus confirmation.
