@@ -296,47 +296,6 @@ TABLE_COLUMN(silent_correlate, schema::transaction::pk);
 
 #undef TABLE_COLUMN
 
-// array, deprecated
-struct ecdsa
-{
-    static constexpr size_t pk = schema::outs::pk;
-    using link = schema::outs::link;
-    static constexpr size_t minsize =
-        system::hash_size +
-        system::ec_compressed_size +
-        system::ec_signature_size +
-        one +      // [m|n] packed 16x16 in one byte in 1st row.
-        count_ +   // input (within block) correlation counter.
-        schema::header::pk;
-    static constexpr size_t minrow = minsize;
-    static constexpr size_t size = minsize;
-    ////static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 135u);
-    static_assert(minrow == 135u);
-    static_assert(link::size == 4u);
-};
-
-// array, deprecated
-struct schnorr
-{
-    static constexpr size_t pk = schema::outs::pk;
-    using link = schema::outs::link;
-    static constexpr size_t minsize =
-        system::hash_size +
-        system::ec_xonly_size +
-        system::ec_signature_size +
-        one +      // to_value(system::chain::signatures::category), 1st row.
-        two +      // [min][max] two bytes each (min 1st row, max 2nd row).
-        count_ +   // input (within block) correlation counter.
-        schema::header::pk;
-    static constexpr size_t minrow = minsize;
-    static constexpr size_t size = minsize;
-    ////static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 136u);
-    static_assert(minrow == 136u);
-    static_assert(link::size == 4u);
-};
-
 // record hashmap
 struct duplicate
 {
