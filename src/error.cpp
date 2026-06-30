@@ -51,6 +51,10 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { flush_failure, "file failed to flush" },
     { unload_locked, "unloading locked file" },
     { unload_failure, "file failed to unload" },
+    { shrink_unloaded, "shrinking unloaded file" },
+    { shrink_unload_failure, "shrink failed to unload file" },
+    { shrink_load_failure, "shrink failed to load file" },
+    { shrink_locked, "shrinking locked file" },
 
     // mmap
     { disk_full, "disk full" },
