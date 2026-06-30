@@ -71,20 +71,18 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
                 }
                 else
                 {
-                    // TODO: add unload+load into map as shrink().
-                    // TODO: shrink all signature batch tables here.
-                    // Reclaims disk space to logical extent.
-                    handler(event_t::unload_file, table_t::prevout_body);
-                    ec = prevout_body_.unload();
+                    // Reclaim disk space to logical extent.
+                    handler(event_t::unload_file, table_t::ecdsa_body);
+                    if (!ec) ec = ecdsa_body_.shrink();
+                    handler(event_t::load_file, table_t::ecdsa_body);
 
-                    if (!ec)
-                    {
-                        // TODO: initially always allocate to 1 byte.
-                        // TODO: defer table default size to first allocate.
-                        // Extends to default table size.
-                        handler(event_t::load_file, table_t::prevout_body);
-                        ec = prevout_body_.load();
-                    }
+                    handler(event_t::unload_file, table_t::schnorr_body);
+                    if (!ec) ec = schnorr_body_.shrink();
+                    handler(event_t::load_file, table_t::schnorr_body);
+
+                    handler(event_t::unload_file, table_t::schnorr_body);
+                    if (!ec) ec = prevout_body_.shrink();
+                    handler(event_t::load_file, table_t::schnorr_body);
                 }
             }
         }
