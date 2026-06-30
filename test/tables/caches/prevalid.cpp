@@ -106,8 +106,9 @@ BOOST_AUTO_TEST_CASE(prevalid__get_refs__two__expected)
     table::prevalid instance{ head_store, body_store };
 
     keys links(2u);
-    BOOST_REQUIRE(instance.get(table::prevalid::get_refs{ {}, links }));
-    BOOST_REQUIRE_EQUAL(links.size(), 2u);
+    table::prevalid::link first{ 0 };
+    table::prevalid::get_refs out{ {}, links };
+    BOOST_REQUIRE(instance.get(first, out));
     BOOST_REQUIRE_EQUAL(links.at(0), 0x00345678u);
     BOOST_REQUIRE_EQUAL(links.at(1), 0x00cdef12u);
 }
@@ -123,11 +124,14 @@ BOOST_AUTO_TEST_CASE(prevalid__put_refs_get_refs__round_trip__expected)
     BOOST_REQUIRE(instance.create());
 
     const put_keys in{ 0x00345678, 0x00cdef12 };
-    BOOST_REQUIRE(instance.put(table::prevalid::put_refs{ {}, in }));
+    const table::prevalid::put_refs writer{ {}, in };
+    BOOST_REQUIRE(instance.put(writer));
 
-    get_keys out(in.size());
-    BOOST_REQUIRE(instance.get(table::prevalid::get_refs{ {}, out }));
-    BOOST_REQUIRE(out == in);
+    get_keys result(in.size());
+    table::prevalid::link first{ 0 };
+    table::prevalid::get_refs reader{ {}, result };
+    BOOST_REQUIRE(instance.get(first, reader));
+    BOOST_REQUIRE(result == in);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

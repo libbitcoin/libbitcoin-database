@@ -28,7 +28,7 @@ namespace test {
 const auto events = [](auto, auto){};
 
 // flush lock file path from directory.
-std::filesystem::path flush_lock_file(std::filesystem::path path)
+inline std::filesystem::path flush_lock_file(std::filesystem::path path)
 {
     path /= schema::locks::flush;
     path += schema::ext::lock;
@@ -299,6 +299,16 @@ public:
     inline const path& duplicate_body_file() const NOEXCEPT
     {
         return duplicate_body_.file();
+    }
+
+    inline const path& prevalid_head_file() const NOEXCEPT
+    {
+        return prevalid_head_.file();
+    }
+
+    inline const path& prevalid_body_file() const NOEXCEPT
+    {
+        return prevalid_body_.file();
     }
 
     inline const path& prevout_head_file() const NOEXCEPT

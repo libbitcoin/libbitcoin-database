@@ -27,7 +27,6 @@ BOOST_AUTO_TEST_CASE(query_batch_prevalid__get_prevalids__empty__empty)
     const database::settings configuration{};
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
 
     BOOST_REQUIRE(query.get_prevalids().empty());
 }
@@ -37,7 +36,6 @@ BOOST_AUTO_TEST_CASE(query_batch_prevalid__set_get__two__round_trips)
     const database::settings configuration{};
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
 
     const header_links links{ 0x00345678, 0x00cdef12 };
     BOOST_REQUIRE(query.set_prevalids(links));
@@ -52,7 +50,6 @@ BOOST_AUTO_TEST_CASE(query_batch_prevalid__purge__after_set__empty)
     const database::settings configuration{};
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
 
     const header_links links{ 0x00345678, 0x00cdef12 };
     BOOST_REQUIRE(query.set_prevalids(links));
@@ -67,7 +64,6 @@ BOOST_AUTO_TEST_CASE(query_batch_prevalid__set_purge_set__reuses_empty__round_tr
     const database::settings configuration{};
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
 
     // First dump, consumed and purged (startup-consume pattern).
     const header_links first{ 0x00345678, 0x00cdef12 };

@@ -29,8 +29,13 @@ namespace database {
 TEMPLATE
 header_links CLASS::get_prevalids() const NOEXCEPT
 {
-    header_links links(prevalid_records());
-    if (store_.prevalid.get(table::prevalid::get_refs{ {}, links }))
+    // Get all records, starting at the first position.
+    const auto all = prevalid_records();
+    const table::prevalid::link first{ 0 };
+
+    header_links links(all);
+    table::prevalid::get_refs out{ {}, links };
+    if (store_.prevalid.get(first, out))
         return links;
 
     // Empty return in case of fault is an efficiency loss, table is dropped.

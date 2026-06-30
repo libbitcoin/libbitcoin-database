@@ -59,6 +59,7 @@ code CLASS::dump(const path& folder,
     dump(ec, schnorr_head_, schema::caches::schnorr, table_t::schnorr_head);
     dump(ec, silent_head_, schema::caches::silent, table_t::silent_head);
     dump(ec, duplicate_head_, schema::caches::duplicate, table_t::duplicate_head);
+    dump(ec, prevalid_head_, schema::caches::prevalid, table_t::prevalid_head);
     dump(ec, prevout_head_, schema::caches::prevout, table_t::prevout_head);
     dump(ec, validated_bk_head_, schema::caches::validated_bk, table_t::validated_bk_head);
     dump(ec, validated_tx_head_, schema::caches::validated_tx, table_t::validated_tx_head);

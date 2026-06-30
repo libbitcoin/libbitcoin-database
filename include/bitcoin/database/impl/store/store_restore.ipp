@@ -119,6 +119,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, schnorr, table_t::schnorr_table);
         restore(ec, silent, table_t::silent_table);
         restore(ec, duplicate, table_t::duplicate_table);
+        restore(ec, prevalid, table_t::prevalid_table);
         restore(ec, prevout, table_t::prevout_table);
         restore(ec, validated_bk, table_t::validated_bk_table);
         restore(ec, validated_tx, table_t::validated_tx_table);

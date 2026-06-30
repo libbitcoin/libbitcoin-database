@@ -77,6 +77,7 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, schnorr, table_t::schnorr_table);
     verify(ec, silent, table_t::silent_table);
     verify(ec, duplicate, table_t::duplicate_table);
+    verify(ec, prevalid, table_t::prevalid_table);
     verify(ec, prevout, table_t::prevout_table);
     verify(ec, validated_bk, table_t::validated_bk_table);
     verify(ec, validated_tx, table_t::validated_tx_table);

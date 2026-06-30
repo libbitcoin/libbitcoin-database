@@ -70,6 +70,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, silent_body_, table_t::silent_body);
     open(ec, duplicate_head_, table_t::duplicate_head);
     open(ec, duplicate_body_, table_t::duplicate_body);
+    open(ec, prevalid_head_, table_t::prevalid_head);
+    open(ec, prevalid_body_, table_t::prevalid_body);
     open(ec, prevout_head_, table_t::prevout_head);
     open(ec, prevout_body_, table_t::prevout_body);
     open(ec, validated_bk_head_, table_t::validated_bk_head);
@@ -125,6 +127,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, silent_body_, table_t::silent_body);
     load(ec, duplicate_head_, table_t::duplicate_head);
     load(ec, duplicate_body_, table_t::duplicate_body);
+    load(ec, prevalid_head_, table_t::prevalid_head);
+    load(ec, prevalid_body_, table_t::prevalid_body);
     load(ec, prevout_head_, table_t::prevout_head);
     load(ec, prevout_body_, table_t::prevout_body);
     load(ec, validated_bk_head_, table_t::validated_bk_head);
