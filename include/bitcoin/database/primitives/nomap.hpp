@@ -76,6 +76,9 @@ public:
     /// Increase count as necessary to specified.
     bool expand(const Link& count) NOEXCEPT;
 
+    /// Drop the table (truncate to zero and update head size).
+    bool drop() NOEXCEPT;
+
     /// Errors.
     /// -----------------------------------------------------------------------
 
