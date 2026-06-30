@@ -45,8 +45,11 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
     }
     else
     {
-        // nullify table head, set reference body count to zero.
         handler(event_t::prune_table, table_t::prevout_head);
+
+        // nullify table head, set reference body count to zero.
+        // If snapshot from this state fails previous snapshot remains valid.
+        // Batch tables drop at start and under lock after verify (not here).
         if (!prevout.clear())
         {
             ec = error::prune_table;
@@ -60,7 +63,7 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
             // If the pruning fails here the snapshot remains valid.
             if (!ec)
             {
-                // zeroize table body, set logical body count to zero.
+                // Reclaim logical extent.
                 handler(event_t::prune_table, table_t::prevout_body);
                 if (!prevout_body_.truncate(0))
                 {
@@ -68,15 +71,17 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
                 }
                 else
                 {
-                    // TODO: could move unload+load into map as shrink().
-
-                    // unmap body, setting mapped size to logical size (zero).
+                    // TODO: add unload+load into map as shrink().
+                    // TODO: shrink all signature batch tables here.
+                    // Reclaims disk space to logical extent.
                     handler(event_t::unload_file, table_t::prevout_body);
                     ec = prevout_body_.unload();
 
                     if (!ec)
                     {
-                        // map body, making table usable again.
+                        // TODO: initially always allocate to 1 byte.
+                        // TODO: defer table default size to first allocate.
+                        // Extends to default table size.
                         handler(event_t::load_file, table_t::prevout_body);
                         ec = prevout_body_.load();
                     }
