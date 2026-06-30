@@ -68,6 +68,8 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
                 }
                 else
                 {
+                    // TODO: could move unload+load into map as shrink().
+
                     // unmap body, setting mapped size to logical size (zero).
                     handler(event_t::unload_file, table_t::prevout_body);
                     ec = prevout_body_.unload();
