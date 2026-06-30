@@ -22,6 +22,17 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/names.hpp>
 
+#define TABLE_COLUMN(table, bytes) \
+struct table \
+{ \
+    static constexpr size_t pk = schema::outs::pk; \
+    using link = schema::outs::link; \
+    static constexpr size_t minsize = bytes; \
+    static constexpr size_t minrow = minsize; \
+    static constexpr size_t size = minsize; \
+    static constexpr auto suffix = schema::caches::table; \
+}
+
 namespace libbitcoin {
 namespace database {
 namespace schema {
@@ -237,7 +248,7 @@ struct height
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
     static constexpr auto suffix = "height"_t;
-    static constexpr link count() NOEXCEPT { return 1; }
+    ////static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 3u);
     static_assert(minrow == 3u);
     static_assert(link::size == 3u);
@@ -266,17 +277,6 @@ struct strong_tx
 /// Cache tables.
 /// ---------------------------------------------------------------------------
 
-#define TABLE_COLUMN(table, bytes) \
-struct table \
-{ \
-    static constexpr size_t pk = schema::outs::pk; \
-    using link = schema::outs::link; \
-    static constexpr size_t minsize = bytes; \
-    static constexpr size_t minrow = minsize; \
-    static constexpr size_t size = minsize; \
-    static constexpr auto suffix = schema::caches::table; \
-}
-
 // array
 TABLE_COLUMN(ecdsa_digest, system::hash_size);
 TABLE_COLUMN(ecdsa_compressed, system::ec_compressed_size);
@@ -294,48 +294,8 @@ TABLE_COLUMN(silent_prefix, schema::prefix);
 TABLE_COLUMN(silent_compressed, system::ec_compressed_size);
 TABLE_COLUMN(silent_correlate, schema::transaction::pk);
 
-#undef TABLE_COLUMN
-
-// array, deprecated
-struct ecdsa
-{
-    static constexpr size_t pk = schema::outs::pk;
-    using link = schema::outs::link;
-    static constexpr size_t minsize =
-        system::hash_size +
-        system::ec_compressed_size +
-        system::ec_signature_size +
-        one +      // [m|n] packed 16x16 in one byte in 1st row.
-        count_ +   // input (within block) correlation counter.
-        schema::header::pk;
-    static constexpr size_t minrow = minsize;
-    static constexpr size_t size = minsize;
-    ////static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 135u);
-    static_assert(minrow == 135u);
-    static_assert(link::size == 4u);
-};
-
-// array, deprecated
-struct schnorr
-{
-    static constexpr size_t pk = schema::outs::pk;
-    using link = schema::outs::link;
-    static constexpr size_t minsize =
-        system::hash_size +
-        system::ec_xonly_size +
-        system::ec_signature_size +
-        one +      // to_value(system::chain::signatures::category), 1st row.
-        two +      // [min][max] two bytes each (min 1st row, max 2nd row).
-        count_ +   // input (within block) correlation counter.
-        schema::header::pk;
-    static constexpr size_t minrow = minsize;
-    static constexpr size_t size = minsize;
-    ////static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 136u);
-    static_assert(minrow == 136u);
-    static_assert(link::size == 4u);
-};
+// array (same as candidate and confirmed)
+using prevalid = height;
 
 // record hashmap
 struct duplicate
@@ -474,5 +434,7 @@ struct filter_tx
 } // namespace schema
 } // namespace database
 } // namespace libbitcoin
+
+#undef TABLE_COLUMN
 
 #endif

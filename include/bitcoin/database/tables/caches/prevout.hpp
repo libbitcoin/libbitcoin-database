@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_PREVOUT_HPP
 #define LIBBITCOIN_DATABASE_TABLES_CACHES_PREVOUT_HPP
 
+#include <algorithm>
 #include <utility>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
@@ -85,13 +86,12 @@ struct prevout
             const auto write_tx = [&](const auto& tx) NOEXCEPT
             {
                 const auto& ins = tx->inputs_ptr();
-                return std::for_each(ins->cbegin(), ins->cend(),
-                    [&](const auto& in) NOEXCEPT
-                    {
-                        const auto value = merge(in->metadata);
-                        sink.write_little_endian<tx::integer, tx::size>(value);
-                        sink.write_little_endian<uint32_t>(in->sequence());
-                    });
+                return std::ranges::for_each(*ins, [&](const auto& in) NOEXCEPT
+                {
+                    const auto value = merge(in->metadata);
+                    sink.write_little_endian<tx::integer, tx::size>(value);
+                    sink.write_little_endian<uint32_t>(in->sequence());
+                });
             };
 
             using namespace system;
@@ -102,7 +102,7 @@ struct prevout
 
             // Count is written as a tx link so the table can remain an array.
             sink.write_variable(number);
-            std::for_each(cons.cbegin(), cons.cend(), write_conflict);
+            std::ranges::for_each(cons, write_conflict);
             std::for_each(std::next(txs.cbegin()), txs.cend(), write_tx);
 
             BC_ASSERT(!sink || (sink.get_write_position() == count()));
@@ -128,12 +128,12 @@ struct prevout
         {
             auto& cons = conflicts;
             cons.resize(source.read_variable());
-            std::for_each(cons.begin(), cons.end(), [&](auto& value) NOEXCEPT
+            std::ranges::for_each(cons, [&](auto& value) NOEXCEPT
             {
                 value = source.read_little_endian<tx::integer, tx::size>();
             });
 
-            std::for_each(spends.begin(), spends.end(), [&](auto& value) NOEXCEPT
+            std::ranges::for_each(spends, [&](auto& value) NOEXCEPT
             {
                 value.first = source.read_little_endian<tx::integer, tx::size>();
                 value.second = source.read_little_endian<uint32_t>();

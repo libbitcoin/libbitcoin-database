@@ -32,11 +32,8 @@ enum block_state : uint8_t
     /// transitional
     valid = 1,
 
-    /// transitional
-    prevalid = 2,
-
     /// final
-    unconfirmable = 3,
+    unconfirmable = 2,
 
     /// transitional (debug)
     block_unknown = 42

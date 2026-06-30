@@ -95,7 +95,7 @@ struct txs
 
             // tx fks
             tx_fks.resize(source.read_little_endian<ct::integer, ct::size>());
-            std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
+            std::ranges::for_each(tx_fks, [&](auto& fk) NOEXCEPT
             {
                 fk = source.read_little_endian<tx::integer, tx::size>();
             });
@@ -123,11 +123,10 @@ struct txs
             // tx fks
             const auto number = possible_narrow_cast<ct::integer>(tx_fks.size());
             sink.write_little_endian<ct::integer, ct::size>(number);
-            std::for_each(tx_fks.cbegin(), tx_fks.cend(),
-                [&](const auto& fk) NOEXCEPT
-                {
-                    sink.write_little_endian<tx::integer, tx::size>(fk);
-                });
+            std::ranges::for_each(tx_fks, [&](const auto& fk) NOEXCEPT
+            {
+                sink.write_little_endian<tx::integer, tx::size>(fk);
+            });
 
             // interval (when specified)
             if (interval.has_value()) sink.write_bytes(interval.value());
@@ -436,7 +435,7 @@ struct txs
 
             // tx fks
             tx_fks.resize(source.read_little_endian<ct::integer, ct::size>());
-            std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
+            std::ranges::for_each(tx_fks, [&](auto& fk) NOEXCEPT
             {
                 fk = source.read_little_endian<tx::integer, tx::size>();
             });
@@ -467,7 +466,7 @@ struct txs
             {
                 source.skip_bytes(one * tx::size);
                 tx_fks.resize(sub1(number));
-                std::for_each(tx_fks.begin(), tx_fks.end(), [&](auto& fk) NOEXCEPT
+                std::ranges::for_each(tx_fks, [&](auto& fk) NOEXCEPT
                 {
                     fk = source.read_little_endian<tx::integer, tx::size>();
                 });

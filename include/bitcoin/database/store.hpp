@@ -189,6 +189,10 @@ protected:
     Storage duplicate_head_;
     Storage duplicate_body_;
 
+    // array
+    Storage prevalid_head_;
+    Storage prevalid_body_;
+
     // blob arraymap
     Storage prevout_head_;
     Storage prevout_body_;
@@ -270,6 +274,7 @@ public:
     table::schnorr<Storage> schnorr;
     table::silent<Storage> silent;
     table::duplicate duplicate;
+    table::prevalid prevalid;
     table::prevout prevout;
     table::validated_bk validated_bk;
     table::validated_tx validated_tx;

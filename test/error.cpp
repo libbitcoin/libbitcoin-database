@@ -468,15 +468,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__block_valid__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "block valid");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__block_prevalid__true_expected_message)
-{
-    constexpr auto value = error::block_prevalid;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "block prevalid");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__block_confirmable__true_expected_message)
 {
     constexpr auto value = error::block_confirmable;

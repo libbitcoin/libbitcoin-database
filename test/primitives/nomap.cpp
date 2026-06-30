@@ -749,4 +749,78 @@ BOOST_AUTO_TEST_CASE(nomap__slab_body_count__non_empty_restore__truncates)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+// drop (truncate body to zero and sync head count)
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(nomap__record_drop__populated__empties_body_and_head)
+{
+    auto head = base16_chunk("0200000000");
+    auto body = base16_chunk("1234567812345678");
+    test::chunk_storage head_store{ head };
+    test::chunk_storage body_store{ body };
+    record_table instance{ head_store, body_store };
+
+    // Two records present, head reflects two.
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+
+    // Drop empties the body count and writes zero to the head.
+    BOOST_REQUIRE(instance.drop());
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000"));
+
+    // Capacity is retained (truncate does not reclaim allocation).
+    BOOST_REQUIRE_EQUAL(instance.capacity(), 8u);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(nomap__record_drop__empty__remains_empty)
+{
+    data_chunk head_file{};
+    data_chunk body_file{};
+    test::chunk_storage head_store{ head_file };
+    test::chunk_storage body_store{ body_file };
+    record_table instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.create());
+
+    BOOST_REQUIRE(instance.drop());
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000"));
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(nomap__record_drop__then_restore__stays_empty)
+{
+    auto head = base16_chunk("0200000000");
+    auto body = base16_chunk("1234567812345678");
+    test::chunk_storage head_store{ head };
+    test::chunk_storage body_store{ body };
+    record_table instance{ head_store, body_store };
+
+    // Drop writes zero count to head; restore reads head (zero) and truncates
+    // body to match, so a post-drop restore keeps the table empty.
+    BOOST_REQUIRE(instance.drop());
+    BOOST_REQUIRE(instance.restore());
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE_EQUAL(instance.body_size(), 0u);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(nomap__slab_drop__populated__empties_body_and_head)
+{
+    auto head = base16_chunk("0800000000");
+    auto body = base16_chunk("1234567812345678");
+    test::chunk_storage head_store{ head };
+    test::chunk_storage body_store{ body };
+    slab_table instance{ head_store, body_store };
+
+    // Eight bytes present (slab count is byte count), head reflects eight.
+    BOOST_REQUIRE_EQUAL(instance.count(), 8u);
+
+    BOOST_REQUIRE(instance.drop());
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000"));
+    BOOST_REQUIRE_EQUAL(instance.capacity(), 8u);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

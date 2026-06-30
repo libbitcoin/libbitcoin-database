@@ -101,7 +101,6 @@ size_t CLASS::capacity() const NOEXCEPT
 {
     return manager_.capacity();
 }
-
 TEMPLATE
 bool CLASS::truncate(const Link& count) NOEXCEPT
 {
@@ -112,6 +111,12 @@ TEMPLATE
 bool CLASS::expand(const Link& count) NOEXCEPT
 {
     return manager_.expand(count);
+}
+
+TEMPLATE
+bool CLASS::drop() NOEXCEPT
+{
+    return manager_.truncate(0) && backup();
 }
 
 // error condition

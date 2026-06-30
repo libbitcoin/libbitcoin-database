@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_ARCHIVES_INS_HPP
 #define LIBBITCOIN_DATABASE_TABLES_ARCHIVES_INS_HPP
 
+#include <algorithm>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
@@ -113,7 +114,7 @@ struct ins
 
             auto in_fk = input_fk;
             const auto& ins = *tx_.inputs_ptr();
-            std::for_each(ins.cbegin(), ins.cend(), [&](const auto& in) NOEXCEPT
+            std::ranges::for_each(ins, [&](const auto& in) NOEXCEPT
             {
                 sink.write_little_endian<uint32_t>(in->sequence());
                 sink.write_little_endian<in::integer, in::size>(in_fk);

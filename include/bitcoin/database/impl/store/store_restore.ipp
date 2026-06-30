@@ -97,6 +97,17 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         }
     };
 
+    const auto dropped = [&handler](code& ec, auto& logical,
+        table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::restore_table, table);
+            if (!logical.drop())
+                ec = error::restore_table;
+        }
+    };
+
     if (!ec)
         ec = open_load(handler);
 
@@ -119,6 +130,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, schnorr, table_t::schnorr_table);
         restore(ec, silent, table_t::silent_table);
         restore(ec, duplicate, table_t::duplicate_table);
+        dropped(ec, prevalid, table_t::prevalid_table);
         restore(ec, prevout, table_t::prevout_table);
         restore(ec, validated_bk, table_t::validated_bk_table);
         restore(ec, validated_tx, table_t::validated_tx_table);

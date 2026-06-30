@@ -59,26 +59,27 @@ namespace caches
 {
     // aggregate
     constexpr auto ecdsa = "batch_ecdsa";
-    constexpr auto ecdsa_digest = "digest"_t;
-    constexpr auto ecdsa_compressed = "compressed"_t;
+    constexpr auto ecdsa_digest = "message"_t;
+    constexpr auto ecdsa_compressed = "key"_t;
     constexpr auto ecdsa_signature = "signature"_t;
-    constexpr auto ecdsa_correlate = "correlate"_t;
+    constexpr auto ecdsa_correlate = "identity"_t;
 
     // aggregate
     constexpr auto schnorr  = "batch_schnorr";
-    constexpr auto schnorr_digest = "digest"_t;
-    constexpr auto schnorr_xonly = "xonly"_t;
+    constexpr auto schnorr_digest = "message"_t;
+    constexpr auto schnorr_xonly = "key"_t;
     constexpr auto schnorr_signature = "signature"_t;
-    constexpr auto schnorr_correlate = "correlate"_t;
+    constexpr auto schnorr_correlate = "identity"_t;
 
     // aggregate
     constexpr auto silent  = "batch_silent";
     constexpr auto silent_prefix = "prefix"_t;
-    constexpr auto silent_compressed = "compressed"_t;
-    constexpr auto silent_correlate = "correlate"_t;
+    constexpr auto silent_compressed = "point"_t;
+    constexpr auto silent_correlate = "identity"_t;
 
-    constexpr auto duplicate = "cache_duplicate";
+    constexpr auto prevalid = "batch_prevalid";
     constexpr auto prevout = "cache_prevout";
+    constexpr auto duplicate = "cache_duplicate";
     constexpr auto validated_bk = "validated_bk";
     constexpr auto validated_tx = "validated_tx";
 }

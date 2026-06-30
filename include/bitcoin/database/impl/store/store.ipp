@@ -82,6 +82,9 @@ CLASS::store(const settings& config) NOEXCEPT
     duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate), 1, 0, random),
     duplicate_body_(body(config.path, schema::caches::duplicate), config.duplicate_size, config.duplicate_rate, sequential),
 
+    prevalid_head_(head(config.path / schema::dir::heads, schema::caches::prevalid), 1, 0, random),
+    prevalid_body_(body(config.path, schema::caches::prevalid), config.prevalid_size, config.prevalid_rate, sequential),
+
     prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout), 1, 0, random),
     prevout_body_(body(config.path, schema::caches::prevout), config.prevout_size, config.prevout_rate, sequential),
 
@@ -129,6 +132,7 @@ CLASS::store(const settings& config) NOEXCEPT
     schnorr(schnorr_head_, schnorr_body_),
     silent(silent_head_, silent_body_),
     duplicate(duplicate_head_, duplicate_body_, config.duplicate_buckets),
+    prevalid(prevalid_head_, prevalid_body_),
     prevout(prevout_head_, prevout_body_, config.prevout_buckets),
     validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk_buckets),
     validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx_buckets),

@@ -92,7 +92,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tx_connected, "transaction connected" },
     { tx_disconnected, "transaction disconnected" },
     { block_valid, "block valid" },
-    { block_prevalid, "block prevalid" },
     { block_confirmable, "block confirmable" },
     { block_unconfirmable, "block unconfirmable" },
     { unassociated, "unassociated" },

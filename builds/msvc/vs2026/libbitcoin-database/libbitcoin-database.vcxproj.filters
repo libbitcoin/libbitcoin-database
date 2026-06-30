@@ -281,6 +281,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\ecdsa.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevalid.hpp">
+      <Filter>include\bitcoin\database\tables\caches</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevout.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
@@ -440,6 +443,9 @@
       <Filter>include\bitcoin\database\impl\query\archive</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\batch\ecdsa.ipp">
+      <Filter>include\bitcoin\database\impl\query\batch</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\batch\prevalid.ipp">
       <Filter>include\bitcoin\database\impl\query\batch</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\batch\schnorr.ipp">

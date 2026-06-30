@@ -112,6 +112,9 @@ struct BCD_API settings
     uint64_t duplicate_size;
     uint16_t duplicate_rate;
 
+    uint64_t prevalid_size;
+    uint16_t prevalid_rate;
+
     uint32_t prevout_buckets;
     uint64_t prevout_size;
     uint16_t prevout_rate;

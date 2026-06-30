@@ -37,6 +37,11 @@ struct height
     struct record
       : public schema::height
     {
+        static constexpr link count() NOEXCEPT
+        {
+            return 1;
+        }
+
         inline bool from_data(reader& source) NOEXCEPT
         {
             header_fk = source.read_little_endian<header::integer, header::size>();
