@@ -128,6 +128,7 @@ public:
     size_t schnorr_head_size() const NOEXCEPT;
     size_t silent_head_size() const NOEXCEPT;
     size_t duplicate_head_size() const NOEXCEPT;
+    size_t prevalid_head_size() const NOEXCEPT;
     size_t prevout_head_size() const NOEXCEPT;
     size_t validated_bk_head_size() const NOEXCEPT;
     size_t validated_tx_head_size() const NOEXCEPT;
@@ -152,6 +153,7 @@ public:
     size_t schnorr_body_size() const NOEXCEPT;
     size_t silent_body_size() const NOEXCEPT;
     size_t duplicate_body_size() const NOEXCEPT;
+    size_t prevalid_body_size() const NOEXCEPT;
     size_t prevout_body_size() const NOEXCEPT;
     size_t validated_bk_body_size() const NOEXCEPT;
     size_t validated_tx_body_size() const NOEXCEPT;
@@ -176,6 +178,7 @@ public:
     size_t schnorr_size() const NOEXCEPT;
     size_t silent_size() const NOEXCEPT;
     size_t duplicate_size() const NOEXCEPT;
+    size_t prevalid_size() const NOEXCEPT;
     size_t prevout_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
     size_t validated_tx_size() const NOEXCEPT;
@@ -212,6 +215,7 @@ public:
     size_t schnorr_records() const NOEXCEPT;
     size_t silent_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
+    size_t prevalid_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
     size_t address_records() const NOEXCEPT;
 
@@ -612,14 +616,13 @@ public:
     bool verify_schnorr_signatures(const stopper& cancel, header_links&) NOEXCEPT;
 
     /// Purge all entries in table.
+    bool purge_prevalids() NOEXCEPT;
     bool purge_ecdsa_signatures() NOEXCEPT;
     bool purge_schnorr_signatures() NOEXCEPT;
 
-    // TODO: new table.
-    /// Cache all prevalids (shutdown/startup only).
-    header_links get_prevalids() const NOEXCEPT { return {}; };
-    bool set_prevalids(const header_links& ) NOEXCEPT { return true; };
-    bool purge_prevalids() NOEXCEPT { return true; };
+    /// Cache all prevalids.
+    header_links get_prevalids() const NOEXCEPT;
+    bool set_prevalids(const header_links& links) NOEXCEPT;
 
     /// Confirmation.
     /// -----------------------------------------------------------------------
@@ -974,6 +977,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/archive/wire_writer.ipp>
 
 #include <bitcoin/database/impl/query/batch/ecdsa.ipp>
+#include <bitcoin/database/impl/query/batch/prevalid.ipp>
 #include <bitcoin/database/impl/query/batch/schnorr.ipp>
 #include <bitcoin/database/impl/query/batch/silent.ipp>
 

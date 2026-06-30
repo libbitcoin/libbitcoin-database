@@ -77,8 +77,9 @@ namespace caches
     constexpr auto silent_compressed = "point"_t;
     constexpr auto silent_correlate = "identity"_t;
 
-    constexpr auto duplicate = "cache_duplicate";
+    constexpr auto prevalid = "batch_prevalid";
     constexpr auto prevout = "cache_prevout";
+    constexpr auto duplicate = "cache_duplicate";
     constexpr auto validated_bk = "validated_bk";
     constexpr auto validated_tx = "validated_tx";
 }

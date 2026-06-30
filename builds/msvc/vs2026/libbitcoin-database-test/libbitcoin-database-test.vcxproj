@@ -156,6 +156,9 @@
     <ClCompile Include="..\..\..\..\test\query\batch\ecdsa.cpp">
       <ObjectFileName>$(IntDir)test_query_batch_ecdsa.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\batch\prevalid.cpp">
+      <ObjectFileName>$(IntDir)test_query_batch_prevalid.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\batch\schnorr.cpp">
       <ObjectFileName>$(IntDir)test_query_batch_schnorr.obj</ObjectFileName>
     </ClCompile>
@@ -204,6 +207,9 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\duplicate.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\ecdsa.cpp">
       <ObjectFileName>$(IntDir)test_tables_caches_ecdsa.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\prevalid.cpp">
+      <ObjectFileName>$(IntDir)test_tables_caches_prevalid.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\prevout.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\schnorr.cpp">

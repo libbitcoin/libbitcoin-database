@@ -113,6 +113,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/archive/wire_reader.cpp \
     test/query/archive/wire_writer.cpp \
     test/query/batch/ecdsa.cpp \
+    test/query/batch/prevalid.cpp \
     test/query/batch/schnorr.cpp \
     test/query/batch/silent.cpp \
     test/query/consensus/consensus_block.cpp \
@@ -140,6 +141,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/tables/archives/txs.cpp \
     test/tables/caches/duplicate.cpp \
     test/tables/caches/ecdsa.cpp \
+    test/tables/caches/prevalid.cpp \
     test/tables/caches/prevout.cpp \
     test/tables/caches/schnorr.cpp \
     test/tables/caches/silent.cpp \
@@ -241,6 +243,7 @@ include_bitcoin_database_impl_query_archive_HEADERS = \
 include_bitcoin_database_impl_query_batchdir = ${includedir}/bitcoin/database/impl/query/batch
 include_bitcoin_database_impl_query_batch_HEADERS = \
     include/bitcoin/database/impl/query/batch/ecdsa.ipp \
+    include/bitcoin/database/impl/query/batch/prevalid.ipp \
     include/bitcoin/database/impl/query/batch/schnorr.ipp \
     include/bitcoin/database/impl/query/batch/silent.ipp
 
@@ -345,6 +348,7 @@ include_bitcoin_database_tables_cachesdir = ${includedir}/bitcoin/database/table
 include_bitcoin_database_tables_caches_HEADERS = \
     include/bitcoin/database/tables/caches/duplicate.hpp \
     include/bitcoin/database/tables/caches/ecdsa.hpp \
+    include/bitcoin/database/tables/caches/prevalid.hpp \
     include/bitcoin/database/tables/caches/prevout.hpp \
     include/bitcoin/database/tables/caches/schnorr.hpp \
     include/bitcoin/database/tables/caches/silent.hpp \

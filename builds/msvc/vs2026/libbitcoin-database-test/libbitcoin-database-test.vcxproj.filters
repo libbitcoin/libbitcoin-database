@@ -159,6 +159,9 @@
     <ClCompile Include="..\..\..\..\test\query\batch\ecdsa.cpp">
       <Filter>src\query\batch</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\batch\prevalid.cpp">
+      <Filter>src\query\batch</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\batch\schnorr.cpp">
       <Filter>src\query\batch</Filter>
     </ClCompile>
@@ -280,6 +283,9 @@
       <Filter>src\tables\caches</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\ecdsa.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\prevalid.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\prevout.cpp">
