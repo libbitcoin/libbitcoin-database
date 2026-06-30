@@ -70,6 +70,7 @@ public:
     DISPATCH_METHOD(reload)
     DISPATCH_METHOD(flush)
     DISPATCH_METHOD(unload)
+    DISPATCH_METHOD(shrink)
     DISPATCH_METHOD(get_fault, const)
 
     /// Macro not used because of accumulator.

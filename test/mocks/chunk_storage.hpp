@@ -61,6 +61,7 @@ public:
     code reload() NOEXCEPT override;
     code flush() NOEXCEPT override;
     code unload() NOEXCEPT override;
+    code shrink() NOEXCEPT override;
     code dump(const path& path) const NOEXCEPT override;
     const path& file() const NOEXCEPT override;
     size_t capacity() const NOEXCEPT override;
