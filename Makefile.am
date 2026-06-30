@@ -64,7 +64,6 @@ test_libbitcoin_database_test_SOURCES = \
     test/error.cpp \
     test/main.cpp \
     test/settings.cpp \
-    test/store.cpp \
     test/test.cpp \
     test/test.hpp \
     test/file/rotator.cpp \
@@ -131,6 +130,21 @@ test_libbitcoin_database_test_SOURCES = \
     test/query/navigate/navigate_hashmap.cpp \
     test/query/navigate/navigate_natural.cpp \
     test/query/navigate/navigate_reverse.cpp \
+    test/store/store.cpp \
+    test/store/store_backup.cpp \
+    test/store/store_close.cpp \
+    test/store/store_create.cpp \
+    test/store/store_dump.cpp \
+    test/store/store_events.cpp \
+    test/store/store_open.cpp \
+    test/store/store_open_load.cpp \
+    test/store/store_prune.cpp \
+    test/store/store_reload.cpp \
+    test/store/store_report.cpp \
+    test/store/store_restore.cpp \
+    test/store/store_snapshot.cpp \
+    test/store/store_tables.cpp \
+    test/store/store_unload_close.cpp \
     test/tables/archives/header.cpp \
     test/tables/archives/input.cpp \
     test/tables/archives/ins.cpp \

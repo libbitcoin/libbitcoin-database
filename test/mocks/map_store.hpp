@@ -19,9 +19,21 @@
 #ifndef LIBBITCOIN_DATABASE_TEST_MOCKS_MAP_STORE_HPP
 #define LIBBITCOIN_DATABASE_TEST_MOCKS_MAP_STORE_HPP
 
+#include <filesystem>
 #include "../test.hpp"
 
 namespace test {
+
+// nop event handler.
+const auto events = [](auto, auto){};
+
+// flush lock file path from directory.
+std::filesystem::path flush_lock_file(std::filesystem::path path)
+{
+    path /= schema::locks::flush;
+    path += schema::ext::lock;
+    return path;
+}
 
 // store<map> test accessor.
 class map_store
