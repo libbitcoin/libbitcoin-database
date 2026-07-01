@@ -72,16 +72,16 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
                 else
                 {
                     // Reclaim disk space to logical extent.
+                    handler(event_t::unload_file, table_t::prevout_body);
+                    if (!ec) ec = prevout_body_.shrink();
+                    handler(event_t::load_file, table_t::prevout_body);
+
                     handler(event_t::unload_file, table_t::ecdsa_body);
                     if (!ec) ec = ecdsa_body_.shrink();
                     handler(event_t::load_file, table_t::ecdsa_body);
 
                     handler(event_t::unload_file, table_t::schnorr_body);
                     if (!ec) ec = schnorr_body_.shrink();
-                    handler(event_t::load_file, table_t::schnorr_body);
-
-                    handler(event_t::unload_file, table_t::schnorr_body);
-                    if (!ec) ec = prevout_body_.shrink();
                     handler(event_t::load_file, table_t::schnorr_body);
                 }
             }
