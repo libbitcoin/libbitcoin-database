@@ -167,7 +167,7 @@ public:
 protected:
     /// Row<->byte transpose by the constexpr column width (folds for width 1).
     template <size_t Column>
-    static constexpr size_t to_bytes(size_t offset) NOEXCEPT
+    static constexpr size_t to_width(size_t offset) NOEXCEPT
     {
         return offset * std::get<Column>(widths);
     }
@@ -235,7 +235,7 @@ private:
     // These are protected by field_mutex_.
     // Shared allocation state and per-column file/capacity state.
     // Fields require field_mutex_ exclusive for write, shared for flush/read.
-    // logical_ is the shared row count across all columns.
+    // logical_ is the shared row count across all columns (bytes for width 1).
     std::array<int, columns> opened_;
     sizes capacity_{};
     size_t logical_{};

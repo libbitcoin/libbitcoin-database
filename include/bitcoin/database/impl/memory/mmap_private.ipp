@@ -36,7 +36,7 @@ TEMPLATE
 template <size_t Column>
 size_t CLASS::space_one_(size_t rows) const NOEXCEPT
 {
-    return system::floored_subtract(to_capacity(to_bytes<Column>(rows)),
+    return system::floored_subtract(to_capacity(to_width<Column>(rows)),
         std::get<Column>(capacity_));
 }
 
@@ -74,7 +74,7 @@ template <size_t... Index>
 bool CLASS::remap_all_(size_t logical, std::index_sequence<Index...>) NOEXCEPT 
 {
     const auto space = space_all_(logical, std::index_sequence<Index...>{});
-    return (remap_<Index>(to_bytes<Index>(logical), space) && ...);
+    return (remap_<Index>(to_width<Index>(logical), space) && ...);
 }
 
 // mman wrappers, not thread safe.
@@ -90,7 +90,7 @@ bool CLASS::flush_() NOEXCEPT
     // unmap (and therefore msync) must be called before ftruncate.
     // "To flush all the dirty pages plus the metadata for the file and ensure
     // that they are physically written to disk..."
-    const auto size = to_bytes<Column>(logical_);
+    const auto size = to_width<Column>(logical_);
     const auto success =
            (::msync(memory_map_[Column], size, MS_SYNC) != fail)
         && (::fsync(opened_[Column]) != fail);
@@ -122,7 +122,7 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::unmap_() NOEXCEPT
 {
-    const auto logical = to_bytes<Column>(logical_);
+    const auto logical = to_width<Column>(logical_);
 
 #if defined(HAVE_MSC)
     const auto success =
@@ -155,8 +155,8 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::map_() NOEXCEPT
 {
-    auto size = to_bytes<Column>(logical_);
-    const auto minimum = to_bytes<Column>(minimum_);
+    auto size = to_width<Column>(logical_);
+    const auto minimum = to_width<Column>(minimum_);
 
     if ((size < minimum) && !resize_<Column>((size = minimum),
         space_one_<Column>(logical_)))
@@ -175,11 +175,11 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::remap_(size_t size, size_t space) NOEXCEPT
 {
-    BC_ASSERT(size >= to_bytes<Column>(logical_));
+    BC_ASSERT(size >= to_width<Column>(logical_));
 
     // Cannot remap empty file, so expand to minimum capacity if zero.
     if (is_zero(size))
-        size = to_bytes<Column>(minimum_);
+        size = to_width<Column>(minimum_);
 
 #if !defined(HAVE_MSC) && !defined(MREMAP_MAYMOVE)
     // macOS: unmap before ftruncate sets new size.

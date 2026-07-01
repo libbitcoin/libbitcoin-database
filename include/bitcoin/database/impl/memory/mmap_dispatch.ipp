@@ -58,8 +58,7 @@ memory_ptr CLASS::set_column(size_t offset, size_t size,
                 return {};
 
             // Fill new capacity as offset may not be at end due to expansion.
-            // Scalar-map path: column 0 in bytes (width 1, identity).
-            const auto first = to_bytes<Column>(logical_);
+            const auto first = to_width<Column>(logical_);
             std::fill_n(
                 std::next(std::get<Column>(memory_map_), first),
                 std::get<Column>(capacity_) - first, backfill);
@@ -80,7 +79,7 @@ memory_ptr CLASS::get_column(size_t offset) const NOEXCEPT
     // increases. Close zeroizes capacity but file must be unloaded to do so.
     // Truncate can reduce logical, but capacity is not affected. It is always
     // safe to write past current logical within current capacity.
-    const auto allocated = to_bytes<Column>(size());
+    const auto allocated = to_width<Column>(size());
 
     // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
     const auto ptr = std::make_shared<access>(remap_mutex_);
@@ -110,6 +109,7 @@ memory_ptr CLASS::capacity_column(size_t offset) const NOEXCEPT
     ptr->assign(
         std::next(std::get<Column>(memory_map_), offset),
         std::next(std::get<Column>(memory_map_), allocated));
+
     return ptr;
 }
 
@@ -118,7 +118,7 @@ template <size_t Column, if_lesser<Column, sizeof...(Widths)>>
 memory::iterator CLASS::raw_column(size_t offset) const NOEXCEPT
 {
     // Pointer is otherwise unguarded, not remap safe (use for table heads).
-    if (offset > to_bytes<Column>(size()))
+    if (offset > to_width<Column>(size()))
         return nullptr;
 
     return std::next(std::get<Column>(memory_map_), offset);
