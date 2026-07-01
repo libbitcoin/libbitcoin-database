@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
-#define LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_MMAP_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_MMAP_HPP
 
 #include <atomic>
 #include <filesystem>
@@ -36,11 +36,11 @@ namespace database {
 /// Thread safe access to a memory-mapped file, or to a set of column files
 /// sharing one allocation/remap guard set (SoA aggregate).
 template <size_t... Widths>
-class map1
+class mmap
   : public storage
 {
 public:
-    DELETE_COPY_MOVE(map1);
+    DELETE_COPY_MOVE(mmap);
 
     /// Number of backing columns (1 == scalar map).
     static constexpr size_t columns = sizeof...(Widths);
@@ -76,17 +76,17 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Scalar construction (columns == 1): unchanged signature and codegen.
-    map1(const std::filesystem::path& filename, size_t minimum=1,
+    mmap(const std::filesystem::path& filename, size_t minimum=1,
         size_t expansion=0, bool random=true) NOEXCEPT
         requires (columns == one);
 
     /// Aggregate construction (columns > 1): one file per column, shared guards.
-    map1(const paths& filenames, size_t minimum=1, size_t expansion=0,
+    mmap(const paths& filenames, size_t minimum=1, size_t expansion=0,
         bool random=true) NOEXCEPT
         requires (columns > one);
 
     /// Destruct for debug assertion only.
-    virtual ~map1() NOEXCEPT;
+    virtual ~mmap() NOEXCEPT;
 
     /// True if the file(s) are open.
     bool is_open() const NOEXCEPT;
@@ -243,20 +243,20 @@ private:
 
 /// Scalar map: single column, width 1. Source and codegen identical to the
 /// prior non-aggregate map; existing usage binds the unchanged constructor.
-using map = map1<1>;
+using map = mmap<1>;
 
 } // namespace database
 } // namespace libbitcoin
 
 #define TEMPLATE template <size_t... Widths>
-#define CLASS map1<Widths...>
+#define CLASS mmap<Widths...>
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-#include <bitcoin/database/impl/memory/map.ipp>
-#include <bitcoin/database/impl/memory/map_dispatch.ipp>
-#include <bitcoin/database/impl/memory/map_private.ipp>
-#include <bitcoin/database/impl/memory/map_storage.ipp>
+#include <bitcoin/database/impl/memory/mmap.ipp>
+#include <bitcoin/database/impl/memory/mmap_dispatch.ipp>
+#include <bitcoin/database/impl/memory/mmap_private.ipp>
+#include <bitcoin/database/impl/memory/mmap_storage.ipp>
 
 BC_POP_WARNING()
 

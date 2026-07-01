@@ -22,9 +22,11 @@
 // error::load_failure, error::flush_failure, error::unload_failure codes, but
 // don't want to make this class virtual.
 
-BOOST_FIXTURE_TEST_SUITE(map_tests, test::directory_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(mmap_tests, test::directory_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(map__file__always__expected)
+// map is an alias for mmap<1>.
+
+BOOST_AUTO_TEST_CASE(mmap__file__always__expected)
 {
     const std::string file = TEST_PATH;
     map instance(file);
@@ -32,7 +34,7 @@ BOOST_AUTO_TEST_CASE(map__file__always__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__open__opened__open_open)
+BOOST_AUTO_TEST_CASE(mmap__open__opened__open_open)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -45,7 +47,7 @@ BOOST_AUTO_TEST_CASE(map__open__opened__open_open)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__open__no_file__false)
+BOOST_AUTO_TEST_CASE(mmap__open__no_file__false)
 {
     const std::string file = TEST_PATH;
     map instance(file);
@@ -55,7 +57,7 @@ BOOST_AUTO_TEST_CASE(map__open__no_file__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__close__open__true)
+BOOST_AUTO_TEST_CASE(mmap__close__open__true)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -67,7 +69,7 @@ BOOST_AUTO_TEST_CASE(map__close__open__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__close__closed__true)
+BOOST_AUTO_TEST_CASE(mmap__close__closed__true)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -77,7 +79,7 @@ BOOST_AUTO_TEST_CASE(map__close__closed__true)
     BOOST_REQUIRE(!instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(map__close__loaded__close_loaded)
+BOOST_AUTO_TEST_CASE(mmap__close__loaded__close_loaded)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -91,7 +93,7 @@ BOOST_AUTO_TEST_CASE(map__close__loaded__close_loaded)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__properties__open_close__expected)
+BOOST_AUTO_TEST_CASE(mmap__properties__open_close__expected)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -118,7 +120,7 @@ BOOST_AUTO_TEST_CASE(map__properties__open_close__expected)
     BOOST_REQUIRE(test::exists(file));
 }
 
-BOOST_AUTO_TEST_CASE(map__properties__load_unload__expected)
+BOOST_AUTO_TEST_CASE(mmap__properties__load_unload__expected)
 {
     constexpr auto default_minimum_capacity = 1u;
     const std::string file = TEST_PATH;
@@ -150,7 +152,7 @@ BOOST_AUTO_TEST_CASE(map__properties__load_unload__expected)
     BOOST_REQUIRE(test::exists(file));
 }
 
-BOOST_AUTO_TEST_CASE(map__load__unloaded__true)
+BOOST_AUTO_TEST_CASE(mmap__load__unloaded__true)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -162,7 +164,7 @@ BOOST_AUTO_TEST_CASE(map__load__unloaded__true)
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
 }
-BOOST_AUTO_TEST_CASE(map__load__shared__load_locked)
+BOOST_AUTO_TEST_CASE(mmap__load__shared__load_locked)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -181,7 +183,7 @@ BOOST_AUTO_TEST_CASE(map__load__shared__load_locked)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__load__loaded__load_loaded)
+BOOST_AUTO_TEST_CASE(mmap__load__loaded__load_loaded)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -195,7 +197,7 @@ BOOST_AUTO_TEST_CASE(map__load__loaded__load_loaded)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__unload__unloaded__true)
+BOOST_AUTO_TEST_CASE(mmap__unload__unloaded__true)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -207,7 +209,7 @@ BOOST_AUTO_TEST_CASE(map__unload__unloaded__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__unload__loaded__true)
+BOOST_AUTO_TEST_CASE(mmap__unload__loaded__true)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -220,7 +222,7 @@ BOOST_AUTO_TEST_CASE(map__unload__loaded__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__shrink__unloaded__shrink_unloaded)
+BOOST_AUTO_TEST_CASE(mmap__shrink__unloaded__shrink_unloaded)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -232,7 +234,7 @@ BOOST_AUTO_TEST_CASE(map__shrink__unloaded__shrink_unloaded)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__shrink__loaded__true)
+BOOST_AUTO_TEST_CASE(mmap__shrink__loaded__true)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -246,7 +248,7 @@ BOOST_AUTO_TEST_CASE(map__shrink__loaded__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__capacity__default__expected)
+BOOST_AUTO_TEST_CASE(mmap__capacity__default__expected)
 {
 
     constexpr auto default_minimum_capacity = 1_size;
@@ -263,7 +265,7 @@ BOOST_AUTO_TEST_CASE(map__capacity__default__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__allocate__unloaded__false)
+BOOST_AUTO_TEST_CASE(mmap__allocate__unloaded__false)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -275,7 +277,7 @@ BOOST_AUTO_TEST_CASE(map__allocate__unloaded__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__allocate__loaded__expected_capacity)
+BOOST_AUTO_TEST_CASE(mmap__allocate__loaded__expected_capacity)
 {
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 42_size;
@@ -296,7 +298,7 @@ BOOST_AUTO_TEST_CASE(map__allocate__loaded__expected_capacity)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__allocate__add_overflow__eof)
+BOOST_AUTO_TEST_CASE(mmap__allocate__add_overflow__eof)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -311,7 +313,7 @@ BOOST_AUTO_TEST_CASE(map__allocate__add_overflow__eof)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__allocate__minimum_no_expansion__expected_capacity)
+BOOST_AUTO_TEST_CASE(mmap__allocate__minimum_no_expansion__expected_capacity)
 {
     constexpr auto size = 42_size;
     constexpr auto minimum = 100_size;
@@ -330,7 +332,7 @@ BOOST_AUTO_TEST_CASE(map__allocate__minimum_no_expansion__expected_capacity)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__allocate__no_minimum_expansion__expected_capacity)
+BOOST_AUTO_TEST_CASE(mmap__allocate__no_minimum_expansion__expected_capacity)
 {
     // map will fail if minimum is zero.
     constexpr auto minimum = 1_size;
@@ -352,7 +354,7 @@ BOOST_AUTO_TEST_CASE(map__allocate__no_minimum_expansion__expected_capacity)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__truncate__unloaded__failure)
+BOOST_AUTO_TEST_CASE(mmap__truncate__unloaded__failure)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -364,7 +366,7 @@ BOOST_AUTO_TEST_CASE(map__truncate__unloaded__failure)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__truncate__default_to_zero__success)
+BOOST_AUTO_TEST_CASE(mmap__truncate__default_to_zero__success)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -378,7 +380,7 @@ BOOST_AUTO_TEST_CASE(map__truncate__default_to_zero__success)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__truncate__increase_capacity__failure)
+BOOST_AUTO_TEST_CASE(mmap__truncate__increase_capacity__failure)
 {
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 42_size;
@@ -396,7 +398,7 @@ BOOST_AUTO_TEST_CASE(map__truncate__increase_capacity__failure)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__truncate__unchanged__success_capacity_unchanged)
+BOOST_AUTO_TEST_CASE(mmap__truncate__unchanged__success_capacity_unchanged)
 {
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 42_size;
@@ -416,7 +418,7 @@ BOOST_AUTO_TEST_CASE(map__truncate__unchanged__success_capacity_unchanged)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__truncate__decrease__success_logical_decreased_capacity_unchanged)
+BOOST_AUTO_TEST_CASE(mmap__truncate__decrease__success_logical_decreased_capacity_unchanged)
 {
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 42_size;
@@ -438,7 +440,7 @@ BOOST_AUTO_TEST_CASE(map__truncate__decrease__success_logical_decreased_capacity
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__set__unloaded__false)
+BOOST_AUTO_TEST_CASE(mmap__set__unloaded__false)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -449,7 +451,7 @@ BOOST_AUTO_TEST_CASE(map__set__unloaded__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__set__loaded__expected_capacity)
+BOOST_AUTO_TEST_CASE(mmap__set__loaded__expected_capacity)
 {
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 42_size;
@@ -480,7 +482,7 @@ BOOST_AUTO_TEST_CASE(map__set__loaded__expected_capacity)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__set__add_overflow__eof)
+BOOST_AUTO_TEST_CASE(mmap__set__add_overflow__eof)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -495,7 +497,7 @@ BOOST_AUTO_TEST_CASE(map__set__add_overflow__eof)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__set__minimum_no_expansion__expected_capacity)
+BOOST_AUTO_TEST_CASE(mmap__set__minimum_no_expansion__expected_capacity)
 {
     constexpr auto rate = 0_size;
     constexpr auto minimum = 42_size;
@@ -517,7 +519,7 @@ BOOST_AUTO_TEST_CASE(map__set__minimum_no_expansion__expected_capacity)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__set__no_minimum_expansion__expected_capacity)
+BOOST_AUTO_TEST_CASE(mmap__set__no_minimum_expansion__expected_capacity)
 {
     // map will fail if minimum is zero.
     constexpr auto rate = 42_size;
@@ -541,7 +543,7 @@ BOOST_AUTO_TEST_CASE(map__set__no_minimum_expansion__expected_capacity)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__set__loaded__expected_fill)
+BOOST_AUTO_TEST_CASE(mmap__set__loaded__expected_fill)
 {
     BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 
@@ -642,7 +644,7 @@ BOOST_AUTO_TEST_CASE(map__set__loaded__expected_fill)
     BC_POP_WARNING()
 }
 
-BOOST_AUTO_TEST_CASE(map__get__unloaded__false)
+BOOST_AUTO_TEST_CASE(mmap__get__unloaded__false)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -654,7 +656,7 @@ BOOST_AUTO_TEST_CASE(map__get__unloaded__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__get__loaded__success)
+BOOST_AUTO_TEST_CASE(mmap__get__loaded__success)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -668,7 +670,7 @@ BOOST_AUTO_TEST_CASE(map__get__loaded__success)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__get__size__expected)
+BOOST_AUTO_TEST_CASE(mmap__get__size__expected)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -689,7 +691,7 @@ BOOST_AUTO_TEST_CASE(map__get__size__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__get_capacity__size__expected)
+BOOST_AUTO_TEST_CASE(mmap__get_capacity__size__expected)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -710,7 +712,7 @@ BOOST_AUTO_TEST_CASE(map__get_capacity__size__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__get_raw__always__nonblocking)
+BOOST_AUTO_TEST_CASE(mmap__get_raw__always__nonblocking)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -730,7 +732,7 @@ BOOST_AUTO_TEST_CASE(map__get_raw__always__nonblocking)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__flush__unloaded__flush_unloaded)
+BOOST_AUTO_TEST_CASE(mmap__flush__unloaded__flush_unloaded)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -742,7 +744,7 @@ BOOST_AUTO_TEST_CASE(map__flush__unloaded__flush_unloaded)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__flush__loaded__true)
+BOOST_AUTO_TEST_CASE(mmap__flush__loaded__true)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -756,7 +758,7 @@ BOOST_AUTO_TEST_CASE(map__flush__loaded__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__write__read__expected)
+BOOST_AUTO_TEST_CASE(mmap__write__read__expected)
 {
     constexpr uint64_t expected = 0x0102030405060708_u64;
     const std::string file = TEST_PATH;
@@ -783,7 +785,7 @@ BOOST_AUTO_TEST_CASE(map__write__read__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(map__unload__shared__unload_locked)
+BOOST_AUTO_TEST_CASE(mmap__unload__shared__unload_locked)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));

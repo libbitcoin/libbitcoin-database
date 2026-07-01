@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_MAP_IPP
-#define LIBBITCOIN_DATABASE_MEMORY_MAP_IPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_MMAP_IPP
+#define LIBBITCOIN_DATABASE_MEMORY_MMAP_IPP
 
 #include <algorithm>
 #include <filesystem>
@@ -32,7 +32,7 @@ namespace database {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-CLASS::map1(const path& filename, size_t minimum, size_t expansion,
+CLASS::mmap(const path& filename, size_t minimum, size_t expansion,
     bool random) NOEXCEPT
     requires (columns == one)
   : filenames_{ filename },
@@ -44,7 +44,7 @@ CLASS::map1(const path& filename, size_t minimum, size_t expansion,
 }
 
 TEMPLATE
-CLASS::map1(const paths& filenames, size_t minimum, size_t expansion,
+CLASS::mmap(const paths& filenames, size_t minimum, size_t expansion,
     bool random) NOEXCEPT
     requires (columns > one)
   : filenames_(filenames),
@@ -57,7 +57,7 @@ CLASS::map1(const paths& filenames, size_t minimum, size_t expansion,
 }
 
 TEMPLATE
-CLASS::~map1() NOEXCEPT
+CLASS::~mmap() NOEXCEPT
 {
     BC_ASSERT_MSG(!loaded_, "...");
     BC_ASSERT_MSG(is_zero(logical_), "...");

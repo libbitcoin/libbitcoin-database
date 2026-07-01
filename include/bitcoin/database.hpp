@@ -31,10 +31,10 @@
 #include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/finalizer.hpp>
-#include <bitcoin/database/memory/map.hpp>
 #include <bitcoin/database/memory/maps.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/memory/mman.hpp>
+#include <bitcoin/database/memory/mmap.hpp>
 #include <bitcoin/database/memory/reader.hpp>
 #include <bitcoin/database/memory/streamers.hpp>
 #include <bitcoin/database/memory/utilities.hpp>

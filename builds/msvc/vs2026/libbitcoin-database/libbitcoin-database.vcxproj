@@ -155,10 +155,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\finalizer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\maps.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mman.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mmap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\streamers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\utilities.hpp" />
@@ -222,10 +222,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map_dispatch.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map_private.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map_storage.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_dispatch.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_private.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_storage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\arrayhead.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\arraymap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashhead.ipp" />
