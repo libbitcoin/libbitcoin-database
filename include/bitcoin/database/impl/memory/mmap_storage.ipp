@@ -69,7 +69,7 @@ code CLASS::open() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    for (const auto& descriptor : opened_)
+    for (const auto& descriptor: opened_)
         if (descriptor != file::invalid)
             return error::open_open;
 
@@ -101,7 +101,7 @@ code CLASS::close() NOEXCEPT
         return error::success;
 
     logical_ = zero;
-    for (auto& descriptor : opened_)
+    for (auto& descriptor: opened_)
     {
         if (descriptor != file::invalid)
         {
