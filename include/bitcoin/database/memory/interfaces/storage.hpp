@@ -32,6 +32,15 @@ class storage
 public:
     static constexpr auto eof = system::bit_all<size_t>;
 
+    /// Get the fault condition.
+    virtual code get_fault() const NOEXCEPT = 0;
+
+    /// Get the space required to clear the disk full condition.
+    virtual size_t get_space() const NOEXCEPT = 0;
+
+    /// The filesystem path of the backing storage.
+    virtual const std::filesystem::path& file() const NOEXCEPT = 0;
+
     /// Create empty file, must not exist.
     virtual code create() const NOEXCEPT = 0;
 
@@ -58,9 +67,6 @@ public:
 
     /// Dump current logical map to a new file in path, must not exist.
     virtual code dump(const std::filesystem::path& path) const NOEXCEPT = 0;
-
-    /// The filesystem path of the backing storage.
-    virtual const std::filesystem::path& file() const NOEXCEPT = 0;
 
     /// The current logical size of the memory map (zero if closed).
     virtual size_t size() const NOEXCEPT = 0;
@@ -95,12 +101,6 @@ public:
     /// Get unprotected r/w access to start/offset of memory map (or null).
     /// Pointer is constrained to starting write within full capacity.
     virtual memory::iterator get_raw(size_t offset=zero) const NOEXCEPT = 0;
-
-    /// Get the fault condition.
-    virtual code get_fault() const NOEXCEPT = 0;
-
-    /// Get the space required to clear the disk full condition.
-    virtual size_t get_space() const NOEXCEPT = 0;
 };
 
 } // namespace database

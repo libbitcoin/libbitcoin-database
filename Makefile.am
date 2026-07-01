@@ -43,10 +43,8 @@ src_libbitcoin_database_la_SOURCES = \
     src/locks/file_lock.cpp \
     src/locks/flush_lock.cpp \
     src/locks/interprocess_lock.cpp \
-    src/memory/map.cpp \
+    src/memory/mman.cpp \
     src/memory/utilities.cpp \
-    src/memory/mman-win32/mman.cpp \
-    src/memory/mman-win32/mman.hpp \
     src/types/history.cpp \
     src/types/multisig_view.cpp \
     src/types/unspent.cpp
@@ -208,7 +206,11 @@ include_bitcoin_database_file_HEADERS = \
 
 include_bitcoin_database_impl_memorydir = ${includedir}/bitcoin/database/impl/memory
 include_bitcoin_database_impl_memory_HEADERS = \
-    include/bitcoin/database/impl/memory/accessor.ipp
+    include/bitcoin/database/impl/memory/accessor.ipp \
+    include/bitcoin/database/impl/memory/map.ipp \
+    include/bitcoin/database/impl/memory/map_dispatch.ipp \
+    include/bitcoin/database/impl/memory/map_private.ipp \
+    include/bitcoin/database/impl/memory/map_storage.ipp
 
 include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
 include_bitcoin_database_impl_primitives_HEADERS = \
@@ -314,6 +316,7 @@ include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/map.hpp \
     include/bitcoin/database/memory/maps.hpp \
     include/bitcoin/database/memory/memory.hpp \
+    include/bitcoin/database/memory/mman.hpp \
     include/bitcoin/database/memory/reader.hpp \
     include/bitcoin/database/memory/streamers.hpp \
     include/bitcoin/database/memory/utilities.hpp
