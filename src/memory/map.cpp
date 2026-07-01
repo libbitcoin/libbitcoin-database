@@ -213,6 +213,42 @@ code map::unload() NOEXCEPT
     return error::unload_locked;
 }
 
+// Suspend writes before calling.
+code map::shrink() NOEXCEPT
+{
+    std::unique_lock field_lock(field_mutex_);
+
+    if (remap_mutex_.try_lock())
+    {
+        if (!loaded_)
+        {
+            remap_mutex_.unlock();
+            return error::shrink_unloaded;
+        }
+
+        BC_ASSERT_MSG(logical_ <= capacity_, "logical size exceeds capacity");
+
+        // Updates fields.
+        if (!unmap_())
+        {
+            remap_mutex_.unlock();
+            return error::shrink_unload_failure;
+        }
+
+        // Updates fields.
+        if (!map_())
+        {
+            remap_mutex_.unlock();
+            return error::shrink_load_failure;
+        }
+
+        remap_mutex_.unlock();
+        return error::success;
+    }
+
+    return error::shrink_locked;
+}
+
 bool map::is_loaded() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);

@@ -85,6 +85,11 @@ code chunk_storage::unload() NOEXCEPT
     return error::success;
 }
 
+code chunk_storage::shrink() NOEXCEPT
+{
+    return error::success;
+}
+
 code chunk_storage::dump(const std::filesystem::path&) const NOEXCEPT
 {
     return error::success;

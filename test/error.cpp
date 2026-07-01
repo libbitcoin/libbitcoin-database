@@ -207,6 +207,42 @@ BOOST_AUTO_TEST_CASE(error_t__code__unload_failure__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "file failed to unload");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__shrink_unloaded__true_expected_message)
+{
+    constexpr auto value = error::shrink_unloaded;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "shrinking unloaded file");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__shrink_unload_failure__true_expected_message)
+{
+    constexpr auto value = error::shrink_unload_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "shrink failed to unload file");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__shrink_load_failure__true_expected_message)
+{
+    constexpr auto value = error::shrink_load_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "shrink failed to load file");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__shrink_locked__true_expected_message)
+{
+    constexpr auto value = error::shrink_locked;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "shrinking locked file");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__disk_full__true_expected_message)
 {
     constexpr auto value = error::disk_full;

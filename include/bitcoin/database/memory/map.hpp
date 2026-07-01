@@ -76,6 +76,9 @@ public:
     /// Flush, unmap and truncate to logical, restartable, idempotent.
     code unload() NOEXCEPT override;
 
+    /// Unload and load, causing underyling map to shrink to logical size.
+    code shrink() NOEXCEPT override;
+
     /// Dump current logical map to a new file in path, must not exist.
     code dump(const std::filesystem::path& path) const NOEXCEPT override;
 

@@ -53,6 +53,9 @@ public:
     /// Flush, unmap and truncate to logical, restartable, idempotent.
     virtual code unload() NOEXCEPT = 0;
 
+    /// Unload and load, causing underyling map to shrink to logical size.
+    virtual code shrink() NOEXCEPT = 0;
+
     /// Dump current logical map to a new file in path, must not exist.
     virtual code dump(const std::filesystem::path& path) const NOEXCEPT = 0;
 

@@ -220,6 +220,32 @@ BOOST_AUTO_TEST_CASE(map__unload__loaded__true)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+BOOST_AUTO_TEST_CASE(map__shrink__unloaded__shrink_unloaded)
+{
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file);
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE_EQUAL(instance.shrink(), error::shrink_unloaded);
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(map__shrink__loaded__true)
+{
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file);
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE(!instance.shrink());
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(map__capacity__default__expected)
 {
 
