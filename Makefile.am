@@ -70,7 +70,7 @@ test_libbitcoin_database_test_SOURCES = \
     test/locks/flush_lock.cpp \
     test/locks/interprocess_lock.cpp \
     test/memory/accessor.cpp \
-    test/memory/map.cpp \
+    test/memory/mmap.cpp \
     test/memory/utilities.cpp \
     test/mocks/blocks.cpp \
     test/mocks/blocks.hpp \
@@ -207,10 +207,10 @@ include_bitcoin_database_file_HEADERS = \
 include_bitcoin_database_impl_memorydir = ${includedir}/bitcoin/database/impl/memory
 include_bitcoin_database_impl_memory_HEADERS = \
     include/bitcoin/database/impl/memory/accessor.ipp \
-    include/bitcoin/database/impl/memory/map.ipp \
-    include/bitcoin/database/impl/memory/map_dispatch.ipp \
-    include/bitcoin/database/impl/memory/map_private.ipp \
-    include/bitcoin/database/impl/memory/map_storage.ipp
+    include/bitcoin/database/impl/memory/mmap.ipp \
+    include/bitcoin/database/impl/memory/mmap_dispatch.ipp \
+    include/bitcoin/database/impl/memory/mmap_private.ipp \
+    include/bitcoin/database/impl/memory/mmap_storage.ipp
 
 include_bitcoin_database_impl_primitivesdir = ${includedir}/bitcoin/database/impl/primitives
 include_bitcoin_database_impl_primitives_HEADERS = \
@@ -313,10 +313,10 @@ include_bitcoin_database_memorydir = ${includedir}/bitcoin/database/memory
 include_bitcoin_database_memory_HEADERS = \
     include/bitcoin/database/memory/accessor.hpp \
     include/bitcoin/database/memory/finalizer.hpp \
-    include/bitcoin/database/memory/map.hpp \
     include/bitcoin/database/memory/maps.hpp \
     include/bitcoin/database/memory/memory.hpp \
     include/bitcoin/database/memory/mman.hpp \
+    include/bitcoin/database/memory/mmap.hpp \
     include/bitcoin/database/memory/reader.hpp \
     include/bitcoin/database/memory/streamers.hpp \
     include/bitcoin/database/memory/utilities.hpp

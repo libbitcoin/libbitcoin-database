@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_MEMORY_MAP_STORAGE_IPP
-#define LIBBITCOIN_DATABASE_MEMORY_MAP_STORAGE_IPP
+#ifndef LIBBITCOIN_DATABASE_MEMORY_MMAP_STORAGE_IPP
+#define LIBBITCOIN_DATABASE_MEMORY_MMAP_STORAGE_IPP
 
 #include <filesystem>
 #include <mutex>
@@ -69,7 +69,7 @@ code CLASS::open() NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    for (const auto& descriptor : opened_)
+    for (const auto& descriptor: opened_)
         if (descriptor != file::invalid)
             return error::open_open;
 
@@ -97,12 +97,11 @@ code CLASS::close() NOEXCEPT
     if (loaded_)
         return error::close_loaded;
 
-    for (const auto& descriptor: opened_)
-        if (descriptor == file::invalid)
-            return error::success;
+    if (opened_.front() == file::invalid)
+        return error::success;
 
     logical_ = zero;
-    for (auto& descriptor : opened_)
+    for (auto& descriptor: opened_)
     {
         if (descriptor != file::invalid)
         {

@@ -128,7 +128,7 @@
     <ClCompile Include="..\..\..\..\test\locks\interprocess_lock.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\accessor.cpp" />
-    <ClCompile Include="..\..\..\..\test\memory\map.cpp" />
+    <ClCompile Include="..\..\..\..\test\memory\mmap.cpp" />
     <ClCompile Include="..\..\..\..\test\memory\utilities.cpp">
       <ObjectFileName>$(IntDir)test_memory_utilities.obj</ObjectFileName>
     </ClCompile>
