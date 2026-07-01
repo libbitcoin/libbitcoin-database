@@ -76,10 +76,7 @@ TEMPLATE
 bool CLASS::is_open() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
-    return std::ranges::any_of(opened_, [](auto opened) NOEXCEPT
-    {
-        return opened != file::invalid;
-    });
+    return opened_.front() != file::invalid;
 }
 
 TEMPLATE

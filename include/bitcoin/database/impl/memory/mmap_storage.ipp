@@ -97,9 +97,8 @@ code CLASS::close() NOEXCEPT
     if (loaded_)
         return error::close_loaded;
 
-    for (const auto& descriptor: opened_)
-        if (descriptor == file::invalid)
-            return error::success;
+    if (opened_.front() == file::invalid)
+        return error::success;
 
     logical_ = zero;
     for (auto& descriptor : opened_)
