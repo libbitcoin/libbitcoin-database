@@ -206,7 +206,8 @@ bool CLASS::remap_(size_t size, size_t space) NOEXCEPT
 #elif defined(MREMAP_MAYMOVE)
 
     memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mremap(memory_map_[Column], capacity_[Column], size, MREMAP_MAYMOVE));
+        ::mremap(memory_map_[Column], capacity_[Column], size,
+            MREMAP_MAYMOVE));
 
 #else
 
