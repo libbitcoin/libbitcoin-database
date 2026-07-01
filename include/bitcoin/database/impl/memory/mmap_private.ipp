@@ -33,6 +33,22 @@ namespace database {
 // private
 
 TEMPLATE
+template <size_t Column>
+size_t CLASS::space_one_(size_t rows) const NOEXCEPT
+{
+    return system::floored_subtract(to_capacity(to_bytes<Column>(rows)),
+        std::get<Column>(capacity_));
+}
+
+TEMPLATE
+template <size_t... Index>
+size_t CLASS::space_all_(size_t rows, 
+    std::index_sequence<Index...>) const NOEXCEPT
+{
+    return (space_one_<Index>(rows) + ...);
+}
+
+TEMPLATE
 template <size_t... Index>
 bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
 {
@@ -57,7 +73,8 @@ TEMPLATE
 template <size_t... Index>
 bool CLASS::remap_all_(size_t logical, std::index_sequence<Index...>) NOEXCEPT 
 {
-    return (remap_<Index>(to_bytes<Index>(logical)) && ...);
+    const auto space = space_all_(logical, std::index_sequence<Index...>{});
+    return (remap_<Index>(to_bytes<Index>(logical), space) && ...);
 }
 
 // mman wrappers, not thread safe.
@@ -139,12 +156,11 @@ template <size_t Column>
 bool CLASS::map_() NOEXCEPT
 {
     auto size = to_bytes<Column>(logical_);
-
-    // Cannot map empty file, and want mininum capacity, so expand as required.
-    // disk_full: space is set but no code is set with false return.
     const auto minimum = to_bytes<Column>(minimum_);
-    if ((size < minimum) && !resize_<Column>((size = minimum)))
-      return false;
+
+    if ((size < minimum) && !resize_<Column>((size = minimum),
+        space_one_<Column>(logical_)))
+        return false;
 
     memory_map_[Column] = system::pointer_cast<uint8_t>(
         ::mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED,
@@ -157,7 +173,7 @@ bool CLASS::map_() NOEXCEPT
 // Remapping has no effect on logical size, sets map_/capacity_.
 TEMPLATE
 template <size_t Column>
-bool CLASS::remap_(size_t size) NOEXCEPT
+bool CLASS::remap_(size_t size, size_t space) NOEXCEPT
 {
     BC_ASSERT(size >= to_bytes<Column>(logical_));
 
@@ -170,16 +186,13 @@ bool CLASS::remap_(size_t size) NOEXCEPT
     if (!unmap_<Column>())
         return false;
 
-    // disk_full: unmap(ok), resize(fail for space), map(ok), return false.
-    // disk_full: if second unmap fails then code is set, and false return.
-    if (!resize_<Column>(size))
+    if (!resize_<Column>(size, space))
     {
         /* bool */ map_<Column>();
         return false;
     }
 #else
-    // disk_full: space is set but no code is set with false return.
-    if (!resize_<Column>(size))
+    if (!resize_<Column>(size, space))
         return false;
 #endif
 
@@ -211,7 +224,7 @@ bool CLASS::remap_(size_t size) NOEXCEPT
 // disk_full: space is set but no code is set with false return.
 TEMPLATE
 template <size_t Column>
-bool CLASS::resize_(size_t size) NOEXCEPT
+bool CLASS::resize_(size_t size, size_t space) NOEXCEPT
 {
     // Disk full detection, any other failure is an abort.
 #if !defined (WITHOUT_FALLOCATE)
@@ -224,7 +237,7 @@ bool CLASS::resize_(size_t size) NOEXCEPT
         // Disk full is the only restartable store failure (leave mapped).
         if (errno == ENOSPC)
         {
-            set_disk_space(size - capacity_[Column]);
+            set_disk_space(space);
             return false;
         }
 

@@ -192,6 +192,13 @@ private:
     static constexpr auto fail = -1;
     using access = accessor<std::shared_mutex>;
     using sequence = std::make_index_sequence<columns>;
+    
+    // dispatch utils.
+    template <size_t Column>
+    size_t space_one_(size_t rows) const NOEXCEPT;
+    template <size_t... Index>
+    size_t space_all_(size_t rows,
+        std::index_sequence<Index...>) const NOEXCEPT;
 
     // mman dispatch, not thread safe.
     template <size_t... Index>
@@ -211,9 +218,9 @@ private:
     template <size_t Column>
     bool map_() NOEXCEPT;
     template <size_t Column>
-    bool remap_(size_t size) NOEXCEPT;
+    bool remap_(size_t size, size_t space) NOEXCEPT;
     template <size_t Column>
-    bool resize_(size_t size) NOEXCEPT;
+    bool resize_(size_t size, size_t space) NOEXCEPT;
     template <size_t Column>
     bool finalize_(size_t size) NOEXCEPT;
 
