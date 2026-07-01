@@ -91,11 +91,8 @@
     <Filter Include="src\memory">
       <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-0000000000B1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\memory\mman-win32">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-0000000000C1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\types">
-      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-0000000000D1}</UniqueIdentifier>
+      <UniqueIdentifier>{62D7FBEE-4D52-424A-0000-0000000000C1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -120,11 +117,8 @@
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp">
       <Filter>src\locks</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\memory\map.cpp">
+    <ClCompile Include="..\..\..\..\src\memory\mman.cpp">
       <Filter>src\memory</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.cpp">
-      <Filter>src\memory\mman-win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\memory\utilities.cpp">
       <Filter>src\memory</Filter>
@@ -195,6 +189,9 @@
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mman.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp">
@@ -377,12 +374,21 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.hpp">
-      <Filter>src\memory\mman-win32</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp">
+      <Filter>include\bitcoin\database\impl\memory</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map.ipp">
+      <Filter>include\bitcoin\database\impl\memory</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map_dispatch.ipp">
+      <Filter>include\bitcoin\database\impl\memory</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map_private.ipp">
+      <Filter>include\bitcoin\database\impl\memory</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map_storage.ipp">
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\arrayhead.ipp">

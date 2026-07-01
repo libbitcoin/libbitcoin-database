@@ -19,11 +19,11 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_MAP_HPP
 
-#include <algorithm>
 #include <atomic>
 #include <filesystem>
 #include <mutex>
 #include <shared_mutex>
+#include <tuple>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/file/file.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
@@ -33,57 +33,105 @@
 namespace libbitcoin {
 namespace database {
 
-/// Thread safe access to a memory-mapped file.
-class BCD_API map
+/// Thread safe access to a memory-mapped file, or to a set of column files
+/// sharing one allocation/remap guard set (SoA aggregate).
+template <size_t... Widths>
+class map1
   : public storage
 {
 public:
-    DELETE_COPY_MOVE(map);
+    DELETE_COPY_MOVE(map1);
 
-    map(const std::filesystem::path& filename, size_t minimum=1,
-        size_t expansion=0, bool random=true) NOEXCEPT;
+    /// Number of backing columns (1 == scalar map).
+    static constexpr size_t columns = sizeof...(Widths);
+    static_assert(!is_zero(columns), "requires at least one column");
+
+    using path = std::filesystem::path;
+    using paths = std::array<path, columns>;
+    using sizes = std::array<size_t, columns>;
+
+    /// Per-column record widths; transpose row<->byte by these (constexpr).
+    static constexpr sizes widths{ Widths... };
+
+    /// Bytes per logical row across the aggregate (sum of column widths).
+    static constexpr size_t stride = (Widths + ...);
+
+    /// Dispatch.
+    /// -----------------------------------------------------------------------
+
+    template <size_t Column, if_lesser<Column, sizeof...(Widths)> = true>
+    memory_ptr set_column(size_t offset, size_t size,
+        uint8_t backfill) NOEXCEPT;
+
+    template <size_t Column, if_lesser<Column, sizeof...(Widths)> = true>
+    memory_ptr get_column(size_t offset=zero) const NOEXCEPT;
+
+    template <size_t Column, if_lesser<Column, sizeof...(Widths)> = true>
+    memory_ptr capacity_column(size_t offset=zero) const NOEXCEPT;
+
+    template <size_t Column, if_lesser<Column, sizeof...(Widths)> = true>
+    memory::iterator raw_column(size_t offset=zero)  const NOEXCEPT;
+
+    /// Constructors.
+    /// -----------------------------------------------------------------------
+
+    /// Scalar construction (columns == 1): unchanged signature and codegen.
+    map1(const std::filesystem::path& filename, size_t minimum=1,
+        size_t expansion=0, bool random=true) NOEXCEPT
+        requires (columns == one);
+
+    /// Aggregate construction (columns > 1): one file per column, shared guards.
+    map1(const paths& filenames, size_t minimum=1, size_t expansion=0,
+        bool random=true) NOEXCEPT
+        requires (columns > one);
 
     /// Destruct for debug assertion only.
-    virtual ~map() NOEXCEPT;
+    virtual ~map1() NOEXCEPT;
 
-    /// True if the file is open.
+    /// True if the file(s) are open.
     bool is_open() const NOEXCEPT;
 
-    /// True if the memory map is loaded.
+    /// True if the memory map(s) are loaded.
     bool is_loaded() const NOEXCEPT;
 
     /// storage interface
     /// -----------------------------------------------------------------------
 
-    /// Create empty file, must be closed.
+    /// Get the fault condition.
+    code get_fault() const NOEXCEPT override;
+
+    /// Get the space required to clear the disk full condition.
+    size_t get_space() const NOEXCEPT override;
+
+    /// The filesystem path of the (first) backing file.
+    const std::filesystem::path& file() const NOEXCEPT override;
+
+    /// Create empty file(s), must be closed.
     code create() const NOEXCEPT override;
 
-    /// Open file, must be closed.
+    /// Open file(s), must be closed.
     code open() NOEXCEPT override;
 
-    /// Close file, must be unloaded, idempotent.
+    /// Close file(s), must be unloaded, idempotent.
     code close() NOEXCEPT override;
 
-    /// Map file to memory, must be loaded.
+    /// Map file(s) to memory, must be loaded.
     code load() NOEXCEPT override;
 
     /// Clear disk full condition, fails if fault, must be loaded, idempotent.
     code reload() NOEXCEPT override;
 
-    /// Flush memory map to disk, suspend writes for call, must be loaded.
+    /// Flush memory map(s) to disk, suspend writes for call, must be loaded.
     code flush() NOEXCEPT override;
 
     /// Flush, unmap and truncate to logical, restartable, idempotent.
     code unload() NOEXCEPT override;
 
-    /// Unload and load, causing underyling map to shrink to logical size.
+    /// Unload and load, causing underyling map(s) to shrink to logical size.
     code shrink() NOEXCEPT override;
 
     /// Dump current logical map to a new file in path, must not exist.
     code dump(const std::filesystem::path& path) const NOEXCEPT override;
-
-    /// The filesystem path of the file.
-    const std::filesystem::path& file() const NOEXCEPT override;
 
     /// The current logical size of the memory map (zero if closed).
     size_t size() const NOEXCEPT override;
@@ -91,86 +139,128 @@ public:
     /// The current capacity of the memory map (zero if unloaded).
     size_t capacity() const NOEXCEPT override;
 
-    /// Reduce logical size to specified bytes (false if exceeds logical).
+    /// Reduce logical size to specified (false if exceeds logical).
     bool truncate(size_t size) NOEXCEPT override;
 
-    /// Increase logical size to specified bytes as required (false if fails).
+    /// Increase logical size to specified as required (false if fails).
     bool expand(size_t size) NOEXCEPT override;
 
-    /// Increase capacity by specified bytes (false only if fails).
-    bool reserve(size_t chunk) NOEXCEPT override;
+    /// Increase capacity by specified (false only if fails).
+    bool reserve(size_t size) NOEXCEPT override;
 
-    /// Increase logical by specified bytes, return offset to first (or eof).
+    /// Increase logical by specified, return offset to first (or eof).
     size_t allocate(size_t chunk) NOEXCEPT override;
 
-    /// Get remap-protected r/w access to offset (or null) allocated to size.
+    /// Remap-protected r/w access to offset (or null) allocated to size.
     memory_ptr set(size_t offset, size_t size,
         uint8_t backfill) NOEXCEPT override;
 
-    /// Get remap-protected r/w access to start/offset of memory map (or null).
-    /// Pointer is constrained to starting write within logical allocation.
+    /// Remap-protected r/w access to start/offset (or null), within logical.
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
-    /// Get remap-protected r/w access to start/offset of memory map (or null).
-    /// Pointer is constrained to starting write within full capacity.
+    /// Remap-protected r/w access to start/offset (or null), within capacity.
     memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT override;
 
-    /// Get unprotected r/w access to start/offset of memory map (or null).
-    /// Pointer is constrained to starting write within logical allocation.
+    /// Unprotected r/w access to start/offset (or null), within logical.
     memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override;
 
-    /// Get the fault condition.
-    code get_fault() const NOEXCEPT override;
-
-    /// Get the space required to clear the disk full condition.
-    /// Use load() to clear the indicated space and allow restart.
-    size_t get_space() const NOEXCEPT override;
-
 protected:
+    /// Row<->byte transpose by the constexpr column width (folds for width 1).
+    template <size_t Column>
+    static constexpr size_t to_bytes(size_t offset) NOEXCEPT
+    {
+        return offset * std::get<Column>(widths);
+    }
+
+    // Capacity in rows: column 0 bytes transposed back to rows.
+    static constexpr size_t capacity_rows(const sizes& capacity) NOEXCEPT
+    {
+        return std::get<zero>(capacity) / std::get<zero>(widths);
+    }
+
+    // Logical rows: column 0 bytes transposed back to rows.
+    static constexpr size_t logical_rows(size_t bytes) NOEXCEPT
+    {
+        return bytes / std::get<zero>(widths);
+    }
+
     size_t to_capacity(size_t required) const NOEXCEPT;
     void set_first_code(const error::error_t& ec) NOEXCEPT;
     void set_disk_space(size_t required) NOEXCEPT;
 
 private:
-    using path = std::filesystem::path;
+    static constexpr auto fail = -1;
     using access = accessor<std::shared_mutex>;
+    using sequence = std::make_index_sequence<columns>;
 
-    // Mapping utilities.
+    // mman dispatch, not thread safe.
+    template <size_t... Index>
+    bool map_all_(std::index_sequence<Index...>) NOEXCEPT;
+    template <size_t... Index>
+    bool unmap_all_(std::index_sequence<Index...>) NOEXCEPT;
+    template <size_t... Index>
+    bool flush_all_(std::index_sequence<Index...>) NOEXCEPT;
+    template <size_t... Index>
+    bool remap_all_(size_t logical, std::index_sequence<Index...>) NOEXCEPT;
+
+    // mman wrappers, not thread safe.
+    template <size_t Column>
     bool flush_() NOEXCEPT;
+    template <size_t Column>
     bool unmap_() NOEXCEPT;
+    template <size_t Column>
     bool map_() NOEXCEPT;
+    template <size_t Column>
     bool remap_(size_t size) NOEXCEPT;
+    template <size_t Column>
     bool resize_(size_t size) NOEXCEPT;
+    template <size_t Column>
     bool finalize_(size_t size) NOEXCEPT;
 
-    // Constants.
-    const std::filesystem::path filename_;
+    // These are thread safe.
+    const paths filenames_;
     const size_t minimum_;
     const size_t expansion_;
     const bool random_;
-
-    // Protected by remap_mutex.
-    // requires remap_mutex_ exclusive lock for write.
-    // requires remap_mutex_ minimum shared lock for flush/read.
-    uint8_t* memory_map_{};
-    mutable std::shared_mutex remap_mutex_{};
-
-    // Protected by field_mutex.
-    // fields require field_mutex_ exclusive lock for write.
-    // fields require minimum field_mutex_ shared lock for flush/read.
-    int opened_{ file::invalid };
-    bool fault_{};
-    bool loaded_{};
-    size_t capacity_{};
-    size_t logical_{};
-    mutable std::shared_mutex field_mutex_{};
-
-    // These are thread safe.
     std::atomic<size_t> space_{ zero };
     std::atomic<error::error_t> error_{ error::success };
+
+    // These are protected by field_mutex_.
+    // Shared allocation state and per-column file/capacity state.
+    // Fields require field_mutex_ exclusive for write, shared for flush/read.
+    // logical_ is the shared row count across all columns.
+    std::array<int, columns> opened_;
+    sizes capacity_{};
+    size_t logical_{};
+    bool fault_{};
+    bool loaded_{};
+    mutable std::shared_mutex field_mutex_{};
+
+    // These are protected by remap_mutex_.
+    std::array<uint8_t*, columns> memory_map_{};
+    mutable std::shared_mutex remap_mutex_{};
 };
+
+/// Scalar map: single column, width 1. Source and codegen identical to the
+/// prior non-aggregate map; existing usage binds the unchanged constructor.
+using map = map1<1>;
 
 } // namespace database
 } // namespace libbitcoin
+
+#define TEMPLATE template <size_t... Widths>
+#define CLASS map1<Widths...>
+
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+#include <bitcoin/database/impl/memory/map.ipp>
+#include <bitcoin/database/impl/memory/map_dispatch.ipp>
+#include <bitcoin/database/impl/memory/map_private.ipp>
+#include <bitcoin/database/impl/memory/map_storage.ipp>
+
+BC_POP_WARNING()
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

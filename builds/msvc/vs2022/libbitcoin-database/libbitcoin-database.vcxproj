@@ -130,8 +130,7 @@
     <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\flush_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp" />
-    <ClCompile Include="..\..\..\..\src\memory\map.cpp" />
-    <ClCompile Include="..\..\..\..\src\memory\mman-win32\mman.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory\mman.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\utilities.cpp">
       <ObjectFileName>$(IntDir)src_memory_utilities.obj</ObjectFileName>
     </ClCompile>
@@ -159,6 +158,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\map.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\maps.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mman.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\streamers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\utilities.hpp" />
@@ -219,10 +219,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\unspent.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
-    <ClInclude Include="..\..\..\..\src\memory\mman-win32\mman.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map_dispatch.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map_private.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\map_storage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\arrayhead.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\arraymap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashhead.ipp" />
