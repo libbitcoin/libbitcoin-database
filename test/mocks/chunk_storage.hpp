@@ -54,6 +54,8 @@ public:
     system::data_chunk& buffer() NOEXCEPT;
 
     // storage interface.
+    code get_fault() const NOEXCEPT override;
+    size_t get_space() const NOEXCEPT override;
     code create() const NOEXCEPT override;
     code open() NOEXCEPT override;
     code close() NOEXCEPT override;
@@ -70,12 +72,13 @@ public:
     bool expand(size_t size) NOEXCEPT override;
     bool reserve(size_t chunk) NOEXCEPT override;
     size_t allocate(size_t chunk) NOEXCEPT override;
-    memory_ptr set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT override;
+    memory_ptr get_capacity(size_t offset = zero) const NOEXCEPT override;
+    memory::iterator get_raw(size_t offset = zero) const NOEXCEPT override;
+    memory_ptr set(size_t offset, size_t size,
+        uint8_t backfill) NOEXCEPT override;
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
-    memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT override;
-    memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override;
-    code get_fault() const NOEXCEPT override;
-    size_t get_space() const NOEXCEPT override;
+    memory_ptr get_at(size_t column,
+        size_t offset=zero) const NOEXCEPT override;
 
 private:
     // These are protected by mutex.

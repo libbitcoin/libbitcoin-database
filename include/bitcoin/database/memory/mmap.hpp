@@ -56,22 +56,6 @@ public:
     /// Bytes per logical row across the aggregate (sum of column widths).
     static constexpr size_t stride = (Widths + ...);
 
-    /// Dispatch.
-    /// -----------------------------------------------------------------------
-
-    template <size_t Column, if_lesser<Column, sizeof...(Widths)> = true>
-    memory_ptr set_column(size_t offset, size_t size,
-        uint8_t backfill) NOEXCEPT;
-
-    template <size_t Column, if_lesser<Column, sizeof...(Widths)> = true>
-    memory_ptr get_column(size_t offset=zero) const NOEXCEPT;
-
-    template <size_t Column, if_lesser<Column, sizeof...(Widths)> = true>
-    memory_ptr capacity_column(size_t offset=zero) const NOEXCEPT;
-
-    template <size_t Column, if_lesser<Column, sizeof...(Widths)> = true>
-    memory::iterator raw_column(size_t offset=zero)  const NOEXCEPT;
-
     /// Constructors.
     /// -----------------------------------------------------------------------
 
@@ -149,6 +133,12 @@ public:
     /// Increase logical by specified, return offset to first (or eof).
     size_t allocate(size_t chunk) NOEXCEPT override;
 
+    /// Remap-protected r/w access to start/offset (or null), within capacity.
+    memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT override;
+
+    /// Unprotected r/w access to start/offset (or null), within logical.
+    memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override;
+
     /// Remap-protected r/w access to offset (or null) allocated to size.
     memory_ptr set(size_t offset, size_t size,
         uint8_t backfill) NOEXCEPT override;
@@ -156,11 +146,9 @@ public:
     /// Remap-protected r/w access to start/offset (or null), within logical.
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
-    /// Remap-protected r/w access to start/offset (or null), within capacity.
-    memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT override;
-
-    /// Unprotected r/w access to start/offset (or null), within logical.
-    memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override;
+    /// Same as get() but within specified column (or null for invalid column).
+    memory_ptr get_at(size_t column,
+        size_t offset=zero) const NOEXCEPT override;
 
 protected:
     /// Row<->byte transpose by the constexpr column width (folds for width 1).

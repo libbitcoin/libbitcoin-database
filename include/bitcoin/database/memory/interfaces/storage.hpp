@@ -86,6 +86,14 @@ public:
     /// Increase logical by specified bytes, return offset to first (or eof).
     virtual size_t allocate(size_t chunk) NOEXCEPT = 0;
 
+    /// Get remap-protected r/w access to start/offset of memory map (or null).
+    /// Pointer is constrained to starting write within full capacity.
+    virtual memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT = 0;
+
+    /// Get unprotected r/w access to start/offset of memory map (or null).
+    /// Pointer is constrained to starting write within full capacity.
+    virtual memory::iterator get_raw(size_t offset=zero) const NOEXCEPT = 0;
+
     /// Get remap-protected r/w access to offset (or null) allocated to size.
     virtual memory_ptr set(size_t offset, size_t size,
         uint8_t backfill) NOEXCEPT = 0;
@@ -94,13 +102,10 @@ public:
     /// Pointer is constrained to starting write within logical allocation.
     virtual memory_ptr get(size_t offset=zero) const NOEXCEPT = 0;
 
-    /// Get remap-protected r/w access to start/offset of memory map (or null).
-    /// Pointer is constrained to starting write within full capacity.
-    virtual memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT = 0;
-
-    /// Get unprotected r/w access to start/offset of memory map (or null).
-    /// Pointer is constrained to starting write within full capacity.
-    virtual memory::iterator get_raw(size_t offset=zero) const NOEXCEPT = 0;
+    /// Same as get() but within specified column (or null for invalid column).
+    /// Pointer is constrained to starting write within logical allocation.
+    virtual memory_ptr get_at(size_t column,
+        size_t offset=zero) const NOEXCEPT = 0;
 };
 
 } // namespace database

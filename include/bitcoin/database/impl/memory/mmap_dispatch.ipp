@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_DISPATCH_IPP
 
 #include <algorithm>
-#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <utility>
@@ -35,8 +34,33 @@ namespace database {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-template <size_t Column, if_lesser<Column, sizeof...(Widths)>>
-memory_ptr CLASS::set_column(size_t offset, size_t size,
+memory_ptr CLASS::get_capacity(size_t offset) const NOEXCEPT
+{
+    // Same as get() but limited by capacity() vs. size().
+    const auto allocated = std::get<zero>(capacity_);
+    const auto ptr = std::make_shared<access>(remap_mutex_);
+    if (!loaded_ || is_null(ptr))
+        return nullptr;
+
+    ptr->assign(
+        std::next(std::get<zero>(memory_map_), offset),
+        std::next(std::get<zero>(memory_map_), allocated));
+
+    return ptr;
+}
+
+TEMPLATE
+memory::iterator CLASS::get_raw(size_t offset) const NOEXCEPT
+{
+    // Pointer is otherwise unguarded, not remap safe (use for table heads).
+    if (offset > to_width<zero>(size()))
+        return nullptr;
+
+    return std::next(std::get<zero>(memory_map_), offset);
+}
+
+TEMPLATE
+memory_ptr CLASS::set(size_t offset, size_t size,
     uint8_t backfill) NOEXCEPT
 {
     {
@@ -58,70 +82,62 @@ memory_ptr CLASS::set_column(size_t offset, size_t size,
                 return {};
 
             // Fill new capacity as offset may not be at end due to expansion.
-            const auto first = to_width<Column>(logical_);
-            std::fill_n(
-                std::next(std::get<Column>(memory_map_), first),
-                std::get<Column>(capacity_) - first, backfill);
+            const auto first = to_width<zero>(logical_);
+            std::fill_n(std::next(std::get<zero>(memory_map_), first),
+                std::get<zero>(capacity_) - first, backfill);
         }
 
         logical_ = end;
     }
 
-    return get_column<Column>(offset);
+    return get(offset);
+}
+
+// This avoids forwarding to get_at() for the tiny runtime performance benefit.
+TEMPLATE
+memory_ptr CLASS::get(size_t offset) const NOEXCEPT
+{
+    const auto allocated = to_width<zero>(size());
+    const auto ptr = std::make_shared<access>(remap_mutex_);
+    if (!loaded_ || is_null(ptr))
+        return {};
+
+    ptr->assign(
+        std::next(std::get<zero>(memory_map_), offset),
+        std::next(std::get<zero>(memory_map_), allocated));
+
+    return ptr;
 }
 
 TEMPLATE
-template <size_t Column, if_lesser<Column, sizeof...(Widths)>>
-memory_ptr CLASS::get_column(size_t offset) const NOEXCEPT
+memory_ptr CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_ARRAY_INDEXING)
+
+    // Invalid column yields null (bounds check on runtime column index).
+    if (column >= columns)
+        return {};
+
     // Obtaining size before access prevents mutual mutex wait (deadlock).
-    // The store could remap between here and next line, but capacity only
-    // increases. Close zeroizes capacity but file must be unloaded to do so.
-    // Truncate can reduce logical, but capacity is not affected. It is always
-    // safe to write past current logical within current capacity.
-    const auto allocated = to_width<Column>(size());
+    // Capacity only increases; safe to bound by logical (rows) transposed to
+    // this column's bytes. widths_[column] is the runtime column stride.
+    const auto allocated = size() * widths[column];
 
     // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
     const auto ptr = std::make_shared<access>(remap_mutex_);
 
     // loaded_ update is precluded by remap_mutex_, making this read atomic.
     if (!loaded_ || is_null(ptr))
-        return nullptr;
+        return {};
 
     // With offset > size the assignment is negative (stream is exhausted).
     ptr->assign(
-        std::next(std::get<Column>(memory_map_), offset),
-        std::next(std::get<Column>(memory_map_), allocated));
+        std::next(memory_map_[column], offset),
+        std::next(memory_map_[column], allocated));
 
     return ptr;
-}
 
-TEMPLATE
-template <size_t Column, if_lesser<Column, sizeof...(Widths)>>
-memory_ptr CLASS::capacity_column(size_t offset) const NOEXCEPT
-{
-    // Same as get() but limited by capacity() vs. size().
-    const auto allocated = std::get<Column>(capacity_);
-    const auto ptr = std::make_shared<access>(remap_mutex_);
-    if (!loaded_ || is_null(ptr))
-        return nullptr;
-
-    ptr->assign(
-        std::next(std::get<Column>(memory_map_), offset),
-        std::next(std::get<Column>(memory_map_), allocated));
-
-    return ptr;
-}
-
-TEMPLATE
-template <size_t Column, if_lesser<Column, sizeof...(Widths)>>
-memory::iterator CLASS::raw_column(size_t offset) const NOEXCEPT
-{
-    // Pointer is otherwise unguarded, not remap safe (use for table heads).
-    if (offset > to_width<Column>(size()))
-        return nullptr;
-
-    return std::next(std::get<Column>(memory_map_), offset);
+    BC_POP_WARNING()
 }
 
 } // namespace database

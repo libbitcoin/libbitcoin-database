@@ -45,6 +45,16 @@ chunk_storage::chunk_storage(const std::filesystem::path& filename,
 {
 }
 
+code chunk_storage::get_fault() const NOEXCEPT
+{
+    return {};
+}
+
+size_t chunk_storage::get_space() const NOEXCEPT
+{
+    return {};
+}
+
 system::data_chunk& chunk_storage::buffer() NOEXCEPT
 {
     return buffer_;
@@ -177,6 +187,21 @@ size_t chunk_storage::allocate(size_t chunk) NOEXCEPT
     return link;
 }
 
+memory_ptr chunk_storage::get_capacity(size_t offset) const NOEXCEPT
+{
+    const auto ptr = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
+
+    // With offset > capacity the assignment is negative (stream is exhausted).
+    ptr->assign(get_raw(offset), get_raw(capacity()));
+
+    return ptr;
+}
+
+memory::iterator chunk_storage::get_raw(size_t offset) const NOEXCEPT
+{
+    return std::next(buffer_.data(), offset);
+}
+
 memory_ptr chunk_storage::set(size_t offset, size_t size,
     uint8_t backfill) NOEXCEPT
 {
@@ -214,29 +239,12 @@ memory_ptr chunk_storage::get(size_t offset) const NOEXCEPT
     return ptr;
 }
 
-memory_ptr chunk_storage::get_capacity(size_t offset) const NOEXCEPT
+// TODO: extend support for multiple column SoA tables.
+memory_ptr chunk_storage::get_at(size_t BC_DEBUG_ONLY(column),
+    size_t offset) const NOEXCEPT
 {
-    const auto ptr = std::make_shared<accessor<std::shared_mutex>>(map_mutex_);
-
-    // With offset > capacity the assignment is negative (stream is exhausted).
-    ptr->assign(get_raw(offset), get_raw(capacity()));
-
-    return ptr;
-}
-
-memory::iterator chunk_storage::get_raw(size_t offset) const NOEXCEPT
-{
-    return std::next(buffer_.data(), offset);
-}
-
-code chunk_storage::get_fault() const NOEXCEPT
-{
-    return {};
-}
-
-size_t chunk_storage::get_space() const NOEXCEPT
-{
-    return {};
+    BC_ASSERT(is_zero(column));
+    return get(offset);
 }
 
 BC_POP_WARNING()

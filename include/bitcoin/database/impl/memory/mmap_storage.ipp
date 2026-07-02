@@ -364,33 +364,6 @@ size_t CLASS::allocate(size_t chunk) NOEXCEPT
     return end;
 }
 
-// dispatch
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-memory_ptr CLASS::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
-{
-    return set_column<zero>(offset, size, backfill);
-}
-
-TEMPLATE
-memory_ptr CLASS::get(size_t offset) const NOEXCEPT
-{
-    return get_column<zero>(offset);
-}
-
-TEMPLATE
-memory_ptr CLASS::get_capacity(size_t offset) const NOEXCEPT
-{
-    return capacity_column<zero>(offset);
-}
-
-TEMPLATE
-memory::iterator CLASS::get_raw(size_t offset) const NOEXCEPT
-{
-    return raw_column<zero>(offset);
-}
-
 } // namespace database
 } // namespace libbitcoin
 
