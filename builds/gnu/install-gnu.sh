@@ -16,9 +16,9 @@
 #                               Default: --disable-sse41
 # --<enable/disable>-shani    Use Intel/ARM SHA Extensions.
 #                               Default: --disable-shani
-# --<with/without>-ultrafast  Use shrec/UltrafastSecp256k1.
+# --<with/without>-ultrafast  Use shrec/UltrafastSecp256k1 library.
 #                               Default: --without-ultrafast
-# --<with/without>-secp256k1  Use bitcoin-core/secp256k1.
+# --<with/without>-secp256k1  Use bitcoin-core/secp256k1 library.
 #                               Default: --with-secp256k1
 # --build-boost               Build Boost libraries
 # --build-secp256k1           Build libsecp256k1 libraries
@@ -516,10 +516,10 @@ main()
         source_github "${secp256k1_OWNER}" "secp256k1" "${secp256k1_TAG}"
         local SAVE_CPPFLAGS="${CPPFLAGS}"
         export CPPFLAGS="${CPPFLAGS} ${secp256k1_FLAGS[@]}"
-        build_gnu "secp256k1" "." "${PARALLEL}" "${secp256k1_OPTIONS[@]}" "${CONFIGURE_OPTIONS_GNU[@]}"
-        install_gnu "secp256k1"
+        build_gnu "secp256k1" "." "." "${PARALLEL}" "${secp256k1_OPTIONS[@]}" "${CONFIGURE_OPTIONS_GNU[@]}"
+        install_gnu "secp256k1" "."
         if [[ "${BUILD_POST_INSTALL_CLEAN}" == "yes" ]]; then
-            clean_gnu "secp256k1"
+            clean_gnu "secp256k1" "."
         fi
         export CPPFLAGS="${SAVE_CPPFLAGS}"
     fi
@@ -528,10 +528,10 @@ main()
         source_github "${UltrafastSecp256k1_OWNER}" "UltrafastSecp256k1" "${UltrafastSecp256k1_TAG}"
         local SAVE_CPPFLAGS="${CPPFLAGS}"
         export CPPFLAGS="${CPPFLAGS} ${UltrafastSecp256k1_FLAGS[@]}"
-        build_cmake "UltrafastSecp256k1" "." "${PARALLEL}" "${UltrafastSecp256k1_OPTIONS[@]}" "${CONFIGURE_OPTIONS_CMAKE[@]}"
-        install_cmake "UltrafastSecp256k1"
+        build_cmake "UltrafastSecp256k1" "." "." "${PARALLEL}" "${UltrafastSecp256k1_OPTIONS[@]}" "${CONFIGURE_OPTIONS_CMAKE[@]}"
+        install_cmake "UltrafastSecp256k1" "."
         if [[ "${BUILD_POST_INSTALL_CLEAN}" == "yes" ]]; then
-            clean_cmake "UltrafastSecp256k1"
+            clean_cmake "UltrafastSecp256k1" "."
         fi
         export CPPFLAGS="${SAVE_CPPFLAGS}"
     fi
@@ -539,23 +539,23 @@ main()
     source_github "${libbitcoin_system_OWNER}" "libbitcoin-system" "${libbitcoin_system_TAG}"
     local SAVE_CPPFLAGS="${CPPFLAGS}"
     export CPPFLAGS="${CPPFLAGS} ${libbitcoin_system_FLAGS[@]}"
-    build_gnu "libbitcoin-system" "." "${PARALLEL}" "${libbitcoin_system_OPTIONS[@]}" "${CONFIGURE_OPTIONS_GNU[@]}"
-    install_gnu "libbitcoin-system"
+    build_gnu "libbitcoin-system" "builds/gnu" "builds/gnu" "${PARALLEL}" "${libbitcoin_system_OPTIONS[@]}" "${CONFIGURE_OPTIONS_GNU[@]}"
+    install_gnu "libbitcoin-system" "builds/gnu"
     if [[ "${BUILD_POST_INSTALL_CLEAN}" == "yes" ]]; then
-        clean_gnu "libbitcoin-system"
+        clean_gnu "libbitcoin-system" "builds/gnu"
     fi
     export CPPFLAGS="${SAVE_CPPFLAGS}"
 
     source_github "${libbitcoin_database_OWNER}" "libbitcoin-database" "${libbitcoin_database_TAG}"
     local SAVE_CPPFLAGS="${CPPFLAGS}"
     export CPPFLAGS="${CPPFLAGS} ${libbitcoin_database_FLAGS[@]}"
-    build_gnu "libbitcoin-database" "." "${PARALLEL}" "${libbitcoin_database_OPTIONS[@]}" "${CONFIGURE_OPTIONS_GNU[@]}"
+    build_gnu "libbitcoin-database" "builds/gnu" "builds/gnu" "${PARALLEL}" "${libbitcoin_database_OPTIONS[@]}" "${CONFIGURE_OPTIONS_GNU[@]}"
     if ! [[ "${BUILD_SKIP_TESTS}" == "yes" ]]; then
-        test_gnu "libbitcoin-database" "${PARALLEL}"
+        test_gnu "libbitcoin-database" "builds/gnu" "${PARALLEL}"
     fi
-    install_gnu "libbitcoin-database"
+    install_gnu "libbitcoin-database" "builds/gnu"
     if [[ "${BUILD_POST_INSTALL_CLEAN}" == "yes" ]]; then
-        clean_gnu "libbitcoin-database"
+        clean_gnu "libbitcoin-database" "builds/gnu"
     fi
     export CPPFLAGS="${SAVE_CPPFLAGS}"
 
@@ -773,9 +773,10 @@ build_boost()
 build_gnu()
 {
     local PROJECT="$1"
-    local RELATIVE_PATH="$2"
-    local JOBS="$3"
-    shift 3
+    local RELATIVE_SRC_PATH="$2"
+    local RELATIVE_OBJ_PATH="$3"
+    local JOBS="$4"
+    shift 4
 
     local VERBOSITY_GNU=""
     local VERBOSITY_MAKE=""
@@ -790,7 +791,7 @@ build_gnu()
 
     # directory rationalization
     push_directory "${BUILD_SRC_DIR}/${PROJECT}"
-    push_directory "${RELATIVE_PATH}"
+    push_directory "${RELATIVE_SRC_PATH}"
     local BUILD_PATH="$(pwd)"
     pop_directory
 
@@ -802,6 +803,11 @@ build_gnu()
         create_directory_force "${PROJECT}"
         pop_directory
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
+    fi
+
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        create_directory_force "${RELATIVE_OBJ_PATH}"
+        push_directory "${RELATIVE_OBJ_PATH}"
     fi
 
     # configuration
@@ -822,6 +828,10 @@ build_gnu()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
+
     msg_success "'${PROJECT}' built successfully."
 }
 
@@ -829,9 +839,10 @@ build_gnu()
 build_cmake()
 {
     local PROJECT="$1"
-    local RELATIVE_PATH="$2"
-    local JOBS="$3"
-    shift 3
+    local RELATIVE_SRC_PATH="$2"
+    local RELATIVE_OBJ_PATH="$3"
+    local JOBS="$4"
+    shift 4
 
     local VERBOSITY_CMAKE=""
     local VERBOSITY_MAKE=""
@@ -846,7 +857,7 @@ build_cmake()
 
     # directory rationalization
     push_directory "${BUILD_SRC_DIR}/${PROJECT}"
-    push_directory "${RELATIVE_PATH}"
+    push_directory "${RELATIVE_SRC_PATH}"
     local BUILD_PATH="$(pwd)"
     pop_directory
 
@@ -860,9 +871,14 @@ build_cmake()
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
     fi
 
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        create_directory_force "${RELATIVE_OBJ_PATH}"
+        push_directory "${RELATIVE_OBJ_PATH}"
+    fi
+
     display_configure_options "$@"
 
-    cmake ${VERBOSITY_CMAKE} -LA "$@" "${BUILD_SRC_DIR}/${PROJECT}/${RELATIVE_PATH}"
+    cmake ${VERBOSITY_CMAKE} -LA "$@" "${BUILD_SRC_DIR}/${PROJECT}/${RELATIVE_SRC_PATH}"
 
     # make
     if [[ ${JOBS} -gt ${SEQUENTIAL} ]]; then
@@ -873,6 +889,10 @@ build_cmake()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
+
     msg_success "'${PROJECT}' built successfully."
 }
 
@@ -880,7 +900,8 @@ build_cmake()
 clean_cmake()
 {
     local PROJECT="$1"
-    shift 1
+    local RELATIVE_OBJ_PATH="$2"
+    shift 2
 
     msg "Preparing to clean ${PROJECT}"
 
@@ -890,6 +911,10 @@ clean_cmake()
         push_directory "${BUILD_OBJ_DIR}"
     else
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
+    fi
+
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        push_directory "${RELATIVE_OBJ_PATH}"
     fi
 
     disable_exit_on_error
@@ -905,6 +930,9 @@ clean_cmake()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
 
     msg_success "'${PROJECT}' clean complete."
 }
@@ -912,7 +940,8 @@ clean_cmake()
 install_cmake()
 {
     local PROJECT="$1"
-    shift
+    local RELATIVE_OBJ_PATH="$2"
+    shift 2
 
     msg "Preparing to install ${PROJECT}"
 
@@ -924,6 +953,10 @@ install_cmake()
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
     fi
 
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        push_directory "${RELATIVE_OBJ_PATH}"
+    fi
+
     cmake --install .
 
     if [[ ${OS} == Linux ]] && [[ "${PREFIX}" == "/usr/local" ]]; then
@@ -932,6 +965,9 @@ install_cmake()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
 
     msg_success "'${PROJECT}' installation complete."
 }
@@ -939,8 +975,9 @@ install_cmake()
 test_cmake()
 {
     local PROJECT="$1"
-    local JOBS="$2"
-    shift 2
+    local RELATIVE_OBJ_PATH="$2"
+    local JOBS="$3"
+    shift 3
 
     msg "Preparing to test ${PROJECT}"
 
@@ -950,6 +987,10 @@ test_cmake()
         push_directory "${BUILD_OBJ_DIR}"
     else
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
+    fi
+
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        push_directory "${RELATIVE_OBJ_PATH}"
     fi
 
     disable_exit_on_error
@@ -979,6 +1020,9 @@ test_cmake()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
 
     msg_success "'${PROJECT}' test complete."
 }
@@ -986,7 +1030,8 @@ test_cmake()
 clean_gnu()
 {
     local PROJECT="$1"
-    shift 1
+    local RELATIVE_OBJ_PATH="$2"
+    shift 2
 
     msg "Preparing to clean ${PROJECT}"
 
@@ -996,6 +1041,10 @@ clean_gnu()
         push_directory "${BUILD_OBJ_DIR}"
     else
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
+    fi
+
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        push_directory "${RELATIVE_OBJ_PATH}"
     fi
 
     disable_exit_on_error
@@ -1011,6 +1060,9 @@ clean_gnu()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
 
     msg_success "'${PROJECT}' clean complete."
 }
@@ -1018,7 +1070,8 @@ clean_gnu()
 install_gnu()
 {
     local PROJECT="$1"
-    shift
+    local RELATIVE_OBJ_PATH="$2"
+    shift 2
 
     msg "Preparing to install ${PROJECT}"
 
@@ -1030,6 +1083,10 @@ install_gnu()
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
     fi
 
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        push_directory "${RELATIVE_OBJ_PATH}"
+    fi
+
     make install
 
     if [[ ${OS} == Linux ]] && [[ "${PREFIX}" == "/usr/local" ]]; then
@@ -1038,6 +1095,9 @@ install_gnu()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
 
     msg_success "'${PROJECT}' installation complete."
 }
@@ -1045,8 +1105,9 @@ install_gnu()
 test_gnu()
 {
     local PROJECT="$1"
-    local JOBS="$2"
-    shift 2
+    local RELATIVE_OBJ_PATH="$2"
+    local JOBS="$3"
+    shift 3
 
     msg "Preparing to test ${PROJECT}"
 
@@ -1056,6 +1117,10 @@ test_gnu()
         push_directory "${BUILD_OBJ_DIR}"
     else
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
+    fi
+
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        push_directory "${RELATIVE_OBJ_PATH}"
     fi
 
     disable_exit_on_error
@@ -1089,6 +1154,9 @@ test_gnu()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
 
     msg_success "'${PROJECT}' test complete."
 }
@@ -1165,9 +1233,9 @@ help()
     msg "                              Default: --disable-sse41"
     msg "--<enable/disable>-shani    Use Intel/ARM SHA Extensions."
     msg "                              Default: --disable-shani"
-    msg "--<with/without>-ultrafast  Use shrec/UltrafastSecp256k1."
+    msg "--<with/without>-ultrafast  Use shrec/UltrafastSecp256k1 library."
     msg "                              Default: --without-ultrafast"
-    msg "--<with/without>-secp256k1  Use bitcoin-core/secp256k1."
+    msg "--<with/without>-secp256k1  Use bitcoin-core/secp256k1 library."
     msg "                              Default: --with-secp256k1"
     msg "--build-boost               Build Boost libraries"
     msg "--build-secp256k1           Build libsecp256k1 libraries"
