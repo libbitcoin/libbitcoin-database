@@ -71,13 +71,12 @@ endif()
 #------------------------------------------------------------------------------
 # Project options.
 #------------------------------------------------------------------------------
-option( with-tests "Build tests." ON )
-option( with-tools "Build tools." ON )
+option( with-tests "Compile with unit tests." ON )
+option( with-tools "Compile with tools." ON )
 
 #------------------------------------------------------------------------------
 # Dependencies.
 #------------------------------------------------------------------------------
-
 if ( BUILD_SHARED_LIBS )
   set( libbitcoin-system_USE_STATIC_LIBS "OFF" )
   set( Boost_USE_STATIC_LIBS "OFF" )
@@ -96,7 +95,6 @@ find_package( Boost 1.86.0 REQUIRED
 #------------------------------------------------------------------------------
 # Compiler options.
 #------------------------------------------------------------------------------
-
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 include(CheckCXXSourceCompiles)
@@ -168,12 +166,7 @@ endif()
 #------------------------------------------------------------------------------
 # Linker options.
 #------------------------------------------------------------------------------
-
 include(CheckLinkerFlag)
-
-#------------------------------------------------------------------------------
-# Configurable file(s).
-#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # libbitcoin-database library
@@ -196,7 +189,7 @@ target_compile_options( libbitcoin-database
     $<$<COMPILE_LANGUAGE:CXX>:-Wno-comment>
     $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-copy>
     $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
-    -fstack-protector-all
+    $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
 )
 
 file( GLOB_RECURSE libbitcoin_database_HEADERS CONFIGURE_DEPENDS
@@ -275,7 +268,7 @@ if ( with-tests )
       $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
       $<$<COMPILE_LANGUAGE:CXX>:-Wno-long-long>
       $<$<CXX_COMPILER_ID:GNU>:-fno-var-tracking-assignments>
-      -fstack-protector-all
+      $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
   )
 
   file( GLOB_RECURSE libbitcoin_database_test_SOURCES CONFIGURE_DEPENDS
@@ -325,7 +318,7 @@ if ( with-tools )
       $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
       $<$<COMPILE_LANGUAGE:CXX>:-Wno-long-long>
       $<$<CXX_COMPILER_ID:GNU>:-fno-var-tracking-assignments>
-      -fstack-protector-all
+      $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
   )
 
   file( GLOB_RECURSE libbitcoin_database_tools_SOURCES CONFIGURE_DEPENDS
@@ -350,6 +343,7 @@ if ( with-tools )
       OUTPUT_NAME initchain
   )
 endif()
+
 #------------------------------------------------------------------------------
 # Installation routine.
 #------------------------------------------------------------------------------
