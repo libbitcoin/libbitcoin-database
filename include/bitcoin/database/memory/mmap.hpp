@@ -76,14 +76,12 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Scalar construction (columns == 1): unchanged signature and codegen.
-    mmap(const std::filesystem::path& filename, size_t minimum=1,
-        size_t expansion=0, bool random=true) NOEXCEPT
-        requires (columns == one);
+    mmap(const path& filename, size_t minimum=1, size_t expansion=0,
+        bool random=true) NOEXCEPT requires (columns == one);
 
     /// Aggregate construction (columns > 1): one file per column, shared guards.
     mmap(const paths& filenames, size_t minimum=1, size_t expansion=0,
-        bool random=true) NOEXCEPT
-        requires (columns > one);
+        bool random=true) NOEXCEPT requires (columns > one);
 
     /// Destruct for debug assertion only.
     virtual ~mmap() NOEXCEPT;
@@ -248,8 +246,7 @@ private:
     mutable std::shared_mutex remap_mutex_{};
 };
 
-/// Scalar map: single column, width 1. Source and codegen identical to the
-/// prior non-aggregate map; existing usage binds the unchanged constructor.
+// TODO: rename mmap<> to mmaps<> and map to mmap.
 using map = mmap<1>;
 
 } // namespace database

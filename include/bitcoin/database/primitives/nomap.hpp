@@ -128,7 +128,7 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     inline Link put_link(const Element& element) NOEXCEPT;
 
-    /// NOT THREAD SAFE
+    /// NOT THREAD SAFE (used only for height index with writer ordering).
     /// Write element to reserved next position and commit to logical space.
     template <typename Element, if_equal<Element::size, Size> = true>
     inline bool commit(const Element& element) NOEXCEPT;

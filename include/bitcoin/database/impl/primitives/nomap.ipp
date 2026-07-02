@@ -242,6 +242,7 @@ inline Link CLASS::put_link(const Element& element) NOEXCEPT
     return put_link(link, element) ? link : Link{};
 }
 
+/// NOT THREAD SAFE (used only for height index with writer ordering).
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 inline bool CLASS::commit(const Element& element) NOEXCEPT

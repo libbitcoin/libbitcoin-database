@@ -115,7 +115,7 @@ public:
 private:
     static constexpr auto is_slab = (RowSize == max_size_t);
     using head = database::arrayhead<Link, Align>;
-    using body = database::manager<Link, system::data_array<0>, RowSize>;
+    using body = database::manager<Link, system::data_array<zero>, RowSize>;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).
