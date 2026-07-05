@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_TABLES_CACHES_SILENT_HPP
 
 #include <algorithm>
+#include <filesystem>
 #include <tuple>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
@@ -138,8 +139,8 @@ struct silent_correlate
 /// Aggregate (files)
 /// ---------------------------------------------------------------------------
 
-template <typename Storage>
-using silent_maps = maps
+template <template <size_t...> class Storage>
+using silent_files = mmaps
 <
     Storage,
     silent_correlate,
@@ -147,49 +148,45 @@ using silent_maps = maps
     silent_compressed
 >;
 
-template <typename Storage>
+template <template <size_t...> class Storage>
 class silent_storage
-  : public silent_maps<Storage>
+  : public silent_files<Storage>
 {
 public:
     silent_storage(const std::filesystem::path& path, size_t size,
         size_t rate, bool random_access) NOEXCEPT
-      : silent_maps<Storage>(path, size, rate, random_access)
+      : silent_files<Storage>(path, size, rate, random_access)
     {
     }
-
-    Storage& correlate = std::get<0>(this->files_);
-    Storage& prefix = std::get<1>(this->files_);
-    Storage& compressed = std::get<2>(this->files_);
 };
 
 /// Aggregate (table)
 /// ---------------------------------------------------------------------------
 
-template <typename Storage>
 using silent_table = nomaps
 <
-    Storage,
+    silent_correlate::link,
     silent_correlate,
     silent_prefix,
     silent_compressed
 >;
 
-template <typename Storage>
+template <template <size_t...> class Storage>
 class silent
-  : public silent_table<Storage>
+  : public silent_table
 {
 public:
-    using storage = silent_storage<Storage>;
-
-    silent(storage& head, storage& body) NOEXCEPT
-      : silent_table<Storage>(head, body)
+    silent(database::storage& head, silent_storage<Storage>& body) NOEXCEPT
+      : silent_table(head, body),
+        correlate(*this),
+        prefix(*this),
+        compressed(*this)
     {
     }
 
-    silent_correlate& correlate = std::get<0>(this->tables_);
-    silent_prefix& prefix = std::get<1>(this->tables_);
-    silent_compressed& compressed = std::get<2>(this->tables_);
+    column<silent_table, 0> correlate;
+    column<silent_table, 1> prefix;
+    column<silent_table, 2> compressed;
 };
 
 static_assert(is_same_type<silent_prefix::span,

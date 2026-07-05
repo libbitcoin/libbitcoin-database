@@ -19,102 +19,99 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_NOMAPS_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_NOMAPS_HPP
 
-#include <algorithm>
-#include <tuple>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
-
-// Forwarding macro with early termination.
-#define DISPATCH_METHOD(method) \
-    bool method() NOEXCEPT \
-    { \
-        bool success{ true }; \
-        std::apply([&](auto&... column) \
-        { \
-            ((success &= column.method()), ...); \
-        }, tables_); \
-        return success; \
-    }
 
 namespace libbitcoin {
 namespace database {
 
-/// Variadic template for defining an SoA aggregate table.
-template <typename Storage, typename... Columns>
+/// SoA aggregate array table: one shared head + one unified managers body.
+template <typename Link, typename... Columns>
 class nomaps
 {
 public:
-    using files = maps<Storage, Columns...>;
+    DELETE_COPY_MOVE_DESTRUCT(nomaps);
 
-    nomaps(files& heads, files& bodies) NOEXCEPT
-      : nomaps{ heads, bodies, std::index_sequence_for<Columns...>{} }
-    {
-    }
+    using link = Link;
+    static_assert((is_same_type<link, typename Columns::link> && ...),
+        "all columns must share the row link type");
 
-    DISPATCH_METHOD(create)
-    DISPATCH_METHOD(close)
-    DISPATCH_METHOD(verify)
-    DISPATCH_METHOD(restore)
+    template <size_t Column>
+    static constexpr size_t width = std::get<Column>
+    (
+        std::array<size_t, sizeof...(Columns)>{ Columns::width... }
+    );
 
-    /// The smallest column length as integral.
-    size_t count() const NOEXCEPT
-    {
-        return std::apply([](const auto&... column) NOEXCEPT
-        {
-            return std::min({ column.count().value... });
-        }, tables_);
-    }
+    nomaps(storage& header, storage& body) NOEXCEPT;
 
-    /// Macro not used because of accumulator.
-    size_t body_size() const NOEXCEPT
-    {
-        size_t total{};
-        std::apply([&](const auto&... column)
-        {
-            ((total += column.body_size()), ...);
-        }, tables_);
-        return total;
-    }
+    /// Setup.
+    /// -----------------------------------------------------------------------
 
-    /// Macro not used because of parameter.
-    bool truncate(auto count) NOEXCEPT
-    {
-        bool success{ true };
-        std::apply([&](auto&... column)
-        {
-            ((success &= column.truncate(count)), ...);
-        }, tables_);
-        return success;
-    }
+    bool create() NOEXCEPT;
+    bool close() NOEXCEPT;
+    bool backup(bool) NOEXCEPT;
+    bool restore() NOEXCEPT;
+    bool verify() const NOEXCEPT;
 
-    /// Macro not used because of parameter.
-    bool backup(bool prune) NOEXCEPT
-    {
-        bool success{ true };
-        std::apply([&](auto&... column)
-        {
-            ((success &= column.backup(prune)), ...);
-        }, tables_);
-        return success;
-    }
+    /// Sizing.
+    /// -----------------------------------------------------------------------
+
+    size_t body_size() const NOEXCEPT;
+    Link count() const NOEXCEPT;
+    Link allocate(const Link& count) NOEXCEPT;
+    bool truncate(const Link& count) NOEXCEPT;
+
+    /// Faults.
+    /// -----------------------------------------------------------------------
+
+    code get_fault() const NOEXCEPT;
+    size_t get_space() const NOEXCEPT;
+    code reload() NOEXCEPT;
+
+    /// Query interface (columnar).
+    /// -----------------------------------------------------------------------
+
+    /// Column base ptr for batch processing (holds shared lock on body remap).
+    template <size_t Column>
+    memory_ptr get_memory() const NOEXCEPT;
+
+    /// Get element from column at link using column base ptr (deserialize).
+    template <size_t Column, typename Element>
+    static bool get(const memory_ptr& ptr, const Link& link,
+        Element& element) NOEXCEPT;
+
+    /// Get element from column at link.
+    template <size_t Column, typename Element>
+    bool get(const Link& link, Element& element) const NOEXCEPT;
+
+    /// Put previously allocated element to column at link.
+    template <size_t Column, typename Element>
+    bool put(const Link& link, const Element& element) NOEXCEPT;
+    template <size_t Column, typename Element>
+    bool put(const memory_ptr& ptr, const Element& element) NOEXCEPT;
 
 protected:
-    template <size_t... Index>
-    nomaps(files& heads, files& bodies,
-        std::index_sequence<Index...>) NOEXCEPT
-      : tables_{ Columns
-        {
-            heads.template file<Index>(),
-            bodies.template file<Index>()
-        }...}
-    {}
+    using head = database::nohead<link>;
+    using body = database::managers<link, system::data_array<zero>,
+        Columns::width...>;
 
-    std::tuple<Columns...> tables_;
+    // Thread safe (index/top/push).
+    // Not thread safe (create/open/close/backup/restore).
+    head head_;
+
+    // This is thread safe.
+    body manager_;
 };
 
 } // namespace database
 } // namespace libbitcoin
 
-#undef DISPATCH_METHOD
+#define TEMPLATE template <typename Link, typename... Columns>
+#define CLASS nomaps<Link, Columns...>
+
+#include <bitcoin/database/impl/primitives/nomaps.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

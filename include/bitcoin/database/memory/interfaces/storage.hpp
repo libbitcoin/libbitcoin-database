@@ -27,10 +27,12 @@ namespace libbitcoin {
 namespace database {
 
 /// Mapped memory interface.
+/// A slab has a row width of 1, so "count" implies "bytes" for slabs below.
 class storage
 {
 public:
     static constexpr auto eof = system::bit_all<size_t>;
+    using path = std::filesystem::path;
 
     /// Get the fault condition.
     virtual code get_fault() const NOEXCEPT = 0;
@@ -39,7 +41,7 @@ public:
     virtual size_t get_space() const NOEXCEPT = 0;
 
     /// The filesystem path of the backing storage.
-    virtual const std::filesystem::path& file() const NOEXCEPT = 0;
+    virtual const path& file() const NOEXCEPT = 0;
 
     /// Create empty file, must not exist.
     virtual code create() const NOEXCEPT = 0;
@@ -66,25 +68,25 @@ public:
     virtual code shrink() NOEXCEPT = 0;
 
     /// Dump current logical map to a new file in path, must not exist.
-    virtual code dump(const std::filesystem::path& path) const NOEXCEPT = 0;
+    virtual code dump(const path& path) const NOEXCEPT = 0;
 
-    /// The current logical size of the memory map (zero if closed).
+    /// Current of rows/bytes in map (zero if closed).
     virtual size_t size() const NOEXCEPT = 0;
 
-    /// The current capacity of the memory map (zero if unmapped).
+    /// The current count of rows/bytes in map (zero if closed).
     virtual size_t capacity() const NOEXCEPT = 0;
 
-    /// Reduce logical size to specified bytes (false if exceeds logical).
-    virtual bool truncate(size_t size) NOEXCEPT = 0;
+    /// Reduce logical size to specified rows/bytes (false if exceeds logical).
+    virtual bool truncate(size_t count) NOEXCEPT = 0;
 
-    /// Increase logical size to specified bytes as required (false if fails).
-    virtual bool expand(size_t size) NOEXCEPT = 0;
+    /// Increase logical to specified rows/bytes as required (false if fails).
+    virtual bool expand(size_t count) NOEXCEPT = 0;
 
-    /// Increase capacity by specified bytes (false only if fails).
-    virtual bool reserve(size_t size) NOEXCEPT = 0;
+    /// Increase capacity by specified rows/bytes (false only if fails).
+    virtual bool reserve(size_t count) NOEXCEPT = 0;
 
-    /// Increase logical by specified bytes, return offset to first (or eof).
-    virtual size_t allocate(size_t chunk) NOEXCEPT = 0;
+    /// Increase logical by specified rows/bytes, return row of first (or eof).
+    virtual size_t allocate(size_t count) NOEXCEPT = 0;
 
     /// Get remap-protected r/w access to start/offset of memory map (or null).
     /// Pointer is constrained to starting write within full capacity.

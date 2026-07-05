@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_ECDSA_HPP
 #define LIBBITCOIN_DATABASE_TABLES_CACHES_ECDSA_HPP
 
+#include <filesystem>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/tables/schema.hpp>
@@ -236,46 +237,6 @@ struct ecdsa_correlate
         uint16_t group{};
     };
 
-    struct allocate1
-      : public schema::ecdsa_correlate
-    {
-        inline link count() const NOEXCEPT
-        {
-            return 1;
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            sink.write_little_endian<hd::integer, hd::size>(hd::terminal);
-            return sink;
-        }
-    };
-
-    struct allocate
-      : public schema::ecdsa_correlate
-    {
-        inline link count() const NOEXCEPT
-        {
-            return system::possible_narrow_cast<link::integer>(rows);
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            constexpr auto skip = one + sizeof(uint16_t);
-
-            for (size_t row{}; row < rows; ++row)
-            {
-                sink.write_little_endian<hd::integer, hd::size>(hd::terminal);
-                sink.skip_bytes(skip);
-            }
-
-            BC_ASSERT(!sink || sink.get_write_position() == minrow);
-            return sink;
-        }
-
-        const size_t rows{};
-    };
-
     struct put_ref
       : public schema::ecdsa_correlate
     {
@@ -340,8 +301,8 @@ struct ecdsa_correlate
 /// Aggregate (files)
 /// ---------------------------------------------------------------------------
 
-template <typename Storage>
-using ecdsa_files = maps
+template <template <size_t...> class Storage>
+using ecdsa_files = mmaps
 <
     Storage,
     ecdsa_correlate,
@@ -350,51 +311,48 @@ using ecdsa_files = maps
     ecdsa_signature
 >;
 
-template <typename Storage>
+template <template <size_t...> class Storage>
 class ecdsa_storage
-    : public ecdsa_files<Storage>
+  : public ecdsa_files<Storage>
 {
 public:
     ecdsa_storage(const std::filesystem::path& path, size_t size,
         size_t rate, bool random_access) NOEXCEPT
-        : ecdsa_files<Storage>(path, size, rate, random_access)
-    {}
-
-    Storage& correlate = std::get<0>(this->files_);
-    Storage& digest = std::get<1>(this->files_);
-    Storage& compressed = std::get<2>(this->files_);
-    Storage& signature = std::get<3>(this->files_);
+      : ecdsa_files<Storage>(path, size, rate, random_access)
+    {
+    }
 };
 
 /// Aggregate (table)
 /// ---------------------------------------------------------------------------
 
-template <typename Storage>
 using ecdsa_table = nomaps
 <
-    Storage,
+    ecdsa_correlate::link,
     ecdsa_correlate,
     ecdsa_digest,
     ecdsa_compressed,
     ecdsa_signature
 >;
 
-template <typename Storage>
+template <template <size_t...> class Storage>
 class ecdsa
-  : public ecdsa_table<Storage>
+  : public ecdsa_table
 {
 public:
-    using storage = ecdsa_storage<Storage>;
-
-    ecdsa(storage& head, storage& body) NOEXCEPT
-      : ecdsa_table<Storage>(head, body)
+    ecdsa(database::storage& head, ecdsa_storage<Storage>& body) NOEXCEPT
+      : ecdsa_table(head, body),
+        correlate(*this),
+        digest(*this),
+        compressed(*this),
+        signature(*this)
     {
     }
 
-    ecdsa_correlate& correlate = std::get<0>(this->tables_);
-    ecdsa_digest& digest = std::get<1>(this->tables_);
-    ecdsa_compressed& compressed = std::get<2>(this->tables_);
-    ecdsa_signature& signature = std::get<3>(this->tables_);
+    column<ecdsa_table, 0> correlate;
+    column<ecdsa_table, 1> digest;
+    column<ecdsa_table, 2> compressed;
+    column<ecdsa_table, 3> signature;
 };
 
 static_assert(sizeof(system::ecdsa::batch::correlate_t) ==

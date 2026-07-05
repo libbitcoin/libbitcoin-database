@@ -155,15 +155,16 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\finalizer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\maps.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mman.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mmap.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mmaps.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\streamers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arrayhead.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arraymap.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\column.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashhead.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp" />
@@ -236,6 +237,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\manager.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nohead.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomap.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomaps.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_balance.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_history.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_outpoints.ipp" />

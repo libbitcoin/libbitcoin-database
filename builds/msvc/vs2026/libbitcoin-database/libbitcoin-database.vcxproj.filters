@@ -182,9 +182,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp">
       <Filter>include\bitcoin\database\memory\interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\maps.hpp">
-      <Filter>include\bitcoin\database\memory</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
@@ -192,6 +189,9 @@
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mmap.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mmaps.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp">
@@ -207,6 +207,9 @@
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arraymap.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\column.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashhead.hpp">
@@ -419,6 +422,9 @@
       <Filter>include\bitcoin\database\impl\primitives</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomap.ipp">
+      <Filter>include\bitcoin\database\impl\primitives</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\nomaps.ipp">
       <Filter>include\bitcoin\database\impl\primitives</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\address\address_balance.ipp">

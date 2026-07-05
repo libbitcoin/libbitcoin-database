@@ -16,17 +16,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_NOMAP_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_NOMAP_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_NOMAPS_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_NOMAPS_IPP
 
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
+
 TEMPLATE
-CLASS::nomap(storage& header, storage& body) NOEXCEPT
-  : head_(header, 0), manager_(body)
+CLASS::nomaps(storage& header, storage& body) NOEXCEPT
+  : head_(header, 0),
+    manager_(body)
 {
 }
 
@@ -73,27 +75,9 @@ bool CLASS::verify() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-size_t CLASS::buckets() const NOEXCEPT
-{
-    return head_.buckets();
-}
-
-TEMPLATE
-size_t CLASS::head_size() const NOEXCEPT
-{
-    return head_.size();
-}
-
-TEMPLATE
 size_t CLASS::body_size() const NOEXCEPT
 {
     return manager_.size();
-}
-
-TEMPLATE
-size_t CLASS::capacity() const NOEXCEPT
-{
-    return manager_.capacity();
 }
 
 TEMPLATE
@@ -103,37 +87,18 @@ Link CLASS::count() const NOEXCEPT
 }
 
 TEMPLATE
+Link CLASS::allocate(const Link& count) NOEXCEPT
+{
+    return manager_.allocate(count);
+}
+
+TEMPLATE
 bool CLASS::truncate(const Link& count) NOEXCEPT
 {
     return manager_.truncate(count);
 }
 
-TEMPLATE
-bool CLASS::expand(const Link& count) NOEXCEPT
-{
-    return manager_.expand(count);
-}
-
-TEMPLATE
-bool CLASS::drop() NOEXCEPT
-{
-    return manager_.truncate(0) && backup();
-}
-
-TEMPLATE
-bool CLASS::reserve(const Link& size) NOEXCEPT
-{
-    // Not writer-writer thread safe (two writers may share reserve).
-    return manager_.reserve(size);
-}
-
-TEMPLATE
-memory_ptr CLASS::get_memory() const NOEXCEPT
-{
-    return manager_.get();
-}
-
-// error condition
+// Faults.
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -157,17 +122,25 @@ code CLASS::reload() NOEXCEPT
 // query interface
 // ----------------------------------------------------------------------------
 
+TEMPLATE
+template <size_t Column>
+memory_ptr CLASS::get_memory() const NOEXCEPT
+{
+    return manager_.template get<Column>();
+}
+
 // static
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+template <size_t Column, typename Element>
 bool CLASS::get(const memory_ptr& ptr, const Link& link,
     Element& element) NOEXCEPT
 {
+    static_assert(Element::size == width<Column>, "element size != width");
     using namespace system;
     if (!ptr || link.is_terminal())
         return false;
 
-    const auto start = manager::link_to_position(link);
+    const auto start = body::template link_to_position<Column>(link);
     if (is_limited<ptrdiff_t>(start))
         return false;
 
@@ -183,42 +156,31 @@ bool CLASS::get(const memory_ptr& ptr, const Link& link,
     iostream stream{ offset, size - position };
     reader source{ stream };
 
-    if constexpr (!is_slab)
-    {
-        BC_DEBUG_ONLY(source.set_limit(Size * element.count());)
-    }
-
+    BC_DEBUG_ONLY(source.set_limit(width<Column> * element.count());)
     return element.from_data(source);
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
+template <size_t Column, typename Element>
+bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
-    return get(get_memory(), link, element);
+    return get<Column>(get_memory<Column>(), link, element);
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-inline bool CLASS::put(const Element& element) NOEXCEPT
-{
-    Link link{};
-    return put_link(link, element);
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+template <size_t Column, typename Element>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
     using namespace system;
-    const auto ptr = manager_.get(link);
-    return put(ptr, element);
+    const auto ptr = manager_.template get<Column>(link);
+    return put<Column>(ptr, element);
 }
 
 TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
+template <size_t Column, typename Element>
 bool CLASS::put(const memory_ptr& ptr, const Element& element) NOEXCEPT
 {
+    static_assert(Element::size == width<Column>, "element size != width");
     using namespace system;
     if (!ptr)
         return false;
@@ -226,45 +188,8 @@ bool CLASS::put(const memory_ptr& ptr, const Element& element) NOEXCEPT
     iostream stream{ *ptr };
     flipper sink{ stream };
 
-    if constexpr (!is_slab)
-    {
-        BC_DEBUG_ONLY(sink.set_limit(Size * element.count());)
-    }
-
+    BC_DEBUG_ONLY(sink.set_limit(width<Column> * element.count());)
     return element.to_data(sink);
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-inline bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
-{
-    const auto count = element.count();
-    link = manager_.allocate(count);
-    return put(link, element);
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-inline Link CLASS::put_link(const Element& element) NOEXCEPT
-{
-    Link link{};
-    return put_link(link, element) ? link : Link{};
-}
-
-/// NOT THREAD SAFE (used only for height index with writer ordering).
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-inline bool CLASS::commit(const Element& element) NOEXCEPT
-{
-    // Zero allocation provides link of next (presumably reserved) element.
-    const auto link = manager_.allocate(0);
-
-    // Write element into reserved but unallocated space.
-    if (!put(manager_.get_capacity(link), element))
-        return false;
-
-    // Allocate reserved and written element (exposes logically).
-    return !manager_.allocate(element.count()).is_terminal();
 }
 
 } // namespace database

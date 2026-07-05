@@ -64,11 +64,11 @@ public:
     /// Body file bytes.
     size_t body_size() const NOEXCEPT;
 
-    /// Count of body records (or bytes if slab).
-    Link count() const NOEXCEPT;
-
     /// Capacity of body in bytes.
     size_t capacity() const NOEXCEPT;
+
+    /// Count of body records (or bytes if slab).
+    Link count() const NOEXCEPT;
 
     /// Reduce count as specified.
     bool truncate(const Link& count) NOEXCEPT;
@@ -78,6 +78,15 @@ public:
 
     /// Drop the table (truncate to zero and update head size).
     bool drop() NOEXCEPT;
+
+    /// Reserve additional count or slab to guard against disk full.
+    /// This is necessary for no-maps that are publicly-indexed (e.g. heights).
+    /// Not writer-writer thread safe. Link must be put (or discarded) before
+    /// any subsequent element is reserved or put, or will overwrite.
+    bool reserve(const Link& size) NOEXCEPT;
+
+    /// Return ptr for batch processing, holds shared lock on storage remap.
+    memory_ptr get_memory() const NOEXCEPT;
 
     /// Errors.
     /// -----------------------------------------------------------------------
@@ -94,15 +103,6 @@ public:
     /// Query interface.
     /// -----------------------------------------------------------------------
 
-    /// Reserve additional count or slab to guard against disk full.
-    /// This is necessary for no-maps that are publicly-indexed (e.g. heights).
-    /// Not writer-writer thread safe. Link must be put (or discarded) before
-    /// any subsequent element is reserved or put, or will overwrite.
-    inline bool reserve(const Link& size) NOEXCEPT;
-
-    /// Return ptr for batch processing, holds shared lock on storage remap.
-    inline memory_ptr get_memory() const NOEXCEPT;
-
     /// Get element at link using get_memory() ptr, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
     static bool get(const memory_ptr& ptr, const Link& link,
@@ -110,11 +110,11 @@ public:
 
     /// Get element at link.
     template <typename Element, if_equal<Element::size, Size> = true>
-    inline bool get(const Link& link, Element& element) const NOEXCEPT;
+    bool get(const Link& link, Element& element) const NOEXCEPT;
 
     /// Put element.
     template <typename Element, if_equal<Element::size, Size> = true>
-    inline bool put(const Element& element) NOEXCEPT;
+    bool put(const Element& element) NOEXCEPT;
 
     /// Put previously allocated element at link.
     template <typename Element, if_equal<Element::size, Size> = true>
@@ -124,14 +124,14 @@ public:
 
     /// Put element and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
-    inline bool put_link(Link& link, const Element& element) NOEXCEPT;
+    bool put_link(Link& link, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
-    inline Link put_link(const Element& element) NOEXCEPT;
+    Link put_link(const Element& element) NOEXCEPT;
 
     /// NOT THREAD SAFE (used only for height index with writer ordering).
     /// Write element to reserved next position and commit to logical space.
     template <typename Element, if_equal<Element::size, Size> = true>
-    inline bool commit(const Element& element) NOEXCEPT;
+    bool commit(const Element& element) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);

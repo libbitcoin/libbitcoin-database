@@ -35,13 +35,13 @@ inline std::filesystem::path flush_lock_file(std::filesystem::path path)
     return path;
 }
 
-// store<map> test accessor.
+// store<mmap> test accessor.
 class map_store
-  : public store<map>
+  : public store<database::mmap>
 {
 public:
     using path = std::filesystem::path;
-    using store<map>::store;
+    using store<database::mmap>::store;
 
     // backup internals
 
@@ -181,115 +181,75 @@ public:
 
     // Caches.
 
-    inline const path& ecdsa_head_correlate_file() const NOEXCEPT
+    inline const path& ecdsa_head_file() const NOEXCEPT
     {
-        return ecdsa_head_.correlate.file();
+        return ecdsa_head_.file();
     }
 
-    inline const path& ecdsa_body_correlate_file() const NOEXCEPT
+    ////inline const path& ecdsa_body_correlate_file() const NOEXCEPT
+    ////{
+    ////    return ecdsa_body_.correlate.file();
+    ////}
+
+    ////inline const path& ecdsa_body_digest_file() const NOEXCEPT
+    ////{
+    ////    return ecdsa_body_.digest.file();
+    ////}
+
+    ////inline const path& ecdsa_body_compressed_file() const NOEXCEPT
+    ////{
+    ////    return ecdsa_body_.compressed.file();
+    ////}
+
+    ////inline const path& ecdsa_body_signature_file() const NOEXCEPT
+    ////{
+    ////    return ecdsa_body_.signature.file();
+    ////}
+
+    inline const path& schnorr_head_file() const NOEXCEPT
     {
-        return ecdsa_body_.correlate.file();
+        return schnorr_head_.file();
     }
 
-    inline const path& ecdsa_head_digest_file() const NOEXCEPT
+    ////inline const path& schnorr_body_correlate_file() const NOEXCEPT
+    ////{
+    ////    return schnorr_body_.correlate.file();
+    ////}
+
+    ////inline const path& schnorr_body_digest_file() const NOEXCEPT
+    ////{
+    ////    return schnorr_body_.digest.file();
+    ////}
+
+    ////inline const path& schnorr_body_xonly_file() const NOEXCEPT
+    ////{
+    ////    return schnorr_body_.xonly.file();
+    ////}
+
+    ////inline const path& schnorr_body_signature_file() const NOEXCEPT
+    ////{
+    ////    return schnorr_body_.signature.file();
+    ////}
+
+    inline const path& silent_head_file() const NOEXCEPT
     {
-        return ecdsa_head_.digest.file();
+        return silent_head_.file();
     }
 
-    inline const path& ecdsa_body_digest_file() const NOEXCEPT
-    {
-        return ecdsa_body_.digest.file();
-    }
+    ////inline const path& silent_body_correlate_file() const NOEXCEPT
+    ////{
+    ////    return silent_body_.correlate.file();
+    ////}
 
-    inline const path& ecdsa_head_compressed_file() const NOEXCEPT
-    {
-        return ecdsa_head_.compressed.file();
-    }
+    ////inline const path& silent_body_prefix_file() const NOEXCEPT
+    ////{
+    ////    return silent_body_.prefix.file();
+    ////}
 
-    inline const path& ecdsa_body_compressed_file() const NOEXCEPT
-    {
-        return ecdsa_body_.compressed.file();
-    }
-
-    inline const path& ecdsa_head_signature_file() const NOEXCEPT
-    {
-        return ecdsa_head_.signature.file();
-    }
-
-    inline const path& ecdsa_body_signature_file() const NOEXCEPT
-    {
-        return ecdsa_body_.signature.file();
-    }
-
-    inline const path& schnorr_head_correlate_file() const NOEXCEPT
-    {
-        return schnorr_head_.correlate.file();
-    }
-
-    inline const path& schnorr_body_correlate_file() const NOEXCEPT
-    {
-        return schnorr_body_.correlate.file();
-    }
-
-    inline const path& schnorr_head_digest_file() const NOEXCEPT
-    {
-        return schnorr_head_.digest.file();
-    }
-
-    inline const path& schnorr_body_digest_file() const NOEXCEPT
-    {
-        return schnorr_body_.digest.file();
-    }
-
-    inline const path& schnorr_head_xonly_file() const NOEXCEPT
-    {
-        return schnorr_head_.xonly.file();
-    }
-
-    inline const path& schnorr_body_xonly_file() const NOEXCEPT
-    {
-        return schnorr_body_.xonly.file();
-    }
-
-    inline const path& schnorr_head_signature_file() const NOEXCEPT
-    {
-        return schnorr_head_.signature.file();
-    }
-
-    inline const path& schnorr_body_signature_file() const NOEXCEPT
-    {
-        return schnorr_body_.signature.file();
-    }
-
-    inline const path& silent_head_correlate_file() const NOEXCEPT
-    {
-        return silent_head_.correlate.file();
-    }
-
-    inline const path& silent_body_correlate_file() const NOEXCEPT
-    {
-        return silent_body_.correlate.file();
-    }
-
-    inline const path& silent_head_prefix_file() const NOEXCEPT
-    {
-        return silent_head_.prefix.file();
-    }
-
-    inline const path& silent_body_prefix_file() const NOEXCEPT
-    {
-        return silent_body_.prefix.file();
-    }
-
-    inline const path& silent_head_compressed_file() const NOEXCEPT
-    {
-        return silent_head_.compressed.file();
-    }
-
-    inline const path& silent_body_compressed_file() const NOEXCEPT
-    {
-        return silent_body_.compressed.file();
-    }
+    ////inline const path& silent_body_compressed_file() const NOEXCEPT
+    ////{
+    ////    return silent_body_.compressed.file();
+    ////}
 
     inline const path& duplicate_head_file() const NOEXCEPT
     {

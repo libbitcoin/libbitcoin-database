@@ -36,8 +36,9 @@ TEMPLATE
 template <size_t Column>
 size_t CLASS::space_one_(size_t rows) const NOEXCEPT
 {
-    return system::floored_subtract(to_capacity(to_width<Column>(rows)),
-        std::get<Column>(capacity_));
+    return system::floored_subtract(
+        to_width<Column>(rows),
+        to_width<Column>(capacity_));
 }
 
 TEMPLATE
@@ -52,14 +53,20 @@ TEMPLATE
 template <size_t... Index>
 bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
 {
-    return (map_<Index>() && ...);
+    if (!(map_<Index>() && ...))
+        return false;
+
+    capacity_ = std::max(logical_, minimum_);
+    return true;
 }
 
 TEMPLATE
 template <size_t... Index>
 bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
 {
-    return (unmap_<Index>() && ...);
+    const auto success = (unmap_<Index>() && ...);
+    capacity_ = zero;
+    return success;
 }
 
 TEMPLATE
@@ -71,10 +78,14 @@ bool CLASS::flush_all_(std::index_sequence<Index...>) NOEXCEPT
 
 TEMPLATE
 template <size_t... Index>
-bool CLASS::remap_all_(size_t logical, std::index_sequence<Index...>) NOEXCEPT 
+bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT
 {
-    const auto space = space_all_(logical, std::index_sequence<Index...>{});
-    return (remap_<Index>(to_width<Index>(logical), space) && ...);
+    const auto space = space_all_(capacity, std::index_sequence<Index...>{});
+    if (!(remap_<Index>(to_width<Index>(capacity), space) && ...))
+        return false;
+
+    capacity_ = capacity;
+    return true;
 }
 
 // mman wrappers, not thread safe.
@@ -127,7 +138,7 @@ bool CLASS::unmap_() NOEXCEPT
 #if defined(HAVE_MSC)
     const auto success =
            (::msync(memory_map_[Column], logical, MS_SYNC) != fail)
-        && (::munmap(memory_map_[Column], capacity_[Column]) != fail)
+        && (::munmap(memory_map_[Column], to_width<Column>(capacity_)) != fail)
         && (::ftruncate(opened_[Column], logical) != fail)
         && (::fsync(opened_[Column]) != fail);
 #else
@@ -138,13 +149,12 @@ bool CLASS::unmap_() NOEXCEPT
     #else
         && (::fsync(opened_[Column]) != fail)
     #endif
-        && (::munmap(memory_map_[Column], capacity_[Column]) != fail);
+        && (::munmap(memory_map_[Column], to_width<Column>(capacity_)) != fail);
 #endif
     if (!success)
         set_first_code(error::munmap_failure);
 
     loaded_ = false;
-    capacity_[Column] = zero;
     memory_map_[Column] = {};
     return success;
 }
@@ -200,13 +210,13 @@ bool CLASS::remap_(size_t size, size_t space) NOEXCEPT
 
     // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
     memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mremap_(memory_map_[Column], capacity_[Column], size,
+        ::mremap_(memory_map_[Column], to_width<Column>(capacity_), size,
             PROT_READ | PROT_WRITE, MAP_SHARED, opened_[Column]));
 
 #elif defined(MREMAP_MAYMOVE)
 
     memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mremap(memory_map_[Column], capacity_[Column], size,
+        ::mremap(memory_map_[Column], to_width<Column>(capacity_), size,
             MREMAP_MAYMOVE));
 
 #else
@@ -229,8 +239,8 @@ bool CLASS::resize_(size_t size, size_t space) NOEXCEPT
 {
     // Disk full detection, any other failure is an abort.
 #if !defined (WITHOUT_FALLOCATE)
-    if (::fallocate(opened_[Column], 0, capacity_[Column],
-        size - capacity_[Column]) == fail)
+    const auto capacity = to_width<Column>(capacity_);
+    if (::fallocate(opened_[Column], 0, capacity, size - capacity) == fail)
 #else
     if (::ftruncate(opened_[Column], size) == fail)
 #endif
@@ -253,12 +263,16 @@ bool CLASS::resize_(size_t size, size_t space) NOEXCEPT
 // Finalize failure results in unmapped.
 TEMPLATE
 template <size_t Column>
-bool CLASS::finalize_(size_t size) NOEXCEPT
+bool CLASS::finalize_(size_t
+    #if !defined (WITHOUT_MADVISE) && !defined(HAVE_MSC)
+    size
+    #endif
+) NOEXCEPT
 {
     if (memory_map_[Column] == MAP_FAILED)
     {
         loaded_ = false;
-        capacity_[Column] = zero;
+        capacity_ = zero;
         memory_map_[Column] = {};
 
         // mmap or mremap failure (not mapped).
@@ -266,8 +280,7 @@ bool CLASS::finalize_(size_t size) NOEXCEPT
         return false;
     }
 
-#if !defined (WITHOUT_MADVISE)
-#if !defined(HAVE_MSC)
+#if !defined (WITHOUT_MADVISE) && !defined(HAVE_MSC)
     // Get page size (usually 4KB).
     const int page_size = ::sysconf(_SC_PAGESIZE);
     const auto page = system::possible_narrow_sign_cast<size_t>(page_size);
@@ -303,11 +316,9 @@ bool CLASS::finalize_(size_t size) NOEXCEPT
             return false;
         }
     }
-#endif // !HAVE_MSC
-#endif // !WITHOUT_MADVISE
+#endif // !WITHOUT_MADVISE && !HAVE_MSC
 
     loaded_ = true;
-    capacity_[Column] = size;
     return true;
 }
 

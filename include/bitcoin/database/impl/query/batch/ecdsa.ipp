@@ -73,31 +73,26 @@ bool CLASS::purge_ecdsa_signatures() NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_signature(const hash_digest& digest, const ec_compressed& point,
-    const ec_signature& signature, uint16_t id,
+bool CLASS::set_signature(const hash_digest& digest,
+    const ec_compressed& point, const ec_signature& signature, uint16_t id,
     const header_link& link) NOEXCEPT
 {
-    using allocate_t = table::ecdsa_correlate::allocate1;
     using correlate_t = table::ecdsa_correlate::put_ref;
     using digest_t = table::ecdsa_digest::put_ref;
     using compressed_t = table::ecdsa_compressed::put_ref;
     using signature_t = table::ecdsa_signature::put_ref;
-    using namespace system;
 
-    // All values in the table are only valid under write exclusion.
-    // Table row cannot be assumed equal and tables remap independently.
+    // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    ecdsa_link fk{};
+    using namespace system;
     const auto row = possible_narrow_cast<ecdsa_link::integer>(one);
 
-    // Allocate one correlate row and write terminal to it, gets fk.
-    // Then expand (as necessary) subordinate tables to same size.
-    if (!store_.ecdsa.correlate.put_link(fk, allocate_t{}) ||
-        !store_.ecdsa.digest.expand(fk + row) ||
-        !store_.ecdsa.compressed.expand(fk + row) ||
-        !store_.ecdsa.signature.expand(fk + row))
+    // Allocate 1 row across all columns.
+    // TODO: this could provide a single remap lock for all puts below.
+    const auto fk = store_.ecdsa.allocate(row);
+    if (fk.is_terminal())
         return false;
 
     // Write one value to each column in corresponding positions.
@@ -114,31 +109,26 @@ bool CLASS::set_signatures(const hash_digest& digest,
     const ec_compresseds& keys, const ec_signatures& sigs, uint16_t id,
     const header_link& link) NOEXCEPT
 {
-    using allocate_t = table::ecdsa_correlate::allocate;
     using correlate_t = table::ecdsa_correlate::put_refs;
     using digest_t = table::ecdsa_digest::put_refs;
     using compressed_t = table::ecdsa_compressed::put_refs;
     using signature_t = table::ecdsa_signature::put_refs;
-    using namespace system;
 
     const auto csigs = sigs.size();
     const auto ckeys = keys.size();
     const auto count = table::ecdsa_count(csigs, ckeys);
 
-    // All values in the table are only valid under write exclusion.
-    // Table row cannot be assumed equal and tables remap independently.
+    // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
     const auto scope = store_.get_transactor();
 
-    ecdsa_link fk{};
+    using namespace system;
     const auto rows = possible_narrow_cast<ecdsa_link::integer>(count);
 
-    // Allocate contiguous correlate rows and write terminal to each, gets fk.
-    // Then expand (as necessary) subordinate tables to same size.
-    if (!store_.ecdsa.correlate.put_link(fk, allocate_t{ {}, rows }) ||
-        !store_.ecdsa.digest.expand(fk + rows) ||
-        !store_.ecdsa.compressed.expand(fk + rows) ||
-        !store_.ecdsa.signature.expand(fk + rows))
+    // Allocate rows across all columns.
+    // TODO: this could provide a single remap lock for all puts below.
+    const auto fk = store_.ecdsa.allocate(rows);
+    if (fk.is_terminal())
         return false;
 
     // Write values to each column in corresponding positions.

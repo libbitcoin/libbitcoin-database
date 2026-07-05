@@ -52,8 +52,8 @@ constexpr ec_signature sig_a = base16_array
 // ecdsa (aggregate)
 // ----------------------------------------------------------------------------
 
-using ecdsa_table = table::ecdsa<chunk_storage>;
-using ecdsa_storage = default_storage<table::ecdsa_storage<chunk_storage>>;
+using ecdsa_table = table::ecdsa<chunk_storages>;
+using ecdsa_storage = default_storage<table::ecdsa_storage<chunk_storages>>;
 
 BOOST_AUTO_TEST_CASE(ecdsa__create_verify_close__aggregate__expected)
 {
@@ -72,7 +72,6 @@ BOOST_AUTO_TEST_CASE(ecdsa__create_verify_close__aggregate__expected)
 // header_fk(3) | pair(1) | group(2). Single encodes pair=0 (0|0 -> 1-of-1).
 BOOST_AUTO_TEST_CASE(ecdsa__set_signature__single__expected)
 {
-    using allocate = table::ecdsa_correlate::allocate1;
     using correlate = table::ecdsa_correlate::put_ref;
     using digest_t = table::ecdsa_digest::put_ref;
     using compressed_t = table::ecdsa_compressed::put_ref;
@@ -83,15 +82,9 @@ BOOST_AUTO_TEST_CASE(ecdsa__set_signature__single__expected)
     ecdsa_table instance{ head, body };
     BOOST_REQUIRE(instance.create());
 
-    // Phase 1: allocate one terminal correlate row, expand subordinates.
-    ecdsa_link fk{};
-    BOOST_REQUIRE(instance.correlate.put_link(fk, allocate{}));
+    const auto fk = instance.allocate(one);
     BOOST_REQUIRE_EQUAL(fk, 0u);
-    BOOST_REQUIRE(instance.digest.expand(fk + 1u));
-    BOOST_REQUIRE(instance.compressed.expand(fk + 1u));
-    BOOST_REQUIRE(instance.signature.expand(fk + 1u));
 
-    // Phase 2: commit real values (single put_ref per column).
     BOOST_REQUIRE(instance.digest.put(fk, digest_t{ {}, digest_a }));
     BOOST_REQUIRE(instance.compressed.put(fk, compressed_t{ {}, point_a }));
     BOOST_REQUIRE(instance.signature.put(fk, signature_t{ {}, sig_a }));
@@ -113,10 +106,10 @@ BOOST_AUTO_TEST_CASE(ecdsa__set_signature__single__expected)
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     );
 
-    BOOST_REQUIRE_EQUAL(body.correlate.buffer(), expected_correlate);
-    BOOST_REQUIRE_EQUAL(body.digest.buffer(), expected_digest);
-    BOOST_REQUIRE_EQUAL(body.compressed.buffer(), expected_compressed);
-    BOOST_REQUIRE_EQUAL(body.signature.buffer(), expected_signature);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(0), expected_correlate);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_digest);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(2), expected_compressed);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(3), expected_signature);
     BOOST_REQUIRE(instance.close());
 }
 

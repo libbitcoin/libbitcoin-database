@@ -24,7 +24,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(mmap_tests, test::directory_setup_fixture)
 
-// map is an alias for mmap<1>.
+// map is an alias for mmap<one>.
 
 BOOST_AUTO_TEST_CASE(mmap__file__always__expected)
 {

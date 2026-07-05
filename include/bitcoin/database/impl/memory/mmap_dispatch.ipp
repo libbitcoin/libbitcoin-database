@@ -37,15 +37,13 @@ TEMPLATE
 memory_ptr CLASS::get_capacity(size_t offset) const NOEXCEPT
 {
     // Same as get() but limited by capacity() vs. size().
-    const auto allocated = std::get<zero>(capacity_);
+    const auto allocated = to_width<zero>(capacity_);
     const auto ptr = std::make_shared<access>(remap_mutex_);
     if (!loaded_ || is_null(ptr))
         return nullptr;
 
-    ptr->assign(
-        std::next(std::get<zero>(memory_map_), offset),
-        std::next(std::get<zero>(memory_map_), allocated));
-
+    auto data = std::get<zero>(memory_map_);
+    ptr->assign(std::next(data, offset), std::next(data, allocated));
     return ptr;
 }
 
@@ -60,8 +58,7 @@ memory::iterator CLASS::get_raw(size_t offset) const NOEXCEPT
 }
 
 TEMPLATE
-memory_ptr CLASS::set(size_t offset, size_t size,
-    uint8_t backfill) NOEXCEPT
+memory_ptr CLASS::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
 {
     {
         std::unique_lock field_lock(field_mutex_);
@@ -70,21 +67,23 @@ memory_ptr CLASS::set(size_t offset, size_t size,
             return {};
 
         const auto end = std::max(logical_, offset + size);
-        if (end > capacity_rows(capacity_))
+        if (end > capacity_)
         {
-            const auto capacity = to_capacity(end);
+            const auto extended = to_capacity(end);
 
             // TODO: Could loop over a try lock here and log deadlock warning.
             std::unique_lock remap_lock(remap_mutex_);
 
             // Disk full condition leaves store in valid state despite null.
-            if (!remap_all_(capacity, sequence{}))
+            if (!remap_all_(extended, sequence{}))
                 return {};
 
             // Fill new capacity as offset may not be at end due to expansion.
-            const auto first = to_width<zero>(logical_);
-            std::fill_n(std::next(std::get<zero>(memory_map_), first),
-                std::get<zero>(capacity_) - first, backfill);
+            auto data = std::get<zero>(memory_map_);
+            const auto logical = to_width<zero>(logical_);
+            const auto capacity = to_width<zero>(capacity_);
+            const auto start = std::next(data, logical);
+            std::fill_n(start, capacity - logical, backfill);
         }
 
         logical_ = end;
@@ -93,27 +92,17 @@ memory_ptr CLASS::set(size_t offset, size_t size,
     return get(offset);
 }
 
-// This avoids forwarding to get_at() for the tiny runtime performance benefit.
 TEMPLATE
 memory_ptr CLASS::get(size_t offset) const NOEXCEPT
 {
-    const auto allocated = to_width<zero>(size());
-    const auto ptr = std::make_shared<access>(remap_mutex_);
-    if (!loaded_ || is_null(ptr))
-        return {};
-
-    ptr->assign(
-        std::next(std::get<zero>(memory_map_), offset),
-        std::next(std::get<zero>(memory_map_), allocated));
-
-    return ptr;
+    return get_at(zero, offset);
 }
+
+BC_PUSH_WARNING(NO_ARRAY_INDEXING)
 
 TEMPLATE
 memory_ptr CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
 {
-    BC_PUSH_WARNING(NO_ARRAY_INDEXING)
-
     // Invalid column yields null (bounds check on runtime column index).
     if (column >= columns)
         return {};
@@ -126,19 +115,17 @@ memory_ptr CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
     // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
     const auto ptr = std::make_shared<access>(remap_mutex_);
 
-    // loaded_ update is precluded by remap_mutex_, making this read atomic.
+    // loaded_ update is precluded by above lock, making this read atomic.
     if (!loaded_ || is_null(ptr))
         return {};
 
     // With offset > size the assignment is negative (stream is exhausted).
-    ptr->assign(
-        std::next(memory_map_[column], offset),
-        std::next(memory_map_[column], allocated));
-
+    auto data = memory_map_[column];
+    ptr->assign(std::next(data, offset), std::next(data, allocated));
     return ptr;
-
-    BC_POP_WARNING()
 }
+
+BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin

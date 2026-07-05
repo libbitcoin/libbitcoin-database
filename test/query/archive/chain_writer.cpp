@@ -45,8 +45,8 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_header__mmap_get_header__expected)
     settings settings{};
     settings.header_buckets = 16;
     settings.path = TEST_DIRECTORY;
-    store<map> store{ settings };
-    query<database::store<map>> query{ store };
+    store<database::mmap> store{ settings };
+    query<database::store<database::mmap>> query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.set(header, test::context, milestone));
 

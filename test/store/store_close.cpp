@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(store__close__uncreated__flush_unlock)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
-    store<map> instance{ configuration };
+    store<database::mmap> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.close(test::events), error::flush_unlock);
 }
 
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(store__close__opened__success)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
-    store<map> instance{ configuration };
+    store<database::mmap> instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(!instance.close(test::events));
 }

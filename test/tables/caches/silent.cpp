@@ -27,8 +27,8 @@ using namespace test;
 // silent (aggregate)
 // ----------------------------------------------------------------------------
 
-using silent_table = table::silent<chunk_storage>;
-using silent_storage = default_storage<table::silent_storage<chunk_storage>>;
+using silent_table = table::silent<chunk_storages>;
+using silent_storage = default_storage<table::silent_storage<chunk_storages>>;
 
 BOOST_AUTO_TEST_CASE(silent__create_verify_close__aggregate__expected)
 {
@@ -62,18 +62,13 @@ BOOST_AUTO_TEST_CASE(silent__put_columns__three_rows__expected)
         0x3333333333333333_u64
     };
 
-    // Allocate correlate rows for one tx_fk, returns base fk.
-    silent_link fk{};
-    const table::silent_correlate::records correlate{ {}, rows, tx_fk };
-    BOOST_REQUIRE(instance.correlate.put_link(fk, correlate));
+    const auto fk = instance.allocate(3);
     BOOST_REQUIRE_EQUAL(fk, 0u);
 
-    // Expand subordinate columns to match correlate row count.
-    BOOST_REQUIRE(instance.prefix.expand(fk + rows));
-    BOOST_REQUIRE(instance.compressed.expand(fk + rows));
-
+    const table::silent_correlate::records correlate{ {}, rows, tx_fk };
     const table::silent_prefix::put_ref prefix{ {}, prefixes };
     const table::silent_compressed::put_ref compress{ {}, rows, compressed };
+    BOOST_REQUIRE(instance.correlate.put(fk, correlate));
     BOOST_REQUIRE(instance.prefix.put(fk, prefix));
     BOOST_REQUIRE(instance.compressed.put(fk, compress));
 
@@ -96,9 +91,9 @@ BOOST_AUTO_TEST_CASE(silent__put_columns__three_rows__expected)
         "111111111111111111111111111111111111111111111111111111111111111111"
     );
 
-    BOOST_REQUIRE_EQUAL(body.correlate.buffer(), expected_correlate);
-    BOOST_REQUIRE_EQUAL(body.prefix.buffer(), expected_prefix);
-    BOOST_REQUIRE_EQUAL(body.compressed.buffer(), expected_compressed);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(0), expected_correlate);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_prefix);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(2), expected_compressed);
     BOOST_REQUIRE(instance.close());
 }
 

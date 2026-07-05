@@ -69,11 +69,11 @@ public:
     /// Body file bytes.
     size_t body_size() const NOEXCEPT;
 
-    /// Count of body records (or bytes if slab).
-    Link count() const NOEXCEPT;
-
     /// Capacity of body in bytes.
     size_t capacity() const NOEXCEPT;
+
+    /// Count of body records (or bytes if slab).
+    Link count() const NOEXCEPT;
 
     /// Increase count as necessary to specified.
     bool expand(const Link& count) NOEXCEPT;

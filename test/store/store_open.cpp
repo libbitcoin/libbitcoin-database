@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(store__open__uncreated__open_failure)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
-    store<map> instance{ configuration };
+    store<database::mmap> instance{ configuration };
     BOOST_REQUIRE(instance.open(test::events));
 }
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(store__open__created__success)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
-    store<map> instance{ configuration };
+    store<database::mmap> instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(!instance.close(test::events));
 }

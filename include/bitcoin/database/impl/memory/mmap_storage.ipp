@@ -275,55 +275,54 @@ TEMPLATE
 size_t CLASS::capacity() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
-    return capacity_rows(capacity_);
+    return capacity_;
 }
 
 TEMPLATE
-bool CLASS::truncate(size_t size) NOEXCEPT
+bool CLASS::truncate(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (size > logical_)
+    if (count > logical_)
         return false;
 
-    logical_ = size;
+    logical_ = count;
     return true;
 }
 
 TEMPLATE
-bool CLASS::expand(size_t size) NOEXCEPT
+bool CLASS::expand(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
     if (fault_ || !loaded_)
         return false;
 
-    if (size <= logical_)
+    if (count <= logical_)
         return true;
 
-    // Column 0 capacity (bytes) transposed to rows for the row-space compare.
-    if (size > capacity_rows(capacity_))
+    if (count > capacity_)
     {
-        const auto capacity = to_capacity(size);
+        const auto capacity = to_capacity(count);
         std::unique_lock remap_lock(remap_mutex_);
         if (!remap_all_(capacity, sequence{}))
             return false;
     }
 
-    logical_ = size;
+    logical_ = count;
     return true;
 }
 
 TEMPLATE
-bool CLASS::reserve(size_t chunk) NOEXCEPT
+bool CLASS::reserve(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (fault_ || !loaded_ || system::is_add_overflow(logical_, chunk))
+    if (fault_ || !loaded_ || system::is_add_overflow(logical_, count))
         return false;
 
-    const auto end = logical_ + chunk;
-    if (end > capacity_rows(capacity_))
+    const auto end = logical_ + count;
+    if (end > capacity_)
     {
         const auto capacity = to_capacity(end);
         std::unique_lock remap_lock(remap_mutex_);
@@ -339,15 +338,15 @@ bool CLASS::reserve(size_t chunk) NOEXCEPT
 // pointer is waiting on allocation. Lock safety requires that access pointers
 // are short-lived and do not block on allocation.
 TEMPLATE
-size_t CLASS::allocate(size_t chunk) NOEXCEPT
+size_t CLASS::allocate(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (fault_ || !loaded_ || system::is_add_overflow(logical_, chunk))
+    if (fault_ || !loaded_ || system::is_add_overflow(logical_, count))
         return storage::eof;
 
-    const auto current = capacity_rows(capacity_);
-    auto end = logical_ + chunk;
+    const auto current = capacity_;
+    auto end = logical_ + count;
     if (end > current)
     {
         const auto capacity = to_capacity(end);

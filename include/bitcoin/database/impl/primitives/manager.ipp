@@ -23,29 +23,71 @@
 
 namespace libbitcoin {
 namespace database {
-    
+
 TEMPLATE
-CLASS::manager(storage& file) NOEXCEPT
-  : file_(file)
+template <size_t Column>
+inline memory_ptr CLASS::get() const NOEXCEPT
+{
+    if constexpr (is_one(columns))
+        return files_.get();
+    else
+        return files_.get_at(Column);
+}
+
+TEMPLATE
+template <size_t Column>
+inline memory_ptr CLASS::get(const Link& link) const NOEXCEPT
+{
+    if (link.is_terminal())
+        return nullptr;
+
+    const auto position = link_to_position<Column>(link);
+
+    // memory.size() may be negative (stream treats as exhausted).
+    if constexpr (is_one(columns))
+        return files_.get(position);
+    else
+        return files_.get_at(Column, position);
+}
+
+TEMPLATE
+template <size_t Columns, if_equal<Columns, one>>
+inline memory_ptr CLASS::get_capacity(const Link& link) const NOEXCEPT
+{
+    if (link.is_terminal())
+        return nullptr;
+
+    return files_.get_capacity(link_to_position(link));
+}
+
+TEMPLATE
+CLASS::managers(storage& body) NOEXCEPT
+  : files_(body)
 {
 }
 
 TEMPLATE
 inline size_t CLASS::size() const NOEXCEPT
 {
-    return file_.size();
-}
-
-TEMPLATE
-inline Link CLASS::count() const NOEXCEPT
-{
-    return position_to_link(size());
+    if constexpr (is_one(columns))
+        return files_.size();
+    else
+        return files_.size() * strides(std::make_index_sequence<columns>{});
 }
 
 TEMPLATE
 inline size_t CLASS::capacity() const NOEXCEPT
 {
-    return file_.capacity();
+    if constexpr (is_one(columns))
+        return files_.capacity();
+    else
+        return files_.capacity() * strides(std::make_index_sequence<columns>{});
+}
+
+TEMPLATE
+inline Link CLASS::count() const NOEXCEPT
+{
+    return elements_to_link(files_.size());
 }
 
 TEMPLATE
@@ -54,8 +96,8 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
     if (count.is_terminal())
         return false;
 
-    // Truncate to count visible records (absolute).
-    return file_.truncate(link_to_position(count));
+    // Truncate to count visible records (absolute, shared row count).
+    return files_.truncate(link_to_elements(count));
 }
 
 TEMPLATE
@@ -64,8 +106,8 @@ bool CLASS::expand(const Link& count) NOEXCEPT
     if (count.is_terminal())
         return false;
 
-    // Expand to count visible records (absolute).
-    return file_.expand(link_to_position(count));
+    // Expand to count visible records (absolute, shared row count).
+    return files_.expand(link_to_elements(count));
 }
 
 TEMPLATE
@@ -74,8 +116,8 @@ bool CLASS::reserve(const Link& count) NOEXCEPT
     if (count.is_terminal())
         return false;
 
-    // Expand by count INVISIBLE records (relative).
-    return file_.reserve(link_to_position(count));
+    // Expand by count invisible records (relative, shared row count).
+    return files_.reserve(link_to_elements(count));
 }
 
 TEMPLATE
@@ -84,41 +126,17 @@ Link CLASS::allocate(const Link& count) NOEXCEPT
     if (count.is_terminal())
         return count;
 
-    // Expand by count visible records (relative), return absolute position.
-    const auto start = file_.allocate(link_to_position(count));
+    // One shared allocation across all columns (one lock). Expand by count
+    // visible records (relative), return absolute record link of first.
+    const auto start = files_.allocate(link_to_elements(count));
 
-    // Guards addition overflow in position_to_link (start must be valid).
+    // Guards addition overflow in cast_link (start must be valid). The eof
+    // sentinel is in file denomination, so must be detected before conversion.
     if (start == storage::eof)
         return Link::terminal;
 
-    // Callers (nomap and hashmap) handle terminal allocation.
-    return position_to_link(start);
-}
-
-TEMPLATE
-inline memory_ptr CLASS::get() const NOEXCEPT
-{
-    return file_.get();
-}
-
-TEMPLATE
-inline memory_ptr CLASS::get(const Link& value) const NOEXCEPT
-{
-    if (value.is_terminal())
-        return nullptr;
-
-    // memory.size() may be negative (stream treats as exhausted).
-    return file_.get(link_to_position(value));
-}
-
-TEMPLATE
-inline memory_ptr CLASS::get_capacity(const Link& value) const NOEXCEPT
-{
-    if (value.is_terminal())
-        return nullptr;
-
-    // memory.size() may be negative (stream treats as exhausted).
-    return file_.get_capacity(link_to_position(value));
+    // Callers (nomaps) handle terminal allocation.
+    return elements_to_link(start);
 }
 
 // Errors.
@@ -127,72 +145,122 @@ inline memory_ptr CLASS::get_capacity(const Link& value) const NOEXCEPT
 TEMPLATE
 code CLASS::get_fault() const NOEXCEPT
 {
-    return file_.get_fault();
+    return files_.get_fault();
 }
 
 TEMPLATE
 size_t CLASS::get_space() const NOEXCEPT
 {
-    return file_.get_space();
+    return files_.get_space();
 }
 
 TEMPLATE
 code CLASS::reload() NOEXCEPT
 {
-    return file_.load();
+    return files_.load();
 }
 
 // static
 // ----------------------------------------------------------------------------
 
+// private
 TEMPLATE
+template <size_t Column>
+constexpr size_t CLASS::stride() NOEXCEPT
+{
+    using namespace system;
+    constexpr auto size = std::get<Column>(sizes);
+
+    if constexpr (size == max_size_t)
+    {
+        // Slab: link/key incorporated into size (byte-addressed map).
+        return size;
+    }
+    else if constexpr (is_zero(Column) && is_nonzero(key_size))
+    {
+        // Spine of a keyed map: link/key precede the record.
+        return Link::size + key_size + size;
+    }
+    else
+    {
+        // Keyless (nomap/arraymap) or non-spine column: pure record.
+        static_assert(is_nonzero(size));
+        return size;
+    }
+}
+
+// private
+TEMPLATE
+template <size_t... Index>
+constexpr size_t CLASS::strides(std::index_sequence<Index...>) NOEXCEPT
+{
+    return (stride<Index>() + ...);
+}
+
+TEMPLATE
+template <size_t Column>
 constexpr size_t CLASS::link_to_position(const Link& link) NOEXCEPT
 {
     using namespace system;
     const auto value = possible_narrow_cast<size_t>(link.value);
+    constexpr auto element_size = stride<Column>();
 
     if constexpr (is_slab)
     {
         // Slab implies link/key incorporated into size.
         return value;
     }
-    else if constexpr (is_nonzero(key_size))
-    {
-        // Record implies link/key independent of Size.
-        constexpr auto element_size = Link::size + key_size + Size;
-        BC_ASSERT(!is_multiply_overflow(value, element_size));
-        return value * element_size;
-    }
     else
     {
-        // No key implies no linked list (not a hashmap), so record array.
-        BC_ASSERT(!is_multiply_overflow(value, Size));
-        return value * Size;
+        // Record (keyed spine or keyless) implies fixed element stride.
+        BC_ASSERT(!is_multiply_overflow(value, element_size));
+        return value * element_size;
     }
 }
 
 TEMPLATE
+template <size_t Column>
 constexpr Link CLASS::position_to_link(size_t position) NOEXCEPT
 {
     using namespace system;
+    constexpr auto element_size = stride<Column>();
 
     if constexpr (is_slab)
     {
         // Slab implies link/key incorporated into size.
         return { cast_link(position) };
     }
-    else if constexpr (is_nonzero(key_size))
-    {
-        // Record implies link/key independent of Size.
-        constexpr auto element_size = Link::size + key_size + Size;
-        return { cast_link(position / element_size) };
-    }
     else
     {
-        // No key implies no linked list.
-        static_assert(is_nonzero(Size));
-        return { cast_link(position / Size) };
+        static_assert(is_nonzero(element_size));
+        return { cast_link(position / element_size) };
     }
+}
+
+// private
+TEMPLATE
+constexpr size_t CLASS::link_to_elements(const Link& link) NOEXCEPT
+{
+    using namespace system;
+
+    // Single column: file elements are bytes (width one). Records convert
+    // by stride (slab passes through, slab links are already byte offsets).
+    // Aggregate: file rows are the shared record count (no conversion).
+    if constexpr (is_one(columns))
+        return link_to_position<zero>(link);
+    else
+        return possible_narrow_cast<size_t>(link.value);
+}
+
+// private
+TEMPLATE
+constexpr Link CLASS::elements_to_link(size_t elements) NOEXCEPT
+{
+    // Inverse of link_to_elements (slab and aggregate pass through).
+    if constexpr (is_one(columns))
+        return position_to_link<zero>(elements);
+    else
+        return { cast_link(elements) };
 }
 
 TEMPLATE

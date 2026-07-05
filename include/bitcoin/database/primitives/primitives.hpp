@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_PRIMITIVES_HPP
 
+#include <bitcoin/database/primitives/column.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
