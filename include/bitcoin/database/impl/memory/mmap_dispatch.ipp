@@ -36,13 +36,13 @@ namespace database {
 TEMPLATE
 memory_ptr CLASS::get_capacity(size_t offset) const NOEXCEPT
 {
-    // Same as get() but limited by capacity() vs. size().
-    const auto allocated = to_width<zero>(capacity_);
+    const auto allocated = to_width<zero>(capacity());
+
     const auto ptr = std::make_shared<access>(remap_mutex_);
     if (!loaded_ || is_null(ptr))
-        return nullptr;
+        return {};
 
-    auto data = std::get<zero>(memory_map_);
+    auto data = memory_map_.front();
     ptr->assign(std::next(data, offset), std::next(data, allocated));
     return ptr;
 }
@@ -52,14 +52,15 @@ memory::iterator CLASS::get_raw(size_t offset) const NOEXCEPT
 {
     // Pointer is otherwise unguarded, not remap safe (use for table heads).
     if (offset > to_width<zero>(size()))
-        return nullptr;
+        return {};
 
-    return std::next(std::get<zero>(memory_map_), offset);
+    return std::next(memory_map_.front(), offset);
 }
 
 TEMPLATE
 memory_ptr CLASS::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
 {
+    // This is basically allocate(...) for application to a table head.
     {
         std::unique_lock field_lock(field_mutex_);
 
@@ -79,7 +80,7 @@ memory_ptr CLASS::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
                 return {};
 
             // Fill new capacity as offset may not be at end due to expansion.
-            auto data = std::get<zero>(memory_map_);
+            auto data = memory_map_.front();
             const auto logical = to_width<zero>(logical_);
             const auto capacity = to_width<zero>(capacity_);
             const auto start = std::next(data, logical);
@@ -98,19 +99,14 @@ memory_ptr CLASS::get(size_t offset) const NOEXCEPT
     return get_at(zero, offset);
 }
 
-BC_PUSH_WARNING(NO_ARRAY_INDEXING)
-
 TEMPLATE
 memory_ptr CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
 {
-    // Invalid column yields null (bounds check on runtime column index).
     if (column >= columns)
         return {};
 
     // Obtaining size before access prevents mutual mutex wait (deadlock).
-    // Capacity only increases; safe to bound by logical (rows) transposed to
-    // this column's bytes. widths_[column] is the runtime column stride.
-    const auto allocated = size() * widths[column];
+    const auto allocated = size() * widths.at(column);
 
     // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
     const auto ptr = std::make_shared<access>(remap_mutex_);
@@ -120,12 +116,10 @@ memory_ptr CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
         return {};
 
     // With offset > size the assignment is negative (stream is exhausted).
-    auto data = memory_map_[column];
+    auto data = memory_map_.at(column);
     ptr->assign(std::next(data, offset), std::next(data, allocated));
     return ptr;
 }
-
-BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin

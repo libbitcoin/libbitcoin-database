@@ -303,9 +303,9 @@ bool CLASS::expand(size_t count) NOEXCEPT
 
     if (count > capacity_)
     {
-        const auto capacity = to_capacity(count);
+        const auto extended = to_capacity(count);
         std::unique_lock remap_lock(remap_mutex_);
-        if (!remap_all_(capacity, sequence{}))
+        if (!remap_all_(extended, sequence{}))
             return false;
     }
 
@@ -324,9 +324,9 @@ bool CLASS::reserve(size_t count) NOEXCEPT
     const auto end = logical_ + count;
     if (end > capacity_)
     {
-        const auto capacity = to_capacity(end);
+        const auto extended = to_capacity(end);
         std::unique_lock remap_lock(remap_mutex_);
-        if (!remap_all_(capacity, sequence{}))
+        if (!remap_all_(extended, sequence{}))
             return false;
     }
 
@@ -345,17 +345,16 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
     if (fault_ || !loaded_ || system::is_add_overflow(logical_, count))
         return storage::eof;
 
-    const auto current = capacity_;
     auto end = logical_ + count;
-    if (end > current)
+    if (end > capacity_)
     {
-        const auto capacity = to_capacity(end);
+        const auto extended = to_capacity(end);
 
         // TODO: Could loop over a try lock here and log deadlock warning.
         std::unique_lock remap_lock(remap_mutex_);
 
         // Disk full condition leaves store in valid state despite eof return.
-        if (!remap_all_(capacity, sequence{}))
+        if (!remap_all_(extended, sequence{}))
             return storage::eof;
     }
 
