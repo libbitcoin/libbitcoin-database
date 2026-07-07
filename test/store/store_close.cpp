@@ -41,12 +41,7 @@ BOOST_AUTO_TEST_CASE(store__close__opened__success)
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
-    ////BOOST_REQUIRE(!instance.close(test::events));
-
-    const auto ec = instance.close(test::events);
-    BOOST_TEST_MESSAGE(ec.message());
-    BOOST_TEST_MESSAGE(instance.get_fault().message());
-    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(!instance.close(test::events));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

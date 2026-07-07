@@ -289,11 +289,7 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__loaded__expected_capacity)
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
-
-    const auto link = instance.allocate(size);
-    BOOST_TEST_MESSAGE(instance.get_fault().message());
-    BOOST_TEST_MESSAGE(instance.get_space());
-    BOOST_REQUIRE_EQUAL(link, zero);
+    BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
 
     constexpr auto capacity = size + to_half(size);
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
