@@ -50,7 +50,12 @@ BOOST_AUTO_TEST_CASE(store__is_dirty__initialized___false)
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(query_.initialize(test::genesis));
     BOOST_REQUIRE(!instance.is_dirty());
-    BOOST_REQUIRE(!instance.close(test::events));
+    ////BOOST_REQUIRE(!instance.close(test::events));
+
+    const auto ec = instance.close(test::events);
+    BOOST_TEST_MESSAGE(ec.message());
+    BOOST_TEST_MESSAGE(instance.get_fault().message());
+    BOOST_REQUIRE(!ec);
 }
 
 BOOST_AUTO_TEST_CASE(store__set_dirty__initialized__is_dirty)
