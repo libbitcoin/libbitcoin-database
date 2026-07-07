@@ -81,7 +81,6 @@ bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
     using digest_t = table::schnorr_digest::put_ref;
     using xonly_t = table::schnorr_xonly::put_ref;
     using signature_t = table::schnorr_signature::put_ref;
-    using namespace system;
 
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
@@ -113,7 +112,6 @@ bool CLASS::set_signatures(const threshold& batch, uint16_t id,
     using digest_t = table::schnorr_digest::put_refs;
     using xonly_t = table::schnorr_xonly::put_refs;
     using signature_t = table::schnorr_signature::put_refs;
-    using namespace system;
 
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
