@@ -34,10 +34,20 @@ namespace database {
 
 TEMPLATE
 template <size_t... Index>
+bool CLASS::flush_all_(std::index_sequence<Index...>) NOEXCEPT
+{
+    return (flush_<Index>() && ...);
+}
+
+TEMPLATE
+template <size_t... Index>
 bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
 {
     if (!(map_<Index>() && ...))
+    {
+        capacity_ = zero;
         return false;
+    }
 
     capacity_ = std::max(logical_, minimum_);
     return true;
@@ -47,16 +57,9 @@ TEMPLATE
 template <size_t... Index>
 bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
 {
-    const auto success = (unmap_<Index>() && ...);
+    const auto success = (unmap_<Index>(capacity_) && ...);
     capacity_ = zero;
     return success;
-}
-
-TEMPLATE
-template <size_t... Index>
-bool CLASS::flush_all_(std::index_sequence<Index...>) NOEXCEPT
-{
-    return (flush_<Index>() && ...);
 }
 
 TEMPLATE
@@ -64,7 +67,10 @@ template <size_t... Index>
 bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT
 {
     if (!(remap_<Index>(capacity) && ...))
+    {
+        capacity_ = zero;
         return false;
+    }
 
     capacity_ = capacity;
     return true;
@@ -109,36 +115,56 @@ bool CLASS::flush_() NOEXCEPT
     return success;
 }
 
-// Always results in unmapped.
-// Trims to logical size, can be zero.
+// Always results in unmapped, file is unchanged.
 TEMPLATE
 template <size_t Column>
-bool CLASS::unmap_() NOEXCEPT
+bool CLASS::release_(size_t size) NOEXCEPT
 {
-    const auto logical = to_width<Column>(logical_);
-    const auto capacity = to_width<Column>(capacity_);
-
-#if defined(HAVE_MSC)
     const auto success =
-           (::msync(memory_map_[Column], logical, MS_SYNC) != fail)
-        && (::munmap(memory_map_[Column], capacity) != fail)
-        && (::ftruncate(opened_[Column], logical) != fail)
-        && (::fsync(opened_[Column]) != fail);
-#else
-    const auto success = 
-           (::ftruncate(opened_[Column], logical) != fail)
-    #if defined(F_FULLFSYNC)
-        && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail)
-    #else
-        && (::fsync(opened_[Column]) != fail)
-    #endif
-        && (::munmap(memory_map_[Column], capacity) != fail);
-#endif
+        ::munmap(memory_map_[Column], to_width<Column>(size)) != fail;
+
     if (!success)
         set_first_code(error::munmap_failure);
 
     loaded_ = false;
     memory_map_[Column] = {};
+    return success;
+}
+
+// Always results in unmapped, trims to logical (can be zero).
+TEMPLATE
+template <size_t Column>
+bool CLASS::unmap_(size_t size) NOEXCEPT
+{
+    const auto logical = to_width<Column>(logical_);
+
+#if defined(HAVE_MSC)
+    // Windows cannot resize a mapped file.
+    // msync requires the live mapping, ftruncate requires it gone.
+    const auto synced =
+           (::msync(memory_map_[Column], logical, MS_SYNC) != fail);
+
+    // Order ensures release in case of sync failure.
+    const auto success = release_<Column>(size) && synced
+        && (::ftruncate(opened_[Column], logical) != fail)
+        && (::fsync(opened_[Column]) != fail);
+#else
+    // POSIX permits resizing a mapped file.
+    const auto truncated =
+           (::ftruncate(opened_[Column], logical) != fail)
+#if defined(F_FULLFSYNC)
+        && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
+#else
+        && (::fsync(opened_[Column]) != fail);
+#endif
+
+    // Order ensures release in case of truncate failure.
+    const auto success = release_<Column>(size) && truncated;
+#endif
+
+    if (!success)
+        set_first_code(error::munmap_failure);
+
     return success;
 }
 
@@ -175,13 +201,15 @@ bool CLASS::remap_(size_t size) NOEXCEPT
         size = minimum_;
 
 #if !defined(HAVE_MSC) && !defined(MREMAP_MAYMOVE)
-    // macOS: unmap before ftruncate sets new size.
-    if (!unmap_<Column>())
+    // macOS cannot remap in place, so release the mapping without trimming and
+    // the file remains at capacity_ bytes and resize_'s fallocate delta (and
+    // the fallocate shim's preallocation window) are exact by construction.
+    if (!release_<Column>(capacity_))
         return false;
 
     if (!resize_<Column>(size))
     {
-        /* bool */ map_<Column>();
+        map_<Column>();
         return false;
     }
 #else
@@ -205,7 +233,7 @@ bool CLASS::remap_(size_t size) NOEXCEPT
 
 #else
 
-    // macOS: does not define mremap or MREMAP_MAYMOVE.
+    // macOS does not define mremap or MREMAP_MAYMOVE.
     // TODO: see "MREMAP_MAYMOVE" in sqlite for map extension technique.
     memory_map_[Column] = system::pointer_cast<uint8_t>(
         ::mmap(nullptr, to_width<Column>(size), PROT_READ | PROT_WRITE,
@@ -240,7 +268,7 @@ bool CLASS::resize_(size_t size) NOEXCEPT
         }
 
         set_first_code(error::ftruncate_failure);
-        unmap_<Column>();
+        unmap_<Column>(capacity_);
         return false;
     }
 
@@ -259,7 +287,6 @@ bool CLASS::finalize_(size_t
     if (memory_map_[Column] == MAP_FAILED)
     {
         loaded_ = false;
-        capacity_ = zero;
         memory_map_[Column] = {};
 
         // mmap or mremap failure (not mapped).
@@ -276,7 +303,7 @@ bool CLASS::finalize_(size_t
     if (page_size == fail || !is_one(system::ones_count(page)))
     {
         set_first_code(error::sysconf_failure);
-        unmap_<Column>();
+        unmap_<Column>(size);
         return false;
     }
 
@@ -299,7 +326,7 @@ bool CLASS::finalize_(size_t
             ::madvise(start, length, MADV_WILLNEED) == fail))
         {
             set_first_code(error::madvise_failure);
-            unmap_<Column>();
+            unmap_<Column>(size);
             return false;
         }
     }

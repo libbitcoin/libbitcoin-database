@@ -179,11 +179,11 @@ private:
 
     // mman dispatch, not thread safe.
     template <size_t... Index>
+    bool flush_all_(std::index_sequence<Index...>) NOEXCEPT;
+    template <size_t... Index>
     bool map_all_(std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
     bool unmap_all_(std::index_sequence<Index...>) NOEXCEPT;
-    template <size_t... Index>
-    bool flush_all_(std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
     bool remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT;
 
@@ -191,9 +191,11 @@ private:
     template <size_t Column>
     bool flush_() NOEXCEPT;
     template <size_t Column>
-    bool unmap_() NOEXCEPT;
-    template <size_t Column>
     bool map_() NOEXCEPT;
+    template <size_t Column>
+    bool release_(size_t size) NOEXCEPT;
+    template <size_t Column>
+    bool unmap_(size_t size) NOEXCEPT;
     template <size_t Column>
     bool remap_(size_t size) NOEXCEPT;
     template <size_t Column>
