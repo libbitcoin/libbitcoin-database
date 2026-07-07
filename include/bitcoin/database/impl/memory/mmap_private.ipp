@@ -134,11 +134,12 @@ template <size_t Column>
 bool CLASS::unmap_() NOEXCEPT
 {
     const auto logical = to_width<Column>(logical_);
+    const auto capacity = to_width<Column>(capacity_);
 
 #if defined(HAVE_MSC)
     const auto success =
            (::msync(memory_map_[Column], logical, MS_SYNC) != fail)
-        && (::munmap(memory_map_[Column], to_width<Column>(capacity_)) != fail)
+        && (::munmap(memory_map_[Column], capacity) != fail)
         && (::ftruncate(opened_[Column], logical) != fail)
         && (::fsync(opened_[Column]) != fail);
 #else
@@ -149,7 +150,11 @@ bool CLASS::unmap_() NOEXCEPT
     #else
         && (::fsync(opened_[Column]) != fail)
     #endif
-        && (::munmap(memory_map_[Column], to_width<Column>(capacity_)) != fail);
+        && (::munmap(memory_map_[Column], capacity) != fail);
+
+    // File was truncated to logical, capacity_ tracks file size.
+    if (success)
+        capacity_ = logical_;
 #endif
     if (!success)
         set_first_code(error::munmap_failure);
@@ -300,16 +305,15 @@ bool CLASS::finalize_(size_t
 
     // Use 1GB chunks to avoid large-length issues.
     constexpr auto chunk = power2(30u);
-    const auto advice = (random_ ? MADV_RANDOM : MADV_SEQUENTIAL) |
-        MADV_WILLNEED;
+    const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
 
     for (auto offset = zero; offset < align; offset += chunk)
     {
-        BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
-        const auto start = memory_map_[Column] + offset;
-        BC_POP_WARNING()
+        const auto length = std::min(chunk, align - offset);
+        const auto start = std::next(memory_map_[Column], offset);
 
-        if (::madvise(start, std::min(chunk, align - offset), advice) == fail)
+        if (::madvise(start, length, advice) == fail || (random_ &&
+            ::madvise(start, length, MADV_WILLNEED) == fail))
         {
             set_first_code(error::madvise_failure);
             unmap_<Column>();
