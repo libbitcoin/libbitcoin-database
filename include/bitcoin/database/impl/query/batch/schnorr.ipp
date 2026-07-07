@@ -125,7 +125,7 @@ bool CLASS::set_signatures(const threshold& batch, uint16_t id,
 
     // Allocate rows across all columns.
     // TODO: this could provide a single remap lock for all puts below.
-    const auto fk = store_.silent.allocate(rows);
+    const auto fk = store_.schnorr.allocate(rows);
     if (fk.is_terminal())
         return false;
 
