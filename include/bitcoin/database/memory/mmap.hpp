@@ -153,17 +153,17 @@ protected:
     template <size_t Column>
     static constexpr size_t to_width(size_t offset) NOEXCEPT
     {
-        return offset * std::get<Column>(widths);
+        return offset * widths.at(Column);
     }
 
     static constexpr size_t logical_rows(size_t bytes) NOEXCEPT
     {
-        return bytes / std::get<zero>(widths);
+        return bytes / widths.front();
     }
     
     static constexpr size_t to_rows(size_t bytes) NOEXCEPT
     {
-        // Convert the user's byte minimum to row denomination.
+        // Convert constructor's byte minimum to row denomination.
         constexpr auto row = (Widths + ...);
         return system::ceilinged_divide(bytes, row);
     }

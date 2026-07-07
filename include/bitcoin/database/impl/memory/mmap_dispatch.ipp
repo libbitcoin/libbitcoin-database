@@ -50,7 +50,7 @@ memory_ptr CLASS::get_capacity(size_t offset) const NOEXCEPT
 TEMPLATE
 memory::iterator CLASS::get_raw(size_t offset) const NOEXCEPT
 {
-    // Pointer is otherwise unguarded, not remap safe (use for table heads).
+    // Pointer otherwise unguarded, not remap safe (use for fixed table heads).
     if (offset > to_width<zero>(size()))
         return {};
 
