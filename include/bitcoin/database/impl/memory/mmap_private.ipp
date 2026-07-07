@@ -133,10 +133,6 @@ bool CLASS::unmap_() NOEXCEPT
         && (::fsync(opened_[Column]) != fail)
     #endif
         && (::munmap(memory_map_[Column], capacity) != fail);
-
-    // File was truncated to logical, capacity_ tracks file size.
-    if (success)
-        capacity_ = logical_;
 #endif
     if (!success)
         set_first_code(error::munmap_failure);
