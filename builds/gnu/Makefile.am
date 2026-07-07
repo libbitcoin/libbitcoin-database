@@ -110,7 +110,8 @@ include_bitcoin_database_impl_primitives_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/linkage.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/manager.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/nohead.ipp \
-    ${srcdir}/../../include/bitcoin/database/impl/primitives/nomap.ipp
+    ${srcdir}/../../include/bitcoin/database/impl/primitives/nomap.ipp \
+    ${srcdir}/../../include/bitcoin/database/impl/primitives/nomaps.ipp
 
 include_bitcoin_database_impl_querydir = \
     ${includedir}/bitcoin/database/impl/query
@@ -149,6 +150,15 @@ include_bitcoin_database_impl_query_archive_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/impl/query/archive/wire_reader.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/archive/wire_writer.ipp
 
+include_bitcoin_database_impl_query_batchdir = \
+    ${includedir}/bitcoin/database/impl/query/batch
+
+include_bitcoin_database_impl_query_batch_HEADERS = \
+    ${srcdir}/../../include/bitcoin/database/impl/query/batch/ecdsa.ipp \
+    ${srcdir}/../../include/bitcoin/database/impl/query/batch/prevalid.ipp \
+    ${srcdir}/../../include/bitcoin/database/impl/query/batch/schnorr.ipp \
+    ${srcdir}/../../include/bitcoin/database/impl/query/batch/silent.ipp
+
 include_bitcoin_database_impl_query_consensusdir = \
     ${includedir}/bitcoin/database/impl/query/consensus
 
@@ -173,15 +183,6 @@ include_bitcoin_database_impl_query_navigate_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/impl/query/navigate/navigate_hashmap.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/navigate/navigate_natural.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/navigate/navigate_reverse.ipp
-
-include_bitcoin_database_impl_query_batchdir = \
-    ${includedir}/bitcoin/database/impl/query/batch
-
-include_bitcoin_database_impl_query_batch_HEADERS = \
-    ${srcdir}/../../include/bitcoin/database/impl/query/batch/ecdsa.ipp \
-    ${srcdir}/../../include/bitcoin/database/impl/query/batch/prevalid.ipp \
-    ${srcdir}/../../include/bitcoin/database/impl/query/batch/schnorr.ipp \
-    ${srcdir}/../../include/bitcoin/database/impl/query/batch/silent.ipp
 
 include_bitcoin_database_impl_storedir = \
     ${includedir}/bitcoin/database/impl/store
@@ -218,10 +219,10 @@ include_bitcoin_database_memorydir = \
 include_bitcoin_database_memory_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/memory/accessor.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/finalizer.hpp \
-    ${srcdir}/../../include/bitcoin/database/memory/maps.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/memory.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/mman.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/mmap.hpp \
+    ${srcdir}/../../include/bitcoin/database/memory/mmaps.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/reader.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/streamers.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/utilities.hpp
@@ -239,6 +240,7 @@ include_bitcoin_database_primitivesdir = \
 include_bitcoin_database_primitives_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/primitives/arrayhead.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/arraymap.hpp \
+    ${srcdir}/../../include/bitcoin/database/primitives/column.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/hashhead.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/hashmap.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/iterator.hpp \
@@ -359,7 +361,6 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/memory/mmap.cpp \
     ${srcdir}/../../test/memory/utilities.cpp \
     ${srcdir}/../../test/mocks/blocks.cpp \
-    ${srcdir}/../../test/mocks/chunk_storage.cpp \
     ${srcdir}/../../test/primitives/arrayhead.cpp \
     ${srcdir}/../../test/primitives/arraymap.cpp \
     ${srcdir}/../../test/primitives/hashhead.cpp \
@@ -391,6 +392,10 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/query/archive/chain_writer.cpp \
     ${srcdir}/../../test/query/archive/wire_reader.cpp \
     ${srcdir}/../../test/query/archive/wire_writer.cpp \
+    ${srcdir}/../../test/query/batch/ecdsa.cpp \
+    ${srcdir}/../../test/query/batch/prevalid.cpp \
+    ${srcdir}/../../test/query/batch/schnorr.cpp \
+    ${srcdir}/../../test/query/batch/silent.cpp \
     ${srcdir}/../../test/query/consensus/consensus_block.cpp \
     ${srcdir}/../../test/query/consensus/consensus_chain_state.cpp \
     ${srcdir}/../../test/query/consensus/consensus_compact.cpp \
@@ -406,10 +411,21 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/query/navigate/navigate_hashmap.cpp \
     ${srcdir}/../../test/query/navigate/navigate_natural.cpp \
     ${srcdir}/../../test/query/navigate/navigate_reverse.cpp \
-    ${srcdir}/../../test/query/batch/ecdsa.cpp \
-    ${srcdir}/../../test/query/batch/prevalid.cpp \
-    ${srcdir}/../../test/query/batch/schnorr.cpp \
-    ${srcdir}/../../test/query/batch/silent.cpp \
+    ${srcdir}/../../test/store/store.cpp \
+    ${srcdir}/../../test/store/store_backup.cpp \
+    ${srcdir}/../../test/store/store_close.cpp \
+    ${srcdir}/../../test/store/store_create.cpp \
+    ${srcdir}/../../test/store/store_dump.cpp \
+    ${srcdir}/../../test/store/store_events.cpp \
+    ${srcdir}/../../test/store/store_open.cpp \
+    ${srcdir}/../../test/store/store_open_load.cpp \
+    ${srcdir}/../../test/store/store_prune.cpp \
+    ${srcdir}/../../test/store/store_reload.cpp \
+    ${srcdir}/../../test/store/store_report.cpp \
+    ${srcdir}/../../test/store/store_restore.cpp \
+    ${srcdir}/../../test/store/store_snapshot.cpp \
+    ${srcdir}/../../test/store/store_tables.cpp \
+    ${srcdir}/../../test/store/store_unload_close.cpp \
     ${srcdir}/../../test/tables/archives/header.cpp \
     ${srcdir}/../../test/tables/archives/input.cpp \
     ${srcdir}/../../test/tables/archives/ins.cpp \
@@ -433,22 +449,7 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/tables/optional/filter_tx.cpp \
     ${srcdir}/../../test/types/history.cpp \
     ${srcdir}/../../test/types/span.cpp \
-    ${srcdir}/../../test/types/unspent.cpp \
-    ${srcdir}/../../test/store/store.cpp \
-    ${srcdir}/../../test/store/store_backup.cpp \
-    ${srcdir}/../../test/store/store_close.cpp \
-    ${srcdir}/../../test/store/store_create.cpp \
-    ${srcdir}/../../test/store/store_dump.cpp \
-    ${srcdir}/../../test/store/store_events.cpp \
-    ${srcdir}/../../test/store/store_open.cpp \
-    ${srcdir}/../../test/store/store_open_load.cpp \
-    ${srcdir}/../../test/store/store_prune.cpp \
-    ${srcdir}/../../test/store/store_reload.cpp \
-    ${srcdir}/../../test/store/store_report.cpp \
-    ${srcdir}/../../test/store/store_restore.cpp \
-    ${srcdir}/../../test/store/store_snapshot.cpp \
-    ${srcdir}/../../test/store/store_tables.cpp \
-    ${srcdir}/../../test/store/store_unload_close.cpp
+    ${srcdir}/../../test/types/unspent.cpp
 
 TESTS = test_runner.sh
 
