@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(store__prune__initialized__success)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
-    store<map> instance{ configuration };
-    query<store<map>> query_{ instance };
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(query_.initialize(test::genesis));
     BOOST_REQUIRE(!instance.prune(test::events));

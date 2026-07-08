@@ -110,15 +110,15 @@ size_t CLASS::body_size() const NOEXCEPT
 }
 
 TEMPLATE
-Link CLASS::count() const NOEXCEPT
-{
-    return body_.count();
-}
-
-TEMPLATE
 size_t CLASS::capacity() const NOEXCEPT
 {
     return body_.capacity();
+}
+
+TEMPLATE
+Link CLASS::count() const NOEXCEPT
+{
+    return body_.count();
 }
 
 TEMPLATE

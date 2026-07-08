@@ -36,7 +36,7 @@ namespace database {
 /// Store provides implmentation support for the public query interface.
 /// Query privides query interface implmentation over the store.
 /// Event handlers are invoked synchronously, providing progress.
-template <typename Storage, if_base_of<storage, Storage> = true>
+template <template <size_t...> class Storage>
 class store
 {
 public:
@@ -124,101 +124,101 @@ protected:
     // These are thread safe.
 
     // record hashmap
-    Storage header_head_;
-    Storage header_body_;
+    Storage<one> header_head_;
+    Storage<one> header_body_;
 
     // slab hashmap
-    Storage input_head_;
-    Storage input_body_;
+    Storage<one> input_head_;
+    Storage<one> input_body_;
 
     // blob
-    Storage output_head_;
-    Storage output_body_;
+    Storage<one> output_head_;
+    Storage<one> output_body_;
 
     // record hashmap
-    Storage point_head_;
-    Storage point_body_;
+    Storage<one> point_head_;
+    Storage<one> point_body_;
 
     // array
-    Storage ins_head_;
-    Storage ins_body_;
+    Storage<one> ins_head_;
+    Storage<one> ins_body_;
 
     // array
-    Storage outs_head_;
-    Storage outs_body_;
+    Storage<one> outs_head_;
+    Storage<one> outs_body_;
 
     // record hashmap
-    Storage tx_head_;
-    Storage tx_body_;
+    Storage<one> tx_head_;
+    Storage<one> tx_body_;
 
     // slab hashmap
-    Storage txs_head_;
-    Storage txs_body_;
+    Storage<one> txs_head_;
+    Storage<one> txs_body_;
 
     /// Indexes.
     /// -----------------------------------------------------------------------
 
     // array
-    Storage candidate_head_;
-    Storage candidate_body_;
+    Storage<one> candidate_head_;
+    Storage<one> candidate_body_;
 
     // array
-    Storage confirmed_head_;
-    Storage confirmed_body_;
+    Storage<one> confirmed_head_;
+    Storage<one> confirmed_body_;
 
     // record hashmap
-    Storage strong_tx_head_;
-    Storage strong_tx_body_;
+    Storage<one> strong_tx_head_;
+    Storage<one> strong_tx_body_;
 
     /// Caches.
     /// -----------------------------------------------------------------------
 
     // aggregate
-    table::ecdsa_storage<Storage> ecdsa_head_;
+    Storage<one> ecdsa_head_;
     table::ecdsa_storage<Storage> ecdsa_body_;
 
     // aggregate
-    table::schnorr_storage<Storage> schnorr_head_;
+    Storage<one> schnorr_head_;
     table::schnorr_storage<Storage> schnorr_body_;
 
     // aggregate
-    table::silent_storage<Storage> silent_head_;
+    Storage<one> silent_head_;
     table::silent_storage<Storage> silent_body_;
 
     // blob arraymap
-    Storage duplicate_head_;
-    Storage duplicate_body_;
+    Storage<one> duplicate_head_;
+    Storage<one> duplicate_body_;
 
     // array
-    Storage prevalid_head_;
-    Storage prevalid_body_;
+    Storage<one> prevalid_head_;
+    Storage<one> prevalid_body_;
 
     // blob arraymap
-    Storage prevout_head_;
-    Storage prevout_body_;
+    Storage<one> prevout_head_;
+    Storage<one> prevout_body_;
 
     // record hashmap
-    Storage validated_bk_head_;
-    Storage validated_bk_body_;
+    Storage<one> validated_bk_head_;
+    Storage<one> validated_bk_body_;
 
     // record multimap
-    Storage validated_tx_head_;
-    Storage validated_tx_body_;
+    Storage<one> validated_tx_head_;
+    Storage<one> validated_tx_body_;
 
     /// Optionals.
     /// -----------------------------------------------------------------------
 
     // record hashmap
-    Storage address_head_;
-    Storage address_body_;
+    Storage<one> address_head_;
+    Storage<one> address_body_;
 
     // record arraymap
-    Storage filter_bk_head_;
-    Storage filter_bk_body_;
+    Storage<one> filter_bk_head_;
+    Storage<one> filter_bk_body_;
 
     // slab
-    Storage filter_tx_head_;
-    Storage filter_tx_body_;
+    Storage<one> filter_tx_head_;
+    Storage<one> filter_tx_body_;
 
     /// Locks.
     /// -----------------------------------------------------------------------
@@ -288,8 +288,8 @@ public:
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Storage, if_base_of<storage, Storage> If>
-#define CLASS store<Storage, If>
+#define TEMPLATE template <template <size_t...> class Storage>
+#define CLASS store<Storage>
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 

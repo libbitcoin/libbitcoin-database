@@ -297,8 +297,8 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
         // Allocate from EOF
         .fst_posmode = F_PEOFPOSMODE,
 
-        // Start from current capacity
-        .fst_offset = offset,
+        // Ignored for allocation in PEOF mode.
+        .fst_offset = 0,
 
         // Delta size
         .fst_length = len,
@@ -311,7 +311,7 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
     auto result = ::fcntl(fd, F_PREALLOCATE, &store);
 
     // Fallback to non-contiguous.
-    if ((result == fail) && (errno != ENOSPC))
+    if (result == fail)
     {
         store.fst_flags = F_ALLOCATEALL;
         result = ::fcntl(fd, F_PREALLOCATE, &store);

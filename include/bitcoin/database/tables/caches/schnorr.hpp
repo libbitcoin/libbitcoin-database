@@ -197,46 +197,6 @@ struct schnorr_correlate
         uint16_t group{};
     };
 
-    struct allocate1
-      : public schema::schnorr_correlate
-    {
-        inline link count() const NOEXCEPT
-        {
-            return 1;
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            sink.write_little_endian<hd::integer, hd::size>(hd::terminal);
-            return sink;
-        }
-    };
-
-    struct allocate
-      : public schema::schnorr_correlate
-    {
-        inline link count() const NOEXCEPT
-        {
-            return system::possible_narrow_cast<link::integer>(rows);
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            constexpr auto skip = one + sizeof(uint16_t) + sizeof(uint16_t);
-
-            for (size_t row{}; row < rows; ++row)
-            {
-                sink.write_little_endian<hd::integer, hd::size>(hd::terminal);
-                sink.skip_bytes(skip);
-            }
-
-            BC_ASSERT(!sink || sink.get_write_position() == minrow);
-            return sink;
-        }
-
-        const size_t rows{};
-    };
-
     struct put_ref
       : public schema::schnorr_correlate
     {
@@ -315,8 +275,8 @@ struct schnorr_correlate
 /// Aggregate (files)
 /// ---------------------------------------------------------------------------
 
-template <typename Storage>
-using schnorr_files = maps
+template <template <size_t...> class Storage>
+using schnorr_files = mmaps
 <
     Storage,
     schnorr_correlate,
@@ -325,7 +285,7 @@ using schnorr_files = maps
     schnorr_signature
 >;
 
-template <typename Storage>
+template <template <size_t...> class Storage>
 class schnorr_storage
   : public schnorr_files<Storage>
 {
@@ -335,42 +295,38 @@ public:
       : schnorr_files<Storage>(path, size, rate, random_access)
     {
     }
-
-    Storage& correlate = std::get<0>(this->files_);
-    Storage& digest = std::get<1>(this->files_);
-    Storage& xonly = std::get<2>(this->files_);
-    Storage& signature = std::get<3>(this->files_);
 };
 
 /// Aggregate (table)
 /// ---------------------------------------------------------------------------
 
-template <typename Storage>
 using schnorr_table = nomaps
 <
-    Storage,
+    schnorr_correlate::link,
     schnorr_correlate,
     schnorr_digest,
     schnorr_xonly,
     schnorr_signature
 >;
 
-template <typename Storage>
+template <template <size_t...> class Storage>
 class schnorr
-  : public schnorr_table<Storage>
+  : public schnorr_table
 {
 public:
-    using storage = schnorr_storage<Storage>;
-
-    schnorr(storage& head, storage& body) NOEXCEPT
-      : schnorr_table<Storage>(head, body)
+    schnorr(database::storage& head, schnorr_storage<Storage>& body) NOEXCEPT
+      : schnorr_table(head, body),
+        correlate(*this),
+        digest(*this),
+        xonly(*this),
+        signature(*this)
     {
     }
 
-    schnorr_correlate& correlate = std::get<0>(this->tables_);
-    schnorr_digest& digest = std::get<1>(this->tables_);
-    schnorr_xonly& xonly = std::get<2>(this->tables_);
-    schnorr_signature& signature = std::get<3>(this->tables_);
+    column<schnorr_table, 0> correlate;
+    column<schnorr_table, 1> digest;
+    column<schnorr_table, 2> xonly;
+    column<schnorr_table, 3> signature;
 };
 
 static_assert(sizeof(system::schnorr::batch::correlate_t) ==

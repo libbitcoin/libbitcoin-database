@@ -116,23 +116,21 @@ bool CLASS::set_silent(const tx_link& link,
     using correlate_t = table::silent_correlate::records;
     using prefix_t = table::silent_prefix::put_ref;
     using compressed_t = table::silent_compressed::put_ref;
-    using namespace system;
 
+    // TODO: caller must guard reads, this is writing into hot storage.
     // ========================================================================
     const auto scope = store_.get_transactor();
 
+    using namespace system;
     auto rows = possible_narrow_cast<silent_link::integer>(prefixes.size());
-    constexpr auto term = silent_link::terminal;
-    silent_link fk{};
 
-    // Allocate contiguous correlate rows and write terminal to each, gets fk.
-    // Then expand (as necessary) subordinate tables to same size.
-    if (!store_.silent.correlate.put_link(fk, correlate_t{ {}, rows, term }) ||
-        !store_.silent.prefix.expand(fk + rows) ||
-        !store_.silent.compressed.expand(fk + rows))
+    // Allocate rows across all columns.
+    // TODO: this could provide a single remap lock for all puts below.
+    const auto fk = store_.silent.allocate(rows);
+    if (fk.is_terminal())
         return false;
 
-    // Write one value to each column in corresponding positions.
+    // Write values to each column in corresponding positions.
     return
         store_.silent.correlate.put(fk, correlate_t{ {}, rows, link }) &&
         store_.silent.prefix.put(fk, prefix_t{ {}, prefixes }) &&

@@ -34,9 +34,9 @@ namespace database {
 TEMPLATE
 CLASS::mmap(const path& filename, size_t minimum, size_t expansion,
     bool random) NOEXCEPT
-    requires (columns == one)
+    requires (is_one(columns))
   : filenames_{ filename },
-    minimum_(minimum),
+    minimum_(to_rows(minimum)),
     expansion_(expansion),
     random_(random),
     opened_{ file::invalid }
@@ -48,7 +48,7 @@ CLASS::mmap(const paths& filenames, size_t minimum, size_t expansion,
     bool random) NOEXCEPT
     requires (columns > one)
   : filenames_(filenames),
-    minimum_(minimum),
+    minimum_(to_rows(minimum)),
     expansion_(expansion),
     random_(random),
     opened_{}
@@ -59,17 +59,13 @@ CLASS::mmap(const paths& filenames, size_t minimum, size_t expansion,
 TEMPLATE
 CLASS::~mmap() NOEXCEPT
 {
-    BC_ASSERT_MSG(!loaded_, "...");
-    BC_ASSERT_MSG(is_zero(logical_), "...");
-
-    BC_ASSERT_MSG(std::ranges::all_of(memory_map_,
-        [](auto map) NOEXCEPT { return is_null(map); }), "...");
-
-    BC_ASSERT_MSG(std::ranges::all_of(capacity_,
-        [](auto closed) NOEXCEPT { return is_zero(closed); }), "...");
-
-    BC_ASSERT_MSG(std::ranges::all_of(opened_,
-        [](auto opened) NOEXCEPT { return opened == file::invalid; }), "...");
+    BC_ASSERT(!loaded_);
+    BC_ASSERT(is_zero(logical_));
+    BC_ASSERT(is_zero(capacity_));
+    BC_ASSERT(std::ranges::all_of(memory_map_,
+        [](auto map) NOEXCEPT { return is_null(map); }));
+    BC_ASSERT(std::ranges::all_of(opened_,
+        [](auto opened) NOEXCEPT { return opened == file::invalid; }));
 }
 
 TEMPLATE
@@ -92,13 +88,10 @@ bool CLASS::is_loaded() const NOEXCEPT
 TEMPLATE
 size_t CLASS::to_capacity(size_t required) const NOEXCEPT
 {
-    BC_PUSH_WARNING(NO_STATIC_CAST)
-    const auto resize = required * ((expansion_ + 100.0) / 100.0);
-    const auto target = std::max(minimum_, static_cast<size_t>(resize));
-    BC_POP_WARNING()
-
-    BC_ASSERT(target >= required);
-    return target;
+    // Covert required rows to capacity-padded rows.
+    using namespace system;
+    const auto growth = ceilinged_multiply(required, expansion_) / 100u;
+    return std::max(minimum_, ceilinged_add(required, growth));
 }
 
 // Read-write protected by atomic, write-write protected by remap_mutex.

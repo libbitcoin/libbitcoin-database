@@ -43,14 +43,14 @@ using key = data_array<key_size>;
 using hashhead_ = hashhead<link, key, cell_size>;
 
 class nullptr_storage
-  : public test::chunk_storage
+  : public test::chunk_storages<one>
 {
 public:
-    using chunk_storage::chunk_storage;
+    using chunk_storages<one>::chunk_storages;
 
     memory_ptr get(size_t size) const NOEXCEPT override
     {
-        return is_zero(size) ? chunk_storage::get(size) : nullptr;
+        return is_zero(size) ? chunk_storages<one>::get(size) : nullptr;
     }
 };
 

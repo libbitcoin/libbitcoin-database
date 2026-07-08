@@ -34,20 +34,6 @@ namespace database {
 
 TEMPLATE
 template <size_t... Index>
-bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
-{
-    return (map_<Index>() && ...);
-}
-
-TEMPLATE
-template <size_t... Index>
-bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
-{
-    return (unmap_<Index>() && ...);
-}
-
-TEMPLATE
-template <size_t... Index>
 bool CLASS::flush_all_(std::index_sequence<Index...>) NOEXCEPT
 {
     return (flush_<Index>() && ...);
@@ -55,9 +41,39 @@ bool CLASS::flush_all_(std::index_sequence<Index...>) NOEXCEPT
 
 TEMPLATE
 template <size_t... Index>
-bool CLASS::remap_all_(size_t logical, std::index_sequence<Index...>) NOEXCEPT 
+bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
 {
-    return (remap_<Index>(to_bytes<Index>(logical)) && ...);
+    if (!(map_<Index>() && ...))
+    {
+        capacity_ = zero;
+        return false;
+    }
+
+    capacity_ = std::max(logical_, minimum_);
+    return true;
+}
+
+TEMPLATE
+template <size_t... Index>
+bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
+{
+    const auto success = (unmap_<Index>(capacity_) && ...);
+    capacity_ = zero;
+    return success;
+}
+
+TEMPLATE
+template <size_t... Index>
+bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT
+{
+    if (!(remap_<Index>(capacity) && ...))
+    {
+        capacity_ = zero;
+        return false;
+    }
+
+    capacity_ = capacity;
+    return true;
 }
 
 // mman wrappers, not thread safe.
@@ -73,7 +89,7 @@ bool CLASS::flush_() NOEXCEPT
     // unmap (and therefore msync) must be called before ftruncate.
     // "To flush all the dirty pages plus the metadata for the file and ensure
     // that they are physically written to disk..."
-    const auto size = to_bytes<Column>(logical_);
+    const auto size = to_width<Column>(logical_);
     const auto success =
            (::msync(memory_map_[Column], size, MS_SYNC) != fail)
         && (::fsync(opened_[Column]) != fail);
@@ -99,36 +115,56 @@ bool CLASS::flush_() NOEXCEPT
     return success;
 }
 
-// Always results in unmapped.
-// Trims to logical size, can be zero.
+// Always results in unmapped, file is unchanged.
 TEMPLATE
 template <size_t Column>
-bool CLASS::unmap_() NOEXCEPT
+bool CLASS::release_(size_t size) NOEXCEPT
 {
-    const auto logical = to_bytes<Column>(logical_);
-
-#if defined(HAVE_MSC)
     const auto success =
-           (::msync(memory_map_[Column], logical, MS_SYNC) != fail)
-        && (::munmap(memory_map_[Column], capacity_[Column]) != fail)
-        && (::ftruncate(opened_[Column], logical) != fail)
-        && (::fsync(opened_[Column]) != fail);
-#else
-    const auto success = 
-           (::ftruncate(opened_[Column], logical) != fail)
-    #if defined(F_FULLFSYNC)
-        && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail)
-    #else
-        && (::fsync(opened_[Column]) != fail)
-    #endif
-        && (::munmap(memory_map_[Column], capacity_[Column]) != fail);
-#endif
+        ::munmap(memory_map_[Column], to_width<Column>(size)) != fail;
+
     if (!success)
         set_first_code(error::munmap_failure);
 
     loaded_ = false;
-    capacity_[Column] = zero;
     memory_map_[Column] = {};
+    return success;
+}
+
+// Always results in unmapped, trims to logical (can be zero).
+TEMPLATE
+template <size_t Column>
+bool CLASS::unmap_(size_t size) NOEXCEPT
+{
+    const auto logical = to_width<Column>(logical_);
+
+#if defined(HAVE_MSC)
+    // Windows cannot resize a mapped file.
+    // msync requires the live mapping, ftruncate requires it gone.
+    const auto synced =
+           (::msync(memory_map_[Column], logical, MS_SYNC) != fail);
+
+    // Order ensures release in case of sync failure.
+    const auto success = release_<Column>(size) && synced
+        && (::ftruncate(opened_[Column], logical) != fail)
+        && (::fsync(opened_[Column]) != fail);
+#else
+    // POSIX permits resizing a mapped file.
+    const auto truncated =
+           (::ftruncate(opened_[Column], logical) != fail)
+#if defined(F_FULLFSYNC)
+        && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
+#else
+        && (::fsync(opened_[Column]) != fail);
+#endif
+
+    // Order ensures release in case of truncate failure.
+    const auto success = release_<Column>(size) && truncated;
+#endif
+
+    if (!success)
+        set_first_code(error::munmap_failure);
+
     return success;
 }
 
@@ -138,17 +174,16 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::map_() NOEXCEPT
 {
-    auto size = to_bytes<Column>(logical_);
+    auto size = logical_;
 
-    // Cannot map empty file, and want mininum capacity, so expand as required.
+    // Cannot map empty file, and want minimum capacity, so expand as required.
     // disk_full: space is set but no code is set with false return.
-    const auto minimum = to_bytes<Column>(minimum_);
-    if ((size < minimum) && !resize_<Column>((size = minimum)))
-      return false;
+    if ((size < minimum_) && !resize_<Column>(size = minimum_))
+        return false;
 
     memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED,
-            opened_[Column], 0));
+        ::mmap(nullptr, to_width<Column>(size), PROT_READ | PROT_WRITE,
+            MAP_SHARED, opened_[Column], 0));
 
     return finalize_<Column>(size);
 }
@@ -159,26 +194,25 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::remap_(size_t size) NOEXCEPT
 {
-    BC_ASSERT(size >= to_bytes<Column>(logical_));
+    BC_ASSERT(size >= logical_);
 
     // Cannot remap empty file, so expand to minimum capacity if zero.
     if (is_zero(size))
-        size = to_bytes<Column>(minimum_);
+        size = minimum_;
 
 #if !defined(HAVE_MSC) && !defined(MREMAP_MAYMOVE)
-    // macOS: unmap before ftruncate sets new size.
-    if (!unmap_<Column>())
+    // macOS cannot remap in place, so release the mapping without trimming and
+    // the file remains at capacity_ bytes and resize_'s fallocate delta (and
+    // the fallocate shim's preallocation window) are exact by construction.
+    if (!release_<Column>(capacity_))
         return false;
 
-    // disk_full: unmap(ok), resize(fail for space), map(ok), return false.
-    // disk_full: if second unmap fails then code is set, and false return.
     if (!resize_<Column>(size))
     {
-        /* bool */ map_<Column>();
+        map_<Column>();
         return false;
     }
 #else
-    // disk_full: space is set but no code is set with false return.
     if (!resize_<Column>(size))
         return false;
 #endif
@@ -187,21 +221,23 @@ bool CLASS::remap_(size_t size) NOEXCEPT
 
     // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
     memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mremap_(memory_map_[Column], capacity_[Column], size,
-            PROT_READ | PROT_WRITE, MAP_SHARED, opened_[Column]));
+        ::mremap_(memory_map_[Column], to_width<Column>(capacity_),
+            to_width<Column>(size), PROT_READ | PROT_WRITE, MAP_SHARED,
+            opened_[Column]));
 
 #elif defined(MREMAP_MAYMOVE)
 
     memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mremap(memory_map_[Column], capacity_[Column], size, MREMAP_MAYMOVE));
+        ::mremap(memory_map_[Column], to_width<Column>(capacity_),
+            to_width<Column>(size), MREMAP_MAYMOVE));
 
 #else
 
-    // macOS: does not define mremap or MREMAP_MAYMOVE.
+    // macOS does not define mremap or MREMAP_MAYMOVE.
     // TODO: see "MREMAP_MAYMOVE" in sqlite for map extension technique.
     memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED,
-            opened_[Column], 0));
+        ::mmap(nullptr, to_width<Column>(size), PROT_READ | PROT_WRITE,
+            MAP_SHARED, opened_[Column], 0));
 
 #endif
 
@@ -213,23 +249,26 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::resize_(size_t size) NOEXCEPT
 {
+    const auto target = to_width<Column>(size);
+    const auto capacity = to_width<Column>(capacity_);
+
     // Disk full detection, any other failure is an abort.
 #if !defined (WITHOUT_FALLOCATE)
-    if (::fallocate(opened_[Column], 0, capacity_[Column],
-        size - capacity_[Column]) == fail)
+    if (::fallocate(opened_[Column], 0, capacity, target - capacity) == fail)
 #else
-    if (::ftruncate(opened_[Column], size) == fail)
+    if (::ftruncate(opened_[Column], target) == fail)
 #endif
     {
         // Disk full is the only restartable store failure (leave mapped).
         if (errno == ENOSPC)
         {
-            set_disk_space(size - capacity_[Column]);
+            set_disk_space(system::ceilinged_multiply(system::floored_subtract(
+                size, capacity_), stride));
             return false;
         }
 
         set_first_code(error::ftruncate_failure);
-        unmap_<Column>();
+        unmap_<Column>(capacity_);
         return false;
     }
 
@@ -239,12 +278,15 @@ bool CLASS::resize_(size_t size) NOEXCEPT
 // Finalize failure results in unmapped.
 TEMPLATE
 template <size_t Column>
-bool CLASS::finalize_(size_t size) NOEXCEPT
+bool CLASS::finalize_(size_t
+    #if !defined (WITHOUT_MADVISE) && !defined(HAVE_MSC)
+    size
+    #endif
+) NOEXCEPT
 {
     if (memory_map_[Column] == MAP_FAILED)
     {
         loaded_ = false;
-        capacity_[Column] = zero;
         memory_map_[Column] = {};
 
         // mmap or mremap failure (not mapped).
@@ -252,8 +294,7 @@ bool CLASS::finalize_(size_t size) NOEXCEPT
         return false;
     }
 
-#if !defined (WITHOUT_MADVISE)
-#if !defined(HAVE_MSC)
+#if !defined (WITHOUT_MADVISE) && !defined(HAVE_MSC)
     // Get page size (usually 4KB).
     const int page_size = ::sysconf(_SC_PAGESIZE);
     const auto page = system::possible_narrow_sign_cast<size_t>(page_size);
@@ -262,38 +303,36 @@ bool CLASS::finalize_(size_t size) NOEXCEPT
     if (page_size == fail || !is_one(system::ones_count(page)))
     {
         set_first_code(error::sysconf_failure);
-        unmap_<Column>();
+        unmap_<Column>(size);
         return false;
     }
-    
-    // Align size up to page boundary.
+
+    // Align mapped bytes up to page boundary.
     using namespace system;
     const auto max = sub1(page);
-    const auto align = bit_and(ceilinged_add(size, max), bit_not(max));
+    const auto target = to_width<Column>(size);
+    const auto align = bit_and(ceilinged_add(target, max), bit_not(max));
 
     // Use 1GB chunks to avoid large-length issues.
     constexpr auto chunk = power2(30u);
-    const auto advice = (random_ ? MADV_RANDOM : MADV_SEQUENTIAL) |
-        MADV_WILLNEED;
+    const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
 
     for (auto offset = zero; offset < align; offset += chunk)
     {
-        BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
-        const auto start = memory_map_[Column] + offset;
-        BC_POP_WARNING()
+        const auto length = std::min(chunk, align - offset);
+        const auto start = std::next(memory_map_[Column], offset);
 
-        if (::madvise(start, std::min(chunk, align - offset), advice) == fail)
+        if (::madvise(start, length, advice) == fail || (random_ &&
+            ::madvise(start, length, MADV_WILLNEED) == fail))
         {
             set_first_code(error::madvise_failure);
-            unmap_<Column>();
+            unmap_<Column>(size);
             return false;
         }
     }
-#endif // !HAVE_MSC
-#endif // !WITHOUT_MADVISE
+#endif // !WITHOUT_MADVISE && !HAVE_MSC
 
     loaded_ = true;
-    capacity_[Column] = size;
     return true;
 }
 

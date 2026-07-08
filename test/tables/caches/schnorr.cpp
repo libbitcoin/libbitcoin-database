@@ -57,8 +57,8 @@ constexpr ec_signature sig_b = base16_array
 // schnorr (aggregate)
 // ----------------------------------------------------------------------------
 
-using schnorr_table = table::schnorr<chunk_storage>;
-using schnorr_storage = default_storage<table::schnorr_storage<chunk_storage>>;
+using schnorr_table = table::schnorr<chunk_storages>;
+using schnorr_storage = default_storage<table::schnorr_storage<chunk_storages>>;
 
 BOOST_AUTO_TEST_CASE(schnorr__create_verify_close__aggregate__expected)
 {
@@ -78,7 +78,6 @@ BOOST_AUTO_TEST_CASE(schnorr__create_verify_close__aggregate__expected)
 // pair=1.
 BOOST_AUTO_TEST_CASE(schnorr__set_signature__single__expected)
 {
-    using allocate = table::schnorr_correlate::allocate1;
     using correlate = table::schnorr_correlate::put_ref;
     using digest_t = table::schnorr_digest::put_ref;
     using xonly_t = table::schnorr_xonly::put_ref;
@@ -89,15 +88,9 @@ BOOST_AUTO_TEST_CASE(schnorr__set_signature__single__expected)
     schnorr_table instance{ head, body };
     BOOST_REQUIRE(instance.create());
 
-    // Phase 1: allocate one terminal correlate row, expand subordinates.
-    schnorr_link fk{};
-    BOOST_REQUIRE(instance.correlate.put_link(fk, allocate{}));
+    const auto fk = instance.allocate(one);
     BOOST_REQUIRE_EQUAL(fk, 0u);
-    BOOST_REQUIRE(instance.digest.expand(fk + 1u));
-    BOOST_REQUIRE(instance.xonly.expand(fk + 1u));
-    BOOST_REQUIRE(instance.signature.expand(fk + 1u));
 
-    // Phase 2: commit real values (single put_ref per column).
     BOOST_REQUIRE(instance.digest.put(fk, digest_t{ {}, digest_a }));
     BOOST_REQUIRE(instance.xonly.put(fk, xonly_t{ {}, xonly_a }));
     BOOST_REQUIRE(instance.signature.put(fk, signature_t{ {}, sig_a }));
@@ -119,10 +112,10 @@ BOOST_AUTO_TEST_CASE(schnorr__set_signature__single__expected)
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     );
 
-    BOOST_REQUIRE_EQUAL(body.correlate.buffer(), expected_correlate);
-    BOOST_REQUIRE_EQUAL(body.digest.buffer(), expected_digest);
-    BOOST_REQUIRE_EQUAL(body.xonly.buffer(), expected_xonly);
-    BOOST_REQUIRE_EQUAL(body.signature.buffer(), expected_signature);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(0), expected_correlate);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_digest);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(2), expected_xonly);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(3), expected_signature);
     BOOST_REQUIRE(instance.close());
 }
 

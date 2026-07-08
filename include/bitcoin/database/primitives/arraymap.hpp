@@ -69,11 +69,11 @@ public:
     /// Body file bytes.
     size_t body_size() const NOEXCEPT;
 
-    /// Count of body records (or bytes if slab).
-    Link count() const NOEXCEPT;
-
     /// Capacity of body in bytes.
     size_t capacity() const NOEXCEPT;
+
+    /// Count of body records (or bytes if slab).
+    Link count() const NOEXCEPT;
 
     /// Increase count as necessary to specified.
     bool expand(const Link& count) NOEXCEPT;
@@ -115,7 +115,7 @@ public:
 private:
     static constexpr auto is_slab = (RowSize == max_size_t);
     using head = database::arrayhead<Link, Align>;
-    using body = database::manager<Link, system::data_array<0>, RowSize>;
+    using body = database::manager<Link, system::data_array<zero>, RowSize>;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).

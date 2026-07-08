@@ -24,7 +24,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(mmap_tests, test::directory_setup_fixture)
 
-// map is an alias for mmap<1>.
+// map is an alias for mmap<one>.
 
 BOOST_AUTO_TEST_CASE(mmap__file__always__expected)
 {
@@ -799,6 +799,90 @@ BOOST_AUTO_TEST_CASE(mmap__unload__shared__unload_locked)
     BOOST_REQUIRE_EQUAL(instance.unload(), error::unload_locked);
 
     memory.reset();
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
+{
+    // Two columns, widths 1 and 3 (stride 4): denomination errors that are
+    // identity at width 1 are visible on the width 3 column.
+    using storage_t = database::mmap<1, 3>;
+    constexpr auto rows = 42_size;
+    constexpr auto last = sub1(rows);
+    const std::string file = TEST_PATH;
+    const storage_t::paths files{ file + "_0", file + "_1" };
+
+    // minimum 1 byte -> 1 row; zero expansion makes capacity == rows exactly.
+    storage_t instance(files, 1, 0);
+    BOOST_REQUIRE(!instance.create());
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_EQUAL(instance.capacity(), 1u);
+
+    // Row zero, written before remap (verifies preservation across remap).
+    BOOST_REQUIRE_EQUAL(instance.allocate(1), zero);
+
+    auto write0_column0 = instance.get_at(0, 0);
+    auto write0_column1 = instance.get_at(1, 0);
+    BOOST_REQUIRE(write0_column0);
+    BOOST_REQUIRE(write0_column1);
+
+    write0_column0->begin()[0] = 'a';
+    write0_column1->begin()[0] = 'b';
+    write0_column1->begin()[1] = 'c';
+    write0_column1->begin()[2] = 'd';
+    write0_column0.reset();
+    write0_column1.reset();
+
+    // Forces remap_all_ (1 -> 42 rows); macOS takes the no-mremap branch.
+    BOOST_REQUIRE_EQUAL(instance.allocate(sub1(rows)), 1u);
+    BOOST_REQUIRE_EQUAL(instance.size(), rows);
+    BOOST_REQUIRE_EQUAL(instance.capacity(), rows);
+
+    // Loaded geometry: resize_ extends each file to capacity x width. This is
+    // the remap denomination check (unload's trim would mask an oversize).
+    BOOST_REQUIRE_EQUAL(std::filesystem::file_size(files.front()), rows * 1u);
+    BOOST_REQUIRE_EQUAL(std::filesystem::file_size(files.back()), rows * 3u);
+
+    // Last row, through the remapped pointers.
+    auto write1_column0 = instance.get_at(0, last * 1);
+    auto write1_column1 = instance.get_at(1, last * 3);
+    BOOST_REQUIRE(write1_column0);
+    BOOST_REQUIRE(write1_column1);
+
+    write1_column0->begin()[0] = 'w';
+    write1_column1->begin()[0] = 'x';
+    write1_column1->begin()[1] = 'y';
+    write1_column1->begin()[2] = 'z';
+    write1_column0.reset();
+    write1_column1.reset();
+    BOOST_REQUIRE(!instance.unload());
+
+    // Unloaded geometry: trimmed to logical x width (trim denomination).
+    BOOST_REQUIRE_EQUAL(std::filesystem::file_size(files.front()), rows * 1u);
+    BOOST_REQUIRE_EQUAL(std::filesystem::file_size(files.back()), rows * 3u);
+
+    // Round trip.
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_EQUAL(instance.size(), rows);
+
+    auto read_column0 = instance.get_at(0, 0);
+    auto read_column1 = instance.get_at(1, 0);
+    BOOST_REQUIRE(read_column0);
+    BOOST_REQUIRE(read_column1);
+    BOOST_REQUIRE_EQUAL(read_column0->begin()[0], 'a');
+    BOOST_REQUIRE_EQUAL(read_column0->begin()[last], 'w');
+    BOOST_REQUIRE_EQUAL(read_column1->begin()[0], 'b');
+    BOOST_REQUIRE_EQUAL(read_column1->begin()[1], 'c');
+    BOOST_REQUIRE_EQUAL(read_column1->begin()[2], 'd');
+    BOOST_REQUIRE_EQUAL(read_column1->begin()[last * 3 + 0], 'x');
+    BOOST_REQUIRE_EQUAL(read_column1->begin()[last * 3 + 1], 'y');
+    BOOST_REQUIRE_EQUAL(read_column1->begin()[last * 3 + 2], 'z');
+
+    read_column0.reset();
+    read_column1.reset();
     BOOST_REQUIRE(!instance.unload());
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());

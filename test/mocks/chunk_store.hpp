@@ -26,10 +26,10 @@ namespace test {
 
 // Store accessor built on chunk_storage.
 class chunk_store
-  : public store<test::chunk_storage>
+  : public store<test::chunk_storages>
 {
 public:
-    using store<test::chunk_storage>::store;
+    using store<test::chunk_storages>::store;
 
     // Archives.
 
@@ -147,115 +147,75 @@ public:
 
     // Caches.
 
-    system::data_chunk& ecdsa_head_correlate() NOEXCEPT
+    system::data_chunk& ecdsa_head() NOEXCEPT
     {
-        return ecdsa_head_.correlate.buffer();
+        return ecdsa_head_.buffer();
     }
 
-    system::data_chunk& ecdsa_body_correlate() NOEXCEPT
+    ////system::data_chunk& ecdsa_body_correlate() NOEXCEPT
+    ////{
+    ////    return ecdsa_body_.correlate.buffer();
+    ////}
+
+    ////system::data_chunk& ecdsa_body_digest() NOEXCEPT
+    ////{
+    ////    return ecdsa_body_.digest.buffer();
+    ////}
+
+    ////system::data_chunk& ecdsa_body_compressed() NOEXCEPT
+    ////{
+    ////    return ecdsa_body_.compressed.buffer();
+    ////}
+
+    ////system::data_chunk& ecdsa_body_signature() NOEXCEPT
+    ////{
+    ////    return ecdsa_body_.signature.buffer();
+    ////}
+
+    system::data_chunk& schnorr_head() NOEXCEPT
     {
-        return ecdsa_body_.correlate.buffer();
+        return schnorr_head_.buffer();
     }
 
-    system::data_chunk& ecdsa_head_digest() NOEXCEPT
+    ////system::data_chunk& schnorr_body_correlate() NOEXCEPT
+    ////{
+    ////    return schnorr_body_.correlate.buffer();
+    ////}
+
+    ////system::data_chunk& schnorr_body_digest() NOEXCEPT
+    ////{
+    ////    return schnorr_body_.digest.buffer();
+    ////}
+
+    ////system::data_chunk& schnorr_body_xonly() NOEXCEPT
+    ////{
+    ////    return schnorr_body_.xonly.buffer();
+    ////}
+
+    ////system::data_chunk& schnorr_body_signature() NOEXCEPT
+    ////{
+    ////    return schnorr_body_.signature.buffer();
+    ////}
+
+    system::data_chunk& silent_head() NOEXCEPT
     {
-        return ecdsa_head_.digest.buffer();
+        return silent_head_.buffer();
     }
 
-    system::data_chunk& ecdsa_body_digest() NOEXCEPT
-    {
-        return ecdsa_body_.digest.buffer();
-    }
+    ////system::data_chunk& silent_body_correlate() NOEXCEPT
+    ////{
+    ////    return silent_body_.correlate.buffer();
+    ////}
 
-    system::data_chunk& ecdsa_head_compressed() NOEXCEPT
-    {
-        return ecdsa_head_.compressed.buffer();
-    }
+    ////system::data_chunk& silent_body_prefix() NOEXCEPT
+    ////{
+    ////    return silent_body_.prefix.buffer();
+    ////}
 
-    system::data_chunk& ecdsa_body_compressed() NOEXCEPT
-    {
-        return ecdsa_body_.compressed.buffer();
-    }
-
-    system::data_chunk& ecdsa_head_signature() NOEXCEPT
-    {
-        return ecdsa_head_.signature.buffer();
-    }
-
-    system::data_chunk& ecdsa_body_signature() NOEXCEPT
-    {
-        return ecdsa_body_.signature.buffer();
-    }
-
-    system::data_chunk& schnorr_head_correlate() NOEXCEPT
-    {
-        return schnorr_head_.correlate.buffer();
-    }
-
-    system::data_chunk& schnorr_body_correlate() NOEXCEPT
-    {
-        return schnorr_body_.correlate.buffer();
-    }
-
-    system::data_chunk& schnorr_head_digest() NOEXCEPT
-    {
-        return schnorr_head_.digest.buffer();
-    }
-
-    system::data_chunk& schnorr_body_digest() NOEXCEPT
-    {
-        return schnorr_body_.digest.buffer();
-    }
-
-    system::data_chunk& schnorr_head_xonly() NOEXCEPT
-    {
-        return schnorr_head_.xonly.buffer();
-    }
-
-    system::data_chunk& schnorr_body_xonly() NOEXCEPT
-    {
-        return schnorr_body_.xonly.buffer();
-    }
-
-    system::data_chunk& schnorr_head_signature() NOEXCEPT
-    {
-        return schnorr_head_.signature.buffer();
-    }
-
-    system::data_chunk& schnorr_body_signature() NOEXCEPT
-    {
-        return schnorr_body_.signature.buffer();
-    }
-
-    system::data_chunk& silent_head_correlate() NOEXCEPT
-    {
-        return silent_head_.correlate.buffer();
-    }
-
-    system::data_chunk& silent_body_correlate() NOEXCEPT
-    {
-        return silent_body_.correlate.buffer();
-    }
-
-    system::data_chunk& silent_head_prefix() NOEXCEPT
-    {
-        return silent_head_.prefix.buffer();
-    }
-
-    system::data_chunk& silent_body_prefix() NOEXCEPT
-    {
-        return silent_body_.prefix.buffer();
-    }
-
-    system::data_chunk& silent_head_compressed() NOEXCEPT
-    {
-        return silent_head_.compressed.buffer();
-    }
-
-    system::data_chunk& silent_body_compressed() NOEXCEPT
-    {
-        return silent_body_.compressed.buffer();
-    }
+    ////system::data_chunk& silent_body_compressed() NOEXCEPT
+    ////{
+    ////    return silent_body_.compressed.buffer();
+    ////}
 
     system::data_chunk& duplicate_head() NOEXCEPT
     {
@@ -340,7 +300,7 @@ public:
     }
 };
 
-using query_accessor = query<store<chunk_storage>>;
+using query_accessor = query<store<chunk_storages>>;
 
 } // namespace test
 

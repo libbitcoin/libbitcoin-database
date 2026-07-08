@@ -19,88 +19,109 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_MANAGER_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_MANAGER_HPP
 
+#include <utility>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
 
 namespace libbitcoin {
 namespace database {
-    
-/// Linked list abstraction over storage for given link and record sizes.
-/// if slab (Size == max_size_t), count/link is bytes, otherwise records.
-/// Obtaining memory object is considered const access despite the fact that
-/// memory is writeable. Non-const manager access implies memory map modify.
-template <class Link, class Key, size_t Size>
-class manager
+
+template <class Link, class Key, size_t... Sizes>
+class managers
 {
 public:
     using integer = typename Link::integer;
+
+    template <size_t Column = zero>
     static constexpr Link position_to_link(size_t position) NOEXCEPT;
+    template <size_t Column = zero>
     static constexpr size_t link_to_position(const Link& link) NOEXCEPT;
     static constexpr integer cast_link(size_t link) NOEXCEPT;
 
-    DEFAULT_COPY_MOVE_DESTRUCT(manager);
+public:
+    DEFAULT_COPY_MOVE_DESTRUCT(managers);
 
-    /// Manage byte storage device.
-    manager(storage& file) NOEXCEPT;
+    /// Return memory object for column full map (null only if oom or unloaded).
+    template <size_t Column = zero>
+    inline memory_ptr get() const NOEXCEPT;
 
-    /// The file size.
+    /// Return memory object for column record at position (null possible).
+    /// Pointer is constrained to starting write within logical allocation.
+    template <size_t Column = zero>
+    inline memory_ptr get(const Link& link) const NOEXCEPT;
+
+    /// Return memory object (limited to AoS) within capacity.
+    template <size_t Columns = sizeof...(Sizes), if_equal<Columns, one> = true>
+    inline memory_ptr get_capacity(const Link& link) const NOEXCEPT;
+
+    /// Manage shared multi-backed byte storage device (caller owns storage).
+    managers(storage& body) NOEXCEPT;
+
+    /// The aggregate logical byte size (cold size) across all columns.
     inline size_t size() const NOEXCEPT;
 
-    /// The logical record count.
-    inline Link count() const NOEXCEPT;
-
-    /// The reserved byte count.
+    /// The aggregate byte capacity (hot size) across all columns.
     inline size_t capacity() const NOEXCEPT;
 
-    /// Reduce logical size to specified records (false if exceeds logical).
+    /// The logical record count (common across columns).
+    inline Link count() const NOEXCEPT;
+
+    /// Reduce logical size to count records (false if exceeds logical).
     bool truncate(const Link& count) NOEXCEPT;
 
-    /// Increase logical size to specified bytes as required (false if fails).
+    /// Increase logical size to count records as required (false if fails).
     bool expand(const Link& count) NOEXCEPT;
 
     /// Thread safe but reservations do not accumulate (effectively unsafe).
-    /// Increase capacity by specified bytes (false only if fails).
+    /// Increase capacity by count records (false only if fails).
     bool reserve(const Link& count) NOEXCEPT;
 
-    /// Increase logical by specified bytes, return offset to first (or eof).
-    /// For record, count is number of records to allocate (link + data).
-    /// For slab count must include bytes (link + data) [key is part of data].
+    /// Unified allocation across all columns (one lock).
+    /// Increase logical size by count records, return offset to first (or eof).
     Link allocate(const Link& count) NOEXCEPT;
 
-    /// Return memory object for full memory map (null only if oom or unloaded).
-    inline memory_ptr get() const NOEXCEPT;
-
-    /// Return memory object for record at specified position (null possible).
-    /// Pointer is constrained to starting write within logical allocation.
-    inline memory_ptr get(const Link& link) const NOEXCEPT;
-
-    /// Return memory object for record at specified position (null possible).
-    /// Pointer is constrained to starting write within full capacity.
-    inline memory_ptr get_capacity(const Link& link) const NOEXCEPT;
-
-    /// Get the fault condition.
+    /// Get the unified fault condition.
     code get_fault() const NOEXCEPT;
 
-    /// Get the space required to clear the disk full condition.
+    /// Get the unified space required to clear the disk full condition.
     size_t get_space() const NOEXCEPT;
 
-    /// Resume from disk full condition.
+    /// Unified resume from disk full condition.
     code reload() NOEXCEPT;
 
 private:
-    static constexpr auto is_slab = (Size == max_size_t);
+    static constexpr auto columns = sizeof...(Sizes);
     static constexpr auto key_size = keys::size<Key>();
+    static constexpr std::array<size_t, columns> sizes{ Sizes... };
+    static constexpr auto is_slab = (std::get<zero>(sizes) == max_size_t);
+    static_assert(!is_slab || is_one(columns), "slab implies single column");
+    static_assert(!is_zero(columns), "requires at least one column");
+
+    template <size_t Column>
+    static constexpr size_t stride() NOEXCEPT;
+    template <size_t... Index>
+    static constexpr size_t strides(std::index_sequence<Index...>) NOEXCEPT;
+
+    /// Convert between record links and the file's native denomination
+    /// (elements). Single column file elements are BYTES (width one), so
+    /// records convert by stride (slabs pass through, links are byte offsets).
+    /// Aggregate file elements are ROWS, which equal records (pass through).
+    static constexpr size_t link_to_elements(const Link& link) NOEXCEPT;
+    static constexpr Link elements_to_link(size_t elements) NOEXCEPT;
 
     // Thread and remap safe.
-    storage& file_;
+    storage& files_;
 };
+
+template <class Link, class Key, size_t Size>
+using manager = managers<Link, Key, Size>;
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <class Link, class Key, size_t Size>
-#define CLASS manager<Link, Key, Size>
+#define TEMPLATE template <class Link, class Key, size_t... Sizes>
+#define CLASS managers<Link, Key, Sizes...>
 
 #include <bitcoin/database/impl/primitives/manager.ipp>
 
