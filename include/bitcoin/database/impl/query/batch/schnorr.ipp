@@ -74,8 +74,7 @@ bool CLASS::purge_schnorr_signatures() NOEXCEPT
 
 TEMPLATE
 bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
-    const ec_signature& signature, uint16_t id,
-    const header_link& link) NOEXCEPT
+    const ec_signature& signature, const header_link& link) NOEXCEPT
 {
     using correlate_t = table::schnorr_correlate::put_ref;
     using digest_t = table::schnorr_digest::put_ref;
@@ -97,7 +96,7 @@ bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
 
     // Write one value to each column in corresponding positions.
     return
-        store_.schnorr.correlate.put(fk, correlate_t{ {}, link, id }) &&
+        store_.schnorr.correlate.put(fk, correlate_t{ {}, link }) &&
         store_.schnorr.digest.put(fk, digest_t{ {}, digest }) &&
         store_.schnorr.xonly.put(fk, xonly_t{ {}, point }) &&
         store_.schnorr.signature.put(fk, signature_t{ {}, signature });
@@ -105,7 +104,7 @@ bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
 }
 
 TEMPLATE
-bool CLASS::set_signatures(const threshold& batch, uint16_t id,
+bool CLASS::set_signatures(const threshold& batch,
     const header_link& link) NOEXCEPT
 {
     using correlate_t = table::schnorr_correlate::put_refs;
@@ -129,7 +128,7 @@ bool CLASS::set_signatures(const threshold& batch, uint16_t id,
 
     // Write one value to each column in corresponding positions.
     return
-        store_.schnorr.correlate.put(fk, correlate_t{ {}, batch, link, id }) &&
+        store_.schnorr.correlate.put(fk, correlate_t{ {}, set.size(), link }) &&
         store_.schnorr.digest.put(fk, digest_t{ {}, set }) &&
         store_.schnorr.xonly.put(fk, xonly_t{ {}, set }) &&
         store_.schnorr.signature.put(fk, signature_t{ {}, set });

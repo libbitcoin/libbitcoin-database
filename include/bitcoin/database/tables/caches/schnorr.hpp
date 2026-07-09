@@ -170,7 +170,6 @@ struct schnorr_correlate
   : public no_map<schema::schnorr_correlate>
 {
     using hd = schema::header::link;
-    using category_t = system::chain::threshold::category_t;
     using no_map<schema::schnorr_correlate>::nomap;
 
     struct record
@@ -184,17 +183,11 @@ struct schnorr_correlate
         inline bool from_data(reader& source) NOEXCEPT
         {
             header_fk = source.read_little_endian<hd::integer, hd::size>();
-            category = static_cast<category_t>(source.read_byte());
-            pair = source.read_little_endian<uint16_t>();
-            group = source.read_little_endian<uint16_t>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
         hd::integer header_fk{};
-        category_t category{};
-        uint16_t pair{};
-        uint16_t group{};
     };
 
     struct put_ref
@@ -207,18 +200,12 @@ struct schnorr_correlate
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            // 1 is required for single sig.
-            constexpr uint16_t pair = 1;
             sink.write_little_endian<hd::integer, hd::size>(header_fk);
-            sink.write_byte(to_value(category_t::single));
-            sink.write_little_endian<uint16_t>(pair);
-            sink.write_little_endian<uint16_t>(group);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
         const hd::integer header_fk{};
-        const uint16_t group{};
     };
 
     struct put_refs
@@ -226,49 +213,20 @@ struct schnorr_correlate
     {
         inline link count() const NOEXCEPT
         {
-            using namespace system;
-            return possible_narrow_cast<link::integer>(batch.tuples.size());
-        }
-
-        /// min in first row, max in second row (for within only).
-        inline uint16_t to_pair(size_t index, size_t count, bool between,
-            uint16_t min, uint16_t max) const NOEXCEPT
-        {
-            if (is_zero(index))
-                return min;
-
-            if (between && is_one(index) && count > one)
-                return max;
-
-            return {};
+            return system::possible_narrow_cast<link::integer>(rows);
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            const auto rows = count();
-            const auto min = batch.minimum;
-            const auto max = batch.maximum;
-            const auto cat = batch.category;
-            const bool between = (cat == category_t::between);
-
-            for (size_t row{}; row < rows; ++row)
-            {
-                const auto category = is_zero(row) ? to_value(cat) : 0_u8;
-                const auto pair = to_pair(row, rows, between, min, max);
-
+            for (size_t row{}; row < count(); ++row)
                 sink.write_little_endian<hd::integer, hd::size>(header_fk);
-                sink.write_byte(category);
-                sink.write_little_endian<uint16_t>(pair);
-                sink.write_little_endian<uint16_t>(group);
-            }
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
 
-        const system::chain::threshold& batch;
+        const size_t rows{};
         const hd::integer header_fk{};
-        const uint16_t group{};
     };
 };
 

@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_valid__em
     const database::settings configuration{};
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 0, 42));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
 
     header_links links{};
     BOOST_REQUIRE_EQUAL(query.schnorr_records(), 1u);
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_invalid__
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
     constexpr auto expected = 42u;
-    BOOST_REQUIRE(query.set_signature(sighash_bad, schnorr_xonly, schnorr_signature, 0, expected));
+    BOOST_REQUIRE(query.set_signature(sighash_bad, schnorr_xonly, schnorr_signature, expected));
 
     header_links links{};
     BOOST_REQUIRE_EQUAL(query.schnorr_records(), 1u);
@@ -90,14 +90,14 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__various__expe
     constexpr auto expected1 = 42u;
     constexpr auto expected2 = 24u;
 
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 0, 1));
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 0, 2));
-    BOOST_REQUIRE(query.set_signature(sighash_bad,     schnorr_xonly, schnorr_signature, 0, expected1));
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 0, 3));
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 0, 4));
-    BOOST_REQUIRE(query.set_signature(sighash_bad,     schnorr_xonly, schnorr_signature, 0, expected2));
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 0, 5));
-    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 0, 6));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 1));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 2));
+    BOOST_REQUIRE(query.set_signature(sighash_bad,     schnorr_xonly, schnorr_signature, expected1));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 3));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 4));
+    BOOST_REQUIRE(query.set_signature(sighash_bad,     schnorr_xonly, schnorr_signature, expected2));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 5));
+    BOOST_REQUIRE(query.set_signature(schnorr_sighash, schnorr_xonly, schnorr_signature, 6));
 
     header_links links{};
     BOOST_REQUIRE_EQUAL(query.schnorr_records(), 8u);
