@@ -67,7 +67,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Get a transactor object.
-    const transactor get_transactor() const NOEXCEPT;
+    transactor get_transactor() const NOEXCEPT;
 
     /// Get first fault code, or disk_full if none and full, or success.
     code get_code() const NOEXCEPT;

@@ -176,7 +176,7 @@ void CLASS::set_dirty() NOEXCEPT
 }
 
 TEMPLATE
-const typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
+typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
 {
     return transactor{ transactor_mutex_ };
 }

@@ -105,7 +105,7 @@ public:
     size_t get_space() const NOEXCEPT;
 
     /// Get a transactor object.
-    const transactor get_transactor() NOEXCEPT;
+    transactor get_transactor() NOEXCEPT;
 
 protected:
     using path = std::filesystem::path;

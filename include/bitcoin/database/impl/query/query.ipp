@@ -74,7 +74,7 @@ CLASS::query(Store& store) NOEXCEPT
 }
 
 TEMPLATE
-const typename CLASS::transactor CLASS::get_transactor() const NOEXCEPT
+typename CLASS::transactor CLASS::get_transactor() const NOEXCEPT
 {
     return store_.get_transactor();
 }
