@@ -25,7 +25,6 @@ using namespace system;
 using namespace test;
 
 // Shared test vectors.
-constexpr auto group = 0x1234_u16;
 constexpr auto header_fk = 0x00abcdef_u32;
 constexpr ec_xonly xonly_a = base16_array
 (
@@ -73,9 +72,7 @@ BOOST_AUTO_TEST_CASE(schnorr__create_verify_close__aggregate__expected)
 
 // Round-trip a single signature through the aggregate, mirroring the
 // set_signature write sequence: allocate one terminal correlate row, expand
-// subordinates, then commit real values. Correlate is header_fk-first:
-// header_fk(3) | category(1) | pair(2) | group(2). Single -> category=single,
-// pair=1.
+// subordinates, then commit real values. Correlate is header_fk only.
 BOOST_AUTO_TEST_CASE(schnorr__set_signature__single__expected)
 {
     using correlate = table::schnorr_correlate::put_ref;
@@ -94,10 +91,10 @@ BOOST_AUTO_TEST_CASE(schnorr__set_signature__single__expected)
     BOOST_REQUIRE(instance.digest.put(fk, digest_t{ {}, digest_a }));
     BOOST_REQUIRE(instance.xonly.put(fk, xonly_t{ {}, xonly_a }));
     BOOST_REQUIRE(instance.signature.put(fk, signature_t{ {}, sig_a }));
-    BOOST_REQUIRE(instance.correlate.put(fk, correlate{ {}, header_fk, group }));
+    BOOST_REQUIRE(instance.correlate.put(fk, correlate{ {}, header_fk }));
 
-    // Correlate: header_fk(3) | category=single(01) | pair=1 | group.
-    const auto expected_correlate = base16_chunk("efcdab" "01" "0100" "3412");
+    // Correlate: header_fk(3).
+    const auto expected_correlate = base16_chunk("efcdab");
     const auto expected_digest = base16_chunk
     (
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -131,19 +128,14 @@ BOOST_AUTO_TEST_CASE(schnorr_correlate__put_ref__single__expected)
     table::schnorr_correlate instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
 
-    // Single writes header_fk | category=single(01) | pair=1 | group.
-    const auto expected = base16_chunk("efcdab" "01" "0100" "3412");
-
-    BOOST_REQUIRE(instance.put(putter{ {}, header_fk, group }));
+    const auto expected = base16_chunk("efcdab");
+    BOOST_REQUIRE(instance.put(putter{ {}, header_fk }));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
 }
 
 // schnorr_correlate (multiple writer: threshold) + reader
 // ----------------------------------------------------------------------------
 
-// A 3-tuple "between" threshold: category in row 0, min in row 0 pair, max in
-// row 1 pair (op_within), remaining rows zero category/pair. Same group and
-// header_fk on every row.
 BOOST_AUTO_TEST_CASE(schnorr_correlate__put_refs__between__expected)
 {
     using putter = table::schnorr_correlate::put_refs;
@@ -153,33 +145,15 @@ BOOST_AUTO_TEST_CASE(schnorr_correlate__put_refs__between__expected)
     table::schnorr_correlate instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
 
-    const ec_xonly point{};
-    const ec_signature sig{};
-    const chain::threshold batch
-    {
-        .tuples =
-        {
-            { null_hash, point, sig },
-            { null_hash, point, sig },
-            { null_hash, point, sig }
-        },
-        .category = chain::threshold::category_t::between,
-        .minimum = 0x0002_u16,
-        .maximum = 0x0003_u16
-    };
-
-    // header_fk | category | pair | group, per row.
-    // row0: cat=between(08), pair=min(2); row1: cat=0, pair=max(3);
-    // row2: cat=0, pair=0. group/header_fk identical across rows.
     const auto expected = base16_chunk
     (
-        "efcdab" "08" "0200" "3412"   // header_fk, between, min=2, group
-        "efcdab" "00" "0300" "3412"   // header_fk, 0, max=3, group
-        "efcdab" "00" "0000" "3412"   // header_fk, 0, 0, group
+        "efcdab"
+        "efcdab"
+        "efcdab"
     );
 
-    // put_refs{ {}, batch, group, header_fk }.
-    BOOST_REQUIRE(instance.put(putter{ {}, batch, header_fk, group }));
+    // put_refs{ {}, size, header_fk }.
+    BOOST_REQUIRE(instance.put(putter{ {}, 3, header_fk }));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
 }
 
@@ -188,8 +162,8 @@ BOOST_AUTO_TEST_CASE(schnorr_correlate__get__using_record__expected)
     auto head = base16_chunk("02000000");
     auto body = base16_chunk
     (
-        "efcdab" "01" "0100" "3412"   // header_fk, single, pair=1, group
-        "785634" "02" "0500" "7856"   // header_fk, equal, pair=5, group
+        "efcdab"
+        "785634"
     );
 
     chunk_storage head_store{ head };
@@ -199,15 +173,9 @@ BOOST_AUTO_TEST_CASE(schnorr_correlate__get__using_record__expected)
     table::schnorr_correlate::record out{};
     BOOST_REQUIRE(instance.get(0u, out));
     BOOST_REQUIRE(out.header_fk == header_fk);
-    BOOST_REQUIRE(out.category == chain::threshold::category_t::single);
-    BOOST_REQUIRE_EQUAL(out.pair, 0x0001_u16);
-    BOOST_REQUIRE_EQUAL(out.group, group);
 
     BOOST_REQUIRE(instance.get(1u, out));
     BOOST_REQUIRE(out.header_fk == 0x00345678_u32);
-    BOOST_REQUIRE(out.category == chain::threshold::category_t::equal);
-    BOOST_REQUIRE_EQUAL(out.pair, 0x0005_u16);
-    BOOST_REQUIRE_EQUAL(out.group, 0x5678_u16);
 }
 
 // schnorr_digest (single + multiple writers)

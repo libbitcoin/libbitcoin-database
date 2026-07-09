@@ -595,8 +595,7 @@ public:
 
     /// Set single schnorr signature row.
     bool set_signature(const hash_digest& digest, const ec_xonly& point,
-        const ec_signature& signature, uint16_t id,
-        const header_link& link) NOEXCEPT;
+        const ec_signature& signature, const header_link& link) NOEXCEPT;
 
     /// Set ecdsa multisig rows.
     bool set_signatures(const hash_digest& digest, const ec_compresseds& keys,
@@ -604,7 +603,7 @@ public:
         const header_link& link) NOEXCEPT;
 
     /// Set schnorr threshold signature rows.
-    bool set_signatures(const threshold& batch, uint16_t id,
+    bool set_signatures(const threshold& batch,
         const header_link& link) NOEXCEPT;
 
     /// Invoke callback for each candidate match, false implies cancel.

@@ -287,7 +287,7 @@ TABLE_COLUMN(ecdsa_correlate, one + count_ + schema::header::pk);
 TABLE_COLUMN(schnorr_digest, system::hash_size);
 TABLE_COLUMN(schnorr_xonly, system::ec_xonly_size);
 TABLE_COLUMN(schnorr_signature, system::ec_signature_size);
-TABLE_COLUMN(schnorr_correlate, one + two + count_ + schema::header::pk);
+TABLE_COLUMN(schnorr_correlate, schema::header::pk);
 
 // array
 TABLE_COLUMN(silent_prefix, schema::prefix);
