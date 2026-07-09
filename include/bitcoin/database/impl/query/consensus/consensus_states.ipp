@@ -254,7 +254,7 @@ bool CLASS::set_block_state(const header_link& link,
     const auto record = to_validated_bk(link);
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
     return store_.validated_bk.put(record,
@@ -290,7 +290,7 @@ bool CLASS::set_tx_state(const tx_link& link, const context& ctx,
     using sigs = linkage<schema::sigops>;
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
     using namespace system;
 
     // Clean single allocation failure (e.g. disk full).

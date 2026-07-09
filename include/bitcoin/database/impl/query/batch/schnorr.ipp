@@ -67,7 +67,7 @@ TEMPLATE
 bool CLASS::purge_schnorr_signatures() NOEXCEPT
 {
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
     return store_.schnorr.truncate(0);
     // ========================================================================
 }
@@ -83,7 +83,7 @@ bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
 
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     using namespace system;
     const auto row = possible_narrow_cast<schnorr_link::integer>(one);
@@ -114,7 +114,7 @@ bool CLASS::set_signatures(const threshold& batch,
 
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     using namespace system;
     const auto& set = batch.tuples;

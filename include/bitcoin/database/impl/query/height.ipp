@@ -40,7 +40,7 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
         return false;
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
     const table::height::record candidate{ {}, link };
@@ -58,7 +58,7 @@ bool CLASS::pop_candidate() NOEXCEPT
 
     // Clean single allocation failure (e.g. disk full).
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Candidate pop implies reorg or disorg, which implies future duplicates.
     store_.set_dirty();
@@ -82,7 +82,7 @@ bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
         return false;
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // This reservation guard assumes no concurrent writes to the table.
     if (strong && !set_strong(link, txs.number, txs.coinbase_fk, true))
@@ -107,7 +107,7 @@ bool CLASS::pop_confirmed() NOEXCEPT
         return {};
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Clean single allocation failure.
     if (!set_strong(link, txs.number, txs.coinbase_fk, false))

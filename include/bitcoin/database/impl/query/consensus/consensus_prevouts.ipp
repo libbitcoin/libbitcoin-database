@@ -46,7 +46,7 @@ code CLASS::get_prevouts(point_sets& sets, size_t points,
     // Transactor required for prevout read because of pruning.
     // ========================================================================
     {
-        const auto scope = store_.get_transactor();
+        const auto scope = get_transactor();
 
         if (!store_.prevout.at(prevout, cache))
             return error::integrity_get_prevouts;
@@ -90,7 +90,7 @@ bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
     const auto prevout = to_prevout(link);
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
     const table::prevout::slab_put_ref prevouts{ {}, doubles, block };

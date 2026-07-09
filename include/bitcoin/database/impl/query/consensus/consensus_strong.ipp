@@ -141,7 +141,7 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     BC_ASSERT(!is_zero(txs.number) && txs.coinbase_fk != tx_link::terminal);
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Clean allocation failure (e.g. disk full).
     return set_strong(link, txs.number, txs.coinbase_fk , true);
@@ -159,7 +159,7 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     BC_ASSERT(!is_zero(txs.number) && txs.coinbase_fk != tx_link::terminal);
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Clean allocation failure (e.g. disk full).
     return set_strong(link, txs.number, txs.coinbase_fk, false);

@@ -49,7 +49,7 @@ TEMPLATE
 bool CLASS::purge_prevalids() NOEXCEPT
 {
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
     return store_.prevalid.truncate(0);
     // ========================================================================
 }
@@ -58,7 +58,7 @@ TEMPLATE
 bool CLASS::set_prevalids(const header_links& links) NOEXCEPT
 {
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
     const table::prevalid::put_refs prevalids{ {}, links };

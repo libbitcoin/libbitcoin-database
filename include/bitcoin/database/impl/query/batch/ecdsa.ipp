@@ -67,7 +67,7 @@ TEMPLATE
 bool CLASS::purge_ecdsa_signatures() NOEXCEPT
 {
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
     return store_.ecdsa.truncate(0);
     // ========================================================================
 }
@@ -84,7 +84,7 @@ bool CLASS::set_signature(const hash_digest& digest,
 
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     using namespace system;
     const auto row = possible_narrow_cast<ecdsa_link::integer>(one);
@@ -120,7 +120,7 @@ bool CLASS::set_signatures(const hash_digest& digest,
 
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     using namespace system;
     const auto rows = possible_narrow_cast<ecdsa_link::integer>(count);
