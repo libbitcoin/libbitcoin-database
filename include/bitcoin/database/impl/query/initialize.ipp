@@ -198,7 +198,7 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
     // TODO: add genesis block filter_tx head and body when filter_tx is enabled.
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     if (!set(genesis, context{}, false, false))
         return false;

@@ -119,7 +119,7 @@ bool CLASS::set_silent(const tx_link& link,
 
     // TODO: caller must guard reads, this is writing into hot storage.
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     using namespace system;
     auto rows = possible_narrow_cast<silent_link::integer>(prefixes.size());

@@ -104,7 +104,7 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
     const auto coinbase = tx.is_coinbase();
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Allocate contiguously and store inputs.
     input_link in_fk{};
@@ -283,7 +283,7 @@ code CLASS::set_code(header_link& out_fk, const header& header,
         return system::error::orphan_block;
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
     out_fk = store_.header.put_link(key, table::header::put_ref
@@ -405,7 +405,7 @@ code CLASS::set_code(const block& block, const header_link& key,
         (block.serialized_size(true));
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
     constexpr auto positive = true;
 
     // Transactor assures cannot be restored without txs, as required to unset.

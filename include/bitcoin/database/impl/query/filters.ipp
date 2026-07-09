@@ -165,7 +165,7 @@ bool CLASS::set_filter_body(const header_link& link,
         return true;
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
     return store_.filter_tx.put(to_filter_tx(link), table::filter_tx::put_ref
@@ -209,7 +209,7 @@ bool CLASS::set_filter_head(const header_link& link, const hash_digest& head,
         return true;
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
     return store_.filter_bk.put(to_filter_bk(link), table::filter_bk::put_ref

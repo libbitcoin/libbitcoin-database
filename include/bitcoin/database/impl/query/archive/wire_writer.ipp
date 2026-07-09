@@ -45,7 +45,7 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
     const auto coinbase = tx.is_coinbase();
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
 
     // Allocate contiguously and store inputs.
     input_link in_fk{};
@@ -273,7 +273,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
         (block.serialized_size(true));
 
     // ========================================================================
-    const auto scope = store_.get_transactor();
+    const auto scope = get_transactor();
     constexpr auto positive = true;
 
     // Transactor assures cannot be restored without txs, as required to unset.

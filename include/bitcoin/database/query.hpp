@@ -33,6 +33,7 @@ class query
 {
 public:
     DELETE_COPY_MOVE_DESTRUCT(query);
+    using transactor = typename Store::transactor;
 
     /// Chain type aliases.
     using block = system::chain::block;
@@ -64,6 +65,9 @@ public:
 
     /// Store management from query-holder (not store owner) context.
     /// -----------------------------------------------------------------------
+
+    /// Get a transactor object.
+    const transactor get_transactor() const NOEXCEPT;
 
     /// Get first fault code, or disk_full if none and full, or success.
     code get_code() const NOEXCEPT;
