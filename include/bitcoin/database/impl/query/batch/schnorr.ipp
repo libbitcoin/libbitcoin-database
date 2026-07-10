@@ -106,9 +106,14 @@ bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
 TEMPLATE
 schnorr_link CLASS::allocate_signatures(size_t count) NOEXCEPT
 {
+    // Allocate count rows across all columns (hot storage).
+    // ========================================================================
+    const auto scope = get_transactor();
+
     using namespace system;
     const auto rows = possible_narrow_cast<schnorr_link::integer>(count);
     return store_.schnorr.allocate(rows);
+    // ========================================================================
 }
 
 TEMPLATE
@@ -122,11 +127,16 @@ bool CLASS::set_signature(const schnorr_link& schnorr_fk,
     using xonly_t = table::schnorr_xonly::put_ref;
     using signature_t = table::schnorr_signature::put_ref;
 
+    // Caller must guard reads, this is writing into hot storage.
+    // ========================================================================
+    const auto scope = get_transactor();
+
     return
         store_.schnorr.correlate.put(schnorr_fk, correlate_t{ {}, link }) &&
         store_.schnorr.digest.put(schnorr_fk, digest_t{ {}, digest }) &&
         store_.schnorr.xonly.put(schnorr_fk, xonly_t{ {}, point }) &&
         store_.schnorr.signature.put(schnorr_fk, signature_t{ {}, signature });
+    // ========================================================================
 }
 
 } // namespace database
