@@ -126,8 +126,17 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, confirmed, table_t::confirmed_table);
         restore(ec, strong_tx, table_t::strong_tx_table);
 
-        restore(ec, ecdsa, table_t::ecdsa_table);
-        restore(ec, schnorr, table_t::schnorr_table);
+        // ecdsa, schnorr, and prevalid are dropped.
+        //---------------------------------------------------------------------
+        // Signatures could be retained and verified, but this just becomes
+        // redundant work unless prevalid is retained. That would require flush
+        // of batched_ at snapshot (requires handle message and send complete).
+        // Would also require an external transactor or terminal prefills in
+        // threshold batched rows to prevent recovering unpopulated rows. The
+        // extra complexity isn't probably worth saving the batch for a snap.
+        //---------------------------------------------------------------------
+        dropped(ec, ecdsa, table_t::ecdsa_table);
+        dropped(ec, schnorr, table_t::schnorr_table);
         restore(ec, silent, table_t::silent_table);
         restore(ec, duplicate, table_t::duplicate_table);
         dropped(ec, prevalid, table_t::prevalid_table);
