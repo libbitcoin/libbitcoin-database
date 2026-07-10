@@ -98,6 +98,12 @@ bool CLASS::truncate(const Link& count) NOEXCEPT
     return manager_.truncate(count);
 }
 
+TEMPLATE
+bool CLASS::drop() NOEXCEPT
+{
+    return manager_.truncate(0) && backup();
+}
+
 // Faults.
 // ----------------------------------------------------------------------------
 

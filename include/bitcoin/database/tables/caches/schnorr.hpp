@@ -31,7 +31,6 @@ namespace table {
 struct schnorr_digest
   : public no_map<schema::schnorr_digest>
 {
-    using tuples_t = system::chain::threshold::tuples_t;
     using no_map<schema::schnorr_digest>::nomap;
 
     struct put_ref
@@ -51,33 +50,12 @@ struct schnorr_digest
 
         const system::hash_digest& digest;
     };
-
-    struct put_refs
-      : public schema::schnorr_digest
-    {
-        inline link count() const NOEXCEPT
-        {
-            return system::possible_narrow_cast<link::integer>(tuples.size());
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            for (const auto& tuple: tuples)
-                sink.write_bytes(tuple.digest);
-
-            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
-            return sink;
-        }
-
-        const tuples_t& tuples;
-    };
 };
 
 /// schnorr_xonly is an array of schnorr verification xonly public keys.
 struct schnorr_xonly
   : public no_map<schema::schnorr_xonly>
 {
-    using tuples_t = system::chain::threshold::tuples_t;
     using no_map<schema::schnorr_xonly>::nomap;
 
     struct put_ref
@@ -97,33 +75,12 @@ struct schnorr_xonly
 
         const system::ec_xonly& point;
     };
-
-    struct put_refs
-      : public schema::schnorr_xonly
-    {
-        inline link count() const NOEXCEPT
-        {
-            return system::possible_narrow_cast<link::integer>(tuples.size());
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            for (const auto& tuple: tuples)
-                sink.write_bytes(tuple.point.get());
-
-            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
-            return sink;
-        }
-
-        const tuples_t& tuples;
-    };
 };
 
 /// schnorr_signature is an array of schnorr verification signatures.
 struct schnorr_signature
   : public no_map<schema::schnorr_signature>
 {
-    using tuples_t = system::chain::threshold::tuples_t;
     using no_map<schema::schnorr_signature>::nomap;
 
     struct put_ref
@@ -142,26 +99,6 @@ struct schnorr_signature
         }
 
         const system::ec_signature& signature;
-    };
-
-    struct put_refs
-      : public schema::schnorr_signature
-    {
-        inline link count() const NOEXCEPT
-        {
-            return system::possible_narrow_cast<link::integer>(tuples.size());
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            for (const auto& tuple: tuples)
-                sink.write_bytes(tuple.sig.get());
-
-            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
-            return sink;
-        }
-
-        const tuples_t& tuples;
     };
 };
 
@@ -205,27 +142,6 @@ struct schnorr_correlate
             return sink;
         }
 
-        const hd::integer header_fk{};
-    };
-
-    struct put_refs
-      : public schema::schnorr_correlate
-    {
-        inline link count() const NOEXCEPT
-        {
-            return system::possible_narrow_cast<link::integer>(rows);
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            for (size_t row{}; row < count(); ++row)
-                sink.write_little_endian<hd::integer, hd::size>(header_fk);
-
-            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
-            return sink;
-        }
-
-        const size_t rows{};
         const hd::integer header_fk{};
     };
 };
