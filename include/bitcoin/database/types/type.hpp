@@ -73,12 +73,9 @@ using silent_handler = system::silent::batch::handler;
 /// Common system::chain aliases.
 /// ---------------------------------------------------------------------------
 
-using threshold = system::chain::threshold;
 using checkpoint = system::chain::checkpoint;
-
 using inpoint = system::chain::point;
 using inpoints = std::vector<inpoint>;
-
 using outpoint = system::chain::outpoint;
 using outpoints = std::vector<outpoint>;
 

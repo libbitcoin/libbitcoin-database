@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_QUERY_HPP
 
 #include <mutex>
+#include <span>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/types/types.hpp>
@@ -597,17 +598,20 @@ public:
         const ec_signature& signature, uint16_t id,
         const header_link& link) NOEXCEPT;
 
+    /// Set ecdsa multisig rows.
+    bool set_signatures(const hash_digest& digest,
+        const std::span<const ec_compressed>& keys,
+        const std::span<const ec_signature>& sigs, uint16_t id,
+        const header_link& link) NOEXCEPT;
+
     /// Set single schnorr signature row.
     bool set_signature(const hash_digest& digest, const ec_xonly& point,
         const ec_signature& signature, const header_link& link) NOEXCEPT;
 
-    /// Set ecdsa multisig rows.
-    bool set_signatures(const hash_digest& digest, const ec_compresseds& keys,
-        const ec_signatures& sigs, uint16_t id,
-        const header_link& link) NOEXCEPT;
-
     /// Set schnorr threshold signature rows.
-    bool set_signatures(const threshold& batch,
+    schnorr_link allocate_signatures(size_t count) NOEXCEPT;
+    bool set_signature(const schnorr_link& first, const hash_digest& digest,
+        const ec_xonly& point, const ec_signature& signature,
         const header_link& link) NOEXCEPT;
 
     /// Invoke callback for each candidate match, false implies cancel.

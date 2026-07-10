@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_BATCH_ECDSA_IPP
 #define LIBBITCOIN_DATABASE_QUERY_BATCH_ECDSA_IPP
 
+#include <span>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/types/types.hpp>
 
@@ -106,7 +107,8 @@ bool CLASS::set_signature(const hash_digest& digest,
 
 TEMPLATE
 bool CLASS::set_signatures(const hash_digest& digest,
-    const ec_compresseds& keys, const ec_signatures& sigs, uint16_t id,
+    const std::span<const ec_compressed>& keys,
+    const std::span<const ec_signature>& sigs, uint16_t id,
     const header_link& link) NOEXCEPT
 {
     using correlate_t = table::ecdsa_correlate::put_refs;
@@ -116,7 +118,7 @@ bool CLASS::set_signatures(const hash_digest& digest,
 
     const auto csigs = sigs.size();
     const auto ckeys = keys.size();
-    const auto count = table::ecdsa_count(csigs, ckeys);
+    const auto count = system::chain::multisig::rows(csigs, ckeys);
 
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================

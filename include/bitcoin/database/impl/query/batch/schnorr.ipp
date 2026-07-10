@@ -104,35 +104,29 @@ bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
 }
 
 TEMPLATE
-bool CLASS::set_signatures(const threshold& batch,
-    const header_link& link) NOEXCEPT
+schnorr_link CLASS::allocate_signatures(size_t count) NOEXCEPT
 {
-    using correlate_t = table::schnorr_correlate::put_refs;
-    using digest_t = table::schnorr_digest::put_refs;
-    using xonly_t = table::schnorr_xonly::put_refs;
-    using signature_t = table::schnorr_signature::put_refs;
-
-    // Caller must guard reads, this is writing into hot storage.
-    // ========================================================================
-    const auto scope = get_transactor();
-
     using namespace system;
-    const auto& set = batch.tuples;
-    const auto rows = possible_narrow_cast<schnorr_link::integer>(set.size());
+    const auto rows = possible_narrow_cast<schnorr_link::integer>(count);
+    return store_.schnorr.allocate(rows);
+}
 
-    // Allocate rows across all columns.
-    // TODO: this could provide a single remap lock for all puts below.
-    const auto fk = store_.schnorr.allocate(rows);
-    if (fk.is_terminal())
-        return false;
+TEMPLATE
+bool CLASS::set_signature(const schnorr_link& schnorr_fk,
+    const hash_digest& digest, const ec_xonly& point,
+    const ec_signature& signature, const header_link& link) NOEXCEPT
+{
+    using namespace system;
+    using correlate_t = table::schnorr_correlate::put_ref;
+    using digest_t = table::schnorr_digest::put_ref;
+    using xonly_t = table::schnorr_xonly::put_ref;
+    using signature_t = table::schnorr_signature::put_ref;
 
-    // Write one value to each column in corresponding positions.
     return
-        store_.schnorr.correlate.put(fk, correlate_t{ {}, set.size(), link }) &&
-        store_.schnorr.digest.put(fk, digest_t{ {}, set }) &&
-        store_.schnorr.xonly.put(fk, xonly_t{ {}, set }) &&
-        store_.schnorr.signature.put(fk, signature_t{ {}, set });
-    // ========================================================================
+        store_.schnorr.correlate.put(schnorr_fk, correlate_t{ {}, link }) &&
+        store_.schnorr.digest.put(schnorr_fk, digest_t{ {}, digest }) &&
+        store_.schnorr.xonly.put(schnorr_fk, xonly_t{ {}, point }) &&
+        store_.schnorr.signature.put(schnorr_fk, signature_t{ {}, signature });
 }
 
 } // namespace database

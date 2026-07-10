@@ -28,29 +28,6 @@ namespace libbitcoin {
 namespace database {
 namespace table {
     
-/// Utilities
-/// ---------------------------------------------------------------------------
-constexpr auto ecdsa_max = system::power2(to_half(byte_bits));
-
-constexpr bool ecdsa_check(size_t m, size_t n) NOEXCEPT
-{
-    return !is_zero(m) && !is_zero(n) && !(n > ecdsa_max) && !(m > n);
-}
-
-constexpr size_t ecdsa_count(size_t m, size_t n) NOEXCEPT
-{
-    using namespace system;
-    const auto gap = n - m;
-    if (is_subtract_overflow(n, m) || is_add_overflow(gap, one))
-        return {};
-
-    const auto sum = add1(gap);
-    if (is_multiply_overflow(m, sum))
-        return {};
-
-    return m * sum;
-}
-
 /// ecdsa_digest is an array of ecdsa verification record signature hashes.
 struct ecdsa_digest
   : public no_map<schema::ecdsa_digest>
@@ -80,8 +57,9 @@ struct ecdsa_digest
     {
         inline link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(
-                ecdsa_count(sigs, keys));
+            using namespace system;
+            return possible_narrow_cast<link::integer>(
+                chain::multisig::rows(sigs, keys));
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
@@ -129,27 +107,29 @@ struct ecdsa_compressed
     {
         inline link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(
-                ecdsa_count(sigs, keys.size()));
+            using namespace system;
+            return possible_narrow_cast<link::integer>(
+                chain::multisig::rows(sigs, keys.size()));
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
+            using namespace system::chain;
             const auto m = sigs;
             const auto n = keys.size();
-            if (!ecdsa_check(m, n))
+            if (!multisig::check(m, n))
                 return false;
 
             const auto gap = (n - m);
             for (size_t sig{}; sig < m; ++sig)
                 for (auto key = sig; key <= gap + sig; ++key)
-                    sink.write_bytes(keys.at(key));
+                    sink.write_bytes(keys[key]);
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
 
-        const system::ec_compresseds& keys;
+        const std::span<const system::ec_compressed> keys;
         const size_t sigs{};
     };
 };
@@ -183,28 +163,30 @@ struct ecdsa_signature
     {
         inline link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(
-                ecdsa_count(sigs.size(), keys));
+            using namespace system;
+            return possible_narrow_cast<link::integer>(
+                chain::multisig::rows(sigs.size(), keys));
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
+            using namespace system::chain;
             const auto m = sigs.size();
             const auto n = keys;
-            if (!ecdsa_check(m, n))
+            if (!multisig::check(m, n))
                 return false;
 
             const auto gap = (n - m);
             for (size_t sig{}; sig < m; ++sig)
                 for (auto key = sig; key <= gap + sig; ++key)
-                    sink.write_bytes(sigs.at(sig));
+                    sink.write_bytes(sigs[sig]);
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
 
         const size_t keys{};
-        const system::ec_signatures& sigs;
+        const std::span<const system::ec_signature> sigs;
     };
 };
 
@@ -265,15 +247,17 @@ struct ecdsa_correlate
     {
         inline link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(
-                ecdsa_count(sigs, keys));
+            using namespace system;
+            return possible_narrow_cast<link::integer>(
+                chain::multisig::rows(sigs, keys));
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
+            using namespace system::chain;
             const auto m = sigs;
             const auto n = keys;
-            if (!ecdsa_check(m, n))
+            if (!multisig::check(m, n))
                 return false;
 
             const auto gap = (n - m);
