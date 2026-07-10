@@ -49,7 +49,7 @@ public:
 
     bool create() NOEXCEPT;
     bool close() NOEXCEPT;
-    bool backup(bool) NOEXCEPT;
+    bool backup(bool=false) NOEXCEPT;
     bool restore() NOEXCEPT;
     bool verify() const NOEXCEPT;
 
@@ -60,6 +60,7 @@ public:
     Link count() const NOEXCEPT;
     Link allocate(const Link& count) NOEXCEPT;
     bool truncate(const Link& count) NOEXCEPT;
+    bool drop() NOEXCEPT;
 
     /// Faults.
     /// -----------------------------------------------------------------------
