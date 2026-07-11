@@ -57,23 +57,20 @@ struct ecdsa_digest
     {
         inline link count() const NOEXCEPT
         {
-            using namespace system;
-            return possible_narrow_cast<link::integer>(
-                chain::multisig::rows(sigs, keys));
+            return system::possible_narrow_cast<link::integer>(rows);
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             // ecdsa multisig capture is limited to common signature hash.
-            for (size_t row{}; row < count(); ++row)
+            for (size_t row{}; row < rows; ++row)
                 sink.write_bytes(digest);
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
 
-        const size_t keys{};
-        const size_t sigs{};
+        const size_t rows{};
         const hash_digest& digest;
     };
 };
@@ -107,9 +104,7 @@ struct ecdsa_compressed
     {
         inline link count() const NOEXCEPT
         {
-            using namespace system;
-            return possible_narrow_cast<link::integer>(
-                chain::multisig::rows(sigs, keys.size()));
+            return system::possible_narrow_cast<link::integer>(rows);
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
@@ -117,8 +112,7 @@ struct ecdsa_compressed
             using namespace system::chain;
             const auto m = sigs;
             const auto n = keys.size();
-            if (!multisig::check(m, n))
-                return false;
+            BC_ASSERT(multisig::rows(m, n) == rows);
 
             const auto gap = (n - m);
             for (size_t sig{}; sig < m; ++sig)
@@ -129,6 +123,7 @@ struct ecdsa_compressed
             return sink;
         }
 
+        const size_t rows{};
         const std::span<const system::ec_compressed> keys;
         const size_t sigs{};
     };
@@ -163,9 +158,7 @@ struct ecdsa_signature
     {
         inline link count() const NOEXCEPT
         {
-            using namespace system;
-            return possible_narrow_cast<link::integer>(
-                chain::multisig::rows(sigs.size(), keys));
+            return system::possible_narrow_cast<link::integer>(rows);
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
@@ -173,8 +166,7 @@ struct ecdsa_signature
             using namespace system::chain;
             const auto m = sigs.size();
             const auto n = keys;
-            if (!multisig::check(m, n))
-                return false;
+            BC_ASSERT(multisig::rows(m, n) == rows);
 
             const auto gap = (n - m);
             for (size_t sig{}; sig < m; ++sig)
@@ -185,6 +177,7 @@ struct ecdsa_signature
             return sink;
         }
 
+        const size_t rows{};
         const size_t keys{};
         const std::span<const system::ec_signature> sigs;
     };
@@ -247,9 +240,7 @@ struct ecdsa_correlate
     {
         inline link count() const NOEXCEPT
         {
-            using namespace system;
-            return possible_narrow_cast<link::integer>(
-                chain::multisig::rows(sigs, keys));
+            return system::possible_narrow_cast<link::integer>(rows);
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
@@ -257,8 +248,7 @@ struct ecdsa_correlate
             using namespace system::chain;
             const auto m = sigs;
             const auto n = keys;
-            if (!multisig::check(m, n))
-                return false;
+            BC_ASSERT(multisig::rows(m, n) == rows);
 
             const auto gap = (n - m);
             for (size_t sig{}; sig < m; ++sig)
@@ -275,6 +265,7 @@ struct ecdsa_correlate
             return sink;
         }
 
+        const size_t rows{};
         const hd::integer header_fk{};
         const size_t keys{};
         const size_t sigs{};

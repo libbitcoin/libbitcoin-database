@@ -135,10 +135,10 @@ bool CLASS::set_signatures(const hash_digest& digest,
 
     // Write values to each column in corresponding positions.
     return
-        store_.ecdsa.correlate.put(fk, correlate_t{ {}, link, ckeys, csigs, id }) &&
-        store_.ecdsa.digest.put(fk, digest_t{ {}, ckeys, csigs, digest }) &&
-        store_.ecdsa.compressed.put(fk, compressed_t{ {}, keys, csigs }) &&
-        store_.ecdsa.signature.put(fk, signature_t{ {}, ckeys, sigs });
+        store_.ecdsa.correlate.put(fk, correlate_t{ {}, count, link, ckeys, csigs, id }) &&
+        store_.ecdsa.digest.put(fk, digest_t{ {}, count, digest }) &&
+        store_.ecdsa.compressed.put(fk, compressed_t{ {}, count, keys, csigs }) &&
+        store_.ecdsa.signature.put(fk, signature_t{ {}, count, ckeys, sigs });
     // ========================================================================
 }
 
