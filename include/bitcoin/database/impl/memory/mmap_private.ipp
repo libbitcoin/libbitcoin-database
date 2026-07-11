@@ -253,7 +253,7 @@ bool CLASS::resize_(size_t size) NOEXCEPT
     const auto capacity = to_width<Column>(capacity_);
 
     // Disk full detection, any other failure is an abort.
-#if !defined (WITHOUT_FALLOCATE)
+#if !defined(WITHOUT_FALLOCATE)
     if (::fallocate(opened_[Column], 0, capacity, target - capacity) == fail)
 #else
     if (::ftruncate(opened_[Column], target) == fail)
@@ -279,7 +279,7 @@ bool CLASS::resize_(size_t size) NOEXCEPT
 TEMPLATE
 template <size_t Column>
 bool CLASS::finalize_(size_t
-    #if !defined (WITHOUT_MADVISE) && !defined(HAVE_MSC)
+    #if !defined(HAVE_MSC) && !defined(WITHOUT_MADVISE)
     size
     #endif
 ) NOEXCEPT
@@ -294,7 +294,7 @@ bool CLASS::finalize_(size_t
         return false;
     }
 
-#if !defined (WITHOUT_MADVISE) && !defined(HAVE_MSC)
+#if !defined(HAVE_MSC) && !defined(WITHOUT_MADVISE)
     // Get page size (usually 4KB).
     const int page_size = ::sysconf(_SC_PAGESIZE);
     const auto page = system::possible_narrow_sign_cast<size_t>(page_size);
@@ -330,7 +330,7 @@ bool CLASS::finalize_(size_t
             return false;
         }
     }
-#endif // !WITHOUT_MADVISE && !HAVE_MSC
+#endif // !HAVE_MSC && !WITHOUT_MADVISE
 
     loaded_ = true;
     return true;

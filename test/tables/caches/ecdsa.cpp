@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_correlate__put_refs__one_of_three__expected)
     );
 
     // put_refs{ {}, header_fk, keys, sigs, group }.
-    BOOST_REQUIRE(instance.put(putter{ {}, header_fk, 3_size, 1_size, group }));
+    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, header_fk, 3_size, 1_size, group }));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
 }
 
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_digest__put_refs__repeated__expected)
     );
 
     // put_refs{ {}, keys, sigs, digest }.
-    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, 1_size, digest_a }));
+    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, digest_a }));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
 }
 
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_compressed__put_refs__matrix__expected)
     );
 
     // put_refs{ {}, keys, sigs }.
-    BOOST_REQUIRE(instance.put(putter{ {}, keys, 1_size }));
+    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, keys, 1_size }));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
 }
 
@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_signature__put_refs__repeated__expected)
     );
 
     // put_refs{ {}, keys, sigs }.
-    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, signatures }));
+    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, 3_size, signatures }));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
 }
 
