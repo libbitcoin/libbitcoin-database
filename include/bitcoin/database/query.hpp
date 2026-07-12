@@ -629,6 +629,7 @@ public:
 
     /// Cache all prevalids.
     header_links get_prevalids() const NOEXCEPT;
+    bool set_prevalid(const header_link& link) NOEXCEPT;
     bool set_prevalids(const header_links& links) NOEXCEPT;
 
     /// Confirmation.
