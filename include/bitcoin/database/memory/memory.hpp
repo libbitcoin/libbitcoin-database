@@ -21,7 +21,6 @@
 
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/finalizer.hpp>
-#include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/memory/mman.hpp>
 #include <bitcoin/database/memory/mmap.hpp>
