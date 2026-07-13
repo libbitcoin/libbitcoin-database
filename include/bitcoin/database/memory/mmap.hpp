@@ -131,6 +131,10 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     size_t allocate(size_t count) NOEXCEPT override;
 
+    /// Remap-protected r/w access to offset (or null) allocated to size.
+    memory_ptr set(size_t offset, size_t size,
+        uint8_t backfill) NOEXCEPT override;
+
     /// Remap-protected r/w access to start/offset (or null), within capacity.
     memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT override;
 
@@ -140,10 +144,6 @@ public:
     /// Unprotected r/w access to start/offset (or null), within logical.
     memory::iterator get_at_raw(size_t column,
         size_t offset=zero) const NOEXCEPT override;
-
-    /// Remap-protected r/w access to offset (or null) allocated to size.
-    memory_ptr set(size_t offset, size_t size,
-        uint8_t backfill) NOEXCEPT override;
 
     /// Remap-protected r/w access to start/offset (or null), within logical.
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;

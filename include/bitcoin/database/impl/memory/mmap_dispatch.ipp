@@ -34,30 +34,6 @@ namespace database {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-memory_ptr CLASS::get_capacity(size_t offset) const NOEXCEPT
-{
-    const auto allocated = to_width<zero>(capacity());
-
-    const auto ptr = std::make_shared<accessor>(remap_mutex_);
-    if (!loaded_ || is_null(ptr))
-        return {};
-
-    auto data = memory_map_.front();
-    ptr->assign(std::next(data, offset), std::next(data, allocated));
-    return ptr;
-}
-
-TEMPLATE
-memory::iterator CLASS::get_raw(size_t offset) const NOEXCEPT
-{
-    // Pointer otherwise unguarded, not remap safe (use for fixed table heads).
-    if (offset > to_width<zero>(size()))
-        return {};
-
-    return std::next(memory_map_.front(), offset);
-}
-
-TEMPLATE
 memory_ptr CLASS::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
 {
     // This is basically allocate(...) for application to a table head.
@@ -91,6 +67,30 @@ memory_ptr CLASS::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
     }
 
     return get(offset);
+}
+
+TEMPLATE
+memory_ptr CLASS::get_capacity(size_t offset) const NOEXCEPT
+{
+    const auto allocated = to_width<zero>(capacity());
+
+    const auto ptr = std::make_shared<accessor>(remap_mutex_);
+    if (!loaded_ || is_null(ptr))
+        return {};
+
+    auto data = memory_map_.front();
+    ptr->assign(std::next(data, offset), std::next(data, allocated));
+    return ptr;
+}
+
+TEMPLATE
+memory::iterator CLASS::get_raw(size_t offset) const NOEXCEPT
+{
+    // get_raw not used for variably-sized heads, so should always be bounded.
+    BC_ASSERT(offset < to_width<zero>(size()));
+
+    // Pointer otherwise unguarded, not remap safe (use for fixed table heads).
+    return std::next(memory_map_.front(), offset);
 }
 
 TEMPLATE
