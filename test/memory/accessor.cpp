@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__nulls)
 BOOST_AUTO_TEST_CASE(accessor__destruct__shared_lock__released)
 {
     std::shared_mutex mutex;
-    auto access = std::make_shared<accessor<std::shared_mutex>>(mutex);
+    auto access = std::make_shared<accessor>(mutex);
     BOOST_REQUIRE(!mutex.try_lock());
     access.reset();
     BOOST_REQUIRE(mutex.try_lock());

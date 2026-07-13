@@ -244,7 +244,7 @@ public:
     {
         using namespace system;
         auto& buffer = at(zero);
-        const auto ptr = emplace_shared<accessor<std::shared_mutex>>(map_mutex_);
+        const auto ptr = emplace_shared<accessor>(map_mutex_);
         ptr->assign(get_raw(offset), std::next(buffer.data(), buffer.size()));
         return ptr;
     }
@@ -285,7 +285,7 @@ public:
         using namespace system;
         auto data = at(column).data();
         const auto allocated = size() * widths.at(column);
-        const auto ptr = emplace_shared<accessor<std::shared_mutex>>(map_mutex_);
+        const auto ptr = emplace_shared<accessor>(map_mutex_);
         ptr->assign(std::next(data, offset), std::next(data, allocated));
         return ptr;
     }

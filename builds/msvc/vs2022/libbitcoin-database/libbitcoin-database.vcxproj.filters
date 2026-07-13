@@ -379,9 +379,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp">
-      <Filter>include\bitcoin\database\impl\memory</Filter>
-    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap.ipp">
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>

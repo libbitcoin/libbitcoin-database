@@ -38,7 +38,7 @@ memory_ptr CLASS::get_capacity(size_t offset) const NOEXCEPT
 {
     const auto allocated = to_width<zero>(capacity());
 
-    const auto ptr = std::make_shared<access>(remap_mutex_);
+    const auto ptr = std::make_shared<accessor>(remap_mutex_);
     if (!loaded_ || is_null(ptr))
         return {};
 
@@ -109,7 +109,7 @@ memory_ptr CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
     const auto allocated = size() * widths.at(column);
 
     // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
-    const auto ptr = std::make_shared<access>(remap_mutex_);
+    const auto ptr = std::make_shared<accessor>(remap_mutex_);
 
     // loaded_ update is precluded by above lock, making this read atomic.
     if (!loaded_ || is_null(ptr))

@@ -174,7 +174,6 @@ protected:
 
 private:
     static constexpr auto fail = -1;
-    using access = accessor<std::shared_mutex>;
     using sequence = std::make_index_sequence<columns>;
 
     // mman dispatch, not thread safe.

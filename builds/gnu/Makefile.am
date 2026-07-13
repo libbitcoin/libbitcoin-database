@@ -91,7 +91,6 @@ include_bitcoin_database_impl_memorydir = \
     ${includedir}/bitcoin/database/impl/memory
 
 include_bitcoin_database_impl_memory_HEADERS = \
-    ${srcdir}/../../include/bitcoin/database/impl/memory/accessor.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/memory/mmap.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/memory/mmap_dispatch.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/memory/mmap_private.ipp \
