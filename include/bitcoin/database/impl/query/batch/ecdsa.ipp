@@ -116,15 +116,15 @@ bool CLASS::set_signatures(const hash_digest& digest,
     using compressed_t = table::ecdsa_compressed::put_refs;
     using signature_t = table::ecdsa_signature::put_refs;
 
+    using namespace system;
     const auto csigs = sigs.size();
     const auto ckeys = keys.size();
-    const auto count = system::chain::multisig::rows(csigs, ckeys);
+    const auto count = chain::multisig::rows(csigs, ckeys);
 
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
     const auto scope = get_transactor();
 
-    using namespace system;
     const auto rows = possible_narrow_cast<ecdsa_link::integer>(count);
 
     // Allocate rows across all columns.
