@@ -74,11 +74,11 @@ public:
 
     /// Column base ptr for batch processing (holds shared lock on body remap).
     template <size_t Column>
-    memory_ptr get_memory() const NOEXCEPT;
+    memory get_memory() const NOEXCEPT;
 
     /// Get element from column at link using column base ptr (deserialize).
     template <size_t Column, typename Element>
-    static bool get(const memory_ptr& ptr, const Link& link,
+    static bool get(const memory& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
     /// Get element from column at link.
@@ -89,7 +89,7 @@ public:
     template <size_t Column, typename Element>
     bool put(const Link& link, const Element& element) NOEXCEPT;
     template <size_t Column, typename Element>
-    bool put(const memory_ptr& ptr, const Element& element) NOEXCEPT;
+    bool put(const memory& ptr, const Element& element) NOEXCEPT;
 
 protected:
     using head = database::nohead<link>;

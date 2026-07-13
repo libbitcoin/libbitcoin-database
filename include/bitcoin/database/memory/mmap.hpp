@@ -148,6 +148,12 @@ public:
     memory_ptr get_at(size_t column,
         size_t offset=zero) const NOEXCEPT override;
 
+    /// Remap-protected r/w access to start/offset (or null), within logical.
+    memory get1(size_t offset=zero) const NOEXCEPT override;
+
+    /// Same as get() but within specified column (or null for invalid column).
+    memory get_at1(size_t column, size_t offset=zero) const NOEXCEPT override;
+
 protected:
     template <size_t Column>
     static constexpr size_t to_width(size_t offset) NOEXCEPT

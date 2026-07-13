@@ -290,6 +290,21 @@ public:
         return ptr;
     }
 
+    memory get1(size_t offset=zero) const NOEXCEPT override
+    {
+        return get_at1(zero, offset);
+    }
+
+    memory get_at1(size_t column, size_t offset=zero) const NOEXCEPT override
+    {
+        using namespace system;
+        auto data = at(column).data();
+        const auto allocated = size() * widths.at(column);
+        accessor out(map_mutex_);
+        out.assign(std::next(data, offset), std::next(data, allocated));
+        return out;
+    }
+
     // This is protected by mutex.
     mutable std::array<system::data_chunk, columns> buffers_{};
 

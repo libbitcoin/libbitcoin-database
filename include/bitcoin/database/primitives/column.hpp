@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_PRIMITIVES_COLUMN_HPP
 
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/memory.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -36,7 +37,7 @@ public:
     {
     }
 
-    INLINE memory_ptr get_memory() const NOEXCEPT
+    INLINE memory get_memory() const NOEXCEPT
     {
         return table_.template get_memory<Column>();
     }
@@ -48,7 +49,7 @@ public:
     }
 
     template <typename Element>
-    static INLINE bool get(const memory_ptr& ptr, const link& record,
+    static INLINE bool get(const memory& ptr, const link& record,
         Element& element) NOEXCEPT
     {
         return Table::template get<Column>(ptr, record, element);
@@ -61,7 +62,7 @@ public:
     }
 
     template <typename Element>
-    INLINE bool put(const memory_ptr& ptr, const Element& element) NOEXCEPT
+    INLINE bool put(const memory& ptr, const Element& element) NOEXCEPT
     {
         return table_.template put<Column>(ptr, element);
     }

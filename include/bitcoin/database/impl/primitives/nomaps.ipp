@@ -130,16 +130,15 @@ code CLASS::reload() NOEXCEPT
 
 TEMPLATE
 template <size_t Column>
-memory_ptr CLASS::get_memory() const NOEXCEPT
+memory CLASS::get_memory() const NOEXCEPT
 {
-    return manager_.template get<Column>();
+    return manager_.template get1<Column>();
 }
 
 // static
 TEMPLATE
 template <size_t Column, typename Element>
-bool CLASS::get(const memory_ptr& ptr, const Link& link,
-    Element& element) NOEXCEPT
+bool CLASS::get(const memory& ptr, const Link& link, Element& element) NOEXCEPT
 {
     static_assert(Element::size == width<Column>, "element size != width");
     using namespace system;
@@ -150,12 +149,12 @@ bool CLASS::get(const memory_ptr& ptr, const Link& link,
     if (is_limited<ptrdiff_t>(start))
         return false;
 
-    const auto size = ptr->size();
+    const auto size = ptr.size();
     const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
-    const auto offset = ptr->offset(start);
+    const auto offset = ptr.offset(start);
     if (is_null(offset))
         return false;
 
@@ -178,20 +177,20 @@ template <size_t Column, typename Element>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
     using namespace system;
-    const auto ptr = manager_.template get<Column>(link);
+    const auto ptr = manager_.template get1<Column>(link);
     return put<Column>(ptr, element);
 }
 
 TEMPLATE
 template <size_t Column, typename Element>
-bool CLASS::put(const memory_ptr& ptr, const Element& element) NOEXCEPT
+bool CLASS::put(const memory& ptr, const Element& element) NOEXCEPT
 {
     static_assert(Element::size == width<Column>, "element size != width");
     using namespace system;
     if (!ptr)
         return false;
 
-    iostream stream{ *ptr };
+    iostream stream{ ptr };
     flipper sink{ stream };
 
     BC_DEBUG_ONLY(sink.set_limit(width<Column> * element.count());)

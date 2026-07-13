@@ -40,10 +40,10 @@ bool CLASS::verify_schnorr_signatures(const stopper& cancel,
     using signature_t = const table::schnorr_signature::span;
 
     using namespace system;
-    const auto correlate = pointer_cast<correlate_t>(correlate_ptr->data());
-    const auto digest = pointer_cast<digest_t>(digest_ptr->data());
-    const auto xonly = pointer_cast<xonly_t>(xonly_ptr->data());
-    const auto signature = pointer_cast<signature_t>(signature_ptr->data());
+    const auto correlate = pointer_cast<correlate_t>(correlate_ptr.data());
+    const auto digest = pointer_cast<digest_t>(digest_ptr.data());
+    const auto xonly = pointer_cast<xonly_t>(xonly_ptr.data());
+    const auto signature = pointer_cast<signature_t>(signature_ptr.data());
 
     // Shortest column.
     const auto count = store_.schnorr.count();

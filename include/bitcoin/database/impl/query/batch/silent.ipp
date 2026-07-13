@@ -40,9 +40,9 @@ bool CLASS::scan_silent(const stopper& cancel, const ec_secret& scan_key,
     using compressed_t = const table::silent_compressed::span;
 
     using namespace system;
-    const auto correlate = pointer_cast<correlate_t>(correlate_ptr->data());
-    const auto prefix = pointer_cast<prefix_t>(prefix_ptr->data());
-    const auto compressed = pointer_cast<compressed_t>(compressed_ptr->data());
+    const auto correlate = pointer_cast<correlate_t>(correlate_ptr.data());
+    const auto prefix = pointer_cast<prefix_t>(prefix_ptr.data());
+    const auto compressed = pointer_cast<compressed_t>(compressed_ptr.data());
 
     // Shortest column.
     const auto count = store_.silent.count();

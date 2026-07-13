@@ -121,6 +121,34 @@ memory_ptr CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
     return ptr;
 }
 
+TEMPLATE
+memory CLASS::get1(size_t offset) const NOEXCEPT
+{
+    return get_at1(zero, offset);
+}
+
+TEMPLATE
+memory CLASS::get_at1(size_t column, size_t offset) const NOEXCEPT
+{
+    if (column >= columns)
+        return {};
+
+    // Obtaining size before access prevents mutual mutex wait (deadlock).
+    const auto allocated = size() * widths.at(column);
+
+    // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
+    memory out{ remap_mutex_ };
+
+    // loaded_ update is precluded by above lock, making this read atomic.
+    if (!loaded_)
+        return {};
+
+    // With offset > size the assignment is negative (stream is exhausted).
+    auto data = memory_map_.at(column);
+    out.assign(std::next(data, offset), std::next(data, allocated));
+    return out;
+}
+
 } // namespace database
 } // namespace libbitcoin
 
