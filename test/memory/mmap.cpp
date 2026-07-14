@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_capacity)
     BOOST_REQUIRE(memory);
 
     const auto expected = std::next(instance.get()->data(), offset);
-    BOOST_REQUIRE(memory->data() == expected);
+    BOOST_REQUIRE(memory.data() == expected);
 
     constexpr auto capacity = offset + size + to_half(offset + size);
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
@@ -703,8 +703,8 @@ BOOST_AUTO_TEST_CASE(mmap__get_capacity__size__expected)
 
     constexpr auto expected = 42u;
     auto ptr = instance.get_capacity(instance.allocate(expected));
-    BOOST_REQUIRE_EQUAL(ptr->size(), expected);
-    BOOST_REQUIRE_EQUAL(*ptr->begin(), 0x00u);
+    BOOST_REQUIRE_EQUAL(ptr.size(), expected);
+    BOOST_REQUIRE_EQUAL(*ptr.begin(), 0x00u);
     BOOST_REQUIRE(instance.unload());
 
     ptr.reset();

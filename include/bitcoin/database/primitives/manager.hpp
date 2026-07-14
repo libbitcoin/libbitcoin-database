@@ -59,7 +59,7 @@ public:
 
     /// Return memory object (limited to AoS) within capacity.
     template <size_t Columns = sizeof...(Sizes), if_equal<Columns, one> = true>
-    inline memory_ptr get_capacity(const Link& link) const NOEXCEPT;
+    inline memory get_capacity(const Link& link) const NOEXCEPT;
 
     /// Manage shared multi-backed byte storage device (caller owns storage).
     managers(storage& body) NOEXCEPT;

@@ -102,7 +102,7 @@ inline memory::iterator CLASS::get_raw1(const Link& link) const NOEXCEPT
 
 TEMPLATE
 template <size_t Columns, if_equal<Columns, one>>
-inline memory_ptr CLASS::get_capacity(const Link& link) const NOEXCEPT
+inline memory CLASS::get_capacity(const Link& link) const NOEXCEPT
 {
     if (link.is_terminal())
         return {};

@@ -236,6 +236,25 @@ bool CLASS::put(const memory_ptr& ptr, const Element& element) NOEXCEPT
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(memory&& ptr, const Element& element) NOEXCEPT
+{
+    using namespace system;
+    if (!ptr)
+        return false;
+
+    iostream stream{ ptr };
+    flipper sink{ stream };
+
+    if constexpr (!is_slab)
+    {
+        BC_DEBUG_ONLY(sink.set_limit(Size * element.count());)
+    }
+
+    return element.to_data(sink);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
 inline bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
 {
     const auto count = element.count();

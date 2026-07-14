@@ -34,10 +34,10 @@ namespace database {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-memory_ptr CLASS::get_filled(size_t offset, size_t size,
+memory CLASS::get_filled(size_t offset, size_t size,
     uint8_t backfill) NOEXCEPT
 {
-    // This is basically allocate(...) for application to a table head.
+    // This is basically allocate(...), backfilled for use with a table head.
     {
         std::unique_lock field_lock(field_mutex_);
 
@@ -67,21 +67,22 @@ memory_ptr CLASS::get_filled(size_t offset, size_t size,
         logical_ = end;
     }
 
-    return get(offset);
+    return get1(offset);
 }
 
 TEMPLATE
-memory_ptr CLASS::get_capacity(size_t offset) const NOEXCEPT
+memory CLASS::get_capacity(size_t offset) const NOEXCEPT
 {
     const auto allocated = to_width<zero>(capacity());
 
-    const auto ptr = std::make_shared<accessor>(remap_mutex_);
-    if (!loaded_ || is_null(ptr))
+    memory out{ remap_mutex_ };
+
+    if (!loaded_)
         return {};
 
     auto data = memory_map_.front();
-    ptr->assign(std::next(data, offset), std::next(data, allocated));
-    return ptr;
+    out.assign(std::next(data, offset), std::next(data, allocated));
+    return out;
 }
 
 TEMPLATE

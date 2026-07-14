@@ -240,7 +240,7 @@ public:
     // access
     // ------------------------------------------------------------------------
 
-    memory_ptr get_filled(size_t offset, size_t size,
+    memory get_filled(size_t offset, size_t size,
         uint8_t backfill) NOEXCEPT override
     {
         {
@@ -259,16 +259,15 @@ public:
                 logical_ = (minimum / widths[0]);
         }
 
-        return get(offset);
+        return get1(offset);
     }
 
-    memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT override
+    memory get_capacity(size_t offset=zero) const NOEXCEPT override
     {
-        using namespace system;
         auto& buffer = at(zero);
-        const auto ptr = emplace_shared<accessor>(map_mutex_);
-        ptr->assign(get_raw(offset), std::next(buffer.data(), buffer.size()));
-        return ptr;
+        accessor out{ map_mutex_ };
+        out.assign(get_raw(offset), std::next(buffer.data(), buffer.size()));
+        return out;
     }
 
     memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override

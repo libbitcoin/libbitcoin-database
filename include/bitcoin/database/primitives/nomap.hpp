@@ -122,6 +122,9 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const memory_ptr& ptr, const Element& element) NOEXCEPT;
 
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put(memory&& ptr, const Element& element) NOEXCEPT;
+
     /// Put element and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put_link(Link& link, const Element& element) NOEXCEPT;

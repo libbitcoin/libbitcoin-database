@@ -375,8 +375,8 @@ BOOST_AUTO_TEST_CASE(manager__get_capacity__record__expected)
     manager<linkage<2>, key0, element> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE_EQUAL(instance.get(1)->size(), expected);
-    BOOST_REQUIRE_EQUAL(*instance.get_capacity(0)->begin(), 0x00_u8);
-    BOOST_REQUIRE_EQUAL(*instance.get_capacity(1)->begin(), 0x06_u8);
+    BOOST_REQUIRE_EQUAL(*instance.get_capacity(0).begin(), 0x00_u8);
+    BOOST_REQUIRE_EQUAL(*instance.get_capacity(1).begin(), 0x06_u8);
     BOOST_REQUIRE(!instance.get_fault());
 }
 

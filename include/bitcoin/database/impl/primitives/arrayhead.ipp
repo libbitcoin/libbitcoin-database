@@ -169,19 +169,19 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
     // Allocate as necessary and fill allocations.
     const auto position = link_to_position(index);
     const auto ptr = file_.get_filled(position, bucket_size, fill);
-    if (is_null(ptr))
+    if (!ptr)
         return false;
 
     if constexpr (aligned)
     {
         // Writes full padded word (0x00 fill).
-        const auto raw = ptr->data();
+        const auto raw = ptr.data();
         auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
         head.store(link, std::memory_order_relaxed);
     }
     else
     {
-        auto& head = to_array<bucket_size>(ptr->data());
+        auto& head = to_array<bucket_size>(ptr.data());
 
         mutex_.lock();
         head = link;
