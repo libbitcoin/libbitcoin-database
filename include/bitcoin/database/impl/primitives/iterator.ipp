@@ -120,7 +120,7 @@ Link CLASS::to_first(Link link) const NOEXCEPT
     while (!link.is_terminal())
     {
         // get element offset (fault)
-        const auto offset = memory_.offset(manager::link_to_position(link));
+        const auto offset = memory_.offset(body::link_to_position(link));
         if (is_null(offset))
             return Link::terminal;
 
@@ -142,7 +142,7 @@ Link CLASS::to_next(Link link) const NOEXCEPT
     while (!link.is_terminal())
     {
         // get element offset (fault)
-        auto offset = memory_.offset(manager::link_to_position(link));
+        auto offset = memory_.offset(body::link_to_position(link));
         if (is_null(offset))
             return Link::terminal;
 
@@ -152,7 +152,7 @@ Link CLASS::to_next(Link link) const NOEXCEPT
             return link;
 
         // get next element offset (fault)
-        offset = memory_.offset(manager::link_to_position(link));
+        offset = memory_.offset(body::link_to_position(link));
         if (is_null(offset))
             return Link::terminal;
 

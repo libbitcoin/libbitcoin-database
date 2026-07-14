@@ -24,7 +24,7 @@
 #include <bitcoin/database/primitives/arrayhead.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/primitives/body.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -115,7 +115,7 @@ public:
 private:
     static constexpr auto is_slab = (RowSize == max_size_t);
     using head = database::arrayhead<Link, Align>;
-    using body = database::manager<Link, system::data_array<zero>, RowSize>;
+    using body = database::body<Link, system::data_array<zero>, RowSize>;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).

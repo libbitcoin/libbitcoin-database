@@ -28,7 +28,7 @@ namespace database {
 TEMPLATE
 CLASS::nomaps(storage& header, storage& body) NOEXCEPT
   : head_(header, 0),
-    manager_(body)
+    body_(body)
 {
 }
 
@@ -40,19 +40,19 @@ bool CLASS::create() NOEXCEPT
 {
     Link count{};
     return head_.create() &&
-        head_.get_body_count(count) && manager_.truncate(count);
+        head_.get_body_count(count) && body_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::close() NOEXCEPT
 {
-    return head_.set_body_count(manager_.count());
+    return head_.set_body_count(body_.count());
 }
 
 TEMPLATE
 bool CLASS::backup(bool) NOEXCEPT
 {
-    return head_.set_body_count(manager_.count());
+    return head_.set_body_count(body_.count());
 }
 
 TEMPLATE
@@ -60,7 +60,7 @@ bool CLASS::restore() NOEXCEPT
 {
     Link count{};
     return head_.verify() &&
-        head_.get_body_count(count) && manager_.truncate(count);
+        head_.get_body_count(count) && body_.truncate(count);
 }
 
 TEMPLATE
@@ -68,7 +68,7 @@ bool CLASS::verify() const NOEXCEPT
 {
     Link count{};
     return head_.verify() &&
-        head_.get_body_count(count) && count == manager_.count();
+        head_.get_body_count(count) && count == body_.count();
 }
 
 // sizing
@@ -77,31 +77,31 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 size_t CLASS::body_size() const NOEXCEPT
 {
-    return manager_.size();
+    return body_.size();
 }
 
 TEMPLATE
 Link CLASS::count() const NOEXCEPT
 {
-    return manager_.count();
+    return body_.count();
 }
 
 TEMPLATE
 Link CLASS::allocate(const Link& count) NOEXCEPT
 {
-    return manager_.allocate(count);
+    return body_.allocate(count);
 }
 
 TEMPLATE
 bool CLASS::truncate(const Link& count) NOEXCEPT
 {
-    return manager_.truncate(count);
+    return body_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::drop() NOEXCEPT
 {
-    return manager_.truncate(0) && backup();
+    return body_.truncate(0) && backup();
 }
 
 // Faults.
@@ -110,19 +110,19 @@ bool CLASS::drop() NOEXCEPT
 TEMPLATE
 code CLASS::get_fault() const NOEXCEPT
 {
-    return manager_.get_fault();
+    return body_.get_fault();
 }
 
 TEMPLATE
 size_t CLASS::get_space() const NOEXCEPT
 {
-    return manager_.get_space();
+    return body_.get_space();
 }
 
 TEMPLATE
 code CLASS::reload() NOEXCEPT
 {
-    return manager_.reload();
+    return body_.reload();
 }
 
 // query interface
@@ -138,7 +138,7 @@ TEMPLATE
 template <size_t Column>
 memory CLASS::get_memory() const NOEXCEPT
 {
-    return manager_.template get<Column>();
+    return body_.template get<Column>();
 }
 
 // static
@@ -184,7 +184,7 @@ TEMPLATE
 template <size_t Column, typename Element>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
-    const auto ptr = manager_.template get_raw1<Column>(link);
+    const auto ptr = body_.template get_raw1<Column>(link);
     return put<Column>(ptr, element);
 }
 

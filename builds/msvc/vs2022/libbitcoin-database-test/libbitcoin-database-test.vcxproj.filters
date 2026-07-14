@@ -105,6 +105,9 @@
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\body.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\hashhead.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
@@ -118,9 +121,6 @@
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp">
-      <Filter>src\primitives</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\primitives\manager.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\nohead.cpp">

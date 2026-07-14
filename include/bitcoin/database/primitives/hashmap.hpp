@@ -26,7 +26,7 @@
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/primitives/body.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -229,7 +229,7 @@ private:
     static constexpr auto key_size = keys::size<Key>();
     static constexpr auto index_size = Link::size + key_size;
     using head = database::hashhead<Link, Key, CellSize>;
-    using body = database::manager<Link, Key, RowSize>;
+    using body = database::body<Link, Key, RowSize>;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).

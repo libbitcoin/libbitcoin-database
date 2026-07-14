@@ -25,7 +25,7 @@
 namespace libbitcoin {
 namespace database {
 
-/// SoA aggregate array table: one shared head + one unified managers body.
+/// SoA aggregate array table: one shared head + one unified bodys body.
 template <typename Link, typename... Columns>
 class nomaps
 {
@@ -94,7 +94,7 @@ public:
 
 protected:
     using head = database::nohead<link>;
-    using body = database::managers<link, system::data_array<zero>,
+    using body = database::bodys<link, system::data_array<zero>,
         Columns::width...>;
 
     template <size_t Column, typename Element>
@@ -105,7 +105,7 @@ protected:
     head head_;
 
     // This is thread safe.
-    body manager_;
+    body body_;
 };
 
 } // namespace database

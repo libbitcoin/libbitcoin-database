@@ -81,7 +81,7 @@ bool CLASS::create() NOEXCEPT
     if (is_nonzero(size()))
         return false;
 
-    // Guards addition overflow in manager_.get (start must be valid).
+    // Guards addition overflow in body_.get (start must be valid).
     if (file_.allocate(link_to_position(initial_buckets_)) == storage::eof)
         return false;
 

@@ -26,7 +26,7 @@ namespace database {
     
 TEMPLATE
 CLASS::nomap(storage& header, storage& body) NOEXCEPT
-  : head_(header, 0), manager_(body)
+  : head_(header, 0), body_(body)
 {
 }
 
@@ -38,19 +38,19 @@ bool CLASS::create() NOEXCEPT
 {
     Link count{};
     return head_.create() &&
-        head_.get_body_count(count) && manager_.truncate(count);
+        head_.get_body_count(count) && body_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::close() NOEXCEPT
 {
-    return head_.set_body_count(manager_.count());
+    return head_.set_body_count(body_.count());
 }
 
 TEMPLATE
 bool CLASS::backup(bool) NOEXCEPT
 {
-    return head_.set_body_count(manager_.count());
+    return head_.set_body_count(body_.count());
 }
 
 TEMPLATE
@@ -58,7 +58,7 @@ bool CLASS::restore() NOEXCEPT
 {
     Link count{};
     return head_.verify() &&
-        head_.get_body_count(count) && manager_.truncate(count);
+        head_.get_body_count(count) && body_.truncate(count);
 }
 
 TEMPLATE
@@ -66,7 +66,7 @@ bool CLASS::verify() const NOEXCEPT
 {
     Link count{};
     return head_.verify() &&
-        head_.get_body_count(count) && count == manager_.count();
+        head_.get_body_count(count) && count == body_.count();
 }
 
 // sizing
@@ -87,50 +87,50 @@ size_t CLASS::head_size() const NOEXCEPT
 TEMPLATE
 size_t CLASS::body_size() const NOEXCEPT
 {
-    return manager_.size();
+    return body_.size();
 }
 
 TEMPLATE
 size_t CLASS::capacity() const NOEXCEPT
 {
-    return manager_.capacity();
+    return body_.capacity();
 }
 
 TEMPLATE
 Link CLASS::count() const NOEXCEPT
 {
-    return manager_.count();
+    return body_.count();
 }
 
 TEMPLATE
 bool CLASS::truncate(const Link& count) NOEXCEPT
 {
-    return manager_.truncate(count);
+    return body_.truncate(count);
 }
 
 TEMPLATE
 bool CLASS::expand(const Link& count) NOEXCEPT
 {
-    return manager_.expand(count);
+    return body_.expand(count);
 }
 
 TEMPLATE
 bool CLASS::drop() NOEXCEPT
 {
-    return manager_.truncate(0) && backup();
+    return body_.truncate(0) && backup();
 }
 
 TEMPLATE
 bool CLASS::reserve(const Link& size) NOEXCEPT
 {
     // Not writer-writer thread safe (two writers may share reserve).
-    return manager_.reserve(size);
+    return body_.reserve(size);
 }
 
 TEMPLATE
 memory CLASS::get_memory() const NOEXCEPT
 {
-    return manager_.get();
+    return body_.get();
 }
 
 // error condition
@@ -139,19 +139,19 @@ memory CLASS::get_memory() const NOEXCEPT
 TEMPLATE
 code CLASS::get_fault() const NOEXCEPT
 {
-    return manager_.get_fault();
+    return body_.get_fault();
 }
 
 TEMPLATE
 size_t CLASS::get_space() const NOEXCEPT
 {
-    return manager_.get_space();
+    return body_.get_space();
 }
 
 TEMPLATE
 code CLASS::reload() NOEXCEPT
 {
-    return manager_.reload();
+    return body_.reload();
 }
 
 // query interface
@@ -166,7 +166,7 @@ bool CLASS::get(const memory& ptr, const Link& link, Element& element) NOEXCEPT
     if (!ptr || link.is_terminal())
         return false;
 
-    const auto start = manager::link_to_position(link);
+    const auto start = body::link_to_position(link);
     if (is_limited<ptrdiff_t>(start))
         return false;
 
@@ -210,7 +210,7 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
     using namespace system;
-    const auto ptr = manager_.get(link);
+    const auto ptr = body_.get(link);
     return put(ptr, element);
 }
 
@@ -238,7 +238,7 @@ template <typename Element, if_equal<Element::size, Size>>
 inline bool CLASS::put_link(Link& link, const Element& element) NOEXCEPT
 {
     const auto count = element.count();
-    link = manager_.allocate(count);
+    link = body_.allocate(count);
     return put(link, element);
 }
 
@@ -256,14 +256,14 @@ template <typename Element, if_equal<Element::size, Size>>
 inline bool CLASS::commit(const Element& element) NOEXCEPT
 {
     // Zero allocation provides link of next (presumably reserved) element.
-    const auto link = manager_.allocate(0);
+    const auto link = body_.allocate(0);
 
     // Write element into reserved but unallocated space.
-    if (!put(manager_.get_capacity(link), element))
+    if (!put(body_.get_capacity(link), element))
         return false;
 
     // Allocate reserved and written element (exposes logically).
-    return !manager_.allocate(element.count()).is_terminal();
+    return !body_.allocate(element.count()).is_terminal();
 }
 
 } // namespace database

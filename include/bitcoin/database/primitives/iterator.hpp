@@ -22,7 +22,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/primitives/body.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -32,14 +32,14 @@ namespace database {
 /// OTHERWISE A DEADLOCK WILL OCCUR WHEN THE TABLE'S FILE IS EXPANDED, WHICH
 /// WAITS ON THE RELEASE OF THE SHARED LOCK (REMAP REQUIRES EXCLUSIVE ACCESS).
 /// THE hashmap.get(const iterator& it, ...) METHOD EXISTS TO PREVENT A CALL TO
-/// manager.get(), WHICH DESPITE BEING A READ WOULD CAUSE A DEADLOCK. THIS IS
+/// body.get(), WHICH DESPITE BEING A READ WOULD CAUSE A DEADLOCK. THIS IS
 /// BECAUSE IT CANNOT COMPLETE ITS READ WHILE REMAP IS WAITING ON ACCESS.
 /// A SIMILAR RISK ARISES FROM HOLDING iterator WHILE READING/WRITING ANY OTHER
 /// TABLE AS A CYCLE CAUSING THE ABOVE WILL OCCUR. USE THE ITERATOR TO COLLECT
 /// A SET FROM ITS TABLE AND THEN CALL iterator.release() TO FREE THE POINTER.
 
 /// This class is not thread safe.
-/// Size non-max implies record manager (ordinal record links).
+/// Size non-max implies record body (ordinal record links).
 template <class Link, class Key, size_t Size = max_size_t>
 class iterator
 {
@@ -88,7 +88,7 @@ protected:
     Link to_next(Link link) const NOEXCEPT;
 
 private:
-    using manager = database::manager<Link, Key, Size>;
+    using body = database::body<Link, Key, Size>;
     static constexpr auto key_size = keys::size<Key>();
 
     // This is not thread safe, but it's object is not modified here and the

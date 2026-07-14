@@ -22,7 +22,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/primitives/body.hpp>
 #include <bitcoin/database/primitives/nohead.hpp>
 
 namespace libbitcoin {
@@ -135,7 +135,7 @@ public:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    using manager = database::manager<Link, system::data_array<zero>, Size>;
+    using body = database::body<Link, system::data_array<zero>, Size>;
     using head = database::nohead<Link>;
 
     // Thread safe (index/top/push).
@@ -143,7 +143,7 @@ private:
     head head_;
 
     // Thread safe.
-    manager manager_;
+    body body_;
 };
 
 template <class Schema>

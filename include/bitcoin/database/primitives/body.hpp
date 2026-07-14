@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_MANAGER_HPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_MANAGER_HPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_BODY_HPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_BODY_HPP
 
 #include <utility>
 #include <bitcoin/database/define.hpp>
@@ -28,7 +28,7 @@ namespace libbitcoin {
 namespace database {
 
 template <class Link, class Key, size_t... Sizes>
-class managers
+class bodys
 {
 public:
     using integer = typename Link::integer;
@@ -40,7 +40,7 @@ public:
     static constexpr integer cast_link(size_t link) NOEXCEPT;
 
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(managers);
+    DEFAULT_COPY_MOVE_DESTRUCT(bodys);
 
     /// Return memory object for column full map (null only if oom or unloaded).
     template <size_t Column = zero>
@@ -58,7 +58,7 @@ public:
     inline memory get_capacity(const Link& link) const NOEXCEPT;
 
     /// Manage shared multi-backed byte storage device (caller owns storage).
-    managers(storage& body) NOEXCEPT;
+    bodys(storage& body) NOEXCEPT;
 
     /// The aggregate logical byte size (cold size) across all columns.
     inline size_t size() const NOEXCEPT;
@@ -117,15 +117,15 @@ private:
 };
 
 template <class Link, class Key, size_t Size>
-using manager = managers<Link, Key, Size>;
+using body = bodys<Link, Key, Size>;
 
 } // namespace database
 } // namespace libbitcoin
 
 #define TEMPLATE template <class Link, class Key, size_t... Sizes>
-#define CLASS managers<Link, Key, Sizes...>
+#define CLASS bodys<Link, Key, Sizes...>
 
-#include <bitcoin/database/impl/primitives/manager.ipp>
+#include <bitcoin/database/impl/primitives/body.ipp>
 
 #undef CLASS
 #undef TEMPLATE

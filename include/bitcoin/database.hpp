@@ -41,13 +41,13 @@
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/primitives/arrayhead.hpp>
 #include <bitcoin/database/primitives/arraymap.hpp>
+#include <bitcoin/database/primitives/body.hpp>
 #include <bitcoin/database/primitives/column.hpp>
 #include <bitcoin/database/primitives/hashhead.hpp>
 #include <bitcoin/database/primitives/hashmap.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
 #include <bitcoin/database/primitives/nohead.hpp>
 #include <bitcoin/database/primitives/nomap.hpp>
 #include <bitcoin/database/primitives/nomaps.hpp>
