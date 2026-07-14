@@ -125,10 +125,12 @@ bool CLASS::set_silent(const tx_link& link,
     auto rows = possible_narrow_cast<silent_link::integer>(prefixes.size());
 
     // Allocate rows across all columns.
-    // TODO: this could provide a single remap lock for all puts below.
     const auto fk = store_.silent.allocate(rows);
     if (fk.is_terminal())
         return false;
+
+    // Guard against remap (required for nomaps::put(fk)).
+    const auto guard = store_.silent.guard();
 
     // Write values to each column in corresponding positions.
     return

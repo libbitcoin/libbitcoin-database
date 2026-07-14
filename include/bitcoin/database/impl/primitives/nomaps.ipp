@@ -129,6 +129,12 @@ code CLASS::reload() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+memory CLASS::guard() const NOEXCEPT
+{
+    return get_memory<zero>();
+}
+
+TEMPLATE
 template <size_t Column>
 memory CLASS::get_memory() const NOEXCEPT
 {
@@ -140,11 +146,11 @@ TEMPLATE
 template <size_t Column, typename Element>
 bool CLASS::get(const memory& ptr, const Link& link, Element& element) NOEXCEPT
 {
-    static_assert(Element::size == width<Column>, "element size != width");
-    using namespace system;
+    static_assert(Element::size == width<Column>);
     if (!ptr || link.is_terminal())
         return false;
 
+    using namespace system;
     const auto start = body::template link_to_position<Column>(link);
     if (is_limited<ptrdiff_t>(start))
         return false;
@@ -165,6 +171,7 @@ bool CLASS::get(const memory& ptr, const Link& link, Element& element) NOEXCEPT
     return element.from_data(source);
 }
 
+// TODO: gets are not optimized for shared remap guard.
 TEMPLATE
 template <size_t Column, typename Element>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
@@ -172,25 +179,26 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
     return get<Column>(get_memory<Column>(), link, element);
 }
 
+// TODO: puts are optimized for shared remap guard (required).
 TEMPLATE
 template <size_t Column, typename Element>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
-    using namespace system;
-    const auto ptr = manager_.template get1<Column>(link);
+    const auto ptr = manager_.template get_raw1<Column>(link);
     return put<Column>(ptr, element);
 }
 
+// protected (unguarded memory access)
 TEMPLATE
 template <size_t Column, typename Element>
-bool CLASS::put(const memory& ptr, const Element& element) NOEXCEPT
+bool CLASS::put(memory::iterator it, const Element& element) NOEXCEPT
 {
-    static_assert(Element::size == width<Column>, "element size != width");
-    using namespace system;
-    if (!ptr)
+    static_assert(Element::size == width<Column>);
+    if (is_null(it))
         return false;
 
-    iostream stream{ ptr };
+    using namespace system;
+    iostream stream{ it, system::maximum<ptrdiff_t> };
     flipper sink{ stream };
 
     BC_DEBUG_ONLY(sink.set_limit(width<Column> * element.count());)

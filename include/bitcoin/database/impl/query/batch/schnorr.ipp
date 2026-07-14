@@ -89,10 +89,12 @@ bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
     const auto row = possible_narrow_cast<schnorr_link::integer>(one);
 
     // Allocate 1 row across all columns.
-    // TODO: this could provide a single remap lock for all puts below.
     const auto fk = store_.schnorr.allocate(row);
     if (fk.is_terminal())
         return false;
+
+    // Guard against remap (required for nomaps::put(fk)).
+    const auto guard = store_.schnorr.guard();
 
     // Write one value to each column in corresponding positions.
     return
@@ -130,6 +132,9 @@ bool CLASS::set_signature(const schnorr_link& schnorr_fk,
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
     const auto scope = get_transactor();
+
+    // Guard against remap (required for nomaps::put(fk)).
+    const auto guard = store_.schnorr.guard();
 
     return
         store_.schnorr.correlate.put(schnorr_fk, correlate_t{ {}, link }) &&

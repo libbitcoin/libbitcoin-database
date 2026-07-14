@@ -54,6 +54,8 @@ public:
     inline memory_ptr get(const Link& link) const NOEXCEPT;
     template <size_t Column = zero>
     inline memory get1(const Link& link) const NOEXCEPT;
+    template <size_t Column = zero>
+    inline memory::iterator get_raw1(const Link& link) const NOEXCEPT;
 
     /// Return memory object (limited to AoS) within capacity.
     template <size_t Columns = sizeof...(Sizes), if_equal<Columns, one> = true>

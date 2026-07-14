@@ -72,6 +72,9 @@ public:
     /// Query interface (columnar).
     /// -----------------------------------------------------------------------
 
+    /// Must hold as remap guard across puts().
+    memory guard() const NOEXCEPT;
+
     /// Column base ptr for batch processing (holds shared lock on body remap).
     template <size_t Column>
     memory get_memory() const NOEXCEPT;
@@ -85,16 +88,17 @@ public:
     template <size_t Column, typename Element>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
-    /// Put previously allocated element to column at link.
+    /// Put previously allocated element to column at link (guard required).
     template <size_t Column, typename Element>
     bool put(const Link& link, const Element& element) NOEXCEPT;
-    template <size_t Column, typename Element>
-    bool put(const memory& ptr, const Element& element) NOEXCEPT;
 
 protected:
     using head = database::nohead<link>;
     using body = database::managers<link, system::data_array<zero>,
         Columns::width...>;
+
+    template <size_t Column, typename Element>
+    bool put(memory::iterator it, const Element& element) NOEXCEPT;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).

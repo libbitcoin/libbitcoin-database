@@ -275,6 +275,12 @@ public:
         return get(offset);
     }
 
+    memory::iterator get_at_raw(size_t column,
+        size_t offset=zero) const NOEXCEPT override
+    {
+        return std::next(at(column).data(), offset);
+    }
+
     memory_ptr get(size_t offset=zero) const NOEXCEPT override
     {
         return get_at(zero, offset);

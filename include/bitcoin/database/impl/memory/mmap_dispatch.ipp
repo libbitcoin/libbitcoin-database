@@ -94,6 +94,16 @@ memory_ptr CLASS::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
 }
 
 TEMPLATE
+memory::iterator CLASS::get_at_raw(size_t column, size_t offset) const NOEXCEPT
+{
+    // get_raw not used for variably-sized heads, so should always be bounded.
+    BC_ASSERT(offset < (size() * widths.at(column)));
+
+    // Pointer otherwise unguarded, not remap safe (use for nopmaps columns).
+    return std::next(memory_map_.at(column), offset);
+}
+
+TEMPLATE
 memory_ptr CLASS::get(size_t offset) const NOEXCEPT
 {
     return get_at(zero, offset);

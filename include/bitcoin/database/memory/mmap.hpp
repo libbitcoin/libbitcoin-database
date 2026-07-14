@@ -137,6 +137,10 @@ public:
     /// Unprotected r/w access to start/offset (or null), within logical.
     memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override;
 
+    /// Unprotected r/w access to start/offset (or null), within logical.
+    memory::iterator get_at_raw(size_t column,
+        size_t offset=zero) const NOEXCEPT override;
+
     /// Remap-protected r/w access to offset (or null) allocated to size.
     memory_ptr set(size_t offset, size_t size,
         uint8_t backfill) NOEXCEPT override;
