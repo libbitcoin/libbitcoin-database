@@ -128,9 +128,9 @@ bool CLASS::reserve(const Link& size) NOEXCEPT
 }
 
 TEMPLATE
-memory_ptr CLASS::get_memory() const NOEXCEPT
+memory CLASS::get_memory() const NOEXCEPT
 {
-    return manager_.get();
+    return manager_.get1();
 }
 
 // error condition
@@ -160,8 +160,7 @@ code CLASS::reload() NOEXCEPT
 // static
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::get(const memory_ptr& ptr, const Link& link,
-    Element& element) NOEXCEPT
+bool CLASS::get(const memory& ptr, const Link& link, Element& element) NOEXCEPT
 {
     using namespace system;
     if (!ptr || link.is_terminal())
@@ -171,12 +170,12 @@ bool CLASS::get(const memory_ptr& ptr, const Link& link,
     if (is_limited<ptrdiff_t>(start))
         return false;
 
-    const auto size = ptr->size();
+    const auto size = ptr.size();
     const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
-    const auto offset = ptr->offset(start);
+    const auto offset = ptr.offset(start);
     if (is_null(offset))
         return false;
 
@@ -211,32 +210,13 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
     using namespace system;
-    const auto ptr = manager_.get(link);
+    const auto ptr = manager_.get1(link);
     return put(ptr, element);
 }
 
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(const memory_ptr& ptr, const Element& element) NOEXCEPT
-{
-    using namespace system;
-    if (!ptr)
-        return false;
-
-    iostream stream{ *ptr };
-    flipper sink{ stream };
-
-    if constexpr (!is_slab)
-    {
-        BC_DEBUG_ONLY(sink.set_limit(Size * element.count());)
-    }
-
-    return element.to_data(sink);
-}
-
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-bool CLASS::put(memory&& ptr, const Element& element) NOEXCEPT
+bool CLASS::put(const memory& ptr, const Element& element) NOEXCEPT
 {
     using namespace system;
     if (!ptr)

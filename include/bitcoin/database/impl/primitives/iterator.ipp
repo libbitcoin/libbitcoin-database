@@ -28,14 +28,14 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::iterator(memory_ptr&& data, const Link& start, Key&& key) NOEXCEPT
+CLASS::iterator(memory&& data, const Link& start, Key&& key) NOEXCEPT
   : memory_(std::move(data)), key_(std::forward<Key>(key)),
     link_(to_first(start))
 {
 }
 
 TEMPLATE
-CLASS::iterator(memory_ptr&& data, const Link& start, const Key& key) NOEXCEPT
+CLASS::iterator(memory&& data, const Link& start, const Key& key) NOEXCEPT
   : memory_(std::move(data)), key_(key), link_(to_first(start))
 {
 }
@@ -59,7 +59,7 @@ inline const Link& CLASS::get() const NOEXCEPT
 }
 
 TEMPLATE
-inline const memory_ptr& CLASS::ptr() const NOEXCEPT
+inline const memory& CLASS::ptr() const NOEXCEPT
 {
     return memory_;
 }
@@ -99,13 +99,13 @@ inline CLASS& CLASS::operator++() NOEXCEPT
     return *this;
 }
 
-TEMPLATE
-inline CLASS CLASS::operator++(int) NOEXCEPT
-{
-    auto previous = *this;
-    ++(*this);
-    return previous;
-}
+////TEMPLATE
+////inline CLASS CLASS::operator++(int) NOEXCEPT
+////{
+////    auto previous = *this;
+////    ++(*this);
+////    return previous;
+////}
 
 // protected
 // ----------------------------------------------------------------------------
@@ -120,7 +120,7 @@ Link CLASS::to_first(Link link) const NOEXCEPT
     while (!link.is_terminal())
     {
         // get element offset (fault)
-        const auto offset = memory_->offset(manager::link_to_position(link));
+        const auto offset = memory_.offset(manager::link_to_position(link));
         if (is_null(offset))
             return Link::terminal;
 
@@ -142,7 +142,7 @@ Link CLASS::to_next(Link link) const NOEXCEPT
     while (!link.is_terminal())
     {
         // get element offset (fault)
-        auto offset = memory_->offset(manager::link_to_position(link));
+        auto offset = memory_.offset(manager::link_to_position(link));
         if (is_null(offset))
             return Link::terminal;
 
@@ -152,7 +152,7 @@ Link CLASS::to_next(Link link) const NOEXCEPT
             return link;
 
         // get next element offset (fault)
-        offset = memory_->offset(manager::link_to_position(link));
+        offset = memory_.offset(manager::link_to_position(link));
         if (is_null(offset))
             return Link::terminal;
 

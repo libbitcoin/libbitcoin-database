@@ -86,7 +86,7 @@ public:
     bool reserve(const Link& size) NOEXCEPT;
 
     /// Return ptr for batch processing, holds shared lock on storage remap.
-    memory_ptr get_memory() const NOEXCEPT;
+    memory get_memory() const NOEXCEPT;
 
     /// Errors.
     /// -----------------------------------------------------------------------
@@ -105,7 +105,7 @@ public:
 
     /// Get element at link using get_memory() ptr, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
-    static bool get(const memory_ptr& ptr, const Link& link,
+    static bool get(const memory& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
     /// Get element at link.
@@ -120,10 +120,7 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const Link& link, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool put(const memory_ptr& ptr, const Element& element) NOEXCEPT;
-
-    template <typename Element, if_equal<Element::size, Size> = true>
-    bool put(memory&& ptr, const Element& element) NOEXCEPT;
+    bool put(const memory& ptr, const Element& element) NOEXCEPT;
 
     /// Put element and return link.
     template <typename Element, if_equal<Element::size, Size> = true>

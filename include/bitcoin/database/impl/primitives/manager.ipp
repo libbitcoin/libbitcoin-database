@@ -26,46 +26,12 @@ namespace database {
 
 TEMPLATE
 template <size_t Column>
-inline memory_ptr CLASS::get() const NOEXCEPT
-{
-    if constexpr (is_one(columns))
-        return files_.get();
-    else
-    {
-        auto out = files_.get_at1(Column);
-        if (!out) return {};
-        return std::make_shared<accessor>(std::move(out));
-    }
-}
-
-TEMPLATE
-template <size_t Column>
 inline memory CLASS::get1() const NOEXCEPT
 {
     if constexpr (is_one(columns))
         return files_.get1();
     else
         return files_.get_at1(Column);
-}
-
-TEMPLATE
-template <size_t Column>
-inline memory_ptr CLASS::get(const Link& link) const NOEXCEPT
-{
-    if (link.is_terminal())
-        return {};
-
-    const auto position = link_to_position<Column>(link);
-
-    // memory.size() may be negative (stream treats as exhausted).
-    if constexpr (is_one(columns))
-        return files_.get(position);
-    else
-    {
-        auto out = files_.get_at1(Column, position);
-        if (!out) return {};
-        return std::make_shared<accessor>(std::move(out));
-    }
 }
 
 TEMPLATE

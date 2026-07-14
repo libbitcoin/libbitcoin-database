@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(mmap__load__shared__load_locked)
     map instance(file);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
-    auto memory = instance.get(instance.allocate(1));
+    auto memory = instance.get1(instance.allocate(1));
 
     BOOST_REQUIRE(memory);
     BOOST_REQUIRE_EQUAL(instance.load(), error::load_locked);
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_capacity)
     auto memory = instance.get_filled(offset, size, fill);
     BOOST_REQUIRE(memory);
 
-    const auto expected = std::next(instance.get()->data(), offset);
+    const auto expected = std::next(instance.get1().data(), offset);
     BOOST_REQUIRE(memory.data() == expected);
 
     constexpr auto capacity = offset + size + to_half(offset + size);
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
     BOOST_REQUIRE_EQUAL(capacity, 12u);
 
-    auto data = instance.get()->data();
+    auto data = instance.get1().data();
     ////BOOST_REQUIRE_EQUAL(data[ 0], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 1], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 2], 0x00_u8); // cannot assume mmap default fill
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
     data[19] = 'h';
 
     // Get data again in case it has been remapped by get_filled().
-    data = instance.get()->data();
+    data = instance.get1().data();
     ////BOOST_REQUIRE_EQUAL(data[ 0], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 1], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 2], 0x00_u8); // cannot assume mmap default fill
@@ -652,7 +652,7 @@ BOOST_AUTO_TEST_CASE(mmap__get__unloaded__false)
 
     map instance(file);
     BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.get());
+    BOOST_REQUIRE(!instance.get1());
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -665,7 +665,7 @@ BOOST_AUTO_TEST_CASE(mmap__get__loaded__success)
     map instance(file);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.get(instance.allocate(1)));
+    BOOST_REQUIRE(instance.get1(instance.allocate(1)));
     BOOST_REQUIRE(!instance.unload());
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
@@ -681,9 +681,9 @@ BOOST_AUTO_TEST_CASE(mmap__get__size__expected)
     BOOST_REQUIRE(!instance.load());
 
     constexpr auto expected = 42u;
-    auto ptr = instance.get(instance.allocate(expected));
-    BOOST_CHECK_EQUAL(ptr->size(), expected);
-    BOOST_CHECK_EQUAL(*ptr->begin(), 0x00u);
+    auto ptr = instance.get1(instance.allocate(expected));
+    BOOST_CHECK_EQUAL(ptr.size(), expected);
+    BOOST_CHECK_EQUAL(*ptr.begin(), 0x00u);
     BOOST_REQUIRE(instance.unload());
 
     ptr.reset();
@@ -770,16 +770,16 @@ BOOST_AUTO_TEST_CASE(mmap__write__read__expected)
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
-    auto memory = instance.get(instance.allocate(sizeof(uint64_t)));
+    auto memory = instance.get1(instance.allocate(sizeof(uint64_t)));
     BOOST_REQUIRE(memory);
 
-    system::unsafe_to_little_endian<uint64_t>(memory->begin(), expected);
+    system::unsafe_to_little_endian<uint64_t>(memory.begin(), expected);
     memory.reset();
     BOOST_REQUIRE(!instance.flush());
 
-    memory = instance.get();
+    memory = instance.get1();
     BOOST_REQUIRE(memory);
-    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->begin()), expected);
+    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory.begin()), expected);
 
     memory.reset();
     BOOST_REQUIRE(!instance.unload());
@@ -796,7 +796,7 @@ BOOST_AUTO_TEST_CASE(mmap__unload__shared__unload_locked)
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
-    auto memory = instance.get(instance.allocate(1));
+    auto memory = instance.get1(instance.allocate(1));
     BOOST_REQUIRE(memory);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::unload_locked);
 

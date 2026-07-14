@@ -103,14 +103,6 @@ memory::iterator CLASS::get_at_raw(size_t column, size_t offset) const NOEXCEPT
 }
 
 TEMPLATE
-memory_ptr CLASS::get(size_t offset) const NOEXCEPT
-{
-    auto out = get_at1(zero, offset);
-    if (!out) return {};
-    return std::make_shared<accessor>(std::move(out));
-}
-
-TEMPLATE
 memory CLASS::get1(size_t offset) const NOEXCEPT
 {
     return get_at1(zero, offset);

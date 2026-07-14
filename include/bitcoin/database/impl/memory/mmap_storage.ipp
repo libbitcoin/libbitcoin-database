@@ -255,11 +255,11 @@ TEMPLATE
 code CLASS::dump(const std::filesystem::path& path) const NOEXCEPT
 {
     BC_ASSERT(is_one(columns));
-    const auto ptr = get();
+    const auto ptr = get1();
     if (!ptr)
         return error::unloaded_file;
 
-    return file::create_file_ex(path, ptr->begin(), ptr->size());
+    return file::create_file_ex(path, ptr.begin(), ptr.size());
 }
 
 // ----------------------------------------------------------------------------

@@ -33,7 +33,6 @@ public:
     typedef uint8_t value_type;
     typedef value_type* iterator;
     typedef const value_type* const_iterator;
-    typedef std::shared_ptr<accessor> ptr;
 
     DELETE_COPY(accessor);
     DEFAULT_MOVE(accessor);
@@ -127,7 +126,6 @@ private:
 };
 
 using memory = accessor;
-using memory_ptr = accessor::ptr;
 
 } // namespace database
 } // namespace libbitcoin

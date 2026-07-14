@@ -174,12 +174,12 @@ TEMPLATE
 ELEMENT_CONSTRAINT
 inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
-    const auto ptr = body_.get(link);
+    const auto ptr = body_.get1(link);
     if (!ptr)
         return false;
 
     using namespace system;
-    iostream stream{ *ptr };
+    iostream stream{ ptr };
     reader source{ stream };
 
     if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());) }
@@ -195,13 +195,13 @@ bool CLASS::put(size_t key, const Element& element) NOEXCEPT
         return false;
 
     const auto link = body_.allocate(element.count());
-    const auto ptr = body_.get(link);
+    const auto ptr = body_.get1(link);
     if (!ptr)
         return false;
 
     // iostream.flush is a nop (direct copy).
     using namespace system;
-    iostream stream{ *ptr };
+    iostream stream{ ptr };
     finalizer sink{ stream };
 
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }

@@ -27,8 +27,8 @@
 namespace libbitcoin {
 namespace database {
 
-/// THIS HOLDS A memory_ptr WHICH HOLDS A SHARED REMAP LOCK. IT SHOULD NOT BE
-/// HELD WHILE THE HOLDING CODE EXECUTES READS AGAINST THE SAME TABLE.
+/// THIS HOLDS A memory object WHICH HOLDS A SHARED REMAP LOCK. IT SHOULD NOT
+///  BE HELD WHILE THE HOLDING CODE EXECUTES READS AGAINST THE SAME TABLE.
 /// OTHERWISE A DEADLOCK WILL OCCUR WHEN THE TABLE'S FILE IS EXPANDED, WHICH
 /// WAITS ON THE RELEASE OF THE SHARED LOCK (REMAP REQUIRES EXCLUSIVE ACCESS).
 /// THE hashmap.get(const iterator& it, ...) METHOD EXISTS TO PREVENT A CALL TO
@@ -52,8 +52,8 @@ public:
     static constexpr bool end() NOEXCEPT { return false; }
 
     /// This advances to first match (or terminal).
-    iterator(memory_ptr&& data, const Link& start, Key&& key) NOEXCEPT;
-    iterator(memory_ptr&& data, const Link& start, const Key& key) NOEXCEPT;
+    iterator(memory&& data, const Link& start, Key&& key) NOEXCEPT;
+    iterator(memory&& data, const Link& start, const Key& key) NOEXCEPT;
 
     /// Advance to next and return false if none found.
     inline bool advance() NOEXCEPT;
@@ -64,10 +64,10 @@ public:
     /// Return current link, terminal if not found.
     inline const Link& get() const NOEXCEPT;
 
-    /// Access the underlying memory pointer.
-    inline const memory_ptr& ptr() const NOEXCEPT;
+    /// Access the underlying memory reference.
+    inline const memory& ptr() const NOEXCEPT;
 
-    /// Release the memory pointer, invalidates iterator.
+    /// Release the memory reference, invalidates iterator.
     inline void reset() NOEXCEPT;
 
     /// True if the iterator is not terminal.
@@ -81,7 +81,7 @@ public:
 
     /// Increment operators.
     inline self& operator++() NOEXCEPT;
-    inline self operator++(int) NOEXCEPT;
+    ////inline self operator++(int) NOEXCEPT;
 
 protected:
     Link to_first(Link link) const NOEXCEPT;
@@ -94,7 +94,7 @@ private:
     // This is not thread safe, but it's object is not modified here and the
     // memory that it refers to is not addressable until written, and writes
     // are guarded by allocator, which is protected by mutex.
-    memory_ptr memory_;
+    memory memory_;
 
     // This is thread safe.
     const Key key_;

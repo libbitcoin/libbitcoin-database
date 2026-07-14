@@ -63,7 +63,7 @@ inline Link CLASS::index(size_t key) const NOEXCEPT
 TEMPLATE
 bool CLASS::clear() NOEXCEPT
 {
-    const auto ptr = file_.get();
+    const auto ptr = file_.get1();
     if (!ptr)
         return false;
 
@@ -71,7 +71,7 @@ bool CLASS::clear() NOEXCEPT
     // count to zero, which is picked up in arraymap::reset(). Body file size
     // remains unchanged and subject to initialization size at each startup. So
     // there is no reduction until restart, which can include config change.
-    std::fill_n(ptr->data(), size(), system::bit_all<uint8_t>);
+    std::fill_n(ptr.data(), size(), system::bit_all<uint8_t>);
     return set_body_count(zero);
 }
 
@@ -98,28 +98,28 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 bool CLASS::get_body_count(Link& count) const NOEXCEPT
 {
-    const auto ptr = file_.get();
+    const auto ptr = file_.get1();
     if (!ptr || Link::size > size())
         return false;
 
     // Body count is written as the first value in link size, but since
     // offsetting is a multiple of cell size, a full cell is consumed for it.
     // In case of nomap or disabled there are no cells, so file is link size.
-    count = to_array<Link::size>(ptr->data());
+    count = to_array<Link::size>(ptr.data());
     return true;
 }
 
 TEMPLATE
 bool CLASS::set_body_count(const Link& count) NOEXCEPT
 {
-    const auto ptr = file_.get();
+    const auto ptr = file_.get1();
     if (!ptr || Link::size > size())
         return false;
 
     // Body count is written as the first value in link size, but since
     // offsetting is a multiple of cell size, a full cell is consumed for it.
     // In case of nomap or disabled there are no cells, so file is link size.
-    to_array<Link::size>(ptr->data()) = count;
+    to_array<Link::size>(ptr.data()) = count;
     return true;
 }
 
@@ -137,14 +137,14 @@ Link CLASS::at(size_t key) const NOEXCEPT
     if (position >= size())
         return {};
 
-    const auto ptr = file_.get(position);
-    if (is_null(ptr))
+    const auto ptr = file_.get1(position);
+    if (!ptr)
         return {};
 
     if constexpr (aligned)
     {
         // Reads full padded word.
-        const auto raw = ptr->data();
+        const auto raw = ptr.data();
         const auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
 
         // Aligned values must be masked to match terminal.
@@ -152,7 +152,7 @@ Link CLASS::at(size_t key) const NOEXCEPT
     }
     else
     {
-        const auto& head = to_array<bucket_size>(ptr->data());
+        const auto& head = to_array<bucket_size>(ptr.data());
         mutex_.lock_shared();
         const auto top = head;
         mutex_.unlock_shared();

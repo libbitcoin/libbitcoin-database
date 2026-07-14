@@ -48,9 +48,9 @@ class nullptr_storage
 public:
     using chunk_storages<one>::chunk_storages;
 
-    memory_ptr get(size_t size) const NOEXCEPT override
+    memory get1(size_t size) const NOEXCEPT override
     {
-        return is_zero(size) ? chunk_storages<one>::get(size) : nullptr;
+        return is_zero(size) ? chunk_storages<one>::get1(size) : memory{};
     }
 };
 

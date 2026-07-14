@@ -281,11 +281,6 @@ public:
         return std::next(at(column).data(), offset);
     }
 
-    memory_ptr get(size_t offset=zero) const NOEXCEPT override
-    {
-        return std::make_shared<memory>(get1(offset));
-    }
-
     memory get1(size_t offset=zero) const NOEXCEPT override
     {
         return get_at1(zero, offset);

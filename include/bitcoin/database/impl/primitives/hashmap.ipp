@@ -165,7 +165,7 @@ inline Link CLASS::top(const Link& link) const NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::exists(const memory_ptr& ptr, const Key& key) const NOEXCEPT
+inline bool CLASS::exists(const memory& ptr, const Key& key) const NOEXCEPT
 {
     return !first(ptr, key).is_terminal();
 }
@@ -177,7 +177,7 @@ inline bool CLASS::exists(const Key& key) const NOEXCEPT
 }
 
 TEMPLATE
-inline Link CLASS::first(const memory_ptr& ptr, const Key& key) const NOEXCEPT
+inline Link CLASS::first(const memory& ptr, const Key& key) const NOEXCEPT
 {
     return first(ptr, head_.top(key), key);
 }
@@ -208,20 +208,20 @@ inline Link CLASS::allocate(const Link& size) NOEXCEPT
 }
 
 TEMPLATE
-inline memory_ptr CLASS::get_memory() const NOEXCEPT
+inline memory CLASS::get_memory() const NOEXCEPT
 {
-    return body_.get();
+    return body_.get1();
 }
 
 TEMPLATE
 Key CLASS::get_key(const Link& link) NOEXCEPT
 {
     using namespace system;
-    const auto ptr = body_.get(link);
-    if (!ptr || is_lesser(ptr->size(), index_size))
+    const auto ptr = body_.get1(link);
+    if (!ptr || is_lesser(ptr.size(), index_size))
         return {};
 
-    return unsafe_array_cast<uint8_t, key_size>(std::next(ptr->begin(),
+    return unsafe_array_cast<uint8_t, key_size>(std::next(ptr.begin(),
         Link::size));
 }
 
@@ -236,7 +236,7 @@ TEMPLATE
 ELEMENT_CONSTRAINT
 inline Link CLASS::find_link(const Key& key, Element& element) const NOEXCEPT
 {
-    // This override avoids duplicated memory_ptr construct in get(first()).
+    // This override avoids duplicated memory construct in get(first()).
     const auto ptr = get_memory();
     const auto link = first(ptr, head_.top(key), key);
     if (link.is_terminal())
@@ -256,7 +256,7 @@ inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 // static
 TEMPLATE
 ELEMENT_CONSTRAINT
-inline bool CLASS::get(const memory_ptr& ptr, const Link& link,
+inline bool CLASS::get(const memory& ptr, const Link& link,
     Element& element) NOEXCEPT
 {
     return read(ptr, link, element);
@@ -284,7 +284,7 @@ inline bool CLASS::get(const iterator& it, const Link& link,
 // static
 TEMPLATE
 ELEMENT_CONSTRAINT
-bool CLASS::set(const memory_ptr& ptr, const Link& link, const Key& key,
+bool CLASS::set(const memory& ptr, const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
     using namespace system;
@@ -295,13 +295,13 @@ bool CLASS::set(const memory_ptr& ptr, const Link& link, const Key& key,
     if (is_limited<ptrdiff_t>(start))
         return false;
 
-    const auto size = ptr->size();
+    const auto size = ptr.size();
     const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
     // Stream starts at record and the index is skipped for reader convenience.
-    const auto offset = ptr->offset(start);
+    const auto offset = ptr.offset(start);
     if (is_null(offset))
         return false;
 
@@ -383,7 +383,7 @@ inline bool CLASS::put(const Link& link, const Key& key,
 
 TEMPLATE
 ELEMENT_CONSTRAINT
-inline bool CLASS::put(const memory_ptr& ptr, const Link& link, const Key& key,
+inline bool CLASS::put(const memory& ptr, const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
     return write(ptr, link, key, element);
@@ -391,7 +391,7 @@ inline bool CLASS::put(const memory_ptr& ptr, const Link& link, const Key& key,
 
 TEMPLATE
 ELEMENT_CONSTRAINT
-inline bool CLASS::put(bool& duplicate, const memory_ptr& ptr,
+inline bool CLASS::put(bool& duplicate, const memory& ptr,
     const Link& link, const Key& key, const Element& element) NOEXCEPT
 {
     Link previous{};
@@ -429,7 +429,7 @@ inline bool CLASS::commit(const Link& link, const Key& key) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::commit(const memory_ptr& ptr, const Link& link,
+bool CLASS::commit(const memory& ptr, const Link& link,
     const Key& key) NOEXCEPT
 {
     using namespace system;
@@ -437,7 +437,7 @@ bool CLASS::commit(const memory_ptr& ptr, const Link& link,
         return false;
 
     // get element offset (fault)
-    const auto offset = ptr->offset(body::link_to_position(link));
+    const auto offset = ptr.offset(body::link_to_position(link));
     if (is_null(offset))
         return false;
 
@@ -451,8 +451,7 @@ bool CLASS::commit(const memory_ptr& ptr, const Link& link,
 
 // static
 TEMPLATE
-Link CLASS::first(const memory_ptr& ptr, const Link& link,
-    const Key& key) NOEXCEPT
+Link CLASS::first(const memory& ptr, const Link& link, const Key& key) NOEXCEPT
 {
     using namespace system;
     if (!ptr)
@@ -462,7 +461,7 @@ Link CLASS::first(const memory_ptr& ptr, const Link& link,
     while (!next.is_terminal())
     {
         // get element offset (fault)
-        const auto offset = ptr->offset(body::link_to_position(next));
+        const auto offset = ptr.offset(body::link_to_position(next));
         if (is_null(offset))
             return {};
 
@@ -481,8 +480,7 @@ Link CLASS::first(const memory_ptr& ptr, const Link& link,
 // static
 TEMPLATE
 ELEMENT_CONSTRAINT
-bool CLASS::read(const memory_ptr& ptr, const Link& link,
-    Element& element) NOEXCEPT
+bool CLASS::read(const memory& ptr, const Link& link, Element& element) NOEXCEPT
 {
     using namespace system;
     if (!ptr || link.is_terminal())
@@ -492,12 +490,12 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
     if (is_limited<ptrdiff_t>(start))
         return false;
 
-    const auto size = ptr->size();
+    const auto size = ptr.size();
     const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
-    const auto offset = ptr->offset(start);
+    const auto offset = ptr.offset(start);
     if (is_null(offset))
         return false;
 
@@ -512,7 +510,7 @@ bool CLASS::read(const memory_ptr& ptr, const Link& link,
 
 TEMPLATE
 ELEMENT_CONSTRAINT
-bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
+bool CLASS::write(const memory& ptr, const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
     Link unused{};
@@ -521,7 +519,7 @@ bool CLASS::write(const memory_ptr& ptr, const Link& link, const Key& key,
 
 TEMPLATE
 ELEMENT_CONSTRAINT
-bool CLASS::write(Link& previous, const memory_ptr& ptr, const Link& link,
+bool CLASS::write(Link& previous, const memory& ptr, const Link& link,
     const Key& key, const Element& element) NOEXCEPT
 {
     using namespace system;
@@ -532,12 +530,12 @@ bool CLASS::write(Link& previous, const memory_ptr& ptr, const Link& link,
     if (is_limited<ptrdiff_t>(start))
         return false;
 
-    const auto size = ptr->size();
+    const auto size = ptr.size();
     const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
-    const auto offset = ptr->offset(start);
+    const auto offset = ptr.offset(start);
     if (is_null(offset))
         return false;
 

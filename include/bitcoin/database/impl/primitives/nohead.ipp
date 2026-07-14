@@ -55,7 +55,7 @@ bool CLASS::enabled() const NOEXCEPT
 TEMPLATE
 bool CLASS::clear() NOEXCEPT
 {
-    const auto ptr = file_.get();
+    const auto ptr = file_.get1();
     if (!ptr)
         return false;
 
@@ -63,7 +63,7 @@ bool CLASS::clear() NOEXCEPT
     // count to zero, which is picked up in arraymap::reset(). Body file size
     // remains unchanged and subject to initialization size at each startup. So
     // there is no reduction until restart, which can include config change.
-    std::fill_n(ptr->data(), size(), system::bit_all<uint8_t>);
+    std::fill_n(ptr.data(), size(), system::bit_all<uint8_t>);
     return set_body_count(zero);
 }
 
@@ -90,28 +90,28 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 bool CLASS::get_body_count(Link& count) const NOEXCEPT
 {
-    const auto ptr = file_.get();
+    const auto ptr = file_.get1();
     if (!ptr || Link::size > size())
         return false;
 
     // Body count is written as the first value in link size, but since
     // offsetting is a multiple of cell size, a full cell is consumed for it.
     // In case of nomap or disabled there are no cells, so file is link size.
-    count = to_array<Link::size>(ptr->data());
+    count = to_array<Link::size>(ptr.data());
     return true;
 }
 
 TEMPLATE
 bool CLASS::set_body_count(const Link& count) NOEXCEPT
 {
-    const auto ptr = file_.get();
+    const auto ptr = file_.get1();
     if (!ptr || Link::size > size())
         return false;
 
     // Body count is written as the first value in link size, but since
     // offsetting is a multiple of cell size, a full cell is consumed for it.
     // In case of nomap or disabled there are no cells, so file is link size.
-    to_array<Link::size>(ptr->data()) = count;
+    to_array<Link::size>(ptr.data()) = count;
     return true;
 }
 
