@@ -259,7 +259,7 @@ code CLASS::dump(const std::filesystem::path& path) const NOEXCEPT
     if (!ptr)
         return error::unloaded_file;
 
-    return file::create_file_ex(path, ptr->begin(), ptr->size());
+    return file::create_file_ex(path, ptr.begin(), ptr.size());
 }
 
 // ----------------------------------------------------------------------------

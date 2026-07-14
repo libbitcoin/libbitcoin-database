@@ -22,7 +22,7 @@
 #include <atomic>
 #include <shared_mutex>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/primitives/body.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -70,7 +70,7 @@ public:
 
 private:
     using link = Link::integer;
-    using body = manager<Link, system::data_array<zero>, Link::size>;
+    using body = database::body<Link, system::data_array<zero>, Link::size>;
     static_assert(std::atomic<link>::is_always_lock_free);
     static_assert(is_nonzero(Link::size));
     static constexpr auto bucket_size = Align ? sizeof(link) : Link::size;

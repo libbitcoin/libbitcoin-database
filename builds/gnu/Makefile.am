@@ -102,12 +102,12 @@ include_bitcoin_database_impl_primitivesdir = \
 include_bitcoin_database_impl_primitives_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/arrayhead.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/arraymap.ipp \
+    ${srcdir}/../../include/bitcoin/database/impl/primitives/body.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/hashhead.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/hashmap.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/iterator.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/keys.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/linkage.ipp \
-    ${srcdir}/../../include/bitcoin/database/impl/primitives/manager.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/nohead.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/nomap.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/nomaps.ipp
@@ -238,13 +238,13 @@ include_bitcoin_database_primitivesdir = \
 include_bitcoin_database_primitives_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/primitives/arrayhead.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/arraymap.hpp \
+    ${srcdir}/../../include/bitcoin/database/primitives/body.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/column.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/hashhead.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/hashmap.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/iterator.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/keys.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/linkage.hpp \
-    ${srcdir}/../../include/bitcoin/database/primitives/manager.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/nohead.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/nomap.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/nomaps.hpp \
@@ -361,12 +361,12 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/mocks/blocks.cpp \
     ${srcdir}/../../test/primitives/arrayhead.cpp \
     ${srcdir}/../../test/primitives/arraymap.cpp \
+    ${srcdir}/../../test/primitives/body.cpp \
     ${srcdir}/../../test/primitives/hashhead.cpp \
     ${srcdir}/../../test/primitives/hashmap.cpp \
     ${srcdir}/../../test/primitives/iterator.cpp \
     ${srcdir}/../../test/primitives/keys.cpp \
     ${srcdir}/../../test/primitives/linkage.cpp \
-    ${srcdir}/../../test/primitives/manager.cpp \
     ${srcdir}/../../test/primitives/nohead.cpp \
     ${srcdir}/../../test/primitives/nomap.cpp \
     ${srcdir}/../../test/query/amounts.cpp \

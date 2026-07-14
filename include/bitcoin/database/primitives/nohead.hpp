@@ -21,7 +21,7 @@
 
 #include <atomic>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/primitives/body.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -60,7 +60,7 @@ public:
 
 private:
     using link = Link::integer;
-    using body = manager<Link, system::data_array<zero>, Link::size>;
+    using body = database::body<Link, system::data_array<zero>, Link::size>;
     static constexpr auto bucket_size = Link::size;
     static_assert(is_nonzero(bucket_size));
 

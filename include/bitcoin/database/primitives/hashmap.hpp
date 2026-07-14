@@ -26,7 +26,7 @@
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/primitives/body.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -109,11 +109,11 @@ public:
     inline Link top(const Link& list) const NOEXCEPT;
 
     /// True if an instance of object with key exists.
-    inline bool exists(const memory_ptr& ptr, const Key& key) const NOEXCEPT;
+    inline bool exists(const memory& ptr, const Key& key) const NOEXCEPT;
     inline bool exists(const Key& key) const NOEXCEPT;
 
     /// Return first element link or terminal if not found/error.
-    inline Link first(const memory_ptr& ptr, const Key& key) const NOEXCEPT;
+    inline Link first(const memory& ptr, const Key& key) const NOEXCEPT;
     inline Link first(const Key& key) const NOEXCEPT;
 
     /// Iterator holds shared lock on storage remap.
@@ -124,7 +124,7 @@ public:
     inline Link allocate(const Link& size) NOEXCEPT;
 
     /// Return ptr for batch processing, holds shared lock on storage remap.
-    inline memory_ptr get_memory() const NOEXCEPT;
+    inline memory get_memory() const NOEXCEPT;
 
     /// Return the associated search key (terminal link returns default).
     Key get_key(const Link& link) NOEXCEPT;
@@ -143,7 +143,7 @@ public:
 
     /// Get element at link using get_memory() ptr, false if deserialize error.
     template <typename Element, if_equal<Element::size, RowSize> = true>
-    static inline bool get(const memory_ptr& ptr, const Link& link,
+    static inline bool get(const memory& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
     /// Get element at link, false if deserialize error.
@@ -158,7 +158,7 @@ public:
 
     /// Set element into previously allocated link (follow with commit).
     template <typename Element, if_equal<Element::size, RowSize> = true>
-    static bool set(const memory_ptr& ptr, const Link& link, const Key& key,
+    static bool set(const memory& ptr, const Link& link, const Key& key,
         const Element& element) NOEXCEPT;
 
     /// Set element into previously allocated link (follow with commit).
@@ -190,39 +190,38 @@ public:
 
     /// Set/commit allocated element at link to key, using get_memory() ptr.
     template <typename Element, if_equal<Element::size, RowSize> = true>
-    inline bool put(const memory_ptr& ptr, const Link& link,
+    inline bool put(const memory& ptr, const Link& link,
         const Key& key, const Element& element) NOEXCEPT;
 
     /// Set/commit allocated element at link to key, using get_memory() ptr.
     template <typename Element, if_equal<Element::size, RowSize> = true>
-    inline bool put(bool& duplicate, const memory_ptr& ptr,
-        const Link& link, const Key& key, const Element& element) NOEXCEPT;
+    inline bool put(bool& duplicate, const memory& ptr, const Link& link,
+        const Key& key, const Element& element) NOEXCEPT;
 
     /// Commit previously set element at link to key.
     inline Link commit_link(const Link& link, const Key& key) NOEXCEPT;
     inline bool commit(const Link& link, const Key& key) NOEXCEPT;
-    bool commit(const memory_ptr& ptr, const Link& link,
-        const Key& key) NOEXCEPT;
+    bool commit(const memory& ptr, const Link& link, const Key& key) NOEXCEPT;
 
 protected:
-    /// memory_ptr parameter must be from start (i.e. from get_memory()).
+    /// memory parameter must be from start (i.e. from get_memory()).
     /// Get first element matching key, from top link and whole table memory.
-    static Link first(const memory_ptr& ptr, const Link& link,
+    static Link first(const memory& ptr, const Link& link,
         const Key& key) NOEXCEPT;
 
-    /// memory_ptr parameter must be from start (i.e. from get_memory()).
+    /// memory parameter must be from start (i.e. from get_memory()).
     /// Get element at link using memory object, false if deserialize error.
     template <typename Element, if_equal<Element::size, RowSize> = true>
-    static bool read(const memory_ptr& ptr, const Link& link,
+    static bool read(const memory& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
-    /// memory_ptr parameter must be from start (i.e. from get_memory()).
+    /// memory parameter must be from start (i.e. from get_memory()).
     /// Set and commit previously allocated element at link to key.
     template <typename Element, if_equal<Element::size, RowSize> = true>
-    bool write(const memory_ptr& ptr, const Link& link,
-        const Key& key, const Element& element) NOEXCEPT;
+    bool write(const memory& ptr, const Link& link, const Key& key,
+        const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, RowSize> = true>
-    bool write(Link& previous, const memory_ptr& ptr, const Link& link,
+    bool write(Link& previous, const memory& ptr, const Link& link,
         const Key& key, const Element& element) NOEXCEPT;
 
 private:
@@ -230,7 +229,7 @@ private:
     static constexpr auto key_size = keys::size<Key>();
     static constexpr auto index_size = Link::size + key_size;
     using head = database::hashhead<Link, Key, CellSize>;
-    using body = database::manager<Link, Key, RowSize>;
+    using body = database::body<Link, Key, RowSize>;
 
     // Thread safe (index/top/push).
     // Not thread safe (create/open/close/backup/restore).

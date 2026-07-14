@@ -37,17 +37,18 @@ static_assert(buckets == 0u);
 using link = linkage<link_size>;
 using test_header = nohead<link>;
 
-class nullptr_storage
-  : public test::chunk_storages<one>
-{
-public:
-    using chunk_storages<one>::chunk_storages;
-
-    memory_ptr get(size_t size) const NOEXCEPT override
-    {
-        return is_zero(size) ? chunk_storages<one>::get(size) : nullptr;
-    }
-};
+// TODO: see hashhead.
+////class nullptr_storage
+////  : public test::chunk_storages<one>
+////{
+////public:
+////    using chunk_storages<one>::chunk_storages;
+////
+////    memory get(size_t size) const NOEXCEPT override
+////    {
+////        return is_zero(size) ? chunk_storages<one>::get(size) : memory{};
+////    }
+////};
 
 BOOST_AUTO_TEST_CASE(nohead__create__size__expected)
 {

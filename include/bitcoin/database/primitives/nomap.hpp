@@ -22,7 +22,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
-#include <bitcoin/database/primitives/manager.hpp>
+#include <bitcoin/database/primitives/body.hpp>
 #include <bitcoin/database/primitives/nohead.hpp>
 
 namespace libbitcoin {
@@ -86,7 +86,7 @@ public:
     bool reserve(const Link& size) NOEXCEPT;
 
     /// Return ptr for batch processing, holds shared lock on storage remap.
-    memory_ptr get_memory() const NOEXCEPT;
+    memory get_memory() const NOEXCEPT;
 
     /// Errors.
     /// -----------------------------------------------------------------------
@@ -105,7 +105,7 @@ public:
 
     /// Get element at link using get_memory() ptr, false if deserialize error.
     template <typename Element, if_equal<Element::size, Size> = true>
-    static bool get(const memory_ptr& ptr, const Link& link,
+    static bool get(const memory& ptr, const Link& link,
         Element& element) NOEXCEPT;
 
     /// Get element at link.
@@ -120,7 +120,7 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const Link& link, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
-    bool put(const memory_ptr& ptr, const Element& element) NOEXCEPT;
+    bool put(const memory& ptr, const Element& element) NOEXCEPT;
 
     /// Put element and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
@@ -135,7 +135,7 @@ public:
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);
-    using manager = database::manager<Link, system::data_array<zero>, Size>;
+    using body = database::body<Link, system::data_array<zero>, Size>;
     using head = database::nohead<Link>;
 
     // Thread safe (index/top/push).
@@ -143,7 +143,7 @@ private:
     head head_;
 
     // Thread safe.
-    manager manager_;
+    body body_;
 };
 
 template <class Schema>

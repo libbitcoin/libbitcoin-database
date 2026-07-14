@@ -34,9 +34,10 @@ namespace database {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-memory_ptr CLASS::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
+memory CLASS::get_filled(size_t offset, size_t size,
+    uint8_t backfill) NOEXCEPT
 {
-    // This is basically allocate(...) for application to a table head.
+    // This is basically allocate(...), backfilled for use with a table head.
     {
         std::unique_lock field_lock(field_mutex_);
 
@@ -70,28 +71,29 @@ memory_ptr CLASS::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
 }
 
 TEMPLATE
-memory_ptr CLASS::get_capacity(size_t offset) const NOEXCEPT
+memory CLASS::get_capacity(size_t offset) const NOEXCEPT
 {
     const auto allocated = to_width<zero>(capacity());
 
-    const auto ptr = std::make_shared<accessor>(remap_mutex_);
-    if (!loaded_ || is_null(ptr))
+    memory out{ remap_mutex_ };
+
+    if (!loaded_)
         return {};
 
     auto data = memory_map_.front();
-    ptr->assign(std::next(data, offset), std::next(data, allocated));
-    return ptr;
+    out.assign(std::next(data, offset), std::next(data, allocated));
+    return out;
 }
 
 TEMPLATE
 memory::iterator CLASS::get_raw(size_t offset) const NOEXCEPT
 {
     // Pointer otherwise unguarded, not remap safe (use for fixed table heads).
-    return get_at_raw(zero, offset);
+    return get_raw_at(zero, offset);
 }
 
 TEMPLATE
-memory::iterator CLASS::get_at_raw(size_t column, size_t offset) const NOEXCEPT
+memory::iterator CLASS::get_raw_at(size_t column, size_t offset) const NOEXCEPT
 {
     // get_raw not used for variably-sized heads, so should always be bounded.
     BC_ASSERT(offset < (size() * widths.at(column)));
@@ -101,41 +103,13 @@ memory::iterator CLASS::get_at_raw(size_t column, size_t offset) const NOEXCEPT
 }
 
 TEMPLATE
-memory_ptr CLASS::get(size_t offset) const NOEXCEPT
+memory CLASS::get(size_t offset) const NOEXCEPT
 {
     return get_at(zero, offset);
 }
 
 TEMPLATE
-memory_ptr CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
-{
-    if (column >= columns)
-        return {};
-
-    // Obtaining size before access prevents mutual mutex wait (deadlock).
-    const auto allocated = size() * widths.at(column);
-
-    // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
-    const auto ptr = std::make_shared<accessor>(remap_mutex_);
-
-    // loaded_ update is precluded by above lock, making this read atomic.
-    if (!loaded_ || is_null(ptr))
-        return {};
-
-    // With offset > size the assignment is negative (stream is exhausted).
-    auto data = memory_map_.at(column);
-    ptr->assign(std::next(data, offset), std::next(data, allocated));
-    return ptr;
-}
-
-TEMPLATE
-memory CLASS::get1(size_t offset) const NOEXCEPT
-{
-    return get_at1(zero, offset);
-}
-
-TEMPLATE
-memory CLASS::get_at1(size_t column, size_t offset) const NOEXCEPT
+memory CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
 {
     if (column >= columns)
         return {};

@@ -65,7 +65,7 @@ private:
     finalization finalize_;
 };
 
-/// A finalizing byte reader/writer that copies data from/to a memory_ptr.
+/// A finalizing byte reader/writer that copies data from/to a memory object.
 using finalizer = finalizer_<>;
 
 BC_POP_WARNING()

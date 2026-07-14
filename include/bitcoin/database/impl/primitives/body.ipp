@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_MANAGER_IPP
-#define LIBBITCOIN_DATABASE_PRIMITIVES_MANAGER_IPP
+#ifndef LIBBITCOIN_DATABASE_PRIMITIVES_BODY_IPP
+#define LIBBITCOIN_DATABASE_PRIMITIVES_BODY_IPP
 
 #include <bitcoin/database/define.hpp>
 
@@ -26,7 +26,7 @@ namespace database {
 
 TEMPLATE
 template <size_t Column>
-inline memory_ptr CLASS::get() const NOEXCEPT
+inline memory CLASS::get() const NOEXCEPT
 {
     if constexpr (is_one(columns))
         return files_.get();
@@ -36,17 +36,7 @@ inline memory_ptr CLASS::get() const NOEXCEPT
 
 TEMPLATE
 template <size_t Column>
-inline memory CLASS::get1() const NOEXCEPT
-{
-    if constexpr (is_one(columns))
-        return files_.get1();
-    else
-        return files_.get_at1(Column);
-}
-
-TEMPLATE
-template <size_t Column>
-inline memory_ptr CLASS::get(const Link& link) const NOEXCEPT
+inline memory CLASS::get(const Link& link) const NOEXCEPT
 {
     if (link.is_terminal())
         return {};
@@ -62,22 +52,6 @@ inline memory_ptr CLASS::get(const Link& link) const NOEXCEPT
 
 TEMPLATE
 template <size_t Column>
-inline memory CLASS::get1(const Link& link) const NOEXCEPT
-{
-    if (link.is_terminal())
-        return {};
-
-    const auto position = link_to_position<Column>(link);
-
-    // memory.size() may be negative (stream treats as exhausted).
-    if constexpr (is_one(columns))
-        return files_.get1(position);
-    else
-        return files_.get_at1(Column, position);
-}
-
-TEMPLATE
-template <size_t Column>
 inline memory::iterator CLASS::get_raw1(const Link& link) const NOEXCEPT
 {
     if (link.is_terminal())
@@ -89,12 +63,12 @@ inline memory::iterator CLASS::get_raw1(const Link& link) const NOEXCEPT
     if constexpr (is_one(columns))
         return files_.get_raw(position);
     else
-        return files_.get_at_raw(Column, position);
+        return files_.get_raw_at(Column, position);
 }
 
 TEMPLATE
 template <size_t Columns, if_equal<Columns, one>>
-inline memory_ptr CLASS::get_capacity(const Link& link) const NOEXCEPT
+inline memory CLASS::get_capacity(const Link& link) const NOEXCEPT
 {
     if (link.is_terminal())
         return {};
@@ -103,7 +77,7 @@ inline memory_ptr CLASS::get_capacity(const Link& link) const NOEXCEPT
 }
 
 TEMPLATE
-CLASS::managers(storage& body) NOEXCEPT
+CLASS::bodys(storage& body) NOEXCEPT
   : files_(body)
 {
 }

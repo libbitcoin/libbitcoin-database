@@ -240,7 +240,8 @@ public:
     // access
     // ------------------------------------------------------------------------
 
-    memory_ptr set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT override
+    memory get_filled(size_t offset, size_t size,
+        uint8_t backfill) NOEXCEPT override
     {
         {
             std::unique_lock field_lock(field_mutex_);
@@ -261,13 +262,12 @@ public:
         return get(offset);
     }
 
-    memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT override
+    memory get_capacity(size_t offset=zero) const NOEXCEPT override
     {
-        using namespace system;
         auto& buffer = at(zero);
-        const auto ptr = emplace_shared<accessor>(map_mutex_);
-        ptr->assign(get_raw(offset), std::next(buffer.data(), buffer.size()));
-        return ptr;
+        accessor out{ map_mutex_ };
+        out.assign(get_raw(offset), std::next(buffer.data(), buffer.size()));
+        return out;
     }
 
     memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override
@@ -275,33 +275,18 @@ public:
         return std::next(at(zero).data(), offset);
     }
 
-    memory::iterator get_at_raw(size_t column,
+    memory::iterator get_raw_at(size_t column,
         size_t offset=zero) const NOEXCEPT override
     {
         return std::next(at(column).data(), offset);
     }
 
-    memory_ptr get(size_t offset=zero) const NOEXCEPT override
+    memory get(size_t offset=zero) const NOEXCEPT override
     {
         return get_at(zero, offset);
     }
 
-    memory_ptr get_at(size_t column, size_t offset=zero) const NOEXCEPT override
-    {
-        using namespace system;
-        auto data = at(column).data();
-        const auto allocated = size() * widths.at(column);
-        const auto ptr = emplace_shared<accessor>(map_mutex_);
-        ptr->assign(std::next(data, offset), std::next(data, allocated));
-        return ptr;
-    }
-
-    memory get1(size_t offset=zero) const NOEXCEPT override
-    {
-        return get_at1(zero, offset);
-    }
-
-    memory get_at1(size_t column, size_t offset=zero) const NOEXCEPT override
+    memory get_at(size_t column, size_t offset=zero) const NOEXCEPT override
     {
         using namespace system;
         auto data = at(column).data();

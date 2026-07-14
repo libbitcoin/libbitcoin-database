@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(iterator__advance__slab__expected)
     slab_iterate iterator{ file.get(), start, key2 };
     BOOST_REQUIRE(iterator);
     BOOST_REQUIRE_EQUAL(iterator.get(), 0x00u);
-    BOOST_REQUIRE(iterator++);
+    BOOST_REQUIRE(++iterator);
     BOOST_REQUIRE(iterator);
     BOOST_REQUIRE_EQUAL(iterator.get(), 0x03u);
     BOOST_REQUIRE(!iterator.advance());

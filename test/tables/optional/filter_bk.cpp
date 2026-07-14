@@ -91,24 +91,24 @@ BOOST_AUTO_TEST_CASE(filter_bk__put__ordered__expected)
 
     // Logical order is unaffected by put order.
     table::filter_bk::get_head get0{};
-    table::filter_bk::get_head get1{};
+    table::filter_bk::get_head get{};
     table::filter_bk::get_head get2{};
     table::filter_bk::get_head get3{};
     table::filter_bk::get_head get4{};
     BOOST_REQUIRE(instance.at(0, get0));
-    BOOST_REQUIRE(instance.at(1, get1));
+    BOOST_REQUIRE(instance.at(1, get));
     BOOST_REQUIRE(instance.at(2, get2));
     BOOST_REQUIRE(instance.at(3, get3));
     BOOST_REQUIRE(instance.at(4, get4));
 
     BOOST_REQUIRE_EQUAL(get0.hash, null_hash);
-    BOOST_REQUIRE_EQUAL(get1.hash, one_hash);
+    BOOST_REQUIRE_EQUAL(get.hash, one_hash);
     BOOST_REQUIRE_EQUAL(get2.hash, two_hash);
     BOOST_REQUIRE_EQUAL(get3.hash, three_hash);
     BOOST_REQUIRE_EQUAL(get4.hash, four_hash);
 
     BOOST_REQUIRE_EQUAL(get0.head, null_hash);
-    BOOST_REQUIRE_EQUAL(get1.head, five_hash);
+    BOOST_REQUIRE_EQUAL(get.head, five_hash);
     BOOST_REQUIRE_EQUAL(get2.head, six_hash);
     BOOST_REQUIRE_EQUAL(get3.head, seven_hash);
     BOOST_REQUIRE_EQUAL(get4.head, eight_hash);
@@ -182,24 +182,24 @@ BOOST_AUTO_TEST_CASE(filter_bk__put__disordered__expected)
 
     // Logical order is unaffected by put order.
     table::filter_bk::get_head get0{};
-    table::filter_bk::get_head get1{};
+    table::filter_bk::get_head get{};
     table::filter_bk::get_head get2{};
     table::filter_bk::get_head get3{};
     table::filter_bk::get_head get4{};
     BOOST_REQUIRE(instance.at(0, get0));
-    BOOST_REQUIRE(instance.at(1, get1));
+    BOOST_REQUIRE(instance.at(1, get));
     BOOST_REQUIRE(instance.at(2, get2));
     BOOST_REQUIRE(instance.at(3, get3));
     BOOST_REQUIRE(instance.at(4, get4));
 
     BOOST_REQUIRE_EQUAL(get0.hash, null_hash);
-    BOOST_REQUIRE_EQUAL(get1.hash, one_hash);
+    BOOST_REQUIRE_EQUAL(get.hash, one_hash);
     BOOST_REQUIRE_EQUAL(get2.hash, two_hash);
     BOOST_REQUIRE_EQUAL(get3.hash, three_hash);
     BOOST_REQUIRE_EQUAL(get4.hash, four_hash);
 
     BOOST_REQUIRE_EQUAL(get0.head, null_hash);
-    BOOST_REQUIRE_EQUAL(get1.head, five_hash);
+    BOOST_REQUIRE_EQUAL(get.head, five_hash);
     BOOST_REQUIRE_EQUAL(get2.head, six_hash);
     BOOST_REQUIRE_EQUAL(get3.head, seven_hash);
     BOOST_REQUIRE_EQUAL(get4.head, eight_hash);

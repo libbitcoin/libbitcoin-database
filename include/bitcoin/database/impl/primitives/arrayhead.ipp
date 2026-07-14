@@ -71,7 +71,7 @@ bool CLASS::clear() NOEXCEPT
     // count to zero, which is picked up in arraymap::reset(). Body file size
     // remains unchanged and subject to initialization size at each startup. So
     // there is no reduction until restart, which can include config change.
-    std::fill_n(ptr->data(), size(), system::bit_all<uint8_t>);
+    std::fill_n(ptr.data(), size(), system::bit_all<uint8_t>);
     return set_body_count(zero);
 }
 
@@ -81,7 +81,7 @@ bool CLASS::create() NOEXCEPT
     if (is_nonzero(size()))
         return false;
 
-    // Guards addition overflow in manager_.get (start must be valid).
+    // Guards addition overflow in body_.get (start must be valid).
     if (file_.allocate(link_to_position(initial_buckets_)) == storage::eof)
         return false;
 
@@ -105,7 +105,7 @@ bool CLASS::get_body_count(Link& count) const NOEXCEPT
     // Body count is written as the first value in link size, but since
     // offsetting is a multiple of cell size, a full cell is consumed for it.
     // In case of nomap or disabled there are no cells, so file is link size.
-    count = to_array<Link::size>(ptr->data());
+    count = to_array<Link::size>(ptr.data());
     return true;
 }
 
@@ -119,7 +119,7 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     // Body count is written as the first value in link size, but since
     // offsetting is a multiple of cell size, a full cell is consumed for it.
     // In case of nomap or disabled there are no cells, so file is link size.
-    to_array<Link::size>(ptr->data()) = count;
+    to_array<Link::size>(ptr.data()) = count;
     return true;
 }
 
@@ -138,13 +138,13 @@ Link CLASS::at(size_t key) const NOEXCEPT
         return {};
 
     const auto ptr = file_.get(position);
-    if (is_null(ptr))
+    if (!ptr)
         return {};
 
     if constexpr (aligned)
     {
         // Reads full padded word.
-        const auto raw = ptr->data();
+        const auto raw = ptr.data();
         const auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
 
         // Aligned values must be masked to match terminal.
@@ -152,7 +152,7 @@ Link CLASS::at(size_t key) const NOEXCEPT
     }
     else
     {
-        const auto& head = to_array<bucket_size>(ptr->data());
+        const auto& head = to_array<bucket_size>(ptr.data());
         mutex_.lock_shared();
         const auto top = head;
         mutex_.unlock_shared();
@@ -167,20 +167,21 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
     constexpr auto fill = bit_all<uint8_t>;
 
     // Allocate as necessary and fill allocations.
-    const auto ptr = file_.set(link_to_position(index), bucket_size, fill);
-    if (is_null(ptr))
+    const auto position = link_to_position(index);
+    const auto ptr = file_.get_filled(position, bucket_size, fill);
+    if (!ptr)
         return false;
 
     if constexpr (aligned)
     {
         // Writes full padded word (0x00 fill).
-        const auto raw = ptr->data();
+        const auto raw = ptr.data();
         auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
         head.store(link, std::memory_order_relaxed);
     }
     else
     {
-        auto& head = to_array<bucket_size>(ptr->data());
+        auto& head = to_array<bucket_size>(ptr.data());
 
         mutex_.lock();
         head = link;

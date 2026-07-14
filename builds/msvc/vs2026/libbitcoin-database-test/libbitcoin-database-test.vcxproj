@@ -135,12 +135,12 @@
     <ClCompile Include="..\..\..\..\test\mocks\blocks.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arrayhead.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\arraymap.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\body.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashhead.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\keys.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />
-    <ClCompile Include="..\..\..\..\test\primitives\manager.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\nohead.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\nomap.cpp" />
     <ClCompile Include="..\..\..\..\test\query\address\address_balance.cpp" />

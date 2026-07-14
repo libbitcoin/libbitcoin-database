@@ -164,6 +164,7 @@ BOOST_AUTO_TEST_CASE(mmap__load__unloaded__true)
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
 }
+
 BOOST_AUTO_TEST_CASE(mmap__load__shared__load_locked)
 {
     const std::string file = TEST_PATH;
@@ -440,18 +441,18 @@ BOOST_AUTO_TEST_CASE(mmap__truncate__decrease__success_logical_decreased_capacit
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__set__unloaded__false)
+BOOST_AUTO_TEST_CASE(mmap__get_filled__unloaded__false)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
     map instance(file);
     BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.set(42, 24, 0xff));
+    BOOST_REQUIRE(!instance.get_filled(42, 24, 0xff));
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__set__loaded__expected_capacity)
+BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_capacity)
 {
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 42_size;
@@ -466,11 +467,11 @@ BOOST_AUTO_TEST_CASE(mmap__set__loaded__expected_capacity)
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
 
-    auto memory = instance.set(offset, size, fill);
+    auto memory = instance.get_filled(offset, size, fill);
     BOOST_REQUIRE(memory);
 
-    const auto expected = std::next(instance.get()->data(), offset);
-    BOOST_REQUIRE(memory->data() == expected);
+    const auto expected = std::next(instance.get().data(), offset);
+    BOOST_REQUIRE(memory.data() == expected);
 
     constexpr auto capacity = offset + size + to_half(offset + size);
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
@@ -482,7 +483,7 @@ BOOST_AUTO_TEST_CASE(mmap__set__loaded__expected_capacity)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__set__add_overflow__eof)
+BOOST_AUTO_TEST_CASE(mmap__get_filled__add_overflow__eof)
 {
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
@@ -490,14 +491,14 @@ BOOST_AUTO_TEST_CASE(mmap__set__add_overflow__eof)
     map instance(file);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.set(100, 24, 0xff));
-    BOOST_REQUIRE(!instance.set(max_size_t, 24, 0xff));
+    BOOST_REQUIRE(instance.get_filled(100, 24, 0xff));
+    BOOST_REQUIRE(!instance.get_filled(max_size_t, 24, 0xff));
     BOOST_REQUIRE(!instance.unload());
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__set__minimum_no_expansion__expected_capacity)
+BOOST_AUTO_TEST_CASE(mmap__get_filled__minimum_no_expansion__expected_capacity)
 {
     constexpr auto rate = 0_size;
     constexpr auto minimum = 42_size;
@@ -510,7 +511,7 @@ BOOST_AUTO_TEST_CASE(mmap__set__minimum_no_expansion__expected_capacity)
     map instance(file, minimum, rate);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.set(offset, size, fill));
+    BOOST_REQUIRE(instance.get_filled(offset, size, fill));
 
     constexpr auto capacity = std::max(minimum, offset + size);
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
@@ -519,7 +520,7 @@ BOOST_AUTO_TEST_CASE(mmap__set__minimum_no_expansion__expected_capacity)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__set__no_minimum_expansion__expected_capacity)
+BOOST_AUTO_TEST_CASE(mmap__get_filled__no_minimum_expansion__expected_capacity)
 {
     // map will fail if minimum is zero.
     constexpr auto rate = 42_size;
@@ -533,7 +534,7 @@ BOOST_AUTO_TEST_CASE(mmap__set__no_minimum_expansion__expected_capacity)
     map instance(file, minimum, rate);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.set(offset, size, fill));
+    BOOST_REQUIRE(instance.get_filled(offset, size, fill));
 
     // These add only because offset + size is 100.
     constexpr auto capacity = offset + size + rate;
@@ -543,7 +544,7 @@ BOOST_AUTO_TEST_CASE(mmap__set__no_minimum_expansion__expected_capacity)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__set__loaded__expected_fill)
+BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
 {
     BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 
@@ -559,14 +560,14 @@ BOOST_AUTO_TEST_CASE(mmap__set__loaded__expected_fill)
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
-    auto memory = instance.set(offset1, size1, fill1);
+    auto memory = instance.get_filled(offset1, size1, fill1);
     BOOST_REQUIRE(memory);
 
     constexpr auto capacity = offset1 + size1 + to_half(offset1 + size1);
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
     BOOST_REQUIRE_EQUAL(capacity, 12u);
 
-    auto data = instance.get()->data();
+    auto data = instance.get().data();
     ////BOOST_REQUIRE_EQUAL(data[ 0], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 1], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 2], 0x00_u8); // cannot assume mmap default fill
@@ -589,7 +590,7 @@ BOOST_AUTO_TEST_CASE(mmap__set__loaded__expected_fill)
     constexpr auto offset2 = 15_size;
     constexpr auto fill2 = 0b1111'0000;
     memory.reset();
-    memory = instance.set(offset2, size2, fill2);
+    memory = instance.get_filled(offset2, size2, fill2);
     BOOST_REQUIRE(memory);
 
     constexpr auto capacity2 = offset2 + size2 + to_half(offset2 + size2);
@@ -602,8 +603,8 @@ BOOST_AUTO_TEST_CASE(mmap__set__loaded__expected_fill)
     data[18] = 'g';
     data[19] = 'h';
 
-    // Get data again in case it has been remapped by set().
-    data = instance.get()->data();
+    // Get data again in case it has been remapped by get_filled().
+    data = instance.get().data();
     ////BOOST_REQUIRE_EQUAL(data[ 0], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 1], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 2], 0x00_u8); // cannot assume mmap default fill
@@ -681,8 +682,8 @@ BOOST_AUTO_TEST_CASE(mmap__get__size__expected)
 
     constexpr auto expected = 42u;
     auto ptr = instance.get(instance.allocate(expected));
-    BOOST_CHECK_EQUAL(ptr->size(), expected);
-    BOOST_CHECK_EQUAL(*ptr->begin(), 0x00u);
+    BOOST_CHECK_EQUAL(ptr.size(), expected);
+    BOOST_CHECK_EQUAL(*ptr.begin(), 0x00u);
     BOOST_REQUIRE(instance.unload());
 
     ptr.reset();
@@ -702,8 +703,8 @@ BOOST_AUTO_TEST_CASE(mmap__get_capacity__size__expected)
 
     constexpr auto expected = 42u;
     auto ptr = instance.get_capacity(instance.allocate(expected));
-    BOOST_CHECK_EQUAL(ptr->size(), expected);
-    BOOST_CHECK_EQUAL(*ptr->begin(), 0x00u);
+    BOOST_REQUIRE_EQUAL(ptr.size(), expected);
+    BOOST_REQUIRE_EQUAL(*ptr.begin(), 0x00u);
     BOOST_REQUIRE(instance.unload());
 
     ptr.reset();
@@ -722,8 +723,9 @@ BOOST_AUTO_TEST_CASE(mmap__get_raw__always__nonblocking)
     BOOST_REQUIRE(!instance.load());
 
     constexpr auto expected = 42u;
-    auto raw = instance.get_raw(instance.allocate(expected));
-    BOOST_CHECK_EQUAL(*raw, 0x00u);
+    const auto raw = instance.get_raw(instance.allocate(expected));
+    BOOST_REQUIRE(!is_null(raw));
+    BOOST_REQUIRE_EQUAL(*raw, 0x00u);
 
     // raw pointer does not block remap.
     BOOST_REQUIRE(!instance.unload());
@@ -771,13 +773,13 @@ BOOST_AUTO_TEST_CASE(mmap__write__read__expected)
     auto memory = instance.get(instance.allocate(sizeof(uint64_t)));
     BOOST_REQUIRE(memory);
 
-    system::unsafe_to_little_endian<uint64_t>(memory->begin(), expected);
+    system::unsafe_to_little_endian<uint64_t>(memory.begin(), expected);
     memory.reset();
     BOOST_REQUIRE(!instance.flush());
 
     memory = instance.get();
     BOOST_REQUIRE(memory);
-    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory->begin()), expected);
+    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory.begin()), expected);
 
     memory.reset();
     BOOST_REQUIRE(!instance.unload());
@@ -829,10 +831,10 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     BOOST_REQUIRE(write0_column0);
     BOOST_REQUIRE(write0_column1);
 
-    write0_column0->begin()[0] = 'a';
-    write0_column1->begin()[0] = 'b';
-    write0_column1->begin()[1] = 'c';
-    write0_column1->begin()[2] = 'd';
+    write0_column0.begin()[0] = 'a';
+    write0_column1.begin()[0] = 'b';
+    write0_column1.begin()[1] = 'c';
+    write0_column1.begin()[2] = 'd';
     write0_column0.reset();
     write0_column1.reset();
 
@@ -852,10 +854,10 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     BOOST_REQUIRE(write1_column0);
     BOOST_REQUIRE(write1_column1);
 
-    write1_column0->begin()[0] = 'w';
-    write1_column1->begin()[0] = 'x';
-    write1_column1->begin()[1] = 'y';
-    write1_column1->begin()[2] = 'z';
+    write1_column0.begin()[0] = 'w';
+    write1_column1.begin()[0] = 'x';
+    write1_column1.begin()[1] = 'y';
+    write1_column1.begin()[2] = 'z';
     write1_column0.reset();
     write1_column1.reset();
     BOOST_REQUIRE(!instance.unload());
@@ -872,14 +874,14 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     auto read_column1 = instance.get_at(1, 0);
     BOOST_REQUIRE(read_column0);
     BOOST_REQUIRE(read_column1);
-    BOOST_REQUIRE_EQUAL(read_column0->begin()[0], 'a');
-    BOOST_REQUIRE_EQUAL(read_column0->begin()[last], 'w');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[0], 'b');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[1], 'c');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[2], 'd');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[last * 3 + 0], 'x');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[last * 3 + 1], 'y');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[last * 3 + 2], 'z');
+    BOOST_REQUIRE_EQUAL(read_column0.begin()[0], 'a');
+    BOOST_REQUIRE_EQUAL(read_column0.begin()[last], 'w');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[0], 'b');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[1], 'c');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[2], 'd');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 0], 'x');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 1], 'y');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 2], 'z');
 
     read_column0.reset();
     read_column1.reset();

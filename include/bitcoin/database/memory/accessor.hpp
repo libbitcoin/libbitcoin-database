@@ -25,15 +25,14 @@
 namespace libbitcoin {
 namespace database {
 
+/// Not thread safe.
 /// Shared r/w access to a memory buffer, mutex blocks memory remap.
-/// Zero/negative size is allowed (automatically handled by bc streams).
 class accessor final
 {
 public:
     typedef uint8_t value_type;
     typedef value_type* iterator;
     typedef const value_type* const_iterator;
-    typedef std::shared_ptr<accessor> ptr;
 
     DELETE_COPY(accessor);
     DEFAULT_MOVE(accessor);
@@ -50,7 +49,14 @@ public:
     {
     }
 
+    /// True if holds lock on memory buffer.
+    inline operator bool() const NOEXCEPT
+    {
+        return !is_null(begin_);
+    }
+
     /// Set the buffer, where end is within allocated space.
+    /// Zero/negative size is allowed (automatically handled by bc streams).
     /// End should be initialized to logical space though that may contract or
     /// expand during accessor lifetime. The only guarantee offered by end is
     /// that it remains within allocated space and is initially logical space.
@@ -58,36 +64,32 @@ public:
     {
         begin_ = begin;
         end_ = end;
-        ////BC_ASSERT(!system::is_negative(size()));
     }
 
-    /// memory interface
-    /// -----------------------------------------------------------------------
-
-    inline operator bool() const NOEXCEPT
+    /// Release lock and invalidate pointers (idempotent).
+    inline void reset() NOEXCEPT
     {
-        return !is_null(begin_);
+        if (!is_null(begin_))
+        {
+            shared_lock_.unlock();
+            begin_ = nullptr;
+            end_ = nullptr;
+        }
     }
 
-    /// Return an offset from begin, nullptr if end or past end.
+    /// Return an offset from begin, nullptr if past buffer.
     inline uint8_t* offset(size_t bytes) const NOEXCEPT
     {
         if (system::is_greater(bytes, size()))
             return nullptr;
 
-        BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
-        return begin_ + bytes;
-        BC_POP_WARNING()
-        ////return std::next(begin_, bytes);
+        return std::next(begin_, bytes);
     }
 
     /// The logical buffer size (from begin to end).
     inline ptrdiff_t size() const NOEXCEPT
     {
-        BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
-        return system::possible_narrow_and_sign_cast<ptrdiff_t>(end_ - begin_);
-        BC_POP_WARNING()
-        ////return std::distance(begin_, end_);
+        return std::distance(begin_, end_);
     }
 
     /// Alias for begin.
@@ -95,12 +97,6 @@ public:
     {
         return begin();
     }
-
-    /// Get logical buffer (guarded against remap only).
-    inline operator system::data_slab() const NOEXCEPT
-    {
-        return { begin(), end() };
-    };
 
     /// Buffer start.
     inline uint8_t* begin() const NOEXCEPT
@@ -114,14 +110,22 @@ public:
         return end_;
     }
 
+    /// Get logical buffer (guarded against remap only).
+    inline operator system::data_slab() const NOEXCEPT
+    {
+        return { begin(), end() };
+    };
+
 private:
+    // These are not thread safe.
     uint8_t* begin_{};
     uint8_t* end_{};
+
+    // This is thread safe.
     std::shared_lock<std::shared_mutex> shared_lock_;
 };
 
 using memory = accessor;
-using memory_ptr = accessor::ptr;
 
 } // namespace database
 } // namespace libbitcoin

@@ -89,17 +89,17 @@ BOOST_AUTO_TEST_CASE(filter_tx__put__ordered__expected)
 
     // Logical order is unaffected by put order.
     table::filter_tx::get_filter get0{};
-    table::filter_tx::get_filter get1{};
+    table::filter_tx::get_filter get{};
     table::filter_tx::get_filter get2{};
     table::filter_tx::get_filter get3{};
     table::filter_tx::get_filter get4{};
     BOOST_REQUIRE(instance.at(0, get0));
-    BOOST_REQUIRE(instance.at(1, get1));
+    BOOST_REQUIRE(instance.at(1, get));
     BOOST_REQUIRE(instance.at(2, get2));
     BOOST_REQUIRE(instance.at(3, get3));
     BOOST_REQUIRE(instance.at(4, get4));
     BOOST_REQUIRE_EQUAL(get0.filter, zero_data);
-    BOOST_REQUIRE_EQUAL(get1.filter, one_data);
+    BOOST_REQUIRE_EQUAL(get.filter, one_data);
     BOOST_REQUIRE_EQUAL(get2.filter, two_data);
     BOOST_REQUIRE_EQUAL(get3.filter, three_data);
     BOOST_REQUIRE_EQUAL(get4.filter, four_data);
@@ -171,17 +171,17 @@ BOOST_AUTO_TEST_CASE(filter_tx__put__disordered__expected)
 
     // Logical order is unaffected by put order.
     table::filter_tx::get_filter get0{};
-    table::filter_tx::get_filter get1{};
+    table::filter_tx::get_filter get{};
     table::filter_tx::get_filter get2{};
     table::filter_tx::get_filter get3{};
     table::filter_tx::get_filter get4{};
     BOOST_REQUIRE(instance.at(0, get0));
-    BOOST_REQUIRE(instance.at(1, get1));
+    BOOST_REQUIRE(instance.at(1, get));
     BOOST_REQUIRE(instance.at(2, get2));
     BOOST_REQUIRE(instance.at(3, get3));
     BOOST_REQUIRE(instance.at(4, get4));
     BOOST_REQUIRE_EQUAL(get0.filter, zero_data);
-    BOOST_REQUIRE_EQUAL(get1.filter, one_data);
+    BOOST_REQUIRE_EQUAL(get.filter, one_data);
     BOOST_REQUIRE_EQUAL(get2.filter, two_data);
     BOOST_REQUIRE_EQUAL(get3.filter, three_data);
     BOOST_REQUIRE_EQUAL(get4.filter, four_data);
