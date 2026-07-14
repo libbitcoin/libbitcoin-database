@@ -86,11 +86,8 @@ memory_ptr CLASS::get_capacity(size_t offset) const NOEXCEPT
 TEMPLATE
 memory::iterator CLASS::get_raw(size_t offset) const NOEXCEPT
 {
-    // get_raw not used for variably-sized heads, so should always be bounded.
-    BC_ASSERT(offset < to_width<zero>(size()));
-
     // Pointer otherwise unguarded, not remap safe (use for fixed table heads).
-    return std::next(memory_map_.front(), offset);
+    return get_at_raw(zero, offset);
 }
 
 TEMPLATE
