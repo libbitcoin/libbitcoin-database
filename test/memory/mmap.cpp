@@ -703,8 +703,8 @@ BOOST_AUTO_TEST_CASE(mmap__get_capacity__size__expected)
 
     constexpr auto expected = 42u;
     auto ptr = instance.get_capacity(instance.allocate(expected));
-    BOOST_CHECK_EQUAL(ptr->size(), expected);
-    BOOST_CHECK_EQUAL(*ptr->begin(), 0x00u);
+    BOOST_REQUIRE_EQUAL(ptr->size(), expected);
+    BOOST_REQUIRE_EQUAL(*ptr->begin(), 0x00u);
     BOOST_REQUIRE(instance.unload());
 
     ptr.reset();
@@ -723,8 +723,9 @@ BOOST_AUTO_TEST_CASE(mmap__get_raw__always__nonblocking)
     BOOST_REQUIRE(!instance.load());
 
     constexpr auto expected = 42u;
-    auto raw = instance.get_raw(instance.allocate(expected));
-    BOOST_CHECK_EQUAL(*raw, 0x00u);
+    const auto raw = instance.get_raw(instance.allocate(expected));
+    BOOST_REQUIRE(!is_null(raw));
+    BOOST_REQUIRE_EQUAL(*raw, 0x00u);
 
     // raw pointer does not block remap.
     BOOST_REQUIRE(!instance.unload());
