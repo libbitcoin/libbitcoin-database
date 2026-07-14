@@ -240,7 +240,8 @@ public:
     // access
     // ------------------------------------------------------------------------
 
-    memory_ptr set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT override
+    memory_ptr get_filled(size_t offset, size_t size,
+        uint8_t backfill) NOEXCEPT override
     {
         {
             std::unique_lock field_lock(field_mutex_);

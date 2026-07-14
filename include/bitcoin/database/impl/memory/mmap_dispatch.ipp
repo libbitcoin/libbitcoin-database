@@ -34,7 +34,8 @@ namespace database {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-memory_ptr CLASS::set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT
+memory_ptr CLASS::get_filled(size_t offset, size_t size,
+    uint8_t backfill) NOEXCEPT
 {
     // This is basically allocate(...) for application to a table head.
     {

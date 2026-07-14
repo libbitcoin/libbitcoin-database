@@ -167,7 +167,8 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
     constexpr auto fill = bit_all<uint8_t>;
 
     // Allocate as necessary and fill allocations.
-    const auto ptr = file_.set(link_to_position(index), bucket_size, fill);
+    const auto position = link_to_position(index);
+    const auto ptr = file_.get_filled(position, bucket_size, fill);
     if (is_null(ptr))
         return false;
 

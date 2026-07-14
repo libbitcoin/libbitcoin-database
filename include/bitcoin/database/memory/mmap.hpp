@@ -132,7 +132,7 @@ public:
     size_t allocate(size_t count) NOEXCEPT override;
 
     /// Remap-protected r/w access to offset (or null) allocated to size.
-    memory_ptr set(size_t offset, size_t size,
+    memory_ptr get_filled(size_t offset, size_t size,
         uint8_t backfill) NOEXCEPT override;
 
     /// Remap-protected r/w access to start/offset (or null), within capacity.
