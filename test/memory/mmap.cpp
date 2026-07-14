@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(mmap__load__shared__load_locked)
     map instance(file);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
-    auto memory = instance.get1(instance.allocate(1));
+    auto memory = instance.get(instance.allocate(1));
 
     BOOST_REQUIRE(memory);
     BOOST_REQUIRE_EQUAL(instance.load(), error::load_locked);
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_capacity)
     auto memory = instance.get_filled(offset, size, fill);
     BOOST_REQUIRE(memory);
 
-    const auto expected = std::next(instance.get1().data(), offset);
+    const auto expected = std::next(instance.get().data(), offset);
     BOOST_REQUIRE(memory.data() == expected);
 
     constexpr auto capacity = offset + size + to_half(offset + size);
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
     BOOST_REQUIRE_EQUAL(capacity, 12u);
 
-    auto data = instance.get1().data();
+    auto data = instance.get().data();
     ////BOOST_REQUIRE_EQUAL(data[ 0], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 1], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 2], 0x00_u8); // cannot assume mmap default fill
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
     data[19] = 'h';
 
     // Get data again in case it has been remapped by get_filled().
-    data = instance.get1().data();
+    data = instance.get().data();
     ////BOOST_REQUIRE_EQUAL(data[ 0], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 1], 0x00_u8); // cannot assume mmap default fill
     ////BOOST_REQUIRE_EQUAL(data[ 2], 0x00_u8); // cannot assume mmap default fill
@@ -652,7 +652,7 @@ BOOST_AUTO_TEST_CASE(mmap__get__unloaded__false)
 
     map instance(file);
     BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.get1());
+    BOOST_REQUIRE(!instance.get());
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -665,7 +665,7 @@ BOOST_AUTO_TEST_CASE(mmap__get__loaded__success)
     map instance(file);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.get1(instance.allocate(1)));
+    BOOST_REQUIRE(instance.get(instance.allocate(1)));
     BOOST_REQUIRE(!instance.unload());
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
@@ -681,7 +681,7 @@ BOOST_AUTO_TEST_CASE(mmap__get__size__expected)
     BOOST_REQUIRE(!instance.load());
 
     constexpr auto expected = 42u;
-    auto ptr = instance.get1(instance.allocate(expected));
+    auto ptr = instance.get(instance.allocate(expected));
     BOOST_CHECK_EQUAL(ptr.size(), expected);
     BOOST_CHECK_EQUAL(*ptr.begin(), 0x00u);
     BOOST_REQUIRE(instance.unload());
@@ -770,14 +770,14 @@ BOOST_AUTO_TEST_CASE(mmap__write__read__expected)
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
-    auto memory = instance.get1(instance.allocate(sizeof(uint64_t)));
+    auto memory = instance.get(instance.allocate(sizeof(uint64_t)));
     BOOST_REQUIRE(memory);
 
     system::unsafe_to_little_endian<uint64_t>(memory.begin(), expected);
     memory.reset();
     BOOST_REQUIRE(!instance.flush());
 
-    memory = instance.get1();
+    memory = instance.get();
     BOOST_REQUIRE(memory);
     BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory.begin()), expected);
 
@@ -796,7 +796,7 @@ BOOST_AUTO_TEST_CASE(mmap__unload__shared__unload_locked)
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
-    auto memory = instance.get1(instance.allocate(1));
+    auto memory = instance.get(instance.allocate(1));
     BOOST_REQUIRE(memory);
     BOOST_REQUIRE_EQUAL(instance.unload(), error::unload_locked);
 
@@ -826,8 +826,8 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     // Row zero, written before remap (verifies preservation across remap).
     BOOST_REQUIRE_EQUAL(instance.allocate(1), zero);
 
-    auto write0_column0 = instance.get_at1(0, 0);
-    auto write0_column1 = instance.get_at1(1, 0);
+    auto write0_column0 = instance.get_at(0, 0);
+    auto write0_column1 = instance.get_at(1, 0);
     BOOST_REQUIRE(write0_column0);
     BOOST_REQUIRE(write0_column1);
 
@@ -849,8 +849,8 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     BOOST_REQUIRE_EQUAL(std::filesystem::file_size(files.back()), rows * 3u);
 
     // Last row, through the remapped pointers.
-    auto write1_column0 = instance.get_at1(0, last * 1);
-    auto write1_column1 = instance.get_at1(1, last * 3);
+    auto write1_column0 = instance.get_at(0, last * 1);
+    auto write1_column1 = instance.get_at(1, last * 3);
     BOOST_REQUIRE(write1_column0);
     BOOST_REQUIRE(write1_column1);
 
@@ -870,8 +870,8 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.size(), rows);
 
-    auto read_column0 = instance.get_at1(0, 0);
-    auto read_column1 = instance.get_at1(1, 0);
+    auto read_column0 = instance.get_at(0, 0);
+    auto read_column1 = instance.get_at(1, 0);
     BOOST_REQUIRE(read_column0);
     BOOST_REQUIRE(read_column1);
     BOOST_REQUIRE_EQUAL(read_column0.begin()[0], 'a');

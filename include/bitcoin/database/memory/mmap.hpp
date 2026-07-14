@@ -142,14 +142,14 @@ public:
     memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override;
 
     /// Unprotected r/w access to start/offset (or null), within logical.
-    memory::iterator get_at_raw(size_t column,
+    memory::iterator get_raw_at(size_t column,
         size_t offset=zero) const NOEXCEPT override;
 
     /// Remap-protected r/w access to start/offset (or null), within logical.
-    memory get1(size_t offset=zero) const NOEXCEPT override;
+    memory get(size_t offset=zero) const NOEXCEPT override;
 
     /// Same as get() but within specified column (or null for invalid column).
-    memory get_at1(size_t column, size_t offset=zero) const NOEXCEPT override;
+    memory get_at(size_t column, size_t offset=zero) const NOEXCEPT override;
 
 protected:
     template <size_t Column>

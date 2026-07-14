@@ -102,16 +102,16 @@ public:
 
     /// Get unprotected r/w access to start/offset of memory map (or null).
     /// Pointer is constrained to starting write within full capacity.
-    virtual memory::iterator get_at_raw(size_t column,
+    virtual memory::iterator get_raw_at(size_t column,
         size_t offset=zero) const NOEXCEPT = 0;
 
     /// Get remap-protected r/w access to start/offset of memory map (or null).
     /// Pointer is constrained to starting write within logical allocation.
-    virtual memory get1(size_t offset=zero) const NOEXCEPT = 0;
+    virtual memory get(size_t offset=zero) const NOEXCEPT = 0;
 
     /// Same as get() but within specified column (or null for invalid column).
     /// Pointer is constrained to starting write within logical allocation.
-    virtual memory get_at1(size_t column,
+    virtual memory get_at(size_t column,
         size_t offset=zero) const NOEXCEPT = 0;
 };
 

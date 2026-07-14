@@ -44,12 +44,12 @@ public:
 
     /// Return memory object for column full map (null only if oom or unloaded).
     template <size_t Column = zero>
-    inline memory get1() const NOEXCEPT;
+    inline memory get() const NOEXCEPT;
 
     /// Return memory object for column record (null only if oom or unloaded).
     /// Pointer is constrained to starting write within logical allocation.
     template <size_t Column = zero>
-    inline memory get1(const Link& link) const NOEXCEPT;
+    inline memory get(const Link& link) const NOEXCEPT;
     template <size_t Column = zero>
     inline memory::iterator get_raw1(const Link& link) const NOEXCEPT;
 

@@ -174,7 +174,7 @@ TEMPLATE
 ELEMENT_CONSTRAINT
 inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
-    const auto ptr = body_.get1(link);
+    const auto ptr = body_.get(link);
     if (!ptr)
         return false;
 
@@ -195,7 +195,7 @@ bool CLASS::put(size_t key, const Element& element) NOEXCEPT
         return false;
 
     const auto link = body_.allocate(element.count());
-    const auto ptr = body_.get1(link);
+    const auto ptr = body_.get(link);
     if (!ptr)
         return false;
 

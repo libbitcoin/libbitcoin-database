@@ -26,17 +26,17 @@ namespace database {
 
 TEMPLATE
 template <size_t Column>
-inline memory CLASS::get1() const NOEXCEPT
+inline memory CLASS::get() const NOEXCEPT
 {
     if constexpr (is_one(columns))
-        return files_.get1();
+        return files_.get();
     else
-        return files_.get_at1(Column);
+        return files_.get_at(Column);
 }
 
 TEMPLATE
 template <size_t Column>
-inline memory CLASS::get1(const Link& link) const NOEXCEPT
+inline memory CLASS::get(const Link& link) const NOEXCEPT
 {
     if (link.is_terminal())
         return {};
@@ -45,9 +45,9 @@ inline memory CLASS::get1(const Link& link) const NOEXCEPT
 
     // memory.size() may be negative (stream treats as exhausted).
     if constexpr (is_one(columns))
-        return files_.get1(position);
+        return files_.get(position);
     else
-        return files_.get_at1(Column, position);
+        return files_.get_at(Column, position);
 }
 
 TEMPLATE
@@ -63,7 +63,7 @@ inline memory::iterator CLASS::get_raw1(const Link& link) const NOEXCEPT
     if constexpr (is_one(columns))
         return files_.get_raw(position);
     else
-        return files_.get_at_raw(Column, position);
+        return files_.get_raw_at(Column, position);
 }
 
 TEMPLATE

@@ -255,7 +255,7 @@ TEMPLATE
 code CLASS::dump(const std::filesystem::path& path) const NOEXCEPT
 {
     BC_ASSERT(is_one(columns));
-    const auto ptr = get1();
+    const auto ptr = get();
     if (!ptr)
         return error::unloaded_file;
 

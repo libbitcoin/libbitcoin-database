@@ -138,7 +138,7 @@ TEMPLATE
 template <size_t Column>
 memory CLASS::get_memory() const NOEXCEPT
 {
-    return manager_.template get1<Column>();
+    return manager_.template get<Column>();
 }
 
 // static

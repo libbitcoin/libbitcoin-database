@@ -67,7 +67,7 @@ memory CLASS::get_filled(size_t offset, size_t size,
         logical_ = end;
     }
 
-    return get1(offset);
+    return get(offset);
 }
 
 TEMPLATE
@@ -89,11 +89,11 @@ TEMPLATE
 memory::iterator CLASS::get_raw(size_t offset) const NOEXCEPT
 {
     // Pointer otherwise unguarded, not remap safe (use for fixed table heads).
-    return get_at_raw(zero, offset);
+    return get_raw_at(zero, offset);
 }
 
 TEMPLATE
-memory::iterator CLASS::get_at_raw(size_t column, size_t offset) const NOEXCEPT
+memory::iterator CLASS::get_raw_at(size_t column, size_t offset) const NOEXCEPT
 {
     // get_raw not used for variably-sized heads, so should always be bounded.
     BC_ASSERT(offset < (size() * widths.at(column)));
@@ -103,13 +103,13 @@ memory::iterator CLASS::get_at_raw(size_t column, size_t offset) const NOEXCEPT
 }
 
 TEMPLATE
-memory CLASS::get1(size_t offset) const NOEXCEPT
+memory CLASS::get(size_t offset) const NOEXCEPT
 {
-    return get_at1(zero, offset);
+    return get_at(zero, offset);
 }
 
 TEMPLATE
-memory CLASS::get_at1(size_t column, size_t offset) const NOEXCEPT
+memory CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
 {
     if (column >= columns)
         return {};

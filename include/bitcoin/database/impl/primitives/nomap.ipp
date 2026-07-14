@@ -130,7 +130,7 @@ bool CLASS::reserve(const Link& size) NOEXCEPT
 TEMPLATE
 memory CLASS::get_memory() const NOEXCEPT
 {
-    return manager_.get1();
+    return manager_.get();
 }
 
 // error condition
@@ -210,7 +210,7 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
     using namespace system;
-    const auto ptr = manager_.get1(link);
+    const auto ptr = manager_.get(link);
     return put(ptr, element);
 }
 

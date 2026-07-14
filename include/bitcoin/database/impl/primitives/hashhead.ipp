@@ -64,7 +64,7 @@ bool CLASS::create() NOEXCEPT
     if (start == storage::eof)
         return false;
 
-    const auto ptr = file_.get1(start);
+    const auto ptr = file_.get(start);
     if (!ptr)
         return false;
 
@@ -85,7 +85,7 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 bool CLASS::get_body_count(Link& count) const NOEXCEPT
 {
-    const auto ptr = file_.get1();
+    const auto ptr = file_.get();
     if (!ptr)
         return false;
 
@@ -99,7 +99,7 @@ bool CLASS::get_body_count(Link& count) const NOEXCEPT
 TEMPLATE
 bool CLASS::set_body_count(const Link& count) NOEXCEPT
 {
-    const auto ptr = file_.get1();
+    const auto ptr = file_.get();
     if (!ptr)
         return false;
 

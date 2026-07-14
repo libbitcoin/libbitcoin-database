@@ -46,7 +46,7 @@ using test_header = arrayhead<link, false>;
 ////
 ////    memory get(size_t size) const NOEXCEPT override
 ////    {
-////        return is_zero(size) ? chunk_storages<one>::get1(size) : memory{};
+////        return is_zero(size) ? chunk_storages<one>::get(size) : memory{};
 ////    }
 ////};
 

@@ -210,14 +210,14 @@ inline Link CLASS::allocate(const Link& size) NOEXCEPT
 TEMPLATE
 inline memory CLASS::get_memory() const NOEXCEPT
 {
-    return body_.get1();
+    return body_.get();
 }
 
 TEMPLATE
 Key CLASS::get_key(const Link& link) NOEXCEPT
 {
     using namespace system;
-    const auto ptr = body_.get1(link);
+    const auto ptr = body_.get(link);
     if (!ptr || is_lesser(ptr.size(), index_size))
         return {};
 
