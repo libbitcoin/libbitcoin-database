@@ -117,7 +117,10 @@ bool CLASS::set_silent(const tx_link& link,
     using prefix_t = table::silent_prefix::put_ref;
     using compressed_t = table::silent_compressed::put_ref;
 
-    // TODO: caller must guard reads, this is writing into hot storage.
+    // TODO: Caller must guard reads, this is writing into hot storage. This
+    // TODO: requires caller to chase writers and account for the last contig-
+    // TODO: uously populated row (for searching) and to update subscriptions
+    // TODO: with additional scans as this position increases.
     // ========================================================================
     const auto scope = get_transactor();
 
