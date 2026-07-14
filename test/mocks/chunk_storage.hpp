@@ -240,20 +240,6 @@ public:
     // access
     // ------------------------------------------------------------------------
 
-    memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT override
-    {
-        using namespace system;
-        auto& buffer = at(zero);
-        const auto ptr = emplace_shared<accessor<std::shared_mutex>>(map_mutex_);
-        ptr->assign(get_raw(offset), std::next(buffer.data(), buffer.size()));
-        return ptr;
-    }
-
-    memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override
-    {
-        return std::next(at(zero).data(), offset);
-    }
-
     memory_ptr set(size_t offset, size_t size, uint8_t backfill) NOEXCEPT override
     {
         {
@@ -275,6 +261,26 @@ public:
         return get(offset);
     }
 
+    memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT override
+    {
+        using namespace system;
+        auto& buffer = at(zero);
+        const auto ptr = emplace_shared<accessor>(map_mutex_);
+        ptr->assign(get_raw(offset), std::next(buffer.data(), buffer.size()));
+        return ptr;
+    }
+
+    memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override
+    {
+        return std::next(at(zero).data(), offset);
+    }
+
+    memory::iterator get_at_raw(size_t column,
+        size_t offset=zero) const NOEXCEPT override
+    {
+        return std::next(at(column).data(), offset);
+    }
+
     memory_ptr get(size_t offset=zero) const NOEXCEPT override
     {
         return get_at(zero, offset);
@@ -285,9 +291,24 @@ public:
         using namespace system;
         auto data = at(column).data();
         const auto allocated = size() * widths.at(column);
-        const auto ptr = emplace_shared<accessor<std::shared_mutex>>(map_mutex_);
+        const auto ptr = emplace_shared<accessor>(map_mutex_);
         ptr->assign(std::next(data, offset), std::next(data, allocated));
         return ptr;
+    }
+
+    memory get1(size_t offset=zero) const NOEXCEPT override
+    {
+        return get_at1(zero, offset);
+    }
+
+    memory get_at1(size_t column, size_t offset=zero) const NOEXCEPT override
+    {
+        using namespace system;
+        auto data = at(column).data();
+        const auto allocated = size() * widths.at(column);
+        accessor out(map_mutex_);
+        out.assign(std::next(data, offset), std::next(data, allocated));
+        return out;
     }
 
     // This is protected by mutex.

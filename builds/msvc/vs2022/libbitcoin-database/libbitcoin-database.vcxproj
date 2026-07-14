@@ -153,7 +153,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\locks.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\finalizer.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mman.hpp" />
@@ -222,7 +221,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_dispatch.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_private.ipp" />

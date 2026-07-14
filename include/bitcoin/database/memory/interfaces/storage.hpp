@@ -21,7 +21,7 @@
 
 #include <filesystem>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/interfaces/memory.hpp>
+#include <bitcoin/database/memory/accessor.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -88,6 +88,10 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     virtual size_t allocate(size_t count) NOEXCEPT = 0;
 
+    /// Get remap-protected r/w access to offset (or null) allocated to size.
+    virtual memory_ptr set(size_t offset, size_t size,
+        uint8_t backfill) NOEXCEPT = 0;
+
     /// Get remap-protected r/w access to start/offset of memory map (or null).
     /// Pointer is constrained to starting write within full capacity.
     virtual memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT = 0;
@@ -96,9 +100,10 @@ public:
     /// Pointer is constrained to starting write within full capacity.
     virtual memory::iterator get_raw(size_t offset=zero) const NOEXCEPT = 0;
 
-    /// Get remap-protected r/w access to offset (or null) allocated to size.
-    virtual memory_ptr set(size_t offset, size_t size,
-        uint8_t backfill) NOEXCEPT = 0;
+    /// Get unprotected r/w access to start/offset of memory map (or null).
+    /// Pointer is constrained to starting write within full capacity.
+    virtual memory::iterator get_at_raw(size_t column,
+        size_t offset=zero) const NOEXCEPT = 0;
 
     /// Get remap-protected r/w access to start/offset of memory map (or null).
     /// Pointer is constrained to starting write within logical allocation.
@@ -107,6 +112,15 @@ public:
     /// Same as get() but within specified column (or null for invalid column).
     /// Pointer is constrained to starting write within logical allocation.
     virtual memory_ptr get_at(size_t column,
+        size_t offset=zero) const NOEXCEPT = 0;
+
+    /// Get remap-protected r/w access to start/offset of memory map (or null).
+    /// Pointer is constrained to starting write within logical allocation.
+    virtual memory get1(size_t offset=zero) const NOEXCEPT = 0;
+
+    /// Same as get() but within specified column (or null for invalid column).
+    /// Pointer is constrained to starting write within logical allocation.
+    virtual memory get_at1(size_t column,
         size_t offset=zero) const NOEXCEPT = 0;
 };
 

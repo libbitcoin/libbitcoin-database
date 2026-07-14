@@ -27,7 +27,6 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/file/file.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
-#include <bitcoin/database/memory/interfaces/memory.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 
 namespace libbitcoin {
@@ -132,15 +131,19 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     size_t allocate(size_t count) NOEXCEPT override;
 
+    /// Remap-protected r/w access to offset (or null) allocated to size.
+    memory_ptr set(size_t offset, size_t size,
+        uint8_t backfill) NOEXCEPT override;
+
     /// Remap-protected r/w access to start/offset (or null), within capacity.
     memory_ptr get_capacity(size_t offset=zero) const NOEXCEPT override;
 
     /// Unprotected r/w access to start/offset (or null), within logical.
     memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override;
 
-    /// Remap-protected r/w access to offset (or null) allocated to size.
-    memory_ptr set(size_t offset, size_t size,
-        uint8_t backfill) NOEXCEPT override;
+    /// Unprotected r/w access to start/offset (or null), within logical.
+    memory::iterator get_at_raw(size_t column,
+        size_t offset=zero) const NOEXCEPT override;
 
     /// Remap-protected r/w access to start/offset (or null), within logical.
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
@@ -148,6 +151,12 @@ public:
     /// Same as get() but within specified column (or null for invalid column).
     memory_ptr get_at(size_t column,
         size_t offset=zero) const NOEXCEPT override;
+
+    /// Remap-protected r/w access to start/offset (or null), within logical.
+    memory get1(size_t offset=zero) const NOEXCEPT override;
+
+    /// Same as get() but within specified column (or null for invalid column).
+    memory get_at1(size_t column, size_t offset=zero) const NOEXCEPT override;
 
 protected:
     template <size_t Column>
@@ -174,7 +183,6 @@ protected:
 
 private:
     static constexpr auto fail = -1;
-    using access = accessor<std::shared_mutex>;
     using sequence = std::make_index_sequence<columns>;
 
     // mman dispatch, not thread safe.

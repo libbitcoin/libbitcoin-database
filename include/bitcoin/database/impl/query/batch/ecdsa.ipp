@@ -41,10 +41,10 @@ bool CLASS::verify_ecdsa_signatures(const stopper& cancel,
     using signature_t = const table::ecdsa_signature::span;
 
     using namespace system;
-    const auto correlate = pointer_cast<correlate_t>(correlate_ptr->data());
-    const auto digest = pointer_cast<digest_t>(digest_ptr->data());
-    const auto compressed = pointer_cast<compressed_t>(compressed_ptr->data());
-    const auto signature = pointer_cast<signature_t>(signature_ptr->data());
+    const auto correlate = pointer_cast<correlate_t>(correlate_ptr.data());
+    const auto digest = pointer_cast<digest_t>(digest_ptr.data());
+    const auto compressed = pointer_cast<compressed_t>(compressed_ptr.data());
+    const auto signature = pointer_cast<signature_t>(signature_ptr.data());
 
     // Shortest column.
     const auto count = store_.ecdsa.count();
@@ -91,10 +91,12 @@ bool CLASS::set_signature(const hash_digest& digest,
     const auto row = possible_narrow_cast<ecdsa_link::integer>(one);
 
     // Allocate 1 row across all columns.
-    // TODO: this could provide a single remap lock for all puts below.
     const auto fk = store_.ecdsa.allocate(row);
     if (fk.is_terminal())
         return false;
+
+    // Guard against remap (required for nomaps::put(fk)).
+    const auto guard = store_.ecdsa.guard();
 
     // Write one value to each column in corresponding positions.
     return
@@ -116,22 +118,24 @@ bool CLASS::set_signatures(const hash_digest& digest,
     using compressed_t = table::ecdsa_compressed::put_refs;
     using signature_t = table::ecdsa_signature::put_refs;
 
+    using namespace system;
     const auto csigs = sigs.size();
     const auto ckeys = keys.size();
-    const auto count = system::chain::multisig::rows(csigs, ckeys);
+    const auto count = chain::multisig::rows(csigs, ckeys);
 
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
     const auto scope = get_transactor();
 
-    using namespace system;
     const auto rows = possible_narrow_cast<ecdsa_link::integer>(count);
 
     // Allocate rows across all columns.
-    // TODO: this could provide a single remap lock for all puts below.
     const auto fk = store_.ecdsa.allocate(rows);
     if (fk.is_terminal())
         return false;
+
+    // Guard against remap (required for nomaps::put(fk)).
+    const auto guard = store_.ecdsa.guard();
 
     // Write values to each column in corresponding positions.
     return

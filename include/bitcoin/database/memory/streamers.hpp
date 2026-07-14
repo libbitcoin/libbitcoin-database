@@ -20,7 +20,7 @@
 #define LIBBITCOIN_DATABASE_MEMORY_STREAMERS_HPP
 
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/memory/interfaces/memory.hpp>
+#include <bitcoin/database/memory/accessor.hpp>
 
 namespace libbitcoin {
 namespace database {

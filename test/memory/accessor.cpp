@@ -22,10 +22,11 @@ BOOST_AUTO_TEST_SUITE(accessor_tests)
 
 using namespace system;
 
-BOOST_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__nulls)
+BOOST_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__invalid_nulls)
 {
     std::shared_mutex mutex;
     accessor instance(mutex);
+    BOOST_REQUIRE(!instance);
     BOOST_REQUIRE(is_null(instance.data()));
     BOOST_REQUIRE(is_null(instance.begin()));
     BOOST_REQUIRE(is_null(instance.end()));
@@ -34,7 +35,7 @@ BOOST_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__nulls)
 BOOST_AUTO_TEST_CASE(accessor__destruct__shared_lock__released)
 {
     std::shared_mutex mutex;
-    auto access = std::make_shared<accessor<std::shared_mutex>>(mutex);
+    auto access = std::make_shared<accessor>(mutex);
     BOOST_REQUIRE(!mutex.try_lock());
     access.reset();
     BOOST_REQUIRE(mutex.try_lock());

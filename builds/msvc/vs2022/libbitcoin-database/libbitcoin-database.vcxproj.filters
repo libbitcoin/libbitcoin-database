@@ -176,9 +176,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\finalizer.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\memory.hpp">
-      <Filter>include\bitcoin\database\memory\interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp">
       <Filter>include\bitcoin\database\memory\interfaces</Filter>
     </ClInclude>
@@ -379,9 +376,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\accessor.ipp">
-      <Filter>include\bitcoin\database\impl\memory</Filter>
-    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap.ipp">
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>
