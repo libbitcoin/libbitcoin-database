@@ -283,17 +283,7 @@ public:
 
     memory_ptr get(size_t offset=zero) const NOEXCEPT override
     {
-        return get_at(zero, offset);
-    }
-
-    memory_ptr get_at(size_t column, size_t offset=zero) const NOEXCEPT override
-    {
-        using namespace system;
-        auto data = at(column).data();
-        const auto allocated = size() * widths.at(column);
-        const auto ptr = emplace_shared<accessor>(map_mutex_);
-        ptr->assign(std::next(data, offset), std::next(data, allocated));
-        return ptr;
+        return std::make_shared<memory>(get1(offset));
     }
 
     memory get1(size_t offset=zero) const NOEXCEPT override

@@ -103,29 +103,9 @@ memory::iterator CLASS::get_at_raw(size_t column, size_t offset) const NOEXCEPT
 TEMPLATE
 memory_ptr CLASS::get(size_t offset) const NOEXCEPT
 {
-    return get_at(zero, offset);
-}
-
-TEMPLATE
-memory_ptr CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
-{
-    if (column >= columns)
-        return {};
-
-    // Obtaining size before access prevents mutual mutex wait (deadlock).
-    const auto allocated = size() * widths.at(column);
-
-    // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
-    const auto ptr = std::make_shared<accessor>(remap_mutex_);
-
-    // loaded_ update is precluded by above lock, making this read atomic.
-    if (!loaded_ || is_null(ptr))
-        return {};
-
-    // With offset > size the assignment is negative (stream is exhausted).
-    auto data = memory_map_.at(column);
-    ptr->assign(std::next(data, offset), std::next(data, allocated));
-    return ptr;
+    auto out = get_at1(zero, offset);
+    if (!out) return {};
+    return std::make_shared<accessor>(std::move(out));
 }
 
 TEMPLATE

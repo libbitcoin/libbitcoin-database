@@ -148,10 +148,6 @@ public:
     /// Remap-protected r/w access to start/offset (or null), within logical.
     memory_ptr get(size_t offset=zero) const NOEXCEPT override;
 
-    /// Same as get() but within specified column (or null for invalid column).
-    memory_ptr get_at(size_t column,
-        size_t offset=zero) const NOEXCEPT override;
-
     /// Remap-protected r/w access to start/offset (or null), within logical.
     memory get1(size_t offset=zero) const NOEXCEPT override;
 

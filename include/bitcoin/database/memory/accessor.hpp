@@ -61,6 +61,17 @@ public:
         ////BC_ASSERT(!system::is_negative(size()));
     }
 
+    /// Release lock and invalidate pointers (idempotent).
+    inline void reset() NOEXCEPT
+    {
+        if (!is_null(begin_))
+        {
+            shared_lock_.unlock();
+            begin_ = nullptr;
+            end_ = nullptr;
+        }
+    }
+
     /// memory interface
     /// -----------------------------------------------------------------------
 

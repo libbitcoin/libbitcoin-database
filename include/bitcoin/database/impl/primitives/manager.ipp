@@ -31,7 +31,11 @@ inline memory_ptr CLASS::get() const NOEXCEPT
     if constexpr (is_one(columns))
         return files_.get();
     else
-        return files_.get_at(Column);
+    {
+        auto out = files_.get_at1(Column);
+        if (!out) return {};
+        return std::make_shared<accessor>(std::move(out));
+    }
 }
 
 TEMPLATE
@@ -57,7 +61,11 @@ inline memory_ptr CLASS::get(const Link& link) const NOEXCEPT
     if constexpr (is_one(columns))
         return files_.get(position);
     else
-        return files_.get_at(Column, position);
+    {
+        auto out = files_.get_at1(Column, position);
+        if (!out) return {};
+        return std::make_shared<accessor>(std::move(out));
+    }
 }
 
 TEMPLATE

@@ -164,6 +164,7 @@ BOOST_AUTO_TEST_CASE(mmap__load__unloaded__true)
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
 }
+
 BOOST_AUTO_TEST_CASE(mmap__load__shared__load_locked)
 {
     const std::string file = TEST_PATH;
@@ -824,15 +825,15 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     // Row zero, written before remap (verifies preservation across remap).
     BOOST_REQUIRE_EQUAL(instance.allocate(1), zero);
 
-    auto write0_column0 = instance.get_at(0, 0);
-    auto write0_column1 = instance.get_at(1, 0);
+    auto write0_column0 = instance.get_at1(0, 0);
+    auto write0_column1 = instance.get_at1(1, 0);
     BOOST_REQUIRE(write0_column0);
     BOOST_REQUIRE(write0_column1);
 
-    write0_column0->begin()[0] = 'a';
-    write0_column1->begin()[0] = 'b';
-    write0_column1->begin()[1] = 'c';
-    write0_column1->begin()[2] = 'd';
+    write0_column0.begin()[0] = 'a';
+    write0_column1.begin()[0] = 'b';
+    write0_column1.begin()[1] = 'c';
+    write0_column1.begin()[2] = 'd';
     write0_column0.reset();
     write0_column1.reset();
 
@@ -847,15 +848,15 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     BOOST_REQUIRE_EQUAL(std::filesystem::file_size(files.back()), rows * 3u);
 
     // Last row, through the remapped pointers.
-    auto write1_column0 = instance.get_at(0, last * 1);
-    auto write1_column1 = instance.get_at(1, last * 3);
+    auto write1_column0 = instance.get_at1(0, last * 1);
+    auto write1_column1 = instance.get_at1(1, last * 3);
     BOOST_REQUIRE(write1_column0);
     BOOST_REQUIRE(write1_column1);
 
-    write1_column0->begin()[0] = 'w';
-    write1_column1->begin()[0] = 'x';
-    write1_column1->begin()[1] = 'y';
-    write1_column1->begin()[2] = 'z';
+    write1_column0.begin()[0] = 'w';
+    write1_column1.begin()[0] = 'x';
+    write1_column1.begin()[1] = 'y';
+    write1_column1.begin()[2] = 'z';
     write1_column0.reset();
     write1_column1.reset();
     BOOST_REQUIRE(!instance.unload());
@@ -868,18 +869,18 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.size(), rows);
 
-    auto read_column0 = instance.get_at(0, 0);
-    auto read_column1 = instance.get_at(1, 0);
+    auto read_column0 = instance.get_at1(0, 0);
+    auto read_column1 = instance.get_at1(1, 0);
     BOOST_REQUIRE(read_column0);
     BOOST_REQUIRE(read_column1);
-    BOOST_REQUIRE_EQUAL(read_column0->begin()[0], 'a');
-    BOOST_REQUIRE_EQUAL(read_column0->begin()[last], 'w');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[0], 'b');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[1], 'c');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[2], 'd');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[last * 3 + 0], 'x');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[last * 3 + 1], 'y');
-    BOOST_REQUIRE_EQUAL(read_column1->begin()[last * 3 + 2], 'z');
+    BOOST_REQUIRE_EQUAL(read_column0.begin()[0], 'a');
+    BOOST_REQUIRE_EQUAL(read_column0.begin()[last], 'w');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[0], 'b');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[1], 'c');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[2], 'd');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 0], 'x');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 1], 'y');
+    BOOST_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 2], 'z');
 
     read_column0.reset();
     read_column1.reset();
