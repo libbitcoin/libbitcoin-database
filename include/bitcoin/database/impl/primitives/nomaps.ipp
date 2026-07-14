@@ -198,7 +198,8 @@ bool CLASS::put(memory::iterator it, const Element& element) NOEXCEPT
         return false;
 
     using namespace system;
-    iostream stream{ it, system::maximum<ptrdiff_t> };
+    const auto bytes = width<Column> * element.count();
+    iostream stream{ it, possible_narrow_and_sign_cast<ptrdiff_t>(bytes) };
     flipper sink{ stream };
 
     BC_DEBUG_ONLY(sink.set_limit(width<Column> * element.count());)
