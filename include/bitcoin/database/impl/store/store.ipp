@@ -166,6 +166,12 @@ uint8_t CLASS::interval_depth() const NOEXCEPT
 }
 
 TEMPLATE
+uint32_t CLASS::fork_flags() const NOEXCEPT
+{
+    return configuration_.fork_flags;
+}
+
+TEMPLATE
 bool CLASS::is_dirty() const NOEXCEPT
 {
     return dirty_.load(std::memory_order_relaxed);

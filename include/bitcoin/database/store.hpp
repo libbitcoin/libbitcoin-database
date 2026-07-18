@@ -91,8 +91,11 @@ public:
     /// Mark blocks as unconfirmable (disorganize vs. stall), configuration.
     bool mark_unconfirmable() const NOEXCEPT;
 
-    /// Depth of electrum merkle tree interval caching.
+    /// Depth of electrum merkle tree interval caching upon store creation.
     uint8_t interval_depth() const NOEXCEPT;
+
+    /// Fork flags upon store creation.
+    uint32_t fork_flags() const NOEXCEPT;
 
     /// Determine if the store is non-empty/initialized.
     bool is_dirty() const NOEXCEPT;
