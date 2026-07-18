@@ -282,13 +282,13 @@ code CLASS::get_merkle_subroots(hashes& roots, size_t waypoint) const NOEXCEPT
 TEMPLATE
 size_t CLASS::interval_span() const NOEXCEPT
 {
-    if (const auto span = span_.load(std::memory_order_relaxed);
-        is_nonzero(span))
-        return span;
+    auto span = span_.load(std::memory_order_relaxed);
 
     // initialize_span() never returns zero.
-    span_.store(initialize_span(), std::memory_order_relaxed);
-    return span_;
+    if (is_zero(span))
+        span_.store(span = initialize_span(), std::memory_order_relaxed);
+
+    return span;
 }
 
 // protected

@@ -516,7 +516,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
         "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
         "00");         // witness
     const auto genesis_txs_head = system::base16_chunk(
-        "0d00000000"   // slab size
+        "1100000000"   // slab size
         "0000000000"   // pk->
         "ffffffffff"
         "ffffffffff"
@@ -538,7 +538,8 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
         "1d0100"       // size heavy (285)
         "0100"         // txs count (1)
         "00000000"     // transaction[0]
-        "ff");         // depth (255)
+        "ff"           // depth (255) - genesis only
+        "00000000");   // forks (0) - genesis only
 
     settings settings{};
     settings.header_buckets = 8;
@@ -664,7 +665,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
         "4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73" // script
         "00");         // witness
     const auto genesis_txs_head = system::base16_chunk(
-        "0d00000000"   // slab size
+        "1100000000"   // slab size
         "0000000000"   // pk->
         "ffffffffff"
         "ffffffffff"
@@ -686,7 +687,8 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
         "1d0100"       // size heavy (285)
         "0100"         // txs count (1)
         "00000000"     // transaction[0]
-        "ff");         // depth (255)
+        "ff"           // depth (255) - genesis only
+        "00000000");   // forks (0) - genesis only
 
     settings settings{};
     settings.header_buckets = 8;

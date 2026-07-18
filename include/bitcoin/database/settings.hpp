@@ -45,8 +45,11 @@ struct BCD_API settings
     /// Mark blocks as unconfirmable (disorganize vs. stall).
     bool mark_unconfirmable{ true };
 
-    /// Depth of electrum merkle tree interval caching.
+    /// Depth of merkle tree interval caching (used at store create only).
     uint16_t interval_depth{ max_uint8 };
+
+    /// Fork flags upon store creation (used at store create only).
+    uint32_t fork_flags{};
 
     /// Path to the database directory.
     std::filesystem::path path{ "bitcoin" };

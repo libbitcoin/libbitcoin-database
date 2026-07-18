@@ -33,8 +33,9 @@ const table::txs::slab slab0
         // tx fk 0 uniquely identifies genesis, resulting in depth storage.
         0x00000000_u32
     },
-    {},  // interval (unused due to default span)
-    0x42 // depth (genesis only)
+    {},         // interval (unused due to default span)
+    0x42,       // depth (genesis only)
+    0x12345678  // flags (genesis only)
 };
 const table::txs::slab slab1
 {
@@ -81,7 +82,10 @@ const data_chunk expected0
     0x00, 0x00, 0x00, 0x00,
 
     // depth (genesis)
-    0x42
+    0x42,
+
+    // flags (genesis)
+    0x78, 0x56, 0x34, 0x12
 };
 const data_chunk expected1
 {
@@ -147,6 +151,8 @@ BOOST_AUTO_TEST_CASE(txs__put__get__expected)
     BOOST_CHECK(slab == slab0);
     BOOST_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0 }));
 
+    slab.depth = {};
+    slab.forks = {};
     BOOST_CHECK(instance.put(key, slab1));
     BOOST_CHECK(instance.exists(key));
     BOOST_CHECK(instance.at(key, slab));

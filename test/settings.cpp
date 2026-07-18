@@ -26,6 +26,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.turbo, false);
     BOOST_REQUIRE_EQUAL(configuration.mark_unconfirmable, true);
     BOOST_REQUIRE_EQUAL(configuration.interval_depth, 255u);
+    BOOST_REQUIRE_EQUAL(configuration.fork_flags, 0u);
     BOOST_REQUIRE_EQUAL(configuration.path, "bitcoin");
 
     // Archives.
