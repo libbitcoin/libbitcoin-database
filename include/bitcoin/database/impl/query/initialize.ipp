@@ -29,6 +29,14 @@ namespace database {
 // Initialization (natural-keyed).
 // ----------------------------------------------------------------------------
 
+// server (warning)
+TEMPLATE
+uint32_t CLASS::initialized_forks() const NOEXCEPT
+{
+    table::txs::get_genesis_forks txs{};
+    return store_.txs.at(to_txs(0), txs) ? txs.forks : store_.fork_flags();
+}
+
 // server/dumps
 TEMPLATE
 hash_digest CLASS::get_top_confirmed_hash() const NOEXCEPT
