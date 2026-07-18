@@ -40,6 +40,7 @@ struct txs
   : public array_map<schema::txs>
 {
     using ct = linkage<schema::count_>;
+    using flags = linkage<schema::flags>;
     using tx = schema::transaction::link;
     using keys = std::vector<tx::integer>;
     using bytes = linkage<schema::size, sub1(to_bits(schema::size))>;
@@ -83,7 +84,7 @@ struct txs
             return system::possible_narrow_cast<link::integer>(
                 skip_sizes + ct::size + (tx_fks.size() * tx::size) +
                 (interval.has_value() ? schema::hash : zero) +
-                to_int(is_genesis()));
+                (is_genesis() ? one + flags::size : zero));
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -104,8 +105,13 @@ struct txs
             interval.reset();
             if (is_interval(merged)) interval = source.read_hash();
 
-            // depth (genesis only)
-            depth = is_genesis() ? source.read_byte() : zero;
+            // depth/forks (genesis only)
+            if (is_genesis())
+            {
+                depth = source.read_byte();
+                forks = source.read_little_endian<flags::integer, flags::size>();
+            }
+
             BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
@@ -131,8 +137,13 @@ struct txs
             // interval (when specified)
             if (interval.has_value()) sink.write_bytes(interval.value());
 
-            // depth (genesis only)
-            if (is_genesis()) sink.write_byte(depth);
+            // depth/forks (genesis only)
+            if (is_genesis())
+            {
+                sink.write_byte(depth);
+                sink.write_little_endian<flags::integer, flags::size>(forks);
+            }
+
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
@@ -143,7 +154,8 @@ struct txs
                 && heavy == other.heavy
                 && tx_fks == other.tx_fks
                 && interval == other.interval
-                && depth == other.depth;
+                && depth == other.depth
+                && forks == other.forks;
         }
 
         bytes::integer light{};
@@ -151,6 +163,7 @@ struct txs
         keys tx_fks{};
         hash interval{};
         uint8_t depth{};
+        flags::integer forks{};
     };
 
     // put a contiguous set of tx identifiers.
@@ -167,7 +180,7 @@ struct txs
             return system::possible_narrow_cast<link::integer>(
                 skip_sizes + ct::size + (number * tx::size) +
                 (interval.has_value() ? schema::hash : zero) +
-                to_int(is_zero(tx_fk)));
+                (is_genesis() ? one + flags::size : zero));
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
@@ -185,8 +198,13 @@ struct txs
             // interval (when specified)
             if (interval.has_value()) sink.write_bytes(interval.value());
 
-            // depth (genesis only)
-            if (is_genesis()) sink.write_byte(depth);
+            // depth/forks (genesis only)
+            if (is_genesis())
+            {
+                sink.write_byte(depth);
+                sink.write_little_endian<flags::integer, flags::size>(forks);
+            }
+
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
@@ -197,6 +215,7 @@ struct txs
         tx::integer tx_fk{};
         hash interval{};
         uint8_t depth{};
+        flags::integer forks{};
     };
 
     struct get_interval
@@ -257,6 +276,41 @@ struct txs
         }
 
         uint8_t depth{};
+    };
+
+    // This reader is only applicable to the genesis block.
+    struct get_genesis_forks
+      : public schema::txs
+    {
+        inline link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        // Stored at end since only read once (at startup).
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            // tx sizes
+            const auto merged = source.read_little_endian<bytes::integer, bytes::size>();
+            source.skip_bytes(bytes::size);
+
+            // tx fks
+            const auto number = source.read_little_endian<ct::integer, ct::size>();
+            source.skip_bytes(number * tx::size);
+
+            // interval
+            source.skip_bytes(is_interval(merged) ? schema::hash : zero);
+
+            // depth
+            source.skip_byte();
+
+            // forks
+            forks = source.read_little_endian<flags::integer, flags::size>();
+            return source;
+        }
+
+        flags::integer forks{};
     };
 
     struct get_position
