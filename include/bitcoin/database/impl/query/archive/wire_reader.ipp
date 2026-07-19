@@ -44,15 +44,15 @@ bool CLASS::get_wire_header(bytewriter& sink,
 
 TEMPLATE
 bool CLASS::get_wire_input(bytewriter& sink,
-    const point_link& link) const NOEXCEPT
+    const ins_link& link) const NOEXCEPT
 {
-    table::point::wire_point point{ {}, sink };
-    if (!store_.point.get(link, point))
+    table::ins_point::wire_point point{ {}, sink };
+    if (!store_.ins.get(link, point))
         return false;
 
-    table::ins::get_input ins{};
+    table::ins_sequence::get_input ins{};
     table::input::wire_script script{ {}, sink };
-    if (!store_.ins.get(link, ins) ||
+    if (!store_.ins.sequence.get(link, ins) ||
         !store_.input.get(ins.input_fk, script))
         return false;
 
@@ -70,11 +70,11 @@ bool CLASS::get_wire_output(bytewriter& sink,
 
 TEMPLATE
 bool CLASS::get_wire_witness(bytewriter& sink,
-    const point_link& link) const NOEXCEPT
+    const ins_link& link) const NOEXCEPT
 {
-    table::ins::get_input ins{};
+    table::ins_sequence::get_input ins{};
     table::input::wire_witness wire{ {}, sink };
-    return store_.ins.get(link, ins)
+    return store_.ins.sequence.get(link, ins)
         && store_.input.get(ins.input_fk, wire);
 }
 

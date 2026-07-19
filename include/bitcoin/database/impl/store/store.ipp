@@ -40,10 +40,7 @@ CLASS::store(const settings& config) NOEXCEPT
     output_head_(head(config.path / schema::dir::heads, schema::archive::output), 1, 0, sequential),
     output_body_(body(config.path, schema::archive::output), config.output_size, config.output_rate, sequential),
 
-    point_head_(head(config.path / schema::dir::heads, schema::archive::point), 1, 0, random),
-    point_body_(body(config.path, schema::archive::point), config.point_size, config.point_rate, sequential),
-
-    ins_head_(head(config.path / schema::dir::heads, schema::archive::ins), 1, 0, sequential),
+    ins_head_(head(config.path / schema::dir::heads, schema::archive::ins), 1, 0, random),
     ins_body_(body(config.path, schema::archive::ins), config.ins_size, config.ins_rate, sequential),
 
     outs_head_(head(config.path / schema::dir::heads, schema::archive::outs), 1, 0, sequential),
@@ -120,8 +117,7 @@ CLASS::store(const settings& config) NOEXCEPT
     header(header_head_, header_body_, config.header_buckets),
     input(input_head_, input_body_),
     output(output_head_, output_body_),
-    point(point_head_, point_body_, config.point_buckets),
-    ins(ins_head_, ins_body_),
+    ins(ins_head_, ins_body_, config.ins_buckets),
     outs(outs_head_, outs_body_),
     tx(tx_head_, tx_body_, config.tx_buckets),
     txs(txs_head_, txs_body_, config.txs_buckets),

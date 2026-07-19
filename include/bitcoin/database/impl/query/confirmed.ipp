@@ -51,7 +51,7 @@ header_link CLASS::find_confirmed_block(
 }
 
 TEMPLATE
-point_link CLASS::find_confirmed_spender(const point& prevout) const NOEXCEPT
+ins_link CLASS::find_confirmed_spender(const point& prevout) const NOEXCEPT
 {
     for (const auto& in: to_spenders(prevout))
         if (is_confirmed_input(in))
@@ -105,7 +105,7 @@ bool CLASS::is_confirmed_tx(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_confirmed_input(const point_link& link) const NOEXCEPT
+bool CLASS::is_confirmed_input(const ins_link& link) const NOEXCEPT
 {
     // The spend.tx is strong *and* its block is confirmed (by height).
     const auto fk = to_input_tx(link);
@@ -168,7 +168,7 @@ bool CLASS::is_spent(const output_link& link) const NOEXCEPT
 {
     // *Any* tx spends the output. Note that this could even be a tx that is in
     // conflict with another long-confirmed tx, or a valid tx in invalid block.
-    return store_.point.exists(get_outpoint(link).point());
+    return store_.ins.exists(get_outpoint(link).point());
 }
 
 } // namespace database

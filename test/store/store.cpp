@@ -122,8 +122,8 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
     BOOST_REQUIRE_EQUAL(instance.input_body_file(), "bitcoin/archive_input.data");
     BOOST_REQUIRE_EQUAL(instance.output_head_file(), "bitcoin/heads/archive_output.head");
     BOOST_REQUIRE_EQUAL(instance.output_body_file(), "bitcoin/archive_output.data");
-    BOOST_REQUIRE_EQUAL(instance.point_head_file(), "bitcoin/heads/archive_point.head");
-    BOOST_REQUIRE_EQUAL(instance.point_body_file(), "bitcoin/archive_point.data");
+    BOOST_REQUIRE_EQUAL(instance.ins_head_file(), "bitcoin/heads/archive_ins.head");
+    BOOST_REQUIRE_EQUAL(instance.ins_body_file(), "bitcoin/archive_ins_point.data");
     BOOST_REQUIRE_EQUAL(instance.outs_head_file(), "bitcoin/heads/archive_outs.head");
     BOOST_REQUIRE_EQUAL(instance.outs_body_file(), "bitcoin/archive_outs.data");
     BOOST_REQUIRE_EQUAL(instance.tx_head_file(), "bitcoin/heads/archive_tx.head");

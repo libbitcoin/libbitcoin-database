@@ -138,13 +138,9 @@ protected:
     Storage<one> output_head_;
     Storage<one> output_body_;
 
-    // record hashmap
-    Storage<one> point_head_;
-    Storage<one> point_body_;
-
-    // array
+    // aggregate (point spine + sequence satellite)
     Storage<one> ins_head_;
-    Storage<one> ins_body_;
+    table::ins_storage<Storage> ins_body_;
 
     // array
     Storage<one> outs_head_;
@@ -261,7 +257,6 @@ public:
     table::header header;
     table::input input;
     table::output output;
-    table::point point;
     table::ins ins;
     table::outs outs;
     table::transaction tx;

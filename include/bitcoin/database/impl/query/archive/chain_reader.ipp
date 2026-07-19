@@ -191,45 +191,45 @@ typename CLASS::transaction::cptr CLASS::get_transaction(const tx_link& link,
     return ptr;
 }
 
-// point_link->point
+// ins_link->point
 // ----------------------------------------------------------------------------
 
 TEMPLATE
 typename CLASS::point CLASS::get_point(
-    const point_link& link) const NOEXCEPT
+    const ins_link& link) const NOEXCEPT
 {
-    table::point::record point{};
-    if (!store_.point.get(link, point))
+    table::ins_point::record point{};
+    if (!store_.ins.get(link, point))
         return {};
 
     return { point.hash, point.index };
 }
 
-// point_link->witness
+// ins_link->witness
 // ----------------------------------------------------------------------------
 
 TEMPLATE
 typename CLASS::witness::cptr CLASS::get_witness(
-    const point_link& link) const NOEXCEPT
+    const ins_link& link) const NOEXCEPT
 {
     table::input::get_witness in{};
-    table::ins::get_input ins{};
-    if (!store_.ins.get(link, ins) ||
+    table::ins_sequence::get_input ins{};
+    if (!store_.ins.sequence.get(link, ins) ||
         !store_.input.get(ins.input_fk, in))
         return {};
 
     return in.witness;
 }
 
-// point_link->input_script
+// ins_link->input_script
 // ----------------------------------------------------------------------------
 TEMPLATE
 typename CLASS::script::cptr CLASS::get_input_script(
-    const point_link& link) const NOEXCEPT
+    const ins_link& link) const NOEXCEPT
 {
     table::input::get_script in{};
-    table::ins::get_input ins{};
-    if (!store_.ins.get(link, ins) ||
+    table::ins_sequence::get_input ins{};
+    if (!store_.ins.sequence.get(link, ins) ||
         !store_.input.get(ins.input_fk, in))
         return {};
 
@@ -246,19 +246,19 @@ typename CLASS::input::cptr CLASS::get_input(const tx_link& link,
     return get_input(to_point(link, index), witness);
 }
 
-// point_link->input
+// ins_link->input
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-typename CLASS::input::cptr CLASS::get_input(const point_link& link,
+typename CLASS::input::cptr CLASS::get_input(const ins_link& link,
     bool witness) const NOEXCEPT
 {
     using namespace system;
     table::input::get_ptrs in{ {}, witness };
-    table::ins::get_input ins{};
-    table::point::record point{};
-    if (!store_.ins.get(link, ins) ||
-        !store_.point.get(link, point) ||
+    table::ins_sequence::get_input ins{};
+    table::ins_point::record point{};
+    if (!store_.ins.sequence.get(link, ins) ||
+        !store_.ins.get(link, point) ||
         !store_.input.get(ins.input_fk, in))
         return {};
 
@@ -350,11 +350,11 @@ inpoints CLASS::get_spenders(const point& point) const NOEXCEPT
     return ins;
 }
 
-// point_link->inpoint[spender]
+// ins_link->inpoint[spender]
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-inpoint CLASS::get_spender(const point_link& link) const NOEXCEPT
+inpoint CLASS::get_spender(const ins_link& link) const NOEXCEPT
 {
     const auto tx_fk = to_input_tx(link);
     if (tx_fk.is_terminal())

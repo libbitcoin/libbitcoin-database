@@ -49,7 +49,6 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     close(ec, header, table_t::header_table);
     close(ec, input, table_t::input_table);
     close(ec, output, table_t::output_table);
-    close(ec, point, table_t::point_table);
     close(ec, ins, table_t::ins_table);
     close(ec, outs, table_t::outs_table);
     close(ec, tx, table_t::tx_table);

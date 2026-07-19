@@ -56,8 +56,6 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, input_body_, table_t::input_body);
     reload(ec, output_head_, table_t::output_head);
     reload(ec, output_body_, table_t::output_body);
-    reload(ec, point_head_, table_t::point_head);
-    reload(ec, point_body_, table_t::point_body);
     reload(ec, ins_head_, table_t::ins_head);
     reload(ec, ins_body_, table_t::ins_body);
     reload(ec, outs_head_, table_t::outs_head);

@@ -40,7 +40,6 @@ namespace archive
     constexpr auto header = "archive_header";
     constexpr auto input = "archive_input";
     constexpr auto output = "archive_output";
-    constexpr auto point = "archive_point";
     constexpr auto ins = "archive_ins";
     constexpr auto outs = "archive_outs";
     constexpr auto spend = "archive_spend";

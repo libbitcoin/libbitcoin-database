@@ -42,8 +42,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.header_body_size(), schema::header::minrow);
     BOOST_REQUIRE_EQUAL(query.output_body_size(), 81u);
     BOOST_REQUIRE_EQUAL(query.input_body_size(), 79u);
-    BOOST_REQUIRE_EQUAL(query.point_body_size(), schema::point::minrow);
-    BOOST_REQUIRE_EQUAL(query.ins_body_size(), schema::ins::minrow);
+    BOOST_REQUIRE_EQUAL(query.ins_body_size(), schema::ins::minrow + schema::ins_sequence::minrow);
     BOOST_REQUIRE_EQUAL(query.outs_body_size(), schema::outs::minrow);
     BOOST_REQUIRE_EQUAL(query.txs_body_size(), schema::txs::minrow + one + schema::flags);
     BOOST_REQUIRE_EQUAL(query.tx_body_size(), schema::transaction::minrow);
@@ -74,7 +73,7 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     BOOST_REQUIRE_EQUAL(query.header_buckets(), 128u);
-    BOOST_REQUIRE_EQUAL(query.point_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.ins_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.txs_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.tx_buckets(), 128u);
 
@@ -98,7 +97,6 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     BOOST_REQUIRE_EQUAL(query.header_records(), one);
-    BOOST_REQUIRE_EQUAL(query.point_records(), one);
     BOOST_REQUIRE_EQUAL(query.ins_records(), one);
     BOOST_REQUIRE_EQUAL(query.tx_records(), one);
 

@@ -59,11 +59,19 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
         table::output::put_view{ {}, tx_fk, tx }))
         return error::tx_output_put;
 
-    // Allocate and contiguously store input links.
-    ins_link ins_fk{};
-    if (!store_.ins.put_link(ins_fk,
-        table::ins::put_view{ {}, in_fk, tx_fk, tx }))
+    // Allocate ins/point rows and contiguously store input links.
+    // Point elements are set into the same rows following tx set, below.
+    auto ins_fk = store_.ins.allocate(inputs);
+    if (ins_fk.is_terminal())
         return error::tx_ins_put;
+
+    // Ins put is unguarded, the accessor guards its rows against remap.
+    auto insert = store_.ins.get_memory();
+    if (!insert || !store_.ins.sequence.put(ins_fk,
+        table::ins_sequence::put_view{ {}, in_fk, tx_fk, tx }))
+        return error::tx_ins_put;
+
+    insert.reset();
 
     // Allocate and contiguously store output links.
     outs_link outs_fk{};
@@ -93,14 +101,11 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
     if (coinbase)
     {
         // Should only be one input, but generalized anyway.
-        if (!store_.point.expand(ins_fk + inputs))
-            return error::tx_point_allocate;
-
         for (size_t in{}; in < inputs; ++in)
         {
             // Should always be a null point - but could be invalid.
-            if (!store_.point.put(ins_fk++, chain::point(isource),
-                table::point::record{}))
+            if (!store_.ins.put(ins_fk++, chain::point(isource),
+                table::ins_point::record{}))
                 return error::tx_null_point_put;
 
             // Skip script and sequence.
@@ -110,22 +115,17 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
     }
     else
     {
-        // Expand synchronizes keys with ins_fk, entries set into same offset.
-        // Allocate contiguous points (at sequential keys matching ins_fk).
-        if (!store_.point.expand(ins_fk + inputs))
-            return error::tx_point_allocate;
-
         if (store_.is_dirty() || !bypass)
         {
             // Collect duplicates to store in duplicate table.
             std::vector<chain::point> twins{};
-            auto ptr = store_.point.get_memory();
+            auto ptr = store_.ins.get_memory();
 
             for (size_t in{}; in < inputs; ++in)
             {
                 bool duplicate{};
-                if (!store_.point.put(duplicate, ptr, ins_fk++,
-                    chain::point(isource), table::point::record{}))
+                if (!store_.ins.put(duplicate, ptr, ins_fk++,
+                    chain::point(isource), table::ins_point::record{}))
                     return error::tx_point_put;
             
                 if (duplicate)
@@ -150,12 +150,12 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction_view& tx,
         }
         else
         {
-            auto ptr = store_.point.get_memory();
+            auto ptr = store_.ins.get_memory();
 
             for (size_t in{}; in < inputs; ++in)
             {
-                if (!store_.point.put(ptr, ins_fk++, chain::point(isource),
-                    table::point::record{}))
+                if (!store_.ins.put(ptr, ins_fk++, chain::point(isource),
+                    table::ins_point::record{}))
                     return error::tx_point_put;
 
                 // Skip script and sequence.

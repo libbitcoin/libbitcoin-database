@@ -116,7 +116,6 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, header, table_t::header_table);
         restore(ec, input, table_t::input_table);
         restore(ec, output, table_t::output_table);
-        restore(ec, point, table_t::point_table);
         restore(ec, ins, table_t::ins_table);
         restore(ec, outs, table_t::outs_table);
         restore(ec, tx, table_t::tx_table);

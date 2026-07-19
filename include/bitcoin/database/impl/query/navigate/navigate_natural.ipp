@@ -106,20 +106,20 @@ inline hash_digest CLASS::get_tx_key(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-inline point_key CLASS::get_point_key(const point_link& link) const NOEXCEPT
+inline ins_key CLASS::get_point_key(const ins_link& link) const NOEXCEPT
 {
-    table::point::get_composed point{};
-    if (!store_.point.get(link, point))
+    table::ins_point::get_composed point{};
+    if (!store_.ins.get(link, point))
         return {};
 
     return point.key;
 }
 
 TEMPLATE
-inline hash_digest CLASS::get_point_hash(const point_link& link) const NOEXCEPT
+inline hash_digest CLASS::get_point_hash(const ins_link& link) const NOEXCEPT
 {
-    table::point::record point{};
-    if (!store_.point.get(link, point))
+    table::ins_point::record point{};
+    if (!store_.ins.get(link, point))
         return {};
 
     return point.hash;

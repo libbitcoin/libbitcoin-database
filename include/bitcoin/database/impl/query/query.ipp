@@ -136,13 +136,13 @@ code CLASS::snapshot(const typename Store::event_handler& handler) const NOEXCEP
 TEMPLATE
 size_t CLASS::positive_search_count() const NOEXCEPT
 {
-    return store_.point.positive_search_count();
+    return store_.ins.positive_search_count();
 }
 
 TEMPLATE
 size_t CLASS::negative_search_count() const NOEXCEPT
 {
-    return store_.point.negative_search_count();
+    return store_.ins.negative_search_count();
 }
 
 } // namespace database

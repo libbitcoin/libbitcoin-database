@@ -38,7 +38,6 @@ using output_link = table::output::link;
 using input_link = table::input::link;
 using outs_link = table::outs::link;
 using ins_link = table::ins::link;
-using point_link = table::point::link;
 using tx_link = table::transaction::link;
 using filter_link = table::filter_tx::link;
 using strong_link = table::strong_tx::link;
@@ -52,8 +51,8 @@ using header_links = std::vector<header_link::integer>;
 using tx_links = std::vector<tx_link::integer>;
 using input_links = std::vector<input_link::integer>;
 using output_links = std::vector<output_link::integer>;
-using point_links = std::vector<point_link::integer>;
-using point_key = table::point::key;
+using ins_links = std::vector<ins_link::integer>;
+using ins_key = table::ins::key;
 
 /// Point index (uint32_t).
 using index = table::transaction::ix::integer;

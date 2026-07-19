@@ -43,14 +43,14 @@ public:
         return header_body_.buffer();
     }
 
-    system::data_chunk& point_head() NOEXCEPT
+    system::data_chunk& ins_head() NOEXCEPT
     {
-        return point_head_.buffer();
+        return ins_head_.buffer();
     }
 
-    system::data_chunk& point_body() NOEXCEPT
+    system::data_chunk& ins_body() NOEXCEPT
     {
-        return point_body_.buffer();
+        return ins_body_.buffer();
     }
 
     system::data_chunk& input_head() NOEXCEPT
@@ -73,14 +73,9 @@ public:
         return output_body_.buffer();
     }
 
-    system::data_chunk& ins_head() NOEXCEPT
+    system::data_chunk& ins_sequence_body() NOEXCEPT
     {
-        return ins_head_.buffer();
-    }
-
-    system::data_chunk& ins_body() NOEXCEPT
-    {
-        return ins_body_.buffer();
+        return ins_body_.buffers_.at(one);
     }
 
     system::data_chunk& outs_head() NOEXCEPT

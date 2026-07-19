@@ -45,7 +45,6 @@ code CLASS::dump(const path& folder,
     dump(ec, header_head_, schema::archive::header, table_t::header_head);
     dump(ec, input_head_, schema::archive::input, table_t::input_head);
     dump(ec, output_head_, schema::archive::output, table_t::output_head);
-    dump(ec, point_head_, schema::archive::point, table_t::point_head);
     dump(ec, ins_head_, schema::archive::ins, table_t::ins_head);
     dump(ec, outs_head_, schema::archive::outs, table_t::outs_head);
     dump(ec, tx_head_, schema::archive::tx, table_t::tx_head);

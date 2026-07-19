@@ -135,10 +135,10 @@ code CLASS::to_address_outputs(const stopper& cancel, address_link& cursor,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-tx_link CLASS::to_input_tx(const point_link& link) const NOEXCEPT
+tx_link CLASS::to_input_tx(const ins_link& link) const NOEXCEPT
 {
-    table::ins::get_parent ins{};
-    if (!store_.ins.get(link, ins))
+    table::ins_sequence::get_parent ins{};
+    if (!store_.ins.sequence.get(link, ins))
         return {};
 
     return ins.parent_fk;
@@ -155,7 +155,7 @@ tx_link CLASS::to_output_tx(const output_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-tx_link CLASS::to_prevout_tx(const point_link& link) const NOEXCEPT
+tx_link CLASS::to_prevout_tx(const ins_link& link) const NOEXCEPT
 {
     return to_tx(get_point_hash(link));
 }
@@ -167,7 +167,7 @@ tx_link CLASS::to_prevout_tx(const point_link& link) const NOEXCEPT
 // This allows result to be navigated via to_block() to find any strong spend.
 
 TEMPLATE
-point_links CLASS::to_spenders(const output_link& link) const NOEXCEPT
+ins_links CLASS::to_spenders(const output_link& link) const NOEXCEPT
 {
     table::output::get_parent out{};
     if (!store_.output.get(link, out))
@@ -178,28 +178,28 @@ point_links CLASS::to_spenders(const output_link& link) const NOEXCEPT
 }
 
 TEMPLATE
-point_links CLASS::to_spenders(const tx_link& output_tx,
+ins_links CLASS::to_spenders(const tx_link& output_tx,
     uint32_t output_index) const NOEXCEPT
 {
     return to_spenders(get_tx_key(output_tx), output_index);
 }
 
 TEMPLATE
-point_links CLASS::to_spenders(const hash_digest& point_hash,
+ins_links CLASS::to_spenders(const hash_digest& point_hash,
     uint32_t output_index) const NOEXCEPT
 {
     return to_spenders({ point_hash, output_index });
 }
 
 TEMPLATE
-point_links CLASS::to_spenders(const point& point) const NOEXCEPT
+ins_links CLASS::to_spenders(const point& point) const NOEXCEPT
 {
     // Avoid returning spend links for coinbase inputs (not spenders).
     if (point.is_null())
         return {};
 
-    point_links points{};
-    for (auto it = store_.point.it(point); it; ++it)
+    ins_links points{};
+    for (auto it = store_.ins.it(point); it; ++it)
         points.push_back(*it);
 
     return points;
@@ -243,7 +243,7 @@ header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 
 TEMPLATE
 uint32_t CLASS::to_input_index(const tx_link& parent_fk,
-    const point_link& point_fk) const NOEXCEPT
+    const ins_link& point_fk) const NOEXCEPT
 {
     uint32_t index{};
     for (const auto& in_fk: to_points(parent_fk))

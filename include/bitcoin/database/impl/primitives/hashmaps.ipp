@@ -108,6 +108,21 @@ Link CLASS::count() const NOEXCEPT
     return body_.count();
 }
 
+// diagnostic counters
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+size_t CLASS::positive_search_count() const NOEXCEPT
+{
+    return positive_.load(std::memory_order_relaxed);
+}
+
+TEMPLATE
+size_t CLASS::negative_search_count() const NOEXCEPT
+{
+    return negative_.load(std::memory_order_relaxed);
+}
+
 // error condition
 // ----------------------------------------------------------------------------
 
@@ -382,11 +397,13 @@ inline bool CLASS::put(bool& duplicate, const memory& ptr,
     if (previous.is_terminal())
     {
         duplicate = false;
+        ////negative_.fetch_add(one, std::memory_order_relaxed);
     }
     else
     {
         // Search the previous conflicts to determine if actual duplicate.
         duplicate = !first(ptr, previous, key).is_terminal();
+        ////positive_.fetch_add(one, std::memory_order_relaxed);
     }
 
     return true;

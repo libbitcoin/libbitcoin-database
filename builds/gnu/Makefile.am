@@ -272,7 +272,6 @@ include_bitcoin_database_tables_archives_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/tables/archives/ins.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/archives/output.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/archives/outs.hpp \
-    ${srcdir}/../../include/bitcoin/database/tables/archives/point.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/archives/transaction.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/archives/txs.hpp
 
@@ -432,7 +431,6 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/tables/archives/ins.cpp \
     ${srcdir}/../../test/tables/archives/output.cpp \
     ${srcdir}/../../test/tables/archives/outs.cpp \
-    ${srcdir}/../../test/tables/archives/point.cpp \
     ${srcdir}/../../test/tables/archives/transaction.cpp \
     ${srcdir}/../../test/tables/archives/txs.cpp \
     ${srcdir}/../../test/tables/caches/duplicate.cpp \

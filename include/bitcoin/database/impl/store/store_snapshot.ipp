@@ -48,7 +48,6 @@ code CLASS::snapshot(const event_handler& handler, bool prune) NOEXCEPT
     flush(ec, header_body_, table_t::header_body);
     flush(ec, input_body_, table_t::input_body);
     flush(ec, output_body_, table_t::output_body);
-    flush(ec, point_body_, table_t::point_body);
     flush(ec, ins_body_, table_t::ins_body);
     flush(ec, outs_body_, table_t::outs_body);
     flush(ec, tx_body_, table_t::tx_body);

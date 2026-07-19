@@ -44,7 +44,6 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(header_body_, table_t::header_body);
     report(input_body_, table_t::input_body);
     report(output_body_, table_t::output_body);
-    report(point_body_, table_t::point_body);
     report(ins_body_, table_t::ins_body);
     report(outs_body_, table_t::outs_body);
     report(tx_body_, table_t::tx_body);
@@ -73,7 +72,6 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = header_body_.get_fault())) return ec;
     if ((ec = input_body_.get_fault())) return ec;
     if ((ec = output_body_.get_fault())) return ec;
-    if ((ec = point_body_.get_fault())) return ec;
     if ((ec = ins_body_.get_fault())) return ec;
     if ((ec = outs_body_.get_fault())) return ec;
     if ((ec = tx_body_.get_fault())) return ec;
@@ -108,7 +106,6 @@ size_t CLASS::get_space() const NOEXCEPT
     space(header_body_);
     space(input_body_);
     space(output_body_);
-    space(point_body_);
     space(ins_body_);
     space(outs_body_);
     space(tx_body_);

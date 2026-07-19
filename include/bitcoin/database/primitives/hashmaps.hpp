@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAPS_HPP
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HASHMAPS_HPP
 
+#include <atomic>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/hashhead.hpp>
@@ -85,6 +86,15 @@ public:
 
     /// Count of body records (common across columns).
     Link count() const NOEXCEPT;
+
+    /// Diagnostic counters.
+    /// -----------------------------------------------------------------------
+
+    /// Count of puts resulting in table body search to detect duplication.
+    size_t positive_search_count() const NOEXCEPT;
+
+    /// Count of puts not resulting in table body search to detect duplication.
+    size_t negative_search_count() const NOEXCEPT;
 
     /// Errors.
     /// -----------------------------------------------------------------------
@@ -258,6 +268,8 @@ private:
 
     // Thread safe.
     body body_;
+    std::atomic<size_t> negative_{};
+    std::atomic<size_t> positive_{};
 };
 
 /// Spine is the keyed spine schema; Columns are satellite column tables.

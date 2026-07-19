@@ -64,7 +64,6 @@
 #include <bitcoin/database/tables/archives/ins.hpp>
 #include <bitcoin/database/tables/archives/output.hpp>
 #include <bitcoin/database/tables/archives/outs.hpp>
-#include <bitcoin/database/tables/archives/point.hpp>
 #include <bitcoin/database/tables/archives/transaction.hpp>
 #include <bitcoin/database/tables/archives/txs.hpp>
 #include <bitcoin/database/tables/caches/duplicate.hpp>
