@@ -218,6 +218,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmap.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashmaps.hpp">
+      <Filter>include\bitcoin\database\primitives</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\iterator.hpp">
       <Filter>include\bitcoin\database\primitives</Filter>
     </ClInclude>
@@ -401,6 +404,9 @@
       <Filter>include\bitcoin\database\impl\primitives</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashmap.ipp">
+      <Filter>include\bitcoin\database\impl\primitives</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashmaps.ipp">
       <Filter>include\bitcoin\database\impl\primitives</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\iterator.ipp">
