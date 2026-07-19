@@ -138,6 +138,7 @@
     <ClCompile Include="..\..\..\..\test\primitives\body.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashhead.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\hashmap.cpp" />
+    <ClCompile Include="..\..\..\..\test\primitives\hashmaps.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\keys.cpp" />
     <ClCompile Include="..\..\..\..\test\primitives\linkage.cpp" />

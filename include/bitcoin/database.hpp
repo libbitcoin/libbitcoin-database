@@ -45,6 +45,7 @@
 #include <bitcoin/database/primitives/column.hpp>
 #include <bitcoin/database/primitives/hashhead.hpp>
 #include <bitcoin/database/primitives/hashmap.hpp>
+#include <bitcoin/database/primitives/hashmaps.hpp>
 #include <bitcoin/database/primitives/iterator.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
