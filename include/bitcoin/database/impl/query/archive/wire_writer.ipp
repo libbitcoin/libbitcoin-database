@@ -227,6 +227,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
         return error::txs_empty;
 
     // Sum full block allocation for each table from cached view metadata.
+    // Output rows are parent fk prefixed (see table::output::put_view).
     size_t points{};
     size_t outputs{};
     size_t input_bytes{};
@@ -236,7 +237,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
         points += tx.inputs();
         outputs += tx.outputs();
         input_bytes += tx.input_table_size();
-        output_bytes += tx.output_table_size();
+        output_bytes += tx.outputs() * tx_link::size + tx.output_table_size();
     }
 
     // Optional hash, only has value on height intervals.
@@ -318,11 +319,15 @@ code CLASS::set_code(const block_view& block, const header_link& key,
         if ((ec = set_code(twins, ptrs, fks, tx, bypass)))
             return ec;
 
+        // Output rows are parent fk prefixed (see table::output::put_view).
+        const auto out_bytes = tx.outputs() * tx_link::size +
+            tx.output_table_size();
+
         fks.tx_fk++;
         fks.ins_fk.value  += possible_narrow_cast<ins_t>(tx.inputs());
         fks.outs_fk.value += possible_narrow_cast<outs_t>(tx.outputs());
         fks.in_fk.value   += possible_narrow_cast<in_t>(tx.input_table_size());
-        fks.out_fk.value  += possible_narrow_cast<out_t>(tx.output_table_size());
+        fks.out_fk.value  += possible_narrow_cast<out_t>(out_bytes);
         fks.ad_fk.value   += possible_narrow_cast<address_t>(tx.outputs());
     }
 
