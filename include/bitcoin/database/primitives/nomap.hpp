@@ -85,6 +85,9 @@ public:
     /// any subsequent element is reserved or put, or will overwrite.
     bool reserve(const Link& size) NOEXCEPT;
 
+    /// Allocate count records or slab bytes at returned link (follow with put).
+    Link allocate(const Link& size) NOEXCEPT;
+
     /// Return ptr for batch processing, holds shared lock on storage remap.
     memory get_memory() const NOEXCEPT;
 
@@ -121,6 +124,11 @@ public:
     bool put(const Link& link, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const memory& ptr, const Element& element) NOEXCEPT;
+
+    /// Put previously allocated element at link, using get_memory() ptr.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    bool put(const memory& ptr, const Link& link,
+        const Element& element) NOEXCEPT;
 
     /// Put element and return link.
     template <typename Element, if_equal<Element::size, Size> = true>
