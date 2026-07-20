@@ -162,8 +162,8 @@ struct output
     static_assert(link::size == 5u);
 };
 
-// record multimap
-struct point
+// record multimap aggregate (point spine with sequence column)
+struct ins
 {
     static constexpr size_t pk = schema::ins_;
     using link = linkage<pk, to_bits(pk)>;
@@ -181,18 +181,18 @@ struct point
     static_assert(cell == 8u);
 };
 
-// array
-struct ins
+// ins sequence column
+struct ins_sequence
 {
-    static constexpr size_t pk = point::pk;
-    using link = point::link;   // aligned with point.
+    static constexpr size_t pk = ins::pk;
+    using link = ins::link;
     static constexpr size_t minsize =
         sizeof(uint32_t) +      // sequence
         schema::input::pk +     // input->script|witness
         schema::transaction::pk;// parent->tx (spend navigation)
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
-    static constexpr auto suffix = "ins"_t;
+    static constexpr auto suffix = "sequence"_t;
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 13u);
     static_assert(minrow == 13u);

@@ -77,7 +77,6 @@ size_t CLASS::archive_body_size() const NOEXCEPT
     return header_body_size()
         + output_body_size()
         + input_body_size()
-        + point_body_size()
         + ins_body_size()
         + outs_body_size()
         + txs_body_size()
@@ -110,7 +109,6 @@ size_t CLASS::archive_head_size() const NOEXCEPT
     return header_head_size()
         + output_head_size()
         + input_head_size()
-        + point_head_size()
         + ins_head_size()
         + outs_head_size()
         + txs_head_size()
@@ -143,7 +141,6 @@ size_t CLASS::store_head_size() const NOEXCEPT
 DEFINE_SIZES(header)
 DEFINE_SIZES(output)
 DEFINE_SIZES(input)
-DEFINE_SIZES(point)
 DEFINE_SIZES(ins)
 DEFINE_SIZES(outs)
 DEFINE_SIZES(txs)
@@ -168,7 +165,7 @@ DEFINE_SIZES(address)
 // ----------------------------------------------------------------------------
 
 DEFINE_BUCKETS(header)
-DEFINE_BUCKETS(point)
+DEFINE_BUCKETS(ins)
 DEFINE_BUCKETS(txs)
 DEFINE_BUCKETS(tx)
 
@@ -185,7 +182,6 @@ DEFINE_BUCKETS(address)
 // ----------------------------------------------------------------------------
 
 DEFINE_RECORDS(header)
-DEFINE_RECORDS(point)
 DEFINE_RECORDS(ins)
 DEFINE_RECORDS(outs)
 DEFINE_RECORDS(tx)

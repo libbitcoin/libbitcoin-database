@@ -123,7 +123,6 @@ public:
     size_t header_head_size() const NOEXCEPT;
     size_t output_head_size() const NOEXCEPT;
     size_t input_head_size() const NOEXCEPT;
-    size_t point_head_size() const NOEXCEPT;
     size_t ins_head_size() const NOEXCEPT;
     size_t outs_head_size() const NOEXCEPT;
     size_t txs_head_size() const NOEXCEPT;
@@ -148,7 +147,6 @@ public:
     size_t header_body_size() const NOEXCEPT;
     size_t output_body_size() const NOEXCEPT;
     size_t input_body_size() const NOEXCEPT;
-    size_t point_body_size() const NOEXCEPT;
     size_t ins_body_size() const NOEXCEPT;
     size_t outs_body_size() const NOEXCEPT;
     size_t txs_body_size() const NOEXCEPT;
@@ -173,7 +171,6 @@ public:
     size_t header_size() const NOEXCEPT;
     size_t output_size() const NOEXCEPT;
     size_t input_size() const NOEXCEPT;
-    size_t point_size() const NOEXCEPT;
     size_t ins_size() const NOEXCEPT;
     size_t outs_size() const NOEXCEPT;
     size_t txs_size() const NOEXCEPT;
@@ -196,7 +193,7 @@ public:
 
     /// Buckets (hashmap + arraymap).
     size_t header_buckets() const NOEXCEPT;
-    size_t point_buckets() const NOEXCEPT;
+    size_t ins_buckets() const NOEXCEPT;
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
 
@@ -211,7 +208,6 @@ public:
 
     /// Records.
     size_t header_records() const NOEXCEPT;
-    size_t point_records() const NOEXCEPT;
     size_t ins_records() const NOEXCEPT;
     size_t outs_records() const NOEXCEPT;
     size_t tx_records() const NOEXCEPT;
@@ -277,15 +273,15 @@ public:
 
     /// put to tx (reverse navigation)
     tx_link to_output_tx(const output_link& link) const NOEXCEPT;
-    tx_link to_prevout_tx(const point_link& link) const NOEXCEPT;
-    tx_link to_input_tx(const point_link& link) const NOEXCEPT;
+    tx_link to_prevout_tx(const ins_link& link) const NOEXCEPT;
+    tx_link to_input_tx(const ins_link& link) const NOEXCEPT;
 
     /// point to put (forward navigation)
-    point_link to_point(const tx_link& link,
+    ins_link to_point(const tx_link& link,
         uint32_t input_index) const NOEXCEPT;
     output_link to_output(const tx_link& link,
         uint32_t output_index) const NOEXCEPT;
-    output_link to_previous_output(const point_link& link) const NOEXCEPT;
+    output_link to_previous_output(const ins_link& link) const NOEXCEPT;
 
     /// block/tx to block (reverse navigation)
     tx_link find_strong_tx(const tx_link& link) const NOEXCEPT;
@@ -300,28 +296,28 @@ public:
     /// find confirmed objects (reverse navigation)
     header_link find_confirmed_block(const hash_digest& tx_hash) const NOEXCEPT;
     header_link find_confirmed_block(const tx_link& link) const NOEXCEPT;
-    point_link find_confirmed_spender(const point& prevout) const NOEXCEPT;
+    ins_link find_confirmed_spender(const point& prevout) const NOEXCEPT;
 
     /// output to spenders (reverse navigation)
-    point_links to_spenders(const point& prevout) const NOEXCEPT;
-    point_links to_spenders(const output_link& link) const NOEXCEPT;
-    point_links to_spenders(const hash_digest& point_hash,
+    ins_links to_spenders(const point& prevout) const NOEXCEPT;
+    ins_links to_spenders(const output_link& link) const NOEXCEPT;
+    ins_links to_spenders(const hash_digest& point_hash,
         uint32_t output_index) const NOEXCEPT;
-    point_links to_spenders(const tx_link& output_tx,
+    ins_links to_spenders(const tx_link& output_tx,
         uint32_t output_index) const NOEXCEPT;
 
     /// tx to puts (forward navigation)
-    point_links to_points(const tx_link& link) const NOEXCEPT;
+    ins_links to_points(const tx_link& link) const NOEXCEPT;
     output_links to_outputs(const tx_link& link) const NOEXCEPT;
     output_links to_prevouts(const tx_link& link) const NOEXCEPT;
 
     /// txs to puts (forward navigation)
-    point_links to_points(const tx_links& txs) const NOEXCEPT;
+    ins_links to_points(const tx_links& txs) const NOEXCEPT;
     output_links to_outputs(const tx_links& txs) const NOEXCEPT;
     output_links to_prevouts(const tx_links& txs) const NOEXCEPT;
 
     /// block to puts (forward navigation)
-    point_links to_block_points(const header_link& link) const NOEXCEPT;
+    ins_links to_block_points(const header_link& link) const NOEXCEPT;
     output_links to_block_outputs(const header_link& link) const NOEXCEPT;
     output_links to_block_prevouts(const header_link& link) const NOEXCEPT;
 
@@ -341,7 +337,7 @@ public:
 
     /// hashmap enumeration
     header_link top_header(size_t bucket) const NOEXCEPT;
-    point_link top_point(size_t bucket) const NOEXCEPT;
+    ins_link top_point(size_t bucket) const NOEXCEPT;
     tx_link top_tx(size_t bucket) const NOEXCEPT;
 
     /// address outputs enumeration (reverse navigation)
@@ -381,8 +377,8 @@ public:
     size_t get_tx_count(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
-    inline point_key get_point_key(const point_link& link) const NOEXCEPT;
-    inline hash_digest get_point_hash(const point_link& link) const NOEXCEPT;
+    inline ins_key get_point_key(const ins_link& link) const NOEXCEPT;
+    inline hash_digest get_point_hash(const ins_link& link) const NOEXCEPT;
 
     /// False position implies not confirmed (or fault).
     bool get_tx_height(size_t& out, const tx_link& link) const NOEXCEPT;
@@ -416,9 +412,9 @@ public:
     /// Wire.
     /// -----------------------------------------------------------------------
 
-    bool get_wire_input(bytewriter& sink, const point_link& link) const NOEXCEPT;
+    bool get_wire_input(bytewriter& sink, const ins_link& link) const NOEXCEPT;
     bool get_wire_output(bytewriter& sink, const output_link& link) const NOEXCEPT;
-    bool get_wire_witness(bytewriter& sink, const point_link& link) const NOEXCEPT;
+    bool get_wire_witness(bytewriter& sink, const ins_link& link) const NOEXCEPT;
     bool get_wire_header(bytewriter& sink, const header_link& link) const NOEXCEPT;
     bool get_wire_tx(bytewriter& sink, const tx_link& link,
         bool witness) const NOEXCEPT;
@@ -442,10 +438,10 @@ public:
     transaction::cptr get_transaction(const tx_link& link,
         bool witness) const NOEXCEPT;
 
-    point get_point(const point_link& link) const NOEXCEPT;
-    witness::cptr get_witness(const point_link& link) const NOEXCEPT;
-    script::cptr get_input_script(const point_link& link) const NOEXCEPT;
-    input::cptr get_input(const point_link& link, bool witness) const NOEXCEPT;
+    point get_point(const ins_link& link) const NOEXCEPT;
+    witness::cptr get_witness(const ins_link& link) const NOEXCEPT;
+    script::cptr get_input_script(const ins_link& link) const NOEXCEPT;
+    input::cptr get_input(const ins_link& link, bool witness) const NOEXCEPT;
     input::cptr get_input(const tx_link& link, uint32_t index,
         bool witness) const NOEXCEPT;
 
@@ -457,7 +453,7 @@ public:
 
     /// Inpoint and outpoint result sets.
     outpoint get_outpoint(const output_link& link) const NOEXCEPT;
-    inpoint get_spender(const point_link& link) const NOEXCEPT;
+    inpoint get_spender(const ins_link& link) const NOEXCEPT;
     inpoints get_spenders(const point& point) const NOEXCEPT;
 
     /// False implies missing prevouts, input.metadata is not populated.
@@ -643,7 +639,7 @@ public:
     bool is_candidate_header(const header_link& link) const NOEXCEPT;
     bool is_confirmed_block(const header_link& link) const NOEXCEPT;
     bool is_confirmed_tx(const tx_link& link) const NOEXCEPT;
-    bool is_confirmed_input(const point_link& link) const NOEXCEPT;
+    bool is_confirmed_input(const ins_link& link) const NOEXCEPT;
     bool is_confirmed_output(const output_link& link) const NOEXCEPT;
     bool is_confirmed_all_prevouts(const tx_link& link) const NOEXCEPT;
     bool is_unconfirmed_spent(const output_link& link) const NOEXCEPT;
@@ -803,7 +799,7 @@ protected:
     /// -----------------------------------------------------------------------
     header_link to_block(const tx_link& link) const NOEXCEPT;
     uint32_t to_input_index(const tx_link& parent_fk,
-        const point_link& point_fk) const NOEXCEPT;
+        const ins_link& point_fk) const NOEXCEPT;
     uint32_t to_output_index(const tx_link& parent_fk,
         const output_link& output_fk) const NOEXCEPT;
 
@@ -850,7 +846,7 @@ protected:
     /// TODO: compact blocks confirmation.
     bool get_double_spenders(tx_links& out, const block& block) const NOEXCEPT;
     bool get_double_spenders(tx_links& out, const point& point,
-        const point_link& self) const NOEXCEPT;
+        const ins_link& self) const NOEXCEPT;
 
     /// Support set_strong and set_unstrong writers.
     bool set_strong(const header_link& link, size_t count,

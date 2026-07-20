@@ -215,7 +215,6 @@
     <ClCompile Include="..\..\..\..\test\tables\archives\ins.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\output.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\outs.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\archives\point.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\txs.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\duplicate.cpp" />

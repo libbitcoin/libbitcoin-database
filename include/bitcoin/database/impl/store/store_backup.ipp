@@ -45,7 +45,6 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
     backup(ec, header, table_t::header_table);
     backup(ec, input, table_t::input_table);
     backup(ec, output, table_t::output_table);
-    backup(ec, point, table_t::point_table);
     backup(ec, ins, table_t::ins_table);
     backup(ec, outs, table_t::outs_table);
     backup(ec, tx, table_t::tx_table);

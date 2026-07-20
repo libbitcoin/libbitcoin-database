@@ -63,8 +63,6 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     create(ec, input_body_, table_t::input_body);
     create(ec, output_head_, table_t::output_head);
     create(ec, output_body_, table_t::output_body);
-    create(ec, point_head_, table_t::point_head);
-    create(ec, point_body_, table_t::point_body);
     create(ec, ins_head_, table_t::ins_head);
     create(ec, ins_body_, table_t::ins_body);
     create(ec, outs_head_, table_t::outs_head);
@@ -122,7 +120,6 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     populate(ec, header, table_t::header_table);
     populate(ec, input, table_t::input_table);
     populate(ec, output, table_t::output_table);
-    populate(ec, point, table_t::point_table);
     populate(ec, ins, table_t::ins_table);
     populate(ec, outs, table_t::outs_table);
     populate(ec, tx, table_t::tx_table);

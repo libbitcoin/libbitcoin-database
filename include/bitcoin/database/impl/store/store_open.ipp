@@ -63,7 +63,6 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, header, table_t::header_table);
     verify(ec, input, table_t::input_table);
     verify(ec, output, table_t::output_table);
-    verify(ec, point, table_t::point_table);
     verify(ec, ins, table_t::ins_table);
     verify(ec, outs, table_t::outs_table);
     verify(ec, tx, table_t::tx_table);

@@ -34,20 +34,20 @@ namespace database {
 
 TEMPLATE
 bool CLASS::get_double_spenders(tx_links& out, const point& point,
-    const point_link& self) const NOEXCEPT
+    const ins_link& self) const NOEXCEPT
 {
     // This is most of the expense of compact block confirmation.
     // It is not mitigated by the point table filter, since self always exists.
 
-    point_links points{};
-    for (auto it = store_.point.it(point); it; ++it)
+    ins_links points{};
+    for (auto it = store_.ins.it(point); it; ++it)
         if (*it != self)
             points.push_back(*it);
 
     for (auto point: points)
     {
-        table::ins::get_parent get{};
-        if (!store_.ins.get(point, get))
+        table::ins_sequence::get_parent get{};
+        if (!store_.ins.sequence.get(point, get))
             return false;
 
         out.push_back(get.parent_fk);

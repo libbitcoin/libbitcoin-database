@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__empty__expected)
     BOOST_CHECK_EQUAL(store.output_head(), expected_head5_array);
     BOOST_CHECK_EQUAL(store.outs_head(), expected_head4_array);
     BOOST_CHECK_EQUAL(store.tx_body().size(), schema::transaction::minrow);
-    BOOST_CHECK(store.point_body().empty());
+    BOOST_CHECK(store.ins_body().empty());
     BOOST_CHECK(store.input_body().empty());
     BOOST_CHECK(store.output_body().empty());
     BOOST_CHECK(store.outs_body().empty());
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
         "00000000"     // parent_fk->
         "00"           // value
         "00");         // script
-    const auto expected_point_body = system::base16_chunk(
+    const auto expected_ins_body = system::base16_chunk(
         "ffffffff"     // next->
         "0000000000000000000000000000000000000000000000000000000000000000"
         "ffffff");     // index
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
     // data_chunk store.
     settings settings{};
     settings.tx_buckets = 8;
-    settings.point_buckets = 8;
+    settings.ins_buckets = 8;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
     ////BOOST_CHECK_EQUAL(store.spend_head(), expected_spend_head);
 
     BOOST_CHECK_EQUAL(store.tx_body(), expected_tx_body);
-    BOOST_CHECK_EQUAL(store.point_body(), expected_point_body);
+    BOOST_CHECK_EQUAL(store.ins_body(), expected_ins_body);
     BOOST_CHECK_EQUAL(store.input_body(), expected_input_body);
     BOOST_CHECK_EQUAL(store.output_body(), expected_output_body);
     BOOST_CHECK_EQUAL(store.outs_body(), expected_outs_body);
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
         "00000000"     // parent_fk->
         "2a"           // value
         "017a");       // script
-    const auto expected_point_body = system::base16_chunk(
+    const auto expected_ins_body = system::base16_chunk(
         "ffffffff"     // next->
         "0100000000000000000000000000000000000000000000000000000000000000"
         "180000"       // index
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
     // data_chunk store.
     settings settings{};
     settings.tx_buckets = 8;
-    settings.point_buckets = 8;
+    settings.ins_buckets = 8;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
     ////BOOST_CHECK_EQUAL(store.spend_head(), expected_spend_head);
 
     BOOST_CHECK_EQUAL(store.tx_body(), expected_tx_body);
-    BOOST_CHECK_EQUAL(store.point_body(), expected_point_body);
+    BOOST_CHECK_EQUAL(store.ins_body(), expected_ins_body);
     BOOST_CHECK_EQUAL(store.input_body(), expected_input_body);
     BOOST_CHECK_EQUAL(store.output_body(), expected_output_body);
     BOOST_CHECK_EQUAL(store.outs_body(), expected_outs_body);
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
         "00000000"     // parent_fk->
         "ff00f2052a01000000" // value
         "434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"); // script
-    const auto genesis_point_body = system::base16_chunk(
+    const auto genesis_ins_body = system::base16_chunk(
         "ffffffff"     // next->
         "0000000000000000000000000000000000000000000000000000000000000000"
         "ffffff");     // index
@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
     settings settings{};
     settings.header_buckets = 8;
     settings.tx_buckets = 8;
-    settings.point_buckets = 8;
+    settings.ins_buckets = 8;
     settings.txs_buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
 
     BOOST_CHECK_EQUAL(store.header_body(), genesis_header_body);
     BOOST_CHECK_EQUAL(store.tx_body(), genesis_tx_body);
-    BOOST_CHECK_EQUAL(store.point_body(), genesis_point_body);
+    BOOST_CHECK_EQUAL(store.ins_body(), genesis_ins_body);
     BOOST_CHECK_EQUAL(store.input_body(), genesis_input_body);
     BOOST_CHECK_EQUAL(store.output_body(), genesis_output_body);
     ////BOOST_CHECK_EQUAL(store.spend_body(), genesis_spend_body);
@@ -641,7 +641,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
         "00000000"     // parent_fk->
         "ff00f2052a01000000" // value
         "434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac"); // script
-    const auto genesis_point_body = system::base16_chunk(
+    const auto genesis_ins_body = system::base16_chunk(
         "ffffffff"     // next->
         "0000000000000000000000000000000000000000000000000000000000000000"
         "ffffff");     // index
@@ -693,7 +693,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
     settings settings{};
     settings.header_buckets = 8;
     settings.tx_buckets = 8;
-    settings.point_buckets = 8;
+    settings.ins_buckets = 8;
     settings.txs_buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
 
     BOOST_CHECK_EQUAL(store.header_body(), genesis_header_body);
     BOOST_CHECK_EQUAL(store.tx_body(), genesis_tx_body);
-    BOOST_CHECK_EQUAL(store.point_body(), genesis_point_body);
+    BOOST_CHECK_EQUAL(store.ins_body(), genesis_ins_body);
     BOOST_CHECK_EQUAL(store.input_body(), genesis_input_body);
     BOOST_CHECK_EQUAL(store.output_body(), genesis_output_body);
     ////BOOST_CHECK_EQUAL(store.spend_body(), genesis_spend_body);

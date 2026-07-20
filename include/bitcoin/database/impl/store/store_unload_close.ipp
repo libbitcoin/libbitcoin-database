@@ -44,8 +44,6 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, input_body_, table_t::input_body);
     unload(ec, output_head_, table_t::output_head);
     unload(ec, output_body_, table_t::output_body);
-    unload(ec, point_head_, table_t::point_head);
-    unload(ec, point_body_, table_t::point_body);
     unload(ec, ins_head_, table_t::ins_head);
     unload(ec, ins_body_, table_t::ins_body);
     unload(ec, outs_head_, table_t::outs_head);
@@ -101,8 +99,6 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, input_body_, table_t::input_body);
     close(ec, output_head_, table_t::output_head);
     close(ec, output_body_, table_t::output_body);
-    close(ec, point_head_, table_t::point_head);
-    close(ec, point_body_, table_t::point_body);
     close(ec, ins_head_, table_t::ins_head);
     close(ec, ins_body_, table_t::ins_body);
     close(ec, outs_head_, table_t::outs_head);
