@@ -945,9 +945,8 @@ protected:
         address_link ad_fk;
     };
 
-    code set_code(const accessors& ptrs, const allocation& fks,
-        const transaction_view& tx, bool bypass,
-        std::vector<point>& twins) NOEXCEPT;
+    code set_code(std::vector<point>& twins, const accessors& ptrs,
+        const allocation& fks,const transaction_view& tx, bool bypass) NOEXCEPT;
 
     /// History.
     /// -----------------------------------------------------------------------

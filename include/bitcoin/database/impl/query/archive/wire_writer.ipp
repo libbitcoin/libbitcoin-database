@@ -31,9 +31,8 @@ namespace database {
 // preallocated by the block writer. No allocation may occur under accessors.
 
 TEMPLATE
-code CLASS::set_code(const accessors& ptrs, const allocation& fks,
-    const transaction_view& tx, bool bypass,
-    std::vector<point>& twins) NOEXCEPT
+code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
+    const allocation& fks, const transaction_view& tx, bool bypass) NOEXCEPT
 {
     using namespace system;
     using ix = linkage<schema::index>;
@@ -214,6 +213,12 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     bool strong, bool bypass, size_t height) NOEXCEPT
 {
     using namespace system;
+    using in_t = input_link::integer;
+    using out_t = output_link::integer;
+    using ins_t = ins_link::integer;
+    using outs_t = outs_link::integer;
+    using address_t = address_link::integer;
+
     if (key.is_terminal())
         return error::txs_header;
 
@@ -222,16 +227,16 @@ code CLASS::set_code(const block_view& block, const header_link& key,
         return error::txs_empty;
 
     // Sum full block allocation for each table from cached view metadata.
-    size_t input_bytes{};
-    size_t output_bytes{};
     size_t points{};
     size_t outputs{};
+    size_t input_bytes{};
+    size_t output_bytes{};
     for (const auto& tx: block.views())
     {
-        input_bytes += tx.input_table_size();
-        output_bytes += tx.output_table_size();
         points += tx.inputs();
         outputs += tx.outputs();
+        input_bytes += tx.input_table_size();
+        output_bytes += tx.output_table_size();
     }
 
     // Optional hash, only has value on height intervals.
@@ -243,10 +248,8 @@ code CLASS::set_code(const block_view& block, const header_link& key,
 
     using bytes = linkage<schema::size>::integer;
     const auto count = possible_narrow_cast<unsigned_type<schema::count_>>(txs);
-    const auto light = possible_narrow_cast<bytes>(
-        block.serialized_size(false));
-    const auto heavy = possible_narrow_cast<bytes>
-        (block.serialized_size(true));
+    const auto light = possible_narrow_cast<bytes>(block.serialized_size(false));
+    const auto heavy = possible_narrow_cast<bytes>(block.serialized_size(true));
 
     // ========================================================================
     const auto scope = get_transactor();
@@ -260,22 +263,22 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     fks.tx_fk = tx_fks;
 
     fks.in_fk = store_.input.allocate(
-        possible_narrow_cast<input_link::integer>(input_bytes));
+        possible_narrow_cast<in_t>(input_bytes));
     if (fks.in_fk.is_terminal())
         return error::tx_input_put;
 
     fks.out_fk = store_.output.allocate(
-        possible_narrow_cast<output_link::integer>(output_bytes));
+        possible_narrow_cast<out_t>(output_bytes));
     if (fks.out_fk.is_terminal())
         return error::tx_output_put;
 
     fks.ins_fk = store_.ins.allocate(
-        possible_narrow_cast<ins_link::integer>(points));
+        possible_narrow_cast<ins_t>(points));
     if (fks.ins_fk.is_terminal())
         return error::tx_ins_put;
 
     fks.outs_fk = store_.outs.allocate(
-        possible_narrow_cast<outs_link::integer>(outputs));
+        possible_narrow_cast<outs_t>(outputs));
     if (fks.outs_fk.is_terminal())
         return error::tx_outs_put;
 
@@ -291,15 +294,19 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     // Guard all tables against remap for the duration of the block write.
     // No table may be allocated while any of these accessors are held.
     accessors ptrs{};
-    ptrs.input = store_.input.get_memory();
-    ptrs.output = store_.output.get_memory();
+    ptrs.tx = store_.tx.get_memory();
     ptrs.ins = store_.ins.get_memory();
     ptrs.outs = store_.outs.get_memory();
-    ptrs.tx = store_.tx.get_memory();
+    ptrs.input  = store_.input.get_memory();
+    ptrs.output = store_.output.get_memory();
     if (address)
         ptrs.address = store_.address.get_memory();
 
-    if (!ptrs.input || !ptrs.output || !ptrs.ins || !ptrs.outs || !ptrs.tx ||
+    if (!ptrs.input ||
+        !ptrs.output ||
+        !ptrs.ins ||
+        !ptrs.outs ||
+        !ptrs.tx ||
         (address && !ptrs.address))
         return error::unloaded_file;
 
@@ -308,28 +315,23 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     std::vector<point> twins{};
     for (const auto& tx: block.views())
     {
-        if ((ec = set_code(ptrs, fks, tx, bypass, twins)))
+        if ((ec = set_code(twins, ptrs, fks, tx, bypass)))
             return ec;
 
         fks.tx_fk++;
-        fks.in_fk.value += possible_narrow_cast<input_link::integer>(
-            tx.input_table_size());
-        fks.out_fk.value += possible_narrow_cast<output_link::integer>(
-            tx.output_table_size());
-        fks.ins_fk.value += possible_narrow_cast<ins_link::integer>(
-            tx.inputs());
-        fks.outs_fk.value += possible_narrow_cast<outs_link::integer>(
-            tx.outputs());
-        fks.ad_fk.value += possible_narrow_cast<address_link::integer>(
-            tx.outputs());
+        fks.ins_fk.value  += possible_narrow_cast<ins_t>(tx.inputs());
+        fks.outs_fk.value += possible_narrow_cast<outs_t>(tx.outputs());
+        fks.in_fk.value   += possible_narrow_cast<in_t>(tx.input_table_size());
+        fks.out_fk.value  += possible_narrow_cast<out_t>(tx.output_table_size());
+        fks.ad_fk.value   += possible_narrow_cast<address_t>(tx.outputs());
     }
 
     // Release all accessors (subsequent writes allocate).
-    ptrs.input.reset();
-    ptrs.output.reset();
+    ptrs.tx.reset();
     ptrs.ins.reset();
     ptrs.outs.reset();
-    ptrs.tx.reset();
+    ptrs.input.reset();
+    ptrs.output.reset();
     ptrs.address.reset();
 
     // As few duplicates are expected, duplicate domain is only 2^16.
