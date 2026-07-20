@@ -128,6 +128,12 @@ bool CLASS::reserve(const Link& size) NOEXCEPT
 }
 
 TEMPLATE
+Link CLASS::allocate(const Link& size) NOEXCEPT
+{
+    return body_.allocate(size);
+}
+
+TEMPLATE
 memory CLASS::get_memory() const NOEXCEPT
 {
     return body_.get();
@@ -223,6 +229,39 @@ bool CLASS::put(const memory& ptr, const Element& element) NOEXCEPT
         return false;
 
     iostream stream{ ptr };
+    flipper sink{ stream };
+
+    if constexpr (!is_slab)
+    {
+        BC_DEBUG_ONLY(sink.set_limit(Size * element.count());)
+    }
+
+    return element.to_data(sink);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::put(const memory& ptr, const Link& link,
+    const Element& element) NOEXCEPT
+{
+    using namespace system;
+    if (!ptr || link.is_terminal())
+        return false;
+
+    const auto start = body::link_to_position(link);
+    if (is_limited<ptrdiff_t>(start))
+        return false;
+
+    const auto size = ptr.size();
+    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    if (position >= size)
+        return false;
+
+    const auto offset = ptr.offset(start);
+    if (is_null(offset))
+        return false;
+
+    iostream stream{ offset, size - position };
     flipper sink{ stream };
 
     if constexpr (!is_slab)

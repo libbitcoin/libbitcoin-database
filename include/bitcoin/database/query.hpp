@@ -919,8 +919,34 @@ protected:
     /// -----------------------------------------------------------------------
     code set_code(const tx_link& tx_fk, const transaction& tx,
         bool bypass) NOEXCEPT;
-    code set_code(const tx_link& tx_fk, const transaction_view& tx,
-        bool bypass) NOEXCEPT;
+
+    /// Block write batching (all rows preallocated, all accessors held).
+    /// -----------------------------------------------------------------------
+
+    /// Per-table accessors, each holds a shared lock on its storage remap.
+    struct accessors
+    {
+        memory input;
+        memory output;
+        memory ins;
+        memory outs;
+        memory tx;
+        memory address;
+    };
+
+    /// Per-tx allocated table links (bases advanced by the block writer).
+    struct allocation
+    {
+        tx_link tx_fk;
+        input_link in_fk;
+        output_link out_fk;
+        ins_link ins_fk;
+        outs_link outs_fk;
+        address_link ad_fk;
+    };
+
+    code set_code(std::vector<point>& twins, const accessors& ptrs,
+        const allocation& fks,const transaction_view& tx, bool bypass) NOEXCEPT;
 
     /// History.
     /// -----------------------------------------------------------------------

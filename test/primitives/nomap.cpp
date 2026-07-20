@@ -823,4 +823,63 @@ BOOST_AUTO_TEST_CASE(nomap__slab_drop__populated__empties_body_and_head)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+// allocate/put (batch)
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(nomap__record_allocate_put__batch__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    record_table instance{ head_store, body_store };
+
+    // Allocate before ptr acquisition (allocation must not follow accessor).
+    BOOST_REQUIRE_EQUAL(instance.allocate(2), 0u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+
+    const auto ptr = instance.get_memory();
+    BOOST_REQUIRE(instance.put(ptr, 0, little_record{ 0x04030201_u32 }));
+    BOOST_REQUIRE(instance.put(ptr, 1, big_record{ 0x04030201_u32 }));
+    BOOST_REQUIRE(!instance.put(ptr, 2, little_record{ 0x04030201_u32 }));
+    BOOST_REQUIRE(!instance.put(ptr, link5::terminal, little_record{}));
+
+    little_record record1{};
+    BOOST_REQUIRE(instance.get(0, record1));
+    BOOST_REQUIRE_EQUAL(record1.value, 0x04030201_u32);
+
+    big_record record2{};
+    BOOST_REQUIRE(instance.get(1, record2));
+    BOOST_REQUIRE_EQUAL(record2.value, 0x04030201_u32);
+
+    const auto expected_file = base16_chunk("0102030404030201");
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(nomap__slab_allocate_put__batch__expected)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    slab_table instance{ head_store, body_store };
+
+    // Slab allocation is byte count.
+    BOOST_REQUIRE_EQUAL(instance.allocate(8), 0u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 8u);
+
+    const auto ptr = instance.get_memory();
+    BOOST_REQUIRE(instance.put(ptr, 0, little_slab{ 0x04030201_u32 }));
+    BOOST_REQUIRE(instance.put(ptr, 4, big_slab{ 0x04030201_u32 }));
+
+    little_slab slab1{};
+    BOOST_REQUIRE(instance.get(0, slab1));
+    BOOST_REQUIRE_EQUAL(slab1.value, 0x04030201_u32);
+
+    big_slab slab2{};
+    BOOST_REQUIRE(instance.get(4, slab2));
+    BOOST_REQUIRE_EQUAL(slab2.value, 0x04030201_u32);
+
+    const auto expected_file = base16_chunk("0102030404030201");
+    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
