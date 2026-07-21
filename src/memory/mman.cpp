@@ -308,17 +308,19 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
     };
 
     // Try contiguous allocation.
-    auto result = ::fcntl(fd, F_PREALLOCATE, &store);
-
-    // Fallback to non-contiguous.
-    if (result == fail)
+    if (::fcntl(fd, F_PREALLOCATE, &store) == fail)
     {
+        // Fallback to non-contiguous.
         store.fst_flags = F_ALLOCATEALL;
-        result = ::fcntl(fd, F_PREALLOCATE, &store);
-    }
+        store.fst_bytesalloc = 0;
 
-    if (result == fail)
-        return fail;
+        // APFS spuriously fails F_PREALLOCATE (e.g. when logical EOF lies
+        // within blocks preallocated by a prior call), reporting ENOSPC
+        // despite ample space. Preallocation is therefore best-effort and
+        // failure is ignored: ftruncate is authoritative, and reports genuine
+        // exhaustion as its own ENOSPC (via sparse extension at worst).
+        ::fcntl(fd, F_PREALLOCATE, &store);
+    }
 
     // Extend file to new size (required for mmap). This is not required on
     // Linux because fallocate(2) automatically extends file's logical size.
