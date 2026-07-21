@@ -48,8 +48,7 @@ static bool set_one(test::query_accessor& query, const hash_digest& digest,
     const header_link& link) NOEXCEPT
 {
     chain::ecdsa_signatures sigs{};
-    return sigs.append(digest, { &key, one }, { &sig, one }) &&
-        query.set_signatures(sigs, link);
+    return sigs.append(digest, key, sig) && query.set_signatures(sigs, link);
 }
 
 BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__empty__empty)

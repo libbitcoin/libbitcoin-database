@@ -212,14 +212,18 @@ private:
     std::atomic<size_t> space_{ zero };
     std::atomic<error::error_t> error_{ error::success };
 
-    // These are protected by field_mutex_.
-    // Fields require field_mutex_ exclusive for write, shared for flush/read.
-    // logical_ and capacity_ are row counts (byte cound if width is one).
+    // Scalar fields are atomic: size/capacity reads and the allocate fast
+    // path (bounded claim within published capacity) are lock-free. Capacity
+    // growth and compound transitions (open/close/load/unload/shrink/
+    // truncate/expand/reserve/get_filled) are serialized by field_mutex_
+    // exclusive. Shrinking transitions additionally rely on the documented
+    // suspend-writes contract (the fast path does not serialize with them).
+    // logical_ and capacity_ are row counts (byte count if width is one).
     std::array<int, columns> opened_;
-    size_t capacity_{};
-    size_t logical_{};
-    bool fault_{};
-    bool loaded_{};
+    std::atomic<size_t> capacity_{};
+    std::atomic<size_t> logical_{};
+    std::atomic<bool> fault_{};
+    std::atomic<bool> loaded_{};
     mutable std::shared_mutex field_mutex_{};
 
     // These are protected by remap_mutex_.

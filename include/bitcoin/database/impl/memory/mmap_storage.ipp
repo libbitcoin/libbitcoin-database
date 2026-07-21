@@ -84,7 +84,7 @@ code CLASS::open() NOEXCEPT
     if (const auto ec = file::size_ex(bytes, opened_.front()))
         return ec;
 
-    logical_ = logical_rows(bytes);
+    logical_.store(logical_rows(bytes));
     return error::success;
 }
 
@@ -94,13 +94,13 @@ code CLASS::close() NOEXCEPT
     std::unique_lock map_lock(remap_mutex_);
     std::unique_lock field_lock(field_mutex_);
 
-    if (loaded_)
+    if (loaded_.load())
         return error::close_loaded;
 
     if (opened_.front() == file::invalid)
         return error::success;
 
-    logical_ = zero;
+    logical_.store(zero);
     for (auto& descriptor: opened_)
     {
         if (descriptor != file::invalid)
@@ -128,7 +128,7 @@ code CLASS::load() NOEXCEPT
 
     if (remap_mutex_.try_lock())
     {
-        if (loaded_)
+        if (loaded_.load())
         {
             remap_mutex_.unlock();
             return error::load_loaded;
@@ -156,7 +156,7 @@ code CLASS::reload() NOEXCEPT
 
     if (remap_mutex_.try_lock())
     {
-        if (!loaded_)
+        if (!loaded_.load())
         {
             remap_mutex_.unlock();
             return error::reload_unloaded;
@@ -178,9 +178,8 @@ code CLASS::flush() NOEXCEPT
 {
     // Prevent unload, resize, remap.
     std::shared_lock map_lock(remap_mutex_);
-    std::shared_lock field_lock(field_mutex_);
 
-    if (!loaded_)
+    if (!loaded_.load())
         return error::flush_unloaded;
 
     // Reads fields and the memory map.
@@ -195,7 +194,7 @@ code CLASS::unload() NOEXCEPT
 
     if (remap_mutex_.try_lock())
     {
-        if (!loaded_)
+        if (!loaded_.load())
         {
             remap_mutex_.unlock();
             return error::success;
@@ -223,7 +222,7 @@ code CLASS::shrink() NOEXCEPT
 
     if (remap_mutex_.try_lock())
     {
-        if (!loaded_)
+        if (!loaded_.load())
         {
             remap_mutex_.unlock();
             return error::shrink_unloaded;
@@ -267,15 +266,13 @@ code CLASS::dump(const std::filesystem::path& path) const NOEXCEPT
 TEMPLATE
 size_t CLASS::size() const NOEXCEPT
 {
-    std::shared_lock field_lock(field_mutex_);
-    return logical_;
+    return logical_.load();
 }
 
 TEMPLATE
 size_t CLASS::capacity() const NOEXCEPT
 {
-    std::shared_lock field_lock(field_mutex_);
-    return capacity_;
+    return capacity_.load();
 }
 
 TEMPLATE
@@ -283,10 +280,10 @@ bool CLASS::truncate(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (count > logical_)
+    if (count > logical_.load())
         return false;
 
-    logical_ = count;
+    logical_.store(count);
     return true;
 }
 
@@ -295,13 +292,13 @@ bool CLASS::expand(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (fault_ || !loaded_)
+    if (fault_.load() || !loaded_.load())
         return false;
 
-    if (count <= logical_)
+    if (count <= logical_.load())
         return true;
 
-    if (count > capacity_)
+    if (count > capacity_.load())
     {
         const auto extended = to_capacity(count);
         std::unique_lock remap_lock(remap_mutex_);
@@ -309,7 +306,11 @@ bool CLASS::expand(size_t count) NOEXCEPT
             return false;
     }
 
-    logical_ = count;
+    // Raise to at least count (concurrent claims may already exceed it).
+    for (auto current = logical_.load(); current < count;)
+        if (logical_.compare_exchange_weak(current, count))
+            break;
+
     return true;
 }
 
@@ -318,11 +319,12 @@ bool CLASS::reserve(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (fault_ || !loaded_ || system::is_add_overflow(logical_, count))
+    if (fault_.load() || !loaded_.load() ||
+        system::is_add_overflow(logical_.load(), count))
         return false;
 
-    const auto end = logical_ + count;
-    if (end > capacity_)
+    const auto end = logical_.load() + count;
+    if (end > capacity_.load())
     {
         const auto extended = to_capacity(end);
         std::unique_lock remap_lock(remap_mutex_);
@@ -334,20 +336,47 @@ bool CLASS::reserve(size_t count) NOEXCEPT
     return true;
 }
 
-// Waits until all access pointers are destructed. Will deadlock if any access
-// pointer is waiting on allocation. Lock safety requires that access pointers
-// are short-lived and do not block on allocation.
+// The slow path waits until all access pointers are destructed. Will deadlock
+// if any access pointer is waiting on allocation. Lock safety requires that
+// access pointers are short-lived and do not block on allocation. Relies on
+// the suspend-writes contract of shrinking transitions (truncate/unload/
+// shrink/close), as the fast path does not serialize against them.
 TEMPLATE
 size_t CLASS::allocate(size_t count) NOEXCEPT
 {
-    std::unique_lock field_lock(field_mutex_);
-
-    if (fault_ || !loaded_ || system::is_add_overflow(logical_, count))
-        return storage::eof;
-
-    auto end = logical_ + count;
-    if (end > capacity_)
+    // Fast path: claim rows within published capacity (no locks). A failed
+    // exchange implies another claim succeeded, so every retry is progress.
+    for (auto start = logical_.load();;)
     {
+        if (fault_.load() || !loaded_.load() ||
+            system::is_add_overflow(start, count))
+            return storage::eof;
+
+        if ((start + count) > capacity_.load())
+            break;
+
+        if (logical_.compare_exchange_weak(start, start + count))
+            return start;
+    }
+
+    // Slow path: serialize capacity growth (at most one grower). Fast paths
+    // continue claiming under the old capacity; the growth target covers them.
+    std::unique_lock field_lock(field_mutex_);
+    for (auto start = logical_.load();;)
+    {
+        if (fault_.load() || !loaded_.load() ||
+            system::is_add_overflow(start, count))
+            return storage::eof;
+
+        const auto end = start + count;
+        if (end <= capacity_.load())
+        {
+            if (logical_.compare_exchange_weak(start, end))
+                return start;
+
+            continue;
+        }
+
         const auto extended = to_capacity(end);
 
         // TODO: Could loop over a try lock here and log deadlock warning.
@@ -357,9 +386,6 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
         if (!remap_all_(extended, sequence{}))
             return storage::eof;
     }
-
-    std::swap(logical_, end);
-    return end;
 }
 
 } // namespace database

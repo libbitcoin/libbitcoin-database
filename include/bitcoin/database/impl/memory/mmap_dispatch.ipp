@@ -41,11 +41,12 @@ memory CLASS::get_filled(size_t offset, size_t size,
     {
         std::unique_lock field_lock(field_mutex_);
 
-        if (fault_ || !loaded_ || system::is_add_overflow(offset, size))
+        if (fault_.load() || !loaded_.load() ||
+            system::is_add_overflow(offset, size))
             return {};
 
-        const auto end = std::max(logical_, offset + size);
-        if (end > capacity_)
+        const auto end = std::max(logical_.load(), offset + size);
+        if (end > capacity_.load())
         {
             const auto extended = to_capacity(end);
 
@@ -58,13 +59,16 @@ memory CLASS::get_filled(size_t offset, size_t size,
 
             // Fill new capacity as offset may not be at end due to expansion.
             auto data = memory_map_.front();
-            const auto logical = to_width<zero>(logical_);
-            const auto capacity = to_width<zero>(capacity_);
+            const auto logical = to_width<zero>(logical_.load());
+            const auto capacity = to_width<zero>(capacity_.load());
             const auto start = std::next(data, logical);
             std::fill_n(start, capacity - logical, backfill);
         }
 
-        logical_ = end;
+        // Raise to at least end (concurrent claims may already exceed it).
+        for (auto current = logical_.load(); current < end;)
+            if (logical_.compare_exchange_weak(current, end))
+                break;
     }
 
     return get(offset);
@@ -77,7 +81,7 @@ memory CLASS::get_capacity(size_t offset) const NOEXCEPT
 
     memory out{ remap_mutex_ };
 
-    if (!loaded_)
+    if (!loaded_.load())
         return {};
 
     auto data = memory_map_.front();
@@ -114,14 +118,14 @@ memory CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
     if (column >= columns)
         return {};
 
-    // Obtaining size before access prevents mutual mutex wait (deadlock).
+    // size() is a lock-free atomic read.
     const auto allocated = size() * widths.at(column);
 
     // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
     memory out{ remap_mutex_ };
 
-    // loaded_ update is precluded by above lock, making this read atomic.
-    if (!loaded_)
+    // loaded_ update is precluded by above lock.
+    if (!loaded_.load())
         return {};
 
     // With offset > size the assignment is negative (stream is exhausted).
