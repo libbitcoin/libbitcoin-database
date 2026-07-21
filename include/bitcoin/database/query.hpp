@@ -592,25 +592,12 @@ public:
     bool set_silent(const tx_link& link, const transaction& tx) NOEXCEPT;
     bool set_silent(const header_link& link, const block& block) NOEXCEPT;
 
-    /// Set single ecdsa signature row.
-    bool set_signature(const hash_digest& digest, const ec_compressed& point,
-        const ec_signature& signature, uint16_t id,
+    /// Commit a block's captured ecdsa signature groups (band-expanded).
+    bool set_signatures(const system::chain::ecdsa_signatures& sigs,
         const header_link& link) NOEXCEPT;
 
-    /// Set ecdsa multisig rows.
-    bool set_signatures(const hash_digest& digest,
-        const std::span<const ec_compressed>& keys,
-        const std::span<const ec_signature>& sigs, uint16_t id,
-        const header_link& link) NOEXCEPT;
-
-    /// Set single schnorr signature row.
-    bool set_signature(const hash_digest& digest, const ec_xonly& point,
-        const ec_signature& signature, const header_link& link) NOEXCEPT;
-
-    /// Set schnorr threshold signature rows.
-    schnorr_link allocate_signatures(size_t count) NOEXCEPT;
-    bool set_signature(const schnorr_link& first, const hash_digest& digest,
-        const ec_xonly& point, const ec_signature& signature,
+    /// Commit a block's captured schnorr signature rows.
+    bool set_signatures(const system::chain::schnorr_signatures& sigs,
         const header_link& link) NOEXCEPT;
 
     /// Invoke callback for each candidate match, false implies cancel.

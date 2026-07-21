@@ -74,62 +74,25 @@ bool CLASS::purge_ecdsa_signatures() NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_signature(const hash_digest& digest,
-    const ec_compressed& point, const ec_signature& signature, uint16_t id,
+bool CLASS::set_signatures(const system::chain::ecdsa_signatures& sigs,
     const header_link& link) NOEXCEPT
 {
-    using correlate_t = table::ecdsa_correlate::put_ref;
-    using digest_t = table::ecdsa_digest::put_ref;
-    using compressed_t = table::ecdsa_compressed::put_ref;
-    using signature_t = table::ecdsa_signature::put_ref;
+    using correlate_t = table::ecdsa_correlate::put_signatures;
+    using digest_t = table::ecdsa_digest::put_signatures;
+    using compressed_t = table::ecdsa_compressed::put_signatures;
+    using signature_t = table::ecdsa_signature::put_signatures;
+
+    if (sigs.empty())
+        return true;
+
+    using namespace system;
+    const auto rows = possible_narrow_cast<ecdsa_link::integer>(sigs.rows());
 
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
     const auto scope = get_transactor();
 
-    using namespace system;
-    const auto row = possible_narrow_cast<ecdsa_link::integer>(one);
-
-    // Allocate 1 row across all columns.
-    const auto fk = store_.ecdsa.allocate(row);
-    if (fk.is_terminal())
-        return false;
-
-    // Guard against remap (required for nomaps::put(fk)).
-    const auto guard = store_.ecdsa.guard();
-
-    // Write one value to each column in corresponding positions.
-    return
-        store_.ecdsa.correlate.put(fk, correlate_t{ {}, link, id }) &&
-        store_.ecdsa.digest.put(fk, digest_t{ {}, digest }) &&
-        store_.ecdsa.compressed.put(fk, compressed_t{ {}, point }) &&
-        store_.ecdsa.signature.put(fk, signature_t{ {}, signature });
-    // ========================================================================
-}
-
-TEMPLATE
-bool CLASS::set_signatures(const hash_digest& digest,
-    const std::span<const ec_compressed>& keys,
-    const std::span<const ec_signature>& sigs, uint16_t id,
-    const header_link& link) NOEXCEPT
-{
-    using correlate_t = table::ecdsa_correlate::put_refs;
-    using digest_t = table::ecdsa_digest::put_refs;
-    using compressed_t = table::ecdsa_compressed::put_refs;
-    using signature_t = table::ecdsa_signature::put_refs;
-
-    using namespace system;
-    const auto csigs = sigs.size();
-    const auto ckeys = keys.size();
-    const auto count = chain::multisig::rows(csigs, ckeys);
-
-    // Caller must guard reads, this is writing into hot storage.
-    // ========================================================================
-    const auto scope = get_transactor();
-
-    const auto rows = possible_narrow_cast<ecdsa_link::integer>(count);
-
-    // Allocate rows across all columns.
+    // Allocate all of the block's rows across all columns.
     const auto fk = store_.ecdsa.allocate(rows);
     if (fk.is_terminal())
         return false;
@@ -137,12 +100,12 @@ bool CLASS::set_signatures(const hash_digest& digest,
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = store_.ecdsa.guard();
 
-    // Write values to each column in corresponding positions.
+    // Deinterleave the accumulator into the columns, expanding group bands.
     return
-        store_.ecdsa.correlate.put(fk, correlate_t{ {}, count, link, ckeys, csigs, id }) &&
-        store_.ecdsa.digest.put(fk, digest_t{ {}, count, digest }) &&
-        store_.ecdsa.compressed.put(fk, compressed_t{ {}, count, keys, csigs }) &&
-        store_.ecdsa.signature.put(fk, signature_t{ {}, count, ckeys, sigs });
+        store_.ecdsa.correlate.put(fk, correlate_t{ {}, link, sigs }) &&
+        store_.ecdsa.digest.put(fk, digest_t{ {}, sigs }) &&
+        store_.ecdsa.compressed.put(fk, compressed_t{ {}, sigs }) &&
+        store_.ecdsa.signature.put(fk, signature_t{ {}, sigs });
     // ========================================================================
 }
 

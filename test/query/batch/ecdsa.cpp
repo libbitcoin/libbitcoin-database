@@ -42,6 +42,16 @@ const ec_signature ecdsa_signature = base16_array
     "01f4e1dbc36f32b4683faeecc8e4b2c6810da69e98fd783f1aad105636c3da08"
 );
 
+// Commit one single-sig (1 of 1) group as one block's accumulator.
+static bool set_one(test::query_accessor& query, const hash_digest& digest,
+    const ec_compressed& key, const ec_signature& sig,
+    const header_link& link) NOEXCEPT
+{
+    chain::ecdsa_signatures sigs{};
+    return sigs.append(digest, { &key, one }, { &sig, one }) &&
+        query.set_signatures(sigs, link);
+}
+
 BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__empty__empty)
 {
     const database::settings configuration{};
@@ -59,7 +69,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__one_valid__empt
     const database::settings configuration{};
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 0, 42));
+    BOOST_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 42));
 
     header_links links{};
     BOOST_REQUIRE_EQUAL(query.ecdsa_records(), 1u);
@@ -73,7 +83,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__one_invalid__ex
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
     constexpr auto expected = 42u;
-    BOOST_REQUIRE(query.set_signature(sighash_bad, ecdsa_compressed, ecdsa_signature, 0, expected));
+    BOOST_REQUIRE(set_one(query, sighash_bad, ecdsa_compressed, ecdsa_signature, expected));
 
     header_links links{};
     BOOST_REQUIRE_EQUAL(query.ecdsa_records(), 1u);
@@ -90,14 +100,14 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__various__expect
     constexpr auto expected1 = 42u;
     constexpr auto expected2 = 24u;
 
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 0, 1));
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 0, 2));
-    BOOST_REQUIRE(query.set_signature(sighash_bad,   ecdsa_compressed, ecdsa_signature, 0, expected1));
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 0, 3));
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 0, 4));
-    BOOST_REQUIRE(query.set_signature(sighash_bad,   ecdsa_compressed, ecdsa_signature, 0, expected2));
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 0, 5));
-    BOOST_REQUIRE(query.set_signature(ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 0, 6));
+    BOOST_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 1));
+    BOOST_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 2));
+    BOOST_REQUIRE(set_one(query, sighash_bad, ecdsa_compressed, ecdsa_signature, expected1));
+    BOOST_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 3));
+    BOOST_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 4));
+    BOOST_REQUIRE(set_one(query, sighash_bad, ecdsa_compressed, ecdsa_signature, expected2));
+    BOOST_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 5));
+    BOOST_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 6));
 
     header_links links{};
     BOOST_REQUIRE_EQUAL(query.ecdsa_records(), 8u);
