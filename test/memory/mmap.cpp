@@ -18,6 +18,8 @@
  */
 #include "../test.hpp"
 
+#include <thread>
+
 // TODO: need to fake map_(), unmap_() and flush_() in order to hit
 // error::load_failure, error::flush_failure, error::unload_failure codes, but
 // don't want to make this class virtual.
@@ -885,6 +887,89 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
 
     read_column0.reset();
     read_column1.reset();
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+// Concurrency stress: allocations must be unique, dense claims under
+// contention, with growth forced through the remap slow path.
+BOOST_AUTO_TEST_CASE(mmap__allocate__concurrent__unique_dense_claims)
+{
+    constexpr size_t threads = 8;
+    constexpr size_t rounds = 10'000;
+    using claim = std::pair<size_t, size_t>;
+
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    // Tiny minimum and modest expansion force frequent slow-path remaps.
+    map instance(file, 1, 25);
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+
+    std::atomic_bool failed{};
+    std::array<std::vector<claim>, threads> claims{};
+    std::vector<std::thread> pool{};
+
+    for (size_t id = 0; id < threads; ++id)
+    {
+        pool.emplace_back([&, id]() NOEXCEPT
+        {
+            // Vary claim size by thread (1..3 bytes).
+            const auto count = add1(id % 3);
+            auto& mine = claims.at(id);
+            mine.reserve(rounds);
+
+            for (size_t round = 0; round < rounds; ++round)
+            {
+                const auto start = instance.allocate(count);
+                if (start == storage::eof)
+                {
+                    failed.store(true);
+                    return;
+                }
+
+                // Write the claim through an accessor (rides remap guard).
+                auto memory = instance.get(start);
+                if (!memory)
+                {
+                    failed.store(true);
+                    return;
+                }
+
+                std::fill_n(memory.begin(), count, system::narrow_cast<uint8_t>(id));
+                mine.push_back({ start, count });
+            }
+        });
+    }
+
+    for (auto& thread: pool)
+        thread.join();
+
+    BOOST_REQUIRE(!failed.load());
+
+    // Aggregate and sort all claims by start.
+    std::vector<claim> all{};
+    all.reserve(threads * rounds);
+    for (const auto& mine: claims)
+        all.insert(all.end(), mine.begin(), mine.end());
+
+    std::sort(all.begin(), all.end());
+
+    // Claims are unique, non-overlapping and dense from zero to size().
+    size_t expected{};
+    auto contiguous = true;
+    for (const auto& [start, count]: all)
+    {
+        contiguous &= (start == expected);
+        expected = start + count;
+    }
+
+    BOOST_REQUIRE(contiguous);
+    BOOST_REQUIRE_EQUAL(expected, instance.size());
+    BOOST_REQUIRE_GE(instance.capacity(), instance.size());
+
     BOOST_REQUIRE(!instance.unload());
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());

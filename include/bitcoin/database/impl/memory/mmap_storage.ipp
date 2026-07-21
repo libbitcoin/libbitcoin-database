@@ -178,7 +178,6 @@ code CLASS::flush() NOEXCEPT
 {
     // Prevent unload, resize, remap.
     std::shared_lock map_lock(remap_mutex_);
-    std::shared_lock field_lock(field_mutex_);
 
     if (!loaded_.load())
         return error::flush_unloaded;
@@ -267,14 +266,12 @@ code CLASS::dump(const std::filesystem::path& path) const NOEXCEPT
 TEMPLATE
 size_t CLASS::size() const NOEXCEPT
 {
-    std::shared_lock field_lock(field_mutex_);
     return logical_.load();
 }
 
 TEMPLATE
 size_t CLASS::capacity() const NOEXCEPT
 {
-    std::shared_lock field_lock(field_mutex_);
     return capacity_.load();
 }
 
@@ -309,7 +306,11 @@ bool CLASS::expand(size_t count) NOEXCEPT
             return false;
     }
 
-    logical_.store(count);
+    // Raise to at least count (concurrent claims may already exceed it).
+    for (auto current = logical_.load(); current < count;)
+        if (logical_.compare_exchange_weak(current, count))
+            break;
+
     return true;
 }
 
@@ -335,22 +336,47 @@ bool CLASS::reserve(size_t count) NOEXCEPT
     return true;
 }
 
-// Waits until all access pointers are destructed. Will deadlock if any access
-// pointer is waiting on allocation. Lock safety requires that access pointers
-// are short-lived and do not block on allocation.
+// The slow path waits until all access pointers are destructed. Will deadlock
+// if any access pointer is waiting on allocation. Lock safety requires that
+// access pointers are short-lived and do not block on allocation. Relies on
+// the suspend-writes contract of shrinking transitions (truncate/unload/
+// shrink/close), as the fast path does not serialize against them.
 TEMPLATE
 size_t CLASS::allocate(size_t count) NOEXCEPT
 {
-    std::unique_lock field_lock(field_mutex_);
-
-    const auto start = logical_.load();
-    if (fault_.load() || !loaded_.load() ||
-        system::is_add_overflow(start, count))
-        return storage::eof;
-
-    const auto end = start + count;
-    if (end > capacity_.load())
+    // Fast path: claim rows within published capacity (no locks). A failed
+    // exchange implies another claim succeeded, so every retry is progress.
+    for (auto start = logical_.load();;)
     {
+        if (fault_.load() || !loaded_.load() ||
+            system::is_add_overflow(start, count))
+            return storage::eof;
+
+        if ((start + count) > capacity_.load())
+            break;
+
+        if (logical_.compare_exchange_weak(start, start + count))
+            return start;
+    }
+
+    // Slow path: serialize capacity growth (at most one grower). Fast paths
+    // continue claiming under the old capacity; the growth target covers them.
+    std::unique_lock field_lock(field_mutex_);
+    for (auto start = logical_.load();;)
+    {
+        if (fault_.load() || !loaded_.load() ||
+            system::is_add_overflow(start, count))
+            return storage::eof;
+
+        const auto end = start + count;
+        if (end <= capacity_.load())
+        {
+            if (logical_.compare_exchange_weak(start, end))
+                return start;
+
+            continue;
+        }
+
         const auto extended = to_capacity(end);
 
         // TODO: Could loop over a try lock here and log deadlock warning.
@@ -360,9 +386,6 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
         if (!remap_all_(extended, sequence{}))
             return storage::eof;
     }
-
-    logical_.store(end);
-    return start;
 }
 
 } // namespace database

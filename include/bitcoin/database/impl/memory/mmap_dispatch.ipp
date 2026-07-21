@@ -65,7 +65,10 @@ memory CLASS::get_filled(size_t offset, size_t size,
             std::fill_n(start, capacity - logical, backfill);
         }
 
-        logical_.store(end);
+        // Raise to at least end (concurrent claims may already exceed it).
+        for (auto current = logical_.load(); current < end;)
+            if (logical_.compare_exchange_weak(current, end))
+                break;
     }
 
     return get(offset);
@@ -115,7 +118,7 @@ memory CLASS::get_at(size_t column, size_t offset) const NOEXCEPT
     if (column >= columns)
         return {};
 
-    // Obtaining size before access prevents mutual mutex wait (deadlock).
+    // size() is a lock-free atomic read.
     const auto allocated = size() * widths.at(column);
 
     // Takes a shared lock on remap_mutex_ until destruct, blocking remap.

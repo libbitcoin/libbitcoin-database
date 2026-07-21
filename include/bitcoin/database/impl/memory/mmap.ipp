@@ -78,7 +78,6 @@ bool CLASS::is_open() const NOEXCEPT
 TEMPLATE
 bool CLASS::is_loaded() const NOEXCEPT
 {
-    std::shared_lock field_lock(field_mutex_);
     return loaded_.load();
 }
 

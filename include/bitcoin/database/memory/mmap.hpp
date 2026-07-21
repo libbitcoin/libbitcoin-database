@@ -212,9 +212,12 @@ private:
     std::atomic<size_t> space_{ zero };
     std::atomic<error::error_t> error_{ error::success };
 
-    // Scalar fields are atomic; compound transitions (open/close/load/unload/
-    // shrink/truncate/expand/reserve/allocate/get_filled) are serialized by
-    // field_mutex_ exclusive, with shared for flush/read.
+    // Scalar fields are atomic: size/capacity reads and the allocate fast
+    // path (bounded claim within published capacity) are lock-free. Capacity
+    // growth and compound transitions (open/close/load/unload/shrink/
+    // truncate/expand/reserve/get_filled) are serialized by field_mutex_
+    // exclusive. Shrinking transitions additionally rely on the documented
+    // suspend-writes contract (the fast path does not serialize with them).
     // logical_ and capacity_ are row counts (byte count if width is one).
     std::array<int, columns> opened_;
     std::atomic<size_t> capacity_{};

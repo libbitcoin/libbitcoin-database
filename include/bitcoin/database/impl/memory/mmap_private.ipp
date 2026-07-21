@@ -127,7 +127,9 @@ bool CLASS::release_(size_t size) NOEXCEPT
     if (!success)
         set_first_code(error::munmap_failure);
 
-    loaded_.store(false);
+    // loaded_ is caller-owned: unmap_ publishes unloaded, remap_ remains
+    // loaded across replacement (lock-free allocate guards must not observe
+    // a transient unload).
     memory_map_[Column] = {};
     return success;
 }
@@ -162,6 +164,8 @@ bool CLASS::unmap_(size_t size) NOEXCEPT
     // Order ensures release in case of truncate failure.
     const auto success = release_<Column>(size) && truncated;
 #endif
+
+    loaded_.store(false);
 
     if (!success)
         set_first_code(error::munmap_failure);
@@ -234,7 +238,8 @@ bool CLASS::remap_(size_t size) NOEXCEPT
 
 #else
 
-    // macOS does not define mremap or MREMAP_MAYMOVE.
+    // macOS does not define mremap or MREMAP_MAYMOVE. The prior mapping was
+    // released above and the resized file is mapped fresh.
     // TODO: see "MREMAP_MAYMOVE" in sqlite for map extension technique.
     memory_map_[Column] = system::pointer_cast<uint8_t>(
         ::mmap(nullptr, to_width<Column>(size), PROT_READ | PROT_WRITE,
