@@ -73,74 +73,39 @@ bool CLASS::purge_schnorr_signatures() NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set_signature(const hash_digest& digest, const ec_xonly& point,
-    const ec_signature& signature, const header_link& link) NOEXCEPT
+bool CLASS::set_signatures(const system::chain::schnorr_signatures& sigs,
+    const header_link& link) NOEXCEPT
 {
-    using correlate_t = table::schnorr_correlate::put_ref;
-    using digest_t = table::schnorr_digest::put_ref;
-    using xonly_t = table::schnorr_xonly::put_ref;
-    using signature_t = table::schnorr_signature::put_ref;
+    using correlate_t = table::schnorr_correlate::put_signatures;
+    using digest_t = table::schnorr_digest::put_signatures;
+    using xonly_t = table::schnorr_xonly::put_signatures;
+    using signature_t = table::schnorr_signature::put_signatures;
+
+    if (sigs.empty())
+        return true;
+
+    using namespace system;
+    const auto rows = possible_narrow_cast<schnorr_link::integer>(
+        sigs.rows().size());
 
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
     const auto scope = get_transactor();
 
-    using namespace system;
-    const auto row = possible_narrow_cast<schnorr_link::integer>(one);
-
-    // Allocate 1 row across all columns.
-    const auto fk = store_.schnorr.allocate(row);
+    // Allocate all of the block's rows across all columns.
+    const auto fk = store_.schnorr.allocate(rows);
     if (fk.is_terminal())
         return false;
 
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = store_.schnorr.guard();
 
-    // Write one value to each column in corresponding positions.
+    // Deinterleave the accumulator into the columns.
     return
-        store_.schnorr.correlate.put(fk, correlate_t{ {}, link }) &&
-        store_.schnorr.digest.put(fk, digest_t{ {}, digest }) &&
-        store_.schnorr.xonly.put(fk, xonly_t{ {}, point }) &&
-        store_.schnorr.signature.put(fk, signature_t{ {}, signature });
-    // ========================================================================
-}
-
-TEMPLATE
-schnorr_link CLASS::allocate_signatures(size_t count) NOEXCEPT
-{
-    // Allocate count rows across all columns (hot storage).
-    // ========================================================================
-    const auto scope = get_transactor();
-
-    using namespace system;
-    const auto rows = possible_narrow_cast<schnorr_link::integer>(count);
-    return store_.schnorr.allocate(rows);
-    // ========================================================================
-}
-
-TEMPLATE
-bool CLASS::set_signature(const schnorr_link& schnorr_fk,
-    const hash_digest& digest, const ec_xonly& point,
-    const ec_signature& signature, const header_link& link) NOEXCEPT
-{
-    using namespace system;
-    using correlate_t = table::schnorr_correlate::put_ref;
-    using digest_t = table::schnorr_digest::put_ref;
-    using xonly_t = table::schnorr_xonly::put_ref;
-    using signature_t = table::schnorr_signature::put_ref;
-
-    // Caller must guard reads, this is writing into hot storage.
-    // ========================================================================
-    const auto scope = get_transactor();
-
-    // Guard against remap (required for nomaps::put(fk)).
-    const auto guard = store_.schnorr.guard();
-
-    return
-        store_.schnorr.correlate.put(schnorr_fk, correlate_t{ {}, link }) &&
-        store_.schnorr.digest.put(schnorr_fk, digest_t{ {}, digest }) &&
-        store_.schnorr.xonly.put(schnorr_fk, xonly_t{ {}, point }) &&
-        store_.schnorr.signature.put(schnorr_fk, signature_t{ {}, signature });
+        store_.schnorr.correlate.put(fk, correlate_t{ {}, link, sigs }) &&
+        store_.schnorr.digest.put(fk, digest_t{ {}, sigs }) &&
+        store_.schnorr.xonly.put(fk, xonly_t{ {}, sigs }) &&
+        store_.schnorr.signature.put(fk, signature_t{ {}, sigs });
     // ========================================================================
 }
 

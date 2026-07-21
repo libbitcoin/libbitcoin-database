@@ -73,6 +73,36 @@ struct ecdsa_digest
         const size_t rows{};
         const hash_digest& digest;
     };
+
+    struct put_signatures
+      : public schema::ecdsa_digest
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(sigs.rows());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using namespace system;
+            sigs.for_each([&](const hash_digest& digest,
+                std::span<const ec_compressed> keys,
+                std::span<const ec_signature> sigs) NOEXCEPT
+            {
+                // Group capture is limited to common signature hash.
+                const auto rows = chain::multisig::rows(sigs.size(),
+                    keys.size());
+
+                for (size_t row{}; row < rows; ++row)
+                    sink.write_bytes(digest);
+            });
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const system::chain::ecdsa_signatures& sigs;
+    };
 };
 
 /// ecdsa_compressed is an array of ecdsa verification compressed public keys.
@@ -127,6 +157,36 @@ struct ecdsa_compressed
         const std::span<const system::ec_compressed> keys;
         const size_t sigs{};
     };
+
+    struct put_signatures
+      : public schema::ecdsa_compressed
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(sigs.rows());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using namespace system;
+            sigs.for_each([&](const hash_digest&,
+                std::span<const ec_compressed> keys,
+                std::span<const ec_signature> sigs) NOEXCEPT
+            {
+                const auto m = sigs.size();
+                const auto gap = keys.size() - m;
+
+                for (size_t sig{}; sig < m; ++sig)
+                    for (auto key = sig; key <= gap + sig; ++key)
+                        sink.write_bytes(keys[key]);
+            });
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const system::chain::ecdsa_signatures& sigs;
+    };
 };
 
 /// ecdsa_signature is an array of ecdsa verification signatures.
@@ -180,6 +240,36 @@ struct ecdsa_signature
         const size_t rows{};
         const size_t keys{};
         const std::span<const system::ec_signature> sigs;
+    };
+
+    struct put_signatures
+      : public schema::ecdsa_signature
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(sigs.rows());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using namespace system;
+            sigs.for_each([&](const hash_digest&,
+                std::span<const ec_compressed> keys,
+                std::span<const ec_signature> sigs) NOEXCEPT
+            {
+                const auto m = sigs.size();
+                const auto gap = keys.size() - m;
+
+                for (size_t sig{}; sig < m; ++sig)
+                    for (auto key = sig; key <= gap + sig; ++key)
+                        sink.write_bytes(sigs[sig]);
+            });
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const system::chain::ecdsa_signatures& sigs;
     };
 };
 
@@ -270,6 +360,48 @@ struct ecdsa_correlate
         const size_t keys{};
         const size_t sigs{};
         const uint16_t group{};
+    };
+
+    struct put_signatures
+      : public schema::ecdsa_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(sigs.rows());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using namespace system;
+            uint16_t group{};
+            sigs.for_each([&](const hash_digest&,
+                std::span<const ec_compressed> keys,
+                std::span<const ec_signature> sigs) NOEXCEPT
+            {
+                const auto m = sigs.size();
+                const auto gap = keys.size() - m;
+
+                // Group id is the group capture ordinal (ecdsa_signatures).
+                for (size_t sig{}; sig < m; ++sig)
+                {
+                    for (auto key = sig; key <= gap + sig; ++key)
+                    {
+                        sink.write_little_endian<hd::integer, hd::size>(
+                            header_fk);
+                        sink.write_byte(pack_word<uint8_t>(sig, key));
+                        sink.write_little_endian<uint16_t>(group);
+                    }
+                }
+
+                ++group;
+            });
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const hd::integer header_fk{};
+        const system::chain::ecdsa_signatures& sigs;
     };
 };
 

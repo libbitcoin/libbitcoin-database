@@ -50,6 +50,27 @@ struct schnorr_digest
 
         const system::hash_digest& digest;
     };
+
+    struct put_signatures
+      : public schema::schnorr_digest
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                sigs.rows().size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto& row: sigs.rows())
+                sink.write_bytes(row.digest);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const system::chain::schnorr_signatures& sigs;
+    };
 };
 
 /// schnorr_xonly is an array of schnorr verification xonly public keys.
@@ -75,6 +96,27 @@ struct schnorr_xonly
 
         const system::ec_xonly& point;
     };
+
+    struct put_signatures
+      : public schema::schnorr_xonly
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                sigs.rows().size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto& row: sigs.rows())
+                sink.write_bytes(row.point);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const system::chain::schnorr_signatures& sigs;
+    };
 };
 
 /// schnorr_signature is an array of schnorr verification signatures.
@@ -99,6 +141,27 @@ struct schnorr_signature
         }
 
         const system::ec_signature& signature;
+    };
+
+    struct put_signatures
+      : public schema::schnorr_signature
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                sigs.rows().size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto& row: sigs.rows())
+                sink.write_bytes(row.signature);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const system::chain::schnorr_signatures& sigs;
     };
 };
 
@@ -143,6 +206,29 @@ struct schnorr_correlate
         }
 
         const hd::integer header_fk{};
+    };
+
+    struct put_signatures
+      : public schema::schnorr_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                sigs.rows().size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            const auto rows = sigs.rows().size();
+            for (size_t row{}; row < rows; ++row)
+                sink.write_little_endian<hd::integer, hd::size>(header_fk);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const hd::integer header_fk{};
+        const system::chain::schnorr_signatures& sigs;
     };
 };
 
