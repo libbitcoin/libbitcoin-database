@@ -84,7 +84,7 @@ code CLASS::open() NOEXCEPT
     if (const auto ec = file::size_ex(bytes, opened_.front()))
         return ec;
 
-    logical_ = logical_rows(bytes);
+    logical_.store(logical_rows(bytes));
     return error::success;
 }
 
@@ -94,13 +94,13 @@ code CLASS::close() NOEXCEPT
     std::unique_lock map_lock(remap_mutex_);
     std::unique_lock field_lock(field_mutex_);
 
-    if (loaded_)
+    if (loaded_.load())
         return error::close_loaded;
 
     if (opened_.front() == file::invalid)
         return error::success;
 
-    logical_ = zero;
+    logical_.store(zero);
     for (auto& descriptor: opened_)
     {
         if (descriptor != file::invalid)
@@ -128,7 +128,7 @@ code CLASS::load() NOEXCEPT
 
     if (remap_mutex_.try_lock())
     {
-        if (loaded_)
+        if (loaded_.load())
         {
             remap_mutex_.unlock();
             return error::load_loaded;
@@ -156,7 +156,7 @@ code CLASS::reload() NOEXCEPT
 
     if (remap_mutex_.try_lock())
     {
-        if (!loaded_)
+        if (!loaded_.load())
         {
             remap_mutex_.unlock();
             return error::reload_unloaded;
@@ -180,7 +180,7 @@ code CLASS::flush() NOEXCEPT
     std::shared_lock map_lock(remap_mutex_);
     std::shared_lock field_lock(field_mutex_);
 
-    if (!loaded_)
+    if (!loaded_.load())
         return error::flush_unloaded;
 
     // Reads fields and the memory map.
@@ -195,7 +195,7 @@ code CLASS::unload() NOEXCEPT
 
     if (remap_mutex_.try_lock())
     {
-        if (!loaded_)
+        if (!loaded_.load())
         {
             remap_mutex_.unlock();
             return error::success;
@@ -223,7 +223,7 @@ code CLASS::shrink() NOEXCEPT
 
     if (remap_mutex_.try_lock())
     {
-        if (!loaded_)
+        if (!loaded_.load())
         {
             remap_mutex_.unlock();
             return error::shrink_unloaded;
@@ -268,14 +268,14 @@ TEMPLATE
 size_t CLASS::size() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
-    return logical_;
+    return logical_.load();
 }
 
 TEMPLATE
 size_t CLASS::capacity() const NOEXCEPT
 {
     std::shared_lock field_lock(field_mutex_);
-    return capacity_;
+    return capacity_.load();
 }
 
 TEMPLATE
@@ -283,10 +283,10 @@ bool CLASS::truncate(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (count > logical_)
+    if (count > logical_.load())
         return false;
 
-    logical_ = count;
+    logical_.store(count);
     return true;
 }
 
@@ -295,13 +295,13 @@ bool CLASS::expand(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (fault_ || !loaded_)
+    if (fault_.load() || !loaded_.load())
         return false;
 
-    if (count <= logical_)
+    if (count <= logical_.load())
         return true;
 
-    if (count > capacity_)
+    if (count > capacity_.load())
     {
         const auto extended = to_capacity(count);
         std::unique_lock remap_lock(remap_mutex_);
@@ -309,7 +309,7 @@ bool CLASS::expand(size_t count) NOEXCEPT
             return false;
     }
 
-    logical_ = count;
+    logical_.store(count);
     return true;
 }
 
@@ -318,11 +318,12 @@ bool CLASS::reserve(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (fault_ || !loaded_ || system::is_add_overflow(logical_, count))
+    if (fault_.load() || !loaded_.load() ||
+        system::is_add_overflow(logical_.load(), count))
         return false;
 
-    const auto end = logical_ + count;
-    if (end > capacity_)
+    const auto end = logical_.load() + count;
+    if (end > capacity_.load())
     {
         const auto extended = to_capacity(end);
         std::unique_lock remap_lock(remap_mutex_);
@@ -342,11 +343,13 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (fault_ || !loaded_ || system::is_add_overflow(logical_, count))
+    const auto start = logical_.load();
+    if (fault_.load() || !loaded_.load() ||
+        system::is_add_overflow(start, count))
         return storage::eof;
 
-    auto end = logical_ + count;
-    if (end > capacity_)
+    const auto end = start + count;
+    if (end > capacity_.load())
     {
         const auto extended = to_capacity(end);
 
@@ -358,8 +361,8 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
             return storage::eof;
     }
 
-    std::swap(logical_, end);
-    return end;
+    logical_.store(end);
+    return start;
 }
 
 } // namespace database
