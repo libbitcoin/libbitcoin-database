@@ -56,6 +56,12 @@ struct linkage
     inline self& operator++() NOEXCEPT;
     inline self operator++(int) NOEXCEPT;
 
+    /// Offset addition operators (records, or bytes for slab links).
+    template <typename Integer, if_unsigned_integer<Integer> = true>
+    constexpr self& operator+=(Integer offset) NOEXCEPT;
+    template <typename Integer, if_unsigned_integer<Integer> = true>
+    constexpr self operator+(Integer offset) const NOEXCEPT;
+
     /// Integral and array cast operators.
     constexpr operator integer() const NOEXCEPT;
     inline operator bytes() const NOEXCEPT;

@@ -225,8 +225,8 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
             // See outs::put_ref.
             // Calculate next corresponding output fk from serialized size.
             // (variable_size(value) + (value + script)) - (value - parent)
-            out_fk.value += (variable_size(output->value()) +
-                output->serialized_size() - value_parent);
+            out_fk += variable_size(output->value()) +
+                output->serialized_size() - value_parent;
         }
     }
 
@@ -409,7 +409,8 @@ code CLASS::set_code(const block& block, const header_link& key,
     constexpr auto positive = true;
 
     // Transactor assures cannot be restored without txs, as required to unset.
-    if (strong && !set_strong(key, txs, tx_fks, positive))
+    // Sequential write, as archival is already concurrent across blocks.
+    if (strong && !set_strong(key, txs, tx_fks, positive, false))
         return error::txs_confirm;
 
     // Header link is the key for the txs table.

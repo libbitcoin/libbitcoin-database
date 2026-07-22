@@ -110,6 +110,17 @@ static_assert(linkage<6>{ 42 } == 42_u64);
 static_assert(linkage<7>{ 42 } == 42_u64);
 static_assert(linkage<8>{ 42 } == 42_u64);
 
+// Offset addition (integer() cast operator for equality test).
+// Size 0 excluded, as its terminal is zero (no row is valid).
+static_assert(linkage<1>{ 40 } + 2u == 42_u8);
+static_assert(linkage<2>{ 40 } + 2u == 42_u16);
+static_assert(linkage<3>{ 40 } + 2u == 42_u32);
+static_assert(linkage<4>{ 40 } + 2u == 42_u32);
+static_assert(linkage<5>{ 40 } + 2u == 42_u64);
+static_assert(linkage<6>{ 40 } + 2u == 42_u64);
+static_assert(linkage<7>{ 40 } + 2u == 42_u64);
+static_assert(linkage<8>{ 40 } + 2u == 42_u64);
+
 // assign integer
 
 BOOST_AUTO_TEST_CASE(linkage__assign_integer__1__expected)
@@ -350,6 +361,39 @@ BOOST_AUTO_TEST_CASE(linkage__increment__8__expected)
 
     BOOST_REQUIRE_EQUAL(++instance, 0x4201020304050602u);
     BOOST_REQUIRE_EQUAL(instance, 0x4201020304050602u);
+}
+
+// add-assign
+
+BOOST_AUTO_TEST_CASE(linkage__add_assign__4__expected)
+{
+    linkage<4> instance{ 0x42010200 };
+    instance += 1u;
+    BOOST_REQUIRE_EQUAL(instance, 0x42010201u);
+
+    instance += 0x10_size;
+    BOOST_REQUIRE_EQUAL(instance, 0x42010211u);
+}
+
+BOOST_AUTO_TEST_CASE(linkage__add_assign__2__expected)
+{
+    linkage<2> instance{ 0x4200 };
+    instance += 2u;
+    BOOST_REQUIRE_EQUAL(instance, 0x4202u);
+}
+
+BOOST_AUTO_TEST_CASE(linkage__add_assign__5__expected)
+{
+    linkage<5> instance{ 0x4201020300 };
+    instance += 0x100u;
+    BOOST_REQUIRE_EQUAL(instance, 0x4201020400u);
+}
+
+BOOST_AUTO_TEST_CASE(linkage__add_assign__8__expected)
+{
+    linkage<8> instance{ 0x4201020304050600 };
+    instance += 0x42u;
+    BOOST_REQUIRE_EQUAL(instance, 0x4201020304050642u);
 }
 
 // cast bytes

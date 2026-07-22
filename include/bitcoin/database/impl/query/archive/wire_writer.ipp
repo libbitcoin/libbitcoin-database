@@ -164,9 +164,8 @@ code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
                 table::address::record{ {}, out_fk }))
                 return error::tx_address_put;
 
-            out_fk.value += possible_narrow_cast<output_link::integer>(
-                tx_link::size + variable_size(value) + variable_size(bytes) +
-                bytes);
+            out_fk += tx_link::size + variable_size(value) +
+                variable_size(bytes) + bytes;
         }
 
         BC_ASSERT(osource);
@@ -217,7 +216,6 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     using out_t = output_link::integer;
     using ins_t = ins_link::integer;
     using outs_t = outs_link::integer;
-    using address_t = address_link::integer;
 
     if (key.is_terminal())
         return error::txs_header;
@@ -324,11 +322,11 @@ code CLASS::set_code(const block_view& block, const header_link& key,
             tx.output_table_size();
 
         fks.tx_fk++;
-        fks.ins_fk.value  += possible_narrow_cast<ins_t>(tx.inputs());
-        fks.outs_fk.value += possible_narrow_cast<outs_t>(tx.outputs());
-        fks.in_fk.value   += possible_narrow_cast<in_t>(tx.input_table_size());
-        fks.out_fk.value  += possible_narrow_cast<out_t>(out_bytes);
-        fks.ad_fk.value   += possible_narrow_cast<address_t>(tx.outputs());
+        fks.ins_fk  += tx.inputs();
+        fks.outs_fk += tx.outputs();
+        fks.in_fk   += tx.input_table_size();
+        fks.out_fk  += out_bytes;
+        fks.ad_fk   += tx.outputs();
     }
 
     // Release all accessors (subsequent writes allocate).
@@ -349,7 +347,8 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     constexpr auto positive = true;
 
     // Transactor assures cannot be restored without txs, as required to unset.
-    if (strong && !set_strong(key, txs, tx_fks, positive))
+    // Sequential write, as archival is already concurrent across blocks.
+    if (strong && !set_strong(key, txs, tx_fks, positive, false))
         return error::txs_confirm;
 
     // Header link is the key for the txs table.
