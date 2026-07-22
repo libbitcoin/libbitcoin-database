@@ -347,7 +347,8 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     constexpr auto positive = true;
 
     // Transactor assures cannot be restored without txs, as required to unset.
-    if (strong && !set_strong(key, txs, tx_fks, positive))
+    // Sequential write, as archival is already concurrent across blocks.
+    if (strong && !set_strong(key, txs, tx_fks, positive, false))
         return error::txs_confirm;
 
     // Header link is the key for the txs table.

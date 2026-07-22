@@ -85,7 +85,7 @@ bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
     const auto scope = get_transactor();
 
     // This reservation guard assumes no concurrent writes to the table.
-    if (strong && !set_strong(link, txs.number, txs.coinbase_fk, true))
+    if (strong && !set_strong(link, txs.number, txs.coinbase_fk, true, true))
         return false;
 
     const table::height::record confirmed{ {}, link };
@@ -110,7 +110,7 @@ bool CLASS::pop_confirmed() NOEXCEPT
     const auto scope = get_transactor();
 
     // Clean single allocation failure.
-    if (!set_strong(link, txs.number, txs.coinbase_fk, false))
+    if (!set_strong(link, txs.number, txs.coinbase_fk, false, true))
         return false;
 
     ///////////////////////////////////////////////////////////////////////////
