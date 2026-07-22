@@ -111,7 +111,7 @@ static_assert(linkage<7>{ 42 } == 42_u64);
 static_assert(linkage<8>{ 42 } == 42_u64);
 
 // Offset addition (integer() cast operator for equality test).
-static_assert(linkage<0>{ 40 } + 2u == 42_size);
+// Size 0 excluded, as its terminal is zero (no row is valid).
 static_assert(linkage<1>{ 40 } + 2u == 42_u8);
 static_assert(linkage<2>{ 40 } + 2u == 42_u16);
 static_assert(linkage<3>{ 40 } + 2u == 42_u32);
@@ -365,14 +365,14 @@ BOOST_AUTO_TEST_CASE(linkage__increment__8__expected)
 
 // add-assign
 
-BOOST_AUTO_TEST_CASE(linkage__add_assign__0__expected)
+BOOST_AUTO_TEST_CASE(linkage__add_assign__4__expected)
 {
-    linkage<0> instance{ 0x42 };
+    linkage<4> instance{ 0x42010200 };
     instance += 1u;
-    BOOST_REQUIRE_EQUAL(instance, 0x43u);
+    BOOST_REQUIRE_EQUAL(instance, 0x42010201u);
 
     instance += 0x10_size;
-    BOOST_REQUIRE_EQUAL(instance, 0x53u);
+    BOOST_REQUIRE_EQUAL(instance, 0x42010211u);
 }
 
 BOOST_AUTO_TEST_CASE(linkage__add_assign__2__expected)
