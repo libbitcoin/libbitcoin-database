@@ -74,6 +74,25 @@ inline CLASS CLASS::operator++(int) NOEXCEPT
 }
 
 TEMPLATE
+template <typename Integer, if_unsigned_integer<Integer>>
+constexpr CLASS& CLASS::operator+=(Integer offset) NOEXCEPT
+{
+    // An actual row cannot be terminal, so the sum must be less than terminal.
+    BC_ASSERT(!system::is_add_overflow<integer>(value, offset));
+    BC_ASSERT(system::is_lesser(system::add<integer>(value, offset), terminal));
+    value = system::add<integer>(value, offset);
+    return *this;
+}
+
+TEMPLATE
+template <typename Integer, if_unsigned_integer<Integer>>
+constexpr CLASS CLASS::operator+(Integer offset) const NOEXCEPT
+{
+    auto self = *this;
+    return self += offset;
+}
+
+TEMPLATE
 constexpr CLASS::operator CLASS::integer() const NOEXCEPT
 {
     return value;

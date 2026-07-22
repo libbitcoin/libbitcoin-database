@@ -225,8 +225,8 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
             // See outs::put_ref.
             // Calculate next corresponding output fk from serialized size.
             // (variable_size(value) + (value + script)) - (value - parent)
-            out_fk.value += (variable_size(output->value()) +
-                output->serialized_size() - value_parent);
+            out_fk += variable_size(output->value()) +
+                output->serialized_size() - value_parent;
         }
     }
 
