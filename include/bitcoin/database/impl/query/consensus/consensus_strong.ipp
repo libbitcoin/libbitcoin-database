@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_CONSENSUS_STRONG_IPP
 #define LIBBITCOIN_DATABASE_QUERY_CONSENSUS_STRONG_IPP
 
-#include <algorithm>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -108,33 +107,27 @@ header_link CLASS::find_strong(const hash_digest& tx_hash) const NOEXCEPT
 // protected
 TEMPLATE
 bool CLASS::set_strong(const header_link& link, size_t count,
-    const tx_link& first_fk, bool positive, bool parallel) NOEXCEPT
+    const tx_link& first_fk, bool positive) NOEXCEPT
 {
     using namespace system;
     using link_t = table::strong_tx::link;
     using element_t = table::strong_tx::record;
-    const auto policy = poolstl::execution::par_if(parallel);
 
     // Preallocate all strong_tx records for the block and reuse memory ptr.
-    // Terminal allocation must not be indexed (would wrap to valid records).
     const auto records = possible_narrow_cast<link_t::integer>(count);
-    const auto record = store_.strong_tx.allocate(records);
-    if (record.is_terminal())
-        return false;
-
+    auto record = store_.strong_tx.allocate(records);
     const auto ptr = store_.strong_tx.get_memory();
+    const auto end = first_fk + count;
 
-    // All records of the block share one element value.
-    const element_t element{ {}, table::strong_tx::merge(positive, link) };
+    // Contiguous tx links.
+    for (auto fk = first_fk; fk < end; ++fk)
+        if (!store_.strong_tx.put(ptr, record++, fk, element_t
+            {
+                {},
+                table::strong_tx::merge(positive, link)
+            })) return false;
 
-    // Contiguous tx links to contiguous records.
-    return std::all_of(policy, poolstl::iota_iter<size_t>(zero),
-        poolstl::iota_iter<size_t>(count),
-        [&](size_t index) NOEXCEPT
-        {
-            return store_.strong_tx.put(ptr, record + index, first_fk + index,
-                element);
-        });
+    return true;
 }
 
 TEMPLATE
@@ -151,7 +144,7 @@ bool CLASS::set_strong(const header_link& link) NOEXCEPT
     const auto scope = get_transactor();
 
     // Clean allocation failure (e.g. disk full).
-    return set_strong(link, txs.number, txs.coinbase_fk, true, true);
+    return set_strong(link, txs.number, txs.coinbase_fk , true);
     // ========================================================================
 }
 
@@ -169,7 +162,7 @@ bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
     const auto scope = get_transactor();
 
     // Clean allocation failure (e.g. disk full).
-    return set_strong(link, txs.number, txs.coinbase_fk, false, true);
+    return set_strong(link, txs.number, txs.coinbase_fk, false);
     // ========================================================================
 }
 
