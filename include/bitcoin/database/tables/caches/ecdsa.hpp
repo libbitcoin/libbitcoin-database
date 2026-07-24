@@ -424,8 +424,8 @@ class ecdsa_storage
 {
 public:
     ecdsa_storage(const std::filesystem::path& path, size_t size,
-        size_t rate, bool random_access) NOEXCEPT
-      : ecdsa_files<Storage>(path, size, rate, random_access)
+        size_t rate, bool random_access, bool staged=false) NOEXCEPT
+      : ecdsa_files<Storage>(path, size, rate, random_access, staged)
     {
     }
 };

@@ -28,6 +28,7 @@
 #include <bitcoin/database/file/file.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
+#include <bitcoin/database/memory/mman.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -57,13 +58,22 @@ public:
     /// Constructors.
     /// -----------------------------------------------------------------------
 
+    /// Staged instances (append-only bodies) stage writes in anonymous memory
+    /// and convert flushed rows to a read-only file mapping, hard-faulting any
+    /// write into settled space. Unstaged instances (heads) hold all logical
+    /// content in anonymous memory for the life of the load. Both write the
+    /// file only by explicit transfer, so no dirty file-backed page ever
+    /// exists (no effect where the staging backend is not built).
+
     /// Scalar construction (columns == 1): unchanged signature and codegen.
     mmap(const path& filename, size_t minimum=1, size_t expansion=0,
-        bool random=true) NOEXCEPT requires (is_one(columns));
+        bool random=true, bool staged=false) NOEXCEPT
+        requires (is_one(columns));
 
     /// Aggregate construction (columns > 1): one file per column, shared guards.
     mmap(const paths& filenames, size_t minimum=1, size_t expansion=0,
-        bool random=true) NOEXCEPT requires (columns > one);
+        bool random=true, bool staged=false) NOEXCEPT
+        requires (columns > one);
 
     /// Destruct for debug assertion only.
     virtual ~mmap() NOEXCEPT;
@@ -180,7 +190,7 @@ private:
 
     // mman dispatch, not thread safe.
     template <size_t... Index>
-    bool flush_all_(std::index_sequence<Index...>) NOEXCEPT;
+    bool flush_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
     bool map_all_(std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
@@ -190,7 +200,7 @@ private:
 
     // mman wrappers, not thread safe.
     template <size_t Column>
-    bool flush_() NOEXCEPT;
+    bool flush_(size_t rows) NOEXCEPT;
     template <size_t Column>
     bool map_() NOEXCEPT;
     template <size_t Column>
@@ -204,11 +214,38 @@ private:
     template <size_t Column>
     bool finalize_(size_t size) NOEXCEPT;
 
+#if defined(HAVE_STAGING)
+    // staging dispatch, not thread safe.
+    template <size_t... Index>
+    bool settle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
+    template <size_t... Index>
+    bool unsettle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
+
+    // staging wrappers, not thread safe.
+    template <size_t Column>
+    bool stage_() NOEXCEPT;
+    template <size_t Column>
+    bool commit_(size_t size) NOEXCEPT;
+    template <size_t Column>
+    bool settle_(size_t from, size_t to) NOEXCEPT;
+    template <size_t Column>
+    bool unsettle_(size_t rows) NOEXCEPT;
+    template <size_t Column>
+    void teardown_(const error::error_t& ec) NOEXCEPT;
+
+    // staging utilities, not thread safe.
+    bool advise_(uint8_t* map, size_t size) const NOEXCEPT;
+    size_t to_reservation(size_t rows) const NOEXCEPT;
+    size_t page_floor(size_t bytes) const NOEXCEPT;
+    size_t page_ceiling(size_t bytes) const NOEXCEPT;
+#endif // HAVE_STAGING
+
     // These are thread safe.
     const paths filenames_;
     const size_t minimum_;
     const size_t expansion_;
     const bool random_;
+    const bool staged_;
     std::atomic<size_t> space_{ zero };
     std::atomic<error::error_t> error_{ error::success };
 
@@ -229,6 +266,16 @@ private:
     // These are protected by remap_mutex_.
     std::array<uint8_t*, columns> memory_map_{};
     mutable std::shared_mutex remap_mutex_{};
+
+#if defined(HAVE_STAGING)
+    // settled_ is the count of rows flushed to disk (atomic for lock-free
+    // reads, updated only under remap_mutex_ exclusive). Rows below settled_
+    // are backed by a read-only file mapping (staged instances); rows above
+    // are committed anonymous memory. The others are protected by remap_mutex_.
+    std::atomic<size_t> settled_{};
+    std::array<size_t, columns> reserved_{};
+    size_t page_{};
+#endif // HAVE_STAGING
 };
 
 using map = mmap<one>;

@@ -52,17 +52,17 @@ public:
     };
 
     mmaps(const path& base_path, size_t size, size_t rate,
-        bool random_access) NOEXCEPT
-      : mmaps(base_path, size, rate, random_access, sequence)
+        bool random_access, bool staged=false) NOEXCEPT
+      : mmaps(base_path, size, rate, random_access, staged, sequence)
     {
     }
 
 protected:
     template <size_t... Index>
     mmaps(const path& base_path, size_t size, size_t rate, bool random_access,
-        std::index_sequence<Index...>) NOEXCEPT
+        bool staged, std::index_sequence<Index...>) NOEXCEPT
       : base(paths{ to_subpath(base_path, suffixes[Index])... }, size, rate,
-          random_access),
+          random_access, staged),
         base_path_{ base_path }
     {
     }

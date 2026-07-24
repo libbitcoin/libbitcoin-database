@@ -154,8 +154,8 @@ class silent_storage
 {
 public:
     silent_storage(const std::filesystem::path& path, size_t size,
-        size_t rate, bool random_access) NOEXCEPT
-      : silent_files<Storage>(path, size, rate, random_access)
+        size_t rate, bool random_access, bool staged=false) NOEXCEPT
+      : silent_files<Storage>(path, size, rate, random_access, staged)
     {
     }
 };
