@@ -58,4 +58,36 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT;
 
 #endif // HAVE_MSC
 
+// The anonymous staging backend accumulates writes in committed anonymous
+// memory and transfers them to the backing file explicitly, so that no dirty
+// file-backed page ever exists (posix kernels bound the dirty file page pool
+// and force early writeback, untunably so on macOS). Default on macOS, which
+// offers no writeback configuration; opt-in elsewhere (Linux exposes
+// vm.dirty_* as an alternative).
+#if !defined(HAVE_MSC) && !defined(WITHOUT_STAGING) && \
+    (defined(HAVE_APPLE) || defined(WITH_STAGING))
+    #define HAVE_STAGING
+#endif
+
+#if defined(HAVE_STAGING)
+
+/// Reserve inaccessible anonymous address space (MAP_FAILED on failure).
+void* mmap_reserve(size_t size) NOEXCEPT;
+
+/// Commit reserved pages as readable/writable anonymous memory.
+int mmap_commit(void* address, size_t size) NOEXCEPT;
+
+/// Replace committed pages with a read-only shared mapping of the file.
+int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT;
+
+/// Replace settled pages with committed anonymous memory (contents undefined).
+int mmap_unsettle(void* address, size_t size) NOEXCEPT;
+
+/// Full-transfer positional file read/write (false on failure or early eof).
+bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT;
+bool pwrite_all(int fd, const uint8_t* from, size_t size,
+    size_t offset) NOEXCEPT;
+
+#endif // HAVE_STAGING
+
 #endif

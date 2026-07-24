@@ -176,14 +176,39 @@ code CLASS::reload() NOEXCEPT
 TEMPLATE
 code CLASS::flush() NOEXCEPT
 {
-    // Prevent unload, resize, remap.
-    std::shared_lock map_lock(remap_mutex_);
+    // The suspend-writes contract holds logical_ stable across both phases.
+    size_t rows{};
 
-    if (!loaded_.load())
-        return error::flush_unloaded;
+    {
+        // Prevent unload, resize, remap.
+        std::shared_lock map_lock(remap_mutex_);
 
-    // Reads fields and the memory map.
-    return flush_all_(sequence{}) ? error::success : error::flush_failure;
+        if (!loaded_.load())
+            return error::flush_unloaded;
+
+        rows = logical_.load();
+
+        // Reads fields and the memory map.
+        if (!flush_all_(rows, sequence{}))
+            return error::flush_failure;
+    }
+
+#if defined(HAVE_STAGING)
+    // Convert flushed rows to read-only file mappings, releasing their
+    // anonymous pages to clean file cache (excludes accessors, briefly).
+    if (staged_)
+    {
+        std::unique_lock map_lock(remap_mutex_);
+
+        if (!loaded_.load())
+            return error::flush_unloaded;
+
+        if (!settle_all_(rows, sequence{}))
+            return error::flush_failure;
+    }
+#endif
+
+    return error::success;
 }
 
 // Suspend writes before calling.
@@ -282,6 +307,18 @@ bool CLASS::truncate(size_t count) NOEXCEPT
 
     if (count > logical_.load())
         return false;
+
+#if defined(HAVE_STAGING)
+    // Truncation below the settle boundary reverts settled rows to anonymous
+    // memory, as append-only bodies may re-append after reorganization.
+    if (staged_ && loaded_.load() && (count < settled_.load()))
+    {
+        std::unique_lock remap_lock(remap_mutex_);
+
+        if (!unsettle_all_(count, sequence{}))
+            return false;
+    }
+#endif
 
     logical_.store(count);
     return true;
