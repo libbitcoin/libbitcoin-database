@@ -69,15 +69,15 @@ public:
     {
     }
 
-    chunk_storages(const path& filename, size_t=1, size_t=0, bool=true) NOEXCEPT
-        requires (is_one(columns))
+    chunk_storages(const path& filename, size_t=1, size_t=0, bool=true,
+        bool=false) NOEXCEPT requires (is_one(columns))
       : alias_{}, paths_{ filename }, logical_{}
     {
     }
 
     /// Aggregate construction (columns > 1): one backing per column.
-    chunk_storages(const paths& filenames, size_t=1, size_t=0,
-        bool=true) NOEXCEPT requires (columns > one)
+    chunk_storages(const paths& filenames, size_t=1, size_t=0, bool=true,
+        bool=false) NOEXCEPT requires (columns > one)
       : alias_{}, paths_{ filenames }, logical_{}
     {
     }

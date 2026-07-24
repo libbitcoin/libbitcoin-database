@@ -234,6 +234,10 @@ private:
     static constexpr bool random = true;
     static constexpr bool sequential = false;
 
+    // Bodies are append-only, so stage writes in anonymous memory where the
+    // staging backend is built (heads update in place and remain resident).
+    static constexpr bool staged = true;
+
     static inline path head(const path& folder, const std::string& name) NOEXCEPT
     {
         return folder / (name + schema::ext::head);

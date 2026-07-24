@@ -1,5 +1,7 @@
 // mman_win32 based on code.google.com/p/mman-win32 (MIT License).
 
+#include <algorithm>
+#include <cerrno>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/mman.hpp>
 
@@ -328,3 +330,88 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
 }
 
 #endif // HAVE_MSC
+
+#if defined(HAVE_STAGING)
+
+void* mmap_reserve(size_t size) NOEXCEPT
+{
+    return ::mmap(nullptr, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS,
+        -1, 0);
+}
+
+int mmap_commit(void* address, size_t size) NOEXCEPT
+{
+    return ::mprotect(address, size, PROT_READ | PROT_WRITE);
+}
+
+int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT
+{
+    return ::mmap(address, size, PROT_READ, MAP_SHARED | MAP_FIXED, fd,
+        static_cast<off_t>(offset)) == MAP_FAILED ? -1 : 0;
+}
+
+int mmap_unsettle(void* address, size_t size) NOEXCEPT
+{
+    return ::mmap(address, size, PROT_READ | PROT_WRITE,
+        MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0) == MAP_FAILED ? -1 : 0;
+}
+
+// Chunked to avoid platform-specific single-transfer length limits.
+constexpr size_t transfer_chunk = size_t{ 1 } << 30;
+
+bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT
+{
+    while (size > 0)
+    {
+        const auto request = std::min(size, transfer_chunk);
+        const auto result = ::pread(fd, to, request,
+            static_cast<off_t>(offset));
+
+        if (result < 0)
+        {
+            if (errno == EINTR)
+                continue;
+
+            return false;
+        }
+
+        // Early eof implies the requested range exceeds the file.
+        if (result == 0)
+            return false;
+
+        const auto bytes = static_cast<size_t>(result);
+        to += bytes;
+        offset += bytes;
+        size -= bytes;
+    }
+
+    return true;
+}
+
+bool pwrite_all(int fd, const uint8_t* from, size_t size,
+    size_t offset) NOEXCEPT
+{
+    while (size > 0)
+    {
+        const auto request = std::min(size, transfer_chunk);
+        const auto result = ::pwrite(fd, from, request,
+            static_cast<off_t>(offset));
+
+        if (result <= 0)
+        {
+            if (result < 0 && errno == EINTR)
+                continue;
+
+            return false;
+        }
+
+        const auto bytes = static_cast<size_t>(result);
+        from += bytes;
+        offset += bytes;
+        size -= bytes;
+    }
+
+    return true;
+}
+
+#endif // HAVE_STAGING

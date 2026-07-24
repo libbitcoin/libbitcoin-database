@@ -789,6 +789,179 @@ BOOST_AUTO_TEST_CASE(mmap__write__read__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+// The staged parameter engages the anonymous staging backend where built
+// (posix); elsewhere it is ignored. Content assertions are identical either
+// way, so these cases validate staging on posix and the classic map on win32.
+
+constexpr auto stage_pattern = [](size_t index) NOEXCEPT
+{
+    return static_cast<uint8_t>(index % 251);
+};
+
+constexpr auto stage_repattern = [](size_t index) NOEXCEPT
+{
+    return static_cast<uint8_t>((index * 3) % 241);
+};
+
+BOOST_AUTO_TEST_CASE(mmap__staged__write_flush_write_reload__expected)
+{
+    constexpr size_t first = 10'000;
+    constexpr size_t second = 7'000;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, 1, 50, true, true);
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+
+    // Write and flush twice, settling from zero and then a page interior.
+    auto memory = instance.get(instance.allocate(first));
+    BOOST_REQUIRE(memory);
+    for (size_t index = 0; index < first; ++index)
+        memory.begin()[index] = stage_pattern(index);
+
+    memory.reset();
+    BOOST_REQUIRE(!instance.flush());
+
+    memory = instance.get(instance.allocate(second));
+    BOOST_REQUIRE(memory);
+    for (size_t index = 0; index < second; ++index)
+        memory.begin()[index] = stage_pattern(first + index);
+
+    memory.reset();
+    BOOST_REQUIRE(!instance.flush());
+
+    // All content is readable through the settled and unsettled regions.
+    memory = instance.get();
+    BOOST_REQUIRE(memory);
+    for (size_t index = 0; index < first + second; ++index)
+        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_pattern(index));
+
+    memory.reset();
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+
+    // All content persists across close and reopen.
+    map reopened(file, 1, 50, true, true);
+    BOOST_REQUIRE(!reopened.open());
+    BOOST_REQUIRE(!reopened.load());
+    BOOST_REQUIRE_EQUAL(reopened.size(), first + second);
+
+    memory = reopened.get();
+    BOOST_REQUIRE(memory);
+    for (size_t index = 0; index < first + second; ++index)
+        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_pattern(index));
+
+    memory.reset();
+    BOOST_REQUIRE(!reopened.unload());
+    BOOST_REQUIRE(!reopened.close());
+    BOOST_REQUIRE(!reopened.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_rewrite__expected)
+{
+    constexpr size_t initial = 12'000;
+    constexpr size_t retained = 5'000;
+    constexpr size_t appended = 4'000;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, 1, 50, true, true);
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+
+    auto memory = instance.get(instance.allocate(initial));
+    BOOST_REQUIRE(memory);
+    for (size_t index = 0; index < initial; ++index)
+        memory.begin()[index] = stage_pattern(index);
+
+    memory.reset();
+    BOOST_REQUIRE(!instance.flush());
+
+    // Truncate below the flushed extent and append replacement content.
+    BOOST_REQUIRE(instance.truncate(retained));
+    BOOST_REQUIRE_EQUAL(instance.allocate(appended), retained);
+
+    memory = instance.get(retained);
+    BOOST_REQUIRE(memory);
+    for (size_t index = 0; index < appended; ++index)
+        memory.begin()[index] = stage_repattern(retained + index);
+
+    memory.reset();
+    BOOST_REQUIRE(!instance.flush());
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+
+    // Retained content precedes replacement content across reopen.
+    map reopened(file, 1, 50, true, true);
+    BOOST_REQUIRE(!reopened.open());
+    BOOST_REQUIRE(!reopened.load());
+    BOOST_REQUIRE_EQUAL(reopened.size(), retained + appended);
+
+    memory = reopened.get();
+    BOOST_REQUIRE(memory);
+    for (size_t index = 0; index < retained; ++index)
+        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_pattern(index));
+    for (size_t index = retained; index < retained + appended; ++index)
+        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_repattern(index));
+
+    memory.reset();
+    BOOST_REQUIRE(!reopened.unload());
+    BOOST_REQUIRE(!reopened.close());
+    BOOST_REQUIRE(!reopened.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__unstaged__rewrite_below_flush__expected)
+{
+    constexpr size_t size = 10'000;
+    constexpr size_t rewrite = 100;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    // Unstaged (default) retains in-place rewrite of flushed content (heads).
+    map instance(file, 1, 50, true);
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+
+    auto memory = instance.get(instance.allocate(size));
+    BOOST_REQUIRE(memory);
+    for (size_t index = 0; index < size; ++index)
+        memory.begin()[index] = stage_pattern(index);
+
+    memory.reset();
+    BOOST_REQUIRE(!instance.flush());
+
+    memory = instance.get();
+    BOOST_REQUIRE(memory);
+    for (size_t index = 0; index < rewrite; ++index)
+        memory.begin()[index] = stage_repattern(index);
+
+    memory.reset();
+    BOOST_REQUIRE(!instance.flush());
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+
+    map reopened(file, 1, 50, true);
+    BOOST_REQUIRE(!reopened.open());
+    BOOST_REQUIRE(!reopened.load());
+    BOOST_REQUIRE_EQUAL(reopened.size(), size);
+
+    memory = reopened.get();
+    BOOST_REQUIRE(memory);
+    for (size_t index = 0; index < rewrite; ++index)
+        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_repattern(index));
+    for (size_t index = rewrite; index < size; ++index)
+        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_pattern(index));
+
+    memory.reset();
+    BOOST_REQUIRE(!reopened.unload());
+    BOOST_REQUIRE(!reopened.close());
+    BOOST_REQUIRE(!reopened.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(mmap__unload__shared__unload_locked)
 {
     const std::string file = TEST_PATH;

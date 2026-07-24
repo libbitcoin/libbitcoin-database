@@ -33,24 +33,26 @@ namespace database {
 
 TEMPLATE
 CLASS::mmap(const path& filename, size_t minimum, size_t expansion,
-    bool random) NOEXCEPT
+    bool random, bool staged) NOEXCEPT
     requires (is_one(columns))
   : filenames_{ filename },
     minimum_(to_rows(minimum)),
     expansion_(expansion),
     random_(random),
+    staged_(staged),
     opened_{ file::invalid }
 {
 }
 
 TEMPLATE
 CLASS::mmap(const paths& filenames, size_t minimum, size_t expansion,
-    bool random) NOEXCEPT
+    bool random, bool staged) NOEXCEPT
     requires (columns > one)
   : filenames_(filenames),
     minimum_(to_rows(minimum)),
     expansion_(expansion),
     random_(random),
+    staged_(staged),
     opened_{}
 {
     opened_.fill(file::invalid);
@@ -66,6 +68,10 @@ CLASS::~mmap() NOEXCEPT
         [](auto map) NOEXCEPT { return is_null(map); }));
     BC_ASSERT(std::ranges::all_of(opened_,
         [](auto opened) NOEXCEPT { return opened == file::invalid; }));
+#if defined(HAVE_STAGING)
+    BC_ASSERT(std::ranges::all_of(reserved_,
+        [](auto reserved) NOEXCEPT { return is_zero(reserved); }));
+#endif
 }
 
 TEMPLATE
