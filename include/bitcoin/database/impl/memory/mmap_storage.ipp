@@ -324,28 +324,33 @@ bool CLASS::truncate(size_t count) NOEXCEPT
     if (staged_)
     {
         std::unique_lock extent_lock(extent_mutex_);
-        while (!is_zero(ring_size_))
+        const auto head = ring_head_.load(std::memory_order_relaxed);
+        auto size = ring_size_.load(std::memory_order_relaxed);
+
+        while (!is_zero(size))
         {
-            auto& tail = ring_.at((ring_head_ + ring_size_ - one) % extents);
-            if (tail.start >= count)
+            auto& tail = ring_.at((head + sub1(size)) % extents);
+            const auto start = tail.start.load(std::memory_order_relaxed);
+            if (start >= count)
             {
-                --ring_size_;
+                --size;
                 continue;
             }
 
-            if (system::ceilinged_add(tail.start, tail.count) > count)
+            if (system::ceilinged_add(start, tail.count) > count)
             {
-                tail.count = count - tail.start;
-                tail.outstanding = std::min(tail.outstanding,
-                    tail.count * columns);
+                tail.count = count - start;
+                const auto limit = tail.count * columns;
+                if (tail.outstanding.load(std::memory_order_relaxed) > limit)
+                    tail.outstanding.store(limit, std::memory_order_relaxed);
             }
 
             break;
         }
 
-        cursor_ = ring_head_;
-        frontier_.store(is_zero(ring_size_) ? count :
-            ring_.at(ring_head_).start);
+        ring_size_.store(size, std::memory_order_release);
+        frontier_.store(is_zero(size) ? count :
+            ring_.at(head).start.load(std::memory_order_relaxed));
     }
 #endif
 

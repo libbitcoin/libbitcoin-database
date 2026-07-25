@@ -241,6 +241,7 @@ private:
 
     // staging utilities, not thread safe.
     void record_(size_t start, size_t count) NOEXCEPT;
+    void maintain_() NOEXCEPT;
     bool advise_(uint8_t* map, size_t size) const NOEXCEPT;
     size_t to_reservation(size_t rows) const NOEXCEPT;
     size_t page_floor(size_t bytes) const NOEXCEPT;
@@ -274,21 +275,21 @@ private:
     static constexpr size_t extents = 4096;
     struct extent
     {
-        size_t start;
+        std::atomic<size_t> start;
         size_t count;
-        size_t outstanding;
+        std::atomic<size_t> outstanding;
     };
 
     // These are thread safe (atomic).
     std::atomic<size_t> settled_{};
     std::atomic<size_t> frontier_{};
+    std::atomic<size_t> ring_head_{};
+    std::atomic<size_t> ring_size_{};
 
-    // These are protected by extent_mutex_.
+    // These are protected by extent_mutex_ (ring entries are immobile, put
+    // under the mutex and published by release, read/decremented lock-free).
     std::array<size_t, columns> reserved_{};
     std::array<extent, extents> ring_{};
-    size_t ring_head_{};
-    size_t ring_size_{};
-    size_t cursor_{};
     size_t page_{};
     mutable std::mutex extent_mutex_{};
 #endif // MANAGE_STAGING

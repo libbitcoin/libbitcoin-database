@@ -25,6 +25,7 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/mman.hpp>
 #include <bitcoin/database/memory/mstage.hpp>
+#include <bitcoin/database/memory/utilities.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -46,7 +47,7 @@ bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
     using namespace system;
-    const auto page = possible_narrow_sign_cast<size_t>(page_size());
+    const auto page = page_size();
 
     // Page size must be a power of two.
     if (is_zero(page) || !is_one(ones_count(page)))
@@ -57,9 +58,8 @@ bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
     }
 
     page_ = page;
-    cursor_ = zero;
-    ring_head_ = zero;
-    ring_size_ = zero;
+    ring_head_.store(zero);
+    ring_size_.store(zero);
     settled_.store(staged_ ? logical_.load() : zero);
     frontier_.store(staged_ ? logical_.load() : zero);
 #endif
@@ -83,9 +83,8 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
     capacity_.store(zero);
 
 #if defined(MANAGE_STAGING)
-    cursor_ = zero;
-    ring_head_ = zero;
-    ring_size_ = zero;
+    ring_head_.store(zero);
+    ring_size_.store(zero);
     settled_.store(zero);
     frontier_.store(zero);
 #endif

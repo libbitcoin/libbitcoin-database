@@ -42,51 +42,56 @@ void CLASS::complete(size_t
 ) NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
-    std::unique_lock extent_lock(extent_mutex_);
-
-    if (!staged_ || is_zero(ring_size_) || is_zero(count))
+    if (!staged_ || is_zero(count))
         return;
 
-    // Cursor probe: completions cluster at the frontier, so the walk from the
-    // remembered extent (falling back to a full scan) is amortized O(1).
-    auto found = extents;
-    auto index = cursor_;
-    for (size_t probe{}; probe < ring_size_; ++probe)
+    // Acquire-ordered window snapshot (published entries are immobile).
+    const auto head = ring_head_.load(std::memory_order_acquire);
+    const auto size = ring_size_.load(std::memory_order_acquire);
+
+    // Lock-free binary search of the sorted window for the covering extent.
+    size_t low{};
+    auto high = size;
+    while (low < high)
     {
-        const auto& record = ring_.at(index);
-        if ((offset >= record.start) &&
-            (offset < system::ceilinged_add(record.start, record.count)))
+        const auto middle = to_half(low + high);
+        auto& record = ring_.at((head + middle) % extents);
+        const auto start = record.start.load(std::memory_order_relaxed);
+
+        if (offset < start)
         {
-            found = index;
-            break;
+            high = middle;
+            continue;
         }
 
-        index = (index + one) % extents;
-        if (index == ((ring_head_ + ring_size_) % extents))
-            index = ring_head_;
-    }
+        if (offset >= (start + record.count))
+        {
+            low = add1(middle);
+            continue;
+        }
 
-    if (found == extents)
+        // Wrap from over-completion stalls the frontier (conservative).
+        const auto previous = record.outstanding.fetch_sub(count,
+            std::memory_order_relaxed);
+
+        // Repair a decrement landed on a recycled slot (start moved).
+        if (record.start.load(std::memory_order_relaxed) != start)
+        {
+            record.outstanding.fetch_add(count, std::memory_order_relaxed);
+            return;
+        }
+
+        // Extent completion is allocation-coarse, so maintenance is cheap
+        // here and the element write fast path otherwise takes no lock.
+        if (previous == count)
+        {
+            std::unique_lock extent_lock(extent_mutex_, std::try_to_lock);
+            if (extent_lock.owns_lock())
+                maintain_();
+        }
+
         return;
-
-    cursor_ = found;
-    auto& record = ring_.at(found);
-    record.outstanding = system::floored_subtract(record.outstanding, count);
-
-    // Pop completed extents from the head, advancing the frontier.
-    while (!is_zero(ring_size_) && is_zero(ring_.at(ring_head_).outstanding))
-    {
-        ring_head_ = (ring_head_ + one) % extents;
-        --ring_size_;
     }
-
-    frontier_.store(is_zero(ring_size_) ? logical_.load() :
-        ring_.at(ring_head_).start);
-
-    // Reset a cursor left pointing at a popped (dead) slot.
-    const auto live = !is_zero(ring_size_) &&
-        (((found + extents - ring_head_) % extents) < ring_size_);
-    cursor_ = live ? found : ring_head_;
 #endif
 }
 
@@ -110,20 +115,45 @@ void CLASS::record_(size_t start, size_t count) NOEXCEPT
         return;
 
     std::unique_lock extent_lock(extent_mutex_);
+    maintain_();
 
     // Saturation stalls the frontier (conservative, safe); asserts in debug.
-    BC_ASSERT(ring_size_ < extents);
-    if (ring_size_ == extents)
+    const auto size = ring_size_.load(std::memory_order_relaxed);
+    BC_ASSERT(size < extents);
+    if (size == extents)
         return;
 
-    const auto tail = (ring_head_ + ring_size_) % extents;
-    ring_.at(tail) = { start, count, count * columns };
+    const auto head = ring_head_.load(std::memory_order_relaxed);
+    auto& record = ring_.at((head + size) % extents);
+    record.start.store(start, std::memory_order_relaxed);
+    record.count = count;
+    record.outstanding.store(count * columns, std::memory_order_relaxed);
 
-    if (is_zero(ring_size_++))
-    {
+    // Publish the extent (pairs with the acquire window snapshot).
+    ring_size_.store(add1(size), std::memory_order_release);
+
+    if (is_zero(size))
         frontier_.store(start);
-        cursor_ = ring_head_;
+}
+
+// Pop completed extents from the head, advancing the frontier (locked).
+TEMPLATE
+void CLASS::maintain_() NOEXCEPT
+{
+    auto head = ring_head_.load(std::memory_order_relaxed);
+    auto size = ring_size_.load(std::memory_order_relaxed);
+
+    while (!is_zero(size) &&
+        is_zero(ring_.at(head).outstanding.load(std::memory_order_relaxed)))
+    {
+        head = add1(head) % extents;
+        --size;
     }
+
+    ring_head_.store(head, std::memory_order_relaxed);
+    ring_size_.store(size, std::memory_order_release);
+    frontier_.store(is_zero(size) ? logical_.load() :
+        ring_.at(head).start.load(std::memory_order_relaxed));
 }
 
 // staging dispatch, not thread safe.
