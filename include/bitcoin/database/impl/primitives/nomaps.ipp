@@ -185,7 +185,11 @@ template <size_t Column, typename Element>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
     const auto ptr = body_.template get_raw1<Column>(link);
-    return put<Column>(ptr, element);
+    if (!put<Column>(ptr, element))
+        return false;
+
+    body_.complete(link, element.count());
+    return true;
 }
 
 // protected (unguarded memory access)

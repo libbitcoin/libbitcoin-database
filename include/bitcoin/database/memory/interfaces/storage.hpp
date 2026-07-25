@@ -88,6 +88,12 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     virtual size_t allocate(size_t count) NOEXCEPT = 0;
 
+    /// Report element write completion of count rows/bytes at offset.
+    virtual void complete(size_t offset, size_t count) NOEXCEPT = 0;
+
+    /// Rows/bytes below which all writes are complete (size() when quiescent).
+    virtual size_t frontier() const NOEXCEPT = 0;
+
     /// Get remap-protected r/w access to offset (or null) allocated to size.
     virtual memory get_filled(size_t offset, size_t size,
         uint8_t backfill) NOEXCEPT = 0;

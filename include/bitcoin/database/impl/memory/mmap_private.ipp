@@ -24,6 +24,7 @@
 #include <tuple>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/mman.hpp>
+#include <bitcoin/database/memory/mstage.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -43,12 +44,12 @@ TEMPLATE
 template <size_t... Index>
 bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
 {
-#if defined(HAVE_STAGING)
-    // Get page size (usually 4KB), one bit ensures a power of two as required.
-    const int page_size = ::sysconf(_SC_PAGESIZE);
-    const auto page = system::possible_narrow_sign_cast<size_t>(page_size);
+#if defined(MANAGE_STAGING)
+    using namespace system;
+    const auto page = possible_narrow_sign_cast<size_t>(page_size());
 
-    if (page_size == fail || !is_one(system::ones_count(page)))
+    // Page size must be a power of two.
+    if (is_zero(page) || !is_one(ones_count(page)))
     {
         set_first_code(error::sysconf_failure);
         capacity_.store(zero);
@@ -56,9 +57,11 @@ bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
     }
 
     page_ = page;
-
-    // File content is fully flushed by definition at load.
+    cursor_ = zero;
+    ring_head_ = zero;
+    ring_size_ = zero;
     settled_.store(staged_ ? logical_.load() : zero);
+    frontier_.store(staged_ ? logical_.load() : zero);
 #endif
 
     if (!(map_<Index>() && ...))
@@ -79,8 +82,12 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
     const auto success = (unmap_<Index>(capacity) && ...);
     capacity_.store(zero);
 
-#if defined(HAVE_STAGING)
+#if defined(MANAGE_STAGING)
+    cursor_ = zero;
+    ring_head_ = zero;
+    ring_size_ = zero;
     settled_.store(zero);
+    frontier_.store(zero);
 #endif
 
     return success;
@@ -108,12 +115,12 @@ bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT
 TEMPLATE
 template <size_t Column>
 bool CLASS::flush_(size_t
-    #if defined(HAVE_STAGING) || defined(HAVE_MSC)
+    #if defined(MANAGE_STAGING) || defined(HAVE_MSC)
     rows
     #endif
 ) NOEXCEPT
 {
-#if defined(HAVE_STAGING)
+#if defined(MANAGE_STAGING)
     // Transfer unflushed rows from anonymous memory to the file. Settled rows
     // are already on disk (staged); unstaged content is written in full.
     const auto from = to_width<Column>(staged_ ? settled_.load() : zero);
@@ -180,14 +187,14 @@ bool CLASS::release_(size_t size) NOEXCEPT
 TEMPLATE
 template <size_t Column>
 bool CLASS::unmap_(size_t
-    #if !defined(HAVE_STAGING)
+    #if !defined(MANAGE_STAGING)
     size
     #endif
 ) NOEXCEPT
 {
     const auto logical = to_width<Column>(logical_.load());
 
-#if defined(HAVE_STAGING)
+#if defined(MANAGE_STAGING)
     // Persist unflushed rows, trim preallocation to logical, sync to disk.
     const auto from = to_width<Column>(staged_ ? settled_.load() : zero);
     const auto transferred =
@@ -244,7 +251,7 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::map_() NOEXCEPT
 {
-#if defined(HAVE_STAGING)
+#if defined(MANAGE_STAGING)
     return stage_<Column>();
 #else
     auto size = logical_.load();
@@ -274,7 +281,7 @@ bool CLASS::remap_(size_t size) NOEXCEPT
     if (is_zero(size))
         size = minimum_;
 
-#if defined(HAVE_STAGING)
+#if defined(MANAGE_STAGING)
     // The file is preallocated to capacity, preserving disk full detection at
     // allocation, and growth commits reserved anonymous pages in place, so no
     // mapping is released and the map base is stable within the reservation.
@@ -326,7 +333,7 @@ bool CLASS::remap_(size_t size) NOEXCEPT
 #endif
 
     return finalize_<Column>(size);
-#endif // HAVE_STAGING
+#endif // MANAGE_STAGING
 }
 
 // disk_full: space is set but no code is set with false return.
@@ -421,313 +428,6 @@ bool CLASS::finalize_(size_t
     return true;
 }
 
-#if defined(HAVE_STAGING)
-
-// staging dispatch, not thread safe.
-// ----------------------------------------------------------------------------
-// private
-
-TEMPLATE
-template <size_t... Index>
-bool CLASS::settle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT
-{
-    const auto from = settled_.load();
-    if (!(settle_<Index>(from, rows) && ...))
-        return false;
-
-    settled_.store(rows);
-    return true;
-}
-
-TEMPLATE
-template <size_t... Index>
-bool CLASS::unsettle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT
-{
-    if (!(unsettle_<Index>(rows) && ...))
-        return false;
-
-    settled_.store(rows);
-    return true;
-}
-
-// staging wrappers, not thread safe.
-// ----------------------------------------------------------------------------
-// private
-
-// Stage failure results in unmapped.
-// Staging has no effect on logical size, commits max(logical, min) capacity.
-TEMPLATE
-template <size_t Column>
-bool CLASS::stage_() NOEXCEPT
-{
-    auto size = logical_.load();
-
-    // Cannot map empty file, and want minimum capacity, so expand as required.
-    // disk_full: space is set but no code is set with false return.
-    if ((size < minimum_) && !resize_<Column>(size = minimum_))
-        return false;
-
-    // Reserve address space with generous multiple of capacity (costless).
-    const auto reserved = page_ceiling(to_width<Column>(to_reservation(size)));
-    const auto base = mmap_reserve(reserved);
-
-    if (base == MAP_FAILED)
-    {
-        set_first_code(error::mmap_failure);
-        return false;
-    }
-
-    memory_map_[Column] = system::pointer_cast<uint8_t>(base);
-    reserved_[Column] = reserved;
-
-    // Commit anonymous pages above the settle boundary page floor.
-    const auto settled = page_floor(to_width<Column>(settled_.load()));
-    const auto target = to_width<Column>(size);
-
-    if ((target > settled) && (mmap_commit(std::next(memory_map_[Column],
-        settled), target - settled) == fail))
-    {
-        teardown_<Column>(error::mmap_failure);
-        return false;
-    }
-
-    // Populate anonymous memory from the file (unstaged content in full,
-    // staged only the settle boundary page remainder).
-    const auto logical = to_width<Column>(logical_.load());
-
-    if ((settled < logical) && !pread_all(opened_[Column],
-        std::next(memory_map_[Column], settled), logical - settled, settled))
-    {
-        teardown_<Column>(error::fsync_failure);
-        return false;
-    }
-
-    // Convert the settled prefix to a read-only file mapping.
-    if (!settle_<Column>(zero, settled_.load()))
-        return false;
-
-    loaded_.store(true);
-    return true;
-}
-
-// Commit failure results in unmapped.
-// Growth within the reservation commits pages in place (stable map base); an
-// exhausted reservation is replaced and its unsettled content copied, under
-// the exclusive remap lock held by the caller.
-TEMPLATE
-template <size_t Column>
-bool CLASS::commit_(size_t size) NOEXCEPT
-{
-    const auto target = to_width<Column>(size);
-
-    if (target <= reserved_[Column])
-    {
-        // Never commit below the settle boundary page floor (the settled
-        // prefix is a read-only file mapping); recommit is idempotent.
-        const auto settled = page_floor(to_width<Column>(settled_.load()));
-        const auto current = page_floor(to_width<Column>(capacity_.load()));
-        const auto from = std::max(settled, current);
-
-        if ((target > from) && (mmap_commit(std::next(memory_map_[Column],
-            from), target - from) == fail))
-        {
-            teardown_<Column>(error::mmap_failure);
-            return false;
-        }
-
-        return true;
-    }
-
-    // Reservation exhausted, so reserve larger and migrate (rare by sizing).
-    const auto reserved = page_ceiling(to_width<Column>(to_reservation(size)));
-    const auto replace = mmap_reserve(reserved);
-
-    if (replace == MAP_FAILED)
-    {
-        teardown_<Column>(error::mmap_failure);
-        return false;
-    }
-
-    const auto base = system::pointer_cast<uint8_t>(replace);
-    const auto settled = page_floor(to_width<Column>(settled_.load()));
-
-    if (mmap_commit(std::next(base, settled), target - settled) == fail)
-    {
-        ::munmap(replace, reserved);
-        teardown_<Column>(error::mmap_failure);
-        return false;
-    }
-
-    // Copy unsettled content (writes are excluded by the remap lock).
-    const auto logical = to_width<Column>(logical_.load());
-
-    if (settled < logical)
-        std::copy_n(std::next(memory_map_[Column], settled),
-            logical - settled, std::next(base, settled));
-
-    // Convert the settled prefix on the replacement reservation.
-    if (!is_zero(settled) &&
-        (mmap_settle(replace, settled, opened_[Column], zero) == fail))
-    {
-        ::munmap(replace, reserved);
-        teardown_<Column>(error::mmap_failure);
-        return false;
-    }
-
-#if !defined(WITHOUT_MADVISE)
-    if (!is_zero(settled) && !advise_(base, settled))
-    {
-        ::munmap(replace, reserved);
-        teardown_<Column>(error::madvise_failure);
-        return false;
-    }
-#endif
-
-    // Release the exhausted reservation and adopt the replacement.
-    const auto released = ::munmap(memory_map_[Column],
-        reserved_[Column]) != fail;
-
-    memory_map_[Column] = base;
-    reserved_[Column] = reserved;
-
-    if (!released)
-    {
-        set_first_code(error::munmap_failure);
-        return false;
-    }
-
-    return true;
-}
-
-// Convert flushed rows [from, to) to a read-only shared file mapping, page
-// floored so the settle boundary page remains anonymous with its settled
-// bytes retained. Releases the covered anonymous pages. Failure results in
-// unmapped.
-TEMPLATE
-template <size_t Column>
-bool CLASS::settle_(size_t from, size_t to) NOEXCEPT
-{
-    if (!staged_)
-        return true;
-
-    const auto begin = page_floor(to_width<Column>(from));
-    const auto end = page_floor(to_width<Column>(to));
-
-    if (begin == end)
-        return true;
-
-    const auto address = std::next(memory_map_[Column], begin);
-
-    if (mmap_settle(address, end - begin, opened_[Column], begin) == fail)
-    {
-        teardown_<Column>(error::mmap_failure);
-        return false;
-    }
-
-#if !defined(WITHOUT_MADVISE)
-    if (!advise_(address, end - begin))
-    {
-        teardown_<Column>(error::madvise_failure);
-        return false;
-    }
-#endif
-
-    return true;
-}
-
-// Revert settled pages at/above rows to committed anonymous memory and
-// restore the retained bytes below rows from the file (truncation below the
-// settle boundary). Failure results in unmapped.
-TEMPLATE
-template <size_t Column>
-bool CLASS::unsettle_(size_t rows) NOEXCEPT
-{
-    const auto bytes = to_width<Column>(rows);
-    const auto begin = page_floor(bytes);
-    const auto end = page_floor(to_width<Column>(settled_.load()));
-
-    if (begin == end)
-        return true;
-
-    const auto address = std::next(memory_map_[Column], begin);
-
-    if (mmap_unsettle(address, end - begin) == fail)
-    {
-        teardown_<Column>(error::mmap_failure);
-        return false;
-    }
-
-    if ((begin < bytes) && !pread_all(opened_[Column], address, bytes - begin,
-        begin))
-    {
-        teardown_<Column>(error::fsync_failure);
-        return false;
-    }
-
-    return true;
-}
-
-// Teardown results in unmapped (release failure is not further reported).
-TEMPLATE
-template <size_t Column>
-void CLASS::teardown_(const error::error_t& ec) NOEXCEPT
-{
-    set_first_code(ec);
-
-    if (!is_null(memory_map_[Column]))
-        ::munmap(memory_map_[Column], reserved_[Column]);
-
-    memory_map_[Column] = {};
-    reserved_[Column] = zero;
-    loaded_.store(false);
-}
-
-// staging utilities, not thread safe.
-// ----------------------------------------------------------------------------
-// private
-
-#if !defined(WITHOUT_MADVISE)
-TEMPLATE
-bool CLASS::advise_(uint8_t* map, size_t size) const NOEXCEPT
-{
-    // Use 1GB chunks to avoid large-length issues.
-    constexpr auto chunk = system::power2(30u);
-    const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
-
-    for (auto offset = zero; offset < size; offset += chunk)
-    {
-        const auto length = std::min(chunk, size - offset);
-        if (::madvise(std::next(map, offset), length, advice) == fail)
-            return false;
-    }
-
-    return true;
-}
-#endif // WITHOUT_MADVISE
-
-// Reservation is address space only (costless), so multiply for headroom;
-// exhaustion is handled by reservation replacement.
-TEMPLATE
-size_t CLASS::to_reservation(size_t rows) const NOEXCEPT
-{
-    constexpr size_t headroom = 4;
-    return system::ceilinged_multiply(to_capacity(std::max(rows, minimum_)),
-        headroom);
-}
-
-TEMPLATE
-size_t CLASS::page_floor(size_t bytes) const NOEXCEPT
-{
-    return system::bit_and(bytes, system::bit_not(sub1(page_)));
-}
-
-TEMPLATE
-size_t CLASS::page_ceiling(size_t bytes) const NOEXCEPT
-{
-    return page_floor(system::ceilinged_add(bytes, sub1(page_)));
-}
-
-#endif // HAVE_STAGING
 
 } // namespace database
 } // namespace libbitcoin

@@ -83,6 +83,9 @@ public:
     /// Increase logical size by count records, return offset to first (or eof).
     Link allocate(const Link& count) NOEXCEPT;
 
+    /// Report element write completion of count records at link.
+    void complete(const Link& link, const Link& count) NOEXCEPT;
+
     /// Get the unified fault condition.
     code get_fault() const NOEXCEPT;
 

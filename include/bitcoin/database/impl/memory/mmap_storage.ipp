@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_MMAP_STORAGE_IPP
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_STORAGE_IPP
 
+#include <algorithm>
 #include <filesystem>
 #include <mutex>
 #include <utility>
@@ -193,7 +194,7 @@ code CLASS::flush() NOEXCEPT
             return error::flush_failure;
     }
 
-#if defined(HAVE_STAGING)
+#if defined(MANAGE_STAGING)
     // Convert flushed rows to read-only file mappings, releasing their
     // anonymous pages to clean file cache (excludes accessors, briefly).
     if (staged_)
@@ -308,7 +309,7 @@ bool CLASS::truncate(size_t count) NOEXCEPT
     if (count > logical_.load())
         return false;
 
-#if defined(HAVE_STAGING)
+#if defined(MANAGE_STAGING)
     // Truncation below the settle boundary reverts settled rows to anonymous
     // memory, as append-only bodies may re-append after reorganization.
     if (staged_ && loaded_.load() && (count < settled_.load()))
@@ -317,6 +318,34 @@ bool CLASS::truncate(size_t count) NOEXCEPT
 
         if (!unsettle_all_(count, sequence{}))
             return false;
+    }
+
+    // Discard extents above the truncation and clamp any overlap.
+    if (staged_)
+    {
+        std::unique_lock extent_lock(extent_mutex_);
+        while (!is_zero(ring_size_))
+        {
+            auto& tail = ring_.at((ring_head_ + ring_size_ - one) % extents);
+            if (tail.start >= count)
+            {
+                --ring_size_;
+                continue;
+            }
+
+            if (system::ceilinged_add(tail.start, tail.count) > count)
+            {
+                tail.count = count - tail.start;
+                tail.outstanding = std::min(tail.outstanding,
+                    tail.count * columns);
+            }
+
+            break;
+        }
+
+        cursor_ = ring_head_;
+        frontier_.store(is_zero(ring_size_) ? count :
+            ring_.at(ring_head_).start);
     }
 #endif
 
@@ -393,7 +422,12 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
             break;
 
         if (logical_.compare_exchange_weak(start, start + count))
+        {
+#if defined(MANAGE_STAGING)
+            record_(start, count);
+#endif
             return start;
+        }
     }
 
     // Slow path: serialize capacity growth (at most one grower). Fast paths
@@ -409,7 +443,12 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
         if (end <= capacity_.load())
         {
             if (logical_.compare_exchange_weak(start, end))
+            {
+#if defined(MANAGE_STAGING)
+                record_(start, count);
+#endif
                 return start;
+            }
 
             continue;
         }

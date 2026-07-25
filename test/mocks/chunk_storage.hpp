@@ -237,6 +237,15 @@ public:
         return link;
     }
 
+    void complete(size_t, size_t) NOEXCEPT override
+    {
+    }
+
+    size_t frontier() const NOEXCEPT override
+    {
+        return size();
+    }
+
     // access
     // ------------------------------------------------------------------------
 

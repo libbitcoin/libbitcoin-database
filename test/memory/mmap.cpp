@@ -913,6 +913,60 @@ BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_rewrite__expected)
     BOOST_REQUIRE(!reopened.get_fault());
 }
 
+#if defined(MANAGE_STAGING)
+
+BOOST_AUTO_TEST_CASE(mmap__frontier__staged_out_of_order_completion__expected)
+{
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, 1, 50, true, true);
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+
+    // Frontier holds at each extent start until its writes complete.
+    const auto first = instance.allocate(100);
+    const auto second = instance.allocate(50);
+    BOOST_REQUIRE_EQUAL(instance.frontier(), first);
+
+    // Completing the second extent does not advance past the first.
+    instance.complete(second, 50);
+    BOOST_REQUIRE_EQUAL(instance.frontier(), first);
+
+    // Completing the first pops both, frontier reaches logical.
+    instance.complete(first, 100);
+    BOOST_REQUIRE_EQUAL(instance.frontier(), instance.size());
+
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__frontier__staged_truncate__discards_extents)
+{
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, 1, 50, true, true);
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+
+    const auto first = instance.allocate(100);
+    instance.complete(first, 100);
+    const auto second = instance.allocate(50);
+    BOOST_REQUIRE_EQUAL(instance.frontier(), second);
+
+    // Truncation below the open extent discards it, frontier follows logical.
+    BOOST_REQUIRE(instance.truncate(first + 100));
+    BOOST_REQUIRE_EQUAL(instance.frontier(), instance.size());
+
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+#endif // MANAGE_STAGING
+
 BOOST_AUTO_TEST_CASE(mmap__unstaged__rewrite_below_flush__expected)
 {
     constexpr size_t size = 10'000;

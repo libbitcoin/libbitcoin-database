@@ -68,7 +68,7 @@ CLASS::~mmap() NOEXCEPT
         [](auto map) NOEXCEPT { return is_null(map); }));
     BC_ASSERT(std::ranges::all_of(opened_,
         [](auto opened) NOEXCEPT { return opened == file::invalid; }));
-#if defined(HAVE_STAGING)
+#if defined(MANAGE_STAGING)
     BC_ASSERT(std::ranges::all_of(reserved_,
         [](auto reserved) NOEXCEPT { return is_zero(reserved); }));
 #endif

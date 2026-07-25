@@ -56,6 +56,7 @@ src_libbitcoin_database_la_SOURCES = \
     ${srcdir}/../../src/locks/flush_lock.cpp \
     ${srcdir}/../../src/locks/interprocess_lock.cpp \
     ${srcdir}/../../src/memory/mman.cpp \
+    ${srcdir}/../../src/memory/mstage.cpp \
     ${srcdir}/../../src/memory/utilities.cpp \
     ${srcdir}/../../src/types/history.cpp \
     ${srcdir}/../../src/types/multisig_view.cpp \
@@ -94,6 +95,7 @@ include_bitcoin_database_impl_memory_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/impl/memory/mmap.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/memory/mmap_dispatch.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/memory/mmap_private.ipp \
+    ${srcdir}/../../include/bitcoin/database/impl/memory/mmap_staging.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/memory/mmap_storage.ipp
 
 include_bitcoin_database_impl_primitivesdir = \
@@ -223,6 +225,7 @@ include_bitcoin_database_memory_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/memory/mman.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/mmap.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/mmaps.hpp \
+    ${srcdir}/../../include/bitcoin/database/memory/mstage.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/reader.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/streamers.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/utilities.hpp

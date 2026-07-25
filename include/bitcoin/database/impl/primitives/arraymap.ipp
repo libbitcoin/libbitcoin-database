@@ -205,7 +205,11 @@ bool CLASS::put(size_t key, const Element& element) NOEXCEPT
     finalizer sink{ stream };
 
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
-    return element.to_data(sink) && head_.push(link, head_.index(key));
+    if (!element.to_data(sink) || !head_.push(link, head_.index(key)))
+        return false;
+
+    body_.complete(link, element.count());
+    return true;
 }
 
 } // namespace database

@@ -155,6 +155,12 @@ Link CLASS::allocate(const Link& count) NOEXCEPT
     return elements_to_link(start);
 }
 
+TEMPLATE
+void CLASS::complete(const Link& link, const Link& count) NOEXCEPT
+{
+    files_.complete(link_to_elements(link), link_to_elements(count));
+}
+
 // Errors.
 // ----------------------------------------------------------------------------
 

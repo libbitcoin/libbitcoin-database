@@ -28,7 +28,7 @@
 #include <bitcoin/database/file/file.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
-#include <bitcoin/database/memory/mman.hpp>
+#include <bitcoin/database/memory/mstage.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -141,6 +141,12 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     size_t allocate(size_t count) NOEXCEPT override;
 
+    /// Report element write completion of count rows/bytes at offset.
+    void complete(size_t offset, size_t count) NOEXCEPT override;
+
+    /// Rows/bytes below which all writes are complete (size() when quiescent).
+    size_t frontier() const NOEXCEPT override;
+
     /// Remap-protected r/w access to offset (or null) allocated to size.
     memory get_filled(size_t offset, size_t size,
         uint8_t backfill) NOEXCEPT override;
@@ -214,7 +220,7 @@ private:
     template <size_t Column>
     bool finalize_(size_t size) NOEXCEPT;
 
-#if defined(HAVE_STAGING)
+#if defined(MANAGE_STAGING)
     // staging dispatch, not thread safe.
     template <size_t... Index>
     bool settle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
@@ -234,48 +240,58 @@ private:
     void teardown_(const error::error_t& ec) NOEXCEPT;
 
     // staging utilities, not thread safe.
+    void record_(size_t start, size_t count) NOEXCEPT;
     bool advise_(uint8_t* map, size_t size) const NOEXCEPT;
     size_t to_reservation(size_t rows) const NOEXCEPT;
     size_t page_floor(size_t bytes) const NOEXCEPT;
     size_t page_ceiling(size_t bytes) const NOEXCEPT;
-#endif // HAVE_STAGING
+#endif // MANAGE_STAGING
 
-    // These are thread safe.
+    // These are thread safe (const).
     const paths filenames_;
     const size_t minimum_;
     const size_t expansion_;
     const bool random_;
     const bool staged_;
-    std::atomic<size_t> space_{ zero };
-    std::atomic<error::error_t> error_{ error::success };
 
-    // Scalar fields are atomic: size/capacity reads and the allocate fast
-    // path (bounded claim within published capacity) are lock-free. Capacity
-    // growth and compound transitions (open/close/load/unload/shrink/
-    // truncate/expand/reserve/get_filled) are serialized by field_mutex_
-    // exclusive. Shrinking transitions additionally rely on the documented
-    // suspend-writes contract (the fast path does not serialize with them).
-    // logical_ and capacity_ are row counts (byte count if width is one).
-    std::array<int, columns> opened_;
+    // These are thread safe (atomic).
+    std::atomic<error::error_t> error_{ error::success };
+    std::atomic<size_t> space_{ zero };
     std::atomic<size_t> capacity_{};
     std::atomic<size_t> logical_{};
-    std::atomic<bool> fault_{};
-    std::atomic<bool> loaded_{};
+    std::atomic_bool fault_{};
+    std::atomic_bool loaded_{};
+
+    // This is protected by field_mutex_.
+    std::array<int, columns> opened_;
     mutable std::shared_mutex field_mutex_{};
 
-    // These are protected by remap_mutex_.
+    // This is protected by remap_mutex_.
     std::array<uint8_t*, columns> memory_map_{};
     mutable std::shared_mutex remap_mutex_{};
 
-#if defined(HAVE_STAGING)
-    // settled_ is the count of rows flushed to disk (atomic for lock-free
-    // reads, updated only under remap_mutex_ exclusive). Rows below settled_
-    // are backed by a read-only file mapping (staged instances); rows above
-    // are committed anonymous memory. The others are protected by remap_mutex_.
+#if defined(MANAGE_STAGING)
+    static constexpr size_t extents = 4096;
+    struct extent
+    {
+        size_t start;
+        size_t count;
+        size_t outstanding;
+    };
+
+    // These are thread safe (atomic).
     std::atomic<size_t> settled_{};
+    std::atomic<size_t> frontier_{};
+
+    // These are protected by extent_mutex_.
     std::array<size_t, columns> reserved_{};
+    std::array<extent, extents> ring_{};
+    size_t ring_head_{};
+    size_t ring_size_{};
+    size_t cursor_{};
     size_t page_{};
-#endif // HAVE_STAGING
+    mutable std::mutex extent_mutex_{};
+#endif // MANAGE_STAGING
 };
 
 using map = mmap<one>;
@@ -291,6 +307,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/memory/mmap.ipp>
 #include <bitcoin/database/impl/memory/mmap_dispatch.ipp>
 #include <bitcoin/database/impl/memory/mmap_private.ipp>
+#include <bitcoin/database/impl/memory/mmap_staging.ipp>
 #include <bitcoin/database/impl/memory/mmap_storage.ipp>
 
 BC_POP_WARNING()
