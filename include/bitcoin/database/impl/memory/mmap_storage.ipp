@@ -143,6 +143,11 @@ code CLASS::load() NOEXCEPT
         }
 
         remap_mutex_.unlock();
+
+#if defined(MANAGE_STAGING)
+        settler_start_();
+#endif
+
         return error::success;
     }
 
@@ -216,6 +221,10 @@ code CLASS::flush() NOEXCEPT
 TEMPLATE
 code CLASS::unload() NOEXCEPT
 {
+#if defined(MANAGE_STAGING)
+    settler_stop_();
+#endif
+
     std::unique_lock field_lock(field_mutex_);
 
     if (remap_mutex_.try_lock())
@@ -244,6 +253,10 @@ code CLASS::unload() NOEXCEPT
 TEMPLATE
 code CLASS::shrink() NOEXCEPT
 {
+#if defined(MANAGE_STAGING)
+    settler_stop_();
+#endif
+
     std::unique_lock field_lock(field_mutex_);
 
     if (remap_mutex_.try_lock())
@@ -269,6 +282,11 @@ code CLASS::shrink() NOEXCEPT
         }
 
         remap_mutex_.unlock();
+
+#if defined(MANAGE_STAGING)
+        settler_start_();
+#endif
+
         return error::success;
     }
 
@@ -324,8 +342,8 @@ bool CLASS::truncate(size_t count) NOEXCEPT
     if (staged_)
     {
         std::unique_lock extent_lock(extent_mutex_);
-        const auto head = ring_head_.load(std::memory_order_relaxed);
-        auto size = ring_size_.load(std::memory_order_relaxed);
+        auto [head, size] = system::unpack_word<uint64_t>(
+            window_.load(std::memory_order_relaxed));
 
         while (!is_zero(size))
         {
@@ -348,7 +366,8 @@ bool CLASS::truncate(size_t count) NOEXCEPT
             break;
         }
 
-        ring_size_.store(size, std::memory_order_release);
+        window_.store(system::pack_word<uint64_t>(head, size),
+            std::memory_order_release);
         frontier_.store(is_zero(size) ? count :
             ring_.at(head).start.load(std::memory_order_relaxed));
     }

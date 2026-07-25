@@ -61,6 +61,11 @@ CLASS::mmap(const paths& filenames, size_t minimum, size_t expansion,
 TEMPLATE
 CLASS::~mmap() NOEXCEPT
 {
+#if defined(MANAGE_STAGING)
+    // Join a settler left running by an unload bypass (thread safety).
+    settler_stop_();
+#endif
+
     BC_ASSERT(!loaded_.load());
     BC_ASSERT(is_zero(logical_.load()));
     BC_ASSERT(is_zero(capacity_.load()));

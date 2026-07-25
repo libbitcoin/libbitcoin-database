@@ -25,7 +25,19 @@
 
 #include <sys/mman.h>
 #include <sys/types.h>
+#include <sys/sysctl.h>
 #include <unistd.h>
+
+size_t system_pressure() NOEXCEPT
+{
+    int level{};
+    auto size = sizeof(level);
+    if (::sysctlbyname("kern.memorystatus_vm_pressure_level", &level, &size,
+        nullptr, 0) != 0)
+        return {};
+
+    return static_cast<size_t>(level);
+}
 
 
 void* mmap_reserve(size_t size) NOEXCEPT

@@ -20,9 +20,11 @@
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_HPP
 
 #include <atomic>
+#include <condition_variable>
 #include <filesystem>
 #include <mutex>
 #include <shared_mutex>
+#include <thread>
 #include <tuple>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/file/file.hpp>
@@ -242,6 +244,15 @@ private:
     // staging utilities, not thread safe.
     void record_(size_t start, size_t count) NOEXCEPT;
     void maintain_() NOEXCEPT;
+
+    // settle scheduler (instance-owned thread, load/unload lifecycle).
+    void settler_start_() NOEXCEPT;
+    void settler_stop_() NOEXCEPT;
+    void settler_run_() NOEXCEPT;
+    bool settle_next_(size_t chunk) NOEXCEPT;
+    template <size_t... Index>
+    bool settle_write_(size_t from, size_t to,
+        std::index_sequence<Index...>) NOEXCEPT;
     bool advise_(uint8_t* map, size_t size) const NOEXCEPT;
     size_t to_reservation(size_t rows) const NOEXCEPT;
     size_t page_floor(size_t bytes) const NOEXCEPT;
@@ -280,11 +291,15 @@ private:
         std::atomic<size_t> outstanding;
     };
 
-    // These are thread safe (atomic).
+    // These are thread safe (atomic). The ring window packs head and size
+    // into one word (pack_word) so lock-free readers cannot observe a torn
+    // window across pops.
     std::atomic<size_t> settled_{};
     std::atomic<size_t> frontier_{};
-    std::atomic<size_t> ring_head_{};
-    std::atomic<size_t> ring_size_{};
+    std::atomic<uint64_t> window_{};
+
+    // TEMPORARY DIAGNOSTIC (not for commit): completions with no extent.
+    std::atomic<size_t> missed_{};
 
     // These are protected by extent_mutex_ (ring entries are immobile, put
     // under the mutex and published by release, read/decremented lock-free).
@@ -292,6 +307,12 @@ private:
     std::array<extent, extents> ring_{};
     size_t page_{};
     mutable std::mutex extent_mutex_{};
+
+    // These are protected by settler_mutex_ (thread joined by stop).
+    std::thread settler_{};
+    std::condition_variable settler_cv_{};
+    std::atomic_bool settling_{};
+    mutable std::mutex settler_mutex_{};
 #endif // MANAGE_STAGING
 };
 

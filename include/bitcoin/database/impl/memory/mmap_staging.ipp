@@ -20,9 +20,11 @@
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_STAGING_IPP
 
 #include <algorithm>
+#include <chrono>
 #include <fcntl.h>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/mstage.hpp>
+#include <bitcoin/database/memory/utilities.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -45,9 +47,10 @@ void CLASS::complete(size_t
     if (!staged_ || is_zero(count))
         return;
 
-    // Acquire-ordered window snapshot (published entries are immobile).
-    const auto head = ring_head_.load(std::memory_order_acquire);
-    const auto size = ring_size_.load(std::memory_order_acquire);
+    // Acquire-ordered window snapshot (published entries are immobile; the
+    // packed word precludes observing a torn head/size pair across pops).
+    const auto [head, size] = system::unpack_word<uint64_t>(
+        window_.load(std::memory_order_acquire));
 
     // Lock-free binary search of the sorted window for the covering extent.
     size_t low{};
@@ -92,6 +95,39 @@ void CLASS::complete(size_t
 
         return;
     }
+
+    // Contention can record extents out of start order (allocation claim and
+    // recording are not one atomic step), transiently breaking search order.
+    // Contiguity guarantees a unique cover, so fall back to a linear scan.
+    for (size_t index = 0; index < size; ++index)
+    {
+        auto& record = ring_.at((head + index) % extents);
+        const auto start = record.start.load(std::memory_order_relaxed);
+
+        if ((offset < start) || (offset >= (start + record.count)))
+            continue;
+
+        const auto previous = record.outstanding.fetch_sub(count,
+            std::memory_order_relaxed);
+
+        if (record.start.load(std::memory_order_relaxed) != start)
+        {
+            record.outstanding.fetch_add(count, std::memory_order_relaxed);
+            return;
+        }
+
+        if (previous == count)
+        {
+            std::unique_lock extent_lock(extent_mutex_, std::try_to_lock);
+            if (extent_lock.owns_lock())
+                maintain_();
+        }
+
+        return;
+    }
+
+    // TEMPORARY DIAGNOSTIC (not for commit): count uncovered completions.
+    missed_.fetch_add(one, std::memory_order_relaxed);
 #endif
 }
 
@@ -118,19 +154,20 @@ void CLASS::record_(size_t start, size_t count) NOEXCEPT
     maintain_();
 
     // Saturation stalls the frontier (conservative, safe); asserts in debug.
-    const auto size = ring_size_.load(std::memory_order_relaxed);
+    const auto [head, size] = system::unpack_word<uint64_t>(
+        window_.load(std::memory_order_relaxed));
     BC_ASSERT(size < extents);
     if (size == extents)
         return;
 
-    const auto head = ring_head_.load(std::memory_order_relaxed);
     auto& record = ring_.at((head + size) % extents);
     record.start.store(start, std::memory_order_relaxed);
     record.count = count;
     record.outstanding.store(count * columns, std::memory_order_relaxed);
 
     // Publish the extent (pairs with the acquire window snapshot).
-    ring_size_.store(add1(size), std::memory_order_release);
+    window_.store(system::pack_word<uint64_t>(head, add1(size)),
+        std::memory_order_release);
 
     if (is_zero(size))
         frontier_.store(start);
@@ -140,8 +177,8 @@ void CLASS::record_(size_t start, size_t count) NOEXCEPT
 TEMPLATE
 void CLASS::maintain_() NOEXCEPT
 {
-    auto head = ring_head_.load(std::memory_order_relaxed);
-    auto size = ring_size_.load(std::memory_order_relaxed);
+    auto [head, size] = system::unpack_word<uint64_t>(
+        window_.load(std::memory_order_relaxed));
 
     while (!is_zero(size) &&
         is_zero(ring_.at(head).outstanding.load(std::memory_order_relaxed)))
@@ -150,8 +187,8 @@ void CLASS::maintain_() NOEXCEPT
         --size;
     }
 
-    ring_head_.store(head, std::memory_order_relaxed);
-    ring_size_.store(size, std::memory_order_release);
+    window_.store(system::pack_word<uint64_t>(head, size),
+        std::memory_order_release);
     frontier_.store(is_zero(size) ? logical_.load() :
         ring_.at(head).start.load(std::memory_order_relaxed));
 }
@@ -458,6 +495,129 @@ TEMPLATE
 size_t CLASS::page_ceiling(size_t bytes) const NOEXCEPT
 {
     return page_floor(system::ceilinged_add(bytes, sub1(page_)));
+}
+
+
+
+// settle scheduler, instance-owned (drains completed writes to clean cache).
+// ----------------------------------------------------------------------------
+// private
+
+TEMPLATE
+void CLASS::settler_start_() NOEXCEPT
+{
+    if (!staged_)
+        return;
+
+    settling_.store(true);
+    settler_ = std::thread([this]() NOEXCEPT { settler_run_(); });
+}
+
+TEMPLATE
+void CLASS::settler_stop_() NOEXCEPT
+{
+    if (!settling_.exchange(false))
+        return;
+
+    settler_cv_.notify_all();
+    if (settler_.joinable())
+        settler_.join();
+}
+
+// Pressure-paced draining (the windows model): writers are never blocked,
+// drain intensity follows memory conditions, settled pages remain cached.
+TEMPLATE
+void CLASS::settler_run_() NOEXCEPT
+{
+    // Tiers derive from physical memory and pressure (no configuration).
+    const auto memory = system_memory();
+    const auto urgent = memory / 4;
+    const auto active = memory / 32;
+    const auto chunk = std::max<size_t>(one, (size_t{ 256 } << 20) / stride);
+
+    const auto backlog = [this]() NOEXCEPT
+    {
+        return system::ceilinged_multiply(system::floored_subtract(
+            frontier_.load(), settled_.load()), stride);
+    };
+
+    while (settling_.load())
+    {
+        std::unique_lock settler_lock(settler_mutex_);
+        settler_cv_.wait_for(settler_lock, std::chrono::seconds(1));
+        settler_lock.unlock();
+
+        if (!settling_.load())
+            return;
+
+        auto bytes = backlog();
+        if (is_zero(bytes))
+            continue;
+
+        // Urgency drains continuously, activity one chunk per tick.
+        const auto driven = (system_pressure() > one) || (bytes > urgent);
+        if (!driven && (bytes <= active))
+            continue;
+
+        do
+        {
+            if (!settle_next_(chunk))
+                break;
+
+            bytes = backlog();
+        }
+        while (settling_.load() && driven && (bytes > active));
+    }
+}
+
+// Settle up to chunk completed rows: write under the shared remap lock
+// (completed extents are immutable, writers proceed), convert under a brief
+// exclusive. Durability remains a snapshot property (no sync here).
+TEMPLATE
+bool CLASS::settle_next_(size_t chunk) NOEXCEPT
+{
+    size_t from{};
+    size_t target{};
+
+    {
+        std::shared_lock map_lock(remap_mutex_);
+        if (!loaded_.load() || fault_.load())
+            return false;
+
+        from = settled_.load();
+        target = std::min(frontier_.load(),
+            system::ceilinged_add(from, chunk));
+
+        if (target <= from)
+            return false;
+
+        if (!settle_write_(from, target, sequence{}))
+        {
+            set_first_code(error::fsync_failure);
+            return false;
+        }
+    }
+
+    std::unique_lock map_lock(remap_mutex_);
+    if (!loaded_.load())
+        return false;
+
+    // A raced settle boundary (flush) invalidates only this conversion.
+    if (settled_.load() != from)
+        return true;
+
+    return settle_all_(target, sequence{});
+}
+
+TEMPLATE
+template <size_t... Index>
+bool CLASS::settle_write_(size_t from, size_t to,
+    std::index_sequence<Index...>) NOEXCEPT
+{
+    return (pwrite_all(opened_[Index],
+        std::next(memory_map_[Index], to_width<Index>(from)),
+        to_width<Index>(to) - to_width<Index>(from),
+        to_width<Index>(from)) && ...);
 }
 
 #endif // MANAGE_STAGING

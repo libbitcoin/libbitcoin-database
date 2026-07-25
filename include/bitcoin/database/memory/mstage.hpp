@@ -39,6 +39,9 @@ int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT;
 /// Replace settled pages with committed anonymous memory (contents undefined).
 int mmap_unsettle(void* address, size_t size) NOEXCEPT;
 
+/// System memory pressure level (1 normal, 2 warning, 4 critical, 0 failure).
+size_t system_pressure() NOEXCEPT;
+
 /// Full-transfer positional file read/write (false on failure or early eof).
 bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT;
 bool pwrite_all(int fd, const uint8_t* from, size_t size,
