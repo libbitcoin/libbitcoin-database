@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2026 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2026 libbitcoin developers
  *
  * This file is part of libbitcoin.
  *
@@ -326,7 +326,10 @@ code CLASS::set_code(const block_view& block, const header_link& key,
         fks.outs_fk += tx.outputs();
         fks.in_fk   += tx.input_table_size();
         fks.out_fk  += out_bytes;
-        fks.ad_fk   += tx.outputs();
+
+        // Unallocated (disabled) address link is terminal (do not increment).
+        if (address)
+            fks.ad_fk += tx.outputs();
     }
 
     // Release all accessors (subsequent writes allocate).

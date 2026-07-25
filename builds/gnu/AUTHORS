@@ -1,8 +1,1 @@
-commits  libbitcoin developers
---------------------------------------------
-    918  Eric Voskuil (evoskuil)
-    262  Amir Taaki (genjix)
-     68  Phillip Mienk (pmienk)
-      5  Neill Miller (thecodefactory)
-      3  William Swanson (swansontec)
-      1  Noel Maersk (veox)
+Use command 'git shortlog -sne' for latest authors log.
