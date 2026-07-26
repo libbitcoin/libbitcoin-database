@@ -24,6 +24,7 @@
     #include <unistd.h>
 #endif
 #if defined(HAVE_APPLE)
+    #include <mach/mach.h>
     #include <sys/sysctl.h>
 #endif
 #if defined(HAVE_LINUX)
@@ -68,6 +69,12 @@ size_t system_pressure() NOEXCEPT
     const auto success = QueryMemoryResourceNotification(handle, &low) != 0;
     CloseHandle(handle);
     return !success ? zero : (low == FALSE ? size_t{ 1 } : size_t{ 4 });
+}
+
+uint64_t system_compressed() NOEXCEPT
+{
+    // No cheap source (performance counters only).
+    return zero;
 }
 
 #else
@@ -138,6 +145,25 @@ size_t system_pressure() NOEXCEPT
     return level;
 #else
     // No platform source.
+    return zero;
+#endif
+}
+
+uint64_t system_compressed() NOEXCEPT
+{
+#if defined(HAVE_APPLE)
+    using namespace system;
+    vm_statistics64_data_t statistics{};
+    auto count = HOST_VM_INFO64_COUNT;
+    if (::host_statistics64(::mach_host_self(), HOST_VM_INFO64,
+        pointer_cast<integer_t>(&statistics), &count) != KERN_SUCCESS)
+        return zero;
+
+    return ceilinged_multiply<uint64_t>(statistics.compressor_page_count,
+        page_size());
+#else
+    // No source adopted (linux zswap/zram accounting is configuration
+    // dependent; PSI carries the pressure signal there).
     return zero;
 #endif
 }

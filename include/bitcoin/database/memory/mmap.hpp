@@ -201,6 +201,7 @@ private:
     static constexpr size_t page_bound = to_bits(sizeof(uint64_t));
     static constexpr size_t settle_chunk = system::power2(28u);
     static constexpr size_t advise_chunk = system::power2(30u);
+    static constexpr size_t compress_factor = 32;
     static constexpr size_t throttle_factor = 8;
     static constexpr size_t active_factor = 32;
     static constexpr size_t urgent_factor = 4;

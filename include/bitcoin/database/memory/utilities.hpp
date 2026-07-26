@@ -35,6 +35,10 @@ BCD_API uint64_t system_memory() NOEXCEPT;
 /// if failed or the platform provides no source.
 BCD_API size_t system_pressure() NOEXCEPT;
 
+/// The bytes held by system memory compression (a pressure precursor), zero
+/// if failed or the platform provides no source.
+BCD_API uint64_t system_compressed() NOEXCEPT;
+
 /// C++26: std::atomic<size_t>::fetch_max
 template <typename Integral, if_integral_integer<Integral> = true>
 Integral fetch_max(std::atomic<Integral>& atomic, Integral value) NOEXCEPT
