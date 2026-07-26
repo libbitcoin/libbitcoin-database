@@ -288,43 +288,66 @@ int sysconf(int) noexcept
 int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
 {
     constexpr auto fail = -1;
+    const auto target = offset + len;
 
-    fstore_t store
+    // Physically allocated bytes (st_blocks is in 512 byte units).
+    const auto allocated = [fd]() NOEXCEPT -> off_t
     {
-        // Prefer contiguous allocation
-        .fst_flags = F_ALLOCATECONTIG,
-
-        // Allocate from EOF
-        .fst_posmode = F_PEOFPOSMODE,
-
-        // Ignored for allocation in PEOF mode.
-        .fst_offset = 0,
-
-        // Delta size
-        .fst_length = len,
-
-        // Output: actual bytes allocated
-        .fst_bytesalloc = 0
+        struct stat status{};
+        return (::fstat(fd, &status) == fail) ? fail :
+            (status.st_blocks * 512);
     };
 
-    // Try contiguous allocation.
-    if (::fcntl(fd, F_PREALLOCATE, &store) == fail)
+    // Disk full recovery requires that a success fully reserves disk space,
+    // as writes must then never fail within reserved space. APFS spuriously
+    // fails F_PREALLOCATE (e.g. when logical EOF lies within blocks that a
+    // prior call preallocated), so neither its success nor failure is
+    // trusted: each pass is verified against physical allocation and the
+    // shortfall retried (F_PEOFPOSMODE allocates from the physical end, so
+    // progress is monotonic). Only a pass without progress is genuine
+    // exhaustion, reported as ENOSPC (the recoverable condition). The whole
+    // file check implies no holes because files grown only through this
+    // function are never sparse (extension lands in verified allocation).
+    for (auto current = allocated(); current < target;)
     {
-        // Fallback to non-contiguous.
-        store.fst_flags = F_ALLOCATEALL;
-        store.fst_bytesalloc = 0;
+        if (current == fail)
+            return fail;
 
-        // APFS spuriously fails F_PREALLOCATE (e.g. when logical EOF lies
-        // within blocks preallocated by a prior call), reporting ENOSPC
-        // despite ample space. Preallocation is therefore best-effort and
-        // failure is ignored: ftruncate is authoritative, and reports genuine
-        // exhaustion as its own ENOSPC (via sparse extension at worst).
-        ::fcntl(fd, F_PREALLOCATE, &store);
+        fstore_t store
+        {
+            // Prefer contiguous allocation, from physical EOF (offset
+            // ignored in PEOF mode), of the verified shortfall.
+            .fst_flags = F_ALLOCATECONTIG,
+            .fst_posmode = F_PEOFPOSMODE,
+            .fst_offset = 0,
+            .fst_length = target - current,
+            .fst_bytesalloc = 0
+        };
+
+        // Fallback to non-contiguous allocation.
+        if (::fcntl(fd, F_PREALLOCATE, &store) == fail)
+        {
+            store.fst_flags = F_ALLOCATEALL;
+            store.fst_bytesalloc = 0;
+            ::fcntl(fd, F_PREALLOCATE, &store);
+        }
+
+        const auto next = allocated();
+        if (next == fail)
+            return fail;
+
+        if (next <= current)
+        {
+            errno = ENOSPC;
+            return fail;
+        }
+
+        current = next;
     }
 
     // Extend file to new size (required for mmap). This is not required on
     // Linux because fallocate(2) automatically extends file's logical size.
-    return ::ftruncate(fd, offset + len);
+    return ::ftruncate(fd, target);
 }
 
 #endif // HAVE_MSC
