@@ -23,6 +23,9 @@
 #else
     #include <unistd.h>
 #endif
+#if defined(HAVE_APPLE)
+    #include <sys/sysctl.h>
+#endif
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -46,6 +49,21 @@ uint64_t system_memory() NOEXCEPT
     status.dwLength = sizeof(status);
     return is_zero(GlobalMemoryStatusEx(&status)) ? zero :
         status.ullTotalPhys;
+}
+
+size_t system_pressure() NOEXCEPT
+{
+    // The kernel low memory resource signal (no configurable threshold).
+    BOOL low{ FALSE };
+    const auto handle = CreateMemoryResourceNotification(
+        LowMemoryResourceNotification);
+
+    if (handle == NULL)
+        return zero;
+
+    const auto success = QueryMemoryResourceNotification(handle, &low) != 0;
+    CloseHandle(handle);
+    return !success ? zero : (low == FALSE ? size_t{ 1 } : size_t{ 4 });
 }
 
 #else
@@ -75,6 +93,23 @@ uint64_t system_memory() NOEXCEPT
     // Failed page_size also results in zero return.
     return ceilinged_multiply(to_unsigned(pages),
         possible_wide_cast<uint64_t>(page_size()));
+}
+
+size_t system_pressure() NOEXCEPT
+{
+#if defined(HAVE_APPLE)
+    using namespace system;
+    int level{};
+    auto size = sizeof(level);
+    if (::sysctlbyname("kern.memorystatus_vm_pressure_level", &level, &size,
+        nullptr, 0) != 0)
+        return zero;
+
+    return possible_narrow_sign_cast<size_t>(level);
+#else
+    // No source adopted (linux PSI /proc/pressure/memory when staged there).
+    return zero;
+#endif
 }
 
 #endif
