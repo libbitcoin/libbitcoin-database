@@ -296,8 +296,9 @@ bool CLASS::stage_() NOEXCEPT
     reserved_[Column] = reserved;
 
     // Page-dirty tracking for unstaged (rewrite-in-place head) instances,
-    // sized to the reservation (value-initialized to clean).
-    if constexpr (is_zero(Column))
+    // sized to the reservation (value-initialized to clean). Single column
+    // only (byte-offset marks); aggregates transfer in full.
+    if constexpr (is_zero(Column) && is_one(columns))
     {
         if (!staged_)
         {
@@ -582,8 +583,12 @@ template <size_t Column>
 bool CLASS::transfer_(size_t bytes) NOEXCEPT
 {
     using namespace system;
-    if (!dirty_ || is_zero(bytes))
+    if (is_zero(bytes))
         return true;
+
+    // Untracked (multi-column unstaged) instances transfer in full.
+    if (!dirty_)
+        return pwrite_all(opened_[Column], memory_map_[Column], bytes, zero);
 
     size_t from{};
     size_t to{};
