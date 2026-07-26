@@ -26,6 +26,10 @@
 #if defined(HAVE_APPLE)
     #include <sys/sysctl.h>
 #endif
+#if defined(HAVE_LINUX)
+    #include <algorithm>
+    #include <cstdio>
+#endif
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -106,8 +110,34 @@ size_t system_pressure() NOEXCEPT
         return zero;
 
     return possible_narrow_sign_cast<size_t>(level);
+#elif defined(HAVE_LINUX)
+    // PSI (requires CONFIG_PSI): fraction of recent wall time that tasks
+    // stalled on memory reclaim. A tenth of time stalled is treated as
+    // genuine pressure, partial (some) as warning and total (full) as
+    // critical, mapping to the macos memorystatus level semantics.
+    auto level = zero;
+    if (const auto file = std::fopen("/proc/pressure/memory", "r"))
+    {
+        char line[128];
+        double avg10{};
+        level = one;
+        while (!is_null(std::fgets(line, sizeof(line), file)))
+        {
+            if ((std::sscanf(line, "some avg10=%lf", &avg10) == 1) &&
+                (avg10 >= 10.0))
+                level = std::max(level, size_t{ 2 });
+
+            if ((std::sscanf(line, "full avg10=%lf", &avg10) == 1) &&
+                (avg10 >= 10.0))
+                level = std::max(level, size_t{ 4 });
+        }
+
+        std::fclose(file);
+    }
+
+    return level;
 #else
-    // No source adopted (linux PSI /proc/pressure/memory when staged there).
+    // No platform source.
     return zero;
 #endif
 }

@@ -126,8 +126,12 @@ bool CLASS::flush_(size_t
     const auto success =
            ((from >= to) || pwrite_all(opened_[Column],
                std::next(memory_map_[Column], from), to - from, from))
+#if defined(F_FULLFSYNC)
         // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
         && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
+#else
+        && (::fsync(opened_[Column]) != fail);
+#endif
 #elif defined(HAVE_MSC)
     // unmap (and therefore msync) must be called before ftruncate.
     // "To flush all the dirty pages plus the metadata for the file and ensure
@@ -190,7 +194,11 @@ bool CLASS::unmap_(size_t
            ((from >= logical) || pwrite_all(opened_[Column],
                std::next(memory_map_[Column], from), logical - from, from))
         && (::ftruncate(opened_[Column], logical) != fail)
+#if defined(F_FULLFSYNC)
         && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
+#else
+        && (::fsync(opened_[Column]) != fail);
+#endif
 
     // Order ensures release of the reservation in case of transfer failure.
     const auto success = (::munmap(memory_map_[Column],
