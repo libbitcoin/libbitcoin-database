@@ -33,15 +33,8 @@ namespace database {
 // closing the gaps, settling the completed prefix.
 
 TEMPLATE
-void CLASS::complete(size_t
-    #if defined(MANAGE_STAGING)
-    offset
-    #endif
-    , size_t
-    #if defined(MANAGE_STAGING)
-    count
-    #endif
-) NOEXCEPT
+void CLASS::complete(size_t STAGING_ONLY(offset),
+    size_t STAGING_ONLY(count)) NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
     if (!staged_ || is_zero(count))
@@ -49,17 +42,16 @@ void CLASS::complete(size_t
 
     // Acquire-ordered window snapshot (published entries are immobile; the
     // packed word precludes observing a torn head/size pair across pops).
-    const auto [head, size] = system::unpack_word<uint64_t>(
-        window_.load(std::memory_order_acquire));
+    const auto window = window_.load(std::memory_order_acquire);
+    const auto [head, size] = system::unpack_word<uint64_t>(window);
 
     // Lock-free binary search of the sorted window for the covering extent.
-    size_t low{};
     auto high = size;
-    while (low < high)
+    for (size_t low{}; low < high;)
     {
         const auto middle = to_half(low + high);
         auto& record = ring_.at((head + middle) % extents);
-        const auto start = record.start.load(std::memory_order_relaxed);
+        const auto start = record.start.load(relaxed);
 
         if (offset < start)
         {
@@ -74,13 +66,12 @@ void CLASS::complete(size_t
         }
 
         // Wrap from over-completion stalls the frontier (conservative).
-        const auto previous = record.outstanding.fetch_sub(count,
-            std::memory_order_relaxed);
+        const auto previous = record.outstanding.fetch_sub(count, relaxed);
 
         // Repair a decrement landed on a recycled slot (start moved).
-        if (record.start.load(std::memory_order_relaxed) != start)
+        if (record.start.load(relaxed) != start)
         {
-            record.outstanding.fetch_add(count, std::memory_order_relaxed);
+            record.outstanding.fetch_add(count, relaxed);
             return;
         }
 
@@ -89,6 +80,7 @@ void CLASS::complete(size_t
         if (previous == count)
         {
             std::unique_lock extent_lock(extent_mutex_, std::try_to_lock);
+
             if (extent_lock.owns_lock())
                 maintain_();
         }
@@ -99,26 +91,24 @@ void CLASS::complete(size_t
     // Contention can record extents out of start order (allocation claim and
     // recording are not one atomic step), transiently breaking search order.
     // Contiguity guarantees a unique cover, so fall back to a linear scan.
-    for (size_t index = 0; index < size; ++index)
+    for (size_t index{}; index < size; ++index)
     {
         auto& record = ring_.at((head + index) % extents);
-        const auto start = record.start.load(std::memory_order_relaxed);
-
+        const auto start = record.start.load(relaxed);
         if ((offset < start) || (offset >= (start + record.count)))
             continue;
 
-        const auto previous = record.outstanding.fetch_sub(count,
-            std::memory_order_relaxed);
-
-        if (record.start.load(std::memory_order_relaxed) != start)
+        const auto previous = record.outstanding.fetch_sub(count, relaxed);
+        if (record.start.load(relaxed) != start)
         {
-            record.outstanding.fetch_add(count, std::memory_order_relaxed);
+            record.outstanding.fetch_add(count, relaxed);
             return;
         }
 
         if (previous == count)
         {
             std::unique_lock extent_lock(extent_mutex_, std::try_to_lock);
+
             if (extent_lock.owns_lock())
                 maintain_();
         }
@@ -148,24 +138,24 @@ void CLASS::record_(size_t start, size_t count) NOEXCEPT
         return;
 
     std::unique_lock extent_lock(extent_mutex_);
+
     maintain_();
 
+    using namespace system;
+    const auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
+
     // Saturation stalls the frontier (conservative, safe); asserts in debug.
-    const auto [head, size] = system::unpack_word<uint64_t>(
-        window_.load(std::memory_order_relaxed));
     BC_ASSERT(size < extents);
     if (size == extents)
         return;
 
     auto& record = ring_.at((head + size) % extents);
-    record.start.store(start, std::memory_order_relaxed);
+    record.start.store(start, relaxed);
     record.count = count;
-    record.outstanding.store(count * columns, std::memory_order_relaxed);
+    record.outstanding.store(count * columns, relaxed);
 
     // Publish the extent (pairs with the acquire window snapshot).
-    window_.store(system::pack_word<uint64_t>(head, add1(size)),
-        std::memory_order_release);
-
+    window_.store(pack_word<uint64_t>(head, add1(size)), release);
     if (is_zero(size))
         frontier_.store(start);
 }
@@ -174,20 +164,17 @@ void CLASS::record_(size_t start, size_t count) NOEXCEPT
 TEMPLATE
 void CLASS::maintain_() NOEXCEPT
 {
-    auto [head, size] = system::unpack_word<uint64_t>(
-        window_.load(std::memory_order_relaxed));
-
-    while (!is_zero(size) &&
-        is_zero(ring_.at(head).outstanding.load(std::memory_order_relaxed)))
+    using namespace system;
+    auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
+    while (!is_zero(size) && is_zero(ring_.at(head).outstanding.load(relaxed)))
     {
         head = add1(head) % extents;
         --size;
     }
 
-    window_.store(system::pack_word<uint64_t>(head, size),
-        std::memory_order_release);
+    window_.store(pack_word<uint64_t>(head, size), release);
     frontier_.store(is_zero(size) ? logical_.load() :
-        ring_.at(head).start.load(std::memory_order_relaxed));
+        ring_.at(head).start.load(relaxed));
 }
 
 // Discard all extents, requires quiescent writers (locked). Any extent then
@@ -199,7 +186,8 @@ void CLASS::discard_() NOEXCEPT
         return;
 
     std::unique_lock extent_lock(extent_mutex_);
-    window_.store(zero, std::memory_order_release);
+
+    window_.store(zero, release);
     frontier_.store(logical_.load());
 }
 
@@ -213,15 +201,17 @@ void CLASS::throttle_() NOEXCEPT
 {
     const auto relieved = [this]() NOEXCEPT
     {
-        return (system::ceilinged_multiply(system::floored_subtract(
-            logical_.load(), settled_.load()), stride) <= limit_) ||
-            !settling_.load() || fault_.load();
+        using namespace system;
+        const auto rows = floored_subtract(logical_.load(), settled_.load());
+        const auto debt = ceilinged_multiply(rows, stride);
+        return (debt <= limit_) || !settling_.load() || fault_.load();
     };
 
     if (!staged_ || relieved())
         return;
 
     std::unique_lock throttle_lock(throttle_mutex_);
+
     throttle_cv_.wait(throttle_lock, relieved);
 }
 
@@ -231,6 +221,7 @@ TEMPLATE
 void CLASS::signal_() NOEXCEPT
 {
     std::unique_lock throttle_lock(throttle_mutex_);
+
     throttle_cv_.notify_all();
 }
 
@@ -289,8 +280,21 @@ bool CLASS::stage_() NOEXCEPT
         return false;
     }
 
-    memory_map_[Column] = system::pointer_cast<uint8_t>(base);
+    using namespace system;
+    memory_map_[Column] = pointer_cast<uint8_t>(base);
     reserved_[Column] = reserved;
+
+    // Page-dirty tracking for unstaged (rewrite-in-place head) instances,
+    // sized to the reservation (value-initialized to clean).
+    if constexpr (is_zero(Column))
+    {
+        if (!staged_)
+        {
+            const auto pages = ceilinged_divide(reserved, page_);
+            words_ = ceilinged_divide(pages, page_bound);
+            dirty_ = std::make_unique<std::atomic<uint64_t>[]>(words_);
+        }
+    }
 
     // Commit anonymous pages above the settle boundary page floor.
     const auto settled = page_floor(to_width<Column>(settled_.load()));
@@ -340,8 +344,8 @@ bool CLASS::commit_(size_t size) NOEXCEPT
         const auto current = page_floor(to_width<Column>(capacity_.load()));
         const auto from = std::max(settled, current);
 
-        if ((target > from) && (mmap_commit(std::next(memory_map_[Column],
-            from), target - from) == fail))
+        if ((target > from) && (mmap_commit(std::next(memory_map_[Column], from),
+            target - from) == fail))
         {
             teardown_<Column>(error::mmap_failure);
             return false;
@@ -360,7 +364,8 @@ bool CLASS::commit_(size_t size) NOEXCEPT
         return false;
     }
 
-    const auto base = system::pointer_cast<uint8_t>(replace);
+    using namespace system;
+    const auto base = pointer_cast<uint8_t>(replace);
     const auto settled = page_floor(to_width<Column>(settled_.load()));
 
     if (mmap_commit(std::next(base, settled), target - settled) == fail)
@@ -395,9 +400,28 @@ bool CLASS::commit_(size_t size) NOEXCEPT
     }
 #endif
 
+    // Regrow dirty tracking with the reservation (marks are excluded by the
+    // remap lock, as unstaged mutations hold protected accessors).
+    if constexpr (is_zero(Column))
+    {
+        if (!staged_ && dirty_)
+        {
+            const auto pages = ceilinged_divide(reserved, page_);
+            const auto words = ceilinged_divide(pages, page_bound);
+            auto grown = std::make_unique<std::atomic<uint64_t>[]>(words);
+
+            for (size_t word{}; word < std::min(words_, words); ++word)
+                grown[word].store(dirty_[word].load(relaxed),
+                    relaxed);
+
+            dirty_ = std::move(grown);
+            words_ = words;
+        }
+    }
+
     // Release the exhausted reservation and adopt the replacement.
-    const auto released = ::munmap(memory_map_[Column],
-        reserved_[Column]) != fail;
+    const auto released = ::munmap(memory_map_[Column], reserved_[Column]) 
+        != fail;
 
     memory_map_[Column] = base;
     reserved_[Column] = reserved;
@@ -424,12 +448,10 @@ bool CLASS::settle_(size_t from, size_t to) NOEXCEPT
 
     const auto begin = page_floor(to_width<Column>(from));
     const auto end = page_floor(to_width<Column>(to));
-
     if (begin == end)
         return true;
 
     const auto address = std::next(memory_map_[Column], begin);
-
     if (mmap_settle(address, end - begin, opened_[Column], begin) == fail)
     {
         teardown_<Column>(error::mmap_failure);
@@ -457,12 +479,10 @@ bool CLASS::unsettle_(size_t rows) NOEXCEPT
     const auto bytes = to_width<Column>(rows);
     const auto begin = page_floor(bytes);
     const auto end = page_floor(to_width<Column>(settled_.load()));
-
     if (begin == end)
         return true;
 
     const auto address = std::next(memory_map_[Column], begin);
-
     if (mmap_unsettle(address, end - begin) == fail)
     {
         teardown_<Column>(error::mmap_failure);
@@ -485,7 +505,6 @@ template <size_t Column>
 void CLASS::teardown_(const error::error_t& ec) NOEXCEPT
 {
     set_first_code(ec);
-
     if (!is_null(memory_map_[Column]))
         ::munmap(memory_map_[Column], reserved_[Column]);
 
@@ -502,13 +521,10 @@ void CLASS::teardown_(const error::error_t& ec) NOEXCEPT
 TEMPLATE
 bool CLASS::advise_(uint8_t* map, size_t size) const NOEXCEPT
 {
-    // Use 1GB chunks to avoid large-length issues.
-    constexpr auto chunk = system::power2(30u);
     const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
-
-    for (auto offset = zero; offset < size; offset += chunk)
+    for (size_t offset{}; offset < size; offset += chunk_size)
     {
-        const auto length = std::min(chunk, size - offset);
+        const auto length = std::min(chunk_size, size - offset);
         if (::madvise(std::next(map, offset), length, advice) == fail)
             return false;
     }
@@ -522,21 +538,22 @@ bool CLASS::advise_(uint8_t* map, size_t size) const NOEXCEPT
 TEMPLATE
 size_t CLASS::to_reservation(size_t rows) const NOEXCEPT
 {
-    constexpr size_t headroom = 4;
-    return system::ceilinged_multiply(to_capacity(std::max(rows, minimum_)),
-        headroom);
+    using namespace system;
+    return ceilinged_multiply(to_capacity(std::max(rows, minimum_)), headroom);
 }
 
 TEMPLATE
 size_t CLASS::page_floor(size_t bytes) const NOEXCEPT
 {
-    return system::bit_and(bytes, system::bit_not(sub1(page_)));
+    using namespace system;
+    return bit_and(bytes, bit_not(sub1(page_)));
 }
 
 TEMPLATE
 size_t CLASS::page_ceiling(size_t bytes) const NOEXCEPT
 {
-    return page_floor(system::ceilinged_add(bytes, sub1(page_)));
+    using namespace system;
+    return page_floor(ceilinged_add(bytes, sub1(page_)));
 }
 
 
@@ -545,15 +562,91 @@ size_t CLASS::page_ceiling(size_t bytes) const NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
+// Transfer dirty pages within [0, bytes), clearing marks before content
+// reads so that concurrently remarked pages transfer on the next pass.
+// Marks beyond bytes are retained (backfill above logical transfers when
+// logical grows over it). Adjacent dirty pages coalesce into single writes.
+TEMPLATE
+template <size_t Column>
+bool CLASS::transfer_(size_t bytes) NOEXCEPT
+{
+    using namespace system;
+    if (!dirty_ || is_zero(bytes))
+        return true;
+
+    size_t from{};
+    size_t to{};
+    const auto write = [&]() NOEXCEPT
+    {
+        return (from >= to) || pwrite_all(opened_[Column],
+            std::next(memory_map_[Column], from), to - from, from);
+    };
+
+    const auto pages = ceilinged_divide(bytes, page_);
+    const auto bound = std::min(words_, ceilinged_divide(pages, page_bound));
+    for (size_t word{}; word < bound; ++word)
+    {
+        auto bits = dirty_[word].exchange(zero, relaxed);
+
+        // Retain marks at and above the page bound (boundary word only).
+        const auto first = word * page_bound;
+        if (pages < (first + page_bound))
+        {
+            const auto keep = mask_right<uint64_t>(pages - first);
+            dirty_[word].fetch_or(bit_and(bits, keep), relaxed);
+            bits = bit_and(bits, bit_not(keep));
+        }
+
+        for (size_t bit{}; !is_zero(bits) && (bit < page_bound); ++bit)
+        {
+            if (!get_right(bits, bit))
+                continue;
+
+            bits = set_right(bits, bit, false);
+            const auto start = (first + bit) * page_;
+            const auto end = std::min(start + page_, bytes);
+            if (start == to)
+            {
+                to = end;
+                continue;
+            }
+
+            if (!write())
+                return false;
+
+            from = start;
+            to = end;
+        }
+    }
+
+    return write();
+}
+
+// Durability barrier for the column file.
+TEMPLATE
+template <size_t Column>
+bool CLASS::sync_() NOEXCEPT
+{
+#if defined(F_FULLFSYNC)
+    // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
+    return ::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail;
+#else
+    return ::fsync(opened_[Column]) != fail;
+#endif
+}
+
 TEMPLATE
 void CLASS::settler_start_() NOEXCEPT
 {
-    if (!staged_)
-        return;
-
+    // The per-instance staging bound. Caps must be sized for their sum: an
+    // eighth of physical memory holds the plausible aggregate across the
+    // concurrently staged bodies to about half (no configuration).
     limit_ = system_memory() / 8;
     settling_.store(true);
-    settler_ = std::thread([this]() NOEXCEPT { settler_run_(); });
+    settler_ = std::thread([this]() NOEXCEPT
+    {
+        staged_ ? settler_run_() : head_run_();
+    });
 }
 
 TEMPLATE
@@ -576,14 +669,14 @@ TEMPLATE
 void CLASS::settler_run_() NOEXCEPT
 {
     // Tiers derive from physical memory and pressure (no configuration).
+    using namespace system;
     const auto memory = system_memory();
     const auto urgent = memory / 4;
     const auto active = memory / 32;
-    const auto chunk = std::max<size_t>(one, (size_t{ 256 } << 20) / stride);
+    const auto chunk = std::max(one, shift_left<size_t>(256, 20) / stride);
 
     // Ticks without allocation before idle draining (settling is not writing,
     // so draining does not hold its own clock).
-    constexpr size_t rest = 60;
     auto mark = logical_.load();
     size_t still{};
 
@@ -596,14 +689,14 @@ void CLASS::settler_run_() NOEXCEPT
     while (settling_.load())
     {
         std::unique_lock settler_lock(settler_mutex_);
-        settler_cv_.wait_for(settler_lock, std::chrono::seconds(1));
+        settler_cv_.wait_for(settler_lock, std::chrono::seconds(wait_seconds));
         settler_lock.unlock();
 
         if (!settling_.load())
             return;
 
         const auto top = logical_.load();
-        still = (top == mark) ? std::min(add1(still), rest) : zero;
+        still = (top == mark) ? std::min(add1(still), idle_ticks) : zero;
         mark = top;
 
         auto bytes = backlog();
@@ -612,7 +705,7 @@ void CLASS::settler_run_() NOEXCEPT
 
         // Urgency drains continuously, activity/stillness one chunk per tick.
         const auto driven = (system_pressure() > one) || (bytes > urgent);
-        if (!driven && (bytes <= active) && (still < rest))
+        if (!driven && (bytes <= active) && (still < idle_ticks))
             continue;
 
         do
@@ -623,6 +716,56 @@ void CLASS::settler_run_() NOEXCEPT
             bytes = backlog();
         }
         while (settling_.load() && driven && (bytes > active));
+    }
+}
+
+// Idle transfer for unstaged (rewrite-in-place head) instances: sustained
+// mark stillness drains dirty pages (the lazy writer) so a quiescent map
+// converges to persisted and snapshot/close transfer approximately nothing.
+// Requires no write exclusion: marks follow writes and transfer clears
+// before reading, so racing writes remark and transfer on the next pass
+// (torn disk pages are unreachable, as live heads are only trusted
+// following a clean close).
+TEMPLATE
+void CLASS::head_run_() NOEXCEPT
+{
+    // Ticks without a mark before idle draining.
+    auto mark = marks_.load();
+    auto transferred = mark;
+    size_t still{};
+
+    while (settling_.load())
+    {
+        std::unique_lock settler_lock(settler_mutex_);
+        settler_cv_.wait_for(settler_lock, std::chrono::seconds(wait_seconds));
+        settler_lock.unlock();
+
+        if (!settling_.load())
+            return;
+
+        const auto top = marks_.load();
+        still = (top == mark) ? std::min(add1(still), idle_ticks) : zero;
+        mark = top;
+
+        if ((still < idle_ticks) || (transferred == top))
+            continue;
+
+        {
+            std::shared_lock map_lock(remap_mutex_);
+
+            if (!loaded_.load() || fault_.load())
+                continue;
+
+            if (!transfer_<zero>(to_width<zero>(logical_.load())) ||
+                !sync_<zero>())
+            {
+                set_first_code(error::fsync_failure);
+                continue;
+            }
+        }
+
+        transferred = top;
+        still = zero;
     }
 }
 
@@ -637,6 +780,7 @@ bool CLASS::settle_next_(size_t chunk) NOEXCEPT
 
     {
         std::shared_lock map_lock(remap_mutex_);
+
         if (!loaded_.load() || fault_.load())
             return false;
 
@@ -655,6 +799,7 @@ bool CLASS::settle_next_(size_t chunk) NOEXCEPT
     }
 
     std::unique_lock map_lock(remap_mutex_);
+
     if (!loaded_.load())
         return false;
 

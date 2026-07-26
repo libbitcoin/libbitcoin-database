@@ -185,6 +185,28 @@ code CLASS::reload() NOEXCEPT
     return error::reload_locked;
 }
 
+TEMPLATE
+void CLASS::mark(size_t STAGING_ONLY(offset),
+    size_t STAGING_ONLY(size)) NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    if (is_zero(size) || !dirty_)
+        return;
+
+    // Marks follow content writes; transfer clears before reading, so pages
+    // remarked during a transfer are simply rewritten by the next pass.
+    auto page = offset / page_;
+    const auto end = (offset + sub1(size)) / page_;
+    while ((page <= end) && ((page / page_bound) < words_))
+    {
+        const auto bit = system::bit_right<uint64_t>(page % page_bound);
+        dirty_[page++ / page_bound].fetch_or(bit, relaxed);
+    }
+
+    marks_.fetch_add(one, relaxed);
+#endif
+}
+
 // Suspend writes before calling.
 TEMPLATE
 code CLASS::flush() NOEXCEPT
@@ -349,34 +371,33 @@ bool CLASS::truncate(size_t count) NOEXCEPT
     if (staged_)
     {
         std::unique_lock extent_lock(extent_mutex_);
-        auto [head, size] = system::unpack_word<uint64_t>(
-            window_.load(std::memory_order_relaxed));
 
+        using namespace system;
+        auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
         while (!is_zero(size))
         {
             auto& tail = ring_.at((head + sub1(size)) % extents);
-            const auto start = tail.start.load(std::memory_order_relaxed);
+            const auto start = tail.start.load(relaxed);
             if (start >= count)
             {
                 --size;
                 continue;
             }
 
-            if (system::ceilinged_add(start, tail.count) > count)
+            if (ceilinged_add(start, tail.count) > count)
             {
                 tail.count = count - start;
                 const auto limit = tail.count * columns;
-                if (tail.outstanding.load(std::memory_order_relaxed) > limit)
-                    tail.outstanding.store(limit, std::memory_order_relaxed);
+                if (tail.outstanding.load(relaxed) > limit)
+                    tail.outstanding.store(limit, relaxed);
             }
 
             break;
         }
 
-        window_.store(system::pack_word<uint64_t>(head, size),
-            std::memory_order_release);
+        window_.store(pack_word<uint64_t>(head, size), release);
         frontier_.store(is_zero(size) ? count :
-            ring_.at(head).start.load(std::memory_order_relaxed));
+            ring_.at(head).start.load(relaxed));
     }
 #endif
 
@@ -399,6 +420,7 @@ bool CLASS::expand(size_t count) NOEXCEPT
     {
         const auto extended = to_capacity(count);
         std::unique_lock remap_lock(remap_mutex_);
+
         if (!remap_all_(extended, sequence{}))
             return false;
     }
@@ -416,8 +438,9 @@ bool CLASS::reserve(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
+    using namespace system;
     if (fault_.load() || !loaded_.load() ||
-        system::is_add_overflow(logical_.load(), count))
+        is_add_overflow(logical_.load(), count))
         return false;
 
     const auto end = logical_.load() + count;
@@ -425,6 +448,7 @@ bool CLASS::reserve(size_t count) NOEXCEPT
     {
         const auto extended = to_capacity(end);
         std::unique_lock remap_lock(remap_mutex_);
+
         if (!remap_all_(extended, sequence{}))
             return false;
     }
@@ -448,10 +472,11 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
 
     // Fast path: claim rows within published capacity (no locks). A failed
     // exchange implies another claim succeeded, so every retry is progress.
-    for (auto start = logical_.load();;)
+    using namespace system;
+    auto start = logical_.load();
+    while (true)
     {
-        if (fault_.load() || !loaded_.load() ||
-            system::is_add_overflow(start, count))
+        if (fault_.load() || !loaded_.load() || is_add_overflow(start, count))
             return storage::eof;
 
         if ((start + count) > capacity_.load())
@@ -469,10 +494,11 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
     // Slow path: serialize capacity growth (at most one grower). Fast paths
     // continue claiming under the old capacity; the growth target covers them.
     std::unique_lock field_lock(field_mutex_);
-    for (auto start = logical_.load();;)
+
+    start = logical_.load();
+    while (true)
     {
-        if (fault_.load() || !loaded_.load() ||
-            system::is_add_overflow(start, count))
+        if (fault_.load() || !loaded_.load() || is_add_overflow(start, count))
             return storage::eof;
 
         const auto end = start + count;

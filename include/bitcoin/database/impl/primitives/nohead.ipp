@@ -64,6 +64,7 @@ bool CLASS::clear() NOEXCEPT
     // remains unchanged and subject to initialization size at each startup. So
     // there is no reduction until restart, which can include config change.
     std::fill_n(ptr.data(), size(), system::bit_all<uint8_t>);
+    file_.mark(zero, size());
     return set_body_count(zero);
 }
 
@@ -112,6 +113,7 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     // offsetting is a multiple of cell size, a full cell is consumed for it.
     // In case of nomap or disabled there are no cells, so file is link size.
     to_array<Link::size>(ptr.data()) = count;
+    file_.mark(zero, Link::size);
     return true;
 }
 

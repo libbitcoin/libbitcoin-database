@@ -73,6 +73,7 @@ bool CLASS::create() NOEXCEPT
     // std::memset/fill_n have identical performance (on win32).
     ////std::memset(ptr.data(), system::bit_all<uint8_t>, allocation);
     std::fill_n(ptr.data(), allocation, system::bit_all<uint8_t>);
+    file_.mark(start, allocation);
     return set_body_count(zero);
 }
 
@@ -108,6 +109,7 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     // In case of disabled there are no cells, so file is link size.
     auto value = count.value;
     link_array(ptr.data()) = link_array(value);
+    file_.mark(zero, Link::size);
     return true;
 }
 
@@ -195,7 +197,8 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
     const Key& key) NOEXCEPT
 {
     using namespace system;
-    const auto raw = file_.get_raw(link_to_position(index(key)));
+    const auto position = link_to_position(index(key));
+    const auto raw = file_.get_raw(position);
     if (is_null(raw))
         return false;
 
@@ -236,6 +239,7 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
         mutex_.unlock();
     }
 
+    file_.mark(position, cell_size);
     return true;
 }
 

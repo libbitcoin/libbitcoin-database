@@ -22,6 +22,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <filesystem>
+#include <memory>
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
@@ -113,6 +114,10 @@ public:
     /// Clear disk full condition, fails if fault, must be loaded, idempotent.
     code reload() NOEXCEPT override;
 
+    /// Report content mutation (advisory page-dirty tracking, unstaged
+    /// instances under the staging backend only; no effect otherwise).
+    void mark(size_t offset, size_t size) NOEXCEPT override;
+
     /// Flush memory map(s) to disk, suspend writes for call, must be loaded.
     code flush() NOEXCEPT override;
 
@@ -193,7 +198,15 @@ protected:
     void set_disk_space(size_t required) NOEXCEPT;
 
 private:
+    // Use 1GB chunks to avoid large-length issues.
+    static constexpr size_t chunk_size = system::power2(30u);
+    static constexpr size_t headroom = 4;
+    static constexpr size_t page_bound = 64;
+    static constexpr size_t idle_ticks = 60;
+    static constexpr size_t wait_seconds = 1;
     static constexpr auto fail = -1;
+    static constexpr auto relaxed = std::memory_order_relaxed;
+    static constexpr auto release = std::memory_order_release;
     using sequence = std::make_index_sequence<columns>;
 
     // mman dispatch, not thread safe.
@@ -248,10 +261,17 @@ private:
     void throttle_() NOEXCEPT;
     void signal_() NOEXCEPT;
 
+    // dirty page transfer (unstaged instances), lock-free with writers.
+    template <size_t Column>
+    bool transfer_(size_t bytes) NOEXCEPT;
+    template <size_t Column>
+    bool sync_() NOEXCEPT;
+
     // settle scheduler (instance-owned thread, load/unload lifecycle).
     void settler_start_() NOEXCEPT;
     void settler_stop_() NOEXCEPT;
     void settler_run_() NOEXCEPT;
+    void head_run_() NOEXCEPT;
     bool settle_next_(size_t chunk) NOEXCEPT;
     template <size_t... Index>
     bool settle_write_(size_t from, size_t to,
@@ -319,6 +339,14 @@ private:
     size_t limit_{};
     std::condition_variable throttle_cv_{};
     mutable std::mutex throttle_mutex_{};
+
+    // Page-dirty bitmap for unstaged (rewrite-in-place head) instances.
+    // Marks follow content writes; transfer clears before reading, so a
+    // racing mark is never lost (a torn disk page is unreachable state, as
+    // live heads are trusted only following a clean close).
+    std::unique_ptr<std::atomic<uint64_t>[]> dirty_{};
+    size_t words_{};
+    std::atomic<size_t> marks_{};
 #endif // MANAGE_STAGING
 };
 

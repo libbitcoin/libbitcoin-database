@@ -58,6 +58,12 @@ public:
     /// Clear disk full condition, fails if fault, must be loaded, idempotent.
     virtual code reload() NOEXCEPT = 0;
 
+    /// Report content mutation of size bytes at offset (rewritable tables),
+    /// after the write. Advisory dirty tracking; no effect where unneeded.
+    virtual void mark(size_t, size_t) NOEXCEPT
+    {
+    }
+
     /// Flush memory map to disk, suspend writes for call, must be loaded.
     virtual code flush() NOEXCEPT = 0;
 
