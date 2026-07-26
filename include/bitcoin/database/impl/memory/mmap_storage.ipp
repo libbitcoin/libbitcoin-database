@@ -441,6 +441,11 @@ bool CLASS::reserve(size_t count) NOEXCEPT
 TEMPLATE
 size_t CLASS::allocate(size_t count) NOEXCEPT
 {
+#if defined(MANAGE_STAGING)
+    // Nothing is held here, so parking cannot deadlock (as with remap waits).
+    throttle_();
+#endif
+
     // Fast path: claim rows within published capacity (no locks). A failed
     // exchange implies another claim succeeded, so every retry is progress.
     for (auto start = logical_.load();;)

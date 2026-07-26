@@ -114,6 +114,11 @@ void CLASS::set_first_code(const error::error_t& ec) NOEXCEPT
 
         // error is atomic for public read exposure.
         error_.store(ec);
+
+#if defined(MANAGE_STAGING)
+        // A fault may stop draining, so it must release throttled callers.
+        signal_();
+#endif
     }
 }
 

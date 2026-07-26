@@ -203,6 +203,37 @@ void CLASS::discard_() NOEXCEPT
     frontier_.store(logical_.load());
 }
 
+// Delay the caller while staging exceeds its memory bound (write throttle).
+// Signaled as the settler drains; a fault or settler stop releases the caller
+// into the normal allocation path (which fails on fault/unload). The relieved
+// state is lock-free for the common (unparked) case; notifiers synchronize on
+// throttle_mutex_ so a parked caller cannot miss its signal.
+TEMPLATE
+void CLASS::throttle_() NOEXCEPT
+{
+    const auto relieved = [this]() NOEXCEPT
+    {
+        return (system::ceilinged_multiply(system::floored_subtract(
+            logical_.load(), settled_.load()), stride) <= limit_) ||
+            !settling_.load() || fault_.load();
+    };
+
+    if (!staged_ || relieved())
+        return;
+
+    std::unique_lock throttle_lock(throttle_mutex_);
+    throttle_cv_.wait(throttle_lock, relieved);
+}
+
+// Wake throttled callers, synchronized so a parking caller cannot miss the
+// signal between its relieved check and its wait.
+TEMPLATE
+void CLASS::signal_() NOEXCEPT
+{
+    std::unique_lock throttle_lock(throttle_mutex_);
+    throttle_cv_.notify_all();
+}
+
 // staging dispatch, not thread safe.
 // ----------------------------------------------------------------------------
 // private
@@ -216,6 +247,7 @@ bool CLASS::settle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT
         return false;
 
     settled_.store(rows);
+    signal_();
     return true;
 }
 
@@ -519,6 +551,7 @@ void CLASS::settler_start_() NOEXCEPT
     if (!staged_)
         return;
 
+    limit_ = system_memory() / 8;
     settling_.store(true);
     settler_ = std::thread([this]() NOEXCEPT { settler_run_(); });
 }
@@ -529,13 +562,15 @@ void CLASS::settler_stop_() NOEXCEPT
     if (!settling_.exchange(false))
         return;
 
+    signal_();
     settler_cv_.notify_all();
     if (settler_.joinable())
         settler_.join();
 }
 
-// Pressure-paced draining (the windows model): writers are never blocked,
-// drain intensity follows memory conditions, settled pages remain cached.
+// Pressure-paced draining (the windows model): drain intensity follows memory
+// conditions, settled pages remain cached, writers delay only at the staging
+// memory bound (write throttle).
 TEMPLATE
 void CLASS::settler_run_() NOEXCEPT
 {

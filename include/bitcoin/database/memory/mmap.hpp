@@ -245,6 +245,8 @@ private:
     void record_(size_t start, size_t count) NOEXCEPT;
     void maintain_() NOEXCEPT;
     void discard_() NOEXCEPT;
+    void throttle_() NOEXCEPT;
+    void signal_() NOEXCEPT;
 
     // settle scheduler (instance-owned thread, load/unload lifecycle).
     void settler_start_() NOEXCEPT;
@@ -311,6 +313,12 @@ private:
     std::condition_variable settler_cv_{};
     std::atomic_bool settling_{};
     mutable std::mutex settler_mutex_{};
+
+    // These delay allocation while staging exceeds its memory bound (write
+    // throttle). The bound is set at load, before writers exist.
+    size_t limit_{};
+    std::condition_variable throttle_cv_{};
+    mutable std::mutex throttle_mutex_{};
 #endif // MANAGE_STAGING
 };
 
