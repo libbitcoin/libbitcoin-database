@@ -366,9 +366,9 @@ bool CLASS::finalize_(size_t
     const auto align = bit_and(ceilinged_add(target, max), bit_not(max));
     const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
 
-    for (size_t offset{}; offset < align; offset += chunk_size)
+    for (size_t offset{}; offset < align; offset += advise_chunk)
     {
-        const auto length = std::min(chunk_size, align - offset);
+        const auto length = std::min(advise_chunk, align - offset);
         const auto start = std::next(memory_map_[Column], offset);
 
         if (::madvise(start, length, advice) == fail || (random_ &&

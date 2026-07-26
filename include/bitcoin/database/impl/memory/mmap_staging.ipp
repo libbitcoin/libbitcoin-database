@@ -303,7 +303,7 @@ bool CLASS::stage_() NOEXCEPT
         {
             const auto pages = ceilinged_divide(reserved, page_);
             words_ = ceilinged_divide(pages, page_bound);
-            dirty_ = std::make_unique<std::atomic<uint64_t>[]>(words_);
+            dirty_ = std::make_unique<dirty_bitmaps>(words_);
         }
     }
 
@@ -419,7 +419,7 @@ bool CLASS::commit_(size_t size) NOEXCEPT
         {
             const auto pages = ceilinged_divide(reserved, page_);
             const auto words = ceilinged_divide(pages, page_bound);
-            auto grown = std::make_unique<std::atomic<uint64_t>[]>(words);
+            auto grown = std::make_unique<dirty_bitmaps>(words);
 
             for (size_t word{}; word < std::min(words_, words); ++word)
                 grown[word].store(dirty_[word].load(relaxed),
@@ -533,9 +533,9 @@ TEMPLATE
 bool CLASS::advise_(uint8_t* map, size_t size) const NOEXCEPT
 {
     const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
-    for (size_t offset{}; offset < size; offset += chunk_size)
+    for (size_t offset{}; offset < size; offset += advise_chunk)
     {
-        const auto length = std::min(chunk_size, size - offset);
+        const auto length = std::min(advise_chunk, size - offset);
         if (::madvise(std::next(map, offset), length, advice) == fail)
             return false;
     }
@@ -649,10 +649,7 @@ bool CLASS::sync_() NOEXCEPT
 TEMPLATE
 void CLASS::settler_start_() NOEXCEPT
 {
-    // The per-instance staging bound. Caps must be sized for their sum: an
-    // eighth of physical memory holds the plausible aggregate across the
-    // concurrently staged bodies to about half (no configuration).
-    limit_ = system_memory() / 8;
+    limit_ = system_memory() / throttle_factor;
     settling_.store(true);
     settler_ = std::thread([this]() NOEXCEPT
     {
@@ -680,11 +677,10 @@ TEMPLATE
 void CLASS::settler_run_() NOEXCEPT
 {
     // Tiers derive from physical memory and pressure (no configuration).
-    using namespace system;
     const auto memory = system_memory();
-    const auto urgent = memory / 4;
-    const auto active = memory / 32;
-    const auto chunk = std::max(one, shift_left<size_t>(256, 20) / stride);
+    const auto urgent = memory / urgent_factor;
+    const auto active = memory / active_factor;
+    const auto chunk = std::max(one, settle_chunk / stride);
 
     // Ticks without allocation before idle draining (settling is not writing,
     // so draining does not hold its own clock).
@@ -693,21 +689,22 @@ void CLASS::settler_run_() NOEXCEPT
 
     const auto backlog = [this]() NOEXCEPT
     {
-        return system::ceilinged_multiply(system::floored_subtract(
-            frontier_.load(), settled_.load()), stride);
+        using namespace system;
+        return ceilinged_multiply(floored_subtract(frontier_.load(),
+            settled_.load()), stride);
     };
 
     while (settling_.load())
     {
         std::unique_lock settler_lock(settler_mutex_);
-        settler_cv_.wait_for(settler_lock, std::chrono::seconds(wait_seconds));
+        settler_cv_.wait_for(settler_lock, std::chrono::seconds(1));
         settler_lock.unlock();
 
         if (!settling_.load())
             return;
 
         const auto top = logical_.load();
-        still = (top == mark) ? std::min(add1(still), idle_ticks) : zero;
+        still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
 
         auto bytes = backlog();
@@ -716,7 +713,7 @@ void CLASS::settler_run_() NOEXCEPT
 
         // Urgency drains continuously, activity/stillness one chunk per tick.
         const auto driven = (system_pressure() > one) || (bytes > urgent);
-        if (!driven && (bytes <= active) && (still < idle_ticks))
+        if (!driven && (bytes <= active) && (still < idle_seconds))
             continue;
 
         do
@@ -748,17 +745,17 @@ void CLASS::head_run_() NOEXCEPT
     while (settling_.load())
     {
         std::unique_lock settler_lock(settler_mutex_);
-        settler_cv_.wait_for(settler_lock, std::chrono::seconds(wait_seconds));
+        settler_cv_.wait_for(settler_lock, std::chrono::seconds(1));
         settler_lock.unlock();
 
         if (!settling_.load())
             return;
 
         const auto top = marks_.load();
-        still = (top == mark) ? std::min(add1(still), idle_ticks) : zero;
+        still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
 
-        if ((still < idle_ticks) || (transferred == top))
+        if ((still < idle_seconds) || (transferred == top))
             continue;
 
         {

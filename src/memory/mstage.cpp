@@ -29,6 +29,7 @@
 
 using namespace libbitcoin;
 using namespace libbitcoin::system;
+static constexpr auto transfer_chunk = power2(30u);
 
 void* mmap_reserve(size_t size) NOEXCEPT
 {
@@ -44,7 +45,7 @@ int mmap_commit(void* address, size_t size) NOEXCEPT
 int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 {
     return ::mmap(address, size, PROT_READ, MAP_SHARED | MAP_FIXED, fd,
-        possible_wide_sign_cast<off_t>(offset)) == MAP_FAILED ? -1 : 0;
+        possible_narrow_sign_cast<off_t>(offset)) == MAP_FAILED ? -1 : 0;
 }
 
 int mmap_unsettle(void* address, size_t size) NOEXCEPT
@@ -53,18 +54,13 @@ int mmap_unsettle(void* address, size_t size) NOEXCEPT
         MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0) == MAP_FAILED ? -1 : 0;
 }
 
-// Bounds a single pread/pwrite request (linux caps one transfer just short of
-// 2GB and macOS has its own large-length quirks). Independent of the mmap.hpp
-// chunk_size, which bounds a single madvise length.
-static constexpr size_t chunk_size = power2(30u);
-
 bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT
 {
     while (!is_zero(size))
     {
-        const auto request = std::min(size, chunk_size);
+        const auto request = std::min(size, transfer_chunk);
         const auto result = ::pread(fd, to, request,
-            possible_wide_sign_cast<off_t>(offset));
+            possible_narrow_sign_cast<off_t>(offset));
 
         if (is_negative(result))
         {
@@ -78,7 +74,7 @@ bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT
         if (is_zero(result))
             return false;
 
-        const auto bytes = possible_wide_sign_cast<size_t>(result);
+        const auto bytes = possible_narrow_sign_cast<size_t>(result);
         to += bytes;
         offset += bytes;
         size -= bytes;
@@ -92,9 +88,9 @@ bool pwrite_all(int fd, const uint8_t* from, size_t size,
 {
     while (!is_zero(size))
     {
-        const auto request = std::min(size, chunk_size);
+        const auto request = std::min(size, transfer_chunk);
         const auto result = ::pwrite(fd, from, request,
-            possible_wide_sign_cast<off_t>(offset));
+            possible_narrow_sign_cast<off_t>(offset));
 
         if (result <= 0)
         {
@@ -104,7 +100,7 @@ bool pwrite_all(int fd, const uint8_t* from, size_t size,
             return false;
         }
 
-        const auto bytes = possible_wide_sign_cast<size_t>(result);
+        const auto bytes = possible_narrow_sign_cast<size_t>(result);
         from += bytes;
         offset += bytes;
         size -= bytes;
