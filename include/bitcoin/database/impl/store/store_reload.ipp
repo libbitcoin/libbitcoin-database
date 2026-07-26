@@ -40,13 +40,16 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     {
         if (!ec)
         {
-            // If any storage has a fault it will return as failure code.
             if (to_bool(file.get_space()))
             {
                 handler(event_t::load_file, table);
-                ec = file.reload();
                 this->dirty_.store(true, std::memory_order_relaxed);
             }
+
+            // Reload all storages, as staged instances must discard extents
+            // orphaned by abandoned writes (which may span into tables that
+            // did not themselves fault). Returns any storage fault as failure.
+            ec = file.reload();
         }
     };
 

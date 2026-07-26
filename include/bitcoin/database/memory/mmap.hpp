@@ -244,6 +244,7 @@ private:
     // staging utilities, not thread safe.
     void record_(size_t start, size_t count) NOEXCEPT;
     void maintain_() NOEXCEPT;
+    void discard_() NOEXCEPT;
 
     // settle scheduler (instance-owned thread, load/unload lifecycle).
     void settler_start_() NOEXCEPT;

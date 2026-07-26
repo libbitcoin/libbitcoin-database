@@ -190,6 +190,19 @@ void CLASS::maintain_() NOEXCEPT
         ring_.at(head).start.load(std::memory_order_relaxed));
 }
 
+// Discard all extents, requires quiescent writers (locked). Any extent then
+// outstanding is an abandoned write (unreferenced), safe to settle as is.
+TEMPLATE
+void CLASS::discard_() NOEXCEPT
+{
+    if (!staged_)
+        return;
+
+    std::unique_lock extent_lock(extent_mutex_);
+    window_.store(zero, std::memory_order_release);
+    frontier_.store(logical_.load());
+}
+
 // staging dispatch, not thread safe.
 // ----------------------------------------------------------------------------
 // private

@@ -168,6 +168,13 @@ code CLASS::reload() NOEXCEPT
             return error::reload_unloaded;
         }
 
+#if defined(MANAGE_STAGING)
+        // The store reload transactor implies quiescent writers, so remaining
+        // extents are orphans of abandoned writes, stalling the frontier (in
+        // any table, not just those that faulted). Discard to unjam settling.
+        discard_();
+#endif
+
         // Allow resume from disk full.
         set_disk_space(zero);
 
