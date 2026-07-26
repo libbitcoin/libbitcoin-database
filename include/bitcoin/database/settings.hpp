@@ -36,6 +36,27 @@ struct BCD_API settings
     settings() NOEXCEPT;
     settings(system::chain::selection context) NOEXCEPT;
 
+    /// Table settings.
+    /// -----------------------------------------------------------------------
+
+    /// Body storage sizing (all tables).
+    struct simple_table
+    {
+        /// Minimum body allocation (bytes).
+        uint64_t size{ 1 };
+
+        /// Body expansion rate (percentage).
+        uint16_t rate{ 50 };
+    };
+
+    /// Adds the head bucket count (hashmap hash space or arraymap length).
+    struct bucket_table
+      : public simple_table
+    {
+        /// Head bucket count.
+        uint32_t buckets{ 128 };
+    };
+
     /// Properties.
     /// -----------------------------------------------------------------------
 
@@ -57,90 +78,39 @@ struct BCD_API settings
     /// Archives.
     /// -----------------------------------------------------------------------
 
-    uint32_t header_buckets;
-    uint64_t header_size;
-    uint16_t header_rate;
-
-    uint64_t input_size;
-    uint16_t input_rate;
-
-    uint64_t output_size;
-    uint16_t output_rate;
-
-    uint32_t ins_buckets;
-    uint64_t ins_size;
-    uint16_t ins_rate;
-
-    uint64_t outs_size;
-    uint16_t outs_rate;
-
-    uint32_t tx_buckets;
-    uint64_t tx_size;
-    uint16_t tx_rate;
-
-    uint32_t txs_buckets;
-    uint64_t txs_size;
-    uint16_t txs_rate;
+    bucket_table header{};
+    simple_table input{};
+    simple_table output{};
+    bucket_table ins{};
+    simple_table outs{};
+    bucket_table tx{};
+    bucket_table txs{};
 
     /// Indexes.
     /// -----------------------------------------------------------------------
 
-    uint64_t candidate_size;
-    uint16_t candidate_rate;
-
-    uint64_t confirmed_size;
-    uint16_t confirmed_rate;
-
-    uint32_t strong_tx_buckets;
-    uint64_t strong_tx_size;
-    uint16_t strong_tx_rate;
+    simple_table candidate{};
+    simple_table confirmed{};
+    bucket_table strong_tx{};
 
     /// Caches.
     /// -----------------------------------------------------------------------
 
-    uint64_t ecdsa_size;
-    uint16_t ecdsa_rate;
-
-    uint64_t schnorr_size;
-    uint16_t schnorr_rate;
-
-    uint64_t silent_size;
-    uint16_t silent_rate;
-
-    // This one is 16 bit (could use table link::integer) for these.
-    uint16_t duplicate_buckets;
-    uint64_t duplicate_size;
-    uint16_t duplicate_rate;
-
-    uint64_t prevalid_size;
-    uint16_t prevalid_rate;
-
-    uint32_t prevout_buckets;
-    uint64_t prevout_size;
-    uint16_t prevout_rate;
-
-    uint32_t validated_bk_buckets;
-    uint64_t validated_bk_size;
-    uint16_t validated_bk_rate;
-
-    uint32_t validated_tx_buckets;
-    uint64_t validated_tx_size;
-    uint16_t validated_tx_rate;
+    simple_table ecdsa{};
+    simple_table schnorr{};
+    simple_table silent{};
+    bucket_table duplicate{};
+    simple_table prevalid{};
+    bucket_table prevout{};
+    bucket_table validated_bk{};
+    bucket_table validated_tx{};
 
     /// Optionals.
     /// -----------------------------------------------------------------------
 
-    uint32_t address_buckets;
-    uint64_t address_size;
-    uint16_t address_rate;
-
-    uint32_t filter_bk_buckets;
-    uint64_t filter_bk_size;
-    uint16_t filter_bk_rate;
-
-    uint32_t filter_tx_buckets;
-    uint64_t filter_tx_size;
-    uint16_t filter_tx_rate;
+    bucket_table address{};
+    bucket_table filter_bk{};
+    bucket_table filter_tx{};
 };
 
 } // namespace database

@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_output_tx__to_output__expected)
 BOOST_AUTO_TEST_CASE(query_navigate__to_prevout_tx__to_prevout__expected)
 {
     settings settings{};
-    settings.tx_buckets = 3;
+    settings.tx.buckets = 3;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
