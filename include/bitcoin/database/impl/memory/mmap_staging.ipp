@@ -125,9 +125,6 @@ void CLASS::complete(size_t
 
         return;
     }
-
-    // TEMPORARY DIAGNOSTIC (not for commit): count uncovered completions.
-    missed_.fetch_add(one, std::memory_order_relaxed);
 #endif
 }
 

@@ -298,9 +298,6 @@ private:
     std::atomic<size_t> frontier_{};
     std::atomic<uint64_t> window_{};
 
-    // TEMPORARY DIAGNOSTIC (not for commit): completions with no extent.
-    std::atomic<size_t> missed_{};
-
     // These are protected by extent_mutex_ (ring entries are immobile, put
     // under the mutex and published by release, read/decremented lock-free).
     std::array<size_t, columns> reserved_{};

@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_PRIVATE_IPP
 
 #include <algorithm>
-#include <cstdio>
 #include <fcntl.h>
 #include <tuple>
 #include <bitcoin/database/define.hpp>
@@ -83,25 +82,6 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
     capacity_.store(zero);
 
 #if defined(MANAGE_STAGING)
-    // TEMPORARY DIAGNOSTIC (not for commit): report stalled rings at unload.
-    const auto [head, size] = system::unpack_word<uint64_t>(window_.load());
-    if (staged_ && (!is_zero(size) || !is_zero(missed_.load())))
-    {
-        std::fprintf(stderr, "[settle-diag] %s ring=%llu frontier=%zu "
-            "settled=%zu logical=%zu missed=%zu\n",
-            filenames_.front().string().c_str(),
-            static_cast<unsigned long long>(size), frontier_.load(),
-            settled_.load(), logical_.load(), missed_.load());
-
-        for (size_t index = 0; index < std::min<uint64_t>(size, 3u); ++index)
-        {
-            const auto& record = ring_.at((head + index) % extents);
-            std::fprintf(stderr, "[settle-diag]   extent[%zu] start=%zu "
-                "count=%zu out=%zu\n", index, record.start.load(),
-                record.count, record.outstanding.load());
-        }
-    }
-
     window_.store(zero);
     settled_.store(zero);
     frontier_.store(zero);
