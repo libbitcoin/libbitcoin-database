@@ -25,6 +25,11 @@
     #define MANAGE_STAGING
 #endif
 
+#if defined(MANAGE_STAGING) && defined(HAVE_MSC)
+    // The native windows mapped-file behavior is the model staging emulates.
+    #error "MANAGE_STAGING is not supported on Windows."
+#endif
+
 #if defined(MANAGE_STAGING)
 
 /// Reserve inaccessible anonymous address space (MAP_FAILED on failure).
