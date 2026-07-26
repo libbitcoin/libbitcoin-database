@@ -570,7 +570,8 @@ void CLASS::settler_stop_() NOEXCEPT
 
 // Pressure-paced draining (the windows model): drain intensity follows memory
 // conditions, settled pages remain cached, writers delay only at the staging
-// memory bound (write throttle).
+// memory bound (write throttle), sustained stillness drains the residual (the
+// lazy writer) so a quiescent map converges to fully settled.
 TEMPLATE
 void CLASS::settler_run_() NOEXCEPT
 {
@@ -579,6 +580,12 @@ void CLASS::settler_run_() NOEXCEPT
     const auto urgent = memory / 4;
     const auto active = memory / 32;
     const auto chunk = std::max<size_t>(one, (size_t{ 256 } << 20) / stride);
+
+    // Ticks without allocation before idle draining (settling is not writing,
+    // so draining does not hold its own clock).
+    constexpr size_t rest = 60;
+    auto mark = logical_.load();
+    size_t still{};
 
     const auto backlog = [this]() NOEXCEPT
     {
@@ -595,13 +602,17 @@ void CLASS::settler_run_() NOEXCEPT
         if (!settling_.load())
             return;
 
+        const auto top = logical_.load();
+        still = (top == mark) ? std::min(add1(still), rest) : zero;
+        mark = top;
+
         auto bytes = backlog();
         if (is_zero(bytes))
             continue;
 
-        // Urgency drains continuously, activity one chunk per tick.
+        // Urgency drains continuously, activity/stillness one chunk per tick.
         const auto driven = (system_pressure() > one) || (bytes > urgent);
-        if (!driven && (bytes <= active))
+        if (!driven && (bytes <= active) && (still < rest))
             continue;
 
         do
