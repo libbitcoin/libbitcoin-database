@@ -61,6 +61,7 @@ bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
     window_.store(zero);
     settled_.store(staged_ ? logical_.load() : zero);
     frontier_.store(staged_ ? logical_.load() : zero);
+    marks_.store(zero);
 #endif
 
     if (!(map_<Index>() && ...))
@@ -85,6 +86,9 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
     window_.store(zero);
     settled_.store(zero);
     frontier_.store(zero);
+    marks_.store(zero);
+    dirty_.reset();
+    words_ = zero;
 #endif
 
     return success;
@@ -119,19 +123,15 @@ bool CLASS::flush_(size_t
 {
 #if defined(MANAGE_STAGING)
     // Transfer unflushed rows from anonymous memory to the file. Settled rows
-    // are already on disk (staged); unstaged content is written in full.
-    const auto from = to_width<Column>(staged_ ? settled_.load() : zero);
+    // are already on disk (staged); unstaged transfers dirty pages only.
+    const auto from = to_width<Column>(settled_.load());
     const auto to = to_width<Column>(rows);
 
     const auto success =
-           ((from >= to) || pwrite_all(opened_[Column],
-               std::next(memory_map_[Column], from), to - from, from))
-#if defined(F_FULLFSYNC)
-        // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
-        && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
-#else
-        && (::fsync(opened_[Column]) != fail);
-#endif
+           (staged_ ? ((from >= to) || pwrite_all(opened_[Column],
+               std::next(memory_map_[Column], from), to - from, from)) :
+               transfer_<Column>(to))
+        && sync_<Column>();
 #elif defined(HAVE_MSC)
     // unmap (and therefore msync) must be called before ftruncate.
     // "To flush all the dirty pages plus the metadata for the file and ensure
@@ -189,16 +189,13 @@ bool CLASS::unmap_(size_t
 
 #if defined(MANAGE_STAGING)
     // Persist unflushed rows, trim preallocation to logical, sync to disk.
-    const auto from = to_width<Column>(staged_ ? settled_.load() : zero);
+    const auto from = to_width<Column>(settled_.load());
     const auto transferred =
-           ((from >= logical) || pwrite_all(opened_[Column],
-               std::next(memory_map_[Column], from), logical - from, from))
+           (staged_ ? ((from >= logical) || pwrite_all(opened_[Column],
+               std::next(memory_map_[Column], from), logical - from, from)) :
+               transfer_<Column>(logical))
         && (::ftruncate(opened_[Column], logical) != fail)
-#if defined(F_FULLFSYNC)
-        && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
-#else
-        && (::fsync(opened_[Column]) != fail);
-#endif
+        && sync_<Column>();
 
     // Order ensures release of the reservation in case of transfer failure.
     const auto success = (::munmap(memory_map_[Column],
@@ -316,8 +313,9 @@ bool CLASS::resize_(size_t size) NOEXCEPT
         // Disk full is the only restartable store failure (leave mapped).
         if (errno == ENOSPC)
         {
-            set_disk_space(system::ceilinged_multiply(system::floored_subtract(
-                size, capacity_.load()), stride));
+            using namespace system;
+            set_disk_space(ceilinged_multiply(floored_subtract(size,
+                capacity_.load()), stride));
             return false;
         }
 
@@ -350,11 +348,12 @@ bool CLASS::finalize_(size_t
 
 #if !defined(HAVE_MSC) && !defined(WITHOUT_MADVISE)
     // Get page size (usually 4KB).
+    using namespace system;
     const int page_size = ::sysconf(_SC_PAGESIZE);
-    const auto page = system::possible_narrow_sign_cast<size_t>(page_size);
+    const auto page = possible_narrow_sign_cast<size_t>(page_size);
 
     // If not one bit then page size is not a power of two as required.
-    if (page_size == fail || !is_one(system::ones_count(page)))
+    if (page_size == fail || !is_one(ones_count(page)))
     {
         set_first_code(error::sysconf_failure);
         unmap_<Column>(size);
@@ -362,18 +361,14 @@ bool CLASS::finalize_(size_t
     }
 
     // Align mapped bytes up to page boundary.
-    using namespace system;
     const auto max = sub1(page);
     const auto target = to_width<Column>(size);
     const auto align = bit_and(ceilinged_add(target, max), bit_not(max));
-
-    // Use 1GB chunks to avoid large-length issues.
-    constexpr auto chunk = power2(30u);
     const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
 
-    for (auto offset = zero; offset < align; offset += chunk)
+    for (size_t offset{}; offset < align; offset += advise_chunk)
     {
-        const auto length = std::min(chunk, align - offset);
+        const auto length = std::min(advise_chunk, align - offset);
         const auto start = std::next(memory_map_[Column], offset);
 
         if (::madvise(start, length, advice) == fail || (random_ &&

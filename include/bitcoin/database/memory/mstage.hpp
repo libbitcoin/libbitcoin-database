@@ -31,6 +31,12 @@
 #endif
 
 #if defined(MANAGE_STAGING)
+    #define STAGING_ONLY(name) name
+#else
+    #define STAGING_ONLY(name)
+#endif
+
+#if defined(MANAGE_STAGING)
 
 /// Reserve inaccessible anonymous address space (MAP_FAILED on failure).
 void* mmap_reserve(size_t size) NOEXCEPT;

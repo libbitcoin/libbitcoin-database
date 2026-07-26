@@ -18,6 +18,8 @@
  */
 #include "../test.hpp"
 
+#include <algorithm>
+#include <numeric>
 #include <thread>
 
 // TODO: need to fake map_(), unmap_() and flush_() in order to hit
@@ -726,7 +728,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_raw__always__nonblocking)
 
     constexpr auto expected = 42u;
     const auto raw = instance.get_raw(instance.allocate(expected));
-    BOOST_REQUIRE(!is_null(raw));
+    BOOST_REQUIRE(raw != nullptr);
     BOOST_REQUIRE_EQUAL(*raw, 0x00u);
 
     // raw pointer does not block remap.
@@ -795,13 +797,27 @@ BOOST_AUTO_TEST_CASE(mmap__write__read__expected)
 
 constexpr auto stage_pattern = [](size_t index) NOEXCEPT
 {
-    return static_cast<uint8_t>(index % 251);
+    return static_cast<uint8_t>(index % 251u);
 };
 
 constexpr auto stage_repattern = [](size_t index) NOEXCEPT
 {
-    return static_cast<uint8_t>((index * 3) % 241);
+    return static_cast<uint8_t>((index * 3u) % 241u);
 };
+
+// Test vector generation (element iteration is confined to here).
+const auto stage_vector = [](auto pattern, size_t size, size_t offset={})
+{
+    system::data_chunk out(size);
+    std::generate(out.begin(), out.end(), [&]() NOEXCEPT
+    {
+        return pattern(offset++);
+    });
+
+    return out;
+};
+
+BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
 
 BOOST_AUTO_TEST_CASE(mmap__staged__write_flush_write_reload__expected)
 {
@@ -814,19 +830,21 @@ BOOST_AUTO_TEST_CASE(mmap__staged__write_flush_write_reload__expected)
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
+    const auto head = stage_vector(stage_pattern, first);
+    const auto tail = stage_vector(stage_pattern, second, first);
+    const auto full = stage_vector(stage_pattern, first + second);
+
     // Write and flush twice, settling from zero and then a page interior.
     auto memory = instance.get(instance.allocate(first));
     BOOST_REQUIRE(memory);
-    for (size_t index = 0; index < first; ++index)
-        memory.begin()[index] = stage_pattern(index);
+    std::copy_n(head.begin(), head.size(), memory.begin());
 
     memory.reset();
     BOOST_REQUIRE(!instance.flush());
 
     memory = instance.get(instance.allocate(second));
     BOOST_REQUIRE(memory);
-    for (size_t index = 0; index < second; ++index)
-        memory.begin()[index] = stage_pattern(first + index);
+    std::copy_n(tail.begin(), tail.size(), memory.begin());
 
     memory.reset();
     BOOST_REQUIRE(!instance.flush());
@@ -834,8 +852,9 @@ BOOST_AUTO_TEST_CASE(mmap__staged__write_flush_write_reload__expected)
     // All content is readable through the settled and unsettled regions.
     memory = instance.get();
     BOOST_REQUIRE(memory);
-    for (size_t index = 0; index < first + second; ++index)
-        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_pattern(index));
+
+    const auto end1 = std::next(memory.begin(), full.size());
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end1, full.begin(), full.end());
 
     memory.reset();
     BOOST_REQUIRE(!instance.unload());
@@ -850,8 +869,9 @@ BOOST_AUTO_TEST_CASE(mmap__staged__write_flush_write_reload__expected)
 
     memory = reopened.get();
     BOOST_REQUIRE(memory);
-    for (size_t index = 0; index < first + second; ++index)
-        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_pattern(index));
+
+    const auto end2 = std::next(memory.begin(), full.size());
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end2, full.begin(), full.end());
 
     memory.reset();
     BOOST_REQUIRE(!reopened.unload());
@@ -871,10 +891,16 @@ BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_rewrite__expected)
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
+    const auto original = stage_vector(stage_pattern, initial);
+    const auto replaced = stage_vector(stage_repattern, appended, retained);
+
+    // Retained content precedes replacement content.
+    auto expected = stage_vector(stage_pattern, retained);
+    expected.insert(expected.end(), replaced.begin(), replaced.end());
+
     auto memory = instance.get(instance.allocate(initial));
     BOOST_REQUIRE(memory);
-    for (size_t index = 0; index < initial; ++index)
-        memory.begin()[index] = stage_pattern(index);
+    std::copy_n(original.begin(), original.size(), memory.begin());
 
     memory.reset();
     BOOST_REQUIRE(!instance.flush());
@@ -885,8 +911,7 @@ BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_rewrite__expected)
 
     memory = instance.get(retained);
     BOOST_REQUIRE(memory);
-    for (size_t index = 0; index < appended; ++index)
-        memory.begin()[index] = stage_repattern(retained + index);
+    std::copy_n(replaced.begin(), replaced.size(), memory.begin());
 
     memory.reset();
     BOOST_REQUIRE(!instance.flush());
@@ -902,10 +927,9 @@ BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_rewrite__expected)
 
     memory = reopened.get();
     BOOST_REQUIRE(memory);
-    for (size_t index = 0; index < retained; ++index)
-        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_pattern(index));
-    for (size_t index = retained; index < retained + appended; ++index)
-        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_repattern(index));
+
+    const auto end = std::next(memory.begin(), expected.size());
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, expected.begin(), expected.end());
 
     memory.reset();
     BOOST_REQUIRE(!reopened.unload());
@@ -979,20 +1003,29 @@ BOOST_AUTO_TEST_CASE(mmap__unstaged__rewrite_below_flush__expected)
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
+    const auto original = stage_vector(stage_pattern, size);
+    const auto replaced = stage_vector(stage_repattern, rewrite);
+
+    // Replacement content precedes retained content.
+    auto expected = stage_vector(stage_repattern, rewrite);
+    const auto retained = stage_vector(stage_pattern, size - rewrite, rewrite);
+    expected.insert(expected.end(), retained.begin(), retained.end());
+
     auto memory = instance.get(instance.allocate(size));
     BOOST_REQUIRE(memory);
-    for (size_t index = 0; index < size; ++index)
-        memory.begin()[index] = stage_pattern(index);
+    std::copy_n(original.begin(), original.size(), memory.begin());
 
+    // Raw unstaged mutation is marked (heads mark via their primitives).
     memory.reset();
+    instance.mark(zero, size);
     BOOST_REQUIRE(!instance.flush());
 
     memory = instance.get();
     BOOST_REQUIRE(memory);
-    for (size_t index = 0; index < rewrite; ++index)
-        memory.begin()[index] = stage_repattern(index);
 
+    std::copy_n(replaced.begin(), replaced.size(), memory.begin());
     memory.reset();
+    instance.mark(zero, rewrite);
     BOOST_REQUIRE(!instance.flush());
     BOOST_REQUIRE(!instance.unload());
     BOOST_REQUIRE(!instance.close());
@@ -1005,10 +1038,9 @@ BOOST_AUTO_TEST_CASE(mmap__unstaged__rewrite_below_flush__expected)
 
     memory = reopened.get();
     BOOST_REQUIRE(memory);
-    for (size_t index = 0; index < rewrite; ++index)
-        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_repattern(index));
-    for (size_t index = rewrite; index < size; ++index)
-        BOOST_REQUIRE_EQUAL(memory.begin()[index], stage_pattern(index));
+
+    const auto end = std::next(memory.begin(), expected.size());
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, expected.begin(), expected.end());
 
     memory.reset();
     BOOST_REQUIRE(!reopened.unload());
@@ -1135,71 +1167,67 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__concurrent__unique_dense_claims)
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
-    std::atomic_bool failed{};
-    std::array<std::vector<claim>, threads> claims{};
     std::vector<std::thread> pool{};
+    std::vector<size_t> identifiers(threads);
+    std::array<std::vector<claim>, threads> claims{};
+    std::iota(identifiers.begin(), identifiers.end(), zero);
 
-    for (size_t id = 0; id < threads; ++id)
+    // Workers record claims only (varying size by thread, 1..3 bytes);
+    // failures manifest in the declarative assertions below.
+    std::for_each(identifiers.begin(), identifiers.end(), [&](size_t id)
     {
         pool.emplace_back([&, id]() NOEXCEPT
         {
-            // Vary claim size by thread (1..3 bytes).
             const auto count = add1(id % 3);
             auto& mine = claims.at(id);
             mine.reserve(rounds);
-
-            for (size_t round = 0; round < rounds; ++round)
+            std::generate_n(std::back_inserter(mine), rounds, [&]() NOEXCEPT
             {
-                const auto start = instance.allocate(count);
-                if (start == storage::eof)
-                {
-                    failed.store(true);
-                    return;
-                }
-
-                // Write the claim through an accessor (rides remap guard).
-                auto memory = instance.get(start);
-                if (!memory)
-                {
-                    failed.store(true);
-                    return;
-                }
-
-                std::fill_n(memory.begin(), count, system::narrow_cast<uint8_t>(id));
-                mine.push_back({ start, count });
-            }
+                return claim{ instance.allocate(count), count };
+            });
         });
-    }
+    });
 
-    for (auto& thread: pool)
+    std::for_each(pool.begin(), pool.end(), [](auto& thread)
+    {
         thread.join();
-
-    BOOST_REQUIRE(!failed.load());
+    });
 
     // Aggregate and sort all claims by start.
     std::vector<claim> all{};
     all.reserve(threads * rounds);
-    for (const auto& mine: claims)
+    std::for_each(claims.begin(), claims.end(), [&](const auto& mine)
+    {
         all.insert(all.end(), mine.begin(), mine.end());
+    });
 
     std::sort(all.begin(), all.end());
 
-    // Claims are unique, non-overlapping and dense from zero to size().
-    size_t expected{};
-    auto contiguous = true;
-    for (const auto& [start, count]: all)
-    {
-        contiguous &= (start == expected);
-        expected = start + count;
-    }
+    // No allocation failed.
+    const auto failed = std::any_of(all.begin(), all.end(),
+        [](const auto& entry) NOEXCEPT
+        {
+            return entry.first == storage::eof;
+        });
 
-    BOOST_REQUIRE(contiguous);
-    BOOST_REQUIRE_EQUAL(expected, instance.size());
+    // Claims are unique, non-overlapping and dense from zero to size().
+    const auto gapped = std::adjacent_find(all.begin(), all.end(),
+        [](const auto& left, const auto& right) NOEXCEPT
+        {
+            return (left.first + left.second) != right.first;
+        });
+
+    BOOST_REQUIRE(!failed);
+    BOOST_REQUIRE(gapped == all.end());
+    BOOST_REQUIRE_EQUAL(all.front().first, zero);
+    BOOST_REQUIRE_EQUAL(all.back().first + all.back().second, instance.size());
     BOOST_REQUIRE_GE(instance.capacity(), instance.size());
 
     BOOST_REQUIRE(!instance.unload());
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
 }
+
+BC_POP_WARNING()
 
 BOOST_AUTO_TEST_SUITE_END()

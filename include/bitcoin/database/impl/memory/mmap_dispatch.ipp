@@ -63,6 +63,7 @@ memory CLASS::get_filled(size_t offset, size_t size,
             const auto capacity = to_width<zero>(capacity_.load());
             const auto start = std::next(data, logical);
             std::fill_n(start, capacity - logical, backfill);
+            mark(logical, capacity - logical);
         }
 
         // Raise to at least end (concurrent claims may already exceed it).

@@ -22,6 +22,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <filesystem>
+#include <memory>
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
@@ -113,6 +114,10 @@ public:
     /// Clear disk full condition, fails if fault, must be loaded, idempotent.
     code reload() NOEXCEPT override;
 
+    /// Report content mutation (advisory page-dirty tracking, unstaged
+    /// instances under the staging backend only; no effect otherwise).
+    void mark(size_t offset, size_t size) NOEXCEPT override;
+
     /// Flush memory map(s) to disk, suspend writes for call, must be loaded.
     code flush() NOEXCEPT override;
 
@@ -193,7 +198,18 @@ protected:
     void set_disk_space(size_t required) NOEXCEPT;
 
 private:
+    static constexpr size_t page_bound = to_bits(sizeof(uint64_t));
+    static constexpr size_t settle_chunk = system::power2(28u);
+    static constexpr size_t advise_chunk = system::power2(30u);
+    static constexpr size_t compress_factor = 32;
+    static constexpr size_t throttle_factor = 8;
+    static constexpr size_t active_factor = 32;
+    static constexpr size_t urgent_factor = 4;
+    static constexpr size_t idle_seconds = 60;
+    static constexpr size_t headroom = 4;
     static constexpr auto fail = -1;
+    static constexpr auto relaxed = std::memory_order_relaxed;
+    static constexpr auto release = std::memory_order_release;
     using sequence = std::make_index_sequence<columns>;
 
     // mman dispatch, not thread safe.
@@ -248,10 +264,17 @@ private:
     void throttle_() NOEXCEPT;
     void signal_() NOEXCEPT;
 
+    // dirty page transfer (unstaged instances), lock-free with writers.
+    template <size_t Column>
+    bool transfer_(size_t bytes) NOEXCEPT;
+    template <size_t Column>
+    bool sync_() NOEXCEPT;
+
     // settle scheduler (instance-owned thread, load/unload lifecycle).
     void settler_start_() NOEXCEPT;
     void settler_stop_() NOEXCEPT;
     void settler_run_() NOEXCEPT;
+    void head_run_() NOEXCEPT;
     bool settle_next_(size_t chunk) NOEXCEPT;
     template <size_t... Index>
     bool settle_write_(size_t from, size_t to,
@@ -286,6 +309,12 @@ private:
     mutable std::shared_mutex remap_mutex_{};
 
 #if defined(MANAGE_STAGING)
+    // Page-dirty bitmap for unstaged (rewrite-in-place head) instances.
+    // Marks follow content writes; transfer clears before reading, so a
+    // racing mark is never lost (a torn disk page is unreachable state, as
+    // live heads are trusted only following a clean close).
+    using dirty_bitmaps = std::atomic<uint64_t>[];
+
     static constexpr size_t extents = 4096;
     struct extent
     {
@@ -294,28 +323,29 @@ private:
         std::atomic<size_t> outstanding;
     };
 
-    // These are thread safe (atomic). The ring window packs head and size
-    // into one word (pack_word) so lock-free readers cannot observe a torn
-    // window across pops.
+    // These are thread safe (atomic).
+    std::atomic<size_t> marks_{};
     std::atomic<size_t> settled_{};
     std::atomic<size_t> frontier_{};
     std::atomic<uint64_t> window_{};
 
-    // These are protected by extent_mutex_ (ring entries are immobile, put
-    // under the mutex and published by release, read/decremented lock-free).
-    std::array<size_t, columns> reserved_{};
-    std::array<extent, extents> ring_{};
+    // These are protected by remap_mutex_.
+    std::unique_ptr<dirty_bitmaps> dirty_{};
+    size_t words_{};
+
+    // These are protected by extent_mutex_.
     size_t page_{};
+    std::array<extent, extents> ring_{};
+    std::array<size_t, columns> reserved_{};
     mutable std::mutex extent_mutex_{};
 
-    // These are protected by settler_mutex_ (thread joined by stop).
+    // These are protected by settler_mutex_.
     std::thread settler_{};
-    std::condition_variable settler_cv_{};
     std::atomic_bool settling_{};
+    std::condition_variable settler_cv_{};
     mutable std::mutex settler_mutex_{};
 
-    // These delay allocation while staging exceeds its memory bound (write
-    // throttle). The bound is set at load, before writers exist.
+    // These are protected by throttle_mutex_.
     size_t limit_{};
     std::condition_variable throttle_cv_{};
     mutable std::mutex throttle_mutex_{};
