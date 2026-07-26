@@ -142,12 +142,23 @@ void CLASS::record_(size_t start, size_t count) NOEXCEPT
     maintain_();
 
     using namespace system;
-    const auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
+    auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
 
-    // Saturation stalls the frontier (conservative, safe); asserts in debug.
-    BC_ASSERT(size < extents);
-    if (size == extents)
-        return;
+    // A full ring waits on completions (extents are allocation-coarse, so
+    // saturation implies extreme concurrency). An unrecorded extent would be
+    // unsafe: an emptied ring advances the frontier to logical, so untracked
+    // incomplete writes could settle. Completions are lock-free, so waiting
+    // needs only this thread's own maintenance; fault or disk full releases
+    // the wait (recording is then moot, as recovery discards the ring).
+    while (size == extents)
+    {
+        if (fault_.load() || !is_zero(space_.load()))
+            return;
+
+        std::this_thread::yield();
+        maintain_();
+        std::tie(head, size) = unpack_word<uint64_t>(window_.load(relaxed));
+    }
 
     auto& record = ring_.at((head + size) % extents);
     record.start.store(start, relaxed);
