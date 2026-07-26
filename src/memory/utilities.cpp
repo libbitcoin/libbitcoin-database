@@ -23,6 +23,13 @@
 #else
     #include <unistd.h>
 #endif
+#if defined(HAVE_APPLE)
+    #include <sys/sysctl.h>
+#endif
+#if defined(HAVE_LINUX)
+    #include <algorithm>
+    #include <cstdio>
+#endif
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -46,6 +53,21 @@ uint64_t system_memory() NOEXCEPT
     status.dwLength = sizeof(status);
     return is_zero(GlobalMemoryStatusEx(&status)) ? zero :
         status.ullTotalPhys;
+}
+
+size_t system_pressure() NOEXCEPT
+{
+    // The kernel low memory resource signal (no configurable threshold).
+    BOOL low{ FALSE };
+    const auto handle = CreateMemoryResourceNotification(
+        LowMemoryResourceNotification);
+
+    if (handle == NULL)
+        return zero;
+
+    const auto success = QueryMemoryResourceNotification(handle, &low) != 0;
+    CloseHandle(handle);
+    return !success ? zero : (low == FALSE ? size_t{ 1 } : size_t{ 4 });
 }
 
 #else
@@ -75,6 +97,49 @@ uint64_t system_memory() NOEXCEPT
     // Failed page_size also results in zero return.
     return ceilinged_multiply(to_unsigned(pages),
         possible_wide_cast<uint64_t>(page_size()));
+}
+
+size_t system_pressure() NOEXCEPT
+{
+#if defined(HAVE_APPLE)
+    using namespace system;
+    int level{};
+    auto size = sizeof(level);
+    if (::sysctlbyname("kern.memorystatus_vm_pressure_level", &level, &size,
+        nullptr, 0) != 0)
+        return zero;
+
+    return possible_narrow_sign_cast<size_t>(level);
+#elif defined(HAVE_LINUX)
+    // PSI (requires CONFIG_PSI): fraction of recent wall time that tasks
+    // stalled on memory reclaim. A tenth of time stalled is treated as
+    // genuine pressure, partial (some) as warning and total (full) as
+    // critical, mapping to the macos memorystatus level semantics.
+    auto level = zero;
+    if (const auto file = std::fopen("/proc/pressure/memory", "r"))
+    {
+        char line[128];
+        double avg10{};
+        level = one;
+        while (!is_null(std::fgets(line, sizeof(line), file)))
+        {
+            if ((std::sscanf(line, "some avg10=%lf", &avg10) == 1) &&
+                (avg10 >= 10.0))
+                level = std::max(level, size_t{ 2 });
+
+            if ((std::sscanf(line, "full avg10=%lf", &avg10) == 1) &&
+                (avg10 >= 10.0))
+                level = std::max(level, size_t{ 4 });
+        }
+
+        std::fclose(file);
+    }
+
+    return level;
+#else
+    // No platform source.
+    return zero;
+#endif
 }
 
 #endif

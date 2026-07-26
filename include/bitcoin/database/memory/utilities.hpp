@@ -31,6 +31,10 @@ BCD_API size_t page_size() NOEXCEPT;
 /// The bytes of physical memory, zero if failed.
 BCD_API uint64_t system_memory() NOEXCEPT;
 
+/// The system memory pressure level (1 normal, 2 warning, 4 critical), zero
+/// if failed or the platform provides no source.
+BCD_API size_t system_pressure() NOEXCEPT;
+
 /// C++26: std::atomic<size_t>::fetch_max
 template <typename Integral, if_integral_integer<Integral> = true>
 Integral fetch_max(std::atomic<Integral>& atomic, Integral value) NOEXCEPT

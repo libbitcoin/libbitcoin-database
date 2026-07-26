@@ -20,14 +20,17 @@
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_HPP
 
 #include <atomic>
+#include <condition_variable>
 #include <filesystem>
 #include <mutex>
 #include <shared_mutex>
+#include <thread>
 #include <tuple>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/file/file.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
+#include <bitcoin/database/memory/mstage.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -57,13 +60,22 @@ public:
     /// Constructors.
     /// -----------------------------------------------------------------------
 
+    /// Staged instances (append-only bodies) stage writes in anonymous memory
+    /// and convert flushed rows to a read-only file mapping, hard-faulting any
+    /// write into settled space. Unstaged instances (heads) hold all logical
+    /// content in anonymous memory for the life of the load. Both write the
+    /// file only by explicit transfer, so no dirty file-backed page ever
+    /// exists (no effect where the staging backend is not built).
+
     /// Scalar construction (columns == 1): unchanged signature and codegen.
     mmap(const path& filename, size_t minimum=1, size_t expansion=0,
-        bool random=true) NOEXCEPT requires (is_one(columns));
+        bool random=true, bool staged=false) NOEXCEPT
+        requires (is_one(columns));
 
     /// Aggregate construction (columns > 1): one file per column, shared guards.
     mmap(const paths& filenames, size_t minimum=1, size_t expansion=0,
-        bool random=true) NOEXCEPT requires (columns > one);
+        bool random=true, bool staged=false) NOEXCEPT
+        requires (columns > one);
 
     /// Destruct for debug assertion only.
     virtual ~mmap() NOEXCEPT;
@@ -131,6 +143,12 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     size_t allocate(size_t count) NOEXCEPT override;
 
+    /// Report element write completion of count rows/bytes at offset.
+    void complete(size_t offset, size_t count) NOEXCEPT override;
+
+    /// Rows/bytes below which all writes are complete (size() when quiescent).
+    size_t frontier() const NOEXCEPT override;
+
     /// Remap-protected r/w access to offset (or null) allocated to size.
     memory get_filled(size_t offset, size_t size,
         uint8_t backfill) NOEXCEPT override;
@@ -180,7 +198,7 @@ private:
 
     // mman dispatch, not thread safe.
     template <size_t... Index>
-    bool flush_all_(std::index_sequence<Index...>) NOEXCEPT;
+    bool flush_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
     bool map_all_(std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
@@ -190,7 +208,7 @@ private:
 
     // mman wrappers, not thread safe.
     template <size_t Column>
-    bool flush_() NOEXCEPT;
+    bool flush_(size_t rows) NOEXCEPT;
     template <size_t Column>
     bool map_() NOEXCEPT;
     template <size_t Column>
@@ -204,31 +222,104 @@ private:
     template <size_t Column>
     bool finalize_(size_t size) NOEXCEPT;
 
-    // These are thread safe.
+#if defined(MANAGE_STAGING)
+    // staging dispatch, not thread safe.
+    template <size_t... Index>
+    bool settle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
+    template <size_t... Index>
+    bool unsettle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
+
+    // staging wrappers, not thread safe.
+    template <size_t Column>
+    bool stage_() NOEXCEPT;
+    template <size_t Column>
+    bool commit_(size_t size) NOEXCEPT;
+    template <size_t Column>
+    bool settle_(size_t from, size_t to) NOEXCEPT;
+    template <size_t Column>
+    bool unsettle_(size_t rows) NOEXCEPT;
+    template <size_t Column>
+    void teardown_(const error::error_t& ec) NOEXCEPT;
+
+    // staging utilities, not thread safe.
+    void record_(size_t start, size_t count) NOEXCEPT;
+    void maintain_() NOEXCEPT;
+    void discard_() NOEXCEPT;
+    void throttle_() NOEXCEPT;
+    void signal_() NOEXCEPT;
+
+    // settle scheduler (instance-owned thread, load/unload lifecycle).
+    void settler_start_() NOEXCEPT;
+    void settler_stop_() NOEXCEPT;
+    void settler_run_() NOEXCEPT;
+    bool settle_next_(size_t chunk) NOEXCEPT;
+    template <size_t... Index>
+    bool settle_write_(size_t from, size_t to,
+        std::index_sequence<Index...>) NOEXCEPT;
+    bool advise_(uint8_t* map, size_t size) const NOEXCEPT;
+    size_t to_reservation(size_t rows) const NOEXCEPT;
+    size_t page_floor(size_t bytes) const NOEXCEPT;
+    size_t page_ceiling(size_t bytes) const NOEXCEPT;
+#endif // MANAGE_STAGING
+
+    // These are thread safe (const).
     const paths filenames_;
     const size_t minimum_;
     const size_t expansion_;
     const bool random_;
-    std::atomic<size_t> space_{ zero };
-    std::atomic<error::error_t> error_{ error::success };
+    const bool staged_;
 
-    // Scalar fields are atomic: size/capacity reads and the allocate fast
-    // path (bounded claim within published capacity) are lock-free. Capacity
-    // growth and compound transitions (open/close/load/unload/shrink/
-    // truncate/expand/reserve/get_filled) are serialized by field_mutex_
-    // exclusive. Shrinking transitions additionally rely on the documented
-    // suspend-writes contract (the fast path does not serialize with them).
-    // logical_ and capacity_ are row counts (byte count if width is one).
-    std::array<int, columns> opened_;
+    // These are thread safe (atomic).
+    std::atomic<error::error_t> error_{ error::success };
+    std::atomic<size_t> space_{ zero };
     std::atomic<size_t> capacity_{};
     std::atomic<size_t> logical_{};
-    std::atomic<bool> fault_{};
-    std::atomic<bool> loaded_{};
+    std::atomic_bool fault_{};
+    std::atomic_bool loaded_{};
+
+    // This is protected by field_mutex_.
+    std::array<int, columns> opened_;
     mutable std::shared_mutex field_mutex_{};
 
-    // These are protected by remap_mutex_.
+    // This is protected by remap_mutex_.
     std::array<uint8_t*, columns> memory_map_{};
     mutable std::shared_mutex remap_mutex_{};
+
+#if defined(MANAGE_STAGING)
+    static constexpr size_t extents = 4096;
+    struct extent
+    {
+        std::atomic<size_t> start;
+        size_t count;
+        std::atomic<size_t> outstanding;
+    };
+
+    // These are thread safe (atomic). The ring window packs head and size
+    // into one word (pack_word) so lock-free readers cannot observe a torn
+    // window across pops.
+    std::atomic<size_t> settled_{};
+    std::atomic<size_t> frontier_{};
+    std::atomic<uint64_t> window_{};
+
+    // These are protected by extent_mutex_ (ring entries are immobile, put
+    // under the mutex and published by release, read/decremented lock-free).
+    std::array<size_t, columns> reserved_{};
+    std::array<extent, extents> ring_{};
+    size_t page_{};
+    mutable std::mutex extent_mutex_{};
+
+    // These are protected by settler_mutex_ (thread joined by stop).
+    std::thread settler_{};
+    std::condition_variable settler_cv_{};
+    std::atomic_bool settling_{};
+    mutable std::mutex settler_mutex_{};
+
+    // These delay allocation while staging exceeds its memory bound (write
+    // throttle). The bound is set at load, before writers exist.
+    size_t limit_{};
+    std::condition_variable throttle_cv_{};
+    mutable std::mutex throttle_mutex_{};
+#endif // MANAGE_STAGING
 };
 
 using map = mmap<one>;
@@ -244,6 +335,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/memory/mmap.ipp>
 #include <bitcoin/database/impl/memory/mmap_dispatch.ipp>
 #include <bitcoin/database/impl/memory/mmap_private.ipp>
+#include <bitcoin/database/impl/memory/mmap_staging.ipp>
 #include <bitcoin/database/impl/memory/mmap_storage.ipp>
 
 BC_POP_WARNING()

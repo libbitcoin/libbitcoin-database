@@ -217,7 +217,11 @@ bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
     using namespace system;
     const auto ptr = body_.get(link);
-    return put(ptr, element);
+    if (!put(ptr, element))
+        return false;
+
+    body_.complete(link, element.count());
+    return true;
 }
 
 TEMPLATE
@@ -269,7 +273,11 @@ bool CLASS::put(const memory& ptr, const Link& link,
         BC_DEBUG_ONLY(sink.set_limit(Size * element.count());)
     }
 
-    return element.to_data(sink);
+    if (!element.to_data(sink))
+        return false;
+
+    body_.complete(link, element.count());
+    return true;
 }
 
 TEMPLATE
@@ -302,7 +310,12 @@ inline bool CLASS::commit(const Element& element) NOEXCEPT
         return false;
 
     // Allocate reserved and written element (exposes logically).
-    return !body_.allocate(element.count()).is_terminal();
+    if (body_.allocate(element.count()).is_terminal())
+        return false;
+
+    // Publication of the pre-written element is its completion.
+    body_.complete(link, element.count());
+    return true;
 }
 
 } // namespace database

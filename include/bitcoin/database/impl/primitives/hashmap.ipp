@@ -313,7 +313,9 @@ bool CLASS::set(const memory& ptr, const Link& link, const Key& key,
     finalizer sink{ stream };
     sink.skip_bytes(index_size);
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
+    // Due to accounting, record hashmaps are limited to set(1).
+    if constexpr (!is_slab) { BC_ASSERT(is_one(element.count())); }
+    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize);) }
     return element.to_data(sink);
 }
 
@@ -443,7 +445,12 @@ bool CLASS::commit(const memory& ptr, const Link& link,
 
     // Commit element to search index (terminal is a valid bucket index).
     auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
-    return head_.push(link, next, key);
+    if (!head_.push(link, next, key))
+        return false;
+
+    // set/commit is limited to record tables, one row at a time.
+    body_.complete(link, one);
+    return true;
 }
 
 // protected
@@ -558,6 +565,9 @@ bool CLASS::write(Link& previous, const memory& ptr, const Link& link,
 
     // If collision set previous stack head for conflict resolution search.
     previous = search ? Link{ next } : Link{};
+
+    // Report element write completion (count matches its allocation).
+    body_.complete(link, element.count());
     return true;
 }
 

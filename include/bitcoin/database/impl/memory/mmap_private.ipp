@@ -24,6 +24,8 @@
 #include <tuple>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/mman.hpp>
+#include <bitcoin/database/memory/mstage.hpp>
+#include <bitcoin/database/memory/utilities.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -34,15 +36,33 @@ namespace database {
 
 TEMPLATE
 template <size_t... Index>
-bool CLASS::flush_all_(std::index_sequence<Index...>) NOEXCEPT
+bool CLASS::flush_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT
 {
-    return (flush_<Index>() && ...);
+    return (flush_<Index>(rows) && ...);
 }
 
 TEMPLATE
 template <size_t... Index>
 bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
 {
+#if defined(MANAGE_STAGING)
+    using namespace system;
+    const auto page = page_size();
+
+    // Page size must be a power of two.
+    if (is_zero(page) || !is_one(ones_count(page)))
+    {
+        set_first_code(error::sysconf_failure);
+        capacity_.store(zero);
+        return false;
+    }
+
+    page_ = page;
+    window_.store(zero);
+    settled_.store(staged_ ? logical_.load() : zero);
+    frontier_.store(staged_ ? logical_.load() : zero);
+#endif
+
     if (!(map_<Index>() && ...))
     {
         capacity_.store(zero);
@@ -60,6 +80,13 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
     const auto capacity = capacity_.load();
     const auto success = (unmap_<Index>(capacity) && ...);
     capacity_.store(zero);
+
+#if defined(MANAGE_STAGING)
+    window_.store(zero);
+    settled_.store(zero);
+    frontier_.store(zero);
+#endif
+
     return success;
 }
 
@@ -84,20 +111,35 @@ bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT
 // Never results in unmapped.
 TEMPLATE
 template <size_t Column>
-bool CLASS::flush_() NOEXCEPT
+bool CLASS::flush_(size_t
+    #if defined(MANAGE_STAGING) || defined(HAVE_MSC)
+    rows
+    #endif
+) NOEXCEPT
 {
-#if defined(HAVE_MSC)
+#if defined(MANAGE_STAGING)
+    // Transfer unflushed rows from anonymous memory to the file. Settled rows
+    // are already on disk (staged); unstaged content is written in full.
+    const auto from = to_width<Column>(staged_ ? settled_.load() : zero);
+    const auto to = to_width<Column>(rows);
+
+    const auto success =
+           ((from >= to) || pwrite_all(opened_[Column],
+               std::next(memory_map_[Column], from), to - from, from))
+#if defined(F_FULLFSYNC)
+        // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
+        && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
+#else
+        && (::fsync(opened_[Column]) != fail);
+#endif
+#elif defined(HAVE_MSC)
     // unmap (and therefore msync) must be called before ftruncate.
     // "To flush all the dirty pages plus the metadata for the file and ensure
     // that they are physically written to disk..."
-    const auto size = to_width<Column>(logical_.load());
+    const auto size = to_width<Column>(rows);
     const auto success =
            (::msync(memory_map_[Column], size, MS_SYNC) != fail)
         && (::fsync(opened_[Column]) != fail);
-#elif defined(F_FULLFSYNC)
-    // macOS msync fails with zero logical size (but we are no longer calling).
-    // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
-    const auto success = ::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail;
 #else
     // msync should not be required on modern linux, see linus et al.
     // stackoverflow.com/questions/5902629/mmap-msync-and-linux-process-termination
@@ -137,11 +179,34 @@ bool CLASS::release_(size_t size) NOEXCEPT
 // Always results in unmapped, trims to logical (can be zero).
 TEMPLATE
 template <size_t Column>
-bool CLASS::unmap_(size_t size) NOEXCEPT
+bool CLASS::unmap_(size_t
+    #if !defined(MANAGE_STAGING)
+    size
+    #endif
+) NOEXCEPT
 {
     const auto logical = to_width<Column>(logical_.load());
 
-#if defined(HAVE_MSC)
+#if defined(MANAGE_STAGING)
+    // Persist unflushed rows, trim preallocation to logical, sync to disk.
+    const auto from = to_width<Column>(staged_ ? settled_.load() : zero);
+    const auto transferred =
+           ((from >= logical) || pwrite_all(opened_[Column],
+               std::next(memory_map_[Column], from), logical - from, from))
+        && (::ftruncate(opened_[Column], logical) != fail)
+#if defined(F_FULLFSYNC)
+        && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
+#else
+        && (::fsync(opened_[Column]) != fail);
+#endif
+
+    // Order ensures release of the reservation in case of transfer failure.
+    const auto success = (::munmap(memory_map_[Column],
+        reserved_[Column]) != fail) && transferred;
+
+    memory_map_[Column] = {};
+    reserved_[Column] = zero;
+#elif defined(HAVE_MSC)
     // Windows cannot resize a mapped file.
     // msync requires the live mapping, ftruncate requires it gone.
     const auto synced =
@@ -155,11 +220,7 @@ bool CLASS::unmap_(size_t size) NOEXCEPT
     // POSIX permits resizing a mapped file.
     const auto truncated =
            (::ftruncate(opened_[Column], logical) != fail)
-#if defined(F_FULLFSYNC)
-        && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
-#else
         && (::fsync(opened_[Column]) != fail);
-#endif
 
     // Order ensures release in case of truncate failure.
     const auto success = release_<Column>(size) && truncated;
@@ -179,6 +240,9 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::map_() NOEXCEPT
 {
+#if defined(MANAGE_STAGING)
+    return stage_<Column>();
+#else
     auto size = logical_.load();
 
     // Cannot map empty file, and want minimum capacity, so expand as required.
@@ -191,6 +255,7 @@ bool CLASS::map_() NOEXCEPT
             MAP_SHARED, opened_[Column], 0));
 
     return finalize_<Column>(size);
+#endif
 }
 
 // Remap failure results in unmapped.
@@ -205,49 +270,32 @@ bool CLASS::remap_(size_t size) NOEXCEPT
     if (is_zero(size))
         size = minimum_;
 
-#if !defined(HAVE_MSC) && !defined(MREMAP_MAYMOVE)
-    // macOS cannot remap in place, so release the mapping without trimming and
-    // the file remains at capacity_ bytes and resize_'s fallocate delta (and
-    // the fallocate shim's preallocation window) are exact by construction.
-    if (!release_<Column>(capacity_.load()))
+#if defined(MANAGE_STAGING)
+    // The file is preallocated to capacity, preserving disk full detection at
+    // allocation, and growth commits reserved anonymous pages in place, so no
+    // mapping is released and the map base is stable within the reservation.
+    if (!resize_<Column>(size))
         return false;
 
-    if (!resize_<Column>(size))
-    {
-        map_<Column>();
-        return false;
-    }
+    return commit_<Column>(size);
 #else
     if (!resize_<Column>(size))
         return false;
-#endif
 
 #if defined(HAVE_MSC)
-
     // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
     memory_map_[Column] = system::pointer_cast<uint8_t>(
         ::mremap_(memory_map_[Column], to_width<Column>(capacity_.load()),
             to_width<Column>(size), PROT_READ | PROT_WRITE, MAP_SHARED,
             opened_[Column]));
-
-#elif defined(MREMAP_MAYMOVE)
-
+#else
     memory_map_[Column] = system::pointer_cast<uint8_t>(
         ::mremap(memory_map_[Column], to_width<Column>(capacity_.load()),
             to_width<Column>(size), MREMAP_MAYMOVE));
-
-#else
-
-    // macOS does not define mremap or MREMAP_MAYMOVE. The prior mapping was
-    // released above and the resized file is mapped fresh.
-    // TODO: see "MREMAP_MAYMOVE" in sqlite for map extension technique.
-    memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mmap(nullptr, to_width<Column>(size), PROT_READ | PROT_WRITE,
-            MAP_SHARED, opened_[Column], 0));
-
 #endif
 
     return finalize_<Column>(size);
+#endif // MANAGE_STAGING
 }
 
 // disk_full: space is set but no code is set with false return.
@@ -341,6 +389,7 @@ bool CLASS::finalize_(size_t
     loaded_.store(true);
     return true;
 }
+
 
 } // namespace database
 } // namespace libbitcoin

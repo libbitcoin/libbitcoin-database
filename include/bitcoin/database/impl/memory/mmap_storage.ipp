@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_MMAP_STORAGE_IPP
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_STORAGE_IPP
 
+#include <algorithm>
 #include <filesystem>
 #include <mutex>
 #include <utility>
@@ -142,6 +143,11 @@ code CLASS::load() NOEXCEPT
         }
 
         remap_mutex_.unlock();
+
+#if defined(MANAGE_STAGING)
+        settler_start_();
+#endif
+
         return error::success;
     }
 
@@ -162,6 +168,13 @@ code CLASS::reload() NOEXCEPT
             return error::reload_unloaded;
         }
 
+#if defined(MANAGE_STAGING)
+        // The store reload transactor implies quiescent writers, so remaining
+        // extents are orphans of abandoned writes, stalling the frontier (in
+        // any table, not just those that faulted). Discard to unjam settling.
+        discard_();
+#endif
+
         // Allow resume from disk full.
         set_disk_space(zero);
 
@@ -176,20 +189,49 @@ code CLASS::reload() NOEXCEPT
 TEMPLATE
 code CLASS::flush() NOEXCEPT
 {
-    // Prevent unload, resize, remap.
-    std::shared_lock map_lock(remap_mutex_);
+    // The suspend-writes contract holds logical_ stable across both phases.
+    size_t rows{};
 
-    if (!loaded_.load())
-        return error::flush_unloaded;
+    {
+        // Prevent unload, resize, remap.
+        std::shared_lock map_lock(remap_mutex_);
 
-    // Reads fields and the memory map.
-    return flush_all_(sequence{}) ? error::success : error::flush_failure;
+        if (!loaded_.load())
+            return error::flush_unloaded;
+
+        rows = logical_.load();
+
+        // Reads fields and the memory map.
+        if (!flush_all_(rows, sequence{}))
+            return error::flush_failure;
+    }
+
+#if defined(MANAGE_STAGING)
+    // Convert flushed rows to read-only file mappings, releasing their
+    // anonymous pages to clean file cache (excludes accessors, briefly).
+    if (staged_)
+    {
+        std::unique_lock map_lock(remap_mutex_);
+
+        if (!loaded_.load())
+            return error::flush_unloaded;
+
+        if (!settle_all_(rows, sequence{}))
+            return error::flush_failure;
+    }
+#endif
+
+    return error::success;
 }
 
 // Suspend writes before calling.
 TEMPLATE
 code CLASS::unload() NOEXCEPT
 {
+#if defined(MANAGE_STAGING)
+    settler_stop_();
+#endif
+
     std::unique_lock field_lock(field_mutex_);
 
     if (remap_mutex_.try_lock())
@@ -218,6 +260,10 @@ code CLASS::unload() NOEXCEPT
 TEMPLATE
 code CLASS::shrink() NOEXCEPT
 {
+#if defined(MANAGE_STAGING)
+    settler_stop_();
+#endif
+
     std::unique_lock field_lock(field_mutex_);
 
     if (remap_mutex_.try_lock())
@@ -243,6 +289,11 @@ code CLASS::shrink() NOEXCEPT
         }
 
         remap_mutex_.unlock();
+
+#if defined(MANAGE_STAGING)
+        settler_start_();
+#endif
+
         return error::success;
     }
 
@@ -282,6 +333,52 @@ bool CLASS::truncate(size_t count) NOEXCEPT
 
     if (count > logical_.load())
         return false;
+
+#if defined(MANAGE_STAGING)
+    // Truncation below the settle boundary reverts settled rows to anonymous
+    // memory, as append-only bodies may re-append after reorganization.
+    if (staged_ && loaded_.load() && (count < settled_.load()))
+    {
+        std::unique_lock remap_lock(remap_mutex_);
+
+        if (!unsettle_all_(count, sequence{}))
+            return false;
+    }
+
+    // Discard extents above the truncation and clamp any overlap.
+    if (staged_)
+    {
+        std::unique_lock extent_lock(extent_mutex_);
+        auto [head, size] = system::unpack_word<uint64_t>(
+            window_.load(std::memory_order_relaxed));
+
+        while (!is_zero(size))
+        {
+            auto& tail = ring_.at((head + sub1(size)) % extents);
+            const auto start = tail.start.load(std::memory_order_relaxed);
+            if (start >= count)
+            {
+                --size;
+                continue;
+            }
+
+            if (system::ceilinged_add(start, tail.count) > count)
+            {
+                tail.count = count - start;
+                const auto limit = tail.count * columns;
+                if (tail.outstanding.load(std::memory_order_relaxed) > limit)
+                    tail.outstanding.store(limit, std::memory_order_relaxed);
+            }
+
+            break;
+        }
+
+        window_.store(system::pack_word<uint64_t>(head, size),
+            std::memory_order_release);
+        frontier_.store(is_zero(size) ? count :
+            ring_.at(head).start.load(std::memory_order_relaxed));
+    }
+#endif
 
     logical_.store(count);
     return true;
@@ -344,6 +441,11 @@ bool CLASS::reserve(size_t count) NOEXCEPT
 TEMPLATE
 size_t CLASS::allocate(size_t count) NOEXCEPT
 {
+#if defined(MANAGE_STAGING)
+    // Nothing is held here, so parking cannot deadlock (as with remap waits).
+    throttle_();
+#endif
+
     // Fast path: claim rows within published capacity (no locks). A failed
     // exchange implies another claim succeeded, so every retry is progress.
     for (auto start = logical_.load();;)
@@ -356,7 +458,12 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
             break;
 
         if (logical_.compare_exchange_weak(start, start + count))
+        {
+#if defined(MANAGE_STAGING)
+            record_(start, count);
+#endif
             return start;
+        }
     }
 
     // Slow path: serialize capacity growth (at most one grower). Fast paths
@@ -372,7 +479,12 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
         if (end <= capacity_.load())
         {
             if (logical_.compare_exchange_weak(start, end))
+            {
+#if defined(MANAGE_STAGING)
+                record_(start, count);
+#endif
                 return start;
+            }
 
             continue;
         }

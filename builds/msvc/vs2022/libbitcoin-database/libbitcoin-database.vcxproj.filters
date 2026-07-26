@@ -120,6 +120,9 @@
     <ClCompile Include="..\..\..\..\src\memory\mman.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\memory\mstage.cpp">
+      <Filter>src\memory</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\memory\utilities.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
@@ -189,6 +192,9 @@
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mmaps.hpp">
+      <Filter>include\bitcoin\database\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mstage.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp">
@@ -383,6 +389,9 @@
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_private.ipp">
+      <Filter>include\bitcoin\database\impl\memory</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_staging.ipp">
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_storage.ipp">

@@ -33,24 +33,26 @@ namespace database {
 
 TEMPLATE
 CLASS::mmap(const path& filename, size_t minimum, size_t expansion,
-    bool random) NOEXCEPT
+    bool random, bool staged) NOEXCEPT
     requires (is_one(columns))
   : filenames_{ filename },
     minimum_(to_rows(minimum)),
     expansion_(expansion),
     random_(random),
+    staged_(staged),
     opened_{ file::invalid }
 {
 }
 
 TEMPLATE
 CLASS::mmap(const paths& filenames, size_t minimum, size_t expansion,
-    bool random) NOEXCEPT
+    bool random, bool staged) NOEXCEPT
     requires (columns > one)
   : filenames_(filenames),
     minimum_(to_rows(minimum)),
     expansion_(expansion),
     random_(random),
+    staged_(staged),
     opened_{}
 {
     opened_.fill(file::invalid);
@@ -59,6 +61,11 @@ CLASS::mmap(const paths& filenames, size_t minimum, size_t expansion,
 TEMPLATE
 CLASS::~mmap() NOEXCEPT
 {
+#if defined(MANAGE_STAGING)
+    // Join a settler left running by an unload bypass (thread safety).
+    settler_stop_();
+#endif
+
     BC_ASSERT(!loaded_.load());
     BC_ASSERT(is_zero(logical_.load()));
     BC_ASSERT(is_zero(capacity_.load()));
@@ -66,6 +73,10 @@ CLASS::~mmap() NOEXCEPT
         [](auto map) NOEXCEPT { return is_null(map); }));
     BC_ASSERT(std::ranges::all_of(opened_,
         [](auto opened) NOEXCEPT { return opened == file::invalid; }));
+#if defined(MANAGE_STAGING)
+    BC_ASSERT(std::ranges::all_of(reserved_,
+        [](auto reserved) NOEXCEPT { return is_zero(reserved); }));
+#endif
 }
 
 TEMPLATE
@@ -103,6 +114,11 @@ void CLASS::set_first_code(const error::error_t& ec) NOEXCEPT
 
         // error is atomic for public read exposure.
         error_.store(ec);
+
+#if defined(MANAGE_STAGING)
+        // A fault may stop draining, so it must release throttled callers.
+        signal_();
+#endif
     }
 }
 
