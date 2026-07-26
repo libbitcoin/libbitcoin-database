@@ -126,12 +126,8 @@ bool CLASS::flush_(size_t
     const auto success =
            ((from >= to) || pwrite_all(opened_[Column],
                std::next(memory_map_[Column], from), to - from, from))
-#if defined(F_FULLFSYNC)
         // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
         && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
-#else
-        && (::fsync(opened_[Column]) != fail);
-#endif
 #elif defined(HAVE_MSC)
     // unmap (and therefore msync) must be called before ftruncate.
     // "To flush all the dirty pages plus the metadata for the file and ensure
@@ -140,10 +136,6 @@ bool CLASS::flush_(size_t
     const auto success =
            (::msync(memory_map_[Column], size, MS_SYNC) != fail)
         && (::fsync(opened_[Column]) != fail);
-#elif defined(F_FULLFSYNC)
-    // macOS msync fails with zero logical size (but we are no longer calling).
-    // non-standard macOS behavior: news.ycombinator.com/item?id=30372218
-    const auto success = ::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail;
 #else
     // msync should not be required on modern linux, see linus et al.
     // stackoverflow.com/questions/5902629/mmap-msync-and-linux-process-termination
@@ -198,11 +190,7 @@ bool CLASS::unmap_(size_t
            ((from >= logical) || pwrite_all(opened_[Column],
                std::next(memory_map_[Column], from), logical - from, from))
         && (::ftruncate(opened_[Column], logical) != fail)
-#if defined(F_FULLFSYNC)
         && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
-#else
-        && (::fsync(opened_[Column]) != fail);
-#endif
 
     // Order ensures release of the reservation in case of transfer failure.
     const auto success = (::munmap(memory_map_[Column],
@@ -224,11 +212,7 @@ bool CLASS::unmap_(size_t
     // POSIX permits resizing a mapped file.
     const auto truncated =
            (::ftruncate(opened_[Column], logical) != fail)
-#if defined(F_FULLFSYNC)
-        && (::fcntl(opened_[Column], F_FULLFSYNC, 0) != fail);
-#else
         && (::fsync(opened_[Column]) != fail);
-#endif
 
     // Order ensures release in case of truncate failure.
     const auto success = release_<Column>(size) && truncated;
@@ -287,46 +271,19 @@ bool CLASS::remap_(size_t size) NOEXCEPT
 
     return commit_<Column>(size);
 #else
-#if !defined(HAVE_MSC) && !defined(MREMAP_MAYMOVE)
-    // macOS cannot remap in place, so release the mapping without trimming and
-    // the file remains at capacity_ bytes and resize_'s fallocate delta (and
-    // the fallocate shim's preallocation window) are exact by construction.
-    if (!release_<Column>(capacity_.load()))
-        return false;
-
-    if (!resize_<Column>(size))
-    {
-        map_<Column>();
-        return false;
-    }
-#else
     if (!resize_<Column>(size))
         return false;
-#endif
 
 #if defined(HAVE_MSC)
-
     // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
     memory_map_[Column] = system::pointer_cast<uint8_t>(
         ::mremap_(memory_map_[Column], to_width<Column>(capacity_.load()),
             to_width<Column>(size), PROT_READ | PROT_WRITE, MAP_SHARED,
             opened_[Column]));
-
-#elif defined(MREMAP_MAYMOVE)
-
+#else
     memory_map_[Column] = system::pointer_cast<uint8_t>(
         ::mremap(memory_map_[Column], to_width<Column>(capacity_.load()),
             to_width<Column>(size), MREMAP_MAYMOVE));
-
-#else
-
-    // macOS does not define mremap or MREMAP_MAYMOVE. The prior mapping was
-    // released above and the resized file is mapped fresh.
-    // TODO: see "MREMAP_MAYMOVE" in sqlite for map extension technique.
-    memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mmap(nullptr, to_width<Column>(size), PROT_READ | PROT_WRITE,
-            MAP_SHARED, opened_[Column], 0));
-
 #endif
 
     return finalize_<Column>(size);
