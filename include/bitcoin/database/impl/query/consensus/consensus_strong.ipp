@@ -117,7 +117,7 @@ bool CLASS::set_strong(const header_link& link, size_t count,
     const auto records = possible_narrow_cast<link_t::integer>(count);
     auto record = store_.strong_tx.allocate(records);
     const auto ptr = store_.strong_tx.get_memory();
-    const auto end = first_fk + count;
+    const auto end = first_fk + records;
 
     // Contiguous tx links.
     for (auto fk = first_fk; fk < end; ++fk)
