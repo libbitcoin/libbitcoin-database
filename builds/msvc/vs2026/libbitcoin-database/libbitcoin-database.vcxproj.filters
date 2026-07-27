@@ -197,10 +197,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mstage.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\settings.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\settings.hpp">
       <Filter>include\bitcoin\database\memory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\streamers.hpp">
