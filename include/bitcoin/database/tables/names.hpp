@@ -79,8 +79,8 @@ namespace caches
     constexpr auto prevalid = "batch_prevalid";
     constexpr auto prevout = "cache_prevout";
     constexpr auto duplicate = "cache_duplicate";
-    constexpr auto validated_bk = "validated_bk";
-    constexpr auto validated_tx = "validated_tx";
+    constexpr auto validated_bk = "cache_validated_bk";
+    constexpr auto validated_tx = "cache_validated_tx";
 }
 
 namespace optionals
