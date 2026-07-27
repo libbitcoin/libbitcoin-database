@@ -16,45 +16,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/database/settings.hpp>
+#ifndef LIBBITCOIN_DATABASE_MEMORY_SETTINGS_HPP
+#define LIBBITCOIN_DATABASE_MEMORY_SETTINGS_HPP
 
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-using namespace bc::system;
-
-settings::settings() NOEXCEPT
+/// Storage tuning consumed by memory map construction: the base of table
+/// configuration, as network settings bases are derived by server services.
+/// Future staging tunables land here without constructor signature changes.
+struct storage_settings
 {
-}
+    /// Minimum body allocation (bytes).
+    uint64_t size{ 1 };
 
-settings::settings(chain::selection context) NOEXCEPT
-  : settings()
-{
-    switch (context)
-    {
-        case chain::selection::mainnet:
-        {
-            break;
-        }
-
-        case chain::selection::testnet3:
-        {
-            break;
-        }
-
-        case chain::selection::regtest:
-        {
-            break;
-        }
-
-        default:
-        case chain::selection::none:
-        {
-        }
-    }
-}
+    /// Body expansion rate (percentage).
+    uint16_t rate{ 5 };
+};
 
 } // namespace database
 } // namespace libbitcoin
+
+#endif

@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__invalid_parent__expected)
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
 
     settings settings{};
-    settings.header_buckets = 16;
+    settings.header.buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__default__expected)
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
 
     settings settings{};
-    settings.header_buckets = 16;
+    settings.header.buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -554,9 +554,9 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_input__not_found__nullptr)
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_input__genesis__expected)
 {
     settings settings{};
-    settings.header_buckets = 8;
-    settings.tx_buckets = 8;
-    settings.txs_buckets = 16;
+    settings.header.buckets = 8;
+    settings.tx.buckets = 8;
+    settings.txs.buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -622,9 +622,9 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_output__not_found__nullptr)
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_output__genesis__expected)
 {
     settings settings{};
-    settings.header_buckets = 8;
-    settings.tx_buckets = 8;
-    settings.txs_buckets = 16;
+    settings.header.buckets = 8;
+    settings.tx.buckets = 8;
+    settings.txs.buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

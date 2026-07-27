@@ -32,6 +32,7 @@
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/memory/mstage.hpp>
+#include <bitcoin/database/memory/settings.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -68,13 +69,16 @@ public:
     /// file only by explicit transfer, so no dirty file-backed page ever
     /// exists (no effect where the staging backend is not built).
 
-    /// Scalar construction (columns == 1): unchanged signature and codegen.
-    mmap(const path& filename, size_t minimum=1, size_t expansion=0,
+    /// Storage tuning is passed by settings (future tunables land there
+    /// without signature change); random and staged are structural.
+
+    /// Scalar construction (columns == 1).
+    mmap(const path& filename, const storage_settings& settings={},
         bool random=true, bool staged=false) NOEXCEPT
         requires (is_one(columns));
 
     /// Aggregate construction (columns > 1): one file per column, shared guards.
-    mmap(const paths& filenames, size_t minimum=1, size_t expansion=0,
+    mmap(const paths& filenames, const storage_settings& settings={},
         bool random=true, bool staged=false) NOEXCEPT
         requires (columns > one);
 

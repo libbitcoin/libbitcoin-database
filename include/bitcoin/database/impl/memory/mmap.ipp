@@ -32,12 +32,12 @@ namespace database {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-CLASS::mmap(const path& filename, size_t minimum, size_t expansion,
+CLASS::mmap(const path& filename, const storage_settings& settings,
     bool random, bool staged) NOEXCEPT
     requires (is_one(columns))
   : filenames_{ filename },
-    minimum_(to_rows(minimum)),
-    expansion_(expansion),
+    minimum_(to_rows(settings.size)),
+    expansion_(settings.rate),
     random_(random),
     staged_(staged),
     opened_{ file::invalid }
@@ -45,12 +45,12 @@ CLASS::mmap(const path& filename, size_t minimum, size_t expansion,
 }
 
 TEMPLATE
-CLASS::mmap(const paths& filenames, size_t minimum, size_t expansion,
+CLASS::mmap(const paths& filenames, const storage_settings& settings,
     bool random, bool staged) NOEXCEPT
     requires (columns > one)
   : filenames_(filenames),
-    minimum_(to_rows(minimum)),
-    expansion_(expansion),
+    minimum_(to_rows(settings.size)),
+    expansion_(settings.rate),
     random_(random),
     staged_(staged),
     opened_{}

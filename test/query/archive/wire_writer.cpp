@@ -76,10 +76,10 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__genesis__expected)
         "00000000");   // forks (0) - genesis only
 
     settings settings{};
-    settings.header_buckets = 8;
-    settings.tx_buckets = 8;
-    settings.ins_buckets = 8;
-    settings.txs_buckets = 16;
+    settings.header.buckets = 8;
+    settings.tx.buckets = 8;
+    settings.ins.buckets = 8;
+    settings.txs.buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
