@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__loaded__expected_capacity)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, minimum, half_rate);
+    map instance(file, { minimum, half_rate });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__minimum_no_expansion__expected_capacity)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, minimum, 0);
+    map instance(file, { minimum, 0 });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__no_minimum_expansion__expected_capacity)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, minimum, rate);
+    map instance(file, { minimum, rate });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(mmap__truncate__increase_capacity__failure)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, minimum, half_rate);
+    map instance(file, { minimum, half_rate });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(mmap__truncate__unchanged__success_capacity_unchanged)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, minimum, half_rate);
+    map instance(file, { minimum, half_rate });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.size(), zero);
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(mmap__truncate__decrease__success_logical_decreased_capacit
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, minimum, half_rate);
+    map instance(file, { minimum, half_rate });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.allocate(minimum), zero);
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_capacity)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, minimum, half_rate);
+    map instance(file, { minimum, half_rate });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__minimum_no_expansion__expected_capacity)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, minimum, rate);
+    map instance(file, { minimum, rate });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE(instance.get_filled(offset, size, fill));
@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__no_minimum_expansion__expected_capacity)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, minimum, rate);
+    map instance(file, { minimum, rate });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE(instance.get_filled(offset, size, fill));
@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, minimum, half_rate);
+    map instance(file, { minimum, half_rate });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
@@ -701,7 +701,8 @@ BOOST_AUTO_TEST_CASE(mmap__get_capacity__size__expected)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file);
+    // No expansion, so capacity equals the allocation.
+    map instance(file, { 1, 0 });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
@@ -826,7 +827,7 @@ BOOST_AUTO_TEST_CASE(mmap__staged__write_flush_write_reload__expected)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, 1, 50, true, true);
+    map instance(file, { 1, 50 }, true, true);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
@@ -862,7 +863,7 @@ BOOST_AUTO_TEST_CASE(mmap__staged__write_flush_write_reload__expected)
     BOOST_REQUIRE(!instance.get_fault());
 
     // All content persists across close and reopen.
-    map reopened(file, 1, 50, true, true);
+    map reopened(file, { 1, 50 }, true, true);
     BOOST_REQUIRE(!reopened.open());
     BOOST_REQUIRE(!reopened.load());
     BOOST_REQUIRE_EQUAL(reopened.size(), first + second);
@@ -887,7 +888,7 @@ BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_rewrite__expected)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, 1, 50, true, true);
+    map instance(file, { 1, 50 }, true, true);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
@@ -920,7 +921,7 @@ BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_rewrite__expected)
     BOOST_REQUIRE(!instance.get_fault());
 
     // Retained content precedes replacement content across reopen.
-    map reopened(file, 1, 50, true, true);
+    map reopened(file, { 1, 50 }, true, true);
     BOOST_REQUIRE(!reopened.open());
     BOOST_REQUIRE(!reopened.load());
     BOOST_REQUIRE_EQUAL(reopened.size(), retained + appended);
@@ -944,7 +945,7 @@ BOOST_AUTO_TEST_CASE(mmap__frontier__staged_out_of_order_completion__expected)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, 1, 50, true, true);
+    map instance(file, { 1, 50 }, true, true);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
@@ -971,7 +972,7 @@ BOOST_AUTO_TEST_CASE(mmap__frontier__staged_truncate__discards_extents)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, 1, 50, true, true);
+    map instance(file, { 1, 50 }, true, true);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
@@ -999,7 +1000,7 @@ BOOST_AUTO_TEST_CASE(mmap__unstaged__rewrite_below_flush__expected)
     BOOST_REQUIRE(test::create(file));
 
     // Unstaged (default) retains in-place rewrite of flushed content (heads).
-    map instance(file, 1, 50, true);
+    map instance(file, { 1, 50 }, true);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
@@ -1031,7 +1032,7 @@ BOOST_AUTO_TEST_CASE(mmap__unstaged__rewrite_below_flush__expected)
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
 
-    map reopened(file, 1, 50, true);
+    map reopened(file, { 1, 50 }, true);
     BOOST_REQUIRE(!reopened.open());
     BOOST_REQUIRE(!reopened.load());
     BOOST_REQUIRE_EQUAL(reopened.size(), size);
@@ -1078,7 +1079,7 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     const storage_t::paths files{ file + "_0", file + "_1" };
 
     // minimum 1 byte -> 1 row; zero expansion makes capacity == rows exactly.
-    storage_t instance(files, 1, 0);
+    storage_t instance(files, { 1, 0 });
     BOOST_REQUIRE(!instance.create());
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
@@ -1163,7 +1164,7 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__concurrent__unique_dense_claims)
     BOOST_REQUIRE(test::create(file));
 
     // Tiny minimum and modest expansion force frequent slow-path remaps.
-    map instance(file, 1, 25);
+    map instance(file, { 1, 25 });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 

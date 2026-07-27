@@ -227,6 +227,7 @@ include_bitcoin_database_memory_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/memory/mmaps.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/mstage.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/reader.hpp \
+    ${srcdir}/../../include/bitcoin/database/memory/settings.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/streamers.hpp \
     ${srcdir}/../../include/bitcoin/database/memory/utilities.hpp
 

@@ -25,7 +25,7 @@
 // settings       : define
 // /locks         : define
 // /file          : define
-// /memory        : /file
+// /memory        : /file settings
 // /primitives    : /memory
 // /tables        : /primitives
 // /types         : /tables

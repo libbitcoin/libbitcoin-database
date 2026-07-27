@@ -34,9 +34,10 @@ class default_storage
 public:
     using path = std::filesystem::path;
 
-    default_storage(const path& filename="test", size_t minimum=1,
-        size_t expansion=0, bool random=true) NOEXCEPT
-      : Storage(filename, minimum, expansion, random)
+    default_storage(const path& filename="test",
+        const database::storage_settings& settings={},
+        bool random=true) NOEXCEPT
+      : Storage(filename, settings, random)
     {
     }
 };
@@ -69,14 +70,16 @@ public:
     {
     }
 
-    chunk_storages(const path& filename, size_t=1, size_t=0, bool=true,
+    chunk_storages(const path& filename,
+        const database::storage_settings& ={}, bool=true,
         bool=false) NOEXCEPT requires (is_one(columns))
       : alias_{}, paths_{ filename }, logical_{}
     {
     }
 
     /// Aggregate construction (columns > 1): one backing per column.
-    chunk_storages(const paths& filenames, size_t=1, size_t=0, bool=true,
+    chunk_storages(const paths& filenames,
+        const database::storage_settings& ={}, bool=true,
         bool=false) NOEXCEPT requires (columns > one)
       : alias_{}, paths_{ filenames }, logical_{}
     {

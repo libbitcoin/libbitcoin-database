@@ -161,6 +161,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mmaps.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\mstage.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\reader.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\streamers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arrayhead.hpp" />

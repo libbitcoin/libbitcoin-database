@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_SETTINGS_HPP
 
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/settings.hpp>
 
 #include <filesystem>
 
@@ -39,14 +40,10 @@ struct BCD_API settings
     /// Table settings.
     /// -----------------------------------------------------------------------
 
-    /// Body storage sizing (all tables).
+    /// Body storage sizing (all tables), the storage construction base.
     struct simple_table
+      : public storage_settings
     {
-        /// Minimum body allocation (bytes).
-        uint64_t size{ 1 };
-
-        /// Body expansion rate (percentage).
-        uint16_t rate{ 50 };
     };
 
     /// Adds the head bucket count (hashmap hash space or arraymap length).
