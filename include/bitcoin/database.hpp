@@ -37,6 +37,7 @@
 #include <bitcoin/database/memory/mmaps.hpp>
 #include <bitcoin/database/memory/mstage.hpp>
 #include <bitcoin/database/memory/reader.hpp>
+#include <bitcoin/database/memory/settings.hpp>
 #include <bitcoin/database/memory/streamers.hpp>
 #include <bitcoin/database/memory/utilities.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
