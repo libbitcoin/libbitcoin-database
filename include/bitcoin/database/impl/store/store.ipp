@@ -129,8 +129,7 @@ CLASS::store(const settings& config) NOEXCEPT
     ecdsa(ecdsa_head_, ecdsa_body_),
     schnorr(schnorr_head_, schnorr_body_),
     silent(silent_head_, silent_body_),
-    duplicate(duplicate_head_, duplicate_body_, system::possible_narrow_cast<
-        table::duplicate::link::integer>(config.duplicate.buckets)),
+    duplicate(duplicate_head_, duplicate_body_, config.duplicate.buckets),
     prevalid(prevalid_head_, prevalid_body_),
     prevout(prevout_head_, prevout_body_, config.prevout.buckets),
     validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk.buckets),

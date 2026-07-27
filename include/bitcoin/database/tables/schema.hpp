@@ -52,7 +52,7 @@ constexpr size_t hash = system::hash_size;
 
 /// Primary keys.
 /// -----------------------------------------------------------------------
-constexpr size_t dup = 2;       // ->duplicate [TODO: increase to 3]
+constexpr size_t dup = 3;       // ->duplicate
 constexpr size_t put = 5;       // ->input/output slab.
 constexpr size_t ins_ = 4;      // ->point|ins record.
 constexpr size_t outs_ = 4;     // ->outs (puts) record.
@@ -312,8 +312,8 @@ struct duplicate
     static constexpr size_t cell = sizeof(uint32_t);
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 0u);
-    static_assert(minrow == 37u);
-    static_assert(link::size == 2u);
+    static_assert(minrow == 38u);
+    static_assert(link::size == 3u);
     static_assert(cell == 4u);
 };
 
