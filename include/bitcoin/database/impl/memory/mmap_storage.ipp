@@ -26,7 +26,6 @@
 #include <shared_mutex>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/file/file.hpp>
-#include <bitcoin/database/memory/mman.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -80,13 +79,6 @@ code CLASS::open() NOEXCEPT
         if (const auto ec = file::open_ex(opened_.at(index),
             filenames_.at(index), random_))
             return ec;
-
-    // Staged bytes are read only through the map once settled, so exclude
-    // descriptor writes from file system caching (macOS otherwise retains
-    // settled pages in cache, starving the mapped read set under pressure).
-    if (staged_)
-        for (const auto& descriptor: opened_)
-            ::uncache(descriptor);
 
     // logical_ is the shared row count, derived from column 0's byte size.
     size_t bytes{};

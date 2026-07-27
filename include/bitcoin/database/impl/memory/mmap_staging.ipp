@@ -831,21 +831,10 @@ template <size_t... Index>
 bool CLASS::settle_write_(size_t from, size_t to,
     std::index_sequence<Index...>) NOEXCEPT
 {
-    const auto settle = [this, from, to]<size_t Column>() NOEXCEPT
-    {
-        const auto offset = to_width<Column>(from);
-        const auto size = to_width<Column>(to) - offset;
-        const auto success = pwrite_all(opened_[Column],
-            std::next(memory_map_[Column], offset), size, offset);
-
-        // Settled bytes are read only through the map, drop the write cache.
-        if (success)
-            ::evict(opened_[Column], offset, size);
-
-        return success;
-    };
-
-    return (settle.template operator()<Index>() && ...);
+    return (pwrite_all(opened_[Index],
+        std::next(memory_map_[Index], to_width<Index>(from)),
+        to_width<Index>(to) - to_width<Index>(from),
+        to_width<Index>(from)) && ...);
 }
 
 #endif // MANAGE_STAGING
