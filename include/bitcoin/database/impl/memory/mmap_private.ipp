@@ -67,10 +67,13 @@ bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
     if (!(map_<Index>() && ...))
     {
         capacity_.store(zero);
+        file_.store(zero);
         return false;
     }
 
-    capacity_.store(std::max(logical_.load(), minimum_));
+    // The file is provisioned in full; capacity publishes committed rows only.
+    file_.store(to_provision());
+    capacity_.store(to_commitment());
     return true;
 }
 
@@ -81,6 +84,9 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
     const auto capacity = capacity_.load();
     const auto success = (unmap_<Index>(capacity) && ...);
     capacity_.store(zero);
+
+    // Unmapping truncates the file to logical, which is then its provisioning.
+    file_.store(logical_.load());
 
 #if defined(MANAGE_STAGING)
     window_.store(zero);
@@ -104,6 +110,9 @@ bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT
         return false;
     }
 
+    // Growth beyond the provisioned file extends it (resize_ is a no-op
+    // within), so the extent tracks the high water of provisioning.
+    file_.store(std::max(file_.load(), capacity));
     capacity_.store(capacity);
     return true;
 }
@@ -240,11 +249,11 @@ bool CLASS::map_() NOEXCEPT
 #if defined(MANAGE_STAGING)
     return stage_<Column>();
 #else
-    auto size = logical_.load();
-
     // Cannot map empty file, and want minimum capacity, so expand as required.
+    // The classic mapping is file-backed, so commitment is provisioning.
     // disk_full: space is set but no code is set with false return.
-    if ((size < minimum_) && !resize_<Column>(size = minimum_))
+    const auto size = to_provision();
+    if (!resize_<Column>(size))
         return false;
 
     memory_map_[Column] = system::pointer_cast<uint8_t>(
@@ -300,8 +309,14 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::resize_(size_t size) NOEXCEPT
 {
+    // The file is provisioned ahead of commitment, so growth within the
+    // provisioned extent requires no disk operation (the space is reserved).
+    const auto extent = file_.load();
+    if (size <= extent)
+        return true;
+
     const auto target = to_width<Column>(size);
-    const auto capacity = to_width<Column>(capacity_.load());
+    const auto capacity = to_width<Column>(extent);
 
     // Disk full detection, any other failure is an abort.
 #if !defined(WITHOUT_FALLOCATE)
@@ -314,8 +329,8 @@ bool CLASS::resize_(size_t size) NOEXCEPT
         if (errno == ENOSPC)
         {
             using namespace system;
-            set_disk_space(ceilinged_multiply(floored_subtract(size,
-                capacity_.load()), stride));
+            set_disk_space(ceilinged_multiply(floored_subtract(size, extent),
+                stride));
             return false;
         }
 

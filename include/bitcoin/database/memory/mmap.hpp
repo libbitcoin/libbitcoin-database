@@ -198,6 +198,8 @@ protected:
     }
 
     size_t to_capacity(size_t required) const NOEXCEPT;
+    size_t to_provision() const NOEXCEPT;
+    size_t to_commitment() const NOEXCEPT;
     void set_first_code(const error::error_t& ec) NOEXCEPT;
     void set_disk_space(size_t required) NOEXCEPT;
 
@@ -205,6 +207,7 @@ private:
     static constexpr size_t page_bound = to_bits(sizeof(uint64_t));
     static constexpr size_t settle_chunk = system::power2(28u);
     static constexpr size_t advise_chunk = system::power2(30u);
+    static constexpr size_t commit_chunk = system::power2(30u);
     static constexpr size_t compress_factor = 32;
     static constexpr size_t throttle_factor = 8;
     static constexpr size_t active_factor = 32;
@@ -304,6 +307,7 @@ private:
     std::atomic<error::error_t> error_{ error::success };
     std::atomic<size_t> space_{ zero };
     std::atomic<size_t> capacity_{};
+    std::atomic<size_t> file_{};
     std::atomic<size_t> logical_{};
     std::atomic_bool fault_{};
     std::atomic_bool loaded_{};

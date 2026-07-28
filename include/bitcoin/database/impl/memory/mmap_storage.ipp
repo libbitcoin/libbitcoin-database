@@ -85,7 +85,9 @@ code CLASS::open() NOEXCEPT
     if (const auto ec = file::size_ex(bytes, opened_.front()))
         return ec;
 
+    // The file as opened is its own provisioning (extent tracks the file).
     logical_.store(logical_rows(bytes));
+    file_.store(logical_rows(bytes));
     return error::success;
 }
 

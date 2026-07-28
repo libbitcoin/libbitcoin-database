@@ -279,15 +279,20 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::stage_() NOEXCEPT
 {
-    auto size = logical_.load();
-
-    // Cannot map empty file, and want minimum capacity, so expand as required.
+    // Provision the file in full (disk reserved, so allocation within cannot
+    // fail for space), but commit only what is in use; committing provisioned
+    // rows would charge that memory before anything is written.
     // disk_full: space is set but no code is set with false return.
-    if ((size < minimum_) && !resize_<Column>(size = minimum_))
+    const auto provision = to_provision();
+    if (!resize_<Column>(provision))
         return false;
 
-    // Reserve address space with generous multiple of capacity (costless).
-    const auto reserved = page_ceiling(to_width<Column>(to_reservation(size)));
+    const auto size = to_commitment();
+
+    // Reserve address space with generous multiple of capacity (costless), so
+    // that commitment growth never migrates the mapping (base is stable).
+    const auto reserved = page_ceiling(to_width<Column>(
+        to_reservation(provision)));
     const auto base = mmap_reserve(reserved);
 
     if (base == MAP_FAILED)

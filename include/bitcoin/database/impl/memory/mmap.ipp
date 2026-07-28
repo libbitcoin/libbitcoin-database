@@ -106,6 +106,32 @@ size_t CLASS::to_capacity(size_t required) const NOEXCEPT
     return std::max(minimum_, ceilinged_add(required, growth));
 }
 
+// Disk provisioning: the configured minimum is a file reservation, ensuring
+// that allocation within it cannot fail for space (disk full is detected at
+// provisioning, where it remains recoverable).
+TEMPLATE
+size_t CLASS::to_provision() const NOEXCEPT
+{
+    return std::max(logical_.load(), minimum_);
+}
+
+// Memory commitment follows use, not provisioning. Committing the configured
+// minimum would demand that much memory (Linux charges the commit) before any
+// row is written, failing load on any machine smaller than its store sizing.
+// Growth commits in chunks within the standing reservation (no remap), so the
+// cost is a syscall per chunk over the life of the store.
+TEMPLATE
+size_t CLASS::to_commitment() const NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    const auto logical = logical_.load();
+    return std::min(to_provision(), std::max(logical, to_rows(commit_chunk)));
+#else
+    // The classic mapping is file-backed, so commitment is provisioning.
+    return to_provision();
+#endif
+}
+
 // Write-write protected by remap_mutex.
 TEMPLATE
 void CLASS::set_first_code(const error::error_t& ec) NOEXCEPT
