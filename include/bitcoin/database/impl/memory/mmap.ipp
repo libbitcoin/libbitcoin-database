@@ -132,6 +132,43 @@ size_t CLASS::to_commitment() const NOEXCEPT
 #endif
 }
 
+// The counter chain is the spine of the design (debug assertion only):
+//
+//     settled_ <= frontier_ <= logical_ <= capacity_ <= file_
+//
+// settled: rows durable and converted (staged) or drained (unstaged).
+// frontier: completed-write prefix bound (extent ring floor).
+// logical: rows claimed by writers (fast path CAS).
+// capacity: rows claimable (committed memory).
+// file: rows provisioned on disk (fallocate extent).
+//
+// Lower bounds are read first: the lock-free fast path can advance logical_
+// concurrently, so stale-low reads of lower bounds cannot falsify the chain,
+// while upper bounds only grow under locks held at every call site.
+TEMPLATE
+void CLASS::check_invariants_() const NOEXCEPT
+{
+#if !defined(NDEBUG)
+    if (!loaded_.load())
+        return;
+
+#if defined(MANAGE_STAGING)
+    if (staged_)
+    {
+        const auto settled = settled_.load();
+        const auto frontier = frontier_.load();
+        BC_ASSERT(settled <= frontier);
+        BC_ASSERT(frontier <= logical_.load());
+    }
+#endif
+
+    const auto logical = logical_.load();
+    const auto capacity = capacity_.load();
+    BC_ASSERT(logical <= capacity);
+    BC_ASSERT(capacity <= file_.load());
+#endif // NDEBUG
+}
+
 // Write-write protected by remap_mutex.
 TEMPLATE
 void CLASS::set_first_code(const error::error_t& ec) NOEXCEPT

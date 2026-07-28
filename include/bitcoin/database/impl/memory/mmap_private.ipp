@@ -74,6 +74,7 @@ bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
     // The file is provisioned in full; capacity publishes committed rows only.
     file_.store(to_provision());
     capacity_.store(to_commitment());
+    check_invariants_();
     return true;
 }
 
@@ -114,6 +115,7 @@ bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT
     // within), so the extent tracks the high water of provisioning.
     file_.store(std::max(file_.load(), capacity));
     capacity_.store(capacity);
+    check_invariants_();
     return true;
 }
 

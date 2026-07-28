@@ -404,6 +404,7 @@ bool CLASS::truncate(size_t count) NOEXCEPT
 #endif
 
     logical_.store(count);
+    check_invariants_();
     return true;
 }
 

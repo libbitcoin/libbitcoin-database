@@ -191,6 +191,7 @@ void CLASS::maintain_() NOEXCEPT
     window_.store(pack_word<uint64_t>(head, size), release);
     frontier_.store(is_zero(size) ? logical_.load() :
         ring_.at(head).start.load(relaxed));
+    check_invariants_();
 }
 
 // Discard all extents, requires quiescent writers (locked). Any extent then
@@ -205,6 +206,7 @@ void CLASS::discard_() NOEXCEPT
 
     window_.store(zero, release);
     frontier_.store(logical_.load());
+    check_invariants_();
 }
 
 // Delay the caller while staging exceeds its memory bound (write throttle).
@@ -255,6 +257,7 @@ bool CLASS::settle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT
 
     settled_.store(rows);
     signal_();
+    check_invariants_();
     return true;
 }
 

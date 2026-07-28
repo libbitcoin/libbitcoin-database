@@ -200,6 +200,7 @@ protected:
     size_t to_capacity(size_t required) const NOEXCEPT;
     size_t to_provision() const NOEXCEPT;
     size_t to_commitment() const NOEXCEPT;
+    void check_invariants_() const NOEXCEPT;
     void set_first_code(const error::error_t& ec) NOEXCEPT;
     void set_disk_space(size_t required) NOEXCEPT;
 
