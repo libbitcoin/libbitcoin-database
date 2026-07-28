@@ -211,6 +211,9 @@ private:
     static constexpr size_t urgent_factor = 4;
     static constexpr size_t idle_seconds = 60;
     static constexpr size_t headroom = 4;
+#if defined(STAGING_TELEMETRY)
+    static constexpr size_t telemetry_seconds = 60;
+#endif
     static constexpr auto fail = -1;
     static constexpr auto relaxed = std::memory_order_relaxed;
     static constexpr auto release = std::memory_order_release;
@@ -327,6 +330,11 @@ private:
         size_t count;
         std::atomic<size_t> outstanding;
     };
+
+#if defined(STAGING_TELEMETRY)
+    // This is unshared (settler thread only).
+    size_t telemetry_{};
+#endif
 
     // These are thread safe (atomic).
     std::atomic<size_t> marks_{};

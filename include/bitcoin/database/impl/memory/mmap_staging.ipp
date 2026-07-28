@@ -20,8 +20,13 @@
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_STAGING_IPP
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <fcntl.h>
+#if defined(STAGING_TELEMETRY)
+    #include <iostream>
+    #include <sstream>
+#endif
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/mstage.hpp>
 #include <bitcoin/database/memory/utilities.hpp>
@@ -724,6 +729,34 @@ void CLASS::settler_run_() NOEXCEPT
         const auto top = logical_.load();
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
+
+#if defined(STAGING_TELEMETRY)
+        // The settler drains to the frontier while the throttle measures debt
+        // to logical, so a pinned frontier stops settling while debt grows
+        // (unbounded). lag exposes the pin, debt the throttle pressure. One
+        // string per line, as settler threads share the stream.
+        if (is_zero(++telemetry_ % telemetry_seconds))
+        {
+            using namespace system;
+            const auto settled = settled_.load();
+            const auto frontier = frontier_.load();
+            const auto [head_, size_] = unpack_word<uint64_t>(
+                window_.load(relaxed));
+
+            std::ostringstream line{};
+            line << "staging " << filenames_.front().filename().string()
+                << " logical=" << top
+                << " frontier=" << frontier
+                << " settled=" << settled
+                << " lag=" << floored_subtract(top, frontier)
+                << " debt=" << floored_subtract(top, settled)
+                << " window=" << size_
+                << " head=" << head_
+                << std::endl;
+
+            std::cerr << line.str() << std::flush;
+        }
+#endif
 
         auto bytes = backlog();
         if (is_zero(bytes))
