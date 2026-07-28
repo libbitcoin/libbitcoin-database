@@ -533,11 +533,22 @@ void CLASS::teardown_(const error::error_t& ec) NOEXCEPT
 TEMPLATE
 bool CLASS::advise_(uint8_t* map, size_t size) const NOEXCEPT
 {
-    const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
+    // Advice is elective (normal is the kernel default) and configured from
+    // the read pattern (see database::advice); random_ is structural.
+    if (access_ == advice::normal)
+        return true;
+
+    // Order follows the advice enumeration.
+    static constexpr std::array<int, 3> advices
+    {
+        MADV_NORMAL, MADV_RANDOM, MADV_SEQUENTIAL
+    };
+
+    const auto behavior = advices.at(static_cast<uint8_t>(access_));
     for (size_t offset{}; offset < size; offset += advise_chunk)
     {
         const auto length = std::min(advise_chunk, size - offset);
-        if (::madvise(std::next(map, offset), length, advice) == fail)
+        if (::madvise(std::next(map, offset), length, behavior) == fail)
             return false;
     }
 

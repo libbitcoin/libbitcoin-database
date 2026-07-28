@@ -77,7 +77,7 @@ code CLASS::open() NOEXCEPT
     // Windows doesn't use madvise, instead infers map access from file open.
     for (size_t index{}; index < columns; ++index)
         if (const auto ec = file::open_ex(opened_.at(index),
-            filenames_.at(index), random_))
+            filenames_.at(index), random_, access_))
             return ec;
 
     // logical_ is the shared row count, derived from column 0's byte size.
