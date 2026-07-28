@@ -48,7 +48,7 @@ memory CLASS::get_filled(size_t offset, size_t size,
         const auto end = std::max(logical_.load(), offset + size);
         if (end > capacity_.load())
         {
-            const auto extended = to_capacity(end);
+            const auto extended = to_growth(end);
 
             // TODO: Could loop over a try lock here and log deadlock warning.
             std::unique_lock remap_lock(remap_mutex_);

@@ -240,6 +240,11 @@ code CLASS::flush() NOEXCEPT
         if (!loaded_.load())
             return error::flush_unloaded;
 
+        // The suspend-writes contract implies remaining extents are complete
+        // or abandoned (as reload), so the ring is discarded to reconcile the
+        // frontier, which settling to the flushed top would otherwise pass.
+        discard_();
+
         if (!settle_all_(rows, sequence{}))
             return error::flush_failure;
     }
@@ -421,7 +426,7 @@ bool CLASS::expand(size_t count) NOEXCEPT
 
     if (count > capacity_.load())
     {
-        const auto extended = to_capacity(count);
+        const auto extended = to_growth(count);
         std::unique_lock remap_lock(remap_mutex_);
 
         if (!remap_all_(extended, sequence{}))
@@ -449,7 +454,7 @@ bool CLASS::reserve(size_t count) NOEXCEPT
     const auto end = logical_.load() + count;
     if (end > capacity_.load())
     {
-        const auto extended = to_capacity(end);
+        const auto extended = to_growth(end);
         std::unique_lock remap_lock(remap_mutex_);
 
         if (!remap_all_(extended, sequence{}))
@@ -518,7 +523,7 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
             continue;
         }
 
-        const auto extended = to_capacity(end);
+        const auto extended = to_growth(end);
 
         // TODO: Could loop over a try lock here and log deadlock warning.
         std::unique_lock remap_lock(remap_mutex_);

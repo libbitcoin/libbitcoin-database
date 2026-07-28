@@ -106,6 +106,29 @@ size_t CLASS::to_capacity(size_t required) const NOEXCEPT
     return std::max(minimum_, ceilinged_add(required, growth));
 }
 
+// Commitment growth target for the capacity slow paths. Unlike to_capacity
+// this never floors to the configured minimum: under lazy commitment that
+// floor would commit the full provisioning on first growth (the load failure
+// this design exists to prevent, moved from create to first touch). Growth is
+// chunked to bound slow path frequency, and clamped so that small tables do
+// not over-commit (the provisioned file requires no memory until committed).
+TEMPLATE
+size_t CLASS::to_growth(size_t required) const NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    using namespace system;
+    const auto expand = ceilinged_multiply(required, expansion_) / 100u;
+    const auto expanded = ceilinged_add(required, expand);
+    const auto chunked = std::max(expanded,
+        ceilinged_add(capacity_.load(), to_rows(commit_chunk)));
+
+    return std::min(chunked, std::max(expanded, to_provision()));
+#else
+    // The classic mapping is file-backed, so growth is capacity.
+    return to_capacity(required);
+#endif
+}
+
 // Disk provisioning: the configured minimum is a file reservation, ensuring
 // that allocation within it cannot fail for space (disk full is detected at
 // provisioning, where it remains recoverable).
