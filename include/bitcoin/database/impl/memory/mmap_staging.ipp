@@ -20,8 +20,13 @@
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_STAGING_IPP
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <fcntl.h>
+#if defined(STAGING_TELEMETRY)
+    #include <iostream>
+    #include <sstream>
+#endif
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/mstage.hpp>
 #include <bitcoin/database/memory/utilities.hpp>
@@ -186,6 +191,7 @@ void CLASS::maintain_() NOEXCEPT
     window_.store(pack_word<uint64_t>(head, size), release);
     frontier_.store(is_zero(size) ? logical_.load() :
         ring_.at(head).start.load(relaxed));
+    check_invariants_();
 }
 
 // Discard all extents, requires quiescent writers (locked). Any extent then
@@ -200,6 +206,7 @@ void CLASS::discard_() NOEXCEPT
 
     window_.store(zero, release);
     frontier_.store(logical_.load());
+    check_invariants_();
 }
 
 // Delay the caller while staging exceeds its memory bound (write throttle).
@@ -250,6 +257,7 @@ bool CLASS::settle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT
 
     settled_.store(rows);
     signal_();
+    check_invariants_();
     return true;
 }
 
@@ -274,15 +282,20 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::stage_() NOEXCEPT
 {
-    auto size = logical_.load();
-
-    // Cannot map empty file, and want minimum capacity, so expand as required.
+    // Provision the file in full (disk reserved, so allocation within cannot
+    // fail for space), but commit only what is in use; committing provisioned
+    // rows would charge that memory before anything is written.
     // disk_full: space is set but no code is set with false return.
-    if ((size < minimum_) && !resize_<Column>(size = minimum_))
+    const auto provision = to_provision();
+    if (!resize_<Column>(provision))
         return false;
 
-    // Reserve address space with generous multiple of capacity (costless).
-    const auto reserved = page_ceiling(to_width<Column>(to_reservation(size)));
+    const auto size = to_commitment();
+
+    // Reserve address space with generous multiple of capacity (costless), so
+    // that commitment growth never migrates the mapping (base is stable).
+    const auto reserved = page_ceiling(to_width<Column>(
+        to_reservation(provision)));
     const auto base = mmap_reserve(reserved);
 
     if (base == MAP_FAILED)
@@ -533,11 +546,22 @@ void CLASS::teardown_(const error::error_t& ec) NOEXCEPT
 TEMPLATE
 bool CLASS::advise_(uint8_t* map, size_t size) const NOEXCEPT
 {
-    const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
+    // Advice is elective (normal is the kernel default) and configured from
+    // the read pattern (see database::advice); random_ is structural.
+    if (access_ == advice::normal)
+        return true;
+
+    // Order follows the advice enumeration.
+    static constexpr std::array<int, 3> advices
+    {
+        MADV_NORMAL, MADV_RANDOM, MADV_SEQUENTIAL
+    };
+
+    const auto behavior = advices.at(static_cast<uint8_t>(access_));
     for (size_t offset{}; offset < size; offset += advise_chunk)
     {
         const auto length = std::min(advise_chunk, size - offset);
-        if (::madvise(std::next(map, offset), length, advice) == fail)
+        if (::madvise(std::next(map, offset), length, behavior) == fail)
             return false;
     }
 
@@ -713,6 +737,34 @@ void CLASS::settler_run_() NOEXCEPT
         const auto top = logical_.load();
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
+
+#if defined(STAGING_TELEMETRY)
+        // The settler drains to the frontier while the throttle measures debt
+        // to logical, so a pinned frontier stops settling while debt grows
+        // (unbounded). lag exposes the pin, debt the throttle pressure. One
+        // string per line, as settler threads share the stream.
+        if (is_zero(++telemetry_ % telemetry_seconds))
+        {
+            using namespace system;
+            const auto settled = settled_.load();
+            const auto frontier = frontier_.load();
+            const auto [head_, size_] = unpack_word<uint64_t>(
+                window_.load(relaxed));
+
+            std::ostringstream line{};
+            line << "staging " << filenames_.front().filename().string()
+                << " logical=" << top
+                << " frontier=" << frontier
+                << " settled=" << settled
+                << " lag=" << floored_subtract(top, frontier)
+                << " debt=" << floored_subtract(top, settled)
+                << " window=" << size_
+                << " head=" << head_
+                << std::endl;
+
+            std::cerr << line.str() << std::flush;
+        }
+#endif
 
         auto bytes = backlog();
         if (is_zero(bytes))

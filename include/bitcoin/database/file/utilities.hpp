@@ -21,6 +21,7 @@
 
 #include <filesystem>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/memory/settings.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -71,9 +72,10 @@ BCD_API bool copy_directory(const path& from, const path& to) NOEXCEPT;
 BCD_API code copy_directory_ex(const path& from, const path& to) NOEXCEPT;
 
 /// File descriptor functions (for memory mapping).
-BCD_API int open(const path& filename, bool random=true) NOEXCEPT;
+BCD_API int open(const path& filename, bool random=true,
+    advice access=advice::normal) NOEXCEPT;
 BCD_API code open_ex(int& file_descriptor, const path& filename,
-    bool random=true) NOEXCEPT;
+    bool random=true, advice access=advice::normal) NOEXCEPT;
 BCD_API bool close(int file_descriptor) NOEXCEPT;
 BCD_API code close_ex(int file_descriptor) NOEXCEPT;
 BCD_API bool size(size_t& out, int file_descriptor) NOEXCEPT;

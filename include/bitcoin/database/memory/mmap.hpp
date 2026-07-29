@@ -198,6 +198,10 @@ protected:
     }
 
     size_t to_capacity(size_t required) const NOEXCEPT;
+    size_t to_growth(size_t required) const NOEXCEPT;
+    size_t to_provision() const NOEXCEPT;
+    size_t to_commitment() const NOEXCEPT;
+    void check_invariants_() const NOEXCEPT;
     void set_first_code(const error::error_t& ec) NOEXCEPT;
     void set_disk_space(size_t required) NOEXCEPT;
 
@@ -205,12 +209,16 @@ private:
     static constexpr size_t page_bound = to_bits(sizeof(uint64_t));
     static constexpr size_t settle_chunk = system::power2(28u);
     static constexpr size_t advise_chunk = system::power2(30u);
+    static constexpr size_t commit_chunk = system::power2(28u);
     static constexpr size_t compress_factor = 32;
     static constexpr size_t throttle_factor = 8;
     static constexpr size_t active_factor = 32;
     static constexpr size_t urgent_factor = 4;
     static constexpr size_t idle_seconds = 60;
     static constexpr size_t headroom = 4;
+#if defined(STAGING_TELEMETRY)
+    static constexpr size_t telemetry_seconds = 60;
+#endif
     static constexpr auto fail = -1;
     static constexpr auto relaxed = std::memory_order_relaxed;
     static constexpr auto release = std::memory_order_release;
@@ -293,6 +301,7 @@ private:
     const paths filenames_;
     const size_t minimum_;
     const size_t expansion_;
+    const advice access_;
     const bool random_;
     const bool staged_;
 
@@ -300,6 +309,7 @@ private:
     std::atomic<error::error_t> error_{ error::success };
     std::atomic<size_t> space_{ zero };
     std::atomic<size_t> capacity_{};
+    std::atomic<size_t> file_{};
     std::atomic<size_t> logical_{};
     std::atomic_bool fault_{};
     std::atomic_bool loaded_{};
@@ -326,6 +336,11 @@ private:
         size_t count;
         std::atomic<size_t> outstanding;
     };
+
+#if defined(STAGING_TELEMETRY)
+    // This is unshared (settler thread only).
+    size_t telemetry_{};
+#endif
 
     // These are thread safe (atomic).
     std::atomic<size_t> marks_{};

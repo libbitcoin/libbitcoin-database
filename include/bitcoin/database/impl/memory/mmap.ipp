@@ -38,6 +38,7 @@ CLASS::mmap(const path& filename, const storage_settings& settings,
   : filenames_{ filename },
     minimum_(to_rows(settings.size)),
     expansion_(settings.rate),
+    access_(settings.access),
     random_(random),
     staged_(staged),
     opened_{ file::invalid }
@@ -51,6 +52,7 @@ CLASS::mmap(const paths& filenames, const storage_settings& settings,
   : filenames_(filenames),
     minimum_(to_rows(settings.size)),
     expansion_(settings.rate),
+    access_(settings.access),
     random_(random),
     staged_(staged),
     opened_{}
@@ -102,6 +104,92 @@ size_t CLASS::to_capacity(size_t required) const NOEXCEPT
     using namespace system;
     const auto growth = ceilinged_multiply(required, expansion_) / 100u;
     return std::max(minimum_, ceilinged_add(required, growth));
+}
+
+// Commitment growth target for the capacity slow paths. Unlike to_capacity
+// this never floors to the configured minimum: under lazy commitment that
+// floor would commit the full provisioning on first growth (the load failure
+// this design exists to prevent, moved from create to first touch). Growth is
+// chunked to bound slow path frequency, and clamped so that small tables do
+// not over-commit (the provisioned file requires no memory until committed).
+TEMPLATE
+size_t CLASS::to_growth(size_t required) const NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    using namespace system;
+    const auto expand = ceilinged_multiply(required, expansion_) / 100u;
+    const auto expanded = ceilinged_add(required, expand);
+    const auto chunked = std::max(expanded,
+        ceilinged_add(capacity_.load(), to_rows(commit_chunk)));
+
+    return std::min(chunked, std::max(expanded, to_provision()));
+#else
+    // The classic mapping is file-backed, so growth is capacity.
+    return to_capacity(required);
+#endif
+}
+
+// Disk provisioning: the configured minimum is a file reservation, ensuring
+// that allocation within it cannot fail for space (disk full is detected at
+// provisioning, where it remains recoverable).
+TEMPLATE
+size_t CLASS::to_provision() const NOEXCEPT
+{
+    return std::max(logical_.load(), minimum_);
+}
+
+// Memory commitment follows use, not provisioning. Committing the configured
+// minimum would demand that much memory (Linux charges the commit) before any
+// row is written, failing load on any machine smaller than its store sizing.
+// Growth commits in chunks within the standing reservation (no remap), so the
+// cost is a syscall per chunk over the life of the store.
+TEMPLATE
+size_t CLASS::to_commitment() const NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    const auto logical = logical_.load();
+    return std::min(to_provision(), std::max(logical, to_rows(commit_chunk)));
+#else
+    // The classic mapping is file-backed, so commitment is provisioning.
+    return to_provision();
+#endif
+}
+
+// The counter chain is the spine of the design (debug assertion only):
+//
+//     settled_ <= frontier_ <= logical_ <= capacity_ <= file_
+//
+// settled: rows durable and converted (staged) or drained (unstaged).
+// frontier: completed-write prefix bound (extent ring floor).
+// logical: rows claimed by writers (fast path CAS).
+// capacity: rows claimable (committed memory).
+// file: rows provisioned on disk (fallocate extent).
+//
+// Lower bounds are read first: the lock-free fast path can advance logical_
+// concurrently, so stale-low reads of lower bounds cannot falsify the chain,
+// while upper bounds only grow under locks held at every call site.
+TEMPLATE
+void CLASS::check_invariants_() const NOEXCEPT
+{
+#if !defined(NDEBUG)
+    if (!loaded_.load())
+        return;
+
+#if defined(MANAGE_STAGING)
+    if (staged_)
+    {
+        const auto settled = settled_.load();
+        const auto frontier = frontier_.load();
+        BC_ASSERT(settled <= frontier);
+        BC_ASSERT(frontier <= logical_.load());
+    }
+#endif
+
+    const auto logical = logical_.load();
+    const auto capacity = capacity_.load();
+    BC_ASSERT(logical <= capacity);
+    BC_ASSERT(capacity <= file_.load());
+#endif // NDEBUG
 }
 
 // Write-write protected by remap_mutex.

@@ -248,7 +248,15 @@ code copy_directory_ex(const path& from, const path& to) NOEXCEPT
     #define MSC_OR_NOAPPLE(parameter)
 #endif
 
-int open(const path& filename, bool MSC_OR_NOAPPLE(random)) NOEXCEPT
+// Page advice is applied at open only where posix_fadvise is available.
+#if !defined(HAVE_MSC) && !defined(HAVE_APPLE)
+    #define POSIX_ONLY(parameter) parameter
+#else
+    #define POSIX_ONLY(parameter)
+#endif
+
+int open(const path& filename, bool MSC_OR_NOAPPLE(random),
+    advice POSIX_ONLY(access)) NOEXCEPT
 {
     const auto path = system::extended_path(filename);
     int file_descriptor{};
@@ -264,28 +272,37 @@ int open(const path& filename, bool MSC_OR_NOAPPLE(random)) NOEXCEPT
     file_descriptor = ::open(path.c_str(), O_RDWR, S_IRUSR | S_IWUSR);
 
 #if !defined(HAVE_APPLE)
-    if (file_descriptor != -1)
+    // Advice is elective (normal is the kernel default) and configured from
+    // the read pattern (see database::advice); random is structural.
+    if ((file_descriptor != -1) && (access != advice::normal))
     {
-        // _O_RANDOM equivalent, posix_fadvise returns error on failure.
-        const auto advice = random ? POSIX_FADV_RANDOM : POSIX_FADV_SEQUENTIAL;
-        const auto result = ::posix_fadvise(file_descriptor, 0, 0, advice);
+        // Order follows the advice enumeration.
+        static constexpr std::array<int, 3> advices
+        {
+            POSIX_FADV_NORMAL, POSIX_FADV_RANDOM, POSIX_FADV_SEQUENTIAL
+        };
+
+        // posix_fadvise returns error on failure.
+        const auto result = ::posix_fadvise(file_descriptor, 0, 0,
+            advices.at(static_cast<uint8_t>(access)));
         if (!is_zero(result))
         {
             close(file_descriptor);
             file_descriptor = -1;
             errno = result;
         }
-        else
+    }
+
+    if (file_descriptor != -1)
+    {
+        // _SH_DENYWR equivalent.
+        const struct flock lock{ F_WRLCK, SEEK_SET, 0, 0 };
+        if (::fcntl(file_descriptor, F_SETLK, &lock) == -1)
         {
-            // _SH_DENYWR equivalent.
-            const struct flock lock{ F_WRLCK, SEEK_SET, 0, 0 };
-            if (::fcntl(file_descriptor, F_SETLK, &lock) == -1)
-            {
-                const auto last = errno;
-                close(file_descriptor);
-                file_descriptor = -1;
-                errno = last;
-            }
+            const auto last = errno;
+            close(file_descriptor);
+            file_descriptor = -1;
+            errno = last;
         }
     }
 #endif // !HAVE_APPLE
@@ -294,10 +311,11 @@ int open(const path& filename, bool MSC_OR_NOAPPLE(random)) NOEXCEPT
     return file_descriptor;
 }
 
-code open_ex(int& file_descriptor, const path& filename, bool random) NOEXCEPT
+code open_ex(int& file_descriptor, const path& filename, bool random,
+    advice access) NOEXCEPT
 {
     system::error::clear_errno();
-    file_descriptor = open(filename, random);
+    file_descriptor = open(filename, random, access);
     return system::error::get_errno();
 }
 
