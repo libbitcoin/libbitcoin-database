@@ -272,6 +272,14 @@ bool CLASS::unsettle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT
     return true;
 }
 
+TEMPLATE
+template <size_t... Index>
+bool CLASS::evict_all_(size_t from, size_t to,
+    std::index_sequence<Index...>) NOEXCEPT
+{
+    return (evict_<Index>(from, to) && ...);
+}
+
 // staging wrappers, not thread safe.
 // ----------------------------------------------------------------------------
 // private
@@ -524,6 +532,31 @@ bool CLASS::unsettle_(size_t rows) NOEXCEPT
     return true;
 }
 
+// Release cached pages of settled rows [from, to), page floored within the
+// converted read-only mapping (its pages cannot be dirtied, and any pending
+// settle write-back is synced by the release). Cost follows residency, so
+// re-eviction is idempotent and free. The mapping is unaffected (a later
+// read faults the page back from the file). Failure faults the store
+// (advisory-class failures have no benign modes) but leaves it mapped, as
+// the shared-lock caller cannot tear down under live accessors.
+TEMPLATE
+template <size_t Column>
+bool CLASS::evict_(size_t from, size_t to) NOEXCEPT
+{
+    const auto begin = page_floor(to_width<Column>(from));
+    const auto end = page_floor(to_width<Column>(to));
+    if (begin == end)
+        return true;
+
+    if (mmap_evict(std::next(memory_map_[Column], begin), end - begin) == fail)
+    {
+        set_first_code(error::fsync_failure);
+        return false;
+    }
+
+    return true;
+}
+
 // Teardown results in unmapped (release failure is not further reported).
 TEMPLATE
 template <size_t Column>
@@ -679,6 +712,7 @@ TEMPLATE
 void CLASS::settler_start_() NOEXCEPT
 {
     limit_ = system_memory() / throttle_factor;
+    evicted_ = zero;
     settling_.store(true);
     settler_ = std::thread([this]() NOEXCEPT
     {
@@ -711,7 +745,9 @@ void CLASS::settler_run_() NOEXCEPT
     const auto urgent = memory / urgent_factor;
     const auto active = memory / active_factor;
     const auto squeeze = memory / compress_factor;
+    const auto scarce = memory / evict_factor;
     const auto chunk = std::max(one, settle_chunk / stride);
+    const auto sweep = std::max(one, evict_chunk / stride);
 
     // Ticks without allocation before idle draining (settling is not writing,
     // so draining does not hold its own clock).
@@ -765,6 +801,11 @@ void CLASS::settler_run_() NOEXCEPT
             std::cerr << line.str() << std::flush;
         }
 #endif
+
+        // Scarcity is read directly: clean cache is reclaimable, so the
+        // kernel pressure level does not raise while free memory exhausts.
+        if (system_free() < scarce)
+            evict_next_(sweep);
 
         auto bytes = backlog();
         if (is_zero(bytes))
@@ -876,6 +917,37 @@ bool CLASS::settle_next_(size_t chunk) NOEXCEPT
         return true;
 
     return settle_all_(target, sequence{});
+}
+
+// Evict up to chunk settled rows under memory scarcity: a wrapping sweep
+// from the oldest offset (offset is write age in an append-only body, and
+// re-read probability decays with it). Scarcity-driven release keeps the
+// machine out of the exhausted-cache regime, where the kernel periodic
+// sync walk (cost follows resident pages, not dirty) otherwise degrades
+// fault service. A wrong eviction costs one cold read, so the sweep needs
+// no precision. Runs under the shared remap lock (readers proceed).
+TEMPLATE
+bool CLASS::evict_next_(size_t chunk) NOEXCEPT
+{
+    std::shared_lock map_lock(remap_mutex_);
+
+    if (!loaded_.load() || fault_.load())
+        return false;
+
+    // A truncated boundary self-heals here (the cursor clamps to a lap).
+    const auto end = settled_.load();
+    const auto from = (evicted_ < end) ? evicted_ : zero;
+    const auto target = std::min(end, system::ceilinged_add(from, chunk));
+
+    if (target <= from)
+        return false;
+
+    if (!evict_all_(from, target, sequence{}))
+        return false;
+
+    // Wrap at the lap end so the next sweep resumes with the oldest.
+    evicted_ = (target == end) ? zero : target;
+    return true;
 }
 
 TEMPLATE

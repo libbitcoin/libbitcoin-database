@@ -31,6 +31,11 @@ BCD_API size_t page_size() NOEXCEPT;
 /// The bytes of physical memory, zero if failed.
 BCD_API uint64_t system_memory() NOEXCEPT;
 
+/// The bytes of unused physical memory, zero if failed. Scarcity precedes
+/// pressure: clean file cache is reclaimable, so the pressure level does not
+/// raise while free memory exhausts.
+BCD_API uint64_t system_free() NOEXCEPT;
+
 /// The system memory pressure level (1 normal, 2 warning, 4 critical), zero
 /// if failed or the platform provides no source.
 BCD_API size_t system_pressure() NOEXCEPT;

@@ -56,6 +56,14 @@ uint64_t system_memory() NOEXCEPT
         status.ullTotalPhys;
 }
 
+uint64_t system_free() NOEXCEPT
+{
+    MEMORYSTATUSEX status{};
+    status.dwLength = sizeof(status);
+    return is_zero(GlobalMemoryStatusEx(&status)) ? zero :
+        status.ullAvailPhys;
+}
+
 size_t system_pressure() NOEXCEPT
 {
     // The kernel low memory resource signal (no configurable threshold).
@@ -104,6 +112,31 @@ uint64_t system_memory() NOEXCEPT
     // Failed page_size also results in zero return.
     return ceilinged_multiply(to_unsigned(pages),
         possible_wide_cast<uint64_t>(page_size()));
+}
+
+uint64_t system_free() NOEXCEPT
+{
+#if defined(HAVE_APPLE)
+    using namespace system;
+    vm_statistics64_data_t statistics{};
+    auto count = HOST_VM_INFO64_COUNT;
+    if (::host_statistics64(::mach_host_self(), HOST_VM_INFO64,
+        pointer_cast<integer_t>(&statistics), &count) != KERN_SUCCESS)
+        return zero;
+
+    return ceilinged_multiply<uint64_t>(statistics.free_count, page_size());
+#else
+    using namespace system;
+    errno = 0;
+
+    const int64_t pages = sysconf(_SC_AVPHYS_PAGES);
+    if (is_negative(pages) || is_nonzero(errno))
+        return zero;
+
+    // Failed page_size also results in zero return.
+    return ceilinged_multiply(to_unsigned(pages),
+        possible_wide_cast<uint64_t>(page_size()));
+#endif
 }
 
 size_t system_pressure() NOEXCEPT

@@ -210,7 +210,9 @@ private:
     static constexpr size_t settle_chunk = system::power2(28u);
     static constexpr size_t advise_chunk = system::power2(30u);
     static constexpr size_t commit_chunk = system::power2(28u);
+    static constexpr size_t evict_chunk = system::power2(30u);
     static constexpr size_t compress_factor = 32;
+    static constexpr size_t evict_factor = 32;
     static constexpr size_t throttle_factor = 8;
     static constexpr size_t active_factor = 32;
     static constexpr size_t urgent_factor = 4;
@@ -256,6 +258,9 @@ private:
     bool settle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
     bool unsettle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
+    template <size_t... Index>
+    bool evict_all_(size_t from, size_t to,
+        std::index_sequence<Index...>) NOEXCEPT;
 
     // staging wrappers, not thread safe.
     template <size_t Column>
@@ -266,6 +271,8 @@ private:
     bool settle_(size_t from, size_t to) NOEXCEPT;
     template <size_t Column>
     bool unsettle_(size_t rows) NOEXCEPT;
+    template <size_t Column>
+    bool evict_(size_t from, size_t to) NOEXCEPT;
     template <size_t Column>
     void teardown_(const error::error_t& ec) NOEXCEPT;
 
@@ -288,6 +295,7 @@ private:
     void settler_run_() NOEXCEPT;
     void head_run_() NOEXCEPT;
     bool settle_next_(size_t chunk) NOEXCEPT;
+    bool evict_next_(size_t chunk) NOEXCEPT;
     template <size_t... Index>
     bool settle_write_(size_t from, size_t to,
         std::index_sequence<Index...>) NOEXCEPT;
@@ -336,6 +344,9 @@ private:
         size_t count;
         std::atomic<size_t> outstanding;
     };
+
+    // This is unshared (settler thread only).
+    size_t evicted_{};
 
 #if defined(STAGING_TELEMETRY)
     // This is unshared (settler thread only).
