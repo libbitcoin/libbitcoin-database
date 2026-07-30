@@ -180,15 +180,15 @@ void CLASS::check_invariants_() const NOEXCEPT
     {
         const auto settled = settled_.load();
         const auto frontier = frontier_.load();
-        BC_ASSERT(settled <= frontier);
         BC_ASSERT(frontier <= logical_.load());
+        BC_ASSERT(settled <= frontier);
     }
 #endif
 
     const auto logical = logical_.load();
     const auto capacity = capacity_.load();
-    BC_ASSERT(logical <= capacity);
     BC_ASSERT(capacity <= file_.load());
+    BC_ASSERT(logical <= capacity);
 #endif // NDEBUG
 }
 
@@ -199,8 +199,6 @@ void CLASS::set_first_code(const error::error_t& ec) NOEXCEPT
     if (!fault_.load())
     {
         fault_.store(true);
-
-        // error is atomic for public read exposure.
         error_.store(ec);
 
 #if defined(MANAGE_STAGING)

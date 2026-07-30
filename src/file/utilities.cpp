@@ -28,6 +28,18 @@
 #include <ios>
 #include <bitcoin/database/define.hpp>
 
+#if defined(HAVE_MSC)
+    #define MSC_ONLY(name) name
+#else
+    #define MSC_ONLY(name)
+#endif
+
+#if defined(HAVE_LINUX)
+    #define LINUX_ONLY(name) name
+#else
+    #define LINUX_ONLY(name)
+#endif
+
 namespace libbitcoin {
 namespace database {
 namespace file {
@@ -39,6 +51,9 @@ using namespace system;
 BC_PUSH_WARNING(DISCARDING_NON_DISCARDABLE)
 BC_PUSH_WARNING(NO_IGNORE_RETURN_VALUE)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+// File and directory manipulation.
+// ----------------------------------------------------------------------------
 
 inline path trim(const path& value) NOEXCEPT
 {
@@ -240,23 +255,52 @@ code copy_directory_ex(const path& from, const path& to) NOEXCEPT
     return ec;
 }
 
+// File sizing.
+// ----------------------------------------------------------------------------
+
+bool size(size_t& out, const std::filesystem::path& filename) NOEXCEPT
+{
+    return !size_ex(out, filename);
+}
+
+code size_ex(size_t& out, const std::filesystem::path& filename) NOEXCEPT
+{
+    code ec{ system::error::errorno_t::no_error };
+    const auto size = std::filesystem::file_size(
+        system::extended_path(filename), ec);
+
+    if (ec) return ec;
+    if (is_limited<size_t>(size))
+        return system::error::errorno_t::value_too_large;
+
+    out = possible_narrow_cast<size_t>(size);
+    return ec;
+}
+
+bool space(size_t& out, const path& filename) NOEXCEPT
+{
+    return !space_ex(out, filename);
+}
+
+code space_ex(size_t& out, const path& filename) NOEXCEPT
+{
+    code ec{ system::error::errorno_t::no_error };
+    const auto space = std::filesystem::space(
+        system::extended_path(filename), ec);
+
+    if (ec) return ec;
+    if (is_limited<size_t>(space.available))
+        return system::error::errorno_t::value_too_large;
+
+    out = possible_narrow_cast<size_t>(space.available);
+    return ec;
+}
+
 // File descriptor functions required for memory mapping.
+// ----------------------------------------------------------------------------
 
-#if defined(HAVE_MSC) || !defined(HAVE_APPLE)
-    #define MSC_OR_NOAPPLE(parameter) parameter
-#else
-    #define MSC_OR_NOAPPLE(parameter)
-#endif
-
-// Page advice is applied at open only where posix_fadvise is available.
-#if !defined(HAVE_MSC) && !defined(HAVE_APPLE)
-    #define POSIX_ONLY(parameter) parameter
-#else
-    #define POSIX_ONLY(parameter)
-#endif
-
-int open(const path& filename, bool MSC_OR_NOAPPLE(random),
-    advice POSIX_ONLY(access)) NOEXCEPT
+int open(const path& filename, bool MSC_ONLY(random),
+    advice LINUX_ONLY(access)) NOEXCEPT
 {
     const auto path = system::extended_path(filename);
     int file_descriptor{};
@@ -267,11 +311,10 @@ int open(const path& filename, bool MSC_OR_NOAPPLE(random),
     const auto access = (random ? _O_RANDOM : _O_SEQUENTIAL);
     ::_wsopen_s(&file_descriptor, path.c_str(),
         O_RDWR | _O_BINARY | access, _SH_DENYWR, _S_IREAD | _S_IWRITE);
-#else
+#elif defined(HAVE_LINUX)
     // open sets errno on failure.
     file_descriptor = ::open(path.c_str(), O_RDWR, S_IRUSR | S_IWUSR);
 
-#if !defined(HAVE_APPLE)
     // Advice is elective (normal is the kernel default) and configured from
     // the read pattern (see database::advice); random is structural.
     if ((file_descriptor != -1) && (access != advice::normal))
@@ -305,7 +348,9 @@ int open(const path& filename, bool MSC_OR_NOAPPLE(random),
             errno = last;
         }
     }
-#endif // !HAVE_APPLE
+#else
+    // open sets errno on failure.
+    file_descriptor = ::open(path.c_str(), O_RDWR, S_IRUSR | S_IWUSR);
 #endif // HAVE_MSC
 
     return file_descriptor;
@@ -378,43 +423,6 @@ code size_ex(size_t& out, int file_descriptor) NOEXCEPT
     system::error::clear_errno();
     size(out, file_descriptor);
     return system::error::get_errno();
-}
-
-bool size(size_t& out, const std::filesystem::path& filename) NOEXCEPT
-{
-    return !size_ex(out, filename);
-}
-
-code size_ex(size_t& out, const std::filesystem::path& filename) NOEXCEPT
-{
-    code ec{ system::error::errorno_t::no_error };
-    const auto size = std::filesystem::file_size(
-        system::extended_path(filename), ec);
-
-    if (ec) return ec;
-    if (is_limited<size_t>(size))
-        return system::error::errorno_t::value_too_large;
-
-    out = possible_narrow_cast<size_t>(size);
-    return ec;
-}
-
-bool space(size_t& out, const path& filename) NOEXCEPT
-{
-    return !space_ex(out, filename);
-}
-
-code space_ex(size_t& out, const path& filename) NOEXCEPT
-{
-    code ec{ system::error::errorno_t::no_error };
-    const auto space = std::filesystem::space(
-        system::extended_path(filename), ec);
-    if (ec) return ec;
-    if (is_limited<size_t>(space.available))
-        return system::error::errorno_t::value_too_large;
-
-    out = possible_narrow_cast<size_t>(space.available);
-    return ec;
 }
 
 BC_POP_WARNING()

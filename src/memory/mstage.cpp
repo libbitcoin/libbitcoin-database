@@ -101,7 +101,7 @@ bool pwrite_all(int fd, const uint8_t* from, size_t size,
 
         if (result <= 0)
         {
-            if (is_negative(result) && errno == EINTR)
+            if (is_negative(result) && (errno == EINTR))
                 continue;
 
             return false;

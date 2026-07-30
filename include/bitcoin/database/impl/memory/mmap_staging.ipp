@@ -20,7 +20,6 @@
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_STAGING_IPP
 
 #include <algorithm>
-#include <array>
 #include <chrono>
 #include <fcntl.h>
 #if defined(STAGING_TELEMETRY)
@@ -625,8 +624,6 @@ size_t CLASS::page_ceiling(size_t bytes) const NOEXCEPT
     return page_floor(ceilinged_add(bytes, sub1(page_)));
 }
 
-
-
 // settle scheduler, instance-owned (drains completed writes to clean cache).
 // ----------------------------------------------------------------------------
 // private
@@ -741,13 +738,13 @@ void CLASS::settler_run_() NOEXCEPT
 {
     // Tiers derive from physical memory, pressure and compression occupancy
     // (a pressure precursor: the kernel compresses without raising level).
-    const auto memory = system_memory();
-    const auto urgent = memory / urgent_factor;
-    const auto active = memory / active_factor;
+    const auto memory  = system_memory();
+    const auto urgent  = memory / urgent_factor;
+    const auto active  = memory / active_factor;
     const auto squeeze = memory / compress_factor;
-    const auto scarce = memory / evict_factor;
-    const auto chunk = std::max(one, settle_chunk / stride);
-    const auto sweep = std::max(one, evict_chunk / stride);
+    const auto scarce  = memory / evict_factor;
+    const auto chunk   = std::max(one, settle_chunk / stride);
+    const auto sweep   = std::max(one, evict_chunk / stride);
 
     // Ticks without allocation before idle draining (settling is not writing,
     // so draining does not hold its own clock).
@@ -812,9 +809,14 @@ void CLASS::settler_run_() NOEXCEPT
             continue;
 
         // Urgency drains continuously, activity/stillness one chunk per tick.
-        const auto driven = (system_pressure() > one) ||
-            (system_compressed() > squeeze) || (bytes > urgent);
-        if (!driven && (bytes <= active) && (still < idle_seconds))
+        const auto driven =
+            (system_pressure() > one) ||
+            (system_compressed() > squeeze) ||
+            (bytes > urgent);
+
+        if (!driven && 
+            (bytes <= active) && 
+            (still < idle_seconds))
             continue;
 
         do

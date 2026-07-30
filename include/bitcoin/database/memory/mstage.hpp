@@ -25,8 +25,8 @@
     #define MANAGE_STAGING
 #endif
 
+// The native windows mapped-file behavior is the model staging emulates.
 #if defined(MANAGE_STAGING) && defined(HAVE_MSC)
-    // The native windows mapped-file behavior is the model staging emulates.
     #error "MANAGE_STAGING is not supported on Windows."
 #endif
 

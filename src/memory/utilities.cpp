@@ -42,7 +42,7 @@ size_t page_size() NOEXCEPT
 {
     using namespace system;
     SYSTEM_INFO info{};
-    GetSystemInfo(&info);
+    ::GetSystemInfo(&info);
 
     BC_ASSERT(!system::is_limited<size_t>(info.dwPageSize));
     return info.dwPageSize;
@@ -52,7 +52,7 @@ uint64_t system_memory() NOEXCEPT
 {
     MEMORYSTATUSEX status{};
     status.dwLength = sizeof(status);
-    return is_zero(GlobalMemoryStatusEx(&status)) ? zero :
+    return is_zero(::GlobalMemoryStatusEx(&status)) ? zero :
         status.ullTotalPhys;
 }
 
@@ -60,7 +60,7 @@ uint64_t system_free() NOEXCEPT
 {
     MEMORYSTATUSEX status{};
     status.dwLength = sizeof(status);
-    return is_zero(GlobalMemoryStatusEx(&status)) ? zero :
+    return is_zero(::GlobalMemoryStatusEx(&status)) ? zero :
         status.ullAvailPhys;
 }
 
@@ -68,15 +68,17 @@ size_t system_pressure() NOEXCEPT
 {
     // The kernel low memory resource signal (no configurable threshold).
     BOOL low{ FALSE };
-    const auto handle = CreateMemoryResourceNotification(
-        LowMemoryResourceNotification);
+    const auto handle = ::CreateMemoryResourceNotification(
+        ::LowMemoryResourceNotification);
 
     if (handle == NULL)
         return zero;
 
-    const auto success = QueryMemoryResourceNotification(handle, &low) != 0;
-    CloseHandle(handle);
-    return !success ? zero : (low == FALSE ? size_t{ 1 } : size_t{ 4 });
+    const auto success = !is_zero(::QueryMemoryResourceNotification(handle,
+        &low));
+    ::CloseHandle(handle);
+
+    return success ? (low == FALSE ? 1_size : 4_size) : zero;
 }
 
 uint64_t system_compressed() NOEXCEPT
@@ -89,116 +91,117 @@ uint64_t system_compressed() NOEXCEPT
 
 size_t page_size() NOEXCEPT
 {
-    using namespace system;
     errno = 0;
-
+    using namespace system;
     const auto size = sysconf(_SC_PAGESIZE);
-    if (is_negative(size) || is_nonzero(errno))
-        return zero;
+    if (is_zero(errno) && !is_negative(size))
+    {
+        BC_ASSERT(!is_limited<size_t>(size));
+        return possible_narrow_sign_cast<size_t>(size);
+    }
 
-    BC_ASSERT(!is_limited<size_t>(size));
-    return possible_narrow_sign_cast<size_t>(size);
+    return zero;
 }
 
 uint64_t system_memory() NOEXCEPT
 {
-    using namespace system;
     errno = 0;
-
+    using namespace system;
     const int64_t pages = sysconf(_SC_PHYS_PAGES);
-    if (is_negative(pages) || is_nonzero(errno))
-        return zero;
+    if (is_zero(errno) && !is_negative(pages))
+    {
+        // Failed page_size also results in zero return.
+        const auto size = possible_wide_cast<uint64_t>(page_size());
+        return ceilinged_multiply(to_unsigned(pages), size);
+    }
 
-    // Failed page_size also results in zero return.
-    return ceilinged_multiply(to_unsigned(pages),
-        possible_wide_cast<uint64_t>(page_size()));
+    return zero;
 }
 
 uint64_t system_free() NOEXCEPT
 {
 #if defined(HAVE_APPLE)
     using namespace system;
-    vm_statistics64_data_t statistics{};
     auto count = HOST_VM_INFO64_COUNT;
+    vm_statistics64_data_t statistics{};
     if (::host_statistics64(::mach_host_self(), HOST_VM_INFO64,
-        pointer_cast<integer_t>(&statistics), &count) != KERN_SUCCESS)
-        return zero;
-
-    return ceilinged_multiply<uint64_t>(statistics.free_count, page_size());
+        pointer_cast<integer_t>(&statistics), &count) == KERN_SUCCESS)
+    {
+        return ceilinged_multiply<uint64_t>(statistics.free_count, page_size());
+    }
 #else
-    using namespace system;
     errno = 0;
-
+    using namespace system;
     const int64_t pages = sysconf(_SC_AVPHYS_PAGES);
-    if (is_negative(pages) || is_nonzero(errno))
-        return zero;
-
-    // Failed page_size also results in zero return.
-    return ceilinged_multiply(to_unsigned(pages),
-        possible_wide_cast<uint64_t>(page_size()));
+    if (is_zero(errno) && !is_negative(pages))
+    {
+        // Failed page_size() also results in zero return.
+        const auto size = possible_wide_cast<uint64_t>(page_size());
+        return ceilinged_multiply(to_unsigned(pages), size);
+    }
 #endif
+
+    // Failed or no platform source.
+    return zero;
 }
 
 size_t system_pressure() NOEXCEPT
 {
 #if defined(HAVE_APPLE)
-    using namespace system;
     int level{};
     auto size = sizeof(level);
-    if (::sysctlbyname("kern.memorystatus_vm_pressure_level", &level, &size,
-        nullptr, 0) != 0)
-        return zero;
-
-    return possible_narrow_sign_cast<size_t>(level);
+    if (is_zero(::sysctlbyname("kern.memorystatus_vm_pressure_level", &level,
+        &size, nullptr, 0)))
+    {
+        return system::possible_narrow_sign_cast<size_t>(level);
+    }
 #elif defined(HAVE_LINUX)
     // PSI (requires CONFIG_PSI): fraction of recent wall time that tasks
-    // stalled on memory reclaim. A tenth of time stalled is treated as
-    // genuine pressure, partial (some) as warning and total (full) as
-    // critical, mapping to the macos memorystatus level semantics.
-    auto level = zero;
+    // stalled on memory reclaim. A tenth of time stalled is treated as genuine
+    // pressure, partial (some) as warning and total (full) as critical,
+    // mapping to the macos memorystatus level semantics.
     if (const auto file = std::fopen("/proc/pressure/memory", "r"))
     {
         char line[128];
-        double avg10{};
-        level = one;
+        auto level = one;
+        double average10{};
         while (!is_null(std::fgets(line, sizeof(line), file)))
         {
-            if ((std::sscanf(line, "some avg10=%lf", &avg10) == 1) &&
-                (avg10 >= 10.0))
-                level = std::max(level, size_t{ 2 });
+            if ((std::sscanf(line, "some average10=%lf", &average10) == 1) &&
+                (average10 >= 10.0))
+                level = std::max(level, 2_size);
 
-            if ((std::sscanf(line, "full avg10=%lf", &avg10) == 1) &&
-                (avg10 >= 10.0))
-                level = std::max(level, size_t{ 4 });
+            if ((std::sscanf(line, "full average10=%lf", &average10) == 1) &&
+                (average10 >= 10.0))
+                level = std::max(level, 4_size);
         }
 
         std::fclose(file);
+        return level;
     }
-
-    return level;
-#else
-    // No platform source.
-    return zero;
 #endif
+
+    // Failed or no platform source.
+    return zero;
 }
 
 uint64_t system_compressed() NOEXCEPT
 {
 #if defined(HAVE_APPLE)
     using namespace system;
-    vm_statistics64_data_t statistics{};
     auto count = HOST_VM_INFO64_COUNT;
+    vm_statistics64_data_t statistics{};
     if (::host_statistics64(::mach_host_self(), HOST_VM_INFO64,
-        pointer_cast<integer_t>(&statistics), &count) != KERN_SUCCESS)
-        return zero;
-
-    return ceilinged_multiply<uint64_t>(statistics.compressor_page_count,
-        page_size());
-#else
-    // No source adopted (linux zswap/zram accounting is configuration
-    // dependent; PSI carries the pressure signal there).
-    return zero;
+        pointer_cast<integer_t>(&statistics), &count) == KERN_SUCCESS)
+    {
+        const auto pages = statistics.compressor_page_count;
+        return ceilinged_multiply<uint64_t>(pages, page_size());
+    }
 #endif
+
+    // Failed or no platform source adopted. Linux zswap/zram accounting is
+    // configuration dependent, PSI carries the pressure signal there.
+    return zero;
 }
 
 #endif
