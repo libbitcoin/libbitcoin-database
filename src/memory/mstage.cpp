@@ -54,6 +54,13 @@ int mmap_unsettle(void* address, size_t size) NOEXCEPT
         MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0) == MAP_FAILED ? -1 : 0;
 }
 
+int mmap_evict(void* address, size_t size) NOEXCEPT
+{
+    // Sync first: a settle write may not yet be written back, and bare
+    // invalidation of a dirty page discards it (clean pages sync free).
+    return ::msync(address, size, MS_SYNC | MS_INVALIDATE);
+}
+
 bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT
 {
     while (!is_zero(size))
@@ -94,7 +101,7 @@ bool pwrite_all(int fd, const uint8_t* from, size_t size,
 
         if (result <= 0)
         {
-            if (is_negative(result) && errno == EINTR)
+            if (is_negative(result) && (errno == EINTR))
                 continue;
 
             return false;
