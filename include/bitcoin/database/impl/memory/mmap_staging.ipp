@@ -884,8 +884,9 @@ void CLASS::head_run_() NOEXCEPT
                 continue;
 
             const auto engaged = engaged_.load();
-            if (scarcity && !engaged)
-                engaged_.store(true);
+            if constexpr (head_release)
+                if (scarcity && !engaged)
+                    engaged_.store(true);
 
             if (!transfer_<zero>(to_width<zero>(logical_.load())) ||
                 !sync_<zero>())
@@ -942,7 +943,7 @@ bool CLASS::release_pages_() NOEXCEPT
         auto bits = bit_not(bit_or(hot, bit_or(dirt, done)));
         const auto first = word * page_bound;
         if (pages < (first + page_bound))
-            bits = bit_and(bits, mask_right<uint64_t>(pages - first));
+            bits = bit_and(bits, unmask_right<uint64_t>(pages - first));
 
         for (size_t bit{}; !is_zero(bits) && (bit < page_bound); ++bit)
         {

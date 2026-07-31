@@ -221,6 +221,11 @@ private:
     static constexpr size_t active_factor = 32;
     static constexpr size_t urgent_factor = 4;
     static constexpr size_t idle_seconds = 60;
+
+    // Page-granular release fragments the address space beyond what host
+    // memory management tolerates (vma/vm_map_entry explosion); disabled
+    // pending run-granular conversion.
+    static constexpr bool head_release = false;
     static constexpr size_t headroom = 4;
 #if defined(STAGING_TELEMETRY)
     static constexpr size_t telemetry_seconds = 60;
