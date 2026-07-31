@@ -134,10 +134,9 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     auto height = add1(fork_point);
     auto link = to_candidate(height);
 
-    // Checkpoint and milestone bypass considers association sufficient, but
-    // filter bodies are generated asynchronously and must precede confirmation.
+    // Confirmation requires a committed filter body when filtering is enabled.
     while (is_block_validated(ec, link, height, top_checkpoint) &&
-        (!filter || ec != error::bypassed || is_filtered_body(link)))
+        (!filter || is_filtered_body(link)))
     {
         out.emplace_back(link, ec);
         link = to_candidate(++height);
