@@ -385,6 +385,11 @@ private:
     // Serializes page release against restore (prepare slow path).
     mutable std::mutex restore_mutex_{};
 
+    // Serializes transfer passes (settler tick against flush), as concurrent
+    // passes split the claimed dirty set, allowing a flush to complete while
+    // claimed pages remain unwritten (a stale snapshot copy).
+    mutable std::mutex transfer_mutex_{};
+
     // These are protected by extent_mutex_.
     size_t page_{};
     std::array<extent, extents> ring_{};

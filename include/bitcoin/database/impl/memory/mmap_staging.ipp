@@ -647,6 +647,9 @@ bool CLASS::transfer_(size_t bytes) NOEXCEPT
     if (is_zero(bytes))
         return true;
 
+    // One pass at a time: concurrent passes split the claimed dirty set.
+    std::unique_lock transfer_lock(transfer_mutex_);
+
     // Untracked (multi-column unstaged) instances transfer in full.
     if (!dirty_)
         return pwrite_all(opened_[Column], memory_map_[Column], bytes, zero);
@@ -689,14 +692,28 @@ bool CLASS::transfer_(size_t bytes) NOEXCEPT
             }
 
             if (!write())
+            {
+                // Restore claimed marks (the failed range, the page that
+                // ended it, and this word's unwritten remainder) so failure
+                // is retryable, not lossy.
+                mark(from, to - from);
+                mark(start, end - start);
+                dirty_[word].fetch_or(bits, relaxed);
                 return false;
+            }
 
             from = start;
             to = end;
         }
     }
 
-    return write();
+    if (!write())
+    {
+        mark(from, to - from);
+        return false;
+    }
+
+    return true;
 }
 
 // Durability barrier for the column file.
@@ -872,7 +889,8 @@ void CLASS::head_run_() NOEXCEPT
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
 
-        const auto scarcity = dirty_ && (system_free() < scarce);
+        const auto scarcity = head_release && dirty_ &&
+            (system_free() < scarce);
         if (!scarcity &&
             ((still < idle_seconds) || (transferred == top)))
             continue;
