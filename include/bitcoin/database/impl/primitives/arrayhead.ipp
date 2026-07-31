@@ -92,6 +92,18 @@ bool CLASS::create() NOEXCEPT
 }
 
 TEMPLATE
+code CLASS::get_fault() const NOEXCEPT
+{
+    return file_.get_fault();
+}
+
+TEMPLATE
+size_t CLASS::get_space() const NOEXCEPT
+{
+    return file_.get_space();
+}
+
+TEMPLATE
 bool CLASS::verify() const NOEXCEPT
 {
     return buckets() >= initial_buckets_;

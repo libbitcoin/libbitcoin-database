@@ -50,6 +50,12 @@ public:
     /// Create from empty head file (not thread safe).
     bool create() NOEXCEPT;
 
+    /// The first fault code recorded by the head storage.
+    code get_fault() const NOEXCEPT;
+
+    /// The space required by a failed head storage allocation.
+    size_t get_space() const NOEXCEPT;
+
     /// False if head file size incorrect (not thread safe).
     bool verify() const NOEXCEPT;
 
