@@ -188,6 +188,33 @@ code CLASS::reload() NOEXCEPT
 }
 
 TEMPLATE
+void CLASS::prepare(size_t STAGING_ONLY(offset),
+    size_t STAGING_ONLY(size)) NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    if (is_zero(size) || !dirty_ || !engaged_.load(relaxed))
+        return;
+
+    // Declare intent before the write (sequentially consistent, pairing with
+    // the release protocol), then restore any released page in the range.
+    auto restore = false;
+    auto page = offset / page_;
+    const auto end = (offset + sub1(size)) / page_;
+    while ((page <= end) && ((page / page_bound) < words_))
+    {
+        const auto word = page / page_bound;
+        const auto flag = system::bit_right<uint64_t>(page % page_bound);
+        intent_[word].fetch_or(flag);
+        restore |= !is_zero(system::bit_and(released_[word].load(), flag));
+        ++page;
+    }
+
+    if (restore)
+        restore_(offset, size);
+#endif
+}
+
+TEMPLATE
 void CLASS::mark(size_t STAGING_ONLY(offset),
     size_t STAGING_ONLY(size)) NOEXCEPT
 {

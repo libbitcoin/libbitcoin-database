@@ -58,6 +58,12 @@ public:
     /// Clear disk full condition, fails if fault, must be loaded, idempotent.
     virtual code reload() NOEXCEPT = 0;
 
+    /// Declare content mutation of size bytes at offset (rewritable tables),
+    /// before the write. Restores released pages; no effect where unneeded.
+    virtual void prepare(size_t, size_t) NOEXCEPT
+    {
+    }
+
     /// Report content mutation of size bytes at offset (rewritable tables),
     /// after the write. Advisory dirty tracking; no effect where unneeded.
     virtual void mark(size_t, size_t) NOEXCEPT

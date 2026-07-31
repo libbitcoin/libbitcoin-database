@@ -325,6 +325,8 @@ bool CLASS::stage_() NOEXCEPT
             const auto pages = ceilinged_divide(reserved, page_);
             words_ = ceilinged_divide(pages, page_bound);
             dirty_ = std::make_unique<dirty_bitmaps>(words_);
+            intent_ = std::make_unique<dirty_bitmaps>(words_);
+            released_ = std::make_unique<dirty_bitmaps>(words_);
         }
     }
 
@@ -448,6 +450,11 @@ bool CLASS::commit_(size_t size) NOEXCEPT
 
             dirty_ = std::move(grown);
             words_ = words;
+
+            // The replacement reservation is fully anonymous (content was
+            // copied above), so released and intent page state resets.
+            intent_ = std::make_unique<dirty_bitmaps>(words);
+            released_ = std::make_unique<dirty_bitmaps>(words);
         }
     }
 
@@ -837,9 +844,16 @@ void CLASS::settler_run_() NOEXCEPT
 // before reading, so racing writes remark and transfer on the next pass
 // (torn disk pages are unreachable, as live heads are only trusted
 // following a clean close).
+//
+// Memory scarcity additionally pages the head to its own file (the windows
+// model): transfer, then release cold clean pages to read-only file mappings
+// (reclaimable cache), restored to anonymous by prepare() before any write.
+// Release waits one pass after engagement so all writers declare intent.
 TEMPLATE
 void CLASS::head_run_() NOEXCEPT
 {
+    const auto scarce = system_memory() / evict_factor;
+
     // Ticks without a mark before idle draining.
     auto mark = marks_.load();
     auto transferred = mark;
@@ -858,7 +872,9 @@ void CLASS::head_run_() NOEXCEPT
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
 
-        if ((still < idle_seconds) || (transferred == top))
+        const auto scarcity = dirty_ && (system_free() < scarce);
+        if (!scarcity &&
+            ((still < idle_seconds) || (transferred == top)))
             continue;
 
         {
@@ -867,16 +883,138 @@ void CLASS::head_run_() NOEXCEPT
             if (!loaded_.load() || fault_.load())
                 continue;
 
+            const auto engaged = engaged_.load();
+            if (scarcity && !engaged)
+                engaged_.store(true);
+
             if (!transfer_<zero>(to_width<zero>(logical_.load())) ||
                 !sync_<zero>())
             {
                 set_first_code(error::fsync_failure);
                 continue;
             }
+
+            if (scarcity && engaged && !release_pages_())
+                continue;
         }
 
         transferred = top;
         still = zero;
+    }
+}
+
+// Release cold clean head pages to read-only file mappings (reclaimable),
+// full pages below logical only. Writer synchronization is a per-page bit
+// protocol: prepare() declares intent then loads released; release stores
+// released then loads intent (both sequentially consistent), so a page
+// converts only when no write can land on it unrestored. A wrong release
+// costs one restore. Conversion and restore serialize on restore_mutex_.
+TEMPLATE
+bool CLASS::release_pages_() NOEXCEPT
+{
+    using namespace system;
+    const auto bytes = to_width<zero>(logical_.load());
+    const auto pages = bytes / page_;
+    const auto bound = std::min(words_, ceilinged_divide(pages, page_bound));
+
+    std::unique_lock restore_lock(restore_mutex_);
+
+    size_t from{};
+    size_t to{};
+    const auto convert = [&]() NOEXCEPT
+    {
+        return (from >= to) || (mmap_settle(
+            std::next(memory_map_[zero], from), to - from, opened_[zero],
+            from) != fail);
+    };
+
+    for (size_t word{}; word < bound; ++word)
+    {
+        // Hot mask: pages written since the previous pass. Aging clears only
+        // the snapshot bits, so a concurrent declaration on a candidate page
+        // is retained for the live rechecks below.
+        const auto hot = intent_[word].load();
+        intent_[word].fetch_and(system::bit_not(hot));
+        const auto dirt = dirty_[word].load(relaxed);
+        const auto done = released_[word].load(relaxed);
+
+        // Retain candidacy below the page bound (boundary word only).
+        auto bits = bit_not(bit_or(hot, bit_or(dirt, done)));
+        const auto first = word * page_bound;
+        if (pages < (first + page_bound))
+            bits = bit_and(bits, mask_right<uint64_t>(pages - first));
+
+        for (size_t bit{}; !is_zero(bits) && (bit < page_bound); ++bit)
+        {
+            if (!get_right(bits, bit))
+                continue;
+
+            bits = set_right(bits, bit, false);
+            const auto flag = bit_right<uint64_t>(bit);
+            released_[word].fetch_or(flag);
+
+            // A raced intent or mark invalidates only this page's release.
+            if (!is_zero(bit_and(intent_[word].load(), flag)) ||
+                !is_zero(bit_and(dirty_[word].load(), flag)))
+            {
+                released_[word].fetch_and(bit_not(flag));
+                continue;
+            }
+
+            const auto start = (first + bit) * page_;
+            if (start == to)
+            {
+                to = start + page_;
+                continue;
+            }
+
+            if (!convert())
+            {
+                set_first_code(error::mmap_failure);
+                return false;
+            }
+
+            from = start;
+            to = start + page_;
+        }
+    }
+
+    if (!convert())
+    {
+        set_first_code(error::mmap_failure);
+        return false;
+    }
+
+    return true;
+}
+
+// Restore released pages within [offset, offset+size) to writable anonymous
+// memory (content preserved by atomic installation), before a declared write.
+TEMPLATE
+void CLASS::restore_(size_t offset, size_t size) NOEXCEPT
+{
+    using namespace system;
+    std::unique_lock restore_lock(restore_mutex_);
+
+    auto page = offset / page_;
+    const auto end = (offset + sub1(size)) / page_;
+    while ((page <= end) && ((page / page_bound) < words_))
+    {
+        const auto word = page / page_bound;
+        const auto flag = bit_right<uint64_t>(page % page_bound);
+        if (!is_zero(bit_and(released_[word].load(), flag)))
+        {
+            if (mmap_restore(std::next(memory_map_[zero], page * page_),
+                page_) == fail)
+            {
+                set_first_code(error::mmap_failure);
+                return;
+            }
+
+            released_[word].fetch_and(bit_not(flag));
+        }
+
+        ++page;
     }
 }
 

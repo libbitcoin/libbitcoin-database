@@ -71,6 +71,7 @@ bool CLASS::clear() NOEXCEPT
     // count to zero, which is picked up in arraymap::reset(). Body file size
     // remains unchanged and subject to initialization size at each startup. So
     // there is no reduction until restart, which can include config change.
+    file_.prepare(zero, size());
     std::fill_n(ptr.data(), size(), system::bit_all<uint8_t>);
     file_.mark(zero, size());
     return set_body_count(zero);
@@ -120,6 +121,7 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     // Body count is written as the first value in link size, but since
     // offsetting is a multiple of cell size, a full cell is consumed for it.
     // In case of nomap or disabled there are no cells, so file is link size.
+    file_.prepare(zero, Link::size);
     to_array<Link::size>(ptr.data()) = count;
     file_.mark(zero, Link::size);
     return true;
@@ -174,6 +176,7 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
     if (!ptr)
         return false;
 
+    file_.prepare(position, bucket_size);
     if constexpr (aligned)
     {
         // Writes full padded word (0x00 fill).
