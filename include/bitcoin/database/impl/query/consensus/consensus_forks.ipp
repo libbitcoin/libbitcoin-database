@@ -125,7 +125,7 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     code ec{};
 
     // Disable filter constraint if filtering is disabled.
-    ////const auto filter = filter_enabled();
+    const auto filter = filter_enabled();
 
     ///////////////////////////////////////////////////////////////////////////
     std::shared_lock interlock{ candidate_reorganization_mutex_ };
@@ -134,9 +134,11 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     auto height = add1(fork_point);
     auto link = to_candidate(height);
 
-    // Filter body always written before validated, so the check is redundant.
-    while (is_block_validated(ec, link, height, top_checkpoint)
-        /*&& (!filter || is_filtered_body(link))*/)
+    // Filter body always written before validated, but validated state is not
+    // written in the case of bypassed blocks, it's inferred. So for bypassed
+    // blocks the existence of the filter must be verified.
+    while (is_block_validated(ec, link, height, top_checkpoint) &&
+        (!filter || ec != error::bypassed || is_filtered_body(link)))
     {
         out.emplace_back(link, ec);
         link = to_candidate(++height);
