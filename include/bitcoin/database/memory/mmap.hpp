@@ -390,6 +390,10 @@ private:
     // Set when the first head page releases (gates the prepare fast path).
     std::atomic_bool engaged_{};
 
+    // Writers between prepare and mark (unaged, unlike intent bits), so a
+    // release pass cannot settle under a preempted in-flight write.
+    std::atomic<size_t> writers_{};
+
     // Serializes page release against restore (prepare slow path).
     mutable std::mutex restore_mutex_{};
 

@@ -328,6 +328,7 @@ bool CLASS::stage_() NOEXCEPT
             intent_ = std::make_unique<dirty_bitmaps>(words_);
             released_ = std::make_unique<dirty_bitmaps>(words_);
             sweep_ = std::make_unique<uint64_t[]>(words_);
+            writers_.store(zero);
         }
     }
 
@@ -986,8 +987,11 @@ bool CLASS::release_pages_() NOEXCEPT
         for (auto word = begin; word <= end; ++word)
             released_[word].fetch_or(mask(word));
 
-        // A raced intent or mark invalidates the conversion (whole run).
-        auto raced = false;
+        // An in-flight writer (counted, unaged) or raced intent or mark
+        // invalidates the conversion (whole run). The count loads first: a
+        // writer counted later observes released and restores, one drained
+        // earlier has published its marks (both sequentially consistent).
+        auto raced = is_nonzero(writers_.load());
         for (auto word = begin; (word <= end) && !raced; ++word)
             raced = !is_zero(bit_and(mask(word),
                 bit_or(intent_[word].load(), dirty_[word].load())));

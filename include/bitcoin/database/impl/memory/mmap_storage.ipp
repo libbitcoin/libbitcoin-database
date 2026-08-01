@@ -192,7 +192,17 @@ void CLASS::prepare(size_t STAGING_ONLY(offset),
     size_t STAGING_ONLY(size)) NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
-    if (is_zero(size) || !dirty_ || !engaged_.load(relaxed))
+    if (is_zero(size) || !dirty_)
+        return;
+
+    // Count the writer before loading released below (sequentially
+    // consistent), pairing with the release protocol: release either observes
+    // the count (and aborts) or this writer observes released (and restores).
+    // Intent bits age (hot sampling), so they cannot protect a write held
+    // in flight across passes; the count persists until mark.
+    writers_.fetch_add(one);
+
+    if (!engaged_.load(relaxed))
         return;
 
     // Declare intent before the write (sequentially consistent, pairing with
@@ -232,6 +242,9 @@ void CLASS::mark(size_t STAGING_ONLY(offset),
         dirty_[page++ / page_bound].fetch_or(bit, relaxed);
     }
 
+    // Uncount the writer after its marks (sequentially consistent), so a
+    // release pass loading a drained count observes the dirty bits.
+    writers_.fetch_sub(one);
     marks_.fetch_add(one, relaxed);
 #endif
 }
