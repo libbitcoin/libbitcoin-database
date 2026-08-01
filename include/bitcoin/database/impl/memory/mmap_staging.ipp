@@ -1005,45 +1005,50 @@ bool CLASS::release_pages_() NOEXCEPT
     return true;
 }
 
-// Restore released runs overlapping [offset, offset+size) to writable
+// Restore released pages overlapping [offset, offset+size) to writable
 // anonymous memory (content preserved by atomic installation), before a
-// declared write. Whole containing runs restore so re-entry does not
-// fragment the mapping (adjacent anonymous regions merge).
+// declared write. Restoration is segmented at release_chunk alignment: the
+// containing segment restores whole (unifying any fragmentation within it)
+// but never more, as released runs consolidate without bound and restoring
+// a maximal run copies gigabytes per scattered write (a restore convoy).
 TEMPLATE
 void CLASS::restore_(size_t offset, size_t size) NOEXCEPT
 {
     using namespace system;
     std::unique_lock restore_lock(restore_mutex_);
 
-    // The sweep buffer is free under the lock (releaser also holds it).
     const auto pages = words_ * page_bound;
-    for (size_t word{}; word < words_; ++word)
-        sweep_[word] = released_[word].load(relaxed);
-
+    const auto span = std::max(one, release_chunk / page_);
+    const auto last = (offset + sub1(size)) / page_;
     auto page = offset / page_;
-    const auto end = (offset + sub1(size)) / page_;
-    while ((page <= end) && (page < pages))
-    {
-        const auto run = bit_run(sweep_.get(), pages, page);
-        if (run.first == run.second)
-        {
-            ++page;
-            continue;
-        }
+    page -= (page % span);
 
-        if (mmap_restore(std::next(memory_map_[zero], run.first * page_),
-            (run.second - run.first) * page_) == fail)
+    for (; (page <= last) && (page < pages); page += span)
+    {
+        const auto stop = std::min(page + span, pages);
+        const auto mask = [&](size_t word) NOEXCEPT
+        {
+            return page_mask(page, stop, word * page_bound);
+        };
+
+        const auto begin = page / page_bound;
+        const auto end = sub1(stop) / page_bound;
+        auto any = false;
+        for (auto word = begin; (word <= end) && !any; ++word)
+            any = !is_zero(bit_and(released_[word].load(), mask(word)));
+
+        if (!any)
+            continue;
+
+        if (mmap_restore(std::next(memory_map_[zero], page * page_),
+            (stop - page) * page_) == fail)
         {
             set_first_code(error::mmap_failure);
             return;
         }
 
-        for (auto word = run.first / page_bound;
-            word <= sub1(run.second) / page_bound; ++word)
-            released_[word].fetch_and(bit_not(
-                page_mask(run.first, run.second, word * page_bound)));
-
-        page = run.second;
+        for (auto word = begin; word <= end; ++word)
+            released_[word].fetch_and(bit_not(mask(word)));
     }
 }
 
