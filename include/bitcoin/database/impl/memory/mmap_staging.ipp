@@ -888,6 +888,7 @@ void CLASS::head_run_() NOEXCEPT
             return;
 
         const auto top = marks_.load();
+        const auto writes = top - mark;
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
 
@@ -921,7 +922,12 @@ void CLASS::head_run_() NOEXCEPT
                 continue;
             }
 
-            if (scarcity && engaged && !release_pages_())
+            // A write-hot instance does not release: hash-scattered writes
+            // into released pages each cost a segment restore, and the sweep
+            // otherwise re-releases restored segments every pass (release
+            // and restore ping-pong that serializes all instance writers).
+            const auto quiet = writes < release_quiet;
+            if (scarcity && engaged && quiet && !release_pages_())
                 continue;
         }
 

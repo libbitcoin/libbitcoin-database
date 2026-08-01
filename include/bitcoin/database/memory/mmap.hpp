@@ -228,6 +228,7 @@ private:
     // fragmentation (each conversion splits a mapping) to the measured flat
     // zone of host memory management (heads / chunk fragments worst case).
     static constexpr size_t release_chunk = system::power2(20u);
+    static constexpr size_t release_quiet = 128;
     static constexpr bool head_release = false;
     static constexpr size_t headroom = 4;
 #if defined(STAGING_TELEMETRY)
