@@ -1017,7 +1017,9 @@ void CLASS::restore_(size_t offset, size_t size) NOEXCEPT
     using namespace system;
     std::unique_lock restore_lock(restore_mutex_);
 
-    const auto pages = words_ * page_bound;
+    // Segments clamp to full pages below logical (as does release candidacy):
+    // the reservation above commitment is inaccessible (installation reads).
+    const auto pages = to_width<zero>(logical_.load()) / page_;
     const auto span = std::max(one, release_chunk / page_);
     const auto last = (offset + sub1(size)) / page_;
     auto page = offset / page_;
