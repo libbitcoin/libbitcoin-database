@@ -97,6 +97,7 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
     dirty_.reset();
     intent_.reset();
     released_.reset();
+    sweep_.reset();
     words_ = zero;
     engaged_.store(false);
 #endif

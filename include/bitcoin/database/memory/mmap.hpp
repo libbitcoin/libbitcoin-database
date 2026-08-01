@@ -224,9 +224,10 @@ private:
     static constexpr size_t urgent_factor = 4;
     static constexpr size_t idle_seconds = 60;
 
-    // Page-granular release fragments the address space beyond what host
-    // memory management tolerates (vma/vm_map_entry explosion); disabled
-    // pending run-granular conversion.
+    // Release conversion granularity: chunked runs bound address space
+    // fragmentation (each conversion splits a mapping) to the measured flat
+    // zone of host memory management (heads / chunk fragments worst case).
+    static constexpr size_t release_chunk = system::power2(20u);
     static constexpr bool head_release = false;
     static constexpr size_t headroom = 4;
 #if defined(STAGING_TELEMETRY)
@@ -380,6 +381,10 @@ private:
     std::unique_ptr<dirty_bitmaps> intent_{};
     std::unique_ptr<dirty_bitmaps> released_{};
     size_t words_{};
+
+    // Sweep scratch (candidate/released word snapshots), protected by
+    // restore_mutex_.
+    std::unique_ptr<uint64_t[]> sweep_{};
 
     // Set when the first head page releases (gates the prepare fast path).
     std::atomic_bool engaged_{};
