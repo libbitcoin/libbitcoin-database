@@ -384,19 +384,28 @@ bool CLASS::finalize_(size_t
     const auto max = sub1(page);
     const auto target = to_width<Column>(size);
     const auto align = bit_and(ceilinged_add(target, max), bit_not(max));
-    const auto advice = random_ ? MADV_RANDOM : MADV_SEQUENTIAL;
 
-    for (size_t offset{}; offset < align; offset += advise_chunk)
+    // Advice is elective (normal is the kernel default) and configured from
+    // the read pattern (see database::advice), as advising from the write
+    // pattern (structural) invites fault read amplification on random reads.
+    // Random access preloads (small heads, avoiding initial fault stalls).
+    if (access_ != advice::normal)
     {
-        const auto length = std::min(advise_chunk, align - offset);
-        const auto start = std::next(memory_map_[Column], offset);
+        const auto preload = (access_ == advice::random);
+        const auto behavior = preload ? MADV_RANDOM : MADV_SEQUENTIAL;
 
-        if (::madvise(start, length, advice) == fail || (random_ &&
-            ::madvise(start, length, MADV_WILLNEED) == fail))
+        for (size_t offset{}; offset < align; offset += advise_chunk)
         {
-            set_first_code(error::madvise_failure);
-            unmap_<Column>(size);
-            return false;
+            const auto length = std::min(advise_chunk, align - offset);
+            const auto start = std::next(memory_map_[Column], offset);
+
+            if (::madvise(start, length, behavior) == fail || (preload &&
+                ::madvise(start, length, MADV_WILLNEED) == fail))
+            {
+                set_first_code(error::madvise_failure);
+                unmap_<Column>(size);
+                return false;
+            }
         }
     }
 #endif // !HAVE_MSC && !WITHOUT_MADVISE
