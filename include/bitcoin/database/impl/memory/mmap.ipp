@@ -24,6 +24,7 @@
 #include <shared_mutex>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/file/file.hpp>
+#include <bitcoin/database/memory/utilities.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -112,6 +113,17 @@ size_t CLASS::to_capacity(size_t required) const NOEXCEPT
 // this design exists to prevent, moved from create to first touch). Growth is
 // chunked to bound slow path frequency, and clamped so that small tables do
 // not over-commit (the provisioned file requires no memory until committed).
+// The commit chunk is scaled to memory (bounded by commit_chunk), as the
+// committed but unused overhang is otherwise up to one full chunk for every
+// instance, an outsized share of a small system under memory pressure.
+TEMPLATE
+size_t CLASS::to_chunk() NOEXCEPT
+{
+    static const auto chunk = std::min(commit_chunk,
+        system::possible_narrow_cast<size_t>(system_memory() / chunk_scale));
+    return chunk;
+}
+
 TEMPLATE
 size_t CLASS::to_growth(size_t required) const NOEXCEPT
 {
@@ -120,7 +132,7 @@ size_t CLASS::to_growth(size_t required) const NOEXCEPT
     const auto expand = ceilinged_multiply(required, expansion_) / 100u;
     const auto expanded = ceilinged_add(required, expand);
     const auto chunked = std::max(expanded,
-        ceilinged_add(capacity_.load(), to_rows(commit_chunk)));
+        ceilinged_add(capacity_.load(), to_rows(to_chunk())));
 
     return std::min(chunked, std::max(expanded, to_provision()));
 #else
@@ -148,7 +160,7 @@ size_t CLASS::to_commitment() const NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
     const auto logical = logical_.load();
-    return std::min(to_provision(), std::max(logical, to_rows(commit_chunk)));
+    return std::min(to_provision(), std::max(logical, to_rows(to_chunk())));
 #else
     // The classic mapping is file-backed, so commitment is provisioning.
     return to_provision();

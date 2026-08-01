@@ -732,7 +732,11 @@ bool CLASS::sync_() NOEXCEPT
 TEMPLATE
 void CLASS::settler_start_() NOEXCEPT
 {
-    limit_ = system_memory() / throttle_factor;
+    // Halve the staging debt allowance on small systems, as the debt is
+    // otherwise an outsized share of a small system under memory pressure.
+    const auto memory = system_memory();
+    const auto small = memory < system::power2(36u);
+    limit_ = memory / (small ? (2u * throttle_factor) : throttle_factor);
     evicted_ = zero;
     settling_.store(true);
     settler_ = std::thread([this]() NOEXCEPT

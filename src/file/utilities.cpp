@@ -28,16 +28,10 @@
 #include <ios>
 #include <bitcoin/database/define.hpp>
 
-#if defined(HAVE_MSC)
-    #define MSC_ONLY(name) name
+#if defined(HAVE_MSC) || defined(HAVE_LINUX)
+    #define ADVISED_ONLY(name) name
 #else
-    #define MSC_ONLY(name)
-#endif
-
-#if defined(HAVE_LINUX)
-    #define LINUX_ONLY(name) name
-#else
-    #define LINUX_ONLY(name)
+    #define ADVISED_ONLY(name)
 #endif
 
 namespace libbitcoin {
@@ -299,18 +293,26 @@ code space_ex(size_t& out, const path& filename) NOEXCEPT
 // File descriptor functions required for memory mapping.
 // ----------------------------------------------------------------------------
 
-int open(const path& filename, bool MSC_ONLY(random),
-    advice LINUX_ONLY(access)) NOEXCEPT
+int open(const path& filename, bool,
+    advice ADVISED_ONLY(access)) NOEXCEPT
 {
     const auto path = system::extended_path(filename);
     int file_descriptor{};
 
 #if defined(HAVE_MSC)
+    // Advice is elective (unhinted is the cache manager default) and
+    // configured from the read pattern (see database::advice).
+    // Order follows the advice enumeration.
+    static constexpr std::array<int, 3> hints
+    {
+        0, _O_RANDOM, _O_SEQUENTIAL
+    };
+
     // _wsopen_s and wstring do not throw (but are unannotated).
     // sets file_descriptor = -1 and errno on error.
-    const auto access = (random ? _O_RANDOM : _O_SEQUENTIAL);
+    const auto hint = hints.at(to_value(access));
     ::_wsopen_s(&file_descriptor, path.c_str(),
-        O_RDWR | _O_BINARY | access, _SH_DENYWR, _S_IREAD | _S_IWRITE);
+        O_RDWR | _O_BINARY | hint, _SH_DENYWR, _S_IREAD | _S_IWRITE);
 #elif defined(HAVE_LINUX)
     // open sets errno on failure.
     file_descriptor = ::open(path.c_str(), O_RDWR, S_IRUSR | S_IWUSR);
@@ -327,7 +329,7 @@ int open(const path& filename, bool MSC_ONLY(random),
 
         // posix_fadvise returns error on failure.
         const auto result = ::posix_fadvise(file_descriptor, 0, 0,
-            advices.at(static_cast<uint8_t>(access)));
+            advices.at(to_value(access)));
         if (!is_zero(result))
         {
             close(file_descriptor);
