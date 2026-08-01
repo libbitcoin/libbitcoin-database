@@ -201,6 +201,7 @@ protected:
         return system::ceilinged_divide(bytes, row);
     }
 
+    static size_t to_chunk() NOEXCEPT;
     size_t to_capacity(size_t required) const NOEXCEPT;
     size_t to_growth(size_t required) const NOEXCEPT;
     size_t to_provision() const NOEXCEPT;
@@ -214,6 +215,7 @@ private:
     static constexpr size_t settle_chunk = system::power2(28u);
     static constexpr size_t advise_chunk = system::power2(30u);
     static constexpr size_t commit_chunk = system::power2(28u);
+    static constexpr size_t chunk_scale = 256;
     static constexpr size_t evict_chunk = system::power2(30u);
     static constexpr size_t compress_factor = 32;
     static constexpr size_t evict_factor = 32;
