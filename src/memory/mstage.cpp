@@ -55,8 +55,18 @@ int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 
 int mmap_unsettle(void* address, size_t size) NOEXCEPT
 {
-    return ::mmap(address, size, PROT_READ | PROT_WRITE,
-        MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0) == MAP_FAILED ? -1 : 0;
+    // No reserve: an unsettled span can span hundreds of gigabytes (truncate
+    // reverting settled rows for re-append), which heuristic overcommit
+    // refuses as a single anonymous commitment; pages charge on touch.
+#if defined(MAP_NORESERVE)
+    constexpr auto flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED |
+        MAP_NORESERVE;
+#else
+    constexpr auto flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED;
+#endif
+
+    return ::mmap(address, size, PROT_READ | PROT_WRITE, flags, -1, 0)
+        == MAP_FAILED ? -1 : 0;
 }
 
 int mmap_evict(void* address, size_t size) NOEXCEPT
