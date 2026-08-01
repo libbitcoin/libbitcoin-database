@@ -133,13 +133,14 @@ bool CLASS::expand(const Link& count) NOEXCEPT
 TEMPLATE
 code CLASS::get_fault() const NOEXCEPT
 {
-    return body_.get_fault();
+    const auto ec = head_.get_fault();
+    return ec ? ec : body_.get_fault();
 }
 
 TEMPLATE
 size_t CLASS::get_space() const NOEXCEPT
 {
-    return body_.get_space();
+    return system::ceilinged_add(head_.get_space(), body_.get_space());
 }
 
 TEMPLATE

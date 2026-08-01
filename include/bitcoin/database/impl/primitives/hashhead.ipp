@@ -72,9 +72,22 @@ bool CLASS::create() NOEXCEPT
 
     // std::memset/fill_n have identical performance (on win32).
     ////std::memset(ptr.data(), system::bit_all<uint8_t>, allocation);
+    file_.prepare(start, allocation);
     std::fill_n(ptr.data(), allocation, system::bit_all<uint8_t>);
     file_.mark(start, allocation);
     return set_body_count(zero);
+}
+
+TEMPLATE
+code CLASS::get_fault() const NOEXCEPT
+{
+    return file_.get_fault();
+}
+
+TEMPLATE
+size_t CLASS::get_space() const NOEXCEPT
+{
+    return file_.get_space();
 }
 
 TEMPLATE
@@ -108,6 +121,7 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     // offsetting is a multiple of sell size, a full cell is consumed for it.
     // In case of disabled there are no cells, so file is link size.
     auto value = count.value;
+    file_.prepare(zero, Link::size);
     link_array(ptr.data()) = link_array(value);
     file_.mark(zero, Link::size);
     return true;
@@ -202,6 +216,7 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
     if (is_null(raw))
         return false;
 
+    file_.prepare(position, cell_size);
     const auto entropy = keys::thumb(key);
     if constexpr (aligned)
     {

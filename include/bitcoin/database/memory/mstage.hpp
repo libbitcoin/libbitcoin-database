@@ -53,6 +53,10 @@ int mmap_unsettle(void* address, size_t size) NOEXCEPT;
 /// Release cached pages of a settled range (writes back any dirty first).
 int mmap_evict(void* address, size_t size) NOEXCEPT;
 
+/// Atomically replace a released (read-only file-backed) range with writable
+/// anonymous memory carrying its content (readers never observe zeros).
+int mmap_restore(void* address, size_t size) NOEXCEPT;
+
 /// Full-transfer positional file read/write (false on failure or early eof).
 bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT;
 bool pwrite_all(int fd, const uint8_t* from, size_t size,

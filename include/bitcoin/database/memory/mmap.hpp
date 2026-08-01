@@ -118,6 +118,10 @@ public:
     /// Clear disk full condition, fails if fault, must be loaded, idempotent.
     code reload() NOEXCEPT override;
 
+    /// Declare content mutation, restoring released pages (unstaged
+    /// instances under the staging backend only; no effect otherwise).
+    void prepare(size_t offset, size_t size) NOEXCEPT override;
+
     /// Report content mutation (advisory page-dirty tracking, unstaged
     /// instances under the staging backend only; no effect otherwise).
     void mark(size_t offset, size_t size) NOEXCEPT override;
@@ -217,6 +221,11 @@ private:
     static constexpr size_t active_factor = 32;
     static constexpr size_t urgent_factor = 4;
     static constexpr size_t idle_seconds = 60;
+
+    // Page-granular release fragments the address space beyond what host
+    // memory management tolerates (vma/vm_map_entry explosion); disabled
+    // pending run-granular conversion.
+    static constexpr bool head_release = false;
     static constexpr size_t headroom = 4;
 #if defined(STAGING_TELEMETRY)
     static constexpr size_t telemetry_seconds = 60;
@@ -288,6 +297,11 @@ private:
     bool transfer_(size_t bytes) NOEXCEPT;
     template <size_t Column>
     bool sync_() NOEXCEPT;
+
+    // head page release (unstaged instances), synchronized with writers by
+    // the prepare/release bit protocol (see release_pages_).
+    bool release_pages_() NOEXCEPT;
+    void restore_(size_t offset, size_t size) NOEXCEPT;
 
     // settle scheduler (instance-owned thread, load/unload lifecycle).
     void settler_start_() NOEXCEPT;
@@ -361,7 +375,20 @@ private:
 
     // These are protected by remap_mutex_.
     std::unique_ptr<dirty_bitmaps> dirty_{};
+    std::unique_ptr<dirty_bitmaps> intent_{};
+    std::unique_ptr<dirty_bitmaps> released_{};
     size_t words_{};
+
+    // Set when the first head page releases (gates the prepare fast path).
+    std::atomic_bool engaged_{};
+
+    // Serializes page release against restore (prepare slow path).
+    mutable std::mutex restore_mutex_{};
+
+    // Serializes transfer passes (settler tick against flush), as concurrent
+    // passes split the claimed dirty set, allowing a flush to complete while
+    // claimed pages remain unwritten (a stale snapshot copy).
+    mutable std::mutex transfer_mutex_{};
 
     // These are protected by extent_mutex_.
     size_t page_{};
