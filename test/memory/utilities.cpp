@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(memory_utilities__release_candidates__none__all)
 BOOST_AUTO_TEST_CASE(memory_utilities__release_candidates__each__excluded)
 {
     BOOST_REQUIRE_EQUAL(release_candidates(0b0001, 0b0010, 0b0100),
-        bit_not<uint64_t>(0b0111));
+        system::bit_not<uint64_t>(0b0111));
 }
 
 BOOST_AUTO_TEST_CASE(memory_utilities__release_candidates__all__none)
@@ -101,8 +101,8 @@ BOOST_AUTO_TEST_CASE(memory_utilities__page_mask__spanning__clamped)
 {
     // Run [60, 70) in word zero: bits 60..63; in word one: bits 0..5.
     BOOST_REQUIRE_EQUAL(page_mask(60, 70, 0),
-        bit_and(max_uint64, mask_right<uint64_t>(60)));
-    BOOST_REQUIRE_EQUAL(page_mask(60, 70, 64), unmask_right<uint64_t>(6));
+        system::bit_and(max_uint64, system::mask_right<uint64_t>(60)));
+    BOOST_REQUIRE_EQUAL(page_mask(60, 70, 64), system::unmask_right<uint64_t>(6));
 }
 
 BOOST_AUTO_TEST_CASE(memory_utilities__page_mask__full_word__all)
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(memory_utilities__next_run__single_page__found)
 BOOST_AUTO_TEST_CASE(memory_utilities__next_run__word_spanning__joined)
 {
     // Bits 62..63 of word zero and 0..2 of word one: run [62, 67).
-    const uint64_t words[]{ mask_right<uint64_t>(62), 0b0111 };
+    const uint64_t words[]{ system::mask_right<uint64_t>(62), 0b0111 };
     const auto run = next_run(words, 128, 0);
     BOOST_REQUIRE_EQUAL(run.first, 62u);
     BOOST_REQUIRE_EQUAL(run.second, 67u);
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(memory_utilities__bit_run__interior_page__extent)
 BOOST_AUTO_TEST_CASE(memory_utilities__bit_run__word_spanning__extent)
 {
     // Bits 63 of word zero and 0..1 of word one: run [63, 66) from page 64.
-    const uint64_t words[]{ bit_left<uint64_t>(0), 0b0011 };
+    const uint64_t words[]{ system::bit_left<uint64_t>(0), 0b0011 };
     const auto run = bit_run(words, 128, 64);
     BOOST_REQUIRE_EQUAL(run.first, 63u);
     BOOST_REQUIRE_EQUAL(run.second, 66u);

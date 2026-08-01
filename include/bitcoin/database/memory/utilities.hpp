@@ -73,7 +73,7 @@ constexpr uint64_t release_below(uint64_t candidates, size_t pages,
 {
     using namespace system;
     return (pages <= first) ? zero :
-        (pages - first >= width<uint64_t>()) ? candidates :
+        (pages - first >= to_bits(sizeof(uint64_t))) ? candidates :
             bit_and(candidates, unmask_right<uint64_t>(pages - first));
 }
 
@@ -82,7 +82,7 @@ constexpr uint64_t release_below(uint64_t candidates, size_t pages,
 constexpr uint64_t page_mask(size_t lo, size_t hi, size_t first) NOEXCEPT
 {
     using namespace system;
-    constexpr auto bits = width<uint64_t>();
+    constexpr auto bits = to_bits(sizeof(uint64_t));
     const auto begin = std::max(lo, first);
     const auto end = std::min(hi, first + bits);
     return (begin >= end) ? zero : bit_and(
@@ -97,7 +97,7 @@ inline std::pair<size_t, size_t> next_run(const uint64_t* words, size_t pages,
     size_t page) NOEXCEPT
 {
     using namespace system;
-    constexpr auto bits = width<uint64_t>();
+    constexpr auto bits = to_bits(sizeof(uint64_t));
 
     // Find first set bit at or above page.
     while ((page < pages) && !get_right(words[page / bits], page % bits))
@@ -117,7 +117,7 @@ inline std::pair<size_t, size_t> bit_run(const uint64_t* words, size_t pages,
     size_t page) NOEXCEPT
 {
     using namespace system;
-    constexpr auto bits = width<uint64_t>();
+    constexpr auto bits = to_bits(sizeof(uint64_t));
 
     if ((page >= pages) || !get_right(words[page / bits], page % bits))
         return { page, page };
