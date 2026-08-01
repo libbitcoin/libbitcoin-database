@@ -891,8 +891,11 @@ void CLASS::head_run_() NOEXCEPT
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
 
+        // Available includes reclaimable file cache, which a loaded store
+        // keeps large while the kernel swaps cold anonymous pages, so free
+        // exhaustion also signals scarcity (anon is being displaced).
         const auto scarcity = head_release && dirty_ &&
-            (system_available() < scarce);
+            ((system_available() < scarce) || (system_free() < scarce));
         if (!scarcity &&
             ((still < idle_seconds) || (transferred == top)))
             continue;
