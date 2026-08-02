@@ -987,7 +987,17 @@ void CLASS::head_run_() NOEXCEPT
         // exhaustion also signals scarcity (anon is being displaced).
         const auto scarcity = head_release && dirty_ &&
             ((system_available() < scarce) || (system_free() < scarce));
-        if (!scarcity &&
+
+        // Once engaged, a quiet instance converts independent of momentary
+        // scarcity: the signal clears as swap absorbs the hot set, but the
+        // swapped pages remain anonymous, so reads fault them back one at a
+        // time (a serial swap-in per probe). Conversion instead settles
+        // clean pages without read-back (the file holds their content),
+        // freeing swap and routing reads through the file mapping.
+        const auto engaged = engaged_.load();
+        const auto quiet = writes < release_quiet;
+        const auto draining = engaged && quiet;
+        if (!scarcity && !draining &&
             ((still < idle_seconds) || (transferred == top)))
             continue;
 
@@ -998,7 +1008,7 @@ void CLASS::head_run_() NOEXCEPT
         // otherwise re-releases restored segments every pass). Its
         // anonymous set is left to swap (dirty-exempt) until quiescence,
         // typically the phase change.
-        if (scarcity && (writes >= release_quiet))
+        if (scarcity && !quiet)
             continue;
 
         {
@@ -1007,7 +1017,6 @@ void CLASS::head_run_() NOEXCEPT
             if (!loaded_.load() || fault_.load())
                 continue;
 
-            const auto engaged = engaged_.load();
             if constexpr (head_release)
                 if (scarcity && !engaged)
                     engaged_.store(true);
@@ -1022,7 +1031,9 @@ void CLASS::head_run_() NOEXCEPT
                 continue;
             }
 
-            if (scarcity && engaged && !release_pages_())
+            // Quiet is assured here (hot scarcity skipped above, and idle
+            // draining implies sixty still seconds).
+            if (engaged && !release_pages_())
                 continue;
         }
 
