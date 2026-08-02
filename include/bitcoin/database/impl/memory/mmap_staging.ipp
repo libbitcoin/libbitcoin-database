@@ -991,6 +991,16 @@ void CLASS::head_run_() NOEXCEPT
             ((still < idle_seconds) || (transferred == top)))
             continue;
 
+        // A write-hot instance neither transfers nor releases under
+        // scarcity: transferred pages re-dirty immediately (write
+        // amplification without release payoff, as hash-scattered writes
+        // into released pages each cost a segment restore, and the sweep
+        // otherwise re-releases restored segments every pass). Its
+        // anonymous set is left to swap (dirty-exempt) until quiescence,
+        // typically the phase change.
+        if (scarcity && (writes >= release_quiet))
+            continue;
+
         {
             std::shared_lock map_lock(remap_mutex_);
 
@@ -1012,12 +1022,7 @@ void CLASS::head_run_() NOEXCEPT
                 continue;
             }
 
-            // A write-hot instance does not release: hash-scattered writes
-            // into released pages each cost a segment restore, and the sweep
-            // otherwise re-releases restored segments every pass (release
-            // and restore ping-pong that serializes all instance writers).
-            const auto quiet = writes < release_quiet;
-            if (scarcity && engaged && quiet && !release_pages_())
+            if (scarcity && engaged && !release_pages_())
                 continue;
         }
 
