@@ -301,6 +301,7 @@ private:
     bool transfer_(size_t bytes) NOEXCEPT;
     template <size_t Column>
     bool sync_() NOEXCEPT;
+    void remark_(size_t offset, size_t size) NOEXCEPT;
 
     // head page release (unstaged instances), synchronized with writers by
     // the prepare/release bit protocol (see release_pages_).

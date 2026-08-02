@@ -234,18 +234,13 @@ void CLASS::mark(size_t STAGING_ONLY(offset),
 
     // Marks follow content writes; transfer clears before reading, so pages
     // remarked during a transfer are simply rewritten by the next pass.
-    auto page = offset / page_;
-    const auto end = (offset + sub1(size)) / page_;
-    while ((page <= end) && ((page / page_bound) < words_))
-    {
-        const auto bit = system::bit_right<uint64_t>(page % page_bound);
-        dirty_[page++ / page_bound].fetch_or(bit, relaxed);
-    }
+    remark_(offset, size);
 
     // Uncount the writer after its marks (sequentially consistent), so a
-    // release pass loading a drained count observes the dirty bits.
+    // release pass loading a drained count observes the dirty bits. Only
+    // prepare() counts, so only mark() may uncount (transfer failure restores
+    // marks by remark_, as an unpaired uncount here corrupts the count).
     writers_.fetch_sub(one);
-    marks_.fetch_add(one, relaxed);
 #endif
 }
 

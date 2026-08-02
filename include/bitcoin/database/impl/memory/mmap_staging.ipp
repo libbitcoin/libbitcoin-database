@@ -638,6 +638,22 @@ size_t CLASS::page_ceiling(size_t bytes) const NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
+// Dirty marking without the writer uncount (no paired prepare), for internal
+// mark restoration (mark() pairs with prepare() and uncounts its writer).
+TEMPLATE
+void CLASS::remark_(size_t offset, size_t size) NOEXCEPT
+{
+    auto page = offset / page_;
+    const auto end = (offset + sub1(size)) / page_;
+    while ((page <= end) && ((page / page_bound) < words_))
+    {
+        const auto bit = system::bit_right<uint64_t>(page % page_bound);
+        dirty_[page++ / page_bound].fetch_or(bit, relaxed);
+    }
+
+    marks_.fetch_add(one, relaxed);
+}
+
 // Transfer dirty pages within [0, bytes), clearing marks before content
 // reads so that concurrently remarked pages transfer on the next pass.
 // Marks beyond bytes are retained (backfill above logical transfers when
@@ -699,8 +715,8 @@ bool CLASS::transfer_(size_t bytes) NOEXCEPT
                 // Restore claimed marks (the failed range, the page that
                 // ended it, and this word's unwritten remainder) so failure
                 // is retryable, not lossy.
-                mark(from, to - from);
-                mark(start, end - start);
+                remark_(from, to - from);
+                remark_(start, end - start);
                 dirty_[word].fetch_or(bits, relaxed);
                 return false;
             }
@@ -712,7 +728,7 @@ bool CLASS::transfer_(size_t bytes) NOEXCEPT
 
     if (!write())
     {
-        mark(from, to - from);
+        remark_(from, to - from);
         return false;
     }
 
