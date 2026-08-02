@@ -317,10 +317,11 @@ bool CLASS::stage_() NOEXCEPT
 
     // Page-dirty tracking for unstaged (rewrite-in-place head) instances,
     // sized to the reservation (value-initialized to clean). Single column
-    // only (byte-offset marks); aggregates transfer in full.
+    // only (byte-offset marks); aggregates transfer in full. Shared heads
+    // write through their mapping, so they track and transfer nothing.
     if constexpr (is_zero(Column) && is_one(columns))
     {
-        if (!staged_)
+        if (!staged_ && !head_shared)
         {
             const auto pages = ceilinged_divide(reserved, page_);
             words_ = ceilinged_divide(pages, page_bound);
@@ -332,9 +333,34 @@ bool CLASS::stage_() NOEXCEPT
         }
     }
 
+    const auto target = to_width<Column>(size);
+
+    // A shared head maps its file in place of commitment (content is the
+    // mapping, so there is nothing to populate).
+    if (!staged_ && head_shared)
+    {
+        if (mmap_share(memory_map_[Column], target, opened_[Column],
+            zero) == fail)
+        {
+            teardown_<Column>(error::mmap_failure);
+            return false;
+        }
+
+#if !defined(WITHOUT_MADVISE)
+        // Heads read randomly, so the mapping advises as the file opens.
+        if (!advise_(memory_map_[Column], target))
+        {
+            teardown_<Column>(error::madvise_failure);
+            return false;
+        }
+#endif
+
+        loaded_.store(true);
+        return true;
+    }
+
     // Commit anonymous pages above the settle boundary page floor.
     const auto settled = page_floor(to_width<Column>(settled_.load()));
-    const auto target = to_width<Column>(size);
 
     if ((target > settled) && (mmap_commit(std::next(memory_map_[Column],
         settled), target - settled) == fail))
@@ -374,6 +400,23 @@ bool CLASS::commit_(size_t size) NOEXCEPT
 
     if (target <= reserved_[Column])
     {
+        // A shared head extends its file mapping over the growth (the file is
+        // provisioned to capacity, so the extension is already allocated).
+        if (!staged_ && head_shared)
+        {
+            const auto grown = page_floor(to_width<Column>(capacity_.load()));
+
+            if ((target > grown) && (mmap_share(std::next(
+                memory_map_[Column], grown), target - grown, opened_[Column],
+                grown) == fail))
+            {
+                teardown_<Column>(error::mmap_failure);
+                return false;
+            }
+
+            return true;
+        }
+
         // Never commit below the settle boundary page floor (the settled
         // prefix is a read-only file mapping); recommit is idempotent.
         const auto settled = page_floor(to_width<Column>(settled_.load()));
@@ -403,6 +446,32 @@ bool CLASS::commit_(size_t size) NOEXCEPT
     using namespace system;
     const auto base = pointer_cast<uint8_t>(replace);
     const auto settled = page_floor(to_width<Column>(settled_.load()));
+
+    // A shared head remaps its file onto the replacement (the file is the
+    // content, so migration copies nothing).
+    if (!staged_ && head_shared)
+    {
+        if (mmap_share(replace, target, opened_[Column], zero) == fail)
+        {
+            ::munmap(replace, reserved);
+            teardown_<Column>(error::mmap_failure);
+            return false;
+        }
+
+        const auto stale = ::munmap(memory_map_[Column], reserved_[Column])
+            != fail;
+
+        memory_map_[Column] = base;
+        reserved_[Column] = reserved;
+
+        if (!stale)
+        {
+            set_first_code(error::munmap_failure);
+            return false;
+        }
+
+        return true;
+    }
 
     if (mmap_commit(std::next(base, settled), target - settled) == fail)
     {
@@ -751,6 +820,10 @@ bool CLASS::sync_() NOEXCEPT
 TEMPLATE
 void CLASS::settler_start_() NOEXCEPT
 {
+    // A shared head has no lazy writer (the kernel writes its mapping back).
+    if (!staged_ && head_shared)
+        return;
+
     limit_ = system_memory() / throttle_factor;
     evicted_ = zero;
     settling_.store(true);

@@ -47,6 +47,9 @@ int mmap_commit(void* address, size_t size) NOEXCEPT;
 /// Replace committed pages with a read-only shared mapping of the file.
 int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT;
 
+/// Replace reserved pages with a writable shared mapping of the file.
+int mmap_share(void* address, size_t size, int fd, size_t offset) NOEXCEPT;
+
 /// Replace settled pages with committed anonymous memory (contents undefined).
 int mmap_unsettle(void* address, size_t size) NOEXCEPT;
 

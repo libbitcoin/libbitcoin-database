@@ -230,6 +230,15 @@ private:
     static constexpr size_t release_chunk = system::power2(20u);
     static constexpr size_t release_quiet = 128;
     static constexpr bool head_release = false;
+
+    // Map heads writable-shared from their files (the native windows model)
+    // instead of anonymously with a dirty-page writer. Head reclaim is then
+    // kernel writeback of a bounded rewrite-in-place mapping (clean pages
+    // drop) rather than swap, which anonymous pages alone require. Bodies
+    // remain staged, so the unbounded append writeback that motivates dirty
+    // ratio tuning does not return with it. Excludes head_release (nothing
+    // to release) and the dirty bitmap (nothing to transfer).
+    static constexpr bool head_shared = false;
     static constexpr size_t headroom = 4;
 #if defined(STAGING_TELEMETRY)
     static constexpr size_t telemetry_seconds = 60;

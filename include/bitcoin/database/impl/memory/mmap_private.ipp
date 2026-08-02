@@ -138,13 +138,15 @@ bool CLASS::flush_(size_t
 {
 #if defined(MANAGE_STAGING)
     // Transfer unflushed rows from anonymous memory to the file. Settled rows
-    // are already on disk (staged); unstaged transfers dirty pages only.
+    // are already on disk (staged); unstaged transfers dirty pages only, or
+    // synchronizes its mapping (shared head, which writes through).
     const auto from = to_width<Column>(settled_.load());
     const auto to = to_width<Column>(rows);
 
     const auto success =
            (staged_ ? ((from >= to) || pwrite_all(opened_[Column],
                std::next(memory_map_[Column], from), to - from, from)) :
+            head_shared ? (::msync(memory_map_[Column], to, MS_SYNC) != fail) :
                transfer_<Column>(to))
         && sync_<Column>();
 #elif defined(HAVE_MSC)
