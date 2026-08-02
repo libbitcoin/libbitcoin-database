@@ -24,6 +24,7 @@
 
 #if defined(MANAGE_STAGING)
 
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -51,6 +52,23 @@ int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 {
     return ::mmap(address, size, PROT_READ, MAP_SHARED | MAP_FIXED, fd,
         possible_narrow_sign_cast<off_t>(offset)) == MAP_FAILED ? -1 : 0;
+}
+
+// The lazy writer duplicates the head in page cache: every transferred page
+// is written to the file, and the cached copy of that write is redundant
+// while the anonymous page remains authoritative (the head is resident, not
+// read back). Undiscarded, that duplicate doubles the head footprint and
+// exhausts memory, which the kernel resolves by swapping the live copy.
+// Mapped pages (released runs, where the file is the live copy) hold a
+// reference and are not discarded. Dirty pages are not discarded either, so
+// a page discards on the pass following its writeback.
+int file_discard(int fd) NOEXCEPT
+{
+#if defined(POSIX_FADV_DONTNEED)
+    return ::posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED);
+#else
+    return is_zero(fd) ? 0 : 0;
+#endif
 }
 
 int mmap_cold(void* address, size_t size) NOEXCEPT

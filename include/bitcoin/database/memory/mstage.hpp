@@ -59,6 +59,9 @@ int mmap_evict(void* address, size_t size) NOEXCEPT;
 /// Demote settled pages to reclaim-first order (cached until pressure).
 int mmap_cold(void* address, size_t size) NOEXCEPT;
 
+/// Discard unmapped page cache of a file (mapped pages are unaffected).
+int file_discard(int fd) NOEXCEPT;
+
 /// Atomically replace a released (read-only file-backed) range with writable
 /// anonymous memory carrying its content (readers never observe zeros).
 int mmap_restore(void* address, size_t size) NOEXCEPT;

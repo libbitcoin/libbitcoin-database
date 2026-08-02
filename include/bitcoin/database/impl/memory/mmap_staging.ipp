@@ -1040,6 +1040,10 @@ void CLASS::head_run_() NOEXCEPT
                 continue;
             }
 
+            // Discard the page cache copy of the transfer: the anonymous
+            // head is the live copy, so caching the file doubles it.
+            file_discard(opened_[zero]);
+
             // Quiet is assured here (hot scarcity skipped above, and idle
             // draining implies sixty still seconds).
             if (engaged && !release_pages_())
