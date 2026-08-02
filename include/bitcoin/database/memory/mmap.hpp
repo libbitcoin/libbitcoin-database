@@ -219,6 +219,13 @@ private:
     static constexpr size_t evict_chunk = system::power2(30u);
     static constexpr size_t compress_factor = 32;
     static constexpr size_t evict_factor = 32;
+
+    // Body eviction leads kernel reclaim: sweeping at the reclaim watermark
+    // concedes the choice of victim, and the kernel takes anonymous heads
+    // alongside the cold body cache (it balances the lists, it does not
+    // know that head residency is the store's priority). A higher floor
+    // keeps free memory above the watermark, so the sweep is the reclaim.
+    static constexpr size_t sweep_factor = 8;
     static constexpr size_t throttle_factor = 8;
     static constexpr size_t active_factor = 32;
     static constexpr size_t urgent_factor = 4;

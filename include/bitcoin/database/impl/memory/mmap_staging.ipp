@@ -867,7 +867,7 @@ void CLASS::settler_run_() NOEXCEPT
     const auto urgent  = memory / urgent_factor;
     const auto active  = memory / active_factor;
     const auto squeeze = memory / compress_factor;
-    const auto scarce  = memory / evict_factor;
+    const auto scarce  = memory / sweep_factor;
     const auto chunk   = std::max(one, settle_chunk / stride);
     const auto sweep   = std::max(one, evict_chunk / stride);
 
@@ -1236,7 +1236,17 @@ bool CLASS::evict_next_(size_t chunk) NOEXCEPT
 
     // A truncated boundary self-heals here (the cursor clamps to a lap).
     const auto end = settled_.load();
-    const auto from = (evicted_ < end) ? evicted_ : zero;
+
+    // Confine the lap to the recently settled tail: cache holds what was
+    // just written (and what validation just read), while the body below
+    // is long evicted, so a full-body lap sweeps unresident rows for most
+    // of its length and the tail refills faster than the cursor returns.
+    // A lap can hold no more than physical memory, as nothing else is
+    // resident to evict.
+    const auto span = std::max(chunk, system_memory() / stride);
+    const auto floor = (end > span) ? (end - span) : zero;
+    const auto from = ((evicted_ > floor) && (evicted_ < end)) ? evicted_ :
+        floor;
     const auto target = std::min(end, system::ceilinged_add(from, chunk));
 
     if (target <= from)
@@ -1245,7 +1255,7 @@ bool CLASS::evict_next_(size_t chunk) NOEXCEPT
     if (!evict_all_(from, target, sequence{}))
         return false;
 
-    // Wrap at the lap end so the next sweep resumes with the oldest.
+    // Wrap at the lap end so the next sweep resumes at the tail floor.
     evicted_ = (target == end) ? zero : target;
     return true;
 }
