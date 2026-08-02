@@ -53,6 +53,20 @@ int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT
         possible_narrow_sign_cast<off_t>(offset)) == MAP_FAILED ? -1 : 0;
 }
 
+int mmap_cold(void* address, size_t size) NOEXCEPT
+{
+#if defined(MADV_COLD)
+    // Deactivation expresses the residency priority the kernel cannot infer:
+    // settled bodies stay cached for imminent re-read (validation follows
+    // archival) but reclaim first under pressure, before active pages and
+    // anonymous heads (which otherwise swap to preserve the body cache). A
+    // read reactivates, so genuinely hot pages promote themselves back.
+    return ::madvise(address, size, MADV_COLD);
+#else
+    return 0;
+#endif
+}
+
 int mmap_share(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 {
     return ::mmap(address, size, PROT_READ | PROT_WRITE, MAP_SHARED |

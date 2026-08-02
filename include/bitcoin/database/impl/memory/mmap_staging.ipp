@@ -575,6 +575,15 @@ bool CLASS::settle_(size_t from, size_t to) NOEXCEPT
         teardown_<Column>(error::madvise_failure);
         return false;
     }
+
+    // Demote the settled extent to reclaim-first order: cached for imminent
+    // re-read (validation follows archival) but reclaimed under pressure
+    // before active pages and anonymous heads (head residency priority).
+    if (mmap_cold(address, end - begin) == fail)
+    {
+        teardown_<Column>(error::madvise_failure);
+        return false;
+    }
 #endif
 
     return true;
