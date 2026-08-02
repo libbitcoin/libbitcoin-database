@@ -380,6 +380,11 @@ bool CLASS::stage_() NOEXCEPT
         return false;
     }
 
+    // Discard the page cache copy of the load: the population read caches
+    // the whole head, duplicating in cache what it just copied to anonymous
+    // memory, so the head is resident twice before a block is processed.
+    file_discard(opened_[Column]);
+
     // Convert the settled prefix to a read-only file mapping.
     if (!settle_<Column>(zero, settled_.load()))
         return false;
