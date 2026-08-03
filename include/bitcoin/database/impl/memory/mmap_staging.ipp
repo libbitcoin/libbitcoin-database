@@ -373,17 +373,24 @@ bool CLASS::stage_() NOEXCEPT
     // staged only the settle boundary page remainder).
     const auto logical = to_width<Column>(logical_.load());
 
-    if ((settled < logical) && !pread_all(opened_[Column],
-        std::next(memory_map_[Column], settled), logical - settled, settled))
+    // The read streams its own page cache discard: a whole-column read
+    // caches the column (the head resident twice), and that transient
+    // stacked over the growing anonymous set forces reclaim during staging
+    // (measured: the eldest staged columns swap before the store is open).
+    // Chunking caps the duplicate at settle_chunk.
+    for (auto at = settled; at < logical; )
     {
-        teardown_<Column>(error::fsync_failure);
-        return false;
-    }
+        const auto chunk = std::min(logical - at, settle_chunk);
+        if (!pread_all(opened_[Column],
+            std::next(memory_map_[Column], at), chunk, at))
+        {
+            teardown_<Column>(error::fsync_failure);
+            return false;
+        }
 
-    // Discard the page cache copy of the load: the population read caches
-    // the whole head, duplicating in cache what it just copied to anonymous
-    // memory, so the head is resident twice before a block is processed.
-    file_discard(opened_[Column]);
+        at += chunk;
+        file_discard(opened_[Column]);
+    }
 
     // Convert the settled prefix to a read-only file mapping.
     if (!settle_<Column>(zero, settled_.load()))
