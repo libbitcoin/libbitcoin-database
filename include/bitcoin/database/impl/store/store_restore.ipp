@@ -64,6 +64,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         if (!ec) ec = file::remove_ex(heads);
         if (!ec) ec = file::rename_ex(primary, heads);
         if (!ec) ec = file::copy_directory_ex(heads, primary);
+        if (!ec) ec = file::discharge_directory_ex(primary);
     }
     else if (file::is_directory(secondary))
     {
@@ -72,6 +73,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         if (!ec) ec = file::remove_ex(heads);
         if (!ec) ec = file::rename_ex(secondary, heads);
         if (!ec) ec = file::copy_directory_ex(heads, primary);
+        if (!ec) ec = file::discharge_directory_ex(primary);
     }
     else
     {

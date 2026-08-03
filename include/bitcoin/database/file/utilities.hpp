@@ -71,6 +71,11 @@ BCD_API code copy_ex(const path& from, const path& to) NOEXCEPT;
 BCD_API bool copy_directory(const path& from, const path& to) NOEXCEPT;
 BCD_API code copy_directory_ex(const path& from, const path& to) NOEXCEPT;
 
+/// Discharge directory files from the page cache (posix, otherwise no-op),
+/// synchronizing pending writeback first. False on access/sync error.
+BCD_API bool discharge_directory(const path& to) NOEXCEPT;
+BCD_API code discharge_directory_ex(const path& to) NOEXCEPT;
+
 /// File descriptor functions (for memory mapping).
 BCD_API int open(const path& filename, bool random=true,
     advice access=advice::normal) NOEXCEPT;

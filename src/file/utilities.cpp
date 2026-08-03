@@ -249,6 +249,65 @@ code copy_directory_ex(const path& from, const path& to) NOEXCEPT
     return ec;
 }
 
+// directory
+bool discharge_directory(const path& to) NOEXCEPT
+{
+    return !discharge_directory_ex(to);
+}
+
+// Discharge an archival clone from the page cache (posix): the clone is
+// written but not soon read, and its cached pages and pending writeback
+// otherwise stand while staging allocates, so the kernel preserves the cache
+// by displacing the fresh anonymous set to swap. Synchronize before advising,
+// as dirty pages do not discharge.
+#if defined(POSIX_FADV_DONTNEED)
+// directory
+code discharge_directory_ex(const path& to) NOEXCEPT
+{
+    code ec{ system::error::errorno_t::no_error };
+    std::filesystem::directory_iterator it{ system::extended_path(to), ec };
+
+    for (const std::filesystem::directory_iterator end{}; !ec && (it != end);
+        it.increment(ec))
+    {
+        if (!it->is_regular_file(ec) || ec)
+            continue;
+
+        system::error::clear_errno();
+        const auto descriptor = ::open(it->path().c_str(), O_RDONLY);
+        if (descriptor == -1)
+            return system::error::get_errno();
+
+        if (::fsync(descriptor) == -1)
+        {
+            /* bool */ close(descriptor);
+            return system::error::get_errno();
+        }
+
+        // posix_fadvise returns the error value (does not set errno).
+        const auto result = ::posix_fadvise(descriptor, 0, 0,
+            POSIX_FADV_DONTNEED);
+        if (!is_zero(result))
+        {
+            /* bool */ close(descriptor);
+            errno = result;
+            return system::error::get_errno();
+        }
+
+        if (!close(descriptor))
+            return system::error::get_errno();
+    }
+
+    return ec;
+}
+#else
+// directory
+code discharge_directory_ex(const path&) NOEXCEPT
+{
+    return system::error::errorno_t::no_error;
+}
+#endif // POSIX_FADV_DONTNEED
+
 // File sizing.
 // ----------------------------------------------------------------------------
 
