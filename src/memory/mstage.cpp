@@ -105,6 +105,18 @@ int mmap_name(void*, size_t, const char*) NOEXCEPT
 }
 #endif
 
+// Residency probe for the touch pass guard (the touch must never fault).
+int mmap_resident(const void* address, size_t size,
+    unsigned char* vector) NOEXCEPT
+{
+#if defined(HAVE_APPLE)
+    return ::mincore(const_cast<void*>(address), size,
+        reinterpret_cast<char*>(vector));
+#else
+    return ::mincore(const_cast<void*>(address), size, vector);
+#endif
+}
+
 int mmap_share(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 {
     return ::mmap(address, size, PROT_READ | PROT_WRITE, MAP_SHARED |

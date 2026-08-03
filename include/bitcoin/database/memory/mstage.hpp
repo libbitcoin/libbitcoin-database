@@ -62,6 +62,10 @@ int mmap_cold(void* address, size_t size) NOEXCEPT;
 /// Name anonymous mappings in the range for diagnostics (no-op elsewhere).
 int mmap_name(void* address, size_t size, const char* name) NOEXCEPT;
 
+/// Report page residency for the range (one vector byte per page, low bit).
+int mmap_resident(const void* address, size_t size,
+    unsigned char* vector) NOEXCEPT;
+
 /// Discard unmapped page cache of a file (mapped pages are unaffected).
 int file_discard(int fd) NOEXCEPT;
 

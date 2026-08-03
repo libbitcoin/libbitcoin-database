@@ -230,6 +230,8 @@ private:
     static constexpr size_t active_factor = 32;
     static constexpr size_t urgent_factor = 4;
     static constexpr size_t idle_seconds = 60;
+    static constexpr size_t touch_seconds = 4;
+    static constexpr size_t touch_span = 16384;
 
     // Release conversion granularity: chunked runs bound address space
     // fragmentation (each conversion splits a mapping) to the measured flat

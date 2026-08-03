@@ -999,6 +999,7 @@ void CLASS::head_run_() NOEXCEPT
     auto mark = marks_.load();
     auto transferred = mark;
     size_t still{};
+    size_t touched{};
 
     while (settling_.load())
     {
@@ -1013,6 +1014,50 @@ void CLASS::head_run_() NOEXCEPT
         const auto writes = top - mark;
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
+
+        // Touch pass: assert working-set residency at a bounded rate.
+        // Hash-uniform probing is per-page sparse in every phase, so the
+        // kernel ages head pages cold and swaps them under cache pressure,
+        // though the set is the process working set (and head misses are
+        // unshieldable serial faults on the probe path). A read sets the
+        // page-table accessed bit without dirtying the page; volatile
+        // prevents elision. The unprivileged equivalent of mlock, and soft:
+        // under true extremity the kernel can still take the pages. The
+        // per-tick budget revisits every page each touch_seconds regardless
+        // of instance size (a whole-instance lap gave the largest head a
+        // proportionally longer revisit, which lost the aging race first).
+        // Residency-guarded so the touch never faults: a swapped page that
+        // nothing probes rests in swap, one the workload needs returns by
+        // its own fault and is defended thereafter.
+        {
+            using namespace system;
+            std::shared_lock touch_lock(remap_mutex_);
+            if (loaded_.load() && !fault_.load())
+            {
+                unsigned char resident[touch_span];
+                const auto pages = to_width<zero>(logical_.load()) / page_;
+                const volatile auto* map = memory_map_[zero];
+                auto budget = ceilinged_divide(pages, touch_seconds);
+                while (!is_zero(pages) && !is_zero(budget))
+                {
+                    if (touched >= pages)
+                        touched = zero;
+
+                    const auto at = touched * page_;
+                    const auto count = std::min(
+                        { touch_span, pages - touched, budget });
+
+                    if (mmap_resident(std::next(memory_map_[zero], at),
+                        count * page_, resident) == 0)
+                        for (size_t page{}; page < count; ++page)
+                            if (is_odd(resident[page]))
+                                (void)map[at + page * page_];
+
+                    touched += count;
+                    budget = floored_subtract(budget, count);
+                }
+            }
+        }
 
         // Available includes reclaimable file cache, which a loaded store
         // keeps large while the kernel swaps cold anonymous pages, so free
