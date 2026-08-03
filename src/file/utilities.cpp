@@ -362,9 +362,9 @@ int open(const path& filename, bool,
     // Advice is elective (unhinted is the cache manager default) and
     // configured from the read pattern (see database::advice).
     // Order follows the advice enumeration.
-    static constexpr std::array<int, 3> hints
+    static constexpr std::array<int, 4> hints
     {
-        0, _O_RANDOM, _O_SEQUENTIAL
+        0, _O_RANDOM, _O_SEQUENTIAL, _O_RANDOM
     };
 
     // _wsopen_s and wstring do not throw (but are unannotated).
@@ -381,9 +381,10 @@ int open(const path& filename, bool,
     if ((file_descriptor != -1) && (access != advice::normal))
     {
         // Order follows the advice enumeration.
-        static constexpr std::array<int, 3> advices
+        static constexpr std::array<int, 4> advices
         {
-            POSIX_FADV_NORMAL, POSIX_FADV_RANDOM, POSIX_FADV_SEQUENTIAL
+            POSIX_FADV_NORMAL, POSIX_FADV_RANDOM, POSIX_FADV_SEQUENTIAL,
+            POSIX_FADV_RANDOM
         };
 
         // posix_fadvise returns error on failure.

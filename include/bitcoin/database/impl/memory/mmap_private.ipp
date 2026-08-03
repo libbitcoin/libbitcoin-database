@@ -394,8 +394,9 @@ bool CLASS::finalize_(size_t
     // Random access preloads (small heads, avoiding initial fault stalls).
     if (access_ != advice::normal)
     {
+        const auto random = (access_ != advice::sequential);
         const auto preload = (access_ == advice::random);
-        const auto behavior = preload ? MADV_RANDOM : MADV_SEQUENTIAL;
+        const auto behavior = random ? MADV_RANDOM : MADV_SEQUENTIAL;
 
         for (size_t offset{}; offset < align; offset += advise_chunk)
         {

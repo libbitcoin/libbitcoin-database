@@ -694,10 +694,11 @@ bool CLASS::advise_(uint8_t* map, size_t size) const NOEXCEPT
     if (access_ == advice::normal)
         return true;
 
-    // Order follows the advice enumeration.
-    static constexpr std::array<int, 3> advices
+    // Order follows the advice enumeration (scattered is random without the
+    // preload, which this path does not apply in any case).
+    static constexpr std::array<int, 4> advices
     {
-        MADV_NORMAL, MADV_RANDOM, MADV_SEQUENTIAL
+        MADV_NORMAL, MADV_RANDOM, MADV_SEQUENTIAL, MADV_RANDOM
     };
 
     const auto behavior = advices.at(static_cast<uint8_t>(access_));
