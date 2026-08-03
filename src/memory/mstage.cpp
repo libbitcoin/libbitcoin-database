@@ -32,6 +32,9 @@
     #include <mach/mach.h>
     #include <mach/mach_vm.h>
 #endif
+#if defined(HAVE_LINUX)
+    #include <sys/prctl.h>
+#endif
 
 using namespace libbitcoin;
 using namespace libbitcoin::system;
@@ -84,6 +87,23 @@ int mmap_cold(void* address, size_t size) NOEXCEPT
     return 0;
 #endif
 }
+
+// Diagnostic attribution: names each anonymous vma in the range so smaps and
+// per-process accounting decompose by table (heads vs staged bodies vs
+// foreign allocations). Refusal (pre-5.17 kernel, name policy) is not an
+// error: attribution is best-effort and alters no behavior.
+#if defined(PR_SET_VMA) && defined(PR_SET_VMA_ANON_NAME)
+int mmap_name(void* address, size_t size, const char* name) NOEXCEPT
+{
+    ::prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, address, size, name);
+    return 0;
+}
+#else
+int mmap_name(void*, size_t, const char*) NOEXCEPT
+{
+    return 0;
+}
+#endif
 
 int mmap_share(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 {

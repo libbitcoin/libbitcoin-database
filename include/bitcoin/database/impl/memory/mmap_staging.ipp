@@ -396,6 +396,12 @@ bool CLASS::stage_() NOEXCEPT
     if (!settle_<Column>(zero, settled_.load()))
         return false;
 
+    // Attribute the anonymous span (above the settled file mapping) for
+    // diagnostics: smaps then decomposes anonymous memory by table.
+    mmap_name(std::next(memory_map_[Column], settled),
+        reserved_[Column] - settled,
+        filenames_[Column].filename().string().c_str());
+
     loaded_.store(true);
     return true;
 }
@@ -441,6 +447,11 @@ bool CLASS::commit_(size_t size) NOEXCEPT
             teardown_<Column>(error::mmap_failure);
             return false;
         }
+
+        // Committed growth is a new (unnamed) vma; reattribute it.
+        if (target > from)
+            mmap_name(std::next(memory_map_[Column], from), target - from,
+                filenames_[Column].filename().string().c_str());
 
         return true;
     }

@@ -59,6 +59,9 @@ int mmap_evict(void* address, size_t size) NOEXCEPT;
 /// Demote settled pages to reclaim-first order (cached until pressure).
 int mmap_cold(void* address, size_t size) NOEXCEPT;
 
+/// Name anonymous mappings in the range for diagnostics (no-op elsewhere).
+int mmap_name(void* address, size_t size, const char* name) NOEXCEPT;
+
 /// Discard unmapped page cache of a file (mapped pages are unaffected).
 int file_discard(int fd) NOEXCEPT;
 
