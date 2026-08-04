@@ -138,7 +138,10 @@ int mmap_unsettle(void* address, size_t size) NOEXCEPT
 
 int mmap_evict(void* address, size_t size) NOEXCEPT
 {
-#if defined(MADV_PAGEOUT)
+    // The apple sdk defines MADV_PAGEOUT but xnu refuses it (ENOTSUP), so
+    // the gate must be platform-true, not macro-present: darwin retains
+    // invalidation (MS_INVALIDATE drops clean ubc pages on mac).
+#if defined(MADV_PAGEOUT) && !defined(HAVE_APPLE)
     // MS_INVALIDATE does not drop clean page cache on linux (it invalidates
     // other mappings of the file), leaving the eviction sweep inert: body
     // cache pressure stands and the kernel preserves it by swapping the
