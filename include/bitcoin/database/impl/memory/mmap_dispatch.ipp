@@ -62,7 +62,6 @@ memory CLASS::get_filled(size_t offset, size_t size,
             const auto logical = to_width<zero>(logical_.load());
             const auto capacity = to_width<zero>(capacity_.load());
             const auto start = std::next(data, logical);
-            prepare(logical, capacity - logical);
             std::fill_n(start, capacity - logical, backfill);
             mark(logical, capacity - logical);
         }
