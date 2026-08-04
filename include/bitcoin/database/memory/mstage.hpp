@@ -47,11 +47,27 @@ int mmap_commit(void* address, size_t size) NOEXCEPT;
 /// Replace committed pages with a read-only shared mapping of the file.
 int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT;
 
+/// Replace reserved pages with a writable shared mapping of the file.
+int mmap_share(void* address, size_t size, int fd, size_t offset) NOEXCEPT;
+
 /// Replace settled pages with committed anonymous memory (contents undefined).
 int mmap_unsettle(void* address, size_t size) NOEXCEPT;
 
 /// Release cached pages of a settled range (writes back any dirty first).
 int mmap_evict(void* address, size_t size) NOEXCEPT;
+
+/// Demote settled pages to reclaim-first order (cached until pressure).
+int mmap_cold(void* address, size_t size) NOEXCEPT;
+
+/// Name anonymous mappings in the range for diagnostics (no-op elsewhere).
+int mmap_name(void* address, size_t size, const char* name) NOEXCEPT;
+
+/// Report page residency for the range (one vector byte per page, low bit).
+int mmap_resident(const void* address, size_t size,
+    unsigned char* vector) NOEXCEPT;
+
+/// Discard unmapped page cache of a file (mapped pages are unaffected).
+int file_discard(int fd) NOEXCEPT;
 
 /// Atomically replace a released (read-only file-backed) range with writable
 /// anonymous memory carrying its content (readers never observe zeros).

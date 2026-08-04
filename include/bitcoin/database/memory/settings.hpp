@@ -33,11 +33,16 @@ enum class advice : uint8_t
     /// Let the operating system decide (mixed or unpredictable access).
     normal,
 
-    /// Random access (suppresses read ahead).
+    /// Random access (suppresses read ahead), preloaded (small maps only).
     random,
 
     /// One pass access (allows the kernel to free pages behind).
-    sequential
+    sequential,
+
+    /// Random access (suppresses read ahead) without preload, for maps too
+    /// large to reside: scattered reads otherwise fault a full read-ahead
+    /// window each, and that manufactured cache displaces the head set.
+    scattered
 };
 
 /// Storage tuning consumed by memory map construction: the base of table
@@ -51,8 +56,12 @@ struct storage_settings
     /// Body expansion rate (percentage).
     uint16_t rate{ 5 };
 
-    /// Page advice for mapped reads (see advice).
-    advice access{ advice::normal };
+    /// Page advice for mapped reads (see advice). Bodies default to
+    /// scattered: they are far too large to reside, and validation reads
+    /// prevouts from arbitrary earlier blocks, so read-ahead manufactures
+    /// cache that is never used and displaces the resident head set. Heads
+    /// override to random (preloaded) at construction.
+    advice access{ advice::scattered };
 };
 
 } // namespace database

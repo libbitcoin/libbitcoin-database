@@ -192,7 +192,17 @@ void CLASS::prepare(size_t STAGING_ONLY(offset),
     size_t STAGING_ONLY(size)) NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
-    if (is_zero(size) || !dirty_ || !engaged_.load(relaxed))
+    if (is_zero(size) || !dirty_)
+        return;
+
+    // Count the writer before loading released below (sequentially
+    // consistent), pairing with the release protocol: release either observes
+    // the count (and aborts) or this writer observes released (and restores).
+    // Intent bits age (hot sampling), so they cannot protect a write held
+    // in flight across passes; the count persists until mark.
+    writers_.fetch_add(one);
+
+    if (!engaged_.load(relaxed))
         return;
 
     // Declare intent before the write (sequentially consistent, pairing with
@@ -224,15 +234,13 @@ void CLASS::mark(size_t STAGING_ONLY(offset),
 
     // Marks follow content writes; transfer clears before reading, so pages
     // remarked during a transfer are simply rewritten by the next pass.
-    auto page = offset / page_;
-    const auto end = (offset + sub1(size)) / page_;
-    while ((page <= end) && ((page / page_bound) < words_))
-    {
-        const auto bit = system::bit_right<uint64_t>(page % page_bound);
-        dirty_[page++ / page_bound].fetch_or(bit, relaxed);
-    }
+    remark_(offset, size);
 
-    marks_.fetch_add(one, relaxed);
+    // Uncount the writer after its marks (sequentially consistent), so a
+    // release pass loading a drained count observes the dirty bits. Only
+    // prepare() counts, so only mark() may uncount (transfer failure restores
+    // marks by remark_, as an unpaired uncount here corrupts the count).
+    writers_.fetch_sub(one);
 #endif
 }
 

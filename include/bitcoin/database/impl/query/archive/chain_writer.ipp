@@ -166,8 +166,8 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
     {
         // If dirty we must guard against duplicates. Dirty is caused by disk,
         // full, disorganized or reorganized block, and tx pooling. It is set
-        // to true at runtime by any of these and in case of duplicate table
-        // non-empty at store startup. disorg/reorg indicated by candidate pop.
+        // to true at runtime by any of these and in case of header table with
+        // multiple rows at startup. disorg/reorg indicated by candidate pop.
         // Must be set after tx.set and before tx.commit, since searchable and
         // produces association to tx.link, and is also an integral part of tx.
         if (store_.is_dirty() || !bypass)
@@ -188,8 +188,7 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
 
             ptr.reset();
 
-            // As few duplicates are expected, duplicate domain is only 2^16.
-            // Return of tx_duplicate_put implies link domain has overflowed.
+            // tx_duplicate_put implies link domain overflow (2^24).
             for (const auto& twin: twins)
                 if (!store_.duplicate.exists(twin))
                     if (!store_.duplicate.put(twin, table::duplicate::record{}))

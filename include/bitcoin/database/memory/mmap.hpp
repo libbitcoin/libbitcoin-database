@@ -219,15 +219,35 @@ private:
     static constexpr size_t evict_chunk = system::power2(30u);
     static constexpr size_t compress_factor = 32;
     static constexpr size_t evict_factor = 32;
+
+    // Body eviction leads kernel reclaim: sweeping at the reclaim watermark
+    // concedes the choice of victim, and the kernel takes anonymous heads
+    // alongside the cold body cache (it balances the lists, it does not
+    // know that head residency is the store's priority). A higher floor
+    // keeps free memory above the watermark, so the sweep is the reclaim.
+    static constexpr size_t sweep_factor = 8;
     static constexpr size_t throttle_factor = 8;
     static constexpr size_t active_factor = 32;
     static constexpr size_t urgent_factor = 4;
     static constexpr size_t idle_seconds = 60;
+    static constexpr size_t touch_seconds = 4;
+    static constexpr size_t touch_span = 16384;
 
-    // Page-granular release fragments the address space beyond what host
-    // memory management tolerates (vma/vm_map_entry explosion); disabled
-    // pending run-granular conversion.
+    // Release conversion granularity: chunked runs bound address space
+    // fragmentation (each conversion splits a mapping) to the measured flat
+    // zone of host memory management (heads / chunk fragments worst case).
+    static constexpr size_t release_chunk = system::power2(20u);
+    static constexpr size_t release_quiet = 128;
     static constexpr bool head_release = false;
+
+    // Map heads writable-shared from their files (the native windows model)
+    // instead of anonymously with a dirty-page writer. Head reclaim is then
+    // kernel writeback of a bounded rewrite-in-place mapping (clean pages
+    // drop) rather than swap, which anonymous pages alone require. Bodies
+    // remain staged, so the unbounded append writeback that motivates dirty
+    // ratio tuning does not return with it. Excludes head_release (nothing
+    // to release) and the dirty bitmap (nothing to transfer).
+    static constexpr bool head_shared = false;
     static constexpr size_t headroom = 4;
 #if defined(STAGING_TELEMETRY)
     static constexpr size_t telemetry_seconds = 60;
@@ -299,6 +319,7 @@ private:
     bool transfer_(size_t bytes) NOEXCEPT;
     template <size_t Column>
     bool sync_() NOEXCEPT;
+    void remark_(size_t offset, size_t size) NOEXCEPT;
 
     // head page release (unstaged instances), synchronized with writers by
     // the prepare/release bit protocol (see release_pages_).
@@ -381,8 +402,16 @@ private:
     std::unique_ptr<dirty_bitmaps> released_{};
     size_t words_{};
 
+    // Sweep scratch (candidate/released word snapshots), protected by
+    // restore_mutex_.
+    std::unique_ptr<uint64_t[]> sweep_{};
+
     // Set when the first head page releases (gates the prepare fast path).
     std::atomic_bool engaged_{};
+
+    // Writers between prepare and mark (unaged, unlike intent bits), so a
+    // release pass cannot settle under a preempted in-flight write.
+    std::atomic<size_t> writers_{};
 
     // Serializes page release against restore (prepare slow path).
     mutable std::mutex restore_mutex_{};

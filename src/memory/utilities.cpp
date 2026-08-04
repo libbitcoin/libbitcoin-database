@@ -29,6 +29,7 @@
 #endif
 #if defined(HAVE_LINUX)
     #include <algorithm>
+    #include <cinttypes>
     #include <cstdio>
 #endif
 #include <bitcoin/database/define.hpp>
@@ -62,6 +63,12 @@ uint64_t system_free() NOEXCEPT
     status.dwLength = sizeof(status);
     return is_zero(::GlobalMemoryStatusEx(&status)) ? zero :
         status.ullAvailPhys;
+}
+
+uint64_t system_available() NOEXCEPT
+{
+    // Windows available physical memory is the correct semantic directly.
+    return system_free();
 }
 
 size_t system_pressure() NOEXCEPT
@@ -143,6 +150,46 @@ uint64_t system_free() NOEXCEPT
 
     // Failed or no platform source.
     return zero;
+}
+
+uint64_t system_available() NOEXCEPT
+{
+#if defined(HAVE_APPLE)
+    // Free plus purgeable plus file-backed (external) pages are available to
+    // allocation without compression or swap.
+    using namespace system;
+    auto count = HOST_VM_INFO64_COUNT;
+    vm_statistics64_data_t statistics{};
+    if (::host_statistics64(::mach_host_self(), HOST_VM_INFO64,
+        pointer_cast<integer_t>(&statistics), &count) == KERN_SUCCESS)
+    {
+        const auto pages = statistics.free_count + statistics.purgeable_count +
+            statistics.external_page_count;
+        return ceilinged_multiply<uint64_t>(pages, page_size());
+    }
+#elif defined(HAVE_LINUX)
+    // MemAvailable is the kernel estimate of memory available to allocation
+    // without swapping (includes reclaimable file cache).
+    if (const auto file = std::fopen("/proc/meminfo", "r"))
+    {
+        char line[128];
+        uint64_t kilobytes{};
+        while (!is_null(std::fgets(line, sizeof(line), file)))
+        {
+            if (std::sscanf(line, "MemAvailable: %" SCNu64 " kB",
+                &kilobytes) == 1)
+            {
+                std::fclose(file);
+                return system::ceilinged_multiply<uint64_t>(kilobytes, 1024u);
+            }
+        }
+
+        std::fclose(file);
+    }
+#endif
+
+    // Failed or no platform source (free approximates on other platforms).
+    return system_free();
 }
 
 size_t system_pressure() NOEXCEPT

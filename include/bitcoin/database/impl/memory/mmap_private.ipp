@@ -97,6 +97,7 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
     dirty_.reset();
     intent_.reset();
     released_.reset();
+    sweep_.reset();
     words_ = zero;
     engaged_.store(false);
 #endif
@@ -137,13 +138,15 @@ bool CLASS::flush_(size_t
 {
 #if defined(MANAGE_STAGING)
     // Transfer unflushed rows from anonymous memory to the file. Settled rows
-    // are already on disk (staged); unstaged transfers dirty pages only.
+    // are already on disk (staged); unstaged transfers dirty pages only, or
+    // synchronizes its mapping (shared head, which writes through).
     const auto from = to_width<Column>(settled_.load());
     const auto to = to_width<Column>(rows);
 
     const auto success =
            (staged_ ? ((from >= to) || pwrite_all(opened_[Column],
                std::next(memory_map_[Column], from), to - from, from)) :
+            head_shared ? (::msync(memory_map_[Column], to, MS_SYNC) != fail) :
                transfer_<Column>(to))
         && sync_<Column>();
 #elif defined(HAVE_MSC)
@@ -391,8 +394,9 @@ bool CLASS::finalize_(size_t
     // Random access preloads (small heads, avoiding initial fault stalls).
     if (access_ != advice::normal)
     {
+        const auto random = (access_ != advice::sequential);
         const auto preload = (access_ == advice::random);
-        const auto behavior = preload ? MADV_RANDOM : MADV_SEQUENTIAL;
+        const auto behavior = random ? MADV_RANDOM : MADV_SEQUENTIAL;
 
         for (size_t offset{}; offset < align; offset += advise_chunk)
         {
