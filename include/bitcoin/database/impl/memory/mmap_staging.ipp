@@ -1047,6 +1047,7 @@ void CLASS::head_run_() NOEXCEPT
                 }
             }
         }
+#endif // !HAVE_APPLE
 
         if ((still < idle_seconds) || (transferred == top))
             continue;

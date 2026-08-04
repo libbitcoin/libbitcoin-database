@@ -60,8 +60,14 @@ struct storage_settings
     /// scattered: they are far too large to reside, and validation reads
     /// prevouts from arbitrary earlier blocks, so read-ahead manufactures
     /// cache that is never used and displaces the resident head set. Heads
-    /// override to random (preloaded) at construction.
+    /// override to random (preloaded) at construction. Apple retains normal
+    /// (its measured known-good): darwin fault clustering serves scattered
+    /// prevout reads that MADV_RANDOM would reduce to single-page faults.
+#if defined(HAVE_APPLE)
+    advice access{ advice::normal };
+#else
     advice access{ advice::scattered };
+#endif
 };
 
 } // namespace database
