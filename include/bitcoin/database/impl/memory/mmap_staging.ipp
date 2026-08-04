@@ -938,15 +938,10 @@ void CLASS::settler_run_() NOEXCEPT
         }
 #endif
 
-#if !defined(HAVE_APPLE)
         // Scarcity is read directly: clean cache is reclaimable, so the
         // kernel pressure level does not raise while free memory exhausts.
-        // Apple is excluded: the sweep corrects linux victim selection, and
-        // ubc/compressor reclaim measured competent without it (its free
-        // signal is also perpetually low on darwin, running the sweep hot).
         if (system_free() < scarce)
             evict_next_(sweep);
-#endif
 
         auto bytes = backlog();
         if (is_zero(bytes))
