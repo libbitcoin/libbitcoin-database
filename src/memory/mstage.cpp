@@ -142,19 +142,20 @@ int mmap_unsettle(void* address, size_t size) NOEXCEPT
 
 int mmap_evict(void* address, size_t size) NOEXCEPT
 {
-    // Sync first: a settle write may not yet be written back, and bare
-    // invalidation of a dirty page discards it (clean pages sync free).
 #if defined(MADV_PAGEOUT)
     // MS_INVALIDATE does not drop clean page cache on linux (it invalidates
     // other mappings of the file), leaving the eviction sweep inert: body
     // cache pressure stands and the kernel preserves it by swapping the
     // anonymous heads. Pageout reclaims the mapped range (dirty pages write
-    // back, clean pages drop, later reads fault back from the file).
-    if (::msync(address, size, MS_SYNC) == -1)
-        return -1;
-
+    // back, clean pages drop, later reads fault back from the file). No
+    // sync first: pageout never discards dirty content (unlike bare
+    // invalidation), and a synchronous flush here serializes the settle
+    // write path behind a device flush barrier on every sweep (durability
+    // remains the clean close).
     return ::madvise(address, size, MADV_PAGEOUT);
 #else
+    // Sync first: a settle write may not yet be written back, and bare
+    // invalidation of a dirty page discards it (clean pages sync free).
     return ::msync(address, size, MS_SYNC | MS_INVALIDATE);
 #endif
 }
