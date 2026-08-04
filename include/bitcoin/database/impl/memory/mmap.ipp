@@ -136,7 +136,7 @@ size_t CLASS::to_growth(size_t required) const NOEXCEPT
 
     return std::min(chunked, std::max(expanded, to_provision()));
 #else
-    // The classic mapping is file-backed, so growth is capacity.
+    // The native mapping is file-backed, so growth is capacity.
     return to_capacity(required);
 #endif
 }
@@ -162,7 +162,7 @@ size_t CLASS::to_commitment() const NOEXCEPT
     const auto logical = logical_.load();
     return std::min(to_provision(), std::max(logical, to_rows(to_chunk())));
 #else
-    // The classic mapping is file-backed, so commitment is provisioning.
+    // The native mapping is file-backed, so commitment is provisioning.
     return to_provision();
 #endif
 }

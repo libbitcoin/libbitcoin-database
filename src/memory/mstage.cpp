@@ -28,10 +28,6 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <unistd.h>
-#if defined(HAVE_APPLE)
-    #include <mach/mach.h>
-    #include <mach/mach_vm.h>
-#endif
 #if defined(HAVE_LINUX)
     #include <sys/prctl.h>
 #endif
@@ -142,61 +138,25 @@ int mmap_unsettle(void* address, size_t size) NOEXCEPT
 
 int mmap_evict(void* address, size_t size) NOEXCEPT
 {
-    // Sync first: a settle write may not yet be written back, and bare
-    // invalidation of a dirty page discards it (clean pages sync free).
-#if defined(MADV_PAGEOUT)
+    // The apple sdk defines MADV_PAGEOUT but xnu refuses it (ENOTSUP), so
+    // the gate must be platform-true, not macro-present: darwin retains
+    // invalidation (MS_INVALIDATE drops clean ubc pages on mac).
+#if defined(MADV_PAGEOUT) && !defined(HAVE_APPLE)
     // MS_INVALIDATE does not drop clean page cache on linux (it invalidates
     // other mappings of the file), leaving the eviction sweep inert: body
     // cache pressure stands and the kernel preserves it by swapping the
     // anonymous heads. Pageout reclaims the mapped range (dirty pages write
-    // back, clean pages drop, later reads fault back from the file).
-    if (::msync(address, size, MS_SYNC) == -1)
-        return -1;
-
+    // back, clean pages drop, later reads fault back from the file). No
+    // sync first: pageout never discards dirty content (unlike bare
+    // invalidation), and a synchronous flush here serializes the settle
+    // write path behind a device flush barrier on every sweep (durability
+    // remains the clean close).
     return ::madvise(address, size, MADV_PAGEOUT);
 #else
+    // Sync first: a settle write may not yet be written back, and bare
+    // invalidation of a dirty page discards it (clean pages sync free).
     return ::msync(address, size, MS_SYNC | MS_INVALIDATE);
 #endif
-}
-
-// Atomically install the source anonymous mapping over the target range,
-// consuming the source (readers see old or new bytes, never zeros).
-static int mmap_install(void* address, void* source, size_t size) NOEXCEPT
-{
-#if defined(HAVE_APPLE)
-    auto target = reinterpret_cast<mach_vm_address_t>(address);
-    vm_prot_t current{};
-    vm_prot_t maximum{};
-    if (::mach_vm_remap(::mach_task_self(), &target, size, 0,
-        VM_FLAGS_FIXED | VM_FLAGS_OVERWRITE, ::mach_task_self(),
-        reinterpret_cast<mach_vm_address_t>(source), TRUE, &current,
-        &maximum, VM_INHERIT_DEFAULT) != KERN_SUCCESS)
-        return -1;
-
-    return ::munmap(source, size);
-#else
-    return ::mremap(source, size, size, MREMAP_MAYMOVE | MREMAP_FIXED,
-        address) == MAP_FAILED ? -1 : 0;
-#endif
-}
-
-int mmap_restore(void* address, size_t size) NOEXCEPT
-{
-    // Anonymous staging copy of the current (file) content.
-    const auto source = ::mmap(nullptr, size, PROT_READ | PROT_WRITE,
-        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-
-    if (source == MAP_FAILED)
-        return -1;
-
-    std::memcpy(source, address, size);
-    if (mmap_install(address, source, size) == -1)
-    {
-        ::munmap(source, size);
-        return -1;
-    }
-
-    return 0;
 }
 
 bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT
