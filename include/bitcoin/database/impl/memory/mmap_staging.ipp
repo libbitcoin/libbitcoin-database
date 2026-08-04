@@ -938,10 +938,15 @@ void CLASS::settler_run_() NOEXCEPT
         }
 #endif
 
+#if !defined(HAVE_APPLE)
         // Scarcity is read directly: clean cache is reclaimable, so the
         // kernel pressure level does not raise while free memory exhausts.
+        // Apple is excluded: the sweep corrects linux victim selection, and
+        // ubc/compressor reclaim measured competent without it (its free
+        // signal is also perpetually low on darwin, running the sweep hot).
         if (system_free() < scarce)
             evict_next_(sweep);
+#endif
 
         auto bytes = backlog();
         if (is_zero(bytes))
@@ -998,6 +1003,7 @@ void CLASS::head_run_() NOEXCEPT
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
 
+#if !defined(HAVE_APPLE)
         // Touch pass: assert working-set residency at a bounded rate.
         // Hash-uniform probing is per-page sparse in every phase, so the
         // kernel ages head pages cold and swaps them under cache pressure,
@@ -1041,6 +1047,7 @@ void CLASS::head_run_() NOEXCEPT
                 }
             }
         }
+#endif // !HAVE_APPLE
 
         if ((still < idle_seconds) || (transferred == top))
             continue;
