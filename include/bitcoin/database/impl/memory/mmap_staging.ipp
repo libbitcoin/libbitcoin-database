@@ -1051,13 +1051,10 @@ void CLASS::head_run_() NOEXCEPT
                     const auto count = std::min(
                         { touch_span, pages - touched, budget });
 
-#if defined(HAVE_APPLE)
-                    // Compressed pages report non-resident, blinding the
-                    // guard to the set it defends: touch unguarded (the
-                    // fault decompresses, manufacturing residency).
-                    for (size_t page{}; page < count; ++page)
-                        (void)map[at + page * page_];
-#else
+#if !defined(HAVE_APPLE)
+                    // Darwin excluded: mincore hides compressed pages from
+                    // the guard, and unguarded touching measured as pure
+                    // decompression churn; release is the darwin mechanism.
                     if (mmap_resident(std::next(memory_map_[zero], at),
                         count * page_, resident) == 0)
                         for (size_t page{}; page < count; ++page)
