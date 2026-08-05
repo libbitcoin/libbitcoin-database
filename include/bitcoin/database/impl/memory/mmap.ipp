@@ -67,6 +67,8 @@ CLASS::~mmap() NOEXCEPT
 #if defined(MANAGE_STAGING)
     // Join a settler left running by an unload bypass (thread safety).
     settler_stop_();
+#elif defined(HAVE_MSC)
+    scanner_stop_();
 #endif
 
     BC_ASSERT(!loaded_.load());

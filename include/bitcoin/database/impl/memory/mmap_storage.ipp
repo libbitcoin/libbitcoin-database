@@ -148,6 +148,8 @@ code CLASS::load() NOEXCEPT
 
 #if defined(MANAGE_STAGING)
         settler_start_();
+#elif defined(HAVE_MSC)
+        scanner_start_();
 #endif
 
         return error::success;
@@ -251,6 +253,8 @@ code CLASS::unload() NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
     settler_stop_();
+#elif defined(HAVE_MSC)
+    scanner_stop_();
 #endif
 
     std::unique_lock field_lock(field_mutex_);
@@ -283,6 +287,8 @@ code CLASS::shrink() NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
     settler_stop_();
+#elif defined(HAVE_MSC)
+    scanner_stop_();
 #endif
 
     std::unique_lock field_lock(field_mutex_);
@@ -313,6 +319,8 @@ code CLASS::shrink() NOEXCEPT
 
 #if defined(MANAGE_STAGING)
         settler_start_();
+#elif defined(HAVE_MSC)
+        scanner_start_();
 #endif
 
         return error::success;

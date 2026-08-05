@@ -325,6 +325,25 @@ private:
     size_t page_ceiling(size_t bytes) const NOEXCEPT;
 #endif // MANAGE_STAGING
 
+#if defined(HAVE_MSC)
+    // Working-set steering for the native (file-backed) mapping. The cache
+    // manager trims without knowing that head residency is the store's
+    // priority, so it takes head pages alongside cold body cache and every
+    // head miss is a serial fault on the probe path. The scanner asserts head
+    // residency (a read sets the access bit) and leads the trim on bodies
+    // (unlock moves the range to the standby list, reclaimed first).
+    void scanner_start_() NOEXCEPT;
+    void scanner_stop_() NOEXCEPT;
+    void scanner_run_() NOEXCEPT;
+
+    std::thread scanner_{};
+    std::atomic_bool scanning_{};
+    std::condition_variable scanner_cv_{};
+    mutable std::mutex scanner_mutex_{};
+    size_t touched_{};
+    size_t unlocked_{};
+#endif // HAVE_MSC
+
     // These are thread safe (const).
     const paths filenames_;
     const size_t minimum_;
@@ -419,6 +438,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 #include <bitcoin/database/impl/memory/mmap.ipp>
 #include <bitcoin/database/impl/memory/mmap_dispatch.ipp>
+#include <bitcoin/database/impl/memory/mmap_native.ipp>
 #include <bitcoin/database/impl/memory/mmap_private.ipp>
 #include <bitcoin/database/impl/memory/mmap_staging.ipp>
 #include <bitcoin/database/impl/memory/mmap_storage.ipp>

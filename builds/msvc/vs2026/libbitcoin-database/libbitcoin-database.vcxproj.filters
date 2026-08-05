@@ -391,6 +391,9 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_dispatch.ipp">
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_native.ipp">
+      <Filter>include\bitcoin\database\impl\memory</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_private.ipp">
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>
