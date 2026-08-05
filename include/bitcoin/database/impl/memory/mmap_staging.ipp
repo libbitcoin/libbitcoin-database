@@ -1013,6 +1013,9 @@ void CLASS::head_run_() NOEXCEPT
         // Residency-guarded so the touch never faults: a swapped page that
         // nothing probes rests in swap, one the workload needs returns by
         // its own fault and is defended thereafter.
+        // Residency is only contested under scarcity, so at plenty the tick
+        // costs a counter test (the aging race has no other runner).
+        if (system_available() < (system_memory() / sweep_factor))
         {
             using namespace system;
             std::shared_lock touch_lock(remap_mutex_);

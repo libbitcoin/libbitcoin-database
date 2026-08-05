@@ -76,6 +76,12 @@ void CLASS::scanner_run_() NOEXCEPT
         if (!scanning_.load())
             return;
 
+        // Steering is only useful against a trim, and a trim only happens
+        // under contention, so at plenty the tick is a counter test. This
+        // also bounds the idle cost to the wait itself.
+        if (system_available() >= (system_memory() / sweep_factor))
+            continue;
+
         std::shared_lock map_lock(remap_mutex_);
         if (!loaded_.load() || fault_.load())
             continue;
