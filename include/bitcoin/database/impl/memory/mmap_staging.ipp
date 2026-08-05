@@ -1033,11 +1033,19 @@ void CLASS::head_run_() NOEXCEPT
                     const auto count = std::min(
                         { touch_span, pages - touched, budget });
 
+#if defined(HAVE_APPLE)
+                    // Compressed pages report non-resident, blinding the
+                    // guard to the set it defends: touch unguarded (the
+                    // fault decompresses, manufacturing residency).
+                    for (size_t page{}; page < count; ++page)
+                        (void)map[at + page * page_];
+#else
                     if (mmap_resident(std::next(memory_map_[zero], at),
                         count * page_, resident) == 0)
                         for (size_t page{}; page < count; ++page)
                             if (is_odd(resident[page]))
                                 (void)map[at + page * page_];
+#endif
 
                     touched += count;
                     budget = floored_subtract(budget, count);
