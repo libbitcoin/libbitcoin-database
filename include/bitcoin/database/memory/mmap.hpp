@@ -118,6 +118,10 @@ public:
     /// Clear disk full condition, fails if fault, must be loaded, idempotent.
     code reload() NOEXCEPT override;
 
+    /// Declare content mutation, restoring released pages (unstaged
+    /// instances under the staging backend only; no effect otherwise).
+    void prepare(size_t offset, size_t size) NOEXCEPT override;
+
     /// Report content mutation (advisory page-dirty tracking, unstaged
     /// instances under the staging backend only; no effect otherwise).
     void mark(size_t offset, size_t size) NOEXCEPT override;
@@ -214,6 +218,7 @@ private:
     static constexpr size_t chunk_scale = 256;
     static constexpr size_t evict_chunk = system::power2(30u);
     static constexpr size_t compress_factor = 32;
+    static constexpr size_t evict_factor = 32;
 
     // Body eviction leads kernel reclaim: sweeping at the reclaim watermark
     // concedes the choice of victim, and the kernel takes anonymous heads
@@ -228,13 +233,27 @@ private:
     static constexpr size_t touch_seconds = 4;
     static constexpr size_t touch_span = 16384;
 
+    // Release conversion granularity: chunked runs bound address space
+    // fragmentation (each conversion splits a mapping) to the measured flat
+    // zone of host memory management (heads / chunk fragments worst case).
+    static constexpr size_t release_chunk = system::power2(20u);
+    static constexpr size_t release_quiet = 128;
+#if defined(HAVE_APPLE)
+    // Anonymous overflow feeds the darwin compressor (10.8GB measured at
+    // 16GB), which mincore hides from the touch guard; release converts
+    // quiet heads to droppable file pages, removing them from its reach.
+    static constexpr bool head_release = true;
+#else
+    static constexpr bool head_release = false;
+#endif
+
     // Map heads writable-shared from their files (the native windows model)
     // instead of anonymously with a dirty-page writer. Head reclaim is then
     // kernel writeback of a bounded rewrite-in-place mapping (clean pages
     // drop) rather than swap, which anonymous pages alone require. Bodies
     // remain staged, so the unbounded append writeback that motivates dirty
-    // ratio tuning does not return with it. Excludes the dirty bitmap
-    // (nothing to transfer).
+    // ratio tuning does not return with it. Excludes head_release (nothing
+    // to release) and the dirty bitmap (nothing to transfer).
     static constexpr bool head_shared = false;
     static constexpr size_t headroom = 4;
 #if defined(STAGING_TELEMETRY)
@@ -269,7 +288,7 @@ private:
     template <size_t Column>
     bool resize_(size_t size) NOEXCEPT;
     template <size_t Column>
-    bool finalize_() NOEXCEPT;
+    bool finalize_(size_t size) NOEXCEPT;
 
 #if defined(MANAGE_STAGING)
     // staging dispatch, not thread safe.
@@ -308,6 +327,11 @@ private:
     template <size_t Column>
     bool sync_() NOEXCEPT;
     void remark_(size_t offset, size_t size) NOEXCEPT;
+
+    // head page release (unstaged instances), synchronized with writers by
+    // the prepare/release bit protocol (see release_pages_).
+    bool release_pages_() NOEXCEPT;
+    void restore_(size_t offset, size_t size) NOEXCEPT;
 
     // settle scheduler (instance-owned thread, load/unload lifecycle).
     void settler_start_() NOEXCEPT;
@@ -400,7 +424,23 @@ private:
 
     // These are protected by remap_mutex_.
     std::unique_ptr<dirty_bitmaps> dirty_{};
+    std::unique_ptr<dirty_bitmaps> intent_{};
+    std::unique_ptr<dirty_bitmaps> released_{};
     size_t words_{};
+
+    // Sweep scratch (candidate/released word snapshots), protected by
+    // restore_mutex_.
+    std::unique_ptr<uint64_t[]> sweep_{};
+
+    // Set when the first head page releases (gates the prepare fast path).
+    std::atomic_bool engaged_{};
+
+    // Writers between prepare and mark (unaged, unlike intent bits), so a
+    // release pass cannot settle under a preempted in-flight write.
+    std::atomic<size_t> writers_{};
+
+    // Serializes page release against restore (prepare slow path).
+    mutable std::mutex restore_mutex_{};
 
     // Serializes transfer passes (settler tick against flush), as concurrent
     // passes split the claimed dirty set, allowing a flush to complete while

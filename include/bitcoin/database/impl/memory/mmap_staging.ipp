@@ -326,6 +326,10 @@ bool CLASS::stage_() NOEXCEPT
             const auto pages = ceilinged_divide(reserved, page_);
             words_ = ceilinged_divide(pages, page_bound);
             dirty_ = std::make_unique<dirty_bitmaps>(words_);
+            intent_ = std::make_unique<dirty_bitmaps>(words_);
+            released_ = std::make_unique<dirty_bitmaps>(words_);
+            sweep_ = std::make_unique<uint64_t[]>(words_);
+            writers_.store(zero);
         }
     }
 
@@ -540,6 +544,12 @@ bool CLASS::commit_(size_t size) NOEXCEPT
 
             dirty_ = std::move(grown);
             words_ = words;
+
+            // The replacement reservation is fully anonymous (content was
+            // copied above), so released and intent page state resets.
+            intent_ = std::make_unique<dirty_bitmaps>(words);
+            released_ = std::make_unique<dirty_bitmaps>(words);
+            sweep_ = std::make_unique<uint64_t[]>(words);
         }
     }
 
@@ -976,9 +986,16 @@ void CLASS::settler_run_() NOEXCEPT
 // before reading, so racing writes remark and transfer on the next pass
 // (torn disk pages are unreachable, as live heads are only trusted
 // following a clean close).
+//
+// Memory scarcity additionally pages the head to its own file (the windows
+// model): transfer, then release cold clean pages to read-only file mappings
+// (reclaimable cache), restored to anonymous by prepare() before any write.
+// Release waits one pass after engagement so all writers declare intent.
 TEMPLATE
 void CLASS::head_run_() NOEXCEPT
 {
+    const auto scarce = system_memory() / evict_factor;
+
     // Ticks without a mark before idle draining.
     auto mark = marks_.load();
     auto transferred = mark;
@@ -995,6 +1012,7 @@ void CLASS::head_run_() NOEXCEPT
             return;
 
         const auto top = marks_.load();
+        const auto writes = top - mark;
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
 
@@ -1053,7 +1071,33 @@ void CLASS::head_run_() NOEXCEPT
             }
         }
 
-        if ((still < idle_seconds) || (transferred == top))
+        // Available includes reclaimable file cache, which a loaded store
+        // keeps large while the kernel swaps cold anonymous pages, so free
+        // exhaustion also signals scarcity (anon is being displaced).
+        const auto scarcity = head_release && dirty_ &&
+            ((system_available() < scarce) || (system_free() < scarce));
+
+        // Once engaged, a quiet instance converts independent of momentary
+        // scarcity: the signal clears as swap absorbs the hot set, but the
+        // swapped pages remain anonymous, so reads fault them back one at a
+        // time (a serial swap-in per probe). Conversion instead settles
+        // clean pages without read-back (the file holds their content),
+        // freeing swap and routing reads through the file mapping.
+        const auto engaged = engaged_.load();
+        const auto quiet = writes < release_quiet;
+        const auto draining = engaged && quiet;
+        if (!scarcity && !draining &&
+            ((still < idle_seconds) || (transferred == top)))
+            continue;
+
+        // A write-hot instance neither transfers nor releases under
+        // scarcity: transferred pages re-dirty immediately (write
+        // amplification without release payoff, as hash-scattered writes
+        // into released pages each cost a segment restore, and the sweep
+        // otherwise re-releases restored segments every pass). Its
+        // anonymous set is left to swap (dirty-exempt) until quiescence,
+        // typically the phase change.
+        if (scarcity && !quiet)
             continue;
 
         {
@@ -1062,8 +1106,15 @@ void CLASS::head_run_() NOEXCEPT
             if (!loaded_.load() || fault_.load())
                 continue;
 
+            if constexpr (head_release)
+                if (scarcity && !engaged)
+                    engaged_.store(true);
+
+            // Scarcity passes pace writeback for release: settle maps page
+            // cache content, and durability remains a clean close property,
+            // so sync applies only to idle draining.
             if (!transfer_<zero>(to_width<zero>(logical_.load())) ||
-                !sync_<zero>())
+                (!scarcity && !sync_<zero>()))
             {
                 set_first_code(error::fsync_failure);
                 continue;
@@ -1072,10 +1123,142 @@ void CLASS::head_run_() NOEXCEPT
             // Discard the page cache copy of the transfer: the anonymous
             // head is the live copy, so caching the file doubles it.
             file_discard(opened_[zero]);
+
+            // Quiet is assured here (hot scarcity skipped above, and idle
+            // draining implies sixty still seconds).
+            if (engaged && !release_pages_())
+                continue;
         }
 
         transferred = top;
         still = zero;
+    }
+}
+
+// Release cold clean head page runs to read-only file mappings (reclaimable),
+// full pages below logical only. Conversion is run-granular (release_chunk
+// minimum) as each conversion splits a mapping: page granularity fragments
+// the address space beyond what host memory management tolerates. Writer
+// synchronization is a per-page bit protocol: prepare() declares intent then
+// loads released; release stores released then loads intent (both
+// sequentially consistent), so a run converts only when no write can land on
+// it unrestored. A wrong release costs one restore. Conversion and restore
+// serialize on restore_mutex_.
+TEMPLATE
+bool CLASS::release_pages_() NOEXCEPT
+{
+    using namespace system;
+    const auto bytes = to_width<zero>(logical_.load());
+    const auto pages = bytes / page_;
+    const auto bound = std::min(words_, ceilinged_divide(pages, page_bound));
+    const auto chunk = std::max(one, release_chunk / page_);
+
+    std::unique_lock restore_lock(restore_mutex_);
+
+    // Materialize candidacy (hot aging clears only the snapshot bits, so a
+    // concurrent declaration on a candidate page is retained for the live
+    // rechecks below).
+    for (size_t word{}; word < bound; ++word)
+    {
+        const auto hot = intent_[word].load();
+        intent_[word].fetch_and(bit_not(hot));
+        sweep_[word] = release_below(release_candidates(
+            dirty_[word].load(relaxed), hot, released_[word].load(relaxed)),
+            pages, word * page_bound);
+    }
+
+    // Convert maximal candidate runs of at least chunk pages.
+    for (auto run = next_run(sweep_.get(), pages, zero); run.first < pages;
+        run = next_run(sweep_.get(), pages, run.second))
+    {
+        if ((run.second - run.first) < chunk)
+            continue;
+
+        const auto begin = run.first / page_bound;
+        const auto end = sub1(run.second) / page_bound;
+        const auto mask = [&](size_t word) NOEXCEPT
+        {
+            return page_mask(run.first, run.second, word * page_bound);
+        };
+
+        // Declare the release (prepare() restores from this point).
+        for (auto word = begin; word <= end; ++word)
+            released_[word].fetch_or(mask(word));
+
+        // An in-flight writer (counted, unaged) or raced intent or mark
+        // invalidates the conversion (whole run). The count loads first: a
+        // writer counted later observes released and restores, one drained
+        // earlier has published its marks (both sequentially consistent).
+        auto raced = is_nonzero(writers_.load());
+        for (auto word = begin; (word <= end) && !raced; ++word)
+            raced = !is_zero(bit_and(mask(word),
+                bit_or(intent_[word].load(), dirty_[word].load())));
+
+        if (raced || (mmap_settle(
+            std::next(memory_map_[zero], run.first * page_),
+            (run.second - run.first) * page_, opened_[zero],
+            run.first * page_) == fail))
+        {
+            for (auto word = begin; word <= end; ++word)
+                released_[word].fetch_and(bit_not(mask(word)));
+
+            if (!raced)
+            {
+                set_first_code(error::mmap_failure);
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+// Restore released pages overlapping [offset, offset+size) to writable
+// anonymous memory (content preserved by atomic installation), before a
+// declared write. Restoration is segmented at release_chunk alignment: the
+// containing segment restores whole (unifying any fragmentation within it)
+// but never more, as released runs consolidate without bound and restoring
+// a maximal run copies gigabytes per scattered write (a restore convoy).
+TEMPLATE
+void CLASS::restore_(size_t offset, size_t size) NOEXCEPT
+{
+    using namespace system;
+    std::unique_lock restore_lock(restore_mutex_);
+
+    // Segments clamp to full pages below logical (as does release candidacy):
+    // the reservation above commitment is inaccessible (installation reads).
+    const auto pages = to_width<zero>(logical_.load()) / page_;
+    const auto span = std::max(one, release_chunk / page_);
+    const auto last = (offset + sub1(size)) / page_;
+    auto page = offset / page_;
+    page -= (page % span);
+
+    for (; (page <= last) && (page < pages); page += span)
+    {
+        const auto stop = std::min(page + span, pages);
+        const auto mask = [&](size_t word) NOEXCEPT
+        {
+            return page_mask(page, stop, word * page_bound);
+        };
+
+        const auto begin = page / page_bound;
+        const auto end = sub1(stop) / page_bound;
+        auto any = false;
+        for (auto word = begin; (word <= end) && !any; ++word)
+            any = !is_zero(bit_and(released_[word].load(), mask(word)));
+
+        if (!any)
+            continue;
+
+        if (mmap_restore(std::next(memory_map_[zero], page * page_),
+            (stop - page) * page_) == fail)
+        {
+            set_first_code(error::mmap_failure);
+            return;
+        }
+
+        for (auto word = begin; word <= end; ++word)
+            released_[word].fetch_and(bit_not(mask(word)));
     }
 }
 

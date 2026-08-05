@@ -21,10 +21,13 @@
 
 #include <bitcoin/database/define.hpp>
 
-// The native windows mapped-file behavior is the model staging emulates,
-// so staging is the build for all other platforms.
-#if !defined(HAVE_MSC)
+#if defined(HAVE_APPLE)
     #define MANAGE_STAGING
+#endif
+
+// The native windows mapped-file behavior is the model staging emulates.
+#if defined(MANAGE_STAGING) && defined(HAVE_MSC)
+    #error "MANAGE_STAGING is not supported on Windows."
 #endif
 
 #if defined(MANAGE_STAGING)
@@ -65,6 +68,10 @@ int mmap_resident(const void* address, size_t size,
 
 /// Discard unmapped page cache of a file (mapped pages are unaffected).
 int file_discard(int fd) NOEXCEPT;
+
+/// Atomically replace a released (read-only file-backed) range with writable
+/// anonymous memory carrying its content (readers never observe zeros).
+int mmap_restore(void* address, size_t size) NOEXCEPT;
 
 /// Full-transfer positional file read/write (false on failure or early eof).
 bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT;
