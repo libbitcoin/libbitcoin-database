@@ -1097,8 +1097,13 @@ void CLASS::head_run_() NOEXCEPT
         // otherwise re-releases restored segments every pass). Its
         // anonymous set is left to swap (dirty-exempt) until quiescence,
         // typically the phase change.
+#if !defined(HAVE_APPLE)
+        // EXPERIMENT: darwin releases while write-hot (page-level intent and
+        // dirty filters remain) to price segment restores against the
+        // measured compressed-hot crawl.
         if (scarcity && !quiet)
             continue;
+#endif
 
         {
             std::shared_lock map_lock(remap_mutex_);
