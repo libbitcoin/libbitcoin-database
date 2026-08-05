@@ -998,7 +998,6 @@ void CLASS::head_run_() NOEXCEPT
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
 
-#if !defined(HAVE_APPLE)
         // Touch pass: assert working-set residency at a bounded rate.
         // Hash-uniform probing is per-page sparse in every phase, so the
         // kernel ages head pages cold and swaps them under cache pressure,
@@ -1045,7 +1044,6 @@ void CLASS::head_run_() NOEXCEPT
                 }
             }
         }
-#endif // !HAVE_APPLE
 
         if ((still < idle_seconds) || (transferred == top))
             continue;
