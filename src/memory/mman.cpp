@@ -182,6 +182,16 @@ int msync(void* addr, size_t len, int) noexcept
     return 0;
 }
 
+// Raise the process working set floor: the trimmer otherwise re-evicts
+// faulted pages faster than the workload amortizes them (measured 71k
+// faults per validated block at 16GB, 7.7x the linux rate for identical
+// work). The floor is advisory (soft limits), failure is not an error.
+int working_floor(size_t minimum, size_t maximum) noexcept
+{
+    return SetProcessWorkingSetSize(GetCurrentProcess(), minimum,
+        maximum) == FALSE ? -1 : 0;
+}
+
 // unused
 int mlock(const void* addr, size_t len) noexcept
 {

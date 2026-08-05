@@ -34,6 +34,10 @@ namespace database {
 TEMPLATE
 void CLASS::scanner_start_() NOEXCEPT
 {
+    // Idempotent across instances (process-wide, same values each call).
+    const auto memory = system_memory();
+    /* int */ ::working_floor((memory / 4) * 3, memory);
+
     touched_ = zero;
     unlocked_ = zero;
     scanning_.store(true);
