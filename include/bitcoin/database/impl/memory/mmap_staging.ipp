@@ -1169,18 +1169,27 @@ bool CLASS::release_pages_() NOEXCEPT
             pages, word * page_bound);
     }
 
-    // Convert maximal candidate runs of at least chunk pages.
+    // Convert maximal candidate runs of at least chunk pages, clamped to
+    // chunk bounds. Restore is chunk-aligned and chunk-granular, so a
+    // partially released chunk places unreleased pages inside a restored
+    // span. The bit protocol guards released pages only: a writer to an
+    // unreleased page observes released clear, so it neither restores nor
+    // takes restore_mutex_, and its write is dropped by the copy-install
+    // window. Whole chunks make the restored span exactly the released set.
     for (auto run = next_run(sweep_.get(), pages, zero); run.first < pages;
         run = next_run(sweep_.get(), pages, run.second))
     {
-        if ((run.second - run.first) < chunk)
+        const auto first = ceilinged_divide(run.first, chunk) * chunk;
+        const auto second = (run.second / chunk) * chunk;
+
+        if ((second <= first) || ((second - first) < chunk))
             continue;
 
-        const auto begin = run.first / page_bound;
-        const auto end = sub1(run.second) / page_bound;
+        const auto begin = first / page_bound;
+        const auto end = sub1(second) / page_bound;
         const auto mask = [&](size_t word) NOEXCEPT
         {
-            return page_mask(run.first, run.second, word * page_bound);
+            return page_mask(first, second, word * page_bound);
         };
 
         // Declare the release (prepare() restores from this point).
@@ -1197,9 +1206,9 @@ bool CLASS::release_pages_() NOEXCEPT
                 bit_or(intent_[word].load(), dirty_[word].load())));
 
         if (raced || (mmap_settle(
-            std::next(memory_map_[zero], run.first * page_),
-            (run.second - run.first) * page_, opened_[zero],
-            run.first * page_) == fail))
+            std::next(memory_map_[zero], first * page_),
+            (second - first) * page_, opened_[zero],
+            first * page_) == fail))
         {
             for (auto word = begin; word <= end; ++word)
                 released_[word].fetch_and(bit_not(mask(word)));
