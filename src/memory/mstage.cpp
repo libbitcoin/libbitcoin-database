@@ -84,7 +84,9 @@ int mmap_cold(void* address, size_t size) NOEXCEPT
     // read reactivates, so genuinely hot pages promote themselves back.
     return ::madvise(address, size, MADV_COLD);
 #else
-    return 0;
+    // Both parameters are unused without MADV_COLD (darwin), consumed by the
+    // test as file_discard consumes its own without POSIX_FADV_DONTNEED.
+    return (address != nullptr) && !is_zero(size) ? 0 : 0;
 #endif
 }
 
