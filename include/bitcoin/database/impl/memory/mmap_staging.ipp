@@ -1038,16 +1038,20 @@ void CLASS::head_run_() NOEXCEPT
             std::shared_lock touch_lock(remap_mutex_);
             if (loaded_.load() && !fault_.load())
             {
-                unsigned char resident[touch_span];
                 const auto pages = to_width<zero>(logical_.load()) / page_;
-                const volatile auto* map = memory_map_[zero];
                 auto budget = ceilinged_divide(pages, touch_seconds);
+#if !defined(HAVE_APPLE)
+                // Probe buffer and map alias, declared with the touch they
+                // serve (excluded on darwin below), as they are otherwise
+                // unused there.
+                unsigned char resident[touch_span];
+                const volatile auto* map = memory_map_[zero];
+#endif
                 while (!is_zero(pages) && !is_zero(budget))
                 {
                     if (touched >= pages)
                         touched = zero;
 
-                    const auto at = touched * page_;
                     const auto count = std::min(
                         { touch_span, pages - touched, budget });
 
@@ -1055,6 +1059,7 @@ void CLASS::head_run_() NOEXCEPT
                     // Darwin excluded: mincore hides compressed pages from
                     // the guard, and unguarded touching measured as pure
                     // decompression churn; release is the darwin mechanism.
+                    const auto at = touched * page_;
                     if (mmap_resident(std::next(memory_map_[zero], at),
                         count * page_, resident) == 0)
                         for (size_t page{}; page < count; ++page)
