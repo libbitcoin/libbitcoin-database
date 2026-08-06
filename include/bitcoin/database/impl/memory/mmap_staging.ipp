@@ -602,7 +602,10 @@ bool CLASS::settle_(size_t from, size_t to) NOEXCEPT
     // Demote the settled extent to reclaim-first order: cached for imminent
     // re-read (validation follows archival) but reclaimed under pressure
     // before active pages and anonymous heads (head residency priority).
-    if (mmap_cold(address, end - begin) == fail)
+    // Ample hosts skip demotion: with nothing contesting memory it only
+    // converts warm cache into re-read faults (see demote_memory).
+    static const auto ample = system_memory() > demote_memory;
+    if (!ample && (mmap_cold(address, end - begin) == fail))
     {
         teardown_<Column>(error::madvise_failure);
         return false;

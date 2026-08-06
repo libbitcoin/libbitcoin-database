@@ -220,6 +220,14 @@ private:
     static constexpr size_t compress_factor = 32;
     static constexpr size_t evict_factor = 32;
 
+    // Settled-extent demotion ceiling (installed memory). Demotion trades
+    // body cache for head residency, which pays only while the head set
+    // contests memory. Above this ceiling nothing contests: demotion just
+    // converts warm cache into re-read faults (measured ~2x milestone and
+    // validation wall on a high-memory host), so ample hosts retain
+    // settled extents at normal priority.
+    static constexpr size_t demote_memory = system::power2(35u);
+
     // Body eviction leads kernel reclaim: sweeping at the reclaim watermark
     // concedes the choice of victim, and the kernel takes anonymous heads
     // alongside the cold body cache (it balances the lists, it does not
