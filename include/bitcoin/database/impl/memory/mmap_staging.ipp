@@ -441,9 +441,10 @@ bool CLASS::stage_() NOEXCEPT
 }
 
 // Commit failure results in unmapped when final (the default); a non-final
-// in-reservation commit refusal returns false untouched, so the caller may
-// iterate a reduced request (commit is a kernel admission decision evaluated
-// per request, so a refused amortization step does not imply exhaustion).
+// refusal (in-reservation commit, replacement reservation, or replacement
+// commit) returns false with the standing mapping untouched, so the caller
+// may iterate a reduced request (admission is evaluated per request, so a
+// refused amortization step does not imply exhaustion).
 // Growth within the reservation commits pages in place (stable map base); an
 // exhausted reservation is replaced and its unsettled content copied, under
 // the exclusive remap lock held by the caller.
@@ -501,7 +502,9 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
 
     if (replace == MAP_FAILED)
     {
-        teardown_<Column>(error::mmap_failure);
+        if (final)
+            teardown_<Column>(error::mmap_failure);
+
         return false;
     }
 
@@ -535,11 +538,19 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
         return true;
     }
 
+    // The replacement commit spans the unsettled prefix, transiently charged
+    // over the standing reservation, so its refusal is the largest single
+    // admission of the design: non-final refusal leaves the standing mapping
+    // untouched for the caller's reduced retry (a reduced ask fits within
+    // the standing reservation), and settle drainage shrinks the span, so a
+    // necessity refusal pauses recoverable rather than tearing down.
     if (mmap_commit(std::next(base, settled), target - settled,
         headroom_) == fail)
     {
         ::munmap(replace, reserved);
-        teardown_<Column>(error::mmap_failure);
+        if (final)
+            teardown_<Column>(error::mmap_failure);
+
         return false;
     }
 
