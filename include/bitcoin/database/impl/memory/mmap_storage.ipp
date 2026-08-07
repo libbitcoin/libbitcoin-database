@@ -483,10 +483,16 @@ bool CLASS::expand(size_t count) NOEXCEPT
         // charges a provisioning extension against free space. Either can
         // refuse a large amortization step while the necessity is easily
         // backed, so iterate: halve the refused surplus toward the necessity.
-        // Refusal of the necessity itself is resource exhaustion, not store
-        // damage: published as disk full (space set, store intact, writes
-        // fail fast until cleared), it clears by settle drainage or operator
-        // relief, where teardown would convert a shortage into a restore.
+        // Growth asks are amortized (rate surplus over the necessity), and
+        // each is admitted only while it leaves the configured headroom of
+        // the backing resource unclaimed (probed with the ask, released on
+        // grant), so exhaustion never consumes the system's final bytes. A
+        // large amortization step can be refused while the necessity fits,
+        // so iterate: halve the refused surplus toward the necessity.
+        // Refusal of the necessity is exhaustion, not store damage:
+        // published as disk full (space set, store intact, writes fail fast
+        // until cleared), it clears by settle drainage or operator relief,
+        // where teardown would convert a shortage into a restore.
         using namespace system;
         for (auto extended = to_growth(count);
             !remap_all_(extended, sequence{}, false);

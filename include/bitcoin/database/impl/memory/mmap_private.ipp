@@ -329,14 +329,17 @@ bool CLASS::resize_(size_t size, bool final) NOEXCEPT
     if (size <= extent)
         return true;
 
+    using namespace system;
     const auto target = to_width<Column>(size);
     const auto capacity = to_width<Column>(extent);
+    const auto probed = ceilinged_add(target, headroom_);
 
-    // Disk full detection, any other failure is an abort.
+    // Disk full detection, any other failure is an abort. The extension is
+    // probed with the headroom, released upon the grant (truncated back).
 #if !defined(WITHOUT_FALLOCATE)
-    if (::fallocate(opened_[Column], 0, capacity, target - capacity) == fail)
+    if (::fallocate(opened_[Column], 0, capacity, probed - capacity) == fail)
 #else
-    if (::ftruncate(opened_[Column], target) == fail)
+    if (::ftruncate(opened_[Column], probed) == fail)
 #endif
     {
         // Disk full is the only restartable store failure (leave mapped).
@@ -344,15 +347,20 @@ bool CLASS::resize_(size_t size, bool final) NOEXCEPT
         if (errno == ENOSPC)
         {
             if (final)
-            {
-                using namespace system;
                 set_disk_space(ceilinged_multiply(
                     floored_subtract(size, extent), stride));
-            }
 
             return false;
         }
 
+        set_first_code(error::ftruncate_failure);
+        unmap_<Column>(capacity_.load());
+        return false;
+    }
+
+    if (!is_zero(headroom_) &&
+        (::ftruncate(opened_[Column], target) == fail))
+    {
         set_first_code(error::ftruncate_failure);
         unmap_<Column>(capacity_.load());
         return false;

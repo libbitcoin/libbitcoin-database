@@ -46,9 +46,23 @@ void* mmap_reserve(size_t size) NOEXCEPT
         -1, 0);
 }
 
-int mmap_commit(void* address, size_t size) NOEXCEPT
+// The commitment is granted only if it leaves the headroom free: the probe
+// charges the headroom alongside the request (atomic with its admission)
+// and releases it upon the grant.
+int mmap_commit(void* address, size_t size, size_t headroom) NOEXCEPT
 {
-    return ::mprotect(address, size, PROT_READ | PROT_WRITE);
+    if (is_zero(headroom))
+        return ::mprotect(address, size, PROT_READ | PROT_WRITE);
+
+    const auto probe = ::mmap(nullptr, headroom, PROT_READ | PROT_WRITE,
+        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+    if (probe == MAP_FAILED)
+        return -1;
+
+    const auto result = ::mprotect(address, size, PROT_READ | PROT_WRITE);
+    ::munmap(probe, headroom);
+    return result;
 }
 
 int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT

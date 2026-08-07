@@ -383,6 +383,7 @@ private:
     const paths filenames_;
     const size_t minimum_;
     const size_t expansion_;
+    const size_t headroom_;
     const advice access_;
     const bool random_;
     const bool staged_;

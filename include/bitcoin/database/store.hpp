@@ -237,7 +237,8 @@ private:
     // Heads are minimally allocated with no expansion (heads size to their
     // configured buckets at table creation) and randomly probed (the advice
     // preserves optimal classic mapped reads; staged heads are anonymous).
-    static constexpr storage_settings head_settings{ 1, 0, advice::random };
+    static constexpr storage_settings head_settings{ .size = 1, .rate = 0,
+        .access = advice::random };
 
     // Bodies are append-only, so stage writes in anonymous memory where the
     // staging backend is built (heads update in place and remain resident).
