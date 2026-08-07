@@ -160,13 +160,17 @@ size_t CLASS::frontier() const NOEXCEPT
 
 #if defined(MANAGE_STAGING)
 
+// Claim and record an extent under one lock: a claim never exists outside
+// the ring and the ring is start-ordered, so the frontier can never pass an
+// unwritten extent (claim-then-record raced the frontier past the claim).
+// Returns eof (unclaimed) on insufficient capacity, fault, or disk full.
 TEMPLATE
-void CLASS::record_(size_t start, size_t count) NOEXCEPT
+size_t CLASS::record_(size_t count) NOEXCEPT
 {
-    if (!staged_ || is_zero(count))
-        return;
-
     std::unique_lock extent_lock(extent_mutex_);
+
+    if (is_zero(count))
+        return logical_.load();
 
     maintain_();
 
@@ -174,20 +178,23 @@ void CLASS::record_(size_t start, size_t count) NOEXCEPT
     auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
 
     // A full ring waits on completions (extents are allocation-coarse, so
-    // saturation implies extreme concurrency). An unrecorded extent would be
-    // unsafe: an emptied ring advances the frontier to logical, so untracked
-    // incomplete writes could settle. Completions are lock-free, so waiting
-    // needs only this thread's own maintenance; fault or disk full releases
-    // the wait (recording is then moot, as recovery discards the ring).
+    // saturation implies extreme concurrency). Completions are lock-free, so
+    // waiting needs only this thread's own maintenance; fault or disk full
+    // releases the wait unclaimed (the write then fails fast).
     while (size == extents)
     {
         if (fault_.load() || !is_zero(space_.load()))
-            return;
+            return storage::eof;
 
         std::this_thread::yield();
         maintain_();
         std::tie(head, size) = unpack_word<uint64_t>(window_.load(relaxed));
     }
+
+    const auto start = logical_.load();
+    if (is_add_overflow(start, count) ||
+        ((start + count) > capacity_.load()))
+        return storage::eof;
 
     auto& record = ring_.at((head + size) % extents);
     const auto generation = bit_and<uint64_t>(add1(shift_right<uint64_t>(
@@ -206,6 +213,10 @@ void CLASS::record_(size_t start, size_t count) NOEXCEPT
     window_.store(pack_word<uint64_t>(head, add1(size)), release);
     if (is_zero(size))
         frontier_.store(start);
+
+    logical_.store(start + count);
+    check_invariants_();
+    return start;
 }
 
 // Pop completed extents from the head, advancing the frontier (locked).

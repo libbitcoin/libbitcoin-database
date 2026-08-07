@@ -282,6 +282,7 @@ private:
     template <size_t... Index>
     bool remap_all_(size_t capacity, std::index_sequence<Index...>,
         bool final=true) NOEXCEPT;
+    bool grow_(size_t end) NOEXCEPT;
 
     // mman wrappers, not thread safe.
     template <size_t Column>
@@ -325,7 +326,7 @@ private:
 
     // staging utilities, not thread safe (claim_ is lock-free thread safe).
     struct extent;
-    void record_(size_t start, size_t count) NOEXCEPT;
+    size_t record_(size_t count) NOEXCEPT;
     bool claim_(extent& record, size_t count) NOEXCEPT;
     void maintain_() NOEXCEPT;
     void discard_() NOEXCEPT;
