@@ -226,6 +226,7 @@
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_dispatch.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_native.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_private.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_staging.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_storage.ipp" />

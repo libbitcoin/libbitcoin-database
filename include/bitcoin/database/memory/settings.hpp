@@ -60,14 +60,15 @@ struct storage_settings
     /// scattered: they are far too large to reside, and validation reads
     /// prevouts from arbitrary earlier blocks, so read-ahead manufactures
     /// cache that is never used and displaces the resident head set. Heads
-    /// override to random (preloaded) at construction. Apple retains normal
-    /// (its measured known-good): darwin fault clustering serves scattered
-    /// prevout reads that MADV_RANDOM would reduce to single-page faults.
-#if defined(HAVE_APPLE)
-    advice access{ advice::normal };
-#else
+    /// override to random (preloaded) at construction. Darwin was excluded
+    /// on the theory that its fault clustering serves scattered prevout
+    /// reads; measurement refutes it — mid-validation the device ran 35-63k
+    /// tps at 15.24 KB/t (~4 pages per fault, ~937 MB/s moved to deliver
+    /// ~250 MB/s wanted) while the cpu sat 66-73% idle and the download
+    /// window stayed full. Resuming the same store with this advice took
+    /// KB/t to 4.0 (one page per fault), bandwidth to ~250 MB/s, and the
+    /// validation rate from 648 to 720 blk/min at the same heights.
     advice access{ advice::scattered };
-#endif
 };
 
 } // namespace database

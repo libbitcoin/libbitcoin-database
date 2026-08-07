@@ -63,33 +63,20 @@ void CLASS::complete(size_t STAGING_ONLY(offset),
             continue;
         }
 
-        if (offset >= (start + record.count))
+        if (offset >= (start + record.count.load(relaxed)))
         {
             low = add1(middle);
             continue;
         }
 
-        // Wrap from over-completion stalls the frontier (conservative).
-        const auto previous = record.outstanding.fetch_sub(count, relaxed);
-
-        // Repair a decrement landed on a recycled slot (start moved).
-        if (record.start.load(relaxed) != start)
-        {
-            record.outstanding.fetch_add(count, relaxed);
+        if (claim_(record, count))
             return;
-        }
 
-        // Extent completion is allocation-coarse, so maintenance is cheap
-        // here and the element write fast path otherwise takes no lock.
-        if (previous == count)
-        {
-            std::unique_lock extent_lock(extent_mutex_, std::try_to_lock);
-
-            if (extent_lock.owns_lock())
-                maintain_();
-        }
-
-        return;
+        // The range matched a slot recycling under the search (regardless
+        // of apparent agreement, the claim refused it). The true covering
+        // extent is immobile while this completion is pending, so the
+        // exhaustive scan below finds it.
+        break;
     }
 
     // Contention can record extents out of start order (allocation claim and
@@ -99,28 +86,66 @@ void CLASS::complete(size_t STAGING_ONLY(offset),
     {
         auto& record = ring_.at((head + index) % extents);
         const auto start = record.start.load(relaxed);
-        if ((offset < start) || (offset >= (start + record.count)))
+        if ((offset < start) ||
+            (offset >= (start + record.count.load(relaxed))))
             continue;
 
-        const auto previous = record.outstanding.fetch_sub(count, relaxed);
-        if (record.start.load(relaxed) != start)
-        {
-            record.outstanding.fetch_add(count, relaxed);
+        if (claim_(record, count))
             return;
-        }
-
-        if (previous == count)
-        {
-            std::unique_lock extent_lock(extent_mutex_, std::try_to_lock);
-
-            if (extent_lock.owns_lock())
-                maintain_();
-        }
-
-        return;
     }
 #endif
 }
+
+#if defined(MANAGE_STAGING)
+
+// Claim completion of count rows against the extent, by cas decrement of the
+// packed state while its recycling generation holds. A claim can therefore
+// never land across a recycle and requires no repair (the prior repair
+// misfired when the decrement itself zeroed the extent and the slot recycled
+// before the start recheck, permanently inflating the successor). False
+// implies the slot recycled out from under the caller's range match (or the
+// match was torn across a recycle): the caller rescans. The true covering
+// extent cannot refuse: its generation is stable and its outstanding covers
+// every pending completion while any remains.
+TEMPLATE
+bool CLASS::claim_(extent& record, size_t count) NOEXCEPT
+{
+    using namespace system;
+    auto state = record.state.load(std::memory_order_acquire);
+    const auto generation = shift_right<uint64_t>(state, generation_shift);
+
+    // An outstanding below the claim is a recycle in flight or a torn match
+    // (never the covering extent), refused rather than wrapped.
+    for (auto outstanding = bit_and<uint64_t>(state, outstanding_mask);
+        outstanding >= count;
+        outstanding = bit_and<uint64_t>(state, outstanding_mask))
+    {
+        if (record.state.compare_exchange_weak(state,
+            pack_extent_(generation, outstanding - count),
+            std::memory_order_acq_rel, std::memory_order_acquire))
+        {
+            // Extent completion is allocation-coarse, so maintenance is
+            // cheap here and the element write fast path takes no lock.
+            if (outstanding == count)
+            {
+                std::unique_lock extent_lock(extent_mutex_, std::try_to_lock);
+
+                if (extent_lock.owns_lock())
+                    maintain_();
+            }
+
+            return true;
+        }
+
+        // The failed cas reloaded state; a generation change is a recycle.
+        if (shift_right<uint64_t>(state, generation_shift) != generation)
+            return false;
+    }
+
+    return false;
+}
+
+#endif // MANAGE_STAGING
 
 TEMPLATE
 size_t CLASS::frontier() const NOEXCEPT
@@ -165,9 +190,17 @@ void CLASS::record_(size_t start, size_t count) NOEXCEPT
     }
 
     auto& record = ring_.at((head + size) % extents);
+    const auto generation = bit_and<uint64_t>(add1(shift_right<uint64_t>(
+        record.state.load(relaxed), generation_shift)), generation_mask);
+    BC_ASSERT((count * columns) <= outstanding_mask);
     record.start.store(start, relaxed);
-    record.count = count;
-    record.outstanding.store(count * columns, relaxed);
+    record.count.store(count, relaxed);
+
+    // Publish the state (pairs with the acquire in claim_): a claim against
+    // the stale generation now fails its cas, and one against this
+    // generation observes the new start and count through the release.
+    record.state.store(pack_extent_(generation, count * columns),
+        std::memory_order_release);
 
     // Publish the extent (pairs with the acquire window snapshot).
     window_.store(pack_word<uint64_t>(head, add1(size)), release);
@@ -181,7 +214,8 @@ void CLASS::maintain_() NOEXCEPT
 {
     using namespace system;
     auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
-    while (!is_zero(size) && is_zero(ring_.at(head).outstanding.load(relaxed)))
+    while (!is_zero(size) && is_zero(bit_and<uint64_t>(
+        ring_.at(head).state.load(relaxed), outstanding_mask)))
     {
         head = add1(head) % extents;
         --size;
@@ -326,6 +360,10 @@ bool CLASS::stage_() NOEXCEPT
             const auto pages = ceilinged_divide(reserved, page_);
             words_ = ceilinged_divide(pages, page_bound);
             dirty_ = std::make_unique<dirty_bitmaps>(words_);
+            intent_ = std::make_unique<dirty_bitmaps>(words_);
+            released_ = std::make_unique<dirty_bitmaps>(words_);
+            sweep_ = std::make_unique<uint64_t[]>(words_);
+            writers_.store(zero);
         }
     }
 
@@ -540,6 +578,12 @@ bool CLASS::commit_(size_t size) NOEXCEPT
 
             dirty_ = std::move(grown);
             words_ = words;
+
+            // The replacement reservation is fully anonymous (content was
+            // copied above), so released and intent page state resets.
+            intent_ = std::make_unique<dirty_bitmaps>(words);
+            released_ = std::make_unique<dirty_bitmaps>(words);
+            sweep_ = std::make_unique<uint64_t[]>(words);
         }
     }
 
@@ -592,7 +636,10 @@ bool CLASS::settle_(size_t from, size_t to) NOEXCEPT
     // Demote the settled extent to reclaim-first order: cached for imminent
     // re-read (validation follows archival) but reclaimed under pressure
     // before active pages and anonymous heads (head residency priority).
-    if (mmap_cold(address, end - begin) == fail)
+    // Ample hosts skip demotion: with nothing contesting memory it only
+    // converts warm cache into re-read faults (see demote_memory).
+    static const auto ample = system_memory() > demote_memory;
+    if (!ample && (mmap_cold(address, end - begin) == fail))
     {
         teardown_<Column>(error::madvise_failure);
         return false;
@@ -938,15 +985,10 @@ void CLASS::settler_run_() NOEXCEPT
         }
 #endif
 
-#if !defined(HAVE_APPLE)
         // Scarcity is read directly: clean cache is reclaimable, so the
         // kernel pressure level does not raise while free memory exhausts.
-        // Apple is excluded: the sweep corrects linux victim selection, and
-        // ubc/compressor reclaim measured competent without it (its free
-        // signal is also perpetually low on darwin, running the sweep hot).
         if (system_free() < scarce)
             evict_next_(sweep);
-#endif
 
         auto bytes = backlog();
         if (is_zero(bytes))
@@ -981,9 +1023,16 @@ void CLASS::settler_run_() NOEXCEPT
 // before reading, so racing writes remark and transfer on the next pass
 // (torn disk pages are unreachable, as live heads are only trusted
 // following a clean close).
+//
+// Memory scarcity additionally pages the head to its own file (the windows
+// model): transfer, then release cold clean pages to read-only file mappings
+// (reclaimable cache), restored to anonymous by prepare() before any write.
+// Release waits one pass after engagement so all writers declare intent.
 TEMPLATE
 void CLASS::head_run_() NOEXCEPT
 {
+    const auto scarce = system_memory() / evict_factor;
+
     // Ticks without a mark before idle draining.
     auto mark = marks_.load();
     auto transferred = mark;
@@ -1000,10 +1049,10 @@ void CLASS::head_run_() NOEXCEPT
             return;
 
         const auto top = marks_.load();
+        const auto writes = top - mark;
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
 
-#if !defined(HAVE_APPLE)
         // Touch pass: assert working-set residency at a bounded rate.
         // Hash-uniform probing is per-page sparse in every phase, so the
         // kernel ages head pages cold and swaps them under cache pressure,
@@ -1018,39 +1067,82 @@ void CLASS::head_run_() NOEXCEPT
         // Residency-guarded so the touch never faults: a swapped page that
         // nothing probes rests in swap, one the workload needs returns by
         // its own fault and is defended thereafter.
+        // Residency is only contested under scarcity, so at plenty the tick
+        // costs a counter test (the aging race has no other runner).
+        if (system_available() < (system_memory() / sweep_factor))
         {
             using namespace system;
             std::shared_lock touch_lock(remap_mutex_);
             if (loaded_.load() && !fault_.load())
             {
-                unsigned char resident[touch_span];
                 const auto pages = to_width<zero>(logical_.load()) / page_;
-                const volatile auto* map = memory_map_[zero];
                 auto budget = ceilinged_divide(pages, touch_seconds);
+#if !defined(HAVE_APPLE)
+                // Probe buffer and map alias, declared with the touch they
+                // serve (excluded on darwin below), as they are otherwise
+                // unused there.
+                unsigned char resident[touch_span];
+                const volatile auto* map = memory_map_[zero];
+#endif
                 while (!is_zero(pages) && !is_zero(budget))
                 {
                     if (touched >= pages)
                         touched = zero;
 
-                    const auto at = touched * page_;
                     const auto count = std::min(
                         { touch_span, pages - touched, budget });
 
+#if !defined(HAVE_APPLE)
+                    // Darwin excluded: mincore hides compressed pages from
+                    // the guard, and unguarded touching measured as pure
+                    // decompression churn; release is the darwin mechanism.
+                    const auto at = touched * page_;
                     if (mmap_resident(std::next(memory_map_[zero], at),
                         count * page_, resident) == 0)
                         for (size_t page{}; page < count; ++page)
                             if (is_odd(resident[page]))
                                 (void)map[at + page * page_];
+#endif
 
                     touched += count;
                     budget = floored_subtract(budget, count);
                 }
             }
         }
-#endif // !HAVE_APPLE
 
-        if ((still < idle_seconds) || (transferred == top))
+        // Available includes reclaimable file cache, which a loaded store
+        // keeps large while the kernel swaps cold anonymous pages, so free
+        // exhaustion also signals scarcity (anon is being displaced).
+        const auto scarcity = head_release && dirty_ &&
+            ((system_available() < scarce) || (system_free() < scarce));
+
+        // Once engaged, a quiet instance converts independent of momentary
+        // scarcity: the signal clears as swap absorbs the hot set, but the
+        // swapped pages remain anonymous, so reads fault them back one at a
+        // time (a serial swap-in per probe). Conversion instead settles
+        // clean pages without read-back (the file holds their content),
+        // freeing swap and routing reads through the file mapping.
+        const auto engaged = engaged_.load();
+        const auto quiet = writes < release_quiet;
+        const auto draining = engaged && quiet;
+        if (!scarcity && !draining &&
+            ((still < idle_seconds) || (transferred == top)))
             continue;
+
+        // A write-hot instance neither transfers nor releases under
+        // scarcity: transferred pages re-dirty immediately (write
+        // amplification without release payoff, as hash-scattered writes
+        // into released pages each cost a segment restore, and the sweep
+        // otherwise re-releases restored segments every pass). Its
+        // anonymous set is left to swap (dirty-exempt) until quiescence,
+        // typically the phase change.
+#if !defined(HAVE_APPLE)
+        // EXPERIMENT: darwin releases while write-hot (page-level intent and
+        // dirty filters remain) to price segment restores against the
+        // measured compressed-hot crawl.
+        if (scarcity && !quiet)
+            continue;
+#endif
 
         {
             std::shared_lock map_lock(remap_mutex_);
@@ -1058,8 +1150,15 @@ void CLASS::head_run_() NOEXCEPT
             if (!loaded_.load() || fault_.load())
                 continue;
 
+            if constexpr (head_release)
+                if (scarcity && !engaged)
+                    engaged_.store(true);
+
+            // Scarcity passes pace writeback for release: settle maps page
+            // cache content, and durability remains a clean close property,
+            // so sync applies only to idle draining.
             if (!transfer_<zero>(to_width<zero>(logical_.load())) ||
-                !sync_<zero>())
+                (!scarcity && !sync_<zero>()))
             {
                 set_first_code(error::fsync_failure);
                 continue;
@@ -1068,10 +1167,151 @@ void CLASS::head_run_() NOEXCEPT
             // Discard the page cache copy of the transfer: the anonymous
             // head is the live copy, so caching the file doubles it.
             file_discard(opened_[zero]);
+
+            // Quiet is assured here (hot scarcity skipped above, and idle
+            // draining implies sixty still seconds).
+            if (engaged && !release_pages_())
+                continue;
         }
 
         transferred = top;
         still = zero;
+    }
+}
+
+// Release cold clean head page runs to read-only file mappings (reclaimable),
+// full pages below logical only. Conversion is run-granular (release_chunk
+// minimum) as each conversion splits a mapping: page granularity fragments
+// the address space beyond what host memory management tolerates. Writer
+// synchronization is a per-page bit protocol: prepare() declares intent then
+// loads released; release stores released then loads intent (both
+// sequentially consistent), so a run converts only when no write can land on
+// it unrestored. A wrong release costs one restore. Conversion and restore
+// serialize on restore_mutex_.
+TEMPLATE
+bool CLASS::release_pages_() NOEXCEPT
+{
+    using namespace system;
+    const auto bytes = to_width<zero>(logical_.load());
+    const auto pages = bytes / page_;
+    const auto bound = std::min(words_, ceilinged_divide(pages, page_bound));
+    const auto chunk = std::max(one, release_chunk / page_);
+
+    std::unique_lock restore_lock(restore_mutex_);
+
+    // Materialize candidacy (hot aging clears only the snapshot bits, so a
+    // concurrent declaration on a candidate page is retained for the live
+    // rechecks below).
+    for (size_t word{}; word < bound; ++word)
+    {
+        const auto hot = intent_[word].load();
+        intent_[word].fetch_and(bit_not(hot));
+        sweep_[word] = release_below(release_candidates(
+            dirty_[word].load(relaxed), hot, released_[word].load(relaxed)),
+            pages, word * page_bound);
+    }
+
+    // Convert maximal candidate runs of at least chunk pages, clamped to
+    // chunk bounds. Restore is chunk-aligned and chunk-granular, so a
+    // partially released chunk places unreleased pages inside a restored
+    // span. The bit protocol guards released pages only: a writer to an
+    // unreleased page observes released clear, so it neither restores nor
+    // takes restore_mutex_, and its write is dropped by the copy-install
+    // window. Whole chunks make the restored span exactly the released set.
+    for (auto run = next_run(sweep_.get(), pages, zero); run.first < pages;
+        run = next_run(sweep_.get(), pages, run.second))
+    {
+        const auto first = ceilinged_divide(run.first, chunk) * chunk;
+        const auto second = (run.second / chunk) * chunk;
+
+        if ((second <= first) || ((second - first) < chunk))
+            continue;
+
+        const auto begin = first / page_bound;
+        const auto end = sub1(second) / page_bound;
+        const auto mask = [&](size_t word) NOEXCEPT
+        {
+            return page_mask(first, second, word * page_bound);
+        };
+
+        // Declare the release (prepare() restores from this point).
+        for (auto word = begin; word <= end; ++word)
+            released_[word].fetch_or(mask(word));
+
+        // An in-flight writer (counted, unaged) or raced intent or mark
+        // invalidates the conversion (whole run). The count loads first: a
+        // writer counted later observes released and restores, one drained
+        // earlier has published its marks (both sequentially consistent).
+        auto raced = is_nonzero(writers_.load());
+        for (auto word = begin; (word <= end) && !raced; ++word)
+            raced = !is_zero(bit_and(mask(word),
+                bit_or(intent_[word].load(), dirty_[word].load())));
+
+        if (raced || (mmap_settle(
+            std::next(memory_map_[zero], first * page_),
+            (second - first) * page_, opened_[zero],
+            first * page_) == fail))
+        {
+            for (auto word = begin; word <= end; ++word)
+                released_[word].fetch_and(bit_not(mask(word)));
+
+            if (!raced)
+            {
+                set_first_code(error::mmap_failure);
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+// Restore released pages overlapping [offset, offset+size) to writable
+// anonymous memory (content preserved by atomic installation), before a
+// declared write. Restoration is segmented at release_chunk alignment: the
+// containing segment restores whole (unifying any fragmentation within it)
+// but never more, as released runs consolidate without bound and restoring
+// a maximal run copies gigabytes per scattered write (a restore convoy).
+TEMPLATE
+void CLASS::restore_(size_t offset, size_t size) NOEXCEPT
+{
+    using namespace system;
+    std::unique_lock restore_lock(restore_mutex_);
+
+    // Segments clamp to full pages below logical (as does release candidacy):
+    // the reservation above commitment is inaccessible (installation reads).
+    const auto pages = to_width<zero>(logical_.load()) / page_;
+    const auto span = std::max(one, release_chunk / page_);
+    const auto last = (offset + sub1(size)) / page_;
+    auto page = offset / page_;
+    page -= (page % span);
+
+    for (; (page <= last) && (page < pages); page += span)
+    {
+        const auto stop = std::min(page + span, pages);
+        const auto mask = [&](size_t word) NOEXCEPT
+        {
+            return page_mask(page, stop, word * page_bound);
+        };
+
+        const auto begin = page / page_bound;
+        const auto end = sub1(stop) / page_bound;
+        auto any = false;
+        for (auto word = begin; (word <= end) && !any; ++word)
+            any = !is_zero(bit_and(released_[word].load(), mask(word)));
+
+        if (!any)
+            continue;
+
+        if (mmap_restore(std::next(memory_map_[zero], page * page_),
+            (stop - page) * page_) == fail)
+        {
+            set_first_code(error::mmap_failure);
+            return;
+        }
+
+        for (auto word = begin; word <= end; ++word)
+            released_[word].fetch_and(bit_not(mask(word)));
     }
 }
 

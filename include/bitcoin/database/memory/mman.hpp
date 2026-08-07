@@ -46,6 +46,7 @@ int munmap(void* addr, size_t len) noexcept;
 int madvise(void* addr, size_t len, int advice) noexcept;
 int mprotect(void* addr, size_t len, int prot) noexcept;
 int msync(void* addr, size_t len, int flags) noexcept;
+int working_floor(size_t minimum, size_t maximum) noexcept;
 int mlock(const void* addr, size_t len) noexcept;
 int munlock(const void* addr, size_t len) noexcept;
 int fsync(int fd) noexcept;

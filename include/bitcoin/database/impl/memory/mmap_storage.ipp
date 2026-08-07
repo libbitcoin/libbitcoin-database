@@ -148,6 +148,8 @@ code CLASS::load() NOEXCEPT
 
 #if defined(MANAGE_STAGING)
         settler_start_();
+#elif defined(HAVE_MSC)
+        scanner_start_();
 #endif
 
         return error::success;
@@ -188,6 +190,43 @@ code CLASS::reload() NOEXCEPT
 }
 
 TEMPLATE
+void CLASS::prepare(size_t STAGING_ONLY(offset),
+    size_t STAGING_ONLY(size)) NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    if (is_zero(size) || !dirty_)
+        return;
+
+    // Count the writer before loading released below (sequentially
+    // consistent), pairing with the release protocol: release either observes
+    // the count (and aborts) or this writer observes released (and restores).
+    // Intent bits age (hot sampling), so they cannot protect a write held
+    // in flight across passes; the count persists until mark.
+    writers_.fetch_add(one);
+
+    if (!engaged_.load(relaxed))
+        return;
+
+    // Declare intent before the write (sequentially consistent, pairing with
+    // the release protocol), then restore any released page in the range.
+    auto restore = false;
+    auto page = offset / page_;
+    const auto end = (offset + sub1(size)) / page_;
+    while ((page <= end) && ((page / page_bound) < words_))
+    {
+        const auto word = page / page_bound;
+        const auto flag = system::bit_right<uint64_t>(page % page_bound);
+        intent_[word].fetch_or(flag);
+        restore |= !is_zero(system::bit_and(released_[word].load(), flag));
+        ++page;
+    }
+
+    if (restore)
+        restore_(offset, size);
+#endif
+}
+
+TEMPLATE
 void CLASS::mark(size_t STAGING_ONLY(offset),
     size_t STAGING_ONLY(size)) NOEXCEPT
 {
@@ -198,6 +237,12 @@ void CLASS::mark(size_t STAGING_ONLY(offset),
     // Marks follow content writes; transfer clears before reading, so pages
     // remarked during a transfer are simply rewritten by the next pass.
     remark_(offset, size);
+
+    // Uncount the writer after its marks (sequentially consistent), so a
+    // release pass loading a drained count observes the dirty bits. Only
+    // prepare() counts, so only mark() may uncount (transfer failure restores
+    // marks by remark_, as an unpaired uncount here corrupts the count).
+    writers_.fetch_sub(one);
 #endif
 }
 
@@ -251,6 +296,8 @@ code CLASS::unload() NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
     settler_stop_();
+#elif defined(HAVE_MSC)
+    scanner_stop_();
 #endif
 
     std::unique_lock field_lock(field_mutex_);
@@ -283,6 +330,8 @@ code CLASS::shrink() NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
     settler_stop_();
+#elif defined(HAVE_MSC)
+    scanner_stop_();
 #endif
 
     std::unique_lock field_lock(field_mutex_);
@@ -313,6 +362,8 @@ code CLASS::shrink() NOEXCEPT
 
 #if defined(MANAGE_STAGING)
         settler_start_();
+#elif defined(HAVE_MSC)
+        scanner_start_();
 #endif
 
         return error::success;
@@ -383,12 +434,18 @@ bool CLASS::truncate(size_t count) NOEXCEPT
                 continue;
             }
 
-            if (ceilinged_add(start, tail.count) > count)
+            if (ceilinged_add(start, tail.count.load(relaxed)) > count)
             {
-                tail.count = count - start;
-                const auto limit = tail.count * columns;
-                if (tail.outstanding.load(relaxed) > limit)
-                    tail.outstanding.store(limit, relaxed);
+                const auto trimmed = count - start;
+                tail.count.store(trimmed, relaxed);
+
+                // Clamp outstanding within the state, generation unchanged
+                // (the extent is trimmed, not recycled; writers quiescent).
+                const auto limit = trimmed * columns;
+                const auto state = tail.state.load(relaxed);
+                if (bit_and<uint64_t>(state, outstanding_mask) > limit)
+                    tail.state.store(pack_extent_(shift_right<uint64_t>(
+                        state, generation_shift), limit), relaxed);
             }
 
             break;

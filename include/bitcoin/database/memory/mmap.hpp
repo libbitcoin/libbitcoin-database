@@ -118,6 +118,10 @@ public:
     /// Clear disk full condition, fails if fault, must be loaded, idempotent.
     code reload() NOEXCEPT override;
 
+    /// Declare content mutation, restoring released pages (unstaged
+    /// instances under the staging backend only; no effect otherwise).
+    void prepare(size_t offset, size_t size) NOEXCEPT override;
+
     /// Report content mutation (advisory page-dirty tracking, unstaged
     /// instances under the staging backend only; no effect otherwise).
     void mark(size_t offset, size_t size) NOEXCEPT override;
@@ -214,6 +218,15 @@ private:
     static constexpr size_t chunk_scale = 256;
     static constexpr size_t evict_chunk = system::power2(30u);
     static constexpr size_t compress_factor = 32;
+    static constexpr size_t evict_factor = 32;
+
+    // Settled-extent demotion ceiling (installed memory). Demotion trades
+    // body cache for head residency, which pays only while the head set
+    // contests memory. Above this ceiling nothing contests: demotion just
+    // converts warm cache into re-read faults (measured ~2x milestone and
+    // validation wall on a high-memory host), so ample hosts retain
+    // settled extents at normal priority.
+    static constexpr size_t demote_memory = system::power2(35u);
 
     // Body eviction leads kernel reclaim: sweeping at the reclaim watermark
     // concedes the choice of victim, and the kernel takes anonymous heads
@@ -228,13 +241,27 @@ private:
     static constexpr size_t touch_seconds = 4;
     static constexpr size_t touch_span = 16384;
 
+    // Release conversion granularity: chunked runs bound address space
+    // fragmentation (each conversion splits a mapping) to the measured flat
+    // zone of host memory management (heads / chunk fragments worst case).
+    static constexpr size_t release_chunk = system::power2(20u);
+    static constexpr size_t release_quiet = 128;
+#if defined(HAVE_APPLE)
+    // Anonymous overflow feeds the darwin compressor (10.8GB measured at
+    // 16GB), which mincore hides from the touch guard; release converts
+    // quiet heads to droppable file pages, removing them from its reach.
+    static constexpr bool head_release = true;
+#else
+    static constexpr bool head_release = false;
+#endif
+
     // Map heads writable-shared from their files (the native windows model)
     // instead of anonymously with a dirty-page writer. Head reclaim is then
     // kernel writeback of a bounded rewrite-in-place mapping (clean pages
     // drop) rather than swap, which anonymous pages alone require. Bodies
     // remain staged, so the unbounded append writeback that motivates dirty
-    // ratio tuning does not return with it. Excludes the dirty bitmap
-    // (nothing to transfer).
+    // ratio tuning does not return with it. Excludes head_release (nothing
+    // to release) and the dirty bitmap (nothing to transfer).
     static constexpr bool head_shared = false;
     static constexpr size_t headroom = 4;
 #if defined(STAGING_TELEMETRY)
@@ -269,7 +296,7 @@ private:
     template <size_t Column>
     bool resize_(size_t size) NOEXCEPT;
     template <size_t Column>
-    bool finalize_() NOEXCEPT;
+    bool finalize_(size_t size) NOEXCEPT;
 
 #if defined(MANAGE_STAGING)
     // staging dispatch, not thread safe.
@@ -295,8 +322,10 @@ private:
     template <size_t Column>
     void teardown_(const error::error_t& ec) NOEXCEPT;
 
-    // staging utilities, not thread safe.
+    // staging utilities, not thread safe (claim_ is lock-free thread safe).
+    struct extent;
     void record_(size_t start, size_t count) NOEXCEPT;
+    bool claim_(extent& record, size_t count) NOEXCEPT;
     void maintain_() NOEXCEPT;
     void discard_() NOEXCEPT;
     void throttle_() NOEXCEPT;
@@ -308,6 +337,11 @@ private:
     template <size_t Column>
     bool sync_() NOEXCEPT;
     void remark_(size_t offset, size_t size) NOEXCEPT;
+
+    // head page release (unstaged instances), synchronized with writers by
+    // the prepare/release bit protocol (see release_pages_).
+    bool release_pages_() NOEXCEPT;
+    void restore_(size_t offset, size_t size) NOEXCEPT;
 
     // settle scheduler (instance-owned thread, load/unload lifecycle).
     void settler_start_() NOEXCEPT;
@@ -324,6 +358,25 @@ private:
     size_t page_floor(size_t bytes) const NOEXCEPT;
     size_t page_ceiling(size_t bytes) const NOEXCEPT;
 #endif // MANAGE_STAGING
+
+#if defined(HAVE_MSC)
+    // Working-set steering for the native (file-backed) mapping. The cache
+    // manager trims without knowing that head residency is the store's
+    // priority, so it takes head pages alongside cold body cache and every
+    // head miss is a serial fault on the probe path. The scanner asserts head
+    // residency (a read sets the access bit) and leads the trim on bodies
+    // (unlock moves the range to the standby list, reclaimed first).
+    void scanner_start_() NOEXCEPT;
+    void scanner_stop_() NOEXCEPT;
+    void scanner_run_() NOEXCEPT;
+
+    std::thread scanner_{};
+    std::atomic_bool scanning_{};
+    std::condition_variable scanner_cv_{};
+    mutable std::mutex scanner_mutex_{};
+    size_t touched_{};
+    size_t unlocked_{};
+#endif // HAVE_MSC
 
     // These are thread safe (const).
     const paths filenames_;
@@ -358,11 +411,35 @@ private:
     using dirty_bitmaps = std::atomic<uint64_t>[];
 
     static constexpr size_t extents = 4096;
+
+    // Extent state packs a recycling generation with the outstanding count,
+    // so a lock-free claim (cas decrement) cannot land across a recycle: the
+    // generation changes before a slot is reused, failing the cas. This
+    // replaces the post-decrement start-recheck repair, which misfired when
+    // the decrement itself zeroed the extent and the slot recycled before
+    // the recheck (the repair then permanently inflated the successor,
+    // freezing the frontier). The count is atomic because the lock-free
+    // range search reads it against a concurrent recycle. The generation
+    // wraps at 16 bits; a stale claimer would need 65536 same-slot recycles
+    // (each a full ring lap) within one preempted claim to alias.
+    static constexpr size_t generation_shift = 48;
+    static constexpr uint64_t generation_mask =
+        sub1(system::power2<uint64_t>(16u));
+    static constexpr uint64_t outstanding_mask =
+        sub1(system::power2<uint64_t>(generation_shift));
+    static constexpr uint64_t pack_extent_(uint64_t generation,
+        uint64_t outstanding) NOEXCEPT
+    {
+        using namespace system;
+        return bit_or(shift_left<uint64_t>(generation, generation_shift),
+            outstanding);
+    }
+
     struct extent
     {
         std::atomic<size_t> start;
-        size_t count;
-        std::atomic<size_t> outstanding;
+        std::atomic<size_t> count;
+        std::atomic<uint64_t> state;
     };
 
     // This is unshared (settler thread only).
@@ -381,7 +458,23 @@ private:
 
     // These are protected by remap_mutex_.
     std::unique_ptr<dirty_bitmaps> dirty_{};
+    std::unique_ptr<dirty_bitmaps> intent_{};
+    std::unique_ptr<dirty_bitmaps> released_{};
     size_t words_{};
+
+    // Sweep scratch (candidate/released word snapshots), protected by
+    // restore_mutex_.
+    std::unique_ptr<uint64_t[]> sweep_{};
+
+    // Set when the first head page releases (gates the prepare fast path).
+    std::atomic_bool engaged_{};
+
+    // Writers between prepare and mark (unaged, unlike intent bits), so a
+    // release pass cannot settle under a preempted in-flight write.
+    std::atomic<size_t> writers_{};
+
+    // Serializes page release against restore (prepare slow path).
+    mutable std::mutex restore_mutex_{};
 
     // Serializes transfer passes (settler tick against flush), as concurrent
     // passes split the claimed dirty set, allowing a flush to complete while
@@ -419,6 +512,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 #include <bitcoin/database/impl/memory/mmap.ipp>
 #include <bitcoin/database/impl/memory/mmap_dispatch.ipp>
+#include <bitcoin/database/impl/memory/mmap_native.ipp>
 #include <bitcoin/database/impl/memory/mmap_private.ipp>
 #include <bitcoin/database/impl/memory/mmap_staging.ipp>
 #include <bitcoin/database/impl/memory/mmap_storage.ipp>
