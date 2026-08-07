@@ -295,7 +295,7 @@ private:
     template <size_t Column>
     bool remap_(size_t size, bool final=true) NOEXCEPT;
     template <size_t Column>
-    bool resize_(size_t size) NOEXCEPT;
+    bool resize_(size_t size, bool final=true) NOEXCEPT;
     template <size_t Column>
     bool finalize_(size_t size) NOEXCEPT;
 

@@ -113,8 +113,8 @@ bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>,
     if (!(remap_<Index>(capacity, final) && ...))
     {
         // A non-final refusal leaves the maps and capacity intact for the
-        // caller's reduced retry (columns already committed larger by the
-        // refused attempt harmlessly retain their surplus commitment).
+        // caller's reduced retry (columns already grown by the refused
+        // attempt harmlessly retain surplus commitment or provisioning).
         if (final)
             capacity_.store(zero);
 
@@ -282,7 +282,7 @@ bool CLASS::map_() NOEXCEPT
 // Remapping has no effect on logical size, sets map_/capacity_.
 TEMPLATE
 template <size_t Column>
-bool CLASS::remap_(size_t size, bool STAGING_ONLY(final)) NOEXCEPT
+bool CLASS::remap_(size_t size, bool final) NOEXCEPT
 {
     BC_ASSERT(size >= logical_.load());
 
@@ -294,12 +294,12 @@ bool CLASS::remap_(size_t size, bool STAGING_ONLY(final)) NOEXCEPT
     // The file is preallocated to capacity, preserving disk full detection at
     // allocation, and growth commits reserved anonymous pages in place, so no
     // mapping is released and the map base is stable within the reservation.
-    if (!resize_<Column>(size))
+    if (!resize_<Column>(size, final))
         return false;
 
     return commit_<Column>(size, final);
 #else
-    if (!resize_<Column>(size))
+    if (!resize_<Column>(size, final))
         return false;
 
 #if defined(HAVE_MSC)
@@ -321,7 +321,7 @@ bool CLASS::remap_(size_t size, bool STAGING_ONLY(final)) NOEXCEPT
 // disk_full: space is set but no code is set with false return.
 TEMPLATE
 template <size_t Column>
-bool CLASS::resize_(size_t size) NOEXCEPT
+bool CLASS::resize_(size_t size, bool final) NOEXCEPT
 {
     // The file is provisioned ahead of commitment, so growth within the
     // provisioned extent requires no disk operation (the space is reserved).
@@ -340,11 +340,16 @@ bool CLASS::resize_(size_t size) NOEXCEPT
 #endif
     {
         // Disk full is the only restartable store failure (leave mapped).
+        // A non-final refusal is not published: the caller retries reduced.
         if (errno == ENOSPC)
         {
-            using namespace system;
-            set_disk_space(ceilinged_multiply(floored_subtract(size, extent),
-                stride));
+            if (final)
+            {
+                using namespace system;
+                set_disk_space(ceilinged_multiply(
+                    floored_subtract(size, extent), stride));
+            }
+
             return false;
         }
 
