@@ -440,13 +440,16 @@ bool CLASS::stage_() NOEXCEPT
     return true;
 }
 
-// Commit failure results in unmapped.
+// Commit failure results in unmapped when final (the default); a non-final
+// in-reservation commit refusal returns false untouched, so the caller may
+// iterate a reduced request (commit is a kernel admission decision evaluated
+// per request, so a refused amortization step does not imply exhaustion).
 // Growth within the reservation commits pages in place (stable map base); an
 // exhausted reservation is replaced and its unsettled content copied, under
 // the exclusive remap lock held by the caller.
 TEMPLATE
 template <size_t Column>
-bool CLASS::commit_(size_t size) NOEXCEPT
+bool CLASS::commit_(size_t size, bool final) NOEXCEPT
 {
     const auto target = to_width<Column>(size);
 
@@ -478,7 +481,9 @@ bool CLASS::commit_(size_t size) NOEXCEPT
         if ((target > from) && (mmap_commit(std::next(memory_map_[Column], from),
             target - from) == fail))
         {
-            teardown_<Column>(error::mmap_failure);
+            if (final)
+                teardown_<Column>(error::mmap_failure);
+
             return false;
         }
 

@@ -107,11 +107,17 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
 
 TEMPLATE
 template <size_t... Index>
-bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT
+bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>,
+    bool final) NOEXCEPT
 {
-    if (!(remap_<Index>(capacity) && ...))
+    if (!(remap_<Index>(capacity, final) && ...))
     {
-        capacity_.store(zero);
+        // A non-final refusal leaves the maps and capacity intact for the
+        // caller's reduced retry (columns already committed larger by the
+        // refused attempt harmlessly retain their surplus commitment).
+        if (final)
+            capacity_.store(zero);
+
         return false;
     }
 
@@ -276,7 +282,7 @@ bool CLASS::map_() NOEXCEPT
 // Remapping has no effect on logical size, sets map_/capacity_.
 TEMPLATE
 template <size_t Column>
-bool CLASS::remap_(size_t size) NOEXCEPT
+bool CLASS::remap_(size_t size, bool STAGING_ONLY(final)) NOEXCEPT
 {
     BC_ASSERT(size >= logical_.load());
 
@@ -291,7 +297,7 @@ bool CLASS::remap_(size_t size) NOEXCEPT
     if (!resize_<Column>(size))
         return false;
 
-    return commit_<Column>(size);
+    return commit_<Column>(size, final);
 #else
     if (!resize_<Column>(size))
         return false;

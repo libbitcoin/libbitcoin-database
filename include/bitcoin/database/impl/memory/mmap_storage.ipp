@@ -475,11 +475,24 @@ bool CLASS::expand(size_t count) NOEXCEPT
 
     if (count > capacity_.load())
     {
-        const auto extended = to_growth(count);
         std::unique_lock remap_lock(remap_mutex_);
 
-        if (!remap_all_(extended, sequence{}))
-            return false;
+        // Commitment is a kernel admission decision (a charge against
+        // ram+swap) evaluated per request, so a large amortization step can
+        // be refused while the necessity is easily backed (settle returns
+        // charge behind the writer continuously). Iterate: halve the refused
+        // surplus toward the necessity, and only a final refusal of the
+        // necessity itself is genuine exhaustion (which tears down). Disk
+        // full exits the iteration (resize_ refusals do not reduce away).
+        using namespace system;
+        for (auto extended = to_growth(count);
+            !remap_all_(extended, sequence{}, extended <= count);
+            extended = ceilinged_add(count,
+                to_half(floored_subtract(extended, count))))
+        {
+            if ((extended <= count) || !is_zero(space_.load()))
+                return false;
+        }
     }
 
     // Raise to at least count (concurrent claims may already exceed it).
@@ -503,11 +516,18 @@ bool CLASS::reserve(size_t count) NOEXCEPT
     const auto end = logical_.load() + count;
     if (end > capacity_.load())
     {
-        const auto extended = to_growth(end);
         std::unique_lock remap_lock(remap_mutex_);
 
-        if (!remap_all_(extended, sequence{}))
-            return false;
+        // Iterated commitment (see expand): reduce a refused amortization
+        // step toward the necessity before treating refusal as exhaustion.
+        for (auto extended = to_growth(end);
+            !remap_all_(extended, sequence{}, extended <= end);
+            extended = ceilinged_add(end,
+                to_half(floored_subtract(extended, end))))
+        {
+            if ((extended <= end) || !is_zero(space_.load()))
+                return false;
+        }
     }
 
     // Same as allocate except logical does not change.

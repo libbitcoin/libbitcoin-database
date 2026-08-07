@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2011-2026 libbitcoin developers
  *
  * This file is part of libbitcoin.
@@ -280,7 +280,8 @@ private:
     template <size_t... Index>
     bool unmap_all_(std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
-    bool remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT;
+    bool remap_all_(size_t capacity, std::index_sequence<Index...>,
+        bool final=true) NOEXCEPT;
 
     // mman wrappers, not thread safe.
     template <size_t Column>
@@ -292,7 +293,7 @@ private:
     template <size_t Column>
     bool unmap_(size_t size) NOEXCEPT;
     template <size_t Column>
-    bool remap_(size_t size) NOEXCEPT;
+    bool remap_(size_t size, bool final=true) NOEXCEPT;
     template <size_t Column>
     bool resize_(size_t size) NOEXCEPT;
     template <size_t Column>
@@ -312,7 +313,7 @@ private:
     template <size_t Column>
     bool stage_() NOEXCEPT;
     template <size_t Column>
-    bool commit_(size_t size) NOEXCEPT;
+    bool commit_(size_t size, bool final=true) NOEXCEPT;
     template <size_t Column>
     bool settle_(size_t from, size_t to) NOEXCEPT;
     template <size_t Column>
