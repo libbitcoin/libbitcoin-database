@@ -481,17 +481,26 @@ bool CLASS::expand(size_t count) NOEXCEPT
         // ram+swap) evaluated per request, so a large amortization step can
         // be refused while the necessity is easily backed (settle returns
         // charge behind the writer continuously). Iterate: halve the refused
-        // surplus toward the necessity, and only a final refusal of the
-        // necessity itself is genuine exhaustion (which tears down). Disk
-        // full exits the iteration (resize_ refusals do not reduce away).
+        // surplus toward the necessity. Refusal of the necessity itself is a
+        // resource condition, not store damage: treated as the memory analog
+        // of disk full (space set, store intact, writes fail fast until
+        // cleared), it clears by settle drainage or operator relief, where
+        // teardown would convert a transient shortage into a restore.
         using namespace system;
         for (auto extended = to_growth(count);
-            !remap_all_(extended, sequence{}, extended <= count);
+            !remap_all_(extended, sequence{}, false);
             extended = ceilinged_add(count,
                 to_half(floored_subtract(extended, count))))
         {
-            if ((extended <= count) || !is_zero(space_.load()))
+            if (!is_zero(space_.load()))
                 return false;
+
+            if (extended <= count)
+            {
+                set_disk_space(ceilinged_multiply(
+                    floored_subtract(count, capacity_.load()), stride));
+                return false;
+            }
         }
     }
 
@@ -519,14 +528,22 @@ bool CLASS::reserve(size_t count) NOEXCEPT
         std::unique_lock remap_lock(remap_mutex_);
 
         // Iterated commitment (see expand): reduce a refused amortization
-        // step toward the necessity before treating refusal as exhaustion.
+        // step toward the necessity; refusal of the necessity is the memory
+        // analog of disk full (recoverable), never teardown.
         for (auto extended = to_growth(end);
-            !remap_all_(extended, sequence{}, extended <= end);
+            !remap_all_(extended, sequence{}, false);
             extended = ceilinged_add(end,
                 to_half(floored_subtract(extended, end))))
         {
-            if ((extended <= end) || !is_zero(space_.load()))
+            if (!is_zero(space_.load()))
                 return false;
+
+            if (extended <= end)
+            {
+                set_disk_space(ceilinged_multiply(
+                    floored_subtract(end, capacity_.load()), stride));
+                return false;
+            }
         }
     }
 
