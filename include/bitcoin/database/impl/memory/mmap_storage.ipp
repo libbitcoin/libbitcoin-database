@@ -434,12 +434,18 @@ bool CLASS::truncate(size_t count) NOEXCEPT
                 continue;
             }
 
-            if (ceilinged_add(start, tail.count) > count)
+            if (ceilinged_add(start, tail.count.load(relaxed)) > count)
             {
-                tail.count = count - start;
-                const auto limit = tail.count * columns;
-                if (tail.outstanding.load(relaxed) > limit)
-                    tail.outstanding.store(limit, relaxed);
+                const auto trimmed = count - start;
+                tail.count.store(trimmed, relaxed);
+
+                // Clamp outstanding within the state, generation unchanged
+                // (the extent is trimmed, not recycled; writers quiescent).
+                const auto limit = trimmed * columns;
+                const auto state = tail.state.load(relaxed);
+                if (bit_and<uint64_t>(state, outstanding_mask) > limit)
+                    tail.state.store(pack_extent_(shift_right<uint64_t>(
+                        state, generation_shift), limit), relaxed);
             }
 
             break;

@@ -322,8 +322,10 @@ private:
     template <size_t Column>
     void teardown_(const error::error_t& ec) NOEXCEPT;
 
-    // staging utilities, not thread safe.
+    // staging utilities, not thread safe (claim_ is lock-free thread safe).
+    struct extent;
     void record_(size_t start, size_t count) NOEXCEPT;
+    bool claim_(extent& record, size_t count) NOEXCEPT;
     void maintain_() NOEXCEPT;
     void discard_() NOEXCEPT;
     void throttle_() NOEXCEPT;
@@ -409,11 +411,35 @@ private:
     using dirty_bitmaps = std::atomic<uint64_t>[];
 
     static constexpr size_t extents = 4096;
+
+    // Extent state packs a recycling generation with the outstanding count,
+    // so a lock-free claim (cas decrement) cannot land across a recycle: the
+    // generation changes before a slot is reused, failing the cas. This
+    // replaces the post-decrement start-recheck repair, which misfired when
+    // the decrement itself zeroed the extent and the slot recycled before
+    // the recheck (the repair then permanently inflated the successor,
+    // freezing the frontier). The count is atomic because the lock-free
+    // range search reads it against a concurrent recycle. The generation
+    // wraps at 16 bits; a stale claimer would need 65536 same-slot recycles
+    // (each a full ring lap) within one preempted claim to alias.
+    static constexpr size_t generation_shift = 48;
+    static constexpr uint64_t generation_mask =
+        sub1(system::power2<uint64_t>(16u));
+    static constexpr uint64_t outstanding_mask =
+        sub1(system::power2<uint64_t>(generation_shift));
+    static constexpr uint64_t pack_extent_(uint64_t generation,
+        uint64_t outstanding) NOEXCEPT
+    {
+        using namespace system;
+        return bit_or(shift_left<uint64_t>(generation, generation_shift),
+            outstanding);
+    }
+
     struct extent
     {
         std::atomic<size_t> start;
-        size_t count;
-        std::atomic<size_t> outstanding;
+        std::atomic<size_t> count;
+        std::atomic<uint64_t> state;
     };
 
     // This is unshared (settler thread only).

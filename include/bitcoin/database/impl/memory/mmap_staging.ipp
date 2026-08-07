@@ -63,33 +63,20 @@ void CLASS::complete(size_t STAGING_ONLY(offset),
             continue;
         }
 
-        if (offset >= (start + record.count))
+        if (offset >= (start + record.count.load(relaxed)))
         {
             low = add1(middle);
             continue;
         }
 
-        // Wrap from over-completion stalls the frontier (conservative).
-        const auto previous = record.outstanding.fetch_sub(count, relaxed);
-
-        // Repair a decrement landed on a recycled slot (start moved).
-        if (record.start.load(relaxed) != start)
-        {
-            record.outstanding.fetch_add(count, relaxed);
+        if (claim_(record, count))
             return;
-        }
 
-        // Extent completion is allocation-coarse, so maintenance is cheap
-        // here and the element write fast path otherwise takes no lock.
-        if (previous == count)
-        {
-            std::unique_lock extent_lock(extent_mutex_, std::try_to_lock);
-
-            if (extent_lock.owns_lock())
-                maintain_();
-        }
-
-        return;
+        // The range matched a slot recycling under the search (regardless
+        // of apparent agreement, the claim refused it). The true covering
+        // extent is immobile while this completion is pending, so the
+        // exhaustive scan below finds it.
+        break;
     }
 
     // Contention can record extents out of start order (allocation claim and
@@ -99,28 +86,66 @@ void CLASS::complete(size_t STAGING_ONLY(offset),
     {
         auto& record = ring_.at((head + index) % extents);
         const auto start = record.start.load(relaxed);
-        if ((offset < start) || (offset >= (start + record.count)))
+        if ((offset < start) ||
+            (offset >= (start + record.count.load(relaxed))))
             continue;
 
-        const auto previous = record.outstanding.fetch_sub(count, relaxed);
-        if (record.start.load(relaxed) != start)
-        {
-            record.outstanding.fetch_add(count, relaxed);
+        if (claim_(record, count))
             return;
-        }
-
-        if (previous == count)
-        {
-            std::unique_lock extent_lock(extent_mutex_, std::try_to_lock);
-
-            if (extent_lock.owns_lock())
-                maintain_();
-        }
-
-        return;
     }
 #endif
 }
+
+#if defined(MANAGE_STAGING)
+
+// Claim completion of count rows against the extent, by cas decrement of the
+// packed state while its recycling generation holds. A claim can therefore
+// never land across a recycle and requires no repair (the prior repair
+// misfired when the decrement itself zeroed the extent and the slot recycled
+// before the start recheck, permanently inflating the successor). False
+// implies the slot recycled out from under the caller's range match (or the
+// match was torn across a recycle): the caller rescans. The true covering
+// extent cannot refuse: its generation is stable and its outstanding covers
+// every pending completion while any remains.
+TEMPLATE
+bool CLASS::claim_(extent& record, size_t count) NOEXCEPT
+{
+    using namespace system;
+    auto state = record.state.load(std::memory_order_acquire);
+    const auto generation = shift_right<uint64_t>(state, generation_shift);
+
+    // An outstanding below the claim is a recycle in flight or a torn match
+    // (never the covering extent), refused rather than wrapped.
+    for (auto outstanding = bit_and<uint64_t>(state, outstanding_mask);
+        outstanding >= count;
+        outstanding = bit_and<uint64_t>(state, outstanding_mask))
+    {
+        if (record.state.compare_exchange_weak(state,
+            pack_extent_(generation, outstanding - count),
+            std::memory_order_acq_rel, std::memory_order_acquire))
+        {
+            // Extent completion is allocation-coarse, so maintenance is
+            // cheap here and the element write fast path takes no lock.
+            if (outstanding == count)
+            {
+                std::unique_lock extent_lock(extent_mutex_, std::try_to_lock);
+
+                if (extent_lock.owns_lock())
+                    maintain_();
+            }
+
+            return true;
+        }
+
+        // The failed cas reloaded state; a generation change is a recycle.
+        if (shift_right<uint64_t>(state, generation_shift) != generation)
+            return false;
+    }
+
+    return false;
+}
+
+#endif // MANAGE_STAGING
 
 TEMPLATE
 size_t CLASS::frontier() const NOEXCEPT
@@ -165,9 +190,17 @@ void CLASS::record_(size_t start, size_t count) NOEXCEPT
     }
 
     auto& record = ring_.at((head + size) % extents);
+    const auto generation = bit_and<uint64_t>(add1(shift_right<uint64_t>(
+        record.state.load(relaxed), generation_shift)), generation_mask);
+    BC_ASSERT((count * columns) <= outstanding_mask);
     record.start.store(start, relaxed);
-    record.count = count;
-    record.outstanding.store(count * columns, relaxed);
+    record.count.store(count, relaxed);
+
+    // Publish the state (pairs with the acquire in claim_): a claim against
+    // the stale generation now fails its cas, and one against this
+    // generation observes the new start and count through the release.
+    record.state.store(pack_extent_(generation, count * columns),
+        std::memory_order_release);
 
     // Publish the extent (pairs with the acquire window snapshot).
     window_.store(pack_word<uint64_t>(head, add1(size)), release);
@@ -181,7 +214,8 @@ void CLASS::maintain_() NOEXCEPT
 {
     using namespace system;
     auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
-    while (!is_zero(size) && is_zero(ring_.at(head).outstanding.load(relaxed)))
+    while (!is_zero(size) && is_zero(bit_and<uint64_t>(
+        ring_.at(head).state.load(relaxed), outstanding_mask)))
     {
         head = add1(head) % extents;
         --size;
