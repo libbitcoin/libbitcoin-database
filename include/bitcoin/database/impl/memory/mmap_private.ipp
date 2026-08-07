@@ -332,41 +332,74 @@ bool CLASS::resize_(size_t size, bool final) NOEXCEPT
     using namespace system;
     const auto target = to_width<Column>(size);
     const auto capacity = to_width<Column>(extent);
-    const auto probed = ceilinged_add(target, headroom_);
 
-    // Disk full detection, any other failure is an abort. The extension is
-    // probed with the headroom, released upon the grant (truncated back).
-#if !defined(WITHOUT_FALLOCATE)
-    if (::fallocate(opened_[Column], 0, capacity, probed - capacity) == fail)
-#else
-    if (::ftruncate(opened_[Column], probed) == fail)
-#endif
+    // The extension is admitted only if it leaves the headroom free: a
+    // sibling reservation charges the headroom on the same volume across
+    // the extension and releases it upon the grant (the mapped file itself
+    // is never oversized, which msc cannot shrink under a live section).
+    auto probe = file::invalid;
+    path name{};
+    if (!is_zero(headroom_))
     {
-        // Disk full is the only restartable store failure (leave mapped).
-        // A non-final refusal is not published: the caller retries reduced.
-        if (errno == ENOSPC)
+        name = filenames_[Column];
+        name += ".probe";
+        if (file::create_file(name))
+            probe = file::open(name);
+
+#if !defined(WITHOUT_FALLOCATE)
+        if ((probe == file::invalid) ||
+            (::fallocate(probe, 0, zero, headroom_) == fail))
+#else
+        if ((probe == file::invalid) ||
+            (::ftruncate(probe, headroom_) == fail))
+#endif
         {
+            if (probe != file::invalid)
+                file::close(probe);
+
+            file::remove(name);
             if (final)
-                set_disk_space(ceilinged_multiply(
-                    floored_subtract(size, extent), stride));
+                set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+                    floored_subtract(size, extent), stride)));
 
             return false;
         }
-
-        set_first_code(error::ftruncate_failure);
-        unmap_<Column>(capacity_.load());
-        return false;
     }
 
-    if (!is_zero(headroom_) &&
-        (::ftruncate(opened_[Column], target) == fail))
+    // Disk full detection, any other failure is an abort.
+#if !defined(WITHOUT_FALLOCATE)
+    const auto extended =
+        ::fallocate(opened_[Column], 0, capacity, target - capacity) != fail;
+#else
+    const auto extended = ::ftruncate(opened_[Column], target) != fail;
+#endif
+    const auto full = !extended && (errno == ENOSPC);
+
+    if (probe != file::invalid)
     {
-        set_first_code(error::ftruncate_failure);
-        unmap_<Column>(capacity_.load());
+        file::close(probe);
+        file::remove(name);
+    }
+
+    if (extended)
+        return true;
+
+    // Disk full is the only restartable store failure (leave mapped).
+    // A non-final refusal is not published: the caller retries reduced.
+    // The published requirement includes the headroom: a retry re-probes,
+    // so resumption below the sum would only bounce back into suspension.
+    if (full)
+    {
+        if (final)
+            set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+                floored_subtract(size, extent), stride)));
+
         return false;
     }
 
-    return true;
+    set_first_code(error::ftruncate_failure);
+    unmap_<Column>(capacity_.load());
+    return false;
 }
 
 // Finalize failure results in unmapped.

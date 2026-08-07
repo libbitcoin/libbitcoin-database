@@ -504,8 +504,8 @@ bool CLASS::expand(size_t count) NOEXCEPT
 
             if (extended <= count)
             {
-                set_disk_space(ceilinged_multiply(
-                    floored_subtract(count, capacity_.load()), stride));
+                set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+                    floored_subtract(count, capacity_.load()), stride)));
                 return false;
             }
         }
@@ -548,8 +548,8 @@ bool CLASS::reserve(size_t count) NOEXCEPT
 
             if (extended <= end)
             {
-                set_disk_space(ceilinged_multiply(
-                    floored_subtract(end, capacity_.load()), stride));
+                set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+                    floored_subtract(end, capacity_.load()), stride)));
                 return false;
             }
         }
