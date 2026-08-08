@@ -31,6 +31,8 @@
 #if defined(HAVE_APPLE)
     #include <mach/mach.h>
     #include <mach/mach_vm.h>
+    #include <sys/mount.h>
+    #include <sys/sysctl.h>
 #endif
 #if defined(HAVE_LINUX)
     #include <sys/prctl.h>
@@ -46,22 +48,68 @@ void* mmap_reserve(size_t size) NOEXCEPT
         -1, 0);
 }
 
+#if defined(HAVE_APPLE)
+
+// Darwin admits every anonymous ask (exhaustion arrives at first touch), so
+// admission is computed: free ram plus swap growth room (darwin swap is
+// files created on demand in the vm volume). A failed measurement term
+// contributes zero (conservative), and the bound moves at disk speed, so
+// the headroom absorbs the measure-to-touch race.
+static bool mmap_admit(size_t size) NOEXCEPT
+{
+    vm_statistics64_data_t stats{};
+    mach_msg_type_number_t count = HOST_VM_INFO64_COUNT;
+    uint64_t ram{};
+    if (::host_statistics64(::mach_host_self(), HOST_VM_INFO64,
+        reinterpret_cast<host_info64_t>(&stats), &count) == KERN_SUCCESS)
+        ram = ceilinged_multiply(
+            ceilinged_add<uint64_t>(stats.free_count, stats.inactive_count),
+            possible_wide_cast<uint64_t>(vm_page_size));
+
+    xsw_usage swap{};
+    size_t length = sizeof(swap);
+    uint64_t slack{};
+    if (::sysctlbyname("vm.swapusage", &swap, &length, nullptr, 0) == 0)
+        slack = floored_subtract<uint64_t>(swap.xsu_total, swap.xsu_used);
+
+    struct statfs volume{};
+    uint64_t growth{};
+    if (::statfs("/System/Volumes/VM", &volume) == 0)
+        growth = ceilinged_multiply(possible_wide_cast<uint64_t>(
+            volume.f_bavail), possible_wide_cast<uint64_t>(volume.f_bsize));
+
+    return possible_wide_cast<uint64_t>(size) <=
+        ceilinged_add(ram, ceilinged_add(slack, growth));
+}
+
+#endif // HAVE_APPLE
+
 // The commitment is granted only if it leaves the headroom free: the probe
 // charges the headroom alongside the request (atomic with its admission)
-// and releases it upon the grant.
+// and releases it upon the grant. Darwin refuses no charge, so its
+// admission is computed rather than delegated.
 int mmap_commit(void* address, size_t size, size_t headroom) NOEXCEPT
 {
     if (is_zero(headroom))
         return ::mprotect(address, size, PROT_READ | PROT_WRITE);
 
+#if defined(HAVE_APPLE)
+    if (!mmap_admit(ceilinged_add(size, headroom)))
+        return -1;
+#else
     const auto probe = ::mmap(nullptr, headroom, PROT_READ | PROT_WRITE,
         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
     if (probe == MAP_FAILED)
         return -1;
+#endif
 
     const auto result = ::mprotect(address, size, PROT_READ | PROT_WRITE);
+
+#if !defined(HAVE_APPLE)
     ::munmap(probe, headroom);
+#endif
+
     return result;
 }
 
