@@ -283,6 +283,7 @@ private:
     bool remap_all_(size_t capacity, std::index_sequence<Index...>,
         bool final=true) NOEXCEPT;
     bool grow_(size_t end) NOEXCEPT;
+    bool probe_(size_t capacity) NOEXCEPT;
 
     // mman wrappers, not thread safe.
     template <size_t Column>

@@ -110,6 +110,21 @@ template <size_t... Index>
 bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>,
     bool final) NOEXCEPT
 {
+    // Probe the wave's disk requirement before touching any column file: a
+    // refused wave then retains no surplus provisioning (columns cannot be
+    // trimmed after a partial wave, as msc cannot shrink a mapped file).
+    if (!probe_(capacity))
+    {
+        if (final)
+        {
+            using namespace system;
+            set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+                floored_subtract(capacity, file_.load()), stride)));
+        }
+
+        return false;
+    }
+
     if (!(remap_<Index>(capacity, final) && ...))
     {
         // A non-final refusal leaves the maps and capacity intact for the
@@ -333,73 +348,68 @@ bool CLASS::resize_(size_t size, bool final) NOEXCEPT
     const auto target = to_width<Column>(size);
     const auto capacity = to_width<Column>(extent);
 
-    // The extension is admitted only if it leaves the headroom free: a
-    // sibling reservation charges the headroom on the same volume across
-    // the extension and releases it upon the grant (the mapped file itself
-    // is never oversized, which msc cannot shrink under a live section).
-    auto probe = file::invalid;
-    path name{};
-    if (!is_zero(headroom_))
-    {
-        name = filenames_[Column];
-        name += ".probe";
-        if (file::create_file(name))
-            probe = file::open(name);
-
+    // Disk full detection, any other failure is an abort. The wave probe
+    // (remap_all_) precedes, so refusal here is a raced foreign consumer.
 #if !defined(WITHOUT_FALLOCATE)
-        if ((probe == file::invalid) ||
-            (::fallocate(probe, 0, zero, headroom_) == fail))
+    if (::fallocate(opened_[Column], 0, capacity, target - capacity) == fail)
 #else
-        if ((probe == file::invalid) ||
-            (::ftruncate(probe, headroom_) == fail))
+    if (::ftruncate(opened_[Column], target) == fail)
 #endif
+    {
+        // Disk full is the only restartable store failure (leave mapped).
+        // A non-final refusal is not published: the caller retries reduced.
+        // The published requirement includes the headroom (a retry probes).
+        if (errno == ENOSPC)
         {
-            if (probe != file::invalid)
-                file::close(probe);
-
-            file::remove(name);
             if (final)
                 set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
                     floored_subtract(size, extent), stride)));
 
             return false;
         }
-    }
 
-    // Disk full detection, any other failure is an abort.
-#if !defined(WITHOUT_FALLOCATE)
-    const auto extended =
-        ::fallocate(opened_[Column], 0, capacity, target - capacity) != fail;
-#else
-    const auto extended = ::ftruncate(opened_[Column], target) != fail;
-#endif
-    const auto full = !extended && (errno == ENOSPC);
-
-    if (probe != file::invalid)
-    {
-        file::close(probe);
-        file::remove(name);
-    }
-
-    if (extended)
-        return true;
-
-    // Disk full is the only restartable store failure (leave mapped).
-    // A non-final refusal is not published: the caller retries reduced.
-    // The published requirement includes the headroom: a retry re-probes,
-    // so resumption below the sum would only bounce back into suspension.
-    if (full)
-    {
-        if (final)
-            set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
-                floored_subtract(size, extent), stride)));
-
+        set_first_code(error::ftruncate_failure);
+        unmap_<Column>(capacity_.load());
         return false;
     }
 
-    set_first_code(error::ftruncate_failure);
-    unmap_<Column>(capacity_.load());
-    return false;
+    return true;
+}
+
+// The wave probe reserves the whole extension plus headroom on the store
+// volume (column widths sum to the stride), released upon the grant: a
+// refused wave touches no column file, and a granted one leaves the
+// headroom unclaimed.
+TEMPLATE
+bool CLASS::probe_(size_t capacity) NOEXCEPT
+{
+    using namespace system;
+    const auto bytes = ceilinged_multiply(
+        floored_subtract(capacity, file_.load()), stride);
+
+    if (is_zero(bytes))
+        return true;
+
+    auto name = filenames_.front();
+    name += ".probe";
+    auto probe = file::invalid;
+    if (file::create_file(name))
+        probe = file::open(name);
+
+    const auto reserve = ceilinged_add(bytes, headroom_);
+#if !defined(WITHOUT_FALLOCATE)
+    const auto held = (probe != file::invalid) &&
+        (::fallocate(probe, 0, zero, reserve) != fail);
+#else
+    const auto held = (probe != file::invalid) &&
+        (::ftruncate(probe, reserve) != fail);
+#endif
+
+    if (probe != file::invalid)
+        file::close(probe);
+
+    file::remove(name);
+    return held;
 }
 
 // Finalize failure results in unmapped.
