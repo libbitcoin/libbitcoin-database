@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2011-2026 libbitcoin developers
  *
  * This file is part of libbitcoin.
@@ -280,7 +280,10 @@ private:
     template <size_t... Index>
     bool unmap_all_(std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
-    bool remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT;
+    bool remap_all_(size_t capacity, std::index_sequence<Index...>,
+        bool final=true) NOEXCEPT;
+    bool grow_(size_t end) NOEXCEPT;
+    bool probe_(size_t capacity) NOEXCEPT;
 
     // mman wrappers, not thread safe.
     template <size_t Column>
@@ -292,9 +295,9 @@ private:
     template <size_t Column>
     bool unmap_(size_t size) NOEXCEPT;
     template <size_t Column>
-    bool remap_(size_t size) NOEXCEPT;
+    bool remap_(size_t size, bool final=true) NOEXCEPT;
     template <size_t Column>
-    bool resize_(size_t size) NOEXCEPT;
+    bool resize_(size_t size, bool final=true) NOEXCEPT;
     template <size_t Column>
     bool finalize_(size_t size) NOEXCEPT;
 
@@ -312,7 +315,7 @@ private:
     template <size_t Column>
     bool stage_() NOEXCEPT;
     template <size_t Column>
-    bool commit_(size_t size) NOEXCEPT;
+    bool commit_(size_t size, bool final=true) NOEXCEPT;
     template <size_t Column>
     bool settle_(size_t from, size_t to) NOEXCEPT;
     template <size_t Column>
@@ -324,7 +327,7 @@ private:
 
     // staging utilities, not thread safe (claim_ is lock-free thread safe).
     struct extent;
-    void record_(size_t start, size_t count) NOEXCEPT;
+    size_t record_(size_t count) NOEXCEPT;
     bool claim_(extent& record, size_t count) NOEXCEPT;
     void maintain_() NOEXCEPT;
     void discard_() NOEXCEPT;
@@ -382,6 +385,7 @@ private:
     const paths filenames_;
     const size_t minimum_;
     const size_t expansion_;
+    const size_t headroom_;
     const advice access_;
     const bool random_;
     const bool staged_;

@@ -186,6 +186,7 @@ code CLASS::reload() NOEXCEPT
         return error::success;
     }
 
+    // Locked by reader(s), as write suspension is a precondition.
     return error::reload_locked;
 }
 
@@ -462,6 +463,42 @@ bool CLASS::truncate(size_t count) NOEXCEPT
     return true;
 }
 
+// Iterated growth (callers hold the remap lock). Growth asks are amortized
+// (rate surplus over the necessity), and each is admitted only while it
+// leaves the configured headroom of the backing resource unclaimed (probed
+// with the ask, released on grant), so exhaustion never consumes the
+// system's final bytes. A large amortization step can be refused while the
+// necessity fits, so iterate: halve the refused surplus toward the
+// necessity. Refusal of the necessity is exhaustion, not store damage:
+// published as disk full (space set, store intact, writes fail fast until
+// cleared), it clears by settle drainage or operator relief, where teardown
+// would convert a shortage into a restore.
+TEMPLATE
+bool CLASS::grow_(size_t end) NOEXCEPT
+{
+    if (!is_zero(space_.load()))
+        return false;
+
+    using namespace system;
+    for (auto extended = to_growth(end);
+        !remap_all_(extended, sequence{}, false);
+        extended = ceilinged_add(end,
+            to_half(floored_subtract(extended, end))))
+    {
+        if (fault_.load())
+            return false;
+
+        if (extended <= end)
+        {
+            set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+                floored_subtract(end, capacity_.load()), stride)));
+            return false;
+        }
+    }
+
+    return true;
+}
+
 TEMPLATE
 bool CLASS::expand(size_t count) NOEXCEPT
 {
@@ -475,10 +512,8 @@ bool CLASS::expand(size_t count) NOEXCEPT
 
     if (count > capacity_.load())
     {
-        const auto extended = to_growth(count);
         std::unique_lock remap_lock(remap_mutex_);
-
-        if (!remap_all_(extended, sequence{}))
+        if (!grow_(count))
             return false;
     }
 
@@ -503,10 +538,8 @@ bool CLASS::reserve(size_t count) NOEXCEPT
     const auto end = logical_.load() + count;
     if (end > capacity_.load())
     {
-        const auto extended = to_growth(end);
         std::unique_lock remap_lock(remap_mutex_);
-
-        if (!remap_all_(extended, sequence{}))
+        if (!grow_(end))
             return false;
     }
 
@@ -522,14 +555,46 @@ bool CLASS::reserve(size_t count) NOEXCEPT
 TEMPLATE
 size_t CLASS::allocate(size_t count) NOEXCEPT
 {
+    using namespace system;
+
 #if defined(MANAGE_STAGING)
     // Nothing is held here, so parking cannot deadlock (as with remap waits).
     throttle_();
-#endif
+
+    // Staged claims serialize with extent recording (record_ locks on every
+    // claim regardless, so this adds no contention): a claim never exists
+    // outside the ring, so the frontier can never pass an unwritten extent.
+    if (staged_)
+    {
+        while (true)
+        {
+            if (fault_.load() || !loaded_.load())
+                return storage::eof;
+
+            const auto start = record_(count);
+            if (start != storage::eof)
+                return start;
+
+            // Slow path: serialize capacity growth (at most one grower).
+            std::unique_lock field_lock(field_mutex_);
+
+            const auto logical = logical_.load();
+            if (is_add_overflow(logical, count))
+                return storage::eof;
+
+            const auto end = logical + count;
+            if (end > capacity_.load())
+            {
+                std::unique_lock remap_lock(remap_mutex_);
+                if (!grow_(end))
+                    return storage::eof;
+            }
+        }
+    }
+#endif // MANAGE_STAGING
 
     // Fast path: claim rows within published capacity (no locks). A failed
     // exchange implies another claim succeeded, so every retry is progress.
-    using namespace system;
     auto start = logical_.load();
     while (true)
     {
@@ -540,12 +605,7 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
             break;
 
         if (logical_.compare_exchange_weak(start, start + count))
-        {
-#if defined(MANAGE_STAGING)
-            record_(start, count);
-#endif
             return start;
-        }
     }
 
     // Slow path: serialize capacity growth (at most one grower). Fast paths
@@ -562,23 +622,16 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
         if (end <= capacity_.load())
         {
             if (logical_.compare_exchange_weak(start, end))
-            {
-#if defined(MANAGE_STAGING)
-                record_(start, count);
-#endif
                 return start;
-            }
 
             continue;
         }
-
-        const auto extended = to_growth(end);
 
         // TODO: Could loop over a try lock here and log deadlock warning.
         std::unique_lock remap_lock(remap_mutex_);
 
         // Disk full condition leaves store in valid state despite eof return.
-        if (!remap_all_(extended, sequence{}))
+        if (!grow_(end))
             return storage::eof;
     }
 }

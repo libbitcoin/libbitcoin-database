@@ -107,11 +107,32 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
 
 TEMPLATE
 template <size_t... Index>
-bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>) NOEXCEPT
+bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>,
+    bool final) NOEXCEPT
 {
-    if (!(remap_<Index>(capacity) && ...))
+    // Probe the wave's disk requirement before touching any column file: a
+    // refused wave then retains no surplus provisioning (columns cannot be
+    // trimmed after a partial wave, as msc cannot shrink a mapped file).
+    if (!probe_(capacity))
     {
-        capacity_.store(zero);
+        if (final)
+        {
+            using namespace system;
+            set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+                floored_subtract(capacity, file_.load()), stride)));
+        }
+
+        return false;
+    }
+
+    if (!(remap_<Index>(capacity, final) && ...))
+    {
+        // A non-final refusal leaves the maps and capacity intact for the
+        // caller's reduced retry (columns already grown by the refused
+        // attempt harmlessly retain surplus commitment or provisioning).
+        if (final)
+            capacity_.store(zero);
+
         return false;
     }
 
@@ -276,7 +297,7 @@ bool CLASS::map_() NOEXCEPT
 // Remapping has no effect on logical size, sets map_/capacity_.
 TEMPLATE
 template <size_t Column>
-bool CLASS::remap_(size_t size) NOEXCEPT
+bool CLASS::remap_(size_t size, bool final) NOEXCEPT
 {
     BC_ASSERT(size >= logical_.load());
 
@@ -288,12 +309,12 @@ bool CLASS::remap_(size_t size) NOEXCEPT
     // The file is preallocated to capacity, preserving disk full detection at
     // allocation, and growth commits reserved anonymous pages in place, so no
     // mapping is released and the map base is stable within the reservation.
-    if (!resize_<Column>(size))
+    if (!resize_<Column>(size, final))
         return false;
 
-    return commit_<Column>(size);
+    return commit_<Column>(size, final);
 #else
-    if (!resize_<Column>(size))
+    if (!resize_<Column>(size, final))
         return false;
 
 #if defined(HAVE_MSC)
@@ -315,7 +336,7 @@ bool CLASS::remap_(size_t size) NOEXCEPT
 // disk_full: space is set but no code is set with false return.
 TEMPLATE
 template <size_t Column>
-bool CLASS::resize_(size_t size) NOEXCEPT
+bool CLASS::resize_(size_t size, bool final) NOEXCEPT
 {
     // The file is provisioned ahead of commitment, so growth within the
     // provisioned extent requires no disk operation (the space is reserved).
@@ -323,10 +344,12 @@ bool CLASS::resize_(size_t size) NOEXCEPT
     if (size <= extent)
         return true;
 
+    using namespace system;
     const auto target = to_width<Column>(size);
     const auto capacity = to_width<Column>(extent);
 
-    // Disk full detection, any other failure is an abort.
+    // Disk full detection, any other failure is an abort. The wave probe
+    // (remap_all_) precedes, so refusal here is a raced foreign consumer.
 #if !defined(WITHOUT_FALLOCATE)
     if (::fallocate(opened_[Column], 0, capacity, target - capacity) == fail)
 #else
@@ -334,11 +357,14 @@ bool CLASS::resize_(size_t size) NOEXCEPT
 #endif
     {
         // Disk full is the only restartable store failure (leave mapped).
+        // A non-final refusal is not published: the caller retries reduced.
+        // The published requirement includes the headroom (a retry probes).
         if (errno == ENOSPC)
         {
-            using namespace system;
-            set_disk_space(ceilinged_multiply(floored_subtract(size, extent),
-                stride));
+            if (final)
+                set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+                    floored_subtract(size, extent), stride)));
+
             return false;
         }
 
@@ -348,6 +374,42 @@ bool CLASS::resize_(size_t size) NOEXCEPT
     }
 
     return true;
+}
+
+// The wave probe reserves the whole extension plus headroom on the store
+// volume (column widths sum to the stride), released upon the grant: a
+// refused wave touches no column file, and a granted one leaves the
+// headroom unclaimed.
+TEMPLATE
+bool CLASS::probe_(size_t capacity) NOEXCEPT
+{
+    using namespace system;
+    const auto bytes = ceilinged_multiply(
+        floored_subtract(capacity, file_.load()), stride);
+
+    if (is_zero(bytes))
+        return true;
+
+    auto name = filenames_.front();
+    name += ".probe";
+    auto probe = file::invalid;
+    if (file::create_file(name))
+        probe = file::open(name);
+
+    const auto reserve = ceilinged_add(bytes, headroom_);
+#if !defined(WITHOUT_FALLOCATE)
+    const auto held = (probe != file::invalid) &&
+        (::fallocate(probe, 0, zero, reserve) != fail);
+#else
+    const auto held = (probe != file::invalid) &&
+        (::ftruncate(probe, reserve) != fail);
+#endif
+
+    if (probe != file::invalid)
+        file::close(probe);
+
+    file::remove(name);
+    return held;
 }
 
 // Finalize failure results in unmapped.

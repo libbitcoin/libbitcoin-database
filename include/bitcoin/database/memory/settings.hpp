@@ -56,6 +56,10 @@ struct storage_settings
     /// Body expansion rate (percentage).
     uint16_t rate{ 5 };
 
+    /// Headroom (bytes): growth is admitted only while it leaves this much
+    /// of the backing resource (memory commitment, disk space) unclaimed.
+    uint64_t headroom{ system::power2(28u) };
+
     /// Page advice for mapped reads (see advice). Bodies default to
     /// scattered: they are far too large to reside, and validation reads
     /// prevouts from arbitrary earlier blocks, so read-ahead manufactures
