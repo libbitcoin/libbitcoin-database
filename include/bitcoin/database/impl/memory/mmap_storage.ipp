@@ -186,6 +186,7 @@ code CLASS::reload() NOEXCEPT
         return error::success;
     }
 
+    // Locked by reader(s), as write suspension is a precondition.
     return error::reload_locked;
 }
 
