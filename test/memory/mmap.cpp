@@ -359,6 +359,158 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__no_minimum_expansion__expected_capacity)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+// Growth admission (headroom).
+// ----------------------------------------------------------------------------
+// An unsatisfiable headroom refuses every growth ask, which is the recoverable
+// resource condition (space set, store intact) and never a store fault.
+
+constexpr uint64_t unsatisfiable_headroom = 0x0001000000000000_u64;
+
+BOOST_AUTO_TEST_CASE(mmap__allocate__unsatisfiable_headroom__eof)
+{
+    constexpr auto minimum = 42_size;
+    constexpr auto rate = 50_size;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { minimum, rate, unsatisfiable_headroom });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__allocate__unsatisfiable_headroom__space_no_fault)
+{
+    constexpr auto minimum = 42_size;
+    constexpr auto rate = 50_size;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { minimum, rate, unsatisfiable_headroom });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
+
+    BOOST_REQUIRE_NE(instance.get_space(), zero);
+    BOOST_REQUIRE(!instance.get_fault());
+    BOOST_REQUIRE(instance.is_loaded());
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__allocate__unsatisfiable_headroom__capacity_retained)
+{
+    constexpr auto minimum = 42_size;
+    constexpr auto rate = 50_size;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { minimum, rate, unsatisfiable_headroom });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BOOST_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
+
+    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__allocate__within_capacity_unsatisfiable_headroom__success)
+{
+    constexpr auto minimum = 100_size;
+    constexpr auto rate = 50_size;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { minimum, rate, unsatisfiable_headroom });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_EQUAL(instance.allocate(42), zero);
+    BOOST_REQUIRE(!instance.get_fault());
+    BOOST_REQUIRE_EQUAL(instance.get_space(), zero);
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__reload__after_headroom_refusal__clears_space)
+{
+    constexpr auto minimum = 42_size;
+    constexpr auto rate = 50_size;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { minimum, rate, unsatisfiable_headroom });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
+    BOOST_REQUIRE_NE(instance.get_space(), zero);
+
+    BOOST_REQUIRE(!instance.reload());
+    BOOST_REQUIRE_EQUAL(instance.get_space(), zero);
+    BOOST_REQUIRE(!instance.get_fault());
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__expand__unsatisfiable_headroom__false_no_fault)
+{
+    constexpr auto minimum = 42_size;
+    constexpr auto rate = 50_size;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { minimum, rate, unsatisfiable_headroom });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE(!instance.expand(1000));
+    BOOST_REQUIRE_NE(instance.get_space(), zero);
+    BOOST_REQUIRE(!instance.get_fault());
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__reserve__unsatisfiable_headroom__false_no_fault)
+{
+    constexpr auto minimum = 42_size;
+    constexpr auto rate = 50_size;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { minimum, rate, unsatisfiable_headroom });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE(!instance.reserve(1000));
+    BOOST_REQUIRE_NE(instance.get_space(), zero);
+    BOOST_REQUIRE(!instance.get_fault());
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__allocate__zero_headroom__growth_admitted)
+{
+    constexpr auto minimum = 42_size;
+    constexpr auto rate = 50_size;
+    constexpr auto size = 1000_size;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { minimum, rate, 0 });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
+
+    constexpr auto capacity = size + to_half(size);
+    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
+    BOOST_REQUIRE_EQUAL(instance.get_space(), zero);
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(mmap__truncate__unloaded__failure)
 {
     const std::string file = TEST_PATH;
