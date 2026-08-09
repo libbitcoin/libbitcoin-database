@@ -375,6 +375,7 @@ public:
     hash_digest get_top_candidate_hash() const NOEXCEPT;
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
     size_t get_tx_count(const header_link& link) const NOEXCEPT;
+    size_t get_branch_tx_count(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
     inline ins_key get_point_key(const ins_link& link) const NOEXCEPT;
@@ -570,6 +571,7 @@ public:
     bool get_timestamp(uint32_t& timestamp, const header_link& link) const NOEXCEPT;
     bool get_version(uint32_t& version, const header_link& link) const NOEXCEPT;
     bool get_work(uint256_t& work, const header_link& link) const NOEXCEPT;
+    bool get_branch_work(uint256_t& work, const header_link& link) const NOEXCEPT;
     bool get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT;
     bool get_context(context& ctx, const header_link& link) const NOEXCEPT;
     bool get_context(chain_context& ctx,
