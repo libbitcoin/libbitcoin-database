@@ -110,9 +110,9 @@ template <size_t... Index>
 bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>,
     bool final) NOEXCEPT
 {
-    // Probe the wave's disk requirement before touching any column file: a
-    // refused wave then retains no surplus provisioning (columns cannot be
-    // trimmed after a partial wave, as msc cannot shrink a mapped file).
+    // Probed before touching any column file: a refused wave then retains no
+    // surplus provisioning (a partial wave cannot be trimmed, as msc cannot
+    // shrink a mapped file).
     if (!probe_(capacity))
     {
         if (final)
@@ -377,9 +377,9 @@ bool CLASS::resize_(size_t size, bool final) NOEXCEPT
 }
 
 // The wave probe reserves the whole extension plus headroom on the store
-// volume (column widths sum to the stride), released upon the grant: a
-// refused wave touches no column file, and a granted one leaves the
-// headroom unclaimed.
+// volume (column widths sum to the stride) leaves the headroom unclaimed.
+// An unmeasurable volume admits the wave: growth failure is the store's own
+// disk full detection, and a query failure is not an exhaustion signal.
 TEMPLATE
 bool CLASS::probe_(size_t capacity) NOEXCEPT
 {
@@ -387,29 +387,14 @@ bool CLASS::probe_(size_t capacity) NOEXCEPT
     const auto bytes = ceilinged_multiply(
         floored_subtract(capacity, file_.load()), stride);
 
-    if (is_zero(bytes))
+    if (is_zero(bytes) || is_zero(headroom_))
         return true;
 
-    auto name = filenames_.front();
-    name += ".probe";
-    auto probe = file::invalid;
-    if (file::create_file(name))
-        probe = file::open(name);
+    size_t available{};
+    if (!file::space(available, filenames_.front()))
+        return true;
 
-    const auto reserve = ceilinged_add(bytes, headroom_);
-#if !defined(WITHOUT_FALLOCATE)
-    const auto held = (probe != file::invalid) &&
-        (::fallocate(probe, 0, zero, reserve) != fail);
-#else
-    const auto held = (probe != file::invalid) &&
-        (::ftruncate(probe, reserve) != fail);
-#endif
-
-    if (probe != file::invalid)
-        file::close(probe);
-
-    file::remove(name);
-    return held;
+    return available >= ceilinged_add(bytes, headroom_);
 }
 
 // Finalize failure results in unmapped.
