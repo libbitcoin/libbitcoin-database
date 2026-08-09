@@ -362,9 +362,13 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__no_minimum_expansion__expected_capacity)
 // Growth admission (headroom).
 // ----------------------------------------------------------------------------
 // An unsatisfiable headroom refuses every growth ask, which is the recoverable
-// resource condition (space set, store intact) and never a store fault.
+// resource condition (space set, store intact) and never a store fault. Staged
+// load commits (stage_), so an unsatisfiable headroom refuses the load itself
+// and these cases cannot isolate growth there.
 
 constexpr uint64_t unsatisfiable_headroom = 0x0001000000000000_u64;
+
+#if !defined(MANAGE_STAGING)
 
 BOOST_AUTO_TEST_CASE(mmap__allocate__unsatisfiable_headroom__eof)
 {
@@ -489,6 +493,8 @@ BOOST_AUTO_TEST_CASE(mmap__reserve__unsatisfiable_headroom__false_no_fault)
     BOOST_REQUIRE(!instance.unload());
     BOOST_REQUIRE(!instance.close());
 }
+
+#endif // !MANAGE_STAGING
 
 BOOST_AUTO_TEST_CASE(mmap__allocate__zero_headroom__growth_admitted)
 {
