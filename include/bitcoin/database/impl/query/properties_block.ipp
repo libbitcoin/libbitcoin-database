@@ -110,6 +110,27 @@ bool CLASS::get_work(uint256_t& work, const header_link& link) const NOEXCEPT
     return result;
 }
 
+// TODO: optimize with stored aggregate.
+TEMPLATE
+bool CLASS::get_branch_work(uint256_t& work, const header_link& link) const NOEXCEPT
+{
+    uint256_t proof{};
+    auto parent = link;
+    work = zero;
+
+    while (get_work(proof, parent))
+    {
+        work += proof;
+        parent = to_parent(parent);
+
+        // Genesis parent link is terminal.
+        if (parent.is_terminal())
+            return true;
+    }
+
+    return false;
+}
+
 TEMPLATE
 bool CLASS::get_bits(uint32_t& bits, const header_link& link) const NOEXCEPT
 {
@@ -246,6 +267,22 @@ size_t CLASS::get_tx_count(const header_link& link) const NOEXCEPT
         return {};
 
     return txs.number;
+}
+
+// TODO: optimize with stored aggregate.
+TEMPLATE
+size_t CLASS::get_branch_tx_count(const header_link& link) const NOEXCEPT
+{
+    size_t count{};
+    auto parent = link;
+
+    while (!parent.is_terminal())
+    {
+        count += get_tx_count(parent);
+        parent = to_parent(parent);
+    }
+
+    return count;
 }
 
 TEMPLATE
