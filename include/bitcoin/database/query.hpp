@@ -501,7 +501,8 @@ public:
     bool set(const block& block, const context& ctx,
         bool milestone, bool strong) NOEXCEPT;
     bool set(const transaction& tx) NOEXCEPT;
-    bool set(const block& block, bool strong, bool bypass) NOEXCEPT;
+    bool set(const block& block, bool strong, bool bypass,
+        bool prune=false) NOEXCEPT;
 
     /// Set transaction.
     code set_code(const transaction& tx) NOEXCEPT;
@@ -526,19 +527,21 @@ public:
     code set_code(header_link& out_fk, const block& block,
         const chain_context& ctx, bool milestone, bool strong) NOEXCEPT;
 
-    /// Set block.txs (headers-first).
-    code set_code(const block& block, bool strong, bool bypass) NOEXCEPT;
+    /// Set block.txs (headers-first). Prune strips input scripts/witnesses.
+    code set_code(const block& block, bool strong, bool bypass,
+        bool prune=false) NOEXCEPT;
     code set_code(header_link& out_fk, const block& block, bool strong,
-        bool bypass) NOEXCEPT;
+        bool bypass, bool prune=false) NOEXCEPT;
     code set_code(const block& block, const header_link& key, bool strong,
-        bool bypass, size_t height) NOEXCEPT;
+        bool bypass, size_t height, bool prune=false) NOEXCEPT;
 
-    /// Set block_view (wire).
-    code set_code(const block_view& block, bool strong, bool bypass) NOEXCEPT;
+    /// Set block_view (wire). Prune strips input scripts/witnesses.
+    code set_code(const block_view& block, bool strong, bool bypass,
+        bool prune=false) NOEXCEPT;
     code set_code(header_link& out_fk, const block_view& block, bool strong,
-        bool bypass) NOEXCEPT;
+        bool bypass, bool prune=false) NOEXCEPT;
     code set_code(const block_view& block, const header_link& key, bool strong,
-        bool bypass, size_t height) NOEXCEPT;
+        bool bypass, size_t height, bool prune=false) NOEXCEPT;
 
     /// Context.
     /// -----------------------------------------------------------------------
@@ -907,7 +910,7 @@ protected:
     /// tx_fk must be allocated.
     /// -----------------------------------------------------------------------
     code set_code(const tx_link& tx_fk, const transaction& tx,
-        bool bypass) NOEXCEPT;
+        bool bypass, bool prune) NOEXCEPT;
 
     /// Block write batching (all rows preallocated, all accessors held).
     /// -----------------------------------------------------------------------
@@ -935,7 +938,8 @@ protected:
     };
 
     code set_code(std::vector<point>& twins, const accessors& ptrs,
-        const allocation& fks,const transaction_view& tx, bool bypass) NOEXCEPT;
+        const allocation& fks,const transaction_view& tx, bool bypass,
+        bool prune) NOEXCEPT;
 
     /// History.
     /// -----------------------------------------------------------------------

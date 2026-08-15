@@ -64,10 +64,11 @@ bool CLASS::set(const transaction& tx) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::set(const block& block, bool strong, bool bypass) NOEXCEPT
+bool CLASS::set(const block& block, bool strong, bool bypass,
+    bool prune) NOEXCEPT
 {
     // This sets only the txs of a block with header/context already archived.
-    return !set_code(block, strong, bypass);
+    return !set_code(block, strong, bypass, prune);
 }
 
 // set transaction
@@ -83,12 +84,12 @@ code CLASS::set_code(const transaction& tx) NOEXCEPT
     if (tx_fk.is_terminal())
         return error::tx_tx_allocate;
 
-    return set_code(tx_fk, tx, false);
+    return set_code(tx_fk, tx, false, false);
 }
 
 TEMPLATE
 code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
-    bool bypass) NOEXCEPT
+    bool bypass, bool prune) NOEXCEPT
 {
     // This is the only multitable write query (except initialize/genesis).
 
@@ -109,7 +110,7 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
     // Allocate contiguously and store inputs.
     input_link in_fk{};
     if (!store_.input.put_link(in_fk,
-        table::input::put_ref{ {}, tx }))
+        table::input::put_ref{ {}, tx, prune }))
         return error::tx_input_put;
 
     // Allocate contiguously and store outputs.
@@ -347,15 +348,16 @@ code CLASS::set_code(header_link& out_fk, const block& block,
 // releases all memory for parts of itself, due to the custom allocator.
 
 TEMPLATE
-code CLASS::set_code(const block& block, bool strong, bool bypass) NOEXCEPT
+code CLASS::set_code(const block& block, bool strong, bool bypass,
+    bool prune) NOEXCEPT
 {
     header_link unused{};
-    return set_code(unused, block, strong, bypass);
+    return set_code(unused, block, strong, bypass, prune);
 }
 
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const block& block, bool strong,
-    bool bypass) NOEXCEPT
+    bool bypass, bool prune) NOEXCEPT
 {
     out_fk = to_header(block.get_hash());
     if (out_fk.is_terminal())
@@ -365,12 +367,12 @@ code CLASS::set_code(header_link& out_fk, const block& block, bool strong,
     if (!get_height(height, out_fk))
         return error::txs_height;
 
-    return set_code(block, out_fk, strong, bypass, height);
+    return set_code(block, out_fk, strong, bypass, height, prune);
 }
 
 TEMPLATE
 code CLASS::set_code(const block& block, const header_link& key,
-    bool strong, bool bypass, size_t height) NOEXCEPT
+    bool strong, bool bypass, size_t height, bool prune) NOEXCEPT
 {
     using namespace system;
     if (key.is_terminal())
@@ -388,7 +390,7 @@ code CLASS::set_code(const block& block, const header_link& key,
     code ec{};
     auto fk = tx_fks;
     for (const auto& tx: *block.transactions_ptr())
-        if ((ec = set_code(fk++, *tx, bypass)))
+        if ((ec = set_code(fk++, *tx, bypass, prune)))
             return ec;
 
     // Optional hash, only has value on height intervals.

@@ -32,7 +32,8 @@ namespace database {
 
 TEMPLATE
 code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
-    const allocation& fks, const transaction_view& tx, bool bypass) NOEXCEPT
+    const allocation& fks, const transaction_view& tx, bool bypass,
+    bool prune) NOEXCEPT
 {
     using namespace system;
     using ix = linkage<schema::index>;
@@ -48,7 +49,7 @@ code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
 
     // Contiguously store inputs (preallocated).
     if (!store_.input.put(ptrs.input, fks.in_fk,
-        table::input::put_view{ {}, tx }))
+        table::input::put_view{ {}, tx, prune }))
         return error::tx_input_put;
 
     // Contiguously store outputs (preallocated).
@@ -185,16 +186,16 @@ code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
 // releases all memory for parts of itself, due to the custom allocator.
 
 TEMPLATE
-code CLASS::set_code(const block_view& block, bool strong,
-    bool bypass) NOEXCEPT
+code CLASS::set_code(const block_view& block, bool strong, bool bypass,
+    bool prune) NOEXCEPT
 {
     header_link unused{};
-    return set_code(unused, block, strong, bypass);
+    return set_code(unused, block, strong, bypass, prune);
 }
 
 TEMPLATE
-code CLASS::set_code(header_link& out_fk, const block_view& block, bool strong,
-    bool bypass) NOEXCEPT
+code CLASS::set_code(header_link& out_fk, const block_view& block,
+    bool strong, bool bypass, bool prune) NOEXCEPT
 {
     out_fk = to_header(block.hash());
     if (out_fk.is_terminal())
@@ -204,12 +205,12 @@ code CLASS::set_code(header_link& out_fk, const block_view& block, bool strong,
     if (!get_height(height, out_fk))
         return error::txs_height;
 
-    return set_code(block, out_fk, strong, bypass, height);
+    return set_code(block, out_fk, strong, bypass, height, prune);
 }
 
 TEMPLATE
 code CLASS::set_code(const block_view& block, const header_link& key,
-    bool strong, bool bypass, size_t height) NOEXCEPT
+    bool strong, bool bypass, size_t height, bool prune) NOEXCEPT
 {
     using namespace system;
     using in_t = input_link::integer;
@@ -234,7 +235,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     {
         points += tx.inputs();
         outputs += tx.outputs();
-        input_bytes += tx.input_table_size();
+        input_bytes += tx.input_table_size(prune);
         output_bytes += tx.outputs() * tx_link::size + tx.output_table_size();
     }
 
@@ -314,7 +315,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     std::vector<point> twins{};
     for (const auto& tx: block.views())
     {
-        if ((ec = set_code(twins, ptrs, fks, tx, bypass)))
+        if ((ec = set_code(twins, ptrs, fks, tx, bypass, prune)))
             return ec;
 
         // Output rows are parent fk prefixed (see table::output::put_view).
@@ -324,7 +325,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
         fks.tx_fk++;
         fks.ins_fk  += tx.inputs();
         fks.outs_fk += tx.outputs();
-        fks.in_fk   += tx.input_table_size();
+        fks.in_fk   += tx.input_table_size(prune);
         fks.out_fk  += out_bytes;
 
         // Unallocated (disabled) address link is terminal (do not increment).
