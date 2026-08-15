@@ -149,6 +149,12 @@ struct input
                 chain::point::serialized_size();
 
             const auto& ins = *tx_.inputs_ptr();
+            if (prune_)
+            {
+                // pruned: (zero ins, zero wits) * inputs.
+                return possible_narrow_cast<link::integer>(two * ins.size());
+            }
+
             const auto other = ins.size() * sequence_ins_size;
             const auto inputs = std::accumulate(ins.cbegin(), ins.cend(), zero,
                 [](size_t total, const auto& in) NOEXCEPT
@@ -163,7 +169,21 @@ struct input
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
+            using namespace system;
             const auto& ins = *tx_.inputs_ptr();
+            if (prune_)
+            {
+                std::ranges::for_each(ins, [&](const auto&) NOEXCEPT
+                {
+                    // empty script + empty witness stack
+                    sink.write_variable(zero);
+                    sink.write_variable(zero);
+                });
+
+                BC_ASSERT(!sink || sink.get_write_position() == count());
+                return sink;
+            }
+
             std::ranges::for_each(ins, [&](const auto& in) NOEXCEPT
             {
                 in->script().to_data(sink, true);
@@ -175,6 +195,7 @@ struct input
         }
 
         const system::chain::transaction& tx_{};
+        bool prune_{};
     };
 
     struct put_view
@@ -182,12 +203,25 @@ struct input
     {
         inline link count() const NOEXCEPT
         {
-            using namespace system;
-            return possible_narrow_cast<link::integer>(tx_.input_table_size());
+            return system::possible_narrow_cast<link::integer>(
+                tx_.input_table_size(prune_));
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
+            if (prune_)
+            {
+                for (size_t in{}; in < tx_.inputs(); ++in)
+                {
+                    // empty script + empty witness stack
+                    sink.write_variable(zero);
+                    sink.write_variable(zero);
+                }
+
+                BC_ASSERT(!sink || sink.get_write_position() == count());
+                return sink;
+            }
+
             using namespace system;
             auto istream = tx_.get_inputs_stream();
             read::bytes::fast isource{ istream };
@@ -225,6 +259,7 @@ struct input
         }
 
         const system::chain::transaction_view& tx_;
+        bool prune_{};
     };
 
     struct wire_script
