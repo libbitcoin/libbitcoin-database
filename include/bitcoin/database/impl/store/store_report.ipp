@@ -59,7 +59,6 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(prevout_body_, table_t::prevout_body);
     report(validated_bk_body_, table_t::validated_bk_body);
     report(validated_tx_body_, table_t::validated_tx_body);
-    report(address_body_, table_t::address_body);
     report(filter_bk_body_, table_t::filter_bk_body);
     report(filter_tx_body_, table_t::filter_tx_body);
 }
@@ -105,8 +104,6 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = validated_bk_body_.get_fault())) return ec;
     if ((ec = validated_tx_head_.get_fault())) return ec;
     if ((ec = validated_tx_body_.get_fault())) return ec;
-    if ((ec = address_head_.get_fault())) return ec;
-    if ((ec = address_body_.get_fault())) return ec;
     if ((ec = filter_bk_head_.get_fault())) return ec;
     if ((ec = filter_bk_body_.get_fault())) return ec;
     if ((ec = filter_tx_head_.get_fault())) return ec;
@@ -160,8 +157,6 @@ size_t CLASS::get_space() const NOEXCEPT
     space(validated_bk_body_);
     space(validated_tx_head_);
     space(validated_tx_body_);
-    space(address_head_);
-    space(address_body_);
     space(filter_bk_head_);
     space(filter_bk_body_);
     space(filter_tx_head_);

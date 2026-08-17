@@ -98,7 +98,6 @@ size_t CLASS::store_body_size() const NOEXCEPT
         + prevout_body_size()
         + validated_bk_body_size()
         + validated_tx_body_size()
-        + address_body_size()
         + filter_bk_body_size()
         + filter_tx_body_size();
 }
@@ -130,7 +129,6 @@ size_t CLASS::store_head_size() const NOEXCEPT
         + prevout_head_size()
         + validated_bk_head_size()
         + validated_tx_head_size()
-        + address_head_size()
         + filter_bk_head_size()
         + filter_tx_head_size();
 }
@@ -159,13 +157,13 @@ DEFINE_SIZES(validated_bk)
 DEFINE_SIZES(validated_tx)
 DEFINE_SIZES(filter_bk)
 DEFINE_SIZES(filter_tx)
-DEFINE_SIZES(address)
 
 // Buckets (hashmap + arraymap).
 // ----------------------------------------------------------------------------
 
 DEFINE_BUCKETS(header)
 DEFINE_BUCKETS(ins)
+DEFINE_BUCKETS(outs)
 DEFINE_BUCKETS(txs)
 DEFINE_BUCKETS(tx)
 
@@ -176,7 +174,6 @@ DEFINE_BUCKETS(validated_bk)
 DEFINE_BUCKETS(validated_tx)
 DEFINE_BUCKETS(filter_bk)
 DEFINE_BUCKETS(filter_tx)
-DEFINE_BUCKETS(address)
 
 // Records (arrays).
 // ----------------------------------------------------------------------------
@@ -195,7 +192,6 @@ DEFINE_RECORDS(silent)
 DEFINE_RECORDS(duplicate)
 DEFINE_RECORDS(prevalid)
 DEFINE_RECORDS(filter_bk)
-DEFINE_RECORDS(address)
 
 // Counters (archive slabs).
 // ----------------------------------------------------------------------------
@@ -258,7 +254,8 @@ counts CLASS::put_counts(const tx_links& txs) const NOEXCEPT
 TEMPLATE
 bool CLASS::address_enabled() const NOEXCEPT
 {
-    return store_.address.enabled();
+    // The optional outs head is the address search enablement.
+    return store_.outs.enabled();
 }
 
 TEMPLATE

@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
     BOOST_REQUIRE_EQUAL(instance.ins_head_file(), "bitcoin/heads/archive_ins.head");
     BOOST_REQUIRE_EQUAL(instance.ins_body_file(), "bitcoin/archive_ins_point.data");
     BOOST_REQUIRE_EQUAL(instance.outs_head_file(), "bitcoin/heads/archive_outs.head");
-    BOOST_REQUIRE_EQUAL(instance.outs_body_file(), "bitcoin/archive_outs.data");
+    BOOST_REQUIRE_EQUAL(instance.outs_body_file(), "bitcoin/archive_outs_address.data");
     BOOST_REQUIRE_EQUAL(instance.tx_head_file(), "bitcoin/heads/archive_tx.head");
     BOOST_REQUIRE_EQUAL(instance.tx_body_file(), "bitcoin/archive_tx.data");
     BOOST_REQUIRE_EQUAL(instance.txs_head_file(), "bitcoin/heads/archive_txs.head");
@@ -148,8 +148,6 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
     BOOST_REQUIRE_EQUAL(instance.validated_tx_body_file(), "bitcoin/cache_validated_tx.data");
 
     /// Option.
-    BOOST_REQUIRE_EQUAL(instance.address_head_file(), "bitcoin/heads/option_address.head");
-    BOOST_REQUIRE_EQUAL(instance.address_body_file(), "bitcoin/option_address.data");
     BOOST_REQUIRE_EQUAL(instance.filter_bk_head_file(), "bitcoin/heads/option_filter_bk.head");
     BOOST_REQUIRE_EQUAL(instance.filter_bk_body_file(), "bitcoin/option_filter_bk.data");
     BOOST_REQUIRE_EQUAL(instance.filter_tx_head_file(), "bitcoin/heads/option_filter_tx.head");

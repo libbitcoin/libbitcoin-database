@@ -99,36 +99,65 @@ TEMPLATE
 code CLASS::to_address_outputs(const stopper& cancel, output_links& out,
     const hash_digest& key) const NOEXCEPT
 {
-    address_link cursor{};
+    outs_link cursor{};
     return to_address_outputs(cancel, cursor, out, key, max_size_t);
 }
 
 TEMPLATE
-code CLASS::to_address_outputs(const stopper& cancel, address_link& cursor,
+code CLASS::to_address_outputs(const stopper& cancel, outs_link& cursor,
     output_links& out, const hash_digest& key, size_t limit) const NOEXCEPT
 {
     out.clear();
+
+    // Limit bounds candidates, verified following iterator disposal.
+    code deferred{ error::success };
+    std::vector<outs_link::integer> candidates{};
+    auto found = cursor.is_terminal();
     const auto end = cursor;
-    auto it = store_.address.it(key);
+    auto it = store_.outs.it({ key });
     for (cursor = it.get(); it; ++it)
     {
         if (cancel)
             return error::query_canceled;
 
         if (it.get() == end)
-            return error::success;
+        {
+            found = true;
+            break;
+        }
 
         if (is_zero(limit--))
-            return error::depth_limited;
+        {
+            deferred = error::depth_limited;
+            break;
+        }
 
-        table::address::record address{};
-        if (!store_.address.get(it, address))
-            return error::integrity;
-
-        out.push_back(address.output_fk);
+        candidates.push_back(*it);
     }
 
-    return end.is_terminal() ? error::success : error::invalid_cursor;
+    it.reset();
+    if (!deferred && !found)
+        deferred = error::invalid_cursor;
+
+    // Verify candidates by hashing their scripts.
+    for (const auto& candidate: candidates)
+    {
+        if (cancel)
+            return error::query_canceled;
+
+        table::outs::get_output outs{};
+        if (!store_.outs.puts.get(candidate, outs))
+            return error::integrity;
+
+        table::output::get_script_hash output{};
+        if (!store_.output.get(outs.out_fk, output))
+            return error::integrity;
+
+        if (output.hash == key)
+            out.push_back(outs.out_fk);
+    }
+
+    return deferred;
 }
 
 // input|output|prevout->tx[parent]

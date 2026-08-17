@@ -132,6 +132,27 @@ struct output
         system::chain::script::cptr script{};
     };
 
+    struct get_script_hash
+      : public schema::output
+    {
+        inline link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            using namespace system;
+            source.skip_bytes(tx::size);
+            source.skip_variable();
+            hash = sha256_hash(source.read_bytes(source.read_size()));
+            return source;
+        }
+
+        hash_digest hash{};
+    };
+
     struct get_parent_value
       : public schema::output
     {

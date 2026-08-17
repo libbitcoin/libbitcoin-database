@@ -77,8 +77,6 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, validated_tx_head_, table_t::validated_tx_head);
     unload(ec, validated_tx_body_, table_t::validated_tx_body);
 
-    unload(ec, address_head_, table_t::address_head);
-    unload(ec, address_body_, table_t::address_body);
     unload(ec, filter_bk_head_, table_t::filter_bk_head);
     unload(ec, filter_bk_body_, table_t::filter_bk_body);
     unload(ec, filter_tx_head_, table_t::filter_tx_head);
@@ -132,8 +130,6 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, validated_tx_head_, table_t::validated_tx_head);
     close(ec, validated_tx_body_, table_t::validated_tx_body);
 
-    close(ec, address_head_, table_t::address_head);
-    close(ec, address_body_, table_t::address_body);
     close(ec, filter_bk_head_, table_t::filter_bk_head);
     close(ec, filter_bk_body_, table_t::filter_bk_body);
     close(ec, filter_tx_head_, table_t::filter_tx_head);

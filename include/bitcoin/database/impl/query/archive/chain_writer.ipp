@@ -133,11 +133,19 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
 
     insert.reset();
 
-    // Allocate and contiguously store output links.
-    outs_link outs_fk{};
-    if (!store_.outs.put_link(outs_fk,
+    // Allocate outs/address rows and contiguously store output links.
+    // Address spine elements are committed into the same rows, below.
+    auto outs_fk = store_.outs.allocate(outputs);
+    if (outs_fk.is_terminal())
+        return error::tx_outs_put;
+
+    // Outs put is unguarded, the accessor guards its rows against remap.
+    auto outsert = store_.outs.get_memory();
+    if (!outsert || !store_.outs.puts.put(outs_fk,
         table::outs::put_ref{ {}, out_fk, tx }))
         return error::tx_outs_put;
+
+    outsert.reset();
 
     // Create tx record.
     // Commit is deferred for point/address index consistency.
@@ -207,27 +215,14 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
         }
     }
 
-    // Commit address index records (hashmap).
+    // Commit address index records (hashmap, rows shared with outs).
     if (address_enabled())
     {
-        auto ad_fk = store_.address.allocate(outputs);
-        if (ad_fk.is_terminal())
-            return error::tx_address_allocate;
-
-        constexpr auto value_parent = sizeof(uint64_t) - tx_link::size;
-        const auto ptr = store_.address.get_memory();
+        auto ad_fk = outs_fk;
+        const auto ptr = store_.outs.get_memory();
         for (const auto& output: *ous)
-        {
-            if (!store_.address.put(ptr, ad_fk++, output->script().hash(),
-                table::address::record{ {}, out_fk }))
+            if (!store_.outs.commit(ptr, ad_fk++, { output->script().hash() }))
                 return error::tx_address_put;
-
-            // See outs::put_ref.
-            // Calculate next corresponding output fk from serialized size.
-            // (variable_size(value) + (value + script)) - (value - parent)
-            out_fk += variable_size(output->value()) +
-                output->serialized_size() - value_parent;
-        }
     }
 
     // Commit tx to search (hashmap).

@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_TABLES_SCHEMA_HPP
 
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/tables/names.hpp>
 
 #define TABLE_COLUMN(table, bytes) \
@@ -199,7 +200,26 @@ struct ins_sequence
     static_assert(link::size == 4u);
 };
 
-// array
+// record multimap spine (optional head, output script hash key)
+struct address
+{
+    static constexpr size_t sk = zero;
+    static constexpr size_t pk = schema::outs_;
+    using link = linkage<pk, to_bits(pk)>;
+    using key = keys::search<sk>;
+    static constexpr size_t minsize =
+        zero;                   // empty row
+    static constexpr size_t minrow = pk + sk + minsize;
+    static constexpr size_t size = minsize;
+    static constexpr size_t cell = sizeof(uint64_t);
+    static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 0u);
+    static_assert(minrow == 4u);
+    static_assert(link::size == 4u);
+    static_assert(cell == 8u);
+};
+
+// address column (output fk)
 struct outs
 {
     static constexpr size_t pk = schema::outs_;
@@ -209,7 +229,6 @@ struct outs
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
     static constexpr auto suffix = "outs"_t;
-    ////static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 5u);
     static_assert(minrow == 5u);
     static_assert(link::size == 4u);
@@ -376,27 +395,6 @@ struct validated_tx
 
 /// Optional tables.
 /// ---------------------------------------------------------------------------
-
-// TODO: modest (sk:4) record multimap, with high multiple rate.
-// large (sk:32) record multimap, with high multiple rate.
-// address record count is output count.
-struct address
-{
-    static constexpr size_t sk = schema::hash;
-    static constexpr size_t pk = schema::outs::pk;
-    using link = linkage<pk, to_bits(pk)>;
-    using key = system::data_array<sk>;
-    static constexpr size_t minsize =
-        schema::output::pk;
-    static constexpr size_t minrow = pk + sk + minsize;
-    static constexpr size_t size = minsize;
-    static constexpr size_t cell = link::size;
-    static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 5u);
-    static_assert(minrow == 41u);
-    static_assert(link::size == 4u);
-    static_assert(cell == 4u);
-};
 
 // record arraymap
 struct filter_bk

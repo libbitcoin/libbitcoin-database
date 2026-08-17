@@ -49,7 +49,7 @@ output_link CLASS::to_output(const tx_link& link,
         return {};
 
     table::outs::get_output outs{};
-    if (!store_.outs.get(tx.outs_fk, outs))
+    if (!store_.outs.puts.get(tx.outs_fk, outs))
         return {};
 
     return outs.out_fk;
@@ -88,7 +88,7 @@ output_links CLASS::to_outputs(const tx_link& link) const NOEXCEPT
 
     table::outs::record outs{};
     outs.out_fks.resize(tx.number);
-    if (!store_.outs.get(tx.outs_fk, outs))
+    if (!store_.outs.puts.get(tx.outs_fk, outs))
         return {};
 
     return std::move(outs.out_fks);

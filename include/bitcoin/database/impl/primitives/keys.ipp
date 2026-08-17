@@ -44,7 +44,11 @@ template <class Key>
 INLINE constexpr size_t size() NOEXCEPT
 {
     using namespace system;
-    if constexpr (is_same_type<Key, chain::point>)
+    if constexpr (is_search<Key>)
+    {
+        return Key::width;
+    }
+    else if constexpr (is_same_type<Key, chain::point>)
     {
         // Index is truncated to three bytes.
         return sub1(chain::point::serialized_size());
@@ -53,6 +57,13 @@ INLINE constexpr size_t size() NOEXCEPT
     {
         return array_count<Key>;
     }
+}
+
+template <class Key>
+INLINE constexpr bool keyed() NOEXCEPT
+{
+    using namespace system;
+    return !is_same_type<Key, data_array<zero>>;
 }
 
 template <class Key, class Integral>
@@ -80,7 +91,11 @@ template <class Key>
 INLINE uint64_t hash(const Key& key) NOEXCEPT
 {
     using namespace system;
-    if constexpr (is_same_type<Key, chain::point>)
+    if constexpr (is_search<Key>)
+    {
+        return hash(key.value);
+    }
+    else if constexpr (is_same_type<Key, chain::point>)
     {
         // Both produce an 85% Poisson distribution.
         return fnv1a_combine(hash(key.hash()), key.index());
@@ -103,7 +118,11 @@ template <class Key>
 INLINE uint64_t thumb(const Key& key) NOEXCEPT
 {
     using namespace system;
-    if constexpr (is_same_type<Key, system::chain::point>)
+    if constexpr (is_search<Key>)
+    {
+        return thumb(key.value);
+    }
+    else if constexpr (is_same_type<Key, system::chain::point>)
     {
         // spread point.index across point.hash extraction, as otherwise the
         // unlikely bucket collisions of points of the same hash will not be
@@ -133,7 +152,13 @@ template <class Key>
 INLINE void write(writer& sink, const Key& key) NOEXCEPT
 {
     using namespace system;
-    if constexpr (is_same_type<Key, chain::point>)
+    if constexpr (is_search<Key>)
+    {
+        if constexpr (is_nonzero(Key::width))
+            sink.write_bytes(std::next(key.value.data(), Key::offset),
+                Key::width);
+    }
+    else if constexpr (is_same_type<Key, chain::point>)
     {
         sink.write_bytes(key.hash());
         sink.write_3_bytes_little_endian(key.index());
@@ -149,7 +174,12 @@ INLINE bool compare(const Array& bytes, const Key& key) NOEXCEPT
 {
     using namespace system;
     static_assert(size<Key>() <= array_count<Array>);
-    if constexpr (is_same_type<Key, chain::point>)
+    if constexpr (is_search<Key>)
+    {
+        return std::equal(bytes.cbegin(), bytes.cend(),
+            std::next(key.value.cbegin(), Key::offset));
+    }
+    else if constexpr (is_same_type<Key, chain::point>)
     {
         // Index is truncated to three bytes.
         const auto index = key.index();

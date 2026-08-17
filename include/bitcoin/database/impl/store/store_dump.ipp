@@ -63,7 +63,6 @@ code CLASS::dump(const path& folder,
     dump(ec, validated_bk_head_, schema::caches::validated_bk, table_t::validated_bk_head);
     dump(ec, validated_tx_head_, schema::caches::validated_tx, table_t::validated_tx_head);
 
-    dump(ec, address_head_, schema::optionals::address, table_t::address_head);
     dump(ec, filter_bk_head_, schema::optionals::filter_bk, table_t::filter_bk_head);
     dump(ec, filter_tx_head_, schema::optionals::filter_tx, table_t::filter_tx_head);
 

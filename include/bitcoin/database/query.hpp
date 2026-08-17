@@ -141,7 +141,6 @@ public:
     size_t validated_tx_head_size() const NOEXCEPT;
     size_t filter_bk_head_size() const NOEXCEPT;
     size_t filter_tx_head_size() const NOEXCEPT;
-    size_t address_head_size() const NOEXCEPT;
 
     /// Table body logical byte sizes.
     size_t header_body_size() const NOEXCEPT;
@@ -165,7 +164,6 @@ public:
     size_t validated_tx_body_size() const NOEXCEPT;
     size_t filter_bk_body_size() const NOEXCEPT;
     size_t filter_tx_body_size() const NOEXCEPT;
-    size_t address_body_size() const NOEXCEPT;
 
     /// Table (head + body) logical byte sizes.
     size_t header_size() const NOEXCEPT;
@@ -189,11 +187,11 @@ public:
     size_t validated_tx_size() const NOEXCEPT;
     size_t filter_bk_size() const NOEXCEPT;
     size_t filter_tx_size() const NOEXCEPT;
-    size_t address_size() const NOEXCEPT;
 
     /// Buckets (hashmap + arraymap).
     size_t header_buckets() const NOEXCEPT;
     size_t ins_buckets() const NOEXCEPT;
+    size_t outs_buckets() const NOEXCEPT;
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
 
@@ -204,7 +202,6 @@ public:
     size_t validated_tx_buckets() const NOEXCEPT;
     size_t filter_bk_buckets() const NOEXCEPT;
     size_t filter_tx_buckets() const NOEXCEPT;
-    size_t address_buckets() const NOEXCEPT;
 
     /// Records.
     size_t header_records() const NOEXCEPT;
@@ -221,7 +218,6 @@ public:
     size_t duplicate_records() const NOEXCEPT;
     size_t prevalid_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
-    size_t address_records() const NOEXCEPT;
 
     /// Counters (archive slabs - txs/puts/filter_tx can be derived).
     size_t input_count(const tx_link& link) const NOEXCEPT;
@@ -351,7 +347,7 @@ public:
     code to_address_outputs(const stopper& cancel, output_links& out,
         const hash_digest& key) const NOEXCEPT;
 
-    code to_address_outputs(const stopper& cancel, address_link& cursor,
+    code to_address_outputs(const stopper& cancel, outs_link& cursor,
         output_links& out, const hash_digest& key,
         size_t limit) const NOEXCEPT;
 
@@ -923,7 +919,6 @@ protected:
         memory ins;
         memory outs;
         memory tx;
-        memory address;
     };
 
     /// Per-tx allocated table links (bases advanced by the block writer).
@@ -934,7 +929,6 @@ protected:
         output_link out_fk;
         ins_link ins_fk;
         outs_link outs_fk;
-        address_link ad_fk;
     };
 
     code set_code(std::vector<point>& twins, const accessors& ptrs,

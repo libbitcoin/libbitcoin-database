@@ -64,8 +64,9 @@ code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
         table::ins_sequence::put_view{ {}, fks.in_fk, fks.tx_fk, tx }))
         return error::tx_ins_put;
 
-    // Contiguously store output links (preallocated).
-    if (!store_.outs.put(ptrs.outs, fks.outs_fk,
+    // Contiguously store output links (preallocated, rows shared with the
+    // address spine). The caller's outs accessor guards against remap.
+    if (!store_.outs.puts.put(fks.outs_fk,
         table::outs::put_view{ {}, fks.out_fk, tx }))
         return error::tx_outs_put;
 
@@ -147,26 +148,21 @@ code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
     if (!isource)
         return error::tx_null_point_put;
 
-    // Commit address index records (hashmap, preallocated).
+    // Commit address index records (hashmap, rows shared with outs).
     if (address_enabled())
     {
-        auto ad_fk = fks.ad_fk;
-        auto out_fk = fks.out_fk;
+        auto ad_fk = fks.outs_fk;
         auto outs = tx.get_outputs_stream();
         read::bytes::fast osource{ outs };
 
         for (size_t out{}; out < outputs; ++out)
         {
-            const auto value = osource.read_8_bytes_little_endian();
+            osource.skip_bytes(sizeof(uint64_t));
             const auto bytes = osource.read_size();
 
-            if (!store_.address.put(ptrs.address, ad_fk++,
-                sha256_hash(osource.read_bytes(bytes)),
-                table::address::record{ {}, out_fk }))
+            if (!store_.outs.commit(ptrs.outs, ad_fk++,
+                { sha256_hash(osource.read_bytes(bytes)) }))
                 return error::tx_address_put;
-
-            out_fk += tx_link::size + variable_size(value) +
-                variable_size(bytes) + bytes;
         }
 
         BC_ASSERT(osource);
@@ -282,15 +278,6 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     if (fks.outs_fk.is_terminal())
         return error::tx_outs_put;
 
-    const auto address = address_enabled();
-    if (address)
-    {
-        fks.ad_fk = store_.address.allocate(
-            possible_narrow_cast<address_link::integer>(outputs));
-        if (fks.ad_fk.is_terminal())
-            return error::tx_address_allocate;
-    }
-
     // Guard all tables against remap for the duration of the block write.
     // No table may be allocated while any of these accessors are held.
     accessors ptrs{};
@@ -299,15 +286,12 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     ptrs.outs = store_.outs.get_memory();
     ptrs.input  = store_.input.get_memory();
     ptrs.output = store_.output.get_memory();
-    if (address)
-        ptrs.address = store_.address.get_memory();
 
     if (!ptrs.input ||
         !ptrs.output ||
         !ptrs.ins ||
         !ptrs.outs ||
-        !ptrs.tx ||
-        (address && !ptrs.address))
+        !ptrs.tx)
         return error::unloaded_file;
 
     // Write all txs into their preallocated rows (write order preserved).
@@ -327,10 +311,6 @@ code CLASS::set_code(const block_view& block, const header_link& key,
         fks.outs_fk += tx.outputs();
         fks.in_fk   += tx.input_table_size(prune);
         fks.out_fk  += out_bytes;
-
-        // Unallocated (disabled) address link is terminal (do not increment).
-        if (address)
-            fks.ad_fk += tx.outputs();
     }
 
     // Release all accessors (subsequent writes allocate).
@@ -339,7 +319,6 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     ptrs.outs.reset();
     ptrs.input.reset();
     ptrs.output.reset();
-    ptrs.address.reset();
 
     // As few duplicates are expected, duplicate domain is only 2^16.
     // Return of tx_duplicate_put implies link domain has overflowed.

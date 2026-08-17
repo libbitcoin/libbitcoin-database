@@ -157,7 +157,10 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__empty__expected)
 {
     const system::chain::transaction tx{};
     const auto expected_head5_array = system::base16_chunk("0000000000");
-    const auto expected_head4_array = system::base16_chunk("00000000");
+    const auto expected_outs_head = system::base16_chunk(
+        "00000000ffffffff"  // record count (cell prefix)
+        "ffffffffffffffff"  // bucket[0] (link|sieve)
+        "ffffffffffffffff");// bucket[1]
     const auto expected_head4_hash = system::base16_chunk(
         "01000000" // record count
         "ffffffff" // bucket[0]...
@@ -179,6 +182,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__empty__expected)
     // data_chunk store.
     settings settings{};
     settings.tx.buckets = 8;
+    settings.address.buckets = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -190,7 +194,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__empty__expected)
     BOOST_CHECK_EQUAL(store.tx_head(), expected_head4_hash);
     BOOST_CHECK_EQUAL(store.input_head(), expected_head5_array);
     BOOST_CHECK_EQUAL(store.output_head(), expected_head5_array);
-    BOOST_CHECK_EQUAL(store.outs_head(), expected_head4_array);
+    BOOST_CHECK_EQUAL(store.outs_head(), expected_outs_head);
     BOOST_CHECK_EQUAL(store.tx_body().size(), schema::transaction::minrow);
     BOOST_CHECK(store.ins_body().empty());
     BOOST_CHECK(store.input_body().empty());
@@ -235,7 +239,12 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
         "010000"       // outs_count
         "00000000"     // point_fk-> (ins_fk)
         "00000000");   // outs_fk->
-    const auto expected_outs_head = system::base16_chunk("01000000");
+    const auto expected_outs_head = system::base16_chunk(
+        "01000000ffffffff"  // record count (cell prefix)
+        "00000000feffffff"  // bucket[0] (link->0|sieve)
+        "ffffffffffffffff");// bucket[1]
+    const auto expected_address_body = system::base16_chunk(
+        "ffffffff");  // next->end
     const auto expected_outs_body = system::base16_chunk(
         "0000000000"); // output0_fk->
     const auto expected_output_head = system::base16_chunk("0600000000");
@@ -273,6 +282,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
     settings settings{};
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
+    settings.address.buckets = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -291,6 +301,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
     BOOST_CHECK_EQUAL(store.input_body(), expected_input_body);
     BOOST_CHECK_EQUAL(store.output_body(), expected_output_body);
     BOOST_CHECK_EQUAL(store.outs_body(), expected_outs_body);
+    BOOST_CHECK_EQUAL(store.address_body(), expected_address_body);
     ////BOOST_CHECK_EQUAL(store.spend_body(), expected_spend_body);
 }
 
@@ -353,7 +364,13 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
         "020000"       // outs_count
         "00000000"     // point_fk-> (ins_fk)
         "00000000");   // outs_fk->
-    const auto expected_outs_head = system::base16_chunk("02000000");
+    const auto expected_outs_head = system::base16_chunk(
+        "02000000ffffffff"  // record count (cell prefix)
+        "ffffffffffffffff"  // bucket[0] (link|sieve)
+        "01000000efed366d");// bucket[1] (link->1|sieve)
+    const auto expected_address_body = system::base16_chunk(
+        "ffffffff"    // next->end
+        "00000000");  // next->0
     const auto expected_outs_body = system::base16_chunk(
         "0000000000"   // output0_fk->
         "0700000000"); // output1_fk->
@@ -409,6 +426,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
     settings settings{};
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
+    settings.address.buckets = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -434,6 +452,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
     BOOST_CHECK_EQUAL(store.input_body(), expected_input_body);
     BOOST_CHECK_EQUAL(store.output_body(), expected_output_body);
     BOOST_CHECK_EQUAL(store.outs_body(), expected_outs_body);
+    BOOST_CHECK_EQUAL(store.address_body(), expected_address_body);
     ////BOOST_CHECK_EQUAL(store.spend_body(), expected_spend_body);
 }
 
@@ -484,7 +503,12 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
         "010000"       // outs_count
         "00000000"     // point_fk-> (ins_fk)
         "00000000");   // outs_fk->
-    const auto genesis_outs_head = system::base16_chunk("01000000");
+    const auto genesis_outs_head = system::base16_chunk(
+        "01000000ffffffff"  // record count (cell prefix)
+        "ffffffffffffffff"  // bucket[0] (link|sieve)
+        "00000000ff6bff7d");// bucket[1] (link->0|sieve)
+    const auto genesis_address_body = system::base16_chunk(
+        "ffffffff");  // next->end
     const auto genesis_outs_body = system::base16_chunk(
         "0000000000"); // output0_fk->
     const auto genesis_output_head = system::base16_chunk("5100000000");
@@ -546,6 +570,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
     settings.txs.buckets = 16;
+    settings.address.buckets = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -632,7 +657,10 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
         "010000"       // outs_count
         "00000000"     // point_fk-> (ins_fk)
         "00000000");   // outs_fk->
-    const auto genesis_outs_head = system::base16_chunk("01000000");
+    const auto genesis_outs_head = system::base16_chunk(
+        "01000000ffffffff"  // record count (cell prefix)
+        "ffffffffffffffff"  // bucket[0] (link|sieve)
+        "00000000ff6bff7d");// bucket[1] (link->0|sieve)
     const auto genesis_outs_body = system::base16_chunk(
         "00000000"     // spend0_fk->
         "0000000000"); // output0_fk->
@@ -695,6 +723,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
     settings.txs.buckets = 16;
+    settings.address.buckets = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

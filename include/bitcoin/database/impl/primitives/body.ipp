@@ -198,7 +198,7 @@ constexpr size_t CLASS::stride() NOEXCEPT
         // Slab: link/key incorporated into size (byte-addressed map).
         return size;
     }
-    else if constexpr (is_zero(Column) && is_nonzero(key_size))
+    else if constexpr (is_zero(Column) && keys::keyed<Key>())
     {
         // Spine of a keyed map: link/key precede the record.
         return Link::size + key_size + size;
