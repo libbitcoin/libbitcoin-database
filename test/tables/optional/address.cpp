@@ -92,11 +92,11 @@ BOOST_AUTO_TEST_CASE(address__it__co_bucket__all_candidates)
     BOOST_REQUIRE_EQUAL(out.out_fk, 0x7890abcdef_u64);
 }
 
-BOOST_AUTO_TEST_CASE(address__enabled__one_bucket__false)
+BOOST_AUTO_TEST_CASE(address__enabled__no_buckets__false)
 {
     test::chunk_storage head_store{};
     body_storages body_store{ body_paths };
-    table::outs instance{ head_store, body_store, 1 };
+    table::outs instance{ head_store, body_store, 0 };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.enabled());
 }

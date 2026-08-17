@@ -75,7 +75,7 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 bool CLASS::enabled() const NOEXCEPT
 {
-    return head_.buckets() > one;
+    return !is_zero(head_.buckets());
 }
 
 TEMPLATE

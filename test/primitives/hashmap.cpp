@@ -109,14 +109,14 @@ BOOST_AUTO_TEST_CASE(hashmap__enabled__non_empty_slab_zero_buckets__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(hashmap__enabled__empty_slab_one_bucket__false)
+BOOST_AUTO_TEST_CASE(hashmap__enabled__empty_slab_one_bucket__true)
 {
     constexpr auto body_size = 12345u;
     test::chunk_storage head_store{};
     test::chunk_storage body_store{};
     body_store.buffer().resize(body_size);
     const slab_table instance{ head_store, body_store, 1 };
-    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.enabled());
     BOOST_REQUIRE(!instance.get_fault());
 }
 
