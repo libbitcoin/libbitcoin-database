@@ -158,9 +158,9 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__empty__expected)
     const system::chain::transaction tx{};
     const auto expected_head5_array = system::base16_chunk("0000000000");
     const auto expected_outs_head = system::base16_chunk(
-        "00000000ffffffff"  // record count (cell prefix)
-        "ffffffffffffffff"  // bucket[0] (link|sieve)
-        "ffffffffffffffff");// bucket[1]
+        "00000000"   // record count
+        "ffffffff"   // bucket[0]
+        "ffffffff");// bucket[1]
     const auto expected_head4_hash = system::base16_chunk(
         "01000000" // record count
         "ffffffff" // bucket[0]...
@@ -240,9 +240,9 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
         "00000000"     // point_fk-> (ins_fk)
         "00000000");   // outs_fk->
     const auto expected_outs_head = system::base16_chunk(
-        "01000000ffffffff"  // record count (cell prefix)
-        "00000000feffffff"  // bucket[0] (link->0|sieve)
-        "ffffffffffffffff");// bucket[1]
+        "01000000"   // record count
+        "00000000"   // bucket[0] (link->0)
+        "ffffffff");// bucket[1]
     const auto expected_address_body = system::base16_chunk(
         "ffffffff");  // next->end
     const auto expected_outs_body = system::base16_chunk(
@@ -365,9 +365,9 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
         "00000000"     // point_fk-> (ins_fk)
         "00000000");   // outs_fk->
     const auto expected_outs_head = system::base16_chunk(
-        "02000000ffffffff"  // record count (cell prefix)
-        "ffffffffffffffff"  // bucket[0] (link|sieve)
-        "01000000efed366d");// bucket[1] (link->1|sieve)
+        "02000000"   // record count
+        "ffffffff"   // bucket[0]
+        "01000000");// bucket[1] (link->1)
     const auto expected_address_body = system::base16_chunk(
         "ffffffff"    // next->end
         "00000000");  // next->0
@@ -504,9 +504,9 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
         "00000000"     // point_fk-> (ins_fk)
         "00000000");   // outs_fk->
     const auto genesis_outs_head = system::base16_chunk(
-        "01000000ffffffff"  // record count (cell prefix)
-        "ffffffffffffffff"  // bucket[0] (link|sieve)
-        "00000000ff6bff7d");// bucket[1] (link->0|sieve)
+        "01000000"   // record count
+        "ffffffff"   // bucket[0]
+        "00000000");// bucket[1] (link->0)
     const auto genesis_address_body = system::base16_chunk(
         "ffffffff");  // next->end
     const auto genesis_outs_body = system::base16_chunk(
@@ -658,9 +658,9 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
         "00000000"     // point_fk-> (ins_fk)
         "00000000");   // outs_fk->
     const auto genesis_outs_head = system::base16_chunk(
-        "01000000ffffffff"  // record count (cell prefix)
-        "ffffffffffffffff"  // bucket[0] (link|sieve)
-        "00000000ff6bff7d");// bucket[1] (link->0|sieve)
+        "01000000"   // record count
+        "ffffffff"   // bucket[0]
+        "00000000");// bucket[1] (link->0)
     const auto genesis_outs_body = system::base16_chunk(
         "00000000"     // spend0_fk->
         "0000000000"); // output0_fk->

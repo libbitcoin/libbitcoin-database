@@ -211,12 +211,12 @@ struct address
         zero;                   // empty row
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
-    static constexpr size_t cell = sizeof(uint64_t);
+    static constexpr size_t cell = link::size;
     static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 0u);
     static_assert(minrow == 4u);
     static_assert(link::size == 4u);
-    static_assert(cell == 8u);
+    static_assert(cell == 4u);
 };
 
 // address column (output fk)
