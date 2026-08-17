@@ -197,6 +197,29 @@ bool CLASS::get(const memory& ptr, const Link& link, Element& element) NOEXCEPT
     return element.from_data(source);
 }
 
+// static
+TEMPLATE
+template <typename Element>
+bool CLASS::raw(const memory& ptr, const Link& link, Element& element) NOEXCEPT
+{
+    using namespace system;
+    if (!ptr || link.is_terminal())
+        return false;
+
+    const auto start = body::link_to_position(link);
+    if (is_limited<ptrdiff_t>(start))
+        return false;
+
+    if (possible_narrow_sign_cast<ptrdiff_t>(start) >= ptr.size())
+        return false;
+
+    const auto offset = ptr.offset(start);
+    if (is_null(offset))
+        return false;
+
+    return element.from_data(offset);
+}
+
 TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT

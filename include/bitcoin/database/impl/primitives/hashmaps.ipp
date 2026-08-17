@@ -493,14 +493,40 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 TEMPLATE
 template <size_t Column, typename Element>
+bool CLASS::get_raw(const Link& link, Element& element) const NOEXCEPT
+{
+    return get<Column>(body_.template get_raw<Column>(link), element);
+}
+
+TEMPLATE
+template <size_t Column, typename Element>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
-    const auto ptr = body_.template get_raw1<Column>(link);
+    const auto ptr = body_.template get_raw<Column>(link);
     if (!put<Column>(ptr, element))
         return false;
 
     body_.complete(link, element.count());
     return true;
+}
+
+// protected (unguarded memory access)
+TEMPLATE
+template <size_t Column, typename Element>
+bool CLASS::get(memory::iterator it, Element& element) const NOEXCEPT
+{
+    static_assert(is_nonzero(Column), "column zero is the keyed spine");
+    static_assert(Element::size == width<Column>);
+    if (is_null(it))
+        return false;
+
+    using namespace system;
+    const auto bytes = width<Column> * element.count();
+    iostream stream{ it, possible_narrow_sign_cast<ptrdiff_t>(bytes) };
+    reader source{ stream };
+
+    BC_DEBUG_ONLY(source.set_limit(width<Column> * element.count());)
+    return element.from_data(source);
 }
 
 // protected (unguarded memory access)

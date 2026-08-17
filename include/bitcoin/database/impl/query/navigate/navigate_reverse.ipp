@@ -110,8 +110,9 @@ code CLASS::to_address_outputs(const stopper& cancel, outs_link& cursor,
     out.clear();
 
     // Limit bounds candidates, verified following iterator disposal.
+    // The iterator guards the aggregate, so puts is read unguarded.
     code deferred{ error::success };
-    std::vector<outs_link::integer> candidates{};
+    output_links candidates{};
     auto found = cursor.is_terminal();
     const auto end = cursor;
     auto it = store_.outs.it({ key });
@@ -132,29 +133,30 @@ code CLASS::to_address_outputs(const stopper& cancel, outs_link& cursor,
             break;
         }
 
-        candidates.push_back(*it);
+        table::outs::get_output put{};
+        if (!store_.outs.puts.get_raw(*it, put))
+            return error::integrity;
+
+        candidates.push_back(put.out_fk);
     }
 
     it.reset();
     if (!deferred && !found)
         deferred = error::invalid_cursor;
 
-    // Verify candidates by hashing their scripts.
+    // Verify candidates by hashing their scripts in place.
+    const auto ptr = store_.output.get_memory();
+    table::output::match_script_hash output{ {}, key };
     for (const auto& candidate: candidates)
     {
         if (cancel)
             return error::query_canceled;
 
-        table::outs::get_output outs{};
-        if (!store_.outs.puts.get(candidate, outs))
+        if (!store_.output.raw(ptr, candidate, output))
             return error::integrity;
 
-        table::output::get_script_hash output{};
-        if (!store_.output.get(outs.out_fk, output))
-            return error::integrity;
-
-        if (output.hash == key)
-            out.push_back(outs.out_fk);
+        if (output.match)
+            out.push_back(candidate);
     }
 
     return deferred;

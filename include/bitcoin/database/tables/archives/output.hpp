@@ -132,25 +132,25 @@ struct output
         system::chain::script::cptr script{};
     };
 
-    struct get_script_hash
+    /// Unstreamed, hashes the script in place and compares to the key.
+    struct match_script_hash
       : public schema::output
     {
-        inline link count() const NOEXCEPT
-        {
-            BC_ASSERT(false);
-            return {};
-        }
-
-        inline bool from_data(reader& source) NOEXCEPT
+        inline bool from_data(memory::iterator start) NOEXCEPT
         {
             using namespace system;
-            source.skip_bytes(tx::size);
-            source.skip_variable();
-            hash = sha256_hash(source.read_bytes(source.read_size()));
-            return source;
+
+            // Skip parent fk and value, and read the script size.
+            const auto* position = std::next(start, tx::size);
+            unsafe_from_variable(position);
+            const auto scrypt_size = unsafe_from_variable(position);
+            const auto bytes = possible_narrow_cast<size_t>(scrypt_size);
+            match = (key == accumulator<sha256>::hash(bytes, position));
+            return true;
         }
 
-        hash_digest hash{};
+        const system::hash_digest& key;
+        bool match{};
     };
 
     struct get_parent_value

@@ -56,6 +56,12 @@ public:
     }
 
     template <typename Element>
+    INLINE bool get_raw(const link& record, Element& element) const NOEXCEPT
+    {
+        return table_.template get_raw<Column>(record, element);
+    }
+
+    template <typename Element>
     INLINE bool put(const link& record, const Element& element) NOEXCEPT
     {
         return table_.template put<Column>(record, element);

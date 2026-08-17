@@ -185,7 +185,7 @@ TEMPLATE
 template <size_t Column, typename Element>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
-    const auto ptr = body_.template get_raw1<Column>(link);
+    const auto ptr = body_.template get_raw<Column>(link);
     if (!put<Column>(ptr, element))
         return false;
 

@@ -115,6 +115,11 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
+    /// Get element at link from its address (unstreamed).
+    template <typename Element>
+    static bool raw(const memory& ptr, const Link& link,
+        Element& element) NOEXCEPT;
+
     /// Put element.
     template <typename Element, if_equal<Element::size, Size> = true>
     bool put(const Element& element) NOEXCEPT;
