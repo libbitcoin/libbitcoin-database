@@ -178,7 +178,7 @@ bool CLASS::get(const memory& ptr, const Link& link, Element& element) NOEXCEPT
         return false;
 
     const auto size = ptr.size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
@@ -258,7 +258,7 @@ bool CLASS::put(const memory& ptr, const Link& link,
         return false;
 
     const auto size = ptr.size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 

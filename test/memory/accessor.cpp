@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(accessor__size__default__empty)
 {
     std::shared_mutex mutex;
     accessor instance(mutex);
-    BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_and_sign_cast<ptrdiff_t>(0));
+    BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_cast<ptrdiff_t>(0));
 }
 
 BOOST_AUTO_TEST_CASE(accessor__assign__forward__positive_size)
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(accessor__assign__forward__positive_size)
     BOOST_REQUIRE_EQUAL(instance.data(), expected_begin);
     BOOST_REQUIRE_EQUAL(instance.begin(), expected_begin);
     BOOST_REQUIRE_EQUAL(instance.end(), expected_end);
-    BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_and_sign_cast<ptrdiff_t>(1));
+    BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_cast<ptrdiff_t>(1));
 }
 
 BOOST_AUTO_TEST_CASE(accessor__assign__reverse__negative_size)
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(accessor__assign__reverse__negative_size)
     BOOST_REQUIRE_EQUAL(instance.data(), expected_begin);
     BOOST_REQUIRE_EQUAL(instance.begin(), expected_begin);
     BOOST_REQUIRE_EQUAL(instance.end(), expected_end);
-    BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_and_sign_cast<ptrdiff_t>(-1));
+    BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_cast<ptrdiff_t>(-1));
 }
 
 BOOST_AUTO_TEST_CASE(accessor__offset__valid__expected)
