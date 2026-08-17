@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
-    settings.address.buckets = 0;
+    settings.outs.buckets = 0;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));

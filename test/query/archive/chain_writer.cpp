@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__empty__expected)
     // data_chunk store.
     settings settings{};
     settings.tx.buckets = 8;
-    settings.address.buckets = 2;
+    settings.outs.buckets = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
     settings settings{};
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
-    settings.address.buckets = 2;
+    settings.outs.buckets = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
     settings settings{};
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
-    settings.address.buckets = 2;
+    settings.outs.buckets = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
     settings.txs.buckets = 16;
-    settings.address.buckets = 2;
+    settings.outs.buckets = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -723,7 +723,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
     settings.txs.buckets = 16;
-    settings.address.buckets = 2;
+    settings.outs.buckets = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

@@ -115,7 +115,7 @@ CLASS::store(const settings& config) NOEXCEPT
     input(input_head_, input_body_),
     output(output_head_, output_body_),
     ins(ins_head_, ins_body_, config.ins.buckets),
-    outs(outs_head_, outs_body_, config.address.buckets),
+    outs(outs_head_, outs_body_, config.outs.buckets),
     tx(tx_head_, tx_body_, config.tx.buckets),
     txs(txs_head_, txs_body_, config.txs.buckets),
 
