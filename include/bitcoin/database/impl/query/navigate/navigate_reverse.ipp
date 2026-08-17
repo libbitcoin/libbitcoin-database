@@ -145,6 +145,7 @@ code CLASS::to_address_outputs(const stopper& cancel, outs_link& cursor,
         deferred = error::invalid_cursor;
 
     // Verify candidates by hashing their scripts in place.
+    // Parallelizable, though marshalling may exceed the benefit even if cold.
     const auto ptr = store_.output.get_memory();
     table::output::match_script_hash output{ {}, key };
     for (const auto& candidate: candidates)
