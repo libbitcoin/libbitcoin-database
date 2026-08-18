@@ -197,7 +197,14 @@ inline typename CLASS::iterator CLASS::it(const Key& key) const NOEXCEPT
 TEMPLATE
 inline Link CLASS::allocate(const Link& size) NOEXCEPT
 {
-    return body_.allocate(size);
+    const auto link = body_.allocate(size);
+
+    // A disabled spine is never committed, so its share of the allocation
+    // completes here (write completion is accounted for each column).
+    if (!link.is_terminal() && !enabled())
+        body_.complete(link, size);
+
+    return link;
 }
 
 TEMPLATE
