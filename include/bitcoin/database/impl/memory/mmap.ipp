@@ -37,7 +37,7 @@ CLASS::mmap(const path& filename, const storage_settings& settings,
     bool random, bool staged) NOEXCEPT
     requires (is_one(columns))
   : filenames_{ filename },
-    minimum_(to_rows(settings.size)),
+    minimum_(std::max(one, to_rows(settings.size))),
     expansion_(settings.rate),
     headroom_(system::possible_narrow_cast<size_t>(settings.headroom)),
     access_(settings.access),
@@ -52,7 +52,7 @@ CLASS::mmap(const paths& filenames, const storage_settings& settings,
     bool random, bool staged) NOEXCEPT
     requires (columns > one)
   : filenames_(filenames),
-    minimum_(to_rows(settings.size)),
+    minimum_(std::max(one, to_rows(settings.size))),
     expansion_(settings.rate),
     headroom_(system::possible_narrow_cast<size_t>(settings.headroom)),
     access_(settings.access),
