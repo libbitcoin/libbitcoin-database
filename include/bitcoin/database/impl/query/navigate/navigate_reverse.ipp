@@ -127,6 +127,8 @@ code CLASS::to_address_outputs(const stopper& cancel, outs_link& cursor,
             break;
         }
 
+        // TODO: co-bucket rows consume the limit, so a collision with a large
+        // TODO: address truncates an unrelated small one.
         if (is_zero(limit--))
         {
             deferred = error::depth_limited;
