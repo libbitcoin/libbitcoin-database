@@ -79,7 +79,7 @@ struct BCD_API settings
     simple_table input{};
     simple_table output{};
     bucket_table ins{};
-    simple_table outs{};
+    bucket_table outs{};
     bucket_table tx{};
     bucket_table txs{};
 
@@ -105,7 +105,6 @@ struct BCD_API settings
     /// Optionals.
     /// -----------------------------------------------------------------------
 
-    bucket_table address{};
     bucket_table filter_bk{};
     bucket_table filter_tx{};
 };

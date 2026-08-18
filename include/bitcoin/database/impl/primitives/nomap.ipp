@@ -178,7 +178,7 @@ bool CLASS::get(const memory& ptr, const Link& link, Element& element) NOEXCEPT
         return false;
 
     const auto size = ptr.size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
@@ -195,6 +195,29 @@ bool CLASS::get(const memory& ptr, const Link& link, Element& element) NOEXCEPT
     }
 
     return element.from_data(source);
+}
+
+// static
+TEMPLATE
+template <typename Element>
+bool CLASS::raw(const memory& ptr, const Link& link, Element& element) NOEXCEPT
+{
+    using namespace system;
+    if (!ptr || link.is_terminal())
+        return false;
+
+    const auto start = body::link_to_position(link);
+    if (is_limited<ptrdiff_t>(start))
+        return false;
+
+    if (possible_narrow_sign_cast<ptrdiff_t>(start) >= ptr.size())
+        return false;
+
+    const auto offset = ptr.offset(start);
+    if (is_null(offset))
+        return false;
+
+    return element.from_data(offset);
 }
 
 TEMPLATE
@@ -258,7 +281,7 @@ bool CLASS::put(const memory& ptr, const Link& link,
         return false;
 
     const auto size = ptr.size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 

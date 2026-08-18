@@ -25,12 +25,36 @@ namespace libbitcoin {
 namespace database {
 namespace keys {
 
-/// en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
+/// Search key, Width bytes stored (loose search if less than the digest).
+template <size_t Width>
+struct search
+{
+    static_assert(Width == system::hash_size ||
+        Width <= sizeof(uint64_t) + sizeof(uint64_t));
+
+    static constexpr size_t width = Width;
+    static constexpr size_t offset = (Width == system::hash_size) ? zero :
+        sizeof(uint64_t);
+
+    system::hash_digest value;
+};
+
+/// True if Key is a keys::search<> instantiation.
+template <class Key>
+constexpr bool is_search = false;
+template <size_t Width>
+constexpr bool is_search<search<Width>> = true;
+
+/// en.wikipedia.org/wiki/Fowlerï¿½Nollï¿½Vo_hash_function
 INLINE constexpr uint64_t fnv1a_combine(uint64_t left, uint64_t right);
 
 /// Key size in bytes.
 template <class Key>
 INLINE constexpr size_t size() NOEXCEPT;
+
+/// True if the map is keyed (a zero-width stored key is still keyed).
+template <class Key>
+INLINE constexpr bool keyed() NOEXCEPT;
 
 /// The hashmap bucket of the key.
 template <class Key, class Integral>

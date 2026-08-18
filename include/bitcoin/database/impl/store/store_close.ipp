@@ -67,7 +67,6 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     close(ec, validated_bk, table_t::validated_bk_table);
     close(ec, validated_tx, table_t::validated_tx_table);
 
-    close(ec, address, table_t::address_table);
     close(ec, filter_bk, table_t::filter_bk_table);
     close(ec, filter_tx, table_t::filter_tx_table);
 

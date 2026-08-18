@@ -77,7 +77,7 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 bool CLASS::enabled() const NOEXCEPT
 {
-    return head_.buckets() > one;
+    return !is_zero(head_.buckets());
 }
 
 TEMPLATE
@@ -297,7 +297,7 @@ bool CLASS::set(const memory& ptr, const Link& link, const Key& key,
         return false;
 
     const auto size = ptr.size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
@@ -307,12 +307,10 @@ bool CLASS::set(const memory& ptr, const Link& link, const Key& key,
         return false;
 
     // Set element search key.
-    unsafe_array_cast<uint8_t, key_size>(std::next(offset,
-        Link::size)) = key;
-
     iostream stream{ offset, size - position };
     finalizer sink{ stream };
-    sink.skip_bytes(index_size);
+    sink.skip_bytes(Link::size);
+    keys::write(sink, key);
 
     // Due to accounting, record hashmaps are limited to set(1).
     if constexpr (!is_slab) { BC_ASSERT(is_one(element.count())); }
@@ -499,7 +497,7 @@ bool CLASS::read(const memory& ptr, const Link& link, Element& element) NOEXCEPT
         return false;
 
     const auto size = ptr.size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
@@ -539,7 +537,7 @@ bool CLASS::write(Link& previous, const memory& ptr, const Link& link,
         return false;
 
     const auto size = ptr.size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 

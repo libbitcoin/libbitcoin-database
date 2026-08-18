@@ -40,7 +40,7 @@ public:
 
     using bytes = typename Link::bytes;
 
-    /// A hash head is disabled it if has one or less buckets.
+    /// A hash head is disabled if it has no buckets.
     hashhead(storage& head, size_t buckets) NOEXCEPT;
 
     /// Sizing (thread safe).

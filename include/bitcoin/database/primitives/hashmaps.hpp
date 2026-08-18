@@ -69,7 +69,7 @@ public:
     /// Sizing.
     /// -----------------------------------------------------------------------
 
-    /// The instance is enabled (more than 1 bucket).
+    /// The instance is enabled (has buckets).
     bool enabled() const NOEXCEPT;
 
     /// Hash table bucket count.
@@ -226,6 +226,10 @@ public:
     template <size_t Column, typename Element>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
+    /// Get element from column at link (guard required).
+    template <size_t Column, typename Element>
+    bool get_raw(const Link& link, Element& element) const NOEXCEPT;
+
     /// Put previously allocated element to column at link (guard required).
     template <size_t Column, typename Element>
     bool put(const Link& link, const Element& element) NOEXCEPT;
@@ -250,6 +254,10 @@ protected:
     template <typename Element, if_equal<Element::size, RowSize> = true>
     bool write(Link& previous, const memory& ptr, const Link& link,
         const Key& key, const Element& element) NOEXCEPT;
+
+    /// Get element from column at raw iterator (unguarded memory access).
+    template <size_t Column, typename Element>
+    bool get(memory::iterator it, Element& element) const NOEXCEPT;
 
     /// Put element to column at raw iterator (unguarded memory access).
     template <size_t Column, typename Element>

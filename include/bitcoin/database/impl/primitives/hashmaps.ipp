@@ -75,7 +75,7 @@ bool CLASS::verify() const NOEXCEPT
 TEMPLATE
 bool CLASS::enabled() const NOEXCEPT
 {
-    return head_.buckets() > one;
+    return !is_zero(head_.buckets());
 }
 
 TEMPLATE
@@ -293,7 +293,7 @@ bool CLASS::set(const memory& ptr, const Link& link, const Key& key,
         return false;
 
     const auto size = ptr.size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
@@ -469,7 +469,7 @@ bool CLASS::get(const memory& ptr, const Link& link, Element& element) NOEXCEPT
         return false;
 
     const auto size = ptr.size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
@@ -493,14 +493,40 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 TEMPLATE
 template <size_t Column, typename Element>
+bool CLASS::get_raw(const Link& link, Element& element) const NOEXCEPT
+{
+    return get<Column>(body_.template get_raw<Column>(link), element);
+}
+
+TEMPLATE
+template <size_t Column, typename Element>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
-    const auto ptr = body_.template get_raw1<Column>(link);
+    const auto ptr = body_.template get_raw<Column>(link);
     if (!put<Column>(ptr, element))
         return false;
 
     body_.complete(link, element.count());
     return true;
+}
+
+// protected (unguarded memory access)
+TEMPLATE
+template <size_t Column, typename Element>
+bool CLASS::get(memory::iterator it, Element& element) const NOEXCEPT
+{
+    static_assert(is_nonzero(Column), "column zero is the keyed spine");
+    static_assert(Element::size == width<Column>);
+    if (is_null(it))
+        return false;
+
+    using namespace system;
+    const auto bytes = width<Column> * element.count();
+    iostream stream{ it, possible_narrow_sign_cast<ptrdiff_t>(bytes) };
+    reader source{ stream };
+
+    BC_DEBUG_ONLY(source.set_limit(width<Column> * element.count());)
+    return element.from_data(source);
 }
 
 // protected (unguarded memory access)
@@ -515,7 +541,7 @@ bool CLASS::put(memory::iterator it, const Element& element) NOEXCEPT
 
     using namespace system;
     const auto bytes = width<Column> * element.count();
-    iostream stream{ it, possible_narrow_and_sign_cast<ptrdiff_t>(bytes) };
+    iostream stream{ it, possible_narrow_sign_cast<ptrdiff_t>(bytes) };
     flipper sink{ stream };
 
     BC_DEBUG_ONLY(sink.set_limit(width<Column> * element.count());)
@@ -567,7 +593,7 @@ bool CLASS::read(const memory& ptr, const Link& link, Element& element) NOEXCEPT
         return false;
 
     const auto size = ptr.size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 
@@ -607,7 +633,7 @@ bool CLASS::write(Link& previous, const memory& ptr, const Link& link,
         return false;
 
     const auto size = ptr.size();
-    const auto position = possible_narrow_and_sign_cast<ptrdiff_t>(start);
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(start);
     if (position >= size)
         return false;
 

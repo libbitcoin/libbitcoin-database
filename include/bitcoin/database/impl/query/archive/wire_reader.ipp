@@ -88,7 +88,7 @@ bool CLASS::get_wire_tx(bytewriter& sink, const tx_link& link,
 
     table::outs::record outs{};
     outs.out_fks.resize(tx.outs_count);
-    if (!store_.outs.get(tx.outs_fk, outs))
+    if (!store_.outs.puts.get(tx.outs_fk, outs))
         return false;
 
     // Point links are contiguous (computed).

@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.output_body_size(), 81u);
     BOOST_REQUIRE_EQUAL(query.input_body_size(), 79u);
     BOOST_REQUIRE_EQUAL(query.ins_body_size(), schema::ins::minrow + schema::ins_sequence::minrow);
-    BOOST_REQUIRE_EQUAL(query.outs_body_size(), schema::outs::minrow);
+    BOOST_REQUIRE_EQUAL(query.outs_body_size(), schema::address::minrow + schema::outs::minrow);
     BOOST_REQUIRE_EQUAL(query.txs_body_size(), schema::txs::minrow + one + schema::flags);
     BOOST_REQUIRE_EQUAL(query.tx_body_size(), schema::transaction::minrow);
 
@@ -60,7 +60,6 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.validated_tx_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.filter_bk_body_size(), schema::filter_bk::minrow);
     BOOST_REQUIRE_EQUAL(query.filter_tx_body_size(), 5u);
-    BOOST_REQUIRE_EQUAL(query.address_body_size(), schema::address::minrow);
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
@@ -74,6 +73,7 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
 
     BOOST_REQUIRE_EQUAL(query.header_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.ins_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.outs_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.txs_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.tx_buckets(), 128u);
 
@@ -84,7 +84,6 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.validated_bk_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.filter_tx_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.filter_bk_buckets(), 128u);
-    BOOST_REQUIRE_EQUAL(query.address_buckets(), 128u);
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
@@ -98,6 +97,7 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
 
     BOOST_REQUIRE_EQUAL(query.header_records(), one);
     BOOST_REQUIRE_EQUAL(query.ins_records(), one);
+    BOOST_REQUIRE_EQUAL(query.outs_records(), one);
     BOOST_REQUIRE_EQUAL(query.tx_records(), one);
 
     BOOST_REQUIRE_EQUAL(query.candidate_records(), one);
@@ -109,7 +109,6 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.duplicate_records(), zero);
     BOOST_REQUIRE_EQUAL(query.prevalid_records(), zero);
     BOOST_REQUIRE_EQUAL(query.filter_bk_records(), one);
-    BOOST_REQUIRE_EQUAL(query.address_records(), one);
 }
 
 BOOST_AUTO_TEST_CASE(query_extent__input_output_count__genesis__expected)
@@ -148,7 +147,7 @@ BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
-    settings.address.buckets = 0;
+    settings.outs.buckets = 0;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));

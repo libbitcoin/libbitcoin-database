@@ -29,14 +29,39 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// Outs is a record output fk records.
-struct outs
-  : public no_map<schema::outs>
+/// Address spine (column zero): conflict link, no stored value or key.
+struct outs_address
+{
+    using link = schema::address::link;
+    static constexpr auto width = schema::address::minrow;
+    static constexpr auto suffix = "address"_t;
+
+    struct record
+      : public schema::address
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            BC_ASSERT(!source || is_zero(source.get_read_position()));
+            return source;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            BC_ASSERT(!sink || is_zero(sink.get_write_position()));
+            return sink;
+        }
+    };
+};
+
+/// Outs column: output fk records (rows aligned with the address spine).
+struct outs_puts
 {
     using out = schema::output::link;
     using tx = schema::transaction::link;
+    using link = schema::outs::link;
     using output_links = std::vector<out::integer>;
-    using no_map<schema::outs>::nomap;
+    static constexpr auto width = schema::outs::size;
+    static constexpr auto suffix = "puts"_t;
 
     struct record
       : public schema::outs
@@ -160,6 +185,31 @@ struct outs
         const system::chain::transaction_view& tx_;
     };
 };
+
+/// The outs association: address spine (searched by output script hash) with
+/// the aligned output fk column, shared row count and allocation.
+struct outs
+  : public hash_maps<schema::address, outs_puts>
+{
+    using base = hash_maps<schema::address, outs_puts>;
+    using base::hashmaps;
+
+    using out = schema::output::link;
+    using output_links = std::vector<out::integer>;
+
+    /// Column element aliases.
+    using record = outs_puts::record;
+    using get_output = outs_puts::get_output;
+    using put_ref = outs_puts::put_ref;
+    using put_view = outs_puts::put_view;
+
+    /// The output fk column (rows aligned with the address spine).
+    column<base, one> puts{ *this };
+};
+
+/// Aggregate (files).
+template <template <size_t...> class Storage>
+using outs_storage = mmaps<Storage, outs_address, outs_puts>;
 
 } // namespace table
 } // namespace database

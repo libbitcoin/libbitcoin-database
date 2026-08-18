@@ -43,7 +43,7 @@ CLASS::store(const settings& config) NOEXCEPT
     ins_head_(head(config.path / schema::dir::heads, schema::archive::ins), head_settings, random),
     ins_body_(body(config.path, schema::archive::ins), config.ins, sequential, staged),
 
-    outs_head_(head(config.path / schema::dir::heads, schema::archive::outs), head_settings, sequential),
+    outs_head_(head(config.path / schema::dir::heads, schema::archive::outs), head_settings, random),
     outs_body_(body(config.path, schema::archive::outs), config.outs, sequential, staged),
 
     tx_head_(head(config.path / schema::dir::heads, schema::archive::tx), head_settings, random),
@@ -96,9 +96,6 @@ CLASS::store(const settings& config) NOEXCEPT
     // Optionals.
     // ------------------------------------------------------------------------
 
-    address_head_(head(config.path / schema::dir::heads, schema::optionals::address), head_settings, random),
-    address_body_(body(config.path, schema::optionals::address), config.address, sequential, staged),
-
     filter_bk_head_(head(config.path / schema::dir::heads, schema::optionals::filter_bk), head_settings, random),
     filter_bk_body_(body(config.path, schema::optionals::filter_bk), config.filter_bk, sequential, staged),
 
@@ -118,7 +115,7 @@ CLASS::store(const settings& config) NOEXCEPT
     input(input_head_, input_body_),
     output(output_head_, output_body_),
     ins(ins_head_, ins_body_, config.ins.buckets),
-    outs(outs_head_, outs_body_),
+    outs(outs_head_, outs_body_, config.outs.buckets),
     tx(tx_head_, tx_body_, config.tx.buckets),
     txs(txs_head_, txs_body_, config.txs.buckets),
 
@@ -135,7 +132,6 @@ CLASS::store(const settings& config) NOEXCEPT
     validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk.buckets),
     validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx.buckets),
 
-    address(address_head_, address_body_, config.address.buckets),
     filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk.buckets),
     filter_tx(filter_tx_head_, filter_tx_body_, config.filter_tx.buckets)
 {

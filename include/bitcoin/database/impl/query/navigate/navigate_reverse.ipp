@@ -99,36 +99,70 @@ TEMPLATE
 code CLASS::to_address_outputs(const stopper& cancel, output_links& out,
     const hash_digest& key) const NOEXCEPT
 {
-    address_link cursor{};
+    outs_link cursor{};
     return to_address_outputs(cancel, cursor, out, key, max_size_t);
 }
 
 TEMPLATE
-code CLASS::to_address_outputs(const stopper& cancel, address_link& cursor,
+code CLASS::to_address_outputs(const stopper& cancel, outs_link& cursor,
     output_links& out, const hash_digest& key, size_t limit) const NOEXCEPT
 {
     out.clear();
+
+    // Limit bounds candidates, verified following iterator disposal.
+    // The iterator guards the aggregate, so puts is read unguarded.
+    code deferred{ error::success };
+    output_links candidates{};
+    auto found = cursor.is_terminal();
     const auto end = cursor;
-    auto it = store_.address.it(key);
+    auto it = store_.outs.it({ key });
     for (cursor = it.get(); it; ++it)
     {
         if (cancel)
             return error::query_canceled;
 
         if (it.get() == end)
-            return error::success;
+        {
+            found = true;
+            break;
+        }
 
+        // TODO: co-bucket rows consume the limit, so a collision with a large
+        // TODO: address truncates an unrelated small one.
         if (is_zero(limit--))
-            return error::depth_limited;
+        {
+            deferred = error::depth_limited;
+            break;
+        }
 
-        table::address::record address{};
-        if (!store_.address.get(it, address))
+        table::outs::get_output put{};
+        if (!store_.outs.puts.get_raw(*it, put))
             return error::integrity;
 
-        out.push_back(address.output_fk);
+        candidates.push_back(put.out_fk);
     }
 
-    return end.is_terminal() ? error::success : error::invalid_cursor;
+    it.reset();
+    if (!deferred && !found)
+        deferred = error::invalid_cursor;
+
+    // Verify candidates by hashing their scripts in place.
+    // Parallelizable, though marshalling may exceed the benefit even if cold.
+    const auto ptr = store_.output.get_memory();
+    table::output::match_script_hash output{ {}, key };
+    for (const auto& candidate: candidates)
+    {
+        if (cancel)
+            return error::query_canceled;
+
+        if (!store_.output.raw(ptr, candidate, output))
+            return error::integrity;
+
+        if (output.match)
+            out.push_back(candidate);
+    }
+
+    return deferred;
 }
 
 // input|output|prevout->tx[parent]

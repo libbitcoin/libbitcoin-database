@@ -142,9 +142,9 @@ protected:
     Storage<one> ins_head_;
     table::ins_storage<Storage> ins_body_;
 
-    // array
+    // aggregate (address spine + outs column)
     Storage<one> outs_head_;
-    Storage<one> outs_body_;
+    table::outs_storage<Storage> outs_body_;
 
     // record hashmap
     Storage<one> tx_head_;
@@ -206,10 +206,6 @@ protected:
 
     /// Optionals.
     /// -----------------------------------------------------------------------
-
-    // record hashmap
-    Storage<one> address_head_;
-    Storage<one> address_body_;
 
     // record arraymap
     Storage<one> filter_bk_head_;
@@ -288,7 +284,6 @@ public:
     table::validated_tx validated_tx;
 
     /// Optionals.
-    table::address address;
     table::filter_bk filter_bk;
     table::filter_tx filter_tx;
 };

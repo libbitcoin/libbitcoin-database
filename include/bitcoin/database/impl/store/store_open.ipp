@@ -81,7 +81,6 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, validated_bk, table_t::validated_bk_table);
     verify(ec, validated_tx, table_t::validated_tx_table);
 
-    verify(ec, address, table_t::address_table);
     verify(ec, filter_bk, table_t::filter_bk_table);
     verify(ec, filter_tx, table_t::filter_tx_table);
 

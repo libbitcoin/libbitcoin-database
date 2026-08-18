@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__terminal__not_reduced)
     BOOST_REQUIRE(setup_three_block_unconfirmed_address_store(query));
 
     output_links out{};
-    address_link end{};
+    outs_link end{};
     const std::atomic_bool cancel{};
     BOOST_REQUIRE(!query.to_address_outputs(cancel, end, out, address0, max_size_t));
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__limit__depth_limited)
     BOOST_REQUIRE(setup_three_block_unconfirmed_address_store(query));
 
     output_links out{};
-    address_link end{};
+    outs_link end{};
     const std::atomic_bool cancel{};
     BOOST_REQUIRE_EQUAL(query.to_address_outputs(cancel, end, out, address0, 4), error::depth_limited);
 
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__stop_mismatch__populat
     BOOST_REQUIRE(setup_three_block_unconfirmed_address_store(query));
 
     output_links out{};
-    address_link cursor{ 4242 };
+    outs_link cursor{ 4242 };
     const std::atomic_bool cancel{};
     const auto ec = query.to_address_outputs(cancel, cursor, out, address0, max_size_t);
     BOOST_REQUIRE_EQUAL(ec, error::invalid_cursor);
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__stop_match__expected)
     BOOST_REQUIRE(setup_three_block_unconfirmed_address_store(query));
 
     output_links out{};
-    address_link cursor{ 3 };
+    outs_link cursor{ 3 };
     const std::atomic_bool cancel{};
     BOOST_REQUIRE(!query.to_address_outputs(cancel, cursor, out, address0, max_size_t));
     BOOST_REQUIRE_EQUAL(cursor.value, 7u);
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__progression__expected)
     BOOST_REQUIRE(!store.create(test::events_handler));
 
     output_links out{};
-    address_link cursor{};
+    outs_link cursor{};
     const std::atomic_bool cancel{};
 
     // Add three unconfirmed blocks and two txs, with 7 outputs, 6 matching address.

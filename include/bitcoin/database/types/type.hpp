@@ -41,7 +41,6 @@ using ins_link = table::ins::link;
 using tx_link = table::transaction::link;
 using filter_link = table::filter_tx::link;
 using strong_link = table::strong_tx::link;
-using address_link = table::address::link;
 using ecdsa_link = table::ecdsa_correlate::link;
 using schnorr_link = table::schnorr_correlate::link;
 using silent_link = table::silent_correlate::link;

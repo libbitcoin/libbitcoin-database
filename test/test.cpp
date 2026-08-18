@@ -41,7 +41,7 @@ size_t size(const std::filesystem::path& file_path) NOEXCEPT
 {
     // returns max_size_t on error.
     code ec;
-    return system::possible_narrow_and_sign_cast<size_t>(
+    return system::possible_narrow_cast<size_t>(
         std::filesystem::file_size(system::extended_path(file_path), ec));
 }
 

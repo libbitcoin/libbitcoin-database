@@ -96,8 +96,6 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     create(ec, validated_tx_head_, table_t::validated_tx_head);
     create(ec, validated_tx_body_, table_t::validated_tx_body);
 
-    create(ec, address_head_, table_t::address_head);
-    create(ec, address_body_, table_t::address_body);
     create(ec, filter_bk_head_, table_t::filter_bk_head);
     create(ec, filter_bk_body_, table_t::filter_bk_body);
     create(ec, filter_tx_head_, table_t::filter_tx_head);
@@ -138,7 +136,6 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     populate(ec, validated_bk, table_t::validated_bk_table);
     populate(ec, validated_tx, table_t::validated_tx_table);
 
-    populate(ec, address, table_t::address_table);
     populate(ec, filter_bk, table_t::filter_bk_table);
     populate(ec, filter_tx, table_t::filter_tx_table);
 

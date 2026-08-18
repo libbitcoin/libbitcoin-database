@@ -92,8 +92,6 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, validated_tx_head_, table_t::validated_tx_head);
     reload(ec, validated_tx_body_, table_t::validated_tx_body);
 
-    reload(ec, address_head_, table_t::address_head);
-    reload(ec, address_body_, table_t::address_body);
     reload(ec, filter_bk_head_, table_t::filter_bk_head);
     reload(ec, filter_bk_body_, table_t::filter_bk_body);
     reload(ec, filter_tx_head_, table_t::filter_tx_head);

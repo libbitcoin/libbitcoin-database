@@ -35,7 +35,7 @@ public:
 
     using bytes = typename Link::bytes;
 
-    /// An array head is disabled if it has one or less buckets.
+    /// An array head is disabled if it has no buckets.
     nohead(storage& head, const Link& buckets) NOEXCEPT;
 
     /// Sizing is dynamic (thread safe).

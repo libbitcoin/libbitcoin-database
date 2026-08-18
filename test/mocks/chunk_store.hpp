@@ -85,6 +85,11 @@ public:
 
     system::data_chunk& outs_body() NOEXCEPT
     {
+        return outs_body_.buffers_.at(one);
+    }
+
+    system::data_chunk& address_body() NOEXCEPT
+    {
         return outs_body_.buffer();
     }
 
@@ -263,16 +268,6 @@ public:
     }
 
     // Optionals.
-
-    system::data_chunk& address_head() NOEXCEPT
-    {
-        return address_head_.buffer();
-    }
-
-    system::data_chunk& address_body() NOEXCEPT
-    {
-        return address_body_.buffer();
-    }
 
     system::data_chunk& filter_bk_head() NOEXCEPT
     {

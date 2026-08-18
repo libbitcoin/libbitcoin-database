@@ -293,16 +293,6 @@ public:
 
     // Optionals.
 
-    inline const path& address_head_file() const NOEXCEPT
-    {
-        return address_head_.file();
-    }
-
-    inline const path& address_body_file() const NOEXCEPT
-    {
-        return address_body_.file();
-    }
-
     inline const path& filter_bk_head_file() const NOEXCEPT
     {
         return filter_bk_head_.file();
