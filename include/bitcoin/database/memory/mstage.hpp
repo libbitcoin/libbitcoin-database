@@ -21,12 +21,10 @@
 
 #include <bitcoin/database/define.hpp>
 
-#if defined(HAVE_APPLE)
-    #define MANAGE_STAGING
-#endif
-
 // The native windows mapped-file behavior is the model staging emulates.
-#if defined(MANAGE_STAGING) && defined(HAVE_MSC)
+#if !defined(HAVE_MSC)
+    #define MANAGE_STAGING
+#elif defined(MANAGE_STAGING)
     #error "MANAGE_STAGING is not supported on Windows."
 #endif
 
