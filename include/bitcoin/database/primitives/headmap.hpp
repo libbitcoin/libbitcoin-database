@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_PRIMITIVES_HEADMAP_HPP
 
 #include <atomic>
+#include <shared_mutex>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
@@ -30,7 +31,8 @@ namespace database {
 /// A head-only array of links indexed by position (no body, no count cell).
 /// The storage logical size is the count, providing count atomicity and
 /// bucket publication as with bodies. Content restores with the heads.
-template <class Link, size_t Cell>
+template <class Link, size_t Cell = Link::size,
+    if_not_greater<Link::size, Cell> = true>
 class headmap
 {
 public:
@@ -90,13 +92,29 @@ public:
     bool push(const Link& link) NOEXCEPT;
 
 private:
-    using integer = Link::integer;
-    static_assert(std::atomic<integer>::is_always_lock_free);
+    using cell = unsigned_type<Cell>;
+    static constexpr size_t bucket_size = Cell;
+    static constexpr bool aligned = (bucket_size == sizeof(cell));
     static_assert(is_nonzero(Link::size));
-    static constexpr auto bucket_size = Cell;
+    static_assert(std::atomic<cell>::is_always_lock_free);
 
-    // Alignment ensures atomic bucket access.
-    static_assert(bucket_size == sizeof(integer));
+    INLINE static auto& cell_array(memory::iterator it) NOEXCEPT
+    {
+        return system::unsafe_array_cast<uint8_t, bucket_size>(it);
+    }
+
+    template <typename Integral>
+    INLINE static auto& cell_array(Integral& value) NOEXCEPT
+    {
+        return cell_array(system::pointer_cast<uint8_t>(&value));
+    }
+
+    INLINE static constexpr Link to_link(cell value) NOEXCEPT
+    {
+        using namespace system;
+        return possible_narrow_cast<typename Link::integer>(
+            bit_and<cell>(Link::terminal, value));
+    }
 
     // Byte offset of bucket index within head file.
     // [[bucket[0]...bucket[count-1]]]
@@ -109,12 +127,13 @@ private:
     INLINE static constexpr Link position_to_link(size_t position) NOEXCEPT
     {
         using namespace system;
-        return possible_narrow_cast<integer>(
+        return possible_narrow_cast<typename Link::integer>(
             floored_divide(position, bucket_size));
     }
 
-    // This is thread safe.
+    // These are thread safe.
     storage& file_;
+    mutable std::shared_mutex mutex_{};
 };
 
 template <typename Schema>
@@ -123,8 +142,9 @@ using head_map = headmap<typename Schema::link, Schema::cell>;
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <class Link, size_t Cell>
-#define CLASS headmap<Link, Cell>
+#define TEMPLATE template <class Link, size_t Cell, \
+    if_not_greater<Link::size, Cell> If>
+#define CLASS headmap<Link, Cell, If>
 
 #include <bitcoin/database/impl/primitives/headmap.ipp>
 

@@ -144,12 +144,24 @@ Link CLASS::at(size_t index) const NOEXCEPT
     if (!ptr)
         return {};
 
-    // Reads full padded word.
     const auto raw = ptr.data();
-    const auto& head = *pointer_cast<std::atomic<integer>>(raw);
+    if constexpr (aligned)
+    {
+        // Reads full padded word (masked by to_link).
+        const auto& head = *pointer_cast<std::atomic<cell>>(raw);
+        return to_link(head.load(std::memory_order_relaxed));
+    }
+    else
+    {
+        const auto& head = cell_array(raw);
+        cell value{};
 
-    // Aligned values must be masked to match terminal.
-    return bit_and(Link::terminal, head.load(std::memory_order_relaxed));
+        mutex_.lock_shared();
+        cell_array(value) = head;
+        mutex_.unlock_shared();
+
+        return to_link(value);
+    }
 }
 
 // NOT WRITER-WRITER THREAD SAFE (the logical top is read-write).
@@ -169,11 +181,25 @@ bool CLASS::push(const Link& link) NOEXCEPT
             bucket_size)))
             return false;
 
-        // Writes full padded word (into unpublished capacity).
+        // Writes into unpublished capacity.
         file_.prepare(position, bucket_size);
         const auto raw = ptr.data();
-        auto& head = *pointer_cast<std::atomic<integer>>(raw);
-        head.store(link, std::memory_order_relaxed);
+        cell value = link.value;
+        if constexpr (aligned)
+        {
+            // Writes full padded word.
+            auto& head = *pointer_cast<std::atomic<cell>>(raw);
+            head.store(value, std::memory_order_relaxed);
+        }
+        else
+        {
+            auto& head = cell_array(raw);
+
+            mutex_.lock();
+            head = cell_array(value);
+            mutex_.unlock();
+        }
+
         file_.mark(position, bucket_size);
     }
 

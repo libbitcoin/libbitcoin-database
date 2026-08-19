@@ -25,6 +25,8 @@ using namespace system;
 
 using link = linkage<2>;
 using test_headmap = headmap<link, sizeof(uint16_t)>;
+using small_link = linkage<3>;
+using unaligned_headmap = headmap<small_link, small_link::size>;
 
 BOOST_AUTO_TEST_CASE(headmap__create__empty__expected)
 {
@@ -85,6 +87,24 @@ BOOST_AUTO_TEST_CASE(headmap__truncate__push__rewrites_bucket)
     BOOST_REQUIRE(instance.push(0x5566_u16));
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE_EQUAL(instance.at(1), 0x5566_u16);
+}
+
+BOOST_AUTO_TEST_CASE(headmap__unaligned__push_at_truncate__expected)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    unaligned_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.reserve(2u));
+    BOOST_REQUIRE(instance.push(0x00112233_u32));
+    BOOST_REQUIRE(instance.push(0x00445566_u32));
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.at(0), 0x00112233_u32);
+    BOOST_REQUIRE_EQUAL(instance.at(1), 0x00445566_u32);
+    BOOST_REQUIRE(instance.at(2).is_terminal());
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("332211665544"));
+    BOOST_REQUIRE(instance.truncate(1u));
+    BOOST_REQUIRE(instance.at(1).is_terminal());
 }
 
 BOOST_AUTO_TEST_CASE(headmap__setup__lifecycle__expected)
