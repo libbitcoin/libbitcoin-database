@@ -34,9 +34,7 @@ height_link CLASS::get_confirmed_height(const header_link& link) const NOEXCEPT
     if (const auto height = get_height(link); !height.is_terminal())
     {
         // The block is confirmed (by height).
-        table::height::record confirmed{};
-        if (store_.confirmed.get(height, confirmed) &&
-            (confirmed.header_fk == link))
+        if (store_.confirmed.at(height) == link)
             return height;
     }
 

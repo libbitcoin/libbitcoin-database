@@ -56,10 +56,7 @@ CLASS::store(const settings& config) NOEXCEPT
     // ------------------------------------------------------------------------
 
     candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate), head_settings, sequential),
-    candidate_body_(body(config.path, schema::indexes::candidate), config.candidate, sequential, staged),
-
     confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed), head_settings, sequential),
-    confirmed_body_(body(config.path, schema::indexes::confirmed), config.confirmed, sequential, staged),
 
     strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx), head_settings, random),
     strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx, sequential, staged),
@@ -119,8 +116,8 @@ CLASS::store(const settings& config) NOEXCEPT
     tx(tx_head_, tx_body_, config.tx.buckets),
     txs(txs_head_, txs_body_, config.txs.buckets),
 
-    candidate(candidate_head_, candidate_body_),
-    confirmed(confirmed_head_, confirmed_body_),
+    candidate(candidate_head_),
+    confirmed(confirmed_head_),
     strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx.buckets),
 
     ecdsa(ecdsa_head_, ecdsa_body_),

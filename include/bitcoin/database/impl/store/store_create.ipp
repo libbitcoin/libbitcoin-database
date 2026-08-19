@@ -73,9 +73,7 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     create(ec, txs_body_, table_t::txs_body);
 
     create(ec, candidate_head_, table_t::candidate_head);
-    create(ec, candidate_body_, table_t::candidate_body);
     create(ec, confirmed_head_, table_t::confirmed_head);
-    create(ec, confirmed_body_, table_t::confirmed_body);
     create(ec, strong_tx_head_, table_t::strong_tx_head);
     create(ec, strong_tx_body_, table_t::strong_tx_body);
 

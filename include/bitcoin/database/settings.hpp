@@ -86,8 +86,6 @@ struct BCD_API settings
     /// Indexes.
     /// -----------------------------------------------------------------------
 
-    simple_table candidate{};
-    simple_table confirmed{};
     bucket_table strong_tx{};
 
     /// Caches.

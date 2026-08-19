@@ -257,9 +257,10 @@ struct txs
 /// Index tables.
 /// ---------------------------------------------------------------------------
 
-// array (candidate and confirmed)
+// headmap (candidate and confirmed)
 struct height
 {
+    static constexpr size_t align = true;
     static constexpr size_t pk = schema::header::pk;
     using link = schema::header::link;
     static constexpr size_t minsize =
@@ -267,7 +268,6 @@ struct height
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
     static constexpr auto suffix = "height"_t;
-    ////static constexpr link count() NOEXCEPT { return 1; }
     static_assert(minsize == 3u);
     static_assert(minrow == 3u);
     static_assert(link::size == 3u);

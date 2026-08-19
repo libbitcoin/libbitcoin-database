@@ -78,9 +78,7 @@ bool CLASS::is_candidate_header(const header_link& link) const NOEXCEPT
     if (height.is_terminal())
         return false;
 
-    table::height::record candidate{};
-    return store_.candidate.get(height, candidate) &&
-        (candidate.header_fk == link);
+    return store_.candidate.at(height) == link;
 }
 
 TEMPLATE
@@ -91,9 +89,7 @@ bool CLASS::is_confirmed_block(const header_link& link) const NOEXCEPT
     if (height.is_terminal())
         return false;
 
-    table::height::record confirmed{};
-    return store_.confirmed.get(height, confirmed) &&
-        (confirmed.header_fk == link);
+    return store_.confirmed.at(height) == link;
 }
 
 TEMPLATE

@@ -157,13 +157,11 @@ protected:
     /// Indexes.
     /// -----------------------------------------------------------------------
 
-    // array
+    // headmap
     Storage<one> candidate_head_;
-    Storage<one> candidate_body_;
 
-    // array
+    // headmap
     Storage<one> confirmed_head_;
-    Storage<one> confirmed_body_;
 
     // record hashmap
     Storage<one> strong_tx_head_;

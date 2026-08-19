@@ -27,42 +27,11 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// height is an array of header fk records.
+/// height is a head-only array of header fks indexed by height (no body).
 struct height
-  : public no_map<schema::height>
+  : public head_map<schema::height>
 {
-    using header = schema::header::link;
-    using no_map<schema::height>::nomap;
-
-    struct record
-      : public schema::height
-    {
-        static constexpr link count() NOEXCEPT
-        {
-            return 1;
-        }
-
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            header_fk = source.read_little_endian<header::integer, header::size>();
-            BC_ASSERT(!source || source.get_read_position() == minrow);
-            return source;
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            sink.write_little_endian<header::integer, header::size>(header_fk);
-            BC_ASSERT(!sink || sink.get_write_position() == minrow);
-            return sink;
-        }
-
-        inline bool operator==(const record& other) const NOEXCEPT
-        {
-            return header_fk == other.header_fk;
-        }
-
-        header::integer header_fk{};
-    };
+    using head_map<schema::height>::headmap;
 };
 
 } // namespace table

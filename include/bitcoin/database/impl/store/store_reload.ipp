@@ -69,9 +69,7 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, txs_body_, table_t::txs_body);
 
     reload(ec, candidate_head_, table_t::candidate_head);
-    reload(ec, candidate_body_, table_t::candidate_body);
     reload(ec, confirmed_head_, table_t::confirmed_head);
-    reload(ec, confirmed_body_, table_t::confirmed_body);
     reload(ec, strong_tx_head_, table_t::strong_tx_head);
     reload(ec, strong_tx_body_, table_t::strong_tx_body);
 

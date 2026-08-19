@@ -54,9 +54,7 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, txs_body_, table_t::txs_body);
 
     unload(ec, candidate_head_, table_t::candidate_head);
-    unload(ec, candidate_body_, table_t::candidate_body);
     unload(ec, confirmed_head_, table_t::confirmed_head);
-    unload(ec, confirmed_body_, table_t::confirmed_body);
     unload(ec, strong_tx_head_, table_t::strong_tx_head);
     unload(ec, strong_tx_body_, table_t::strong_tx_body);
 
@@ -107,9 +105,7 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, txs_body_, table_t::txs_body);
 
     close(ec, candidate_head_, table_t::candidate_head);
-    close(ec, candidate_body_, table_t::candidate_body);
     close(ec, confirmed_head_, table_t::confirmed_head);
-    close(ec, confirmed_body_, table_t::confirmed_body);
     close(ec, strong_tx_head_, table_t::strong_tx_head);
     close(ec, strong_tx_body_, table_t::strong_tx_body);
 

@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.txs_body_size(), schema::txs::minrow + one + schema::flags);
     BOOST_REQUIRE_EQUAL(query.tx_body_size(), schema::transaction::minrow);
 
-    BOOST_REQUIRE_EQUAL(query.candidate_body_size(), schema::height::minrow);
-    BOOST_REQUIRE_EQUAL(query.confirmed_body_size(), schema::height::minrow);
+    BOOST_REQUIRE_EQUAL(query.candidate_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query.confirmed_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.strong_tx_body_size(), schema::strong_tx::minrow);
     BOOST_REQUIRE_EQUAL(query.ecdsa_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.schnorr_body_size(), zero);

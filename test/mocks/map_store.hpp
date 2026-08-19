@@ -144,19 +144,9 @@ public:
         return candidate_head_.file();
     }
 
-    inline const path& candidate_body_file() const NOEXCEPT
-    {
-        return candidate_body_.file();
-    }
-
     inline const path& confirmed_head_file() const NOEXCEPT
     {
         return confirmed_head_.file();
-    }
-
-    inline const path& confirmed_body_file() const NOEXCEPT
-    {
-        return confirmed_body_.file();
     }
 
     inline const path& strong_tx_head_file() const NOEXCEPT
