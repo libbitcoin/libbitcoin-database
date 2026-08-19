@@ -538,7 +538,7 @@ bool CLASS::lazy_install_() NOEXCEPT
             bit_all<uint64_t> : unmask_right<uint64_t>(flags - first));
     }
 
-    engaged_.store(true);
+    lazy_.store(true);
 
     // Attribute the anonymous span for diagnostics (smaps decomposition).
     mmap_name(std::next(memory_map_[zero], floor), reserved - floor,

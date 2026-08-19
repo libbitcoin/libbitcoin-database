@@ -479,6 +479,9 @@ private:
     // Set when the first head page releases (gates the prepare fast path).
     std::atomic_bool engaged_{};
 
+    // Set when a head loads released (gates prepare only, never the drain).
+    std::atomic_bool lazy_{};
+
     // Writers between prepare and mark (unaged, unlike intent bits), so a
     // release pass cannot settle under a preempted in-flight write.
     std::atomic<size_t> writers_{};
