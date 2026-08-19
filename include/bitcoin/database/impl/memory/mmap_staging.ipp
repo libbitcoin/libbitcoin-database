@@ -514,7 +514,7 @@ bool CLASS::lazy_install_() NOEXCEPT
 
     // Commit the remainder to the commitment target and populate the tail.
     const auto target = std::max(page_ceiling(to_width<zero>(
-        capacity_.load())), page_ceiling(logical));
+        to_commitment())), page_ceiling(logical));
     if ((target > floor) && (mmap_commit(std::next(memory_map_[zero], floor),
         target - floor, headroom_) == fail))
     {
