@@ -30,7 +30,7 @@ namespace database {
 /// A head-only array of links indexed by position (no body, no count cell).
 /// The storage logical size is the count, providing count atomicity and
 /// bucket publication as with bodies. Content restores with the heads.
-template <class Link, bool Align>
+template <class Link, size_t Cell>
 class headmap
 {
 public:
@@ -93,7 +93,7 @@ private:
     using integer = Link::integer;
     static_assert(std::atomic<integer>::is_always_lock_free);
     static_assert(is_nonzero(Link::size));
-    static constexpr auto bucket_size = Align ? sizeof(integer) : Link::size;
+    static constexpr auto bucket_size = Cell;
 
     // Alignment ensures atomic bucket access.
     static_assert(bucket_size == sizeof(integer));
@@ -118,13 +118,13 @@ private:
 };
 
 template <typename Schema>
-using head_map = headmap<typename Schema::link, Schema::align>;
+using head_map = headmap<typename Schema::link, Schema::cell>;
 
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <class Link, bool Align>
-#define CLASS headmap<Link, Align>
+#define TEMPLATE template <class Link, size_t Cell>
+#define CLASS headmap<Link, Cell>
 
 #include <bitcoin/database/impl/primitives/headmap.ipp>
 

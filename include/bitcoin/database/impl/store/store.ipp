@@ -31,72 +31,72 @@ CLASS::store(const settings& config) NOEXCEPT
     // Archive.
     // ------------------------------------------------------------------------
 
-    header_head_(head(config.path / schema::dir::heads, schema::archive::header), head_settings, random),
+    header_head_(head(config.path / schema::dir::heads, schema::archive::header), head_settings(config.header), random),
     header_body_(body(config.path, schema::archive::header), config.header, sequential, staged),
 
-    input_head_(head(config.path / schema::dir::heads, schema::archive::input), head_settings, sequential),
+    input_head_(head(config.path / schema::dir::heads, schema::archive::input), head_settings(config.input), sequential),
     input_body_(body(config.path, schema::archive::input), config.input, sequential, staged),
 
-    output_head_(head(config.path / schema::dir::heads, schema::archive::output), head_settings, sequential),
+    output_head_(head(config.path / schema::dir::heads, schema::archive::output), head_settings(config.output), sequential),
     output_body_(body(config.path, schema::archive::output), config.output, sequential, staged),
 
-    ins_head_(head(config.path / schema::dir::heads, schema::archive::ins), head_settings, random),
+    ins_head_(head(config.path / schema::dir::heads, schema::archive::ins), head_settings(config.ins), random),
     ins_body_(body(config.path, schema::archive::ins), config.ins, sequential, staged),
 
-    outs_head_(head(config.path / schema::dir::heads, schema::archive::outs), head_settings, random),
+    outs_head_(head(config.path / schema::dir::heads, schema::archive::outs), head_settings(config.outs), random),
     outs_body_(body(config.path, schema::archive::outs), config.outs, sequential, staged),
 
-    tx_head_(head(config.path / schema::dir::heads, schema::archive::tx), head_settings, random),
+    tx_head_(head(config.path / schema::dir::heads, schema::archive::tx), head_settings(config.tx), random),
     tx_body_(body(config.path, schema::archive::tx), config.tx, sequential, staged),
 
-    txs_head_(head(config.path / schema::dir::heads, schema::archive::txs), head_settings, random),
+    txs_head_(head(config.path / schema::dir::heads, schema::archive::txs), head_settings(config.txs), random),
     txs_body_(body(config.path, schema::archive::txs), config.txs, sequential, staged),
 
     // Indexes.
     // ------------------------------------------------------------------------
 
-    candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate), head_settings, sequential),
-    confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed), head_settings, sequential),
+    candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate), head_settings(config.candidate, config.candidate.buckets * schema::height::cell), sequential),
+    confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed), head_settings(config.confirmed, config.confirmed.buckets * schema::height::cell), sequential),
 
-    strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx), head_settings, random),
+    strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx), head_settings(config.strong_tx), random),
     strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx, sequential, staged),
 
     // Caches.
     // ------------------------------------------------------------------------
 
     // TODO: body not random, but keep in memory.
-    ecdsa_head_(head(config.path / schema::dir::heads, schema::caches::ecdsa), head_settings, sequential),
+    ecdsa_head_(head(config.path / schema::dir::heads, schema::caches::ecdsa), head_settings(config.ecdsa), sequential),
     ecdsa_body_(body(config.path, schema::caches::ecdsa), config.ecdsa, sequential, staged),
 
     // TODO: body not random, but keep in memory.
-    schnorr_head_(head(config.path / schema::dir::heads, schema::caches::schnorr), head_settings, sequential),
+    schnorr_head_(head(config.path / schema::dir::heads, schema::caches::schnorr), head_settings(config.schnorr), sequential),
     schnorr_body_(body(config.path, schema::caches::schnorr), config.schnorr, sequential, staged),
 
-    silent_head_(head(config.path / schema::dir::heads, schema::caches::silent), head_settings, sequential),
+    silent_head_(head(config.path / schema::dir::heads, schema::caches::silent), head_settings(config.silent), sequential),
     silent_body_(body(config.path, schema::caches::silent), config.silent, sequential, staged),
 
-    duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate), head_settings, random),
+    duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate), head_settings(config.duplicate), random),
     duplicate_body_(body(config.path, schema::caches::duplicate), config.duplicate, sequential, staged),
 
-    prevalid_head_(head(config.path / schema::dir::heads, schema::caches::prevalid), head_settings, sequential),
+    prevalid_head_(head(config.path / schema::dir::heads, schema::caches::prevalid), head_settings(config.prevalid), sequential),
     prevalid_body_(body(config.path, schema::caches::prevalid), config.prevalid, sequential, staged),
 
-    prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout), head_settings, random),
+    prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout), head_settings(config.prevout), random),
     prevout_body_(body(config.path, schema::caches::prevout), config.prevout, sequential, staged),
 
-    validated_bk_head_(head(config.path / schema::dir::heads, schema::caches::validated_bk), head_settings, random),
+    validated_bk_head_(head(config.path / schema::dir::heads, schema::caches::validated_bk), head_settings(config.validated_bk), random),
     validated_bk_body_(body(config.path, schema::caches::validated_bk), config.validated_bk, sequential, staged),
 
-    validated_tx_head_(head(config.path / schema::dir::heads, schema::caches::validated_tx), head_settings, random),
+    validated_tx_head_(head(config.path / schema::dir::heads, schema::caches::validated_tx), head_settings(config.validated_tx), random),
     validated_tx_body_(body(config.path, schema::caches::validated_tx), config.validated_tx, sequential, staged),
 
     // Optionals.
     // ------------------------------------------------------------------------
 
-    filter_bk_head_(head(config.path / schema::dir::heads, schema::optionals::filter_bk), head_settings, random),
+    filter_bk_head_(head(config.path / schema::dir::heads, schema::optionals::filter_bk), head_settings(config.filter_bk), random),
     filter_bk_body_(body(config.path, schema::optionals::filter_bk), config.filter_bk, sequential, staged),
 
-    filter_tx_head_(head(config.path / schema::dir::heads, schema::optionals::filter_tx), head_settings, random),
+    filter_tx_head_(head(config.path / schema::dir::heads, schema::optionals::filter_tx), head_settings(config.filter_tx), random),
     filter_tx_body_(body(config.path, schema::optionals::filter_tx), config.filter_tx, sequential, staged),
 
     // Locks.

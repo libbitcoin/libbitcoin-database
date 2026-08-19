@@ -69,7 +69,7 @@ constexpr size_t doubles_ = 4;  // doubles bucket (no actual keys).
 /// Archive tables.
 /// -----------------------------------------------------------------------
 
-// size_t `cell` sets the hashmap bucket size (minimum size of link type).
+// size_t `cell` sets the hashmap/headmap bucket size (minimum link size).
 // bool `align` causes arraymap bucket size to be expanded to nearest word.
 // Memory fencing used (vs. mutex) when array/hashmap bucket is word sized.
 
@@ -260,17 +260,18 @@ struct txs
 // headmap (candidate and confirmed)
 struct height
 {
-    static constexpr size_t align = true;
     static constexpr size_t pk = schema::header::pk;
     using link = schema::header::link;
     static constexpr size_t minsize =
         schema::header::pk;
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
+    static constexpr size_t cell = sizeof(unsigned_type<link::size>);
     static constexpr auto suffix = "height"_t;
     static_assert(minsize == 3u);
     static_assert(minrow == 3u);
     static_assert(link::size == 3u);
+    static_assert(cell == 4u);
 };
 
 // record hashmap

@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_SUITE(headmap_tests)
 using namespace system;
 
 using link = linkage<2>;
-using test_headmap = headmap<link, true>;
+using test_headmap = headmap<link, sizeof(uint16_t)>;
 
 BOOST_AUTO_TEST_CASE(headmap__create__empty__expected)
 {
