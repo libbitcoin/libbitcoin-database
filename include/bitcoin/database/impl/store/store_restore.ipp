@@ -162,15 +162,13 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
 
     if (!ec && file::is_directory(secondary))
     {
-        // A successful restore establishes /primary as the recovery basis,
-        // after which /secondary is unreachable (restore prefers /primary and
-        // the next backup deletes /secondary before rotation), so it can
-        // serve no further purpose. It may also be stranded, where the
-        // prevout truncation above completes an interrupted prune. Deletion
-        // is atomic demotion to /temporary, then best effort clearance.
-        /* bool */ file::rename(secondary, temporary);
-        /* bool */ file::clear_directory(temporary);
-        /* bool */ file::remove(temporary);
+        // A crash between /primary promotion and /secondary deletion in
+        // backup leaves /secondary behind. The successful restore above
+        // establishes /primary as the recovery basis, superseding it (it may
+        // also be stranded, where the prevout truncation above completes an
+        // interrupted prune), so complete the deletion (best effort).
+        /* bool */ file::clear_directory(secondary);
+        /* bool */ file::remove(secondary);
     }
 
     if (ec)

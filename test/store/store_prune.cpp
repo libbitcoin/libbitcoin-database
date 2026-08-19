@@ -28,7 +28,7 @@ BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 // ----------------------------------------------------------------------------
 // Empty store asserts so create and initialize.
 
-BOOST_AUTO_TEST_CASE(store__prune__initialized__success_two_snapshots)
+BOOST_AUTO_TEST_CASE(store__prune__initialized__success)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
@@ -38,9 +38,9 @@ BOOST_AUTO_TEST_CASE(store__prune__initialized__success_two_snapshots)
     BOOST_REQUIRE(query_.initialize(test::genesis));
     BOOST_REQUIRE(!instance.prune(test::events));
 
-    // Both retained snapshots are post-prune (the trim strands neither).
+    // The retained snapshot is post-prune (the trim strands nothing).
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
-    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::secondary));
+    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
     BOOST_REQUIRE_EQUAL(query_.prevout_body_size(), zero);
     BOOST_REQUIRE(!instance.close(test::events));
 }

@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(store__restore__snapshot__success_unlocks)
     BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
 }
 
-BOOST_AUTO_TEST_CASE(store__restore__secondary__deleted)
+BOOST_AUTO_TEST_CASE(store__restore__secondary_remnant__deleted)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
@@ -218,11 +218,14 @@ BOOST_AUTO_TEST_CASE(store__restore__secondary__deleted)
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(!instance.snapshot(test::events));
-    BOOST_REQUIRE(!instance.snapshot(test::events));
-    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::secondary));
     BOOST_REQUIRE(!instance.close(test::events));
 
-    // Success restores from /primary, so /secondary serves no purpose.
+    // Simulate crash between backup promotion and /secondary deletion.
+    BOOST_REQUIRE(file::copy_directory(
+        configuration.path / schema::dir::primary,
+        configuration.path / schema::dir::secondary));
+
+    // Success restores from /primary, superseding the /secondary remnant.
     BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
     BOOST_REQUIRE(!instance.restore(test::events));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
