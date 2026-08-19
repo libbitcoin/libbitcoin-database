@@ -36,21 +36,21 @@ CLASS::headmap(storage& head) NOEXCEPT
 TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
-    // An empty head is a zero count (no count cell and no backfill).
+    // An empty head is a zero count.
     return is_zero(head_size());
 }
 
 TEMPLATE
 bool CLASS::close() NOEXCEPT
 {
-    // Count is the head logical size, so there is no body count to write.
+    // Count is the head logical size.
     return true;
 }
 
 TEMPLATE
 bool CLASS::backup(bool) NOEXCEPT
 {
-    // Count is the head logical size, so there is no body count to write.
+    // Count is the head logical size.
     return true;
 }
 
@@ -160,7 +160,6 @@ bool CLASS::push(const Link& link) NOEXCEPT
     if (link.is_terminal())
         return false;
 
-    // The next bucket is at the logical top, in reserved capacity.
     const auto position = head_size();
 
     // Dispose accessor (lock) before allocate.

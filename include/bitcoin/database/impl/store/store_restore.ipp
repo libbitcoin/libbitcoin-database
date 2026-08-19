@@ -94,8 +94,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         return ec;
     }
 
-    // Height indexes are head-only (headmap), so unlike append-only bodies
-    // their in-place content mutation is captured/restored with the heads.
+    // Height index (headmap) content is captured/restored with the heads.
     const auto restore = [&handler](code& ec, auto& logical,
         table_t table) NOEXCEPT
     {
@@ -162,11 +161,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
 
     if (!ec && file::is_directory(secondary))
     {
-        // A crash between /primary promotion and /secondary deletion in
-        // backup leaves /secondary behind. The successful restore above
-        // establishes /primary as the recovery basis, superseding it (it may
-        // also be stranded, where the prevout truncation above completes an
-        // interrupted prune), so complete the deletion (best effort).
+        // Delete crash remnant /secondary, superseded by restored /primary.
         /* bool */ file::clear_directory(secondary);
         /* bool */ file::remove(secondary);
     }

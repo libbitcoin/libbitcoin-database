@@ -28,11 +28,8 @@ namespace libbitcoin {
 namespace database {
 
 /// A head-only array of links indexed by position (no body, no count cell).
-/// The storage logical size is the count, so count atomicity and bucket
-/// publication (write into reserved capacity, then allocate) are provided by
-/// the storage, as with body allocation. Buckets are trimmed by truncation
-/// and rewritten by push, and the whole is restored with the heads at
-/// snapshot, so there is no append-only body requirement to violate.
+/// The storage logical size is the count, providing count atomicity and
+/// bucket publication as with bodies. Content restores with the heads.
 template <class Link, bool Align>
 class headmap
 {
