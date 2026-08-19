@@ -57,24 +57,12 @@ bool CLASS::create() NOEXCEPT
     if (is_nonzero(file_.size()))
         return false;
 
-    const auto allocation = size();
-    const auto start = file_.allocate(allocation);
-
-    // Guards addition overflow in file_.get (start must be valid).
-    if (start == storage::eof)
-        return false;
-
-    const auto ptr = file_.get(start);
-    if (!ptr)
+    // The fill is file content: a managed head writes it to the file and
+    // maps it released, so creation contributes no memory residency.
+    if (file_.allocate(size(), system::bit_all<uint8_t>) == storage::eof)
         return false;
 
     BC_ASSERT_MSG(verify(), "unexpected head size");
-
-    // std::memset/fill_n have identical performance (on win32).
-    ////std::memset(ptr.data(), system::bit_all<uint8_t>, allocation);
-    file_.prepare(start, allocation);
-    std::fill_n(ptr.data(), allocation, system::bit_all<uint8_t>);
-    file_.mark(start, allocation);
     return set_body_count(zero);
 }
 

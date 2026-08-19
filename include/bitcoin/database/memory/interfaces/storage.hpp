@@ -100,6 +100,10 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     virtual size_t allocate(size_t count) NOEXCEPT = 0;
 
+    /// Allocate backfilled rows/bytes, avoiding memory residency of the fill
+    /// where the backend supports it (head creation path).
+    virtual size_t allocate(size_t count, uint8_t backfill) NOEXCEPT = 0;
+
     /// Report element write completion of count rows/bytes at offset.
     virtual void complete(size_t offset, size_t count) NOEXCEPT = 0;
 

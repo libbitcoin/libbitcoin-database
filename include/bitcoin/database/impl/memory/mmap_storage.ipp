@@ -636,6 +636,33 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
     }
 }
 
+// Backfilled allocation (head creation). A managed head writes the fill to
+// its file and maps it released, so the fill is never memory-resident; a
+// native mapping fills through memory (file-backed, kernel writeback).
+TEMPLATE
+size_t CLASS::allocate(size_t count, uint8_t backfill) NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    if (!staged_ && dirty_)
+        return allocate_filled_(count, backfill);
+#endif
+
+    const auto start = allocate(count);
+    if (start == storage::eof)
+        return start;
+
+    const auto offset = to_width<zero>(start);
+    const auto size = to_width<zero>(count);
+    const auto ptr = get(offset);
+    if (!ptr)
+        return storage::eof;
+
+    prepare(offset, size);
+    std::fill_n(ptr.data(), size, backfill);
+    mark(offset, size);
+    return start;
+}
+
 } // namespace database
 } // namespace libbitcoin
 

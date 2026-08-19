@@ -156,6 +156,10 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     size_t allocate(size_t count) NOEXCEPT override;
 
+    /// Allocate backfilled rows/bytes; managed heads write the fill to the
+    /// file and map it released (no memory residency of the fill).
+    size_t allocate(size_t count, uint8_t backfill) NOEXCEPT override;
+
     /// Report element write completion of count rows/bytes at offset.
     void complete(size_t offset, size_t count) NOEXCEPT override;
 
@@ -327,6 +331,8 @@ private:
 
     // staging utilities, not thread safe (claim_ is lock-free thread safe).
     struct extent;
+    size_t allocate_filled_(size_t count, uint8_t backfill) NOEXCEPT;
+    bool lazy_install_() NOEXCEPT;
     size_t record_(size_t count) NOEXCEPT;
     bool claim_(extent& record, size_t count) NOEXCEPT;
     void maintain_() NOEXCEPT;

@@ -404,6 +404,22 @@ bool CLASS::stage_() NOEXCEPT
         return true;
     }
 
+    // Managed heads load released: the file holds the content and pages
+    // restore to anonymous per segment on first write, so load contributes
+    // no residency (an eager head population is the store's largest
+    // memory transient, the full head set at open).
+    if (!staged_ && dirty_)
+    {
+        if (!lazy_install_())
+        {
+            teardown_<Column>(error::mmap_failure);
+            return false;
+        }
+
+        loaded_.store(true);
+        return true;
+    }
+
     // Commit anonymous pages above the settle boundary page floor.
     const auto settled = page_floor(to_width<Column>(settled_.load()));
 
@@ -449,6 +465,133 @@ bool CLASS::stage_() NOEXCEPT
 
     loaded_.store(true);
     return true;
+}
+
+// Install the managed head lazily over its current logical span: a released
+// (read-only file) full-page prefix restored to anonymous per segment on
+// first write, an anonymous populated tail, and clean page tracking sized to
+// a replacement reservation. Caller holds exclusive remap (or is loading).
+TEMPLATE
+bool CLASS::lazy_install_() NOEXCEPT
+{
+    using namespace system;
+    const auto rows = logical_.load();
+    const auto logical = to_width<zero>(rows);
+
+    // Replace any standing reservation (sized as stage_).
+    if (!is_null(memory_map_[zero]))
+        mmap_unreserve(memory_map_[zero], reserved_[zero]);
+
+    const auto reserved = page_ceiling(to_width<zero>(
+        to_reservation(to_provision())));
+    const auto base = mmap_reserve(reserved);
+    if (base == MAP_FAILED)
+    {
+        set_first_code(error::mmap_failure);
+        return false;
+    }
+
+    memory_map_[zero] = pointer_cast<uint8_t>(base);
+    reserved_[zero] = reserved;
+
+    // Rebuild page tracking for the new reservation (value-initialized).
+    const auto pages = ceilinged_divide(reserved, page_);
+    words_ = ceilinged_divide(pages, page_bound);
+    dirty_ = std::make_unique<dirty_bitmaps>(words_);
+    intent_ = std::make_unique<dirty_bitmaps>(words_);
+    released_ = std::make_unique<dirty_bitmaps>(words_);
+    sweep_ = std::make_unique<uint64_t[]>(words_);
+    writers_.store(zero);
+
+    // Released file prefix (full pages below logical).
+    const auto floor = page_floor(logical);
+    if (is_nonzero(floor) && (mmap_settle(memory_map_[zero], floor,
+        opened_[zero], zero) == fail))
+    {
+        set_first_code(error::mmap_failure);
+        return false;
+    }
+
+    // Commit the remainder to the commitment target and populate the tail.
+    const auto target = std::max(page_ceiling(to_width<zero>(
+        capacity_.load())), page_ceiling(logical));
+    if ((target > floor) && (mmap_commit(std::next(memory_map_[zero], floor),
+        target - floor, headroom_) == fail))
+    {
+        set_first_code(error::mmap_failure);
+        return false;
+    }
+
+    if ((logical > floor) && !pread_all(opened_[zero],
+        std::next(memory_map_[zero], floor), logical - floor, floor))
+    {
+        set_first_code(error::fsync_failure);
+        return false;
+    }
+
+    // Declare the prefix released and engage the restore protocol.
+    const auto flags = floor / page_;
+    for (size_t word{}; word < ceilinged_divide(flags, page_bound); ++word)
+    {
+        const auto first = word * page_bound;
+        released_[word].store((flags >= (first + page_bound)) ?
+            bit_all<uint64_t> : unmask_right<uint64_t>(flags - first));
+    }
+
+    engaged_.store(true);
+
+    // Attribute the anonymous span for diagnostics (smaps decomposition).
+    mmap_name(std::next(memory_map_[zero], floor), reserved - floor,
+        filenames_.front().filename().string().c_str());
+
+    return true;
+}
+
+// Head-creation fill: the fill is file content, written sequentially to the
+// file (page cache, no mapping involvement) and installed released, so
+// creation contributes no memory residency (an in-memory backfill of the
+// head set is the store's largest allocation transient).
+TEMPLATE
+size_t CLASS::allocate_filled_(size_t count, uint8_t backfill) NOEXCEPT
+{
+    BC_ASSERT(!staged_ && dirty_);
+    std::unique_lock field_lock(field_mutex_);
+    std::unique_lock map_lock(remap_mutex_);
+
+    using namespace system;
+    const auto start = logical_.load();
+    if (!loaded_.load() || fault_.load() || is_add_overflow(start, count))
+        return storage::eof;
+
+    // Provision the file physically (disk full detected here).
+    const auto end = start + count;
+    if (!resize_<zero>(end))
+        return storage::eof;
+
+    // Write the fill.
+    const auto from = to_width<zero>(start);
+    const auto to = to_width<zero>(end);
+    std::vector<uint8_t> chunk(std::min(to - from, release_chunk), backfill);
+    for (auto at = from; at < to; )
+    {
+        const auto size = std::min(to - at, chunk.size());
+        if (!pwrite_all(opened_[zero], chunk.data(), size, at))
+        {
+            set_first_code(error::fsync_failure);
+            return storage::eof;
+        }
+
+        at += size;
+    }
+
+    logical_.store(end);
+    file_.store(std::max(file_.load(), end));
+    capacity_.store(std::max(capacity_.load(), end));
+    if (!lazy_install_())
+        return storage::eof;
+
+    check_invariants_();
+    return start;
 }
 
 // Commit failure results in unmapped when final (the default); a non-final
@@ -1198,8 +1341,11 @@ void CLASS::head_run_() NOEXCEPT
 
             // Quiet is assured here (hot scarcity skipped above, and idle
             // draining implies sixty still seconds).
-            if (engaged && !release_pages_())
-                continue;
+            // Lazy head load engages restore on all platforms; the release
+            // sweep remains a darwin response (see head_release).
+            if constexpr (head_release)
+                if (engaged && !release_pages_())
+                    continue;
         }
 
         transferred = top;

@@ -240,6 +240,28 @@ public:
         return link;
     }
 
+    size_t allocate(size_t count, uint8_t backfill) NOEXCEPT override
+    {
+        std::unique_lock field_lock(field_mutex_);
+        if (system::is_add_overflow<size_t>(logical_, count))
+            return chunk_storages::eof;
+
+        const auto end = logical_ + count;
+        for (size_t column{}; column < columns; ++column)
+            if (to_capacity(end, column) > at(column).max_size())
+                return chunk_storages::eof;
+
+        std::unique_lock map_lock(map_mutex_);
+        const auto link = logical_;
+
+        logical_ = end;
+        for (size_t column{}; column < columns; ++column)
+            if (to_capacity(logical_, column) > at(column).size())
+                at(column).resize(to_capacity(logical_, column), backfill);
+
+        return link;
+    }
+
     void complete(size_t, size_t) NOEXCEPT override
     {
     }

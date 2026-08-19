@@ -48,6 +48,11 @@ void* mmap_reserve(size_t size) NOEXCEPT
         -1, 0);
 }
 
+int mmap_unreserve(void* address, size_t size) NOEXCEPT
+{
+    return ::munmap(address, size);
+}
+
 #if defined(HAVE_APPLE)
 
 // Darwin admits every anonymous ask (exhaustion arrives at first touch), so
