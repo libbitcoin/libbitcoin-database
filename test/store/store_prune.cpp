@@ -28,7 +28,7 @@ BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 // ----------------------------------------------------------------------------
 // Empty store asserts so create and initialize.
 
-BOOST_AUTO_TEST_CASE(store__prune__initialized__success)
+BOOST_AUTO_TEST_CASE(store__prune__initialized__success_two_snapshots)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
@@ -37,6 +37,30 @@ BOOST_AUTO_TEST_CASE(store__prune__initialized__success)
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(query_.initialize(test::genesis));
     BOOST_REQUIRE(!instance.prune(test::events));
+
+    // Both retained snapshots are post-prune (the trim strands neither).
+    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
+    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::secondary));
+    BOOST_REQUIRE_EQUAL(query_.prevout_body_size(), zero);
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__success)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE(!instance.close(test::events));
+
+    // Simulate power fault (flush lock persists), restore from post-prune.
+    BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
+    BOOST_REQUIRE(!instance.restore(test::events));
+    BOOST_REQUIRE(query_.is_initialized());
+    BOOST_REQUIRE_EQUAL(query_.prevout_body_size(), zero);
     BOOST_REQUIRE(!instance.close(test::events));
 }
 

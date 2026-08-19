@@ -60,7 +60,13 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
             // The 'prune' parameter signals to not reset body count.
             ec = snapshot(handler, true);
 
-            // If the pruning fails here the snapshot remains valid.
+            // Snapshot again to rotate the pre-prune snapshot out: both
+            // retained snapshots then record the pruned (empty) prevouts, so
+            // the body trim below invalidates no restorable snapshot. Until
+            // then the pre-prune snapshot remains valid (body not yet trimmed).
+            if (!ec) ec = snapshot(handler, true);
+
+            // If the pruning fails here the snapshots remain valid.
             if (!ec)
             {
                 // Reclaim logical extent.
