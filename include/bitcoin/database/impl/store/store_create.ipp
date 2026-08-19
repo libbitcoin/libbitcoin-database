@@ -44,6 +44,28 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
         return error::flush_lock;
     }
 
+    auto ec = create_load(handler);
+
+    if (ec)
+    {
+        /* code */ unload_close(handler);
+
+        // unlock errors override ec.
+        if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
+        if (!process_lock_.try_unlock()) ec = error::process_unlock;
+        /* bool */ file::clear_directory(configuration_.path);
+        /* bool */ file::remove(configuration_.path);
+    }
+
+    // process and flush locks remain open until close().
+    transactor_mutex_.unlock();
+    return ec;
+}
+
+// protected
+TEMPLATE
+code CLASS::create_load(const event_handler& handler) NOEXCEPT
+{
     const auto create = [&handler](code& ec, const auto& file,
         table_t table) NOEXCEPT
     {
@@ -137,19 +159,6 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     populate(ec, filter_bk, table_t::filter_bk_table);
     populate(ec, filter_tx, table_t::filter_tx_table);
 
-    if (ec)
-    {
-        /* code */ unload_close(handler);
-
-        // unlock errors override ec.
-        if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
-        if (!process_lock_.try_unlock()) ec = error::process_unlock;
-        /* bool */ file::clear_directory(configuration_.path);
-        /* bool */ file::remove(configuration_.path);
-    }
-
-    // process and flush locks remain open until close().
-    transactor_mutex_.unlock();
     return ec;
 }
 

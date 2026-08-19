@@ -54,40 +54,35 @@ BOOST_AUTO_TEST_CASE(store__restore__no_flush_lock__flush_lock)
     BOOST_REQUIRE_EQUAL(instance.restore(test::events), error::flush_lock);
 }
 
-BOOST_AUTO_TEST_CASE(store__restore__missing_snapshot__missing_snapshot_locks)
+BOOST_AUTO_TEST_CASE(store__restore__missing_snapshot__recreate_success)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::create(instance.process_lock_file()));
     BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
-    BOOST_REQUIRE_EQUAL(instance.restore(test::events), error::missing_snapshot);
+    BOOST_REQUIRE(!instance.restore(test::events));
     BOOST_REQUIRE(test::exists(instance.flush_lock_file()));
-    BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
+    BOOST_REQUIRE(test::exists(instance.process_lock_file()));
+    BOOST_REQUIRE(instance.transactor_mutex().try_lock());
+    instance.transactor_mutex().unlock();
+    BOOST_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__restore__success__success_locks)
+BOOST_AUTO_TEST_CASE(store__restore__no_backups__recreate_success_locks)
 {
     settings configuration{};
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
-    BOOST_REQUIRE(instance.restore(test::events));
+    BOOST_REQUIRE(!instance.restore_());
     BOOST_REQUIRE(test::exists(instance.flush_lock_file()));
-    BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
+    BOOST_REQUIRE(test::exists(instance.process_lock_file()));
     BOOST_REQUIRE(instance.transactor_mutex().try_lock());
-}
-
-BOOST_AUTO_TEST_CASE(store__restore__no_backups__missing_snapshot_locks)
-{
-    settings configuration{};
-    configuration.path = TEST_DIRECTORY;
-    test::map_store instance{ configuration };
-    BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
-    BOOST_REQUIRE_EQUAL(instance.restore_(), error::missing_snapshot);
-    BOOST_REQUIRE(test::exists(instance.flush_lock_file()));
+    instance.transactor_mutex().unlock();
+    BOOST_REQUIRE(!instance.close(test::events));
+    BOOST_REQUIRE(!test::exists(instance.flush_lock_file()));
     BOOST_REQUIRE(!test::exists(instance.process_lock_file()));
-    BOOST_REQUIRE(instance.transactor_mutex().try_lock());
 }
 
 // The lock is process-exclusive in linux/macOS, globally in win32.

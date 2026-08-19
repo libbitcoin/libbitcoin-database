@@ -77,7 +77,21 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     }
     else
     {
-        ec = error::missing_snapshot;
+        // A corrupted store with no snapshot is unrecoverable, so recreate.
+        ec = create_load(handler);
+
+        if (ec)
+        {
+            /* code */ unload_close(handler);
+
+            // unlock errors override ec.
+            // on failure flush_lock is left in place (store corrupt).
+            if (!process_lock_.try_unlock()) ec = error::process_unlock;
+        }
+
+        // store is open after successful recreate but not otherwise.
+        transactor_mutex_.unlock();
+        return ec;
     }
 
     // Height indexes are head-only (headmap), so unlike append-only bodies
