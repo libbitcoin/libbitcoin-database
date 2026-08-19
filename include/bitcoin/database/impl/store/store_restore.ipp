@@ -160,6 +160,19 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
             /* code */ unload_close(handler);
     }
 
+    if (!ec && file::is_directory(secondary))
+    {
+        // A successful restore establishes /primary as the recovery basis,
+        // after which /secondary is unreachable (restore prefers /primary and
+        // the next backup deletes /secondary before rotation), so it can
+        // serve no further purpose. It may also be stranded, where the
+        // prevout truncation above completes an interrupted prune. Deletion
+        // is atomic demotion to /temporary, then best effort clearance.
+        /* bool */ file::rename(secondary, temporary);
+        /* bool */ file::clear_directory(temporary);
+        /* bool */ file::remove(temporary);
+    }
+
     if (ec)
     {
         // unlock errors override ec.
