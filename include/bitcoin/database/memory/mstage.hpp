@@ -39,6 +39,9 @@
 /// Reserve inaccessible anonymous address space (MAP_FAILED on failure).
 void* mmap_reserve(size_t size) NOEXCEPT;
 
+/// Release reserved address space (with any mappings installed within it).
+int mmap_unreserve(void* address, size_t size) NOEXCEPT;
+
 /// Commit reserved pages as readable/writable anonymous memory.
 int mmap_commit(void* address, size_t size, size_t headroom) NOEXCEPT;
 
