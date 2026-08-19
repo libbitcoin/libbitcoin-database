@@ -55,8 +55,8 @@ CLASS::store(const settings& config) NOEXCEPT
     // Indexes.
     // ------------------------------------------------------------------------
 
-    candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate), head_settings(config.candidate, config.candidate.buckets * schema::height::cell), sequential),
-    confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed), head_settings(config.confirmed, config.confirmed.buckets * schema::height::cell), sequential),
+    candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate), head_settings<schema::height::cell>(config.candidate), sequential),
+    confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed), head_settings<schema::height::cell>(config.confirmed), sequential),
 
     strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx), head_settings(config.strong_tx), random),
     strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx, sequential, staged),

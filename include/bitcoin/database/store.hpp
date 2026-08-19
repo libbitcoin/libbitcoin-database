@@ -242,6 +242,14 @@ private:
         };
     }
 
+    template <size_t Cell>
+    static constexpr storage_settings head_settings(
+        const settings::bucket_table& table) NOEXCEPT
+    {
+        return head_settings(table,
+            system::ceilinged_multiply<uint64_t>(table.buckets, Cell));
+    }
+
     // Bodies are append-only, so stage writes in anonymous memory where the
     // staging backend is built (heads update in place and remain resident).
     static constexpr bool staged = true;
