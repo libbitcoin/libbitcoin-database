@@ -117,6 +117,9 @@
     <ClCompile Include="..\..\..\..\test\primitives\hashmaps.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\primitives\headmap.cpp">
+      <Filter>src\primitives</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\iterator.cpp">
       <Filter>src\primitives</Filter>
     </ClCompile>

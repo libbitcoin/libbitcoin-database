@@ -120,19 +120,9 @@ public:
         return candidate_head_.buffer();
     }
 
-    system::data_chunk& candidate_body() NOEXCEPT
-    {
-        return candidate_body_.buffer();
-    }
-
     system::data_chunk& confirmed_head() NOEXCEPT
     {
         return confirmed_head_.buffer();
-    }
-
-    system::data_chunk& confirmed_body() NOEXCEPT
-    {
-        return confirmed_body_.buffer();
     }
 
     system::data_chunk& strong_tx_head() NOEXCEPT

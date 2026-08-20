@@ -32,31 +32,13 @@ namespace database {
 TEMPLATE
 inline header_link CLASS::to_candidate(size_t height) const NOEXCEPT
 {
-    using namespace system;
-    using link = table::height::header::integer;
-    if (height >= store_.candidate.count())
-        return {};
-
-    table::height::record index{};
-    if (!store_.candidate.get(possible_narrow_cast<link>(height), index))
-        return {};
-
-    return index.header_fk;
+    return store_.candidate.at(height);
 }
 
 TEMPLATE
 inline header_link CLASS::to_confirmed(size_t height) const NOEXCEPT
 {
-    using namespace system;
-    using link = table::height::header::integer;
-    if (height >= store_.confirmed.count())
-        return {};
-
-    table::height::record index{};
-    if (!store_.confirmed.get(possible_narrow_cast<link>(height), index))
-        return {};
-
-    return index.header_fk;
+    return store_.confirmed.at(height);
 }
 
 TEMPLATE

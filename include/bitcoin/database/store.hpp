@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_STORE_HPP
 #define LIBBITCOIN_DATABASE_STORE_HPP
 
+#include <algorithm>
 #include <atomic>
 #include <filesystem>
 #include <shared_mutex>
@@ -114,6 +115,7 @@ protected:
     using path = std::filesystem::path;
 
     /// Method helpers.
+    code create_load(const event_handler& handler) NOEXCEPT;
     code open_load(const event_handler& handler) NOEXCEPT;
     code unload_close(const event_handler& handler) NOEXCEPT;
     code backup(const event_handler& handler, bool prune=false) NOEXCEPT;
@@ -157,13 +159,11 @@ protected:
     /// Indexes.
     /// -----------------------------------------------------------------------
 
-    // array
+    // headmap
     Storage<one> candidate_head_;
-    Storage<one> candidate_body_;
 
-    // array
+    // headmap
     Storage<one> confirmed_head_;
-    Storage<one> confirmed_body_;
 
     // record hashmap
     Storage<one> strong_tx_head_;
@@ -230,11 +230,25 @@ private:
     static constexpr bool random = true;
     static constexpr bool sequential = false;
 
-    // Heads are minimally allocated with no expansion (heads size to their
-    // configured buckets at table creation) and randomly probed (the advice
-    // preserves optimal classic mapped reads; staged heads are anonymous).
-    static constexpr storage_settings head_settings{ .size = 1, .rate = 0,
-        .access = advice::random };
+    // Heads share the table growth rate.
+    static constexpr storage_settings head_settings(
+        const settings::simple_table& table, uint64_t minimum=one) NOEXCEPT
+    {
+        return
+        {
+            .size = std::max<uint64_t>(one, minimum),
+            .rate = table.rate,
+            .access = advice::random
+        };
+    }
+
+    template <size_t Cell>
+    static constexpr storage_settings head_settings(
+        const settings::bucket_table& table) NOEXCEPT
+    {
+        return head_settings(table,
+            system::ceilinged_multiply<uint64_t>(table.buckets, Cell));
+    }
 
     // Bodies are append-only, so stage writes in anonymous memory where the
     // staging backend is built (heads update in place and remain resident).

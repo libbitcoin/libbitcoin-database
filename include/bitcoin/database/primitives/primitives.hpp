@@ -37,6 +37,7 @@
 #include <bitcoin/database/primitives/arraymap.hpp>
 #include <bitcoin/database/primitives/hashmap.hpp>
 #include <bitcoin/database/primitives/hashmaps.hpp>
+#include <bitcoin/database/primitives/headmap.hpp>
 #include <bitcoin/database/primitives/nomap.hpp>
 #include <bitcoin/database/primitives/nomaps.hpp>
 

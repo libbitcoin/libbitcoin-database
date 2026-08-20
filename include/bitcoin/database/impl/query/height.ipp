@@ -35,7 +35,7 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
     if (link.is_terminal())
         return false;
 
-    // Reserve-commit to ensure disk full safety and deferred access.
+    // Reserve-push to ensure disk full safety and deferred access.
     if (!store_.candidate.reserve(one))
         return false;
 
@@ -43,8 +43,7 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
     const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    const table::height::record candidate{ {}, link };
-    return store_.candidate.put(candidate);
+    return store_.candidate.push(link);
     // ========================================================================
 }
 
@@ -77,7 +76,7 @@ bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
     if (strong && !store_.txs.at(to_txs(link), txs))
         return false;
 
-    // Reserve-commit to ensure disk full safety and deferred access.
+    // Reserve-push to ensure disk full safety and deferred access.
     if (!store_.confirmed.reserve(one))
         return false;
 
@@ -88,8 +87,7 @@ bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
     if (strong && !set_strong(link, txs.number, txs.coinbase_fk, true))
         return false;
 
-    const table::height::record confirmed{ {}, link };
-    return store_.confirmed.commit(confirmed);
+    return store_.confirmed.push(link);
     // ========================================================================
 }
 

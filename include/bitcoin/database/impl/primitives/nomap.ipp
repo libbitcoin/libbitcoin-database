@@ -121,13 +121,6 @@ bool CLASS::drop() NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::reserve(const Link& size) NOEXCEPT
-{
-    // Not writer-writer thread safe (two writers may share reserve).
-    return body_.reserve(size);
-}
-
-TEMPLATE
 Link CLASS::allocate(const Link& size) NOEXCEPT
 {
     return body_.allocate(size);
@@ -319,27 +312,6 @@ inline Link CLASS::put_link(const Element& element) NOEXCEPT
 {
     Link link{};
     return put_link(link, element) ? link : Link{};
-}
-
-// NOT THREAD SAFE (used only for height index with writer ordering).
-TEMPLATE
-template <typename Element, if_equal<Element::size, Size>>
-inline bool CLASS::commit(const Element& element) NOEXCEPT
-{
-    // Zero allocation provides link of next (presumably reserved) element.
-    const auto link = body_.allocate(0);
-
-    // Write element into reserved but unallocated space.
-    if (!put(body_.get_capacity(link), element))
-        return false;
-
-    // Allocate reserved and written element (exposes logically).
-    if (body_.allocate(element.count()).is_terminal())
-        return false;
-
-    // Publication of the pre-written element is its completion.
-    body_.complete(link, element.count());
-    return true;
 }
 
 } // namespace database

@@ -48,8 +48,6 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(outs_body_, table_t::outs_body);
     report(tx_body_, table_t::tx_body);
     report(txs_body_, table_t::txs_body);
-    report(candidate_body_, table_t::candidate_body);
-    report(confirmed_body_, table_t::confirmed_body);
     report(strong_tx_body_, table_t::strong_tx_body);
     report(ecdsa_body_, table_t::ecdsa_body);
     report(schnorr_body_, table_t::schnorr_body);
@@ -83,9 +81,7 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = txs_head_.get_fault())) return ec;
     if ((ec = txs_body_.get_fault())) return ec;
     if ((ec = candidate_head_.get_fault())) return ec;
-    if ((ec = candidate_body_.get_fault())) return ec;
     if ((ec = confirmed_head_.get_fault())) return ec;
-    if ((ec = confirmed_body_.get_fault())) return ec;
     if ((ec = strong_tx_head_.get_fault())) return ec;
     if ((ec = strong_tx_body_.get_fault())) return ec;
     if ((ec = ecdsa_head_.get_fault())) return ec;
@@ -136,9 +132,7 @@ size_t CLASS::get_space() const NOEXCEPT
     space(txs_head_);
     space(txs_body_);
     space(candidate_head_);
-    space(candidate_body_);
     space(confirmed_head_);
-    space(confirmed_body_);
     space(strong_tx_head_);
     space(strong_tx_body_);
     space(ecdsa_head_);

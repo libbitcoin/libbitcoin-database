@@ -441,67 +441,6 @@ BOOST_AUTO_TEST_CASE(nomap__slab_get__file_excess__false)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
-// reserve/commit
-// ----------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(nomap__record_reserve__terminal__false_empty)
-{
-    data_chunk head_file{};
-    data_chunk body_file{};
-    test::chunk_storage head_store{ head_file };
-    test::chunk_storage body_store{ body_file };
-    record_table instance{ head_store, body_store };
-    BOOST_REQUIRE(!instance.reserve(link5::terminal));
-    BOOST_REQUIRE_EQUAL(instance.count(), zero);
-}
-
-BOOST_AUTO_TEST_CASE(nomap__record_reserve__zero__true_empty)
-{
-    data_chunk head_file{};
-    data_chunk body_file{};
-    test::chunk_storage head_store{ head_file };
-    test::chunk_storage body_store{ body_file };
-    record_table instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.reserve(0));
-    BOOST_REQUIRE_EQUAL(instance.count(), zero);
-}
-
-BOOST_AUTO_TEST_CASE(nomap__record_reserve__value__true_expected_capacity)
-{
-    data_chunk head_file{};
-    data_chunk body_file{};
-    test::chunk_storage head_store{ head_file };
-    test::chunk_storage body_store{ body_file };
-    record_table instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.reserve(2));
-    BOOST_REQUIRE_EQUAL(instance.count(), zero);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), 2u * record4::size);
-    BOOST_REQUIRE_EQUAL(body_file.size(), 2u * record4::size);
-}
-
-BOOST_AUTO_TEST_CASE(nomap__record_reserve__commit__expected)
-{
-    data_chunk head_file{};
-    data_chunk body_file{};
-    test::chunk_storage head_store{ head_file };
-    test::chunk_storage body_store{ body_file };
-    nomap<link5, big_record::size> instance{ head_store, body_store };
-    BOOST_REQUIRE_EQUAL(instance.capacity(), zero);
-    BOOST_REQUIRE(body_file.empty());
-    BOOST_REQUIRE(instance.reserve(1));
-    BOOST_REQUIRE_EQUAL(instance.capacity(), big_record::size);
-    BOOST_REQUIRE_EQUAL(instance.count(), zero);
-    BOOST_REQUIRE(instance.commit(big_record{ 0xa1b2c3d4_u32 }));
-    BOOST_REQUIRE_EQUAL(instance.capacity(), big_record::size);
-    BOOST_REQUIRE_EQUAL(body_file.size(), big_record::size);
-    BOOST_REQUIRE_EQUAL(instance.count(), one);
-
-    big_record record{};
-    BOOST_REQUIRE(instance.get(0, record));
-    BOOST_REQUIRE_EQUAL(record.value, 0xa1b2c3d4_u32);
-    BOOST_REQUIRE(!instance.get_fault());
-}
-
 // record create/close/backup/restore/verify
 // ----------------------------------------------------------------------------
 

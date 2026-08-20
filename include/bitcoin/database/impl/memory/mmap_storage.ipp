@@ -205,7 +205,7 @@ void CLASS::prepare(size_t STAGING_ONLY(offset),
     // in flight across passes; the count persists until mark.
     writers_.fetch_add(one);
 
-    if (!engaged_.load(relaxed))
+    if (!engaged_.load(relaxed) && !lazy_.load(relaxed))
         return;
 
     // Declare intent before the write (sequentially consistent, pairing with

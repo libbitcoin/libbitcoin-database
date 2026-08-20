@@ -57,10 +57,8 @@ enum class table_t
     /// Indexes.
     candidate_table,
     candidate_head,
-    candidate_body,
     confirmed_table,
     confirmed_head,
-    confirmed_body,
     strong_tx_table,
     strong_tx_head,
     strong_tx_body,

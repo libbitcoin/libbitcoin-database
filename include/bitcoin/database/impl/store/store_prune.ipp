@@ -58,6 +58,7 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
         {
             // Snapshot with nullified head and zero body count.
             // The 'prune' parameter signals to not reset body count.
+            // Success deletes the pre-prune snapshot (trim strands nothing).
             ec = snapshot(handler, true);
 
             // If the pruning fails here the snapshot remains valid.

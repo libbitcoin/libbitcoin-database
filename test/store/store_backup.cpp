@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(store__backup__primary_loaded__success)
     BOOST_REQUIRE(!instance.backup_());
     BOOST_REQUIRE(!instance.close(test::events));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
-    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::secondary));
+    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
 }
 
 BOOST_AUTO_TEST_CASE(store__backup__primary_secondary_loaded__success)
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(store__backup__primary_secondary_loaded__success)
     BOOST_REQUIRE(!instance.backup_());
     BOOST_REQUIRE(!instance.close(test::events));
     BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
-    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::secondary));
+    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

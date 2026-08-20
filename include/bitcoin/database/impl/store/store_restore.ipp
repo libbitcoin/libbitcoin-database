@@ -77,17 +77,24 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     }
     else
     {
-        ec = error::missing_snapshot;
+        // A corrupted store with no snapshot is unrecoverable, so recreate.
+        ec = create_load(handler);
+
+        if (ec)
+        {
+            /* code */ unload_close(handler);
+
+            // unlock errors override ec.
+            // on failure flush_lock is left in place (store corrupt).
+            if (!process_lock_.try_unlock()) ec = error::process_unlock;
+        }
+
+        // store is open after successful recreate but not otherwise.
+        transactor_mutex_.unlock();
+        return ec;
     }
 
-    // BUGBUG: height indexes are not append only, resulting in failure to
-    // recover and allowing insidious integrity failure after recovery,
-    // specifically orphaned header links in the index due to write below snap.
-    // Regarding height index recovery there are two criteria for the fix.
-    // (1) we must accept the existing body size if smaller than head indicates
-    // (reset head), and (2) prune the body (with head indicator) to highest
-    // contiguous set of links that do not exceed the header table count
-    // (orphaned by snapshot restore). This requires a scan upon restore.
+    // Height index (headmap) content is captured/restored with the heads.
     const auto restore = [&handler](code& ec, auto& logical,
         table_t table) NOEXCEPT
     {
@@ -150,6 +157,13 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
 
         if (ec)
             /* code */ unload_close(handler);
+    }
+
+    if (!ec && file::is_directory(secondary))
+    {
+        // Delete crash remnant /secondary, superseded by restored /primary.
+        /* bool */ file::clear_directory(secondary);
+        /* bool */ file::remove(secondary);
     }
 
     if (ec)

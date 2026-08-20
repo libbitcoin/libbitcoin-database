@@ -117,10 +117,8 @@ size_t CLASS::get_locator_start(const hashes& locator) const NOEXCEPT
             continue;
 
         const auto height = get_height(link);
-        table::height::record confirmed{};
-        if (store_.confirmed.get(height, confirmed) &&
-            confirmed.header_fk == link)
-                return height;
+        if (store_.confirmed.at(height) == link)
+            return height;
     }
 
     return zero;

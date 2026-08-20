@@ -109,6 +109,7 @@ include_bitcoin_database_impl_primitives_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/hashhead.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/hashmap.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/hashmaps.ipp \
+    ${srcdir}/../../include/bitcoin/database/impl/primitives/headmap.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/iterator.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/keys.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/linkage.ipp \
@@ -249,6 +250,7 @@ include_bitcoin_database_primitives_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/primitives/hashhead.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/hashmap.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/hashmaps.hpp \
+    ${srcdir}/../../include/bitcoin/database/primitives/headmap.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/iterator.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/keys.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/linkage.hpp \
@@ -371,6 +373,7 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/primitives/hashhead.cpp \
     ${srcdir}/../../test/primitives/hashmap.cpp \
     ${srcdir}/../../test/primitives/hashmaps.cpp \
+    ${srcdir}/../../test/primitives/headmap.cpp \
     ${srcdir}/../../test/primitives/iterator.cpp \
     ${srcdir}/../../test/primitives/keys.cpp \
     ${srcdir}/../../test/primitives/linkage.cpp \

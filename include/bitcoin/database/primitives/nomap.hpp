@@ -79,12 +79,6 @@ public:
     /// Drop the table (truncate to zero and update head size).
     bool drop() NOEXCEPT;
 
-    /// Reserve additional count or slab to guard against disk full.
-    /// This is necessary for no-maps that are publicly-indexed (e.g. heights).
-    /// Not writer-writer thread safe. Link must be put (or discarded) before
-    /// any subsequent element is reserved or put, or will overwrite.
-    bool reserve(const Link& size) NOEXCEPT;
-
     /// Allocate count records or slab bytes at returned link (follow with put).
     Link allocate(const Link& size) NOEXCEPT;
 
@@ -140,11 +134,6 @@ public:
     bool put_link(Link& link, const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, Size> = true>
     Link put_link(const Element& element) NOEXCEPT;
-
-    /// NOT THREAD SAFE (used only for height index with writer ordering).
-    /// Write element to reserved next position and commit to logical space.
-    template <typename Element, if_equal<Element::size, Size> = true>
-    bool commit(const Element& element) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (Size == max_size_t);

@@ -44,6 +44,28 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
         return error::flush_lock;
     }
 
+    auto ec = create_load(handler);
+
+    if (ec)
+    {
+        /* code */ unload_close(handler);
+
+        // unlock errors override ec.
+        if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
+        if (!process_lock_.try_unlock()) ec = error::process_unlock;
+        /* bool */ file::clear_directory(configuration_.path);
+        /* bool */ file::remove(configuration_.path);
+    }
+
+    // process and flush locks remain open until close().
+    transactor_mutex_.unlock();
+    return ec;
+}
+
+// protected
+TEMPLATE
+code CLASS::create_load(const event_handler& handler) NOEXCEPT
+{
     const auto create = [&handler](code& ec, const auto& file,
         table_t table) NOEXCEPT
     {
@@ -73,9 +95,7 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     create(ec, txs_body_, table_t::txs_body);
 
     create(ec, candidate_head_, table_t::candidate_head);
-    create(ec, candidate_body_, table_t::candidate_body);
     create(ec, confirmed_head_, table_t::confirmed_head);
-    create(ec, confirmed_body_, table_t::confirmed_body);
     create(ec, strong_tx_head_, table_t::strong_tx_head);
     create(ec, strong_tx_body_, table_t::strong_tx_body);
 
@@ -139,19 +159,6 @@ code CLASS::create(const event_handler& handler) NOEXCEPT
     populate(ec, filter_bk, table_t::filter_bk_table);
     populate(ec, filter_tx, table_t::filter_tx_table);
 
-    if (ec)
-    {
-        /* code */ unload_close(handler);
-
-        // unlock errors override ec.
-        if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
-        if (!process_lock_.try_unlock()) ec = error::process_unlock;
-        /* bool */ file::clear_directory(configuration_.path);
-        /* bool */ file::remove(configuration_.path);
-    }
-
-    // process and flush locks remain open until close().
-    transactor_mutex_.unlock();
     return ec;
 }
 

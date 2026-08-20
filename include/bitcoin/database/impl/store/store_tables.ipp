@@ -55,10 +55,8 @@ const CLASS::table_map CLASS::tables
     // Indexes.
     { table_t::candidate_table, "candidate_table" },
     { table_t::candidate_head, "candidate_head" },
-    { table_t::candidate_body, "candidate_body" },
     { table_t::confirmed_table, "confirmed_table" },
     { table_t::confirmed_head, "confirmed_head" },
-    { table_t::confirmed_body, "confirmed_body" },
     { table_t::strong_tx_table, "strong_tx_table" },
     { table_t::strong_tx_head, "strong_tx_head" },
     { table_t::strong_tx_body, "strong_tx_body" },
