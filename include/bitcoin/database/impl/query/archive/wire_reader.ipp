@@ -145,7 +145,7 @@ bool CLASS::get_wire_block(bytewriter& sink, const header_link& link,
 
 // These convenience wrappers are made practical by size caching for block and
 // tx for both nominal and witness wire encodings (and fixed size headers).
-// Intermediate objects (input, output, witness) have a size prefix 
+// Intermediate objects (input, output, witness) have a size prefix.
 
 TEMPLATE
 data_chunk CLASS::get_wire_header(const header_link& link) const NOEXCEPT
@@ -175,6 +175,8 @@ data_chunk CLASS::get_wire_tx(const tx_link& link, bool witness) const NOEXCEPT
     if (!get_wire_tx(out, link, witness) || !out)
         return {};
 
+    // Resize in case tx is pruned.
+    data.resize(out.get_write_position());
     return data;
 }
 
@@ -193,6 +195,8 @@ data_chunk CLASS::get_wire_block(const header_link& link,
     if (!get_wire_block(out, link, witness) || !out)
         return {};
 
+    // Resize in case tx is pruned.
+    data.resize(out.get_write_position());
     return data;
 }
 
