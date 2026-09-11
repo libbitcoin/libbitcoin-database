@@ -357,6 +357,9 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\envelope.cpp">
+      <Filter>src\tables</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>

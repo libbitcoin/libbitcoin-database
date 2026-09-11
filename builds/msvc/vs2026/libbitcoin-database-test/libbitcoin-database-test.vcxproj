@@ -236,6 +236,7 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\envelope.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
       <ObjectFileName>$(IntDir)test_tables_indexes_height.obj</ObjectFileName>
     </ClCompile>
