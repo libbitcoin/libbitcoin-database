@@ -649,12 +649,13 @@ size_t CLASS::allocate(size_t count, uint8_t backfill) NOEXCEPT
     if (start == storage::eof)
         return start;
 
+    // Growth provisions above the allocation, so fill through capacity.
     const auto offset = to_width<zero>(start);
-    const auto size = to_width<zero>(count);
-    const auto ptr = get(offset);
+    const auto ptr = get_capacity(offset);
     if (!ptr)
         return storage::eof;
 
+    const auto size = system::possible_narrow_sign_cast<size_t>(ptr.size());
     prepare(offset, size);
     std::fill_n(ptr.data(), size, backfill);
     mark(offset, size);
