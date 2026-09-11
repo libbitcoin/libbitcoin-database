@@ -473,6 +473,7 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/store/store_snapshot.cpp \
     ${srcdir}/../../test/store/store_tables.cpp \
     ${srcdir}/../../test/store/store_unload_close.cpp \
+    ${srcdir}/../../test/tables/envelope.cpp \
     ${srcdir}/../../test/tables/archives/header.cpp \
     ${srcdir}/../../test/tables/archives/input.cpp \
     ${srcdir}/../../test/tables/archives/ins.cpp \
