@@ -50,7 +50,7 @@ code CLASS::hash(unspent_totals& out, hash_digest& digest,
         return ec;
 
     code folded{};
-    auto stop = false;
+    std::atomic_bool stop{};
     auto previous = system::null_hash;
     system::stream::out::fast stream{ digest };
     system::hash::sha256x2::fast sink{ stream };
