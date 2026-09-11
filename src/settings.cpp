@@ -57,5 +57,10 @@ settings::settings(chain::selection context) NOEXCEPT
     }
 }
 
+void settings::initialize(const system::settings& bitcoin) NOEXCEPT
+{
+    envelope = { bitcoin, *this };
+}
+
 } // namespace database
 } // namespace libbitcoin
