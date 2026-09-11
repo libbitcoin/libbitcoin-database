@@ -83,11 +83,12 @@ bool CLASS::create() NOEXCEPT
         return false;
 
     // Guards addition overflow in body_.get (start must be valid).
-    if (file_.allocate(link_to_position(initial_buckets_)) == storage::eof)
+    if (file_.allocate(link_to_position(initial_buckets_),
+        system::bit_all<uint8_t>) == storage::eof)
         return false;
 
     BC_ASSERT_MSG(verify(), "unexpected head size");
-    return clear();
+    return set_body_count(zero);
 }
 
 TEMPLATE

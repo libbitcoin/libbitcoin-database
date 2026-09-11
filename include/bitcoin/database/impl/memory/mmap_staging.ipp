@@ -583,9 +583,11 @@ size_t CLASS::allocate_filled_(size_t count, uint8_t backfill) NOEXCEPT
         at += size;
     }
 
+    // The fill bounds capacity (installation populates only the fill).
+    BC_ASSERT(capacity_.load() <= end);
     logical_.store(end);
     file_.store(std::max(file_.load(), end));
-    capacity_.store(std::max(capacity_.load(), end));
+    capacity_.store(end);
     if (!lazy_install_())
         return storage::eof;
 
