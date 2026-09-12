@@ -429,15 +429,16 @@ bool internal_storage(const std::filesystem::path& path) NOEXCEPT
     constexpr auto smb2 = 0xfe534d42_u32;
 
     // Network mounts carry no block device, so are excluded by type.
-    struct ::statfs system{};
-    if (is_zero(::statfs(path.c_str(), &system)))
+    struct ::statfs stats{};
+    if (is_zero(::statfs(path.c_str(), &stats)))
     {
-        const auto type = possible_narrow_cast<uint32_t>(system.f_type);
+        // The file system type varies in width and sign by platform.
+        const auto type = possible_narrow_and_sign_cast<uint32_t>(stats.f_type);
         if (type == nfs || type == smb || type == cifs || type == smb2)
             return false;
     }
 
-    const auto disk = device(path).string();
+    const auto disk = system::from_path(device(path));
     if (disk.empty())
         return true;
 
