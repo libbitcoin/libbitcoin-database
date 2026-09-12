@@ -20,6 +20,7 @@
 
 #if defined(HAVE_MSC)
     #include <windows.h>
+    #include <winioctl.h>
 #else
     #include <unistd.h>
 #endif
@@ -31,7 +32,13 @@
     #include <algorithm>
     #include <cinttypes>
     #include <cstdio>
+    #include <fstream>
+    #include <sys/stat.h>
+    #include <sys/sysmacros.h>
+    #include <sys/vfs.h>
 #endif
+#include <filesystem>
+#include <system_error>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -252,6 +259,207 @@ size_t cores() NOEXCEPT
 {
     return std::max(std::thread::hardware_concurrency(), 1_u32);
 }
+
+#if defined(HAVE_MSC)
+
+// Volume root of the path, empty if not determinable.
+static std::string volume_root(const std::filesystem::path& path) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+    // The api requires a qualified path, and extension breaks the device path.
+    std::wstring root(MAX_PATH, {});
+    if (is_zero(::GetVolumePathNameW(system::qualified_path(path).c_str(),
+        root.data(), MAX_PATH)))
+        return {};
+
+    const auto end = root.find(std::wstring::value_type{});
+    if (end == std::wstring::npos)
+        return {};
+
+    root.resize(end);
+    return system::to_utf8(root);
+
+    BC_POP_WARNING()
+}
+
+// Volume device handle, requires no access rights (null desired access).
+static HANDLE volume_handle(const std::string& root) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    static const system::string_list trims{ "\\" };
+
+    // Trailing separator is invalid in a device path.
+    const auto volume = system::trim_right_copy(root, trims);
+    if (volume.empty())
+        return INVALID_HANDLE_VALUE;
+
+    return ::CreateFileW(system::to_utf16("\\\\.\\" + volume).c_str(), 0,
+        FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
+
+    BC_POP_WARNING()
+}
+
+bool solid_state(const std::filesystem::path& path) NOEXCEPT
+{
+    const auto root = volume_root(path);
+    if (root.empty() || ::GetDriveTypeW(system::to_utf16(root).c_str()) !=
+        DRIVE_FIXED)
+        return true;
+
+    const auto handle = volume_handle(root);
+    if (handle == INVALID_HANDLE_VALUE)
+        return true;
+
+    DWORD size{};
+    DEVICE_SEEK_PENALTY_DESCRIPTOR penalty{};
+    STORAGE_PROPERTY_QUERY query{ StorageDeviceSeekPenaltyProperty,
+        PropertyStandardQuery, {} };
+
+    const auto result = ::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY,
+        &query, sizeof(query), &penalty, sizeof(penalty), &size, nullptr);
+
+    ::CloseHandle(handle);
+    return to_bool(result) ? !to_bool(penalty.IncursSeekPenalty) : true;
+}
+
+bool internal_storage(const std::filesystem::path& path) NOEXCEPT
+{
+    const auto root = volume_root(path);
+    if (root.empty())
+        return true;
+
+    switch (::GetDriveTypeW(system::to_utf16(root).c_str()))
+    {
+        case DRIVE_REMOVABLE:
+        case DRIVE_REMOTE:
+        case DRIVE_CDROM:
+            return false;
+        case DRIVE_FIXED:
+            break;
+        default:
+            return true;
+    }
+
+    const auto handle = volume_handle(root);
+    if (handle == INVALID_HANDLE_VALUE)
+        return true;
+
+    DWORD size{};
+    std_array<uint8_t, 512> buffer{};
+    STORAGE_PROPERTY_QUERY query{ StorageDeviceProperty, PropertyStandardQuery,
+        {} };
+
+    const auto result = ::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY,
+        &query, sizeof(query), buffer.data(), possible_narrow_cast<DWORD>(
+            buffer.size()), &size, nullptr);
+
+    ::CloseHandle(handle);
+    if (!to_bool(result))
+        return true;
+
+    switch (pointer_cast<STORAGE_DEVICE_DESCRIPTOR>(buffer.data())->BusType)
+    {
+        case BusTypeUsb:
+        case BusType1394:
+        case BusTypeSd:
+        case BusTypeMmc:
+        case BusTypeiScsi:
+        case BusTypeFibre:
+            return false;
+        default:
+            return true;
+    }
+}
+
+#elif defined(HAVE_LINUX)
+
+// Block device sysfs directory for the path, empty if not determinable.
+static std::filesystem::path device(
+    const std::filesystem::path& path) NOEXCEPT
+{
+    struct ::stat status{};
+    if (!is_zero(::stat(path.c_str(), &status)))
+        return {};
+
+    const auto node = std::filesystem::path{ "/sys/dev/block" } /
+        (std::to_string(major(status.st_dev)) + ":" +
+            std::to_string(minor(status.st_dev)));
+
+    std::error_code ec{};
+    const auto disk = std::filesystem::canonical(node, ec);
+    if (ec)
+        return {};
+
+    // Partitions carry no queue, the parent disk holds device attributes.
+    return std::filesystem::is_directory(disk / "queue", ec) ? disk :
+        disk.parent_path();
+}
+
+// Single character sysfs flag, false if not determinable.
+static bool flagged(const std::filesystem::path& file, bool& out) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    std::ifstream stream{ file };
+    char value{};
+    if (!stream.good() || !stream.get(value))
+        return false;
+    BC_POP_WARNING()
+
+    out = (value == '1');
+    return true;
+}
+
+bool solid_state(const std::filesystem::path& path) NOEXCEPT
+{
+    const auto disk = device(path);
+    if (disk.empty())
+        return true;
+
+    bool rotational{};
+    return flagged(disk / "queue" / "rotational", rotational) ? !rotational :
+        true;
+}
+
+bool internal_storage(const std::filesystem::path& path) NOEXCEPT
+{
+    constexpr auto nfs = 0x6969_u32;
+    constexpr auto smb = 0x517b_u32;
+    constexpr auto cifs = 0xff534d42_u32;
+    constexpr auto smb2 = 0xfe534d42_u32;
+
+    // Network mounts carry no block device, so are excluded by type.
+    struct ::statfs system{};
+    if (is_zero(::statfs(path.c_str(), &system)))
+    {
+        const auto type = possible_narrow_cast<uint32_t>(system.f_type);
+        if (type == nfs || type == smb || type == cifs || type == smb2)
+            return false;
+    }
+
+    const auto disk = device(path).string();
+    if (disk.empty())
+        return true;
+
+    // The canonical device path carries the transport topology.
+    return disk.find("/usb") == std::string::npos
+        && disk.find("/mmc") == std::string::npos
+        && disk.find("/firewire") == std::string::npos;
+}
+
+#else
+
+bool solid_state(const std::filesystem::path&) NOEXCEPT
+{
+    return true;
+}
+
+bool internal_storage(const std::filesystem::path&) NOEXCEPT
+{
+    return true;
+}
+
+#endif // HAVE_MSC
 
 } // namespace database
 } // namespace libbitcoin

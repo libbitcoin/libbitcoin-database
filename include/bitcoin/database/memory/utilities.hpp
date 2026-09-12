@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_UTILITIES_HPP
 #define LIBBITCOIN_DATABASE_MEMORY_UTILITIES_HPP
 
+#include <filesystem>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -50,6 +51,12 @@ BCD_API uint64_t system_compressed() NOEXCEPT;
 
 /// Number of cores, no less than one.
 BCD_API size_t cores() NOEXCEPT;
+
+/// True if the path resides on solid state storage, or is not determinable.
+BCD_API bool solid_state(const std::filesystem::path& path) NOEXCEPT;
+
+/// True if the path resides on internal storage, or is not determinable.
+BCD_API bool internal_storage(const std::filesystem::path& path) NOEXCEPT;
 
 } // namespace database
 } // namespace libbitcoin
