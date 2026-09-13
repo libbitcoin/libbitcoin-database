@@ -105,6 +105,12 @@ bool CLASS::set_filter_k(size_t k) NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::set_buckets(size_t buckets) NOEXCEPT
+{
+    return head_.set_buckets(buckets);
+}
+
+TEMPLATE
 size_t CLASS::head_size() const NOEXCEPT
 {
     return head_.size();

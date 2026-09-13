@@ -229,6 +229,25 @@ BOOST_AUTO_TEST_CASE(hashhead__set_filter_k__invalid__false)
     BOOST_REQUIRE_EQUAL(head.filter_k(), 5u);
 }
 
+BOOST_AUTO_TEST_CASE(hashhead__set_buckets__valid__set)
+{
+    data_chunk data{};
+    test::chunk_storage store{ data };
+    filtered_ head{ store, filtered_buckets };
+    BOOST_REQUIRE(head.set_buckets(42));
+    BOOST_REQUIRE_EQUAL(head.buckets(), 42u);
+    BOOST_REQUIRE_EQUAL(head.size(), 43u * 8u);
+}
+
+BOOST_AUTO_TEST_CASE(hashhead__set_buckets__over_terminal__false)
+{
+    data_chunk data{};
+    test::chunk_storage store{ data };
+    filtered_ head{ store, filtered_buckets };
+    BOOST_REQUIRE(!head.set_buckets(system::add1<size_t>(link4::terminal)));
+    BOOST_REQUIRE_EQUAL(head.buckets(), filtered_buckets);
+}
+
 BOOST_AUTO_TEST_CASE(hashhead__set_filter_k__disabled__zero_only)
 {
     data_chunk data{};

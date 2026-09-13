@@ -52,6 +52,9 @@ public:
     /// Set filter selections from stored envelope (not thread safe).
     bool set_filter_k(size_t k) NOEXCEPT;
 
+    /// Set bucket count from stored envelope (not thread safe).
+    bool set_buckets(size_t buckets) NOEXCEPT;
+
     /// Optimal filter k-value for expected load factor.
     static size_t optimal_k(size_t count, size_t buckets) NOEXCEPT;
 
@@ -163,10 +166,10 @@ private:
 
     // These are thread safe.
     storage& file_;
-    const Link buckets_;
     mutable std::shared_mutex mutex_{};
 
     // Protected by order - derived at construct, envelope overrides at open.
+    Link buckets_;
     size_t k_;
 };
 
