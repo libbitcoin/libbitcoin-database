@@ -106,22 +106,20 @@ header_link CLASS::find_strong(const hash_digest& tx_hash) const NOEXCEPT
 
 // protected
 TEMPLATE
-bool CLASS::set_strong(const header_link& link, size_t count,
-    const tx_link& first_fk, bool positive) NOEXCEPT
+bool CLASS::set_strong(const header_link& link, const tx_links& fks,
+    bool positive) NOEXCEPT
 {
     using namespace system;
     using link_t = table::strong_tx::link;
     using element_t = table::strong_tx::record;
 
     // Preallocate all strong_tx records for the block and reuse memory ptr.
-    const auto records = possible_narrow_cast<link_t::integer>(count);
+    const auto records = possible_narrow_cast<link_t::integer>(fks.size());
     auto record = store_.strong_tx.allocate(records);
     const auto ptr = store_.strong_tx.get_memory();
-    const auto end = first_fk + records;
 
-    // Contiguous tx links.
-    for (auto fk = first_fk; fk < end; ++fk)
-        if (!store_.strong_tx.put(ptr, record++, fk, element_t
+    for (const auto& fk: fks)
+        if (!store_.strong_tx.put(ptr, record++, tx_link{ fk }, element_t
             {
                 {},
                 table::strong_tx::merge(positive, link)
@@ -133,36 +131,30 @@ bool CLASS::set_strong(const header_link& link, size_t count,
 TEMPLATE
 bool CLASS::set_strong(const header_link& link) NOEXCEPT
 {
-    table::txs::get_coinbase_and_count txs{};
-    if (!store_.txs.at(to_txs(link), txs))
-        return {};
-
-    // This should be caught by get_coinbase_and_count return.
-    BC_ASSERT(!is_zero(txs.number) && txs.coinbase_fk != tx_link::terminal);
+    table::txs::get_txs txs{};
+    if (!store_.txs.at(to_txs(link), txs) || txs.tx_fks.empty())
+        return false;
 
     // ========================================================================
     const auto scope = get_transactor();
 
     // Clean allocation failure (e.g. disk full).
-    return set_strong(link, txs.number, txs.coinbase_fk , true);
+    return set_strong(link, txs.tx_fks, true);
     // ========================================================================
 }
 
 TEMPLATE
 bool CLASS::set_unstrong(const header_link& link) NOEXCEPT
 {
-    table::txs::get_coinbase_and_count txs{};
-    if (!store_.txs.at(to_txs(link), txs))
-        return {};
-
-    // This should be caught by get_coinbase_and_count return.
-    BC_ASSERT(!is_zero(txs.number) && txs.coinbase_fk != tx_link::terminal);
+    table::txs::get_txs txs{};
+    if (!store_.txs.at(to_txs(link), txs) || txs.tx_fks.empty())
+        return false;
 
     // ========================================================================
     const auto scope = get_transactor();
 
     // Clean allocation failure (e.g. disk full).
-    return set_strong(link, txs.number, txs.coinbase_fk, false);
+    return set_strong(link, txs.tx_fks, false);
     // ========================================================================
 }
 

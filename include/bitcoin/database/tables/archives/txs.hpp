@@ -150,54 +150,6 @@ struct txs
         database::envelope envelope{};
     };
 
-    // put a contiguous set of tx identifiers.
-    struct put_group
-      : public schema::txs
-    {
-        inline bool is_genesis() const NOEXCEPT
-        {
-            return is_zero(tx_fk);
-        }
-
-        inline link count() const NOEXCEPT
-        {
-            return system::possible_narrow_cast<link::integer>(
-                skip_sizes + ct::size + (number * tx::size) +
-                (interval.has_value() ? schema::hash : zero) +
-                (is_genesis() ? envelope.serialized_size() : zero));
-        }
-
-        inline bool to_data(finalizer& sink) const NOEXCEPT
-        {
-            // tx sizes
-            const auto merged = merge(interval.has_value(), light);
-            sink.write_little_endian<bytes::integer, bytes::size>(merged);
-            sink.write_little_endian<bytes::integer, bytes::size>(heavy);
-
-            // tx fks
-            sink.write_little_endian<ct::integer, ct::size>(number);
-            for (auto fk = tx_fk; fk < (tx_fk + number); ++fk)
-                sink.write_little_endian<tx::integer, tx::size>(fk);
-
-            // interval (when specified)
-            if (interval.has_value()) sink.write_bytes(interval.value());
-
-            // envelope (genesis only)
-            if (is_genesis())
-                envelope.to_data(sink);
-
-            BC_ASSERT(!sink || sink.get_write_position() == count());
-            return sink;
-        }
-
-        bytes::integer light{};
-        bytes::integer heavy{};
-        ct::integer number{};
-        tx::integer tx_fk{};
-        hash interval{};
-        database::envelope envelope{};
-    };
-
     struct get_interval
       : public schema::txs
     {
@@ -496,36 +448,6 @@ struct txs
         }
 
         size_t number{};
-    };
-
-    struct get_coinbase_and_count
-      : public schema::txs
-    {
-        inline link count() const NOEXCEPT
-        {
-            BC_ASSERT(false);
-            return {};
-        }
-
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            // tx sizes
-            source.skip_bytes(skip_sizes);
-
-            // tx fks
-            number = source.read_little_endian<ct::integer, ct::size>();
-            if (is_nonzero(number))
-            {
-                coinbase_fk = source.read_little_endian<tx::integer, tx::size>();
-                return source;
-            }
-
-            source.invalidate();
-            return source;
-        }
-
-        size_t number{};
-        tx::integer coinbase_fk{};
     };
 };
 

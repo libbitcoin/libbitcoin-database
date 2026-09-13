@@ -101,6 +101,10 @@ public:
     bool is_dirty() const NOEXCEPT;
     void set_dirty() NOEXCEPT;
 
+    /// Determine if the store pools unconfirmed transactions.
+    bool is_pooling() const NOEXCEPT;
+    void set_pooling() NOEXCEPT;
+
     /// Get first fault code or error::success.
     code get_fault() const NOEXCEPT;
 
@@ -228,6 +232,7 @@ protected:
 
     // This is thread safe.
     stopper dirty_{ true };
+    stopper pooling_{ false };
 
 private:
     static constexpr bool random = true;

@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_ARCHIVE_CHAIN_WRITER_IPP
 #define LIBBITCOIN_DATABASE_QUERY_ARCHIVE_CHAIN_WRITER_IPP
 
-#include <ranges>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -75,14 +74,34 @@ bool CLASS::set(const block& block, bool strong, bool bypass,
 TEMPLATE
 code CLASS::set_code(const transaction& tx) NOEXCEPT
 {
-    constexpr auto txs = system::possible_narrow_cast<tx_link::integer>(one);
+    tx_link unused{};
+    return set_code(unused, tx);
+}
+
+TEMPLATE
+code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
+{
+    if (store_.is_pooling())
+        if (out_fk = to_pooled(tx); !out_fk.is_terminal())
+            return error::success;
 
     // Allocate tx record.
-    const auto tx_fk = store_.tx.allocate(txs);
-    if (tx_fk.is_terminal())
+    constexpr auto txs = system::possible_narrow_cast<tx_link::integer>(one);
+    if (out_fk = store_.tx.allocate(txs); out_fk.is_terminal())
         return error::tx_tx_allocate;
 
-    return set_code(tx_fk, tx, false, false);
+    return set_code(out_fk, tx, false, false);
+}
+
+TEMPLATE
+tx_link CLASS::to_pooled(const transaction& tx) const NOEXCEPT
+{
+    // The same tx duplicates all of its points, so the first is sufficient.
+    if (tx.is_empty() || tx.is_coinbase() ||
+        !store_.ins.exists(tx.inputs_ptr()->front()->point()))
+        return {};
+
+    return to_tx(tx.get_hash(false));
 }
 
 TEMPLATE
@@ -371,20 +390,38 @@ code CLASS::set_code(const block& block, const header_link& key,
     if (key.is_terminal())
         return error::txs_header;
 
-    const auto txs = block.transactions();
+    auto txs = block.transactions();
     if (is_zero(txs))
         return error::txs_empty;
 
-    const auto count = possible_narrow_cast<unsigned_type<schema::count_>>(txs);
-    const auto tx_fks = store_.tx.allocate(count);
-    if (tx_fks.is_terminal())
+    tx_links links(txs, tx_link::terminal);
+    if (store_.is_pooling())
+    {
+        auto it = links.begin();
+        for (const auto& tx: *block.transactions_ptr())
+            if (*it = to_pooled(*tx); *it++ != tx_link::terminal)
+                --txs;
+    }
+
+    using count = linkage<schema::count_>::integer;
+    auto fk = store_.tx.allocate(possible_narrow_cast<count>(txs));
+    if (fk.is_terminal())
         return error::tx_tx_allocate;
 
     code ec{};
-    auto fk = tx_fks;
+    auto it = links.begin();
     for (const auto& tx: *block.transactions_ptr())
-        if ((ec = set_code(fk++, *tx, bypass, prune)))
-            return ec;
+    {
+        if (*it == tx_link::terminal)
+        {
+            if ((ec = set_code(fk, *tx, bypass, prune)))
+                return ec;
+
+            *it = fk++;
+        }
+
+        ++it;
+    }
 
     // Optional hash, only has value on height intervals.
     auto interval = create_interval(key, height);
@@ -400,18 +437,17 @@ code CLASS::set_code(const block& block, const header_link& key,
     constexpr auto positive = true;
 
     // Transactor assures cannot be restored without txs, as required to unset.
-    if (strong && !set_strong(key, txs, tx_fks, positive))
+    if (strong && !set_strong(key, links, positive))
         return error::txs_confirm;
 
     // Header link is the key for the txs table.
     // Clean single allocation failure (e.g. disk full).
-    return store_.txs.put(to_txs(key), table::txs::put_group
+    return store_.txs.put(to_txs(key), table::txs::slab
     {
         {},
         light,
         heavy,
-        count,
-        tx_fks,
+        std::move(links),
         std::move(interval),
         store_.envelope()
     }) ? error::success : error::txs_txs_put;

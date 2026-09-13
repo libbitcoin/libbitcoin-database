@@ -1582,4 +1582,115 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__get_value__genesis__expected)
     BOOST_CHECK_EQUAL(value, 5000000000u);
 }
 
+// pooling
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__not_pooling_duplicate__written)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(!store.is_pooling());
+
+    tx_link first{};
+    tx_link second{};
+    BOOST_REQUIRE_EQUAL(query.set_code(first, test::tx4), error::success);
+    BOOST_REQUIRE_EQUAL(query.set_code(second, test::tx4), error::success);
+    BOOST_REQUIRE(first != second);
+    BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
+    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_duplicate__substituted)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    store.set_pooling();
+
+    tx_link first{};
+    tx_link second{};
+    BOOST_REQUIRE_EQUAL(query.set_code(first, test::tx4), error::success);
+    BOOST_REQUIRE_EQUAL(query.set_code(second, test::tx4), error::success);
+    BOOST_REQUIRE(first == second);
+    BOOST_REQUIRE_EQUAL(query.tx_records(), 1u);
+    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_conflict__written)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    store.set_pooling();
+
+    tx_link first{};
+    tx_link second{};
+    BOOST_REQUIRE_EQUAL(query.set_code(first, test::tx4), error::success);
+    BOOST_REQUIRE_EQUAL(query.set_code(second, test::tx5), error::success);
+    BOOST_REQUIRE(first != second);
+    BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
+    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__not_pooling_pooled_tx__written)
+{
+    using namespace system::chain;
+    const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf4 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx4 } };
+
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    tx_link pooled{};
+    BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
+    BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
+    BOOST_REQUIRE(query.set(block, database::context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE_EQUAL(query.tx_records(), 4u);
+    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 2u);
+    BOOST_REQUIRE(query.to_tx(test::tx4.hash(false)) != pooled);
+}
+
+BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_pooled_tx__substituted)
+{
+    using namespace system::chain;
+    const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf4 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx4 } };
+
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    tx_link pooled{};
+    BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
+    BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
+    BOOST_REQUIRE(query.set(block, database::context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE_EQUAL(query.tx_records(), 3u);
+    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 0u);
+    BOOST_REQUIRE(query.to_tx(test::tx4.hash(false)) == pooled);
+
+    const auto link = query.to_header(block.hash());
+    const auto pointer = query.get_block(link, true);
+    BOOST_REQUIRE(pointer);
+    BOOST_REQUIRE_EQUAL(pointer->transactions(), 2u);
+    BOOST_REQUIRE_EQUAL(pointer->transactions_ptr()->back()->hash(false), test::tx4.hash(false));
+    BOOST_REQUIRE(!query.is_strong_tx(pooled));
+    BOOST_REQUIRE(query.set_strong(link));
+    BOOST_REQUIRE(query.is_strong_tx(pooled));
+    BOOST_REQUIRE(query.set_unstrong(link));
+    BOOST_REQUIRE(!query.is_strong_tx(pooled));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

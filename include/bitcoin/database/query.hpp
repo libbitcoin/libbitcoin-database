@@ -507,6 +507,7 @@ public:
 
     /// Set transaction.
     code set_code(const transaction& tx) NOEXCEPT;
+    code set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT;
 
     /// Set header (headers-first).
     code set_code(const header& header, const context& ctx,
@@ -875,8 +876,8 @@ protected:
         const ins_link& self) const NOEXCEPT;
 
     /// Support set_strong and set_unstrong writers.
-    bool set_strong(const header_link& link, size_t count,
-        const tx_link& first_fk, bool positive) NOEXCEPT;
+    bool set_strong(const header_link& link, const tx_links& fks,
+        bool positive) NOEXCEPT;
 
     /// Get all tx links for any point of block that is also in duplicate table.
     bool get_doubles(tx_links& out, const block& block) const NOEXCEPT;
@@ -945,6 +946,10 @@ protected:
     /// -----------------------------------------------------------------------
     code set_code(const tx_link& tx_fk, const transaction& tx,
         bool bypass, bool prune) NOEXCEPT;
+
+    /// The archived link of a pooled duplicate of the tx, or terminal.
+    tx_link to_pooled(const transaction& tx) const NOEXCEPT;
+    tx_link to_pooled(const transaction_view& tx) const NOEXCEPT;
 
     /// Block write batching (all rows preallocated, all accessors held).
     /// -----------------------------------------------------------------------
