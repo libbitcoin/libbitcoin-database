@@ -60,6 +60,10 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
 
     auto ec = open_load(handler);
 
+    // The stored envelope governs sizing, so it precedes verification.
+    if (!ec)
+        ec = load_envelope();
+
     verify(ec, header, table_t::header_table);
     verify(ec, input, table_t::input_table);
     verify(ec, output, table_t::output_table);
@@ -83,9 +87,6 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
 
     verify(ec, filter_bk, table_t::filter_bk_table);
     verify(ec, filter_tx, table_t::filter_tx_table);
-
-    if (!ec)
-        ec = load_envelope();
 
     if (ec)
     {
@@ -112,6 +113,35 @@ code CLASS::load_envelope() NOEXCEPT
             envelope_ = genesis.envelope;
         else
             return error::verify_table;
+    }
+
+    // A configured bucket count must match the store (zero defers to it).
+    const auto conflict = [](uint32_t configured, uint32_t stored) NOEXCEPT
+    {
+        return is_nonzero(configured) && (configured != stored);
+    };
+
+    if (conflict(configuration_.header.buckets, envelope_.header_buckets) ||
+        conflict(configuration_.ins.buckets, envelope_.ins_buckets) ||
+        conflict(configuration_.outs.buckets, envelope_.outs_buckets) ||
+        conflict(configuration_.tx.buckets, envelope_.tx_buckets) ||
+        conflict(configuration_.strong_tx.buckets, envelope_.strong_tx_buckets) ||
+        conflict(configuration_.duplicate.buckets, envelope_.duplicate_buckets) ||
+        conflict(configuration_.validated_tx.buckets, envelope_.validated_tx_buckets))
+    {
+        return error::verify_table;
+    }
+
+    // The stored bucket counts govern the heads.
+    if (!header.set_buckets(envelope_.header_buckets) ||
+        !ins.set_buckets(envelope_.ins_buckets) ||
+        !outs.set_buckets(envelope_.outs_buckets) ||
+        !tx.set_buckets(envelope_.tx_buckets) ||
+        !strong_tx.set_buckets(envelope_.strong_tx_buckets) ||
+        !duplicate.set_buckets(envelope_.duplicate_buckets) ||
+        !validated_tx.set_buckets(envelope_.validated_tx_buckets))
+    {
+        return error::verify_table;
     }
 
     // The stored filter k values govern filter bit interpretation.

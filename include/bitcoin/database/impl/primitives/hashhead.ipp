@@ -109,6 +109,16 @@ bool CLASS::set_filter_k(size_t k) NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::set_buckets(size_t buckets) NOEXCEPT
+{
+    if (buckets > Link::terminal)
+        return false;
+
+    buckets_ = system::possible_narrow_cast<link>(buckets);
+    return true;
+}
+
+TEMPLATE
 uint32_t CLASS::derive_buckets(uint64_t expected, uint32_t low,
     uint32_t high) NOEXCEPT
 {

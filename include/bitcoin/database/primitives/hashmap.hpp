@@ -77,6 +77,9 @@ public:
     /// Set filter selections from stored envelope (not thread safe).
     bool set_filter_k(size_t k) NOEXCEPT;
 
+    /// Set bucket count from stored envelope (not thread safe).
+    bool set_buckets(size_t buckets) NOEXCEPT;
+
     /// Head file bytes.
     size_t head_size() const NOEXCEPT;
 
