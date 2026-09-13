@@ -58,6 +58,9 @@ BCD_API bool solid_state(const std::filesystem::path& path) NOEXCEPT;
 /// True if the path resides on internal storage, or is not determinable.
 BCD_API bool internal_storage(const std::filesystem::path& path) NOEXCEPT;
 
+/// True if an installed compute runtime reports a gpu device.
+BCD_API bool gpu_device() NOEXCEPT;
+
 } // namespace database
 } // namespace libbitcoin
 
