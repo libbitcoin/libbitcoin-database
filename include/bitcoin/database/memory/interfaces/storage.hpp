@@ -70,6 +70,12 @@ public:
     {
     }
 
+    /// Report store currency (permits managed head settlement); no effect
+    /// where unneeded.
+    virtual void current(bool) NOEXCEPT
+    {
+    }
+
     /// Flush memory map to disk, suspend writes for call, must be loaded.
     virtual code flush() NOEXCEPT = 0;
 

@@ -1386,6 +1386,154 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__concurrent__unique_dense_claims)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+#if defined(MANAGE_STAGING)
+
+// Settle transitions are asynchronous (settler tick), so waits are bounded.
+constexpr size_t drain_wait = 70;
+constexpr size_t settle_wait = 120;
+constexpr size_t unsettle_wait = 60;
+constexpr size_t cell_width = sizeof(uint64_t);
+
+static bool settled_within(const map& instance, bool state, size_t seconds) NOEXCEPT
+{
+    const std::vector<size_t> ticks(seconds);
+    return std::any_of(ticks.begin(), ticks.end(), [&](size_t) NOEXCEPT
+    {
+        std::this_thread::sleep_for(std::chrono::seconds(one));
+        return instance.settled() == state;
+    });
+}
+
+static void stamp(map& instance, size_t cell, uint64_t generation) NOEXCEPT
+{
+    const auto offset = cell * cell_width;
+    const auto raw = instance.get_raw(offset);
+    instance.prepare(offset, cell_width);
+    system::unsafe_to_little_endian<uint64_t>(raw, generation);
+    instance.mark(offset, cell_width);
+}
+
+static std::vector<uint64_t> read_cells(const map& instance, size_t cells) NOEXCEPT
+{
+    std::vector<size_t> positions(cells);
+    std::iota(positions.begin(), positions.end(), zero);
+
+    std::vector<uint64_t> values(cells);
+    std::transform(positions.begin(), positions.end(), values.begin(), [&](size_t cell) NOEXCEPT
+    {
+        return system::unsafe_from_little_endian<uint64_t>(instance.get_raw(cell * cell_width));
+    });
+
+    return values;
+}
+
+// Sustained volume is repetition by definition, so the writer drive iterates.
+// Stamps rising generations across the cells until stopped, returning the
+// last generation stamped into each.
+static std::vector<uint64_t> drive(map& instance, size_t cells, const std::atomic_bool& stop) NOEXCEPT
+{
+    std::vector<uint64_t> last(cells);
+    for (uint64_t generation = one; !stop.load(); ++generation)
+        for (size_t cell = zero; cell < cells; ++cell)
+            stamp(instance, cell, last.at(cell) = generation);
+
+    return last;
+}
+
+BOOST_AUTO_TEST_CASE(mmap__settle__not_current__unsettled)
+{
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
+
+    BOOST_REQUIRE(!settled_within(instance, true, drain_wait));
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__settle__current_quiescent__settled_until_unload)
+{
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
+
+    instance.current(true);
+    BOOST_REQUIRE(settled_within(instance, true, settle_wait));
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.settled());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__settle__write_while_settled__persists)
+{
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
+
+    instance.current(true);
+    BOOST_REQUIRE(settled_within(instance, true, settle_wait));
+    stamp(instance, zero, 42);
+
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_EQUAL(read_cells(instance, one).front(), 42u);
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__settle__sustained_writes__unsettled_without_loss)
+{
+    constexpr size_t cells = 512;
+
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_NE(instance.allocate(cells * cell_width), storage::eof);
+
+    instance.current(true);
+    BOOST_REQUIRE(settled_within(instance, true, settle_wait));
+
+    std::atomic_bool stop{};
+    std::vector<uint64_t> expected{};
+    std::thread writer([&]() NOEXCEPT { expected = drive(instance, cells, stop); });
+    const auto unsettled = settled_within(instance, false, unsettle_wait);
+    stop.store(true);
+    writer.join();
+
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE(unsettled);
+    BOOST_REQUIRE(!instance.settled());
+    BOOST_REQUIRE(read_cells(instance, cells) == expected);
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+#endif // MANAGE_STAGING
+
 BC_POP_WARNING()
 
 BOOST_AUTO_TEST_SUITE_END()

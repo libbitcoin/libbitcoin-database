@@ -528,16 +528,7 @@ bool CLASS::lazy_install_() NOEXCEPT
         return false;
     }
 
-    // Declare the prefix released and engage the restore protocol.
-    const auto flags = floor / page_;
-    for (size_t word{}; word < ceilinged_divide(flags, page_bound); ++word)
-    {
-        const auto first = word * page_bound;
-        released_[word].store((flags >= (first + page_bound)) ?
-            bit_all<uint64_t> : unmask_right<uint64_t>(flags - first));
-    }
-
-    lazy_.store(true);
+    declare_released_();
 
     // Attribute the anonymous span for diagnostics (smaps decomposition).
     mmap_name(std::next(memory_map_[zero], floor), reserved - floor,
@@ -553,7 +544,7 @@ bool CLASS::lazy_install_() NOEXCEPT
 TEMPLATE
 size_t CLASS::allocate_filled_(size_t count, uint8_t backfill) NOEXCEPT
 {
-    BC_ASSERT(!staged_ && dirty_);
+    BC_ASSERT(!staged_ && dirty_ && !shared_.load());
     std::unique_lock field_lock(field_mutex_);
     std::unique_lock map_lock(remap_mutex_);
 
@@ -613,7 +604,7 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
     {
         // A shared head extends its file mapping over the growth (the file is
         // provisioned to capacity, so the extension is already allocated).
-        if (!staged_ && head_shared)
+        if (!staged_ && (head_shared || shared_.load()))
         {
             const auto grown = page_floor(to_width<Column>(capacity_.load()));
 
@@ -669,7 +660,7 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
 
     // A shared head remaps its file onto the replacement (the file is the
     // content, so migration copies nothing).
-    if (!staged_ && head_shared)
+    if (!staged_ && (head_shared || shared_.load()))
     {
         if (mmap_share(replace, target, opened_[Column], zero) == fail)
         {
@@ -1209,6 +1200,7 @@ void CLASS::head_run_() NOEXCEPT
     auto mark = marks_.load();
     auto transferred = mark;
     size_t still{};
+    size_t hot{};
     size_t touched{};
 
     while (settling_.load())
@@ -1224,6 +1216,48 @@ void CLASS::head_run_() NOEXCEPT
         const auto writes = top - mark;
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
+
+#if defined(STAGING_TELEMETRY)
+        // Per-minute head write profile: marks in the minute, the busiest
+        // tick within it, and the ticks that carried any write.
+        marked_ += writes;
+        peaked_ = std::max(peaked_, writes);
+        active_ += is_nonzero(writes) ? one : zero;
+        if (is_zero(++telemetry_ % telemetry_seconds))
+        {
+            std::ostringstream line{};
+            line << "head " << filenames_.front().filename().string()
+                << " marks=" << marked_
+                << " peak=" << peaked_
+                << " active=" << active_
+                << " hot=" << hot
+                << " settled=" << shared_.load()
+                << std::endl;
+            std::cout << line.str();
+            marked_ = zero;
+            peaked_ = zero;
+            active_ = zero;
+        }
+#endif
+
+        // A settled head under sustained writes reinstalls lazily.
+        if (shared_.load())
+        {
+            hot = (writes >= unsettle_writes) ? add1(hot) : zero;
+            if (hot >= unsettle_seconds)
+            {
+                unshare_();
+                transferred = top;
+                hot = zero;
+            }
+
+            continue;
+        }
+
+        // A drained head settles to its file mapping while the store is
+        // current (settled pages are droppable, anonymous pages are not).
+        if (current_.load() && (transferred == top) && share_(transferred))
+            continue;
 
         // Touch pass: assert working-set residency at a bounded rate.
         // Hash-uniform probing is per-page sparse in every phase, so the
@@ -1352,6 +1386,99 @@ void CLASS::head_run_() NOEXCEPT
         transferred = top;
         still = zero;
     }
+}
+
+// Settle a quiescent managed head to a writable mapping of its file over the
+// committed span (as a shared head loads): pages drop under pressure and
+// writes dirty page cache for kernel writeback, so page tracking idles (it
+// remains allocated, as writers read it unlocked). Exclusive remap excludes
+// accessors and the transition excludes counted head writers (raw pointer
+// writes hold no lock), so a mark count still at the drained count proves
+// the file current (a write landing after the drain snapshot would otherwise
+// be lost to the remap).
+// Exclude head writers across a settle transition: they write through raw
+// pointers under no lock, so only the writer count can exclude them. The
+// drain precedes the remap lock, as a writer never takes it (and a transition
+// that waited under it would deadlock the first one that did).
+TEMPLATE
+void CLASS::quiesce_() NOEXCEPT
+{
+    transition_.store(true);
+    while (!is_zero(writers_.load()))
+        std::this_thread::yield();
+}
+
+TEMPLATE
+bool CLASS::share_(size_t transferred) NOEXCEPT
+{
+    quiesce_();
+    std::unique_lock map_lock(remap_mutex_);
+
+    auto shared = false;
+    if (loaded_.load() && !fault_.load() && (marks_.load() == transferred))
+    {
+        const auto span = to_width<zero>(capacity_.load());
+        shared = mmap_share(memory_map_[zero], span, opened_[zero],
+            zero) != fail;
+
+        if (!shared)
+            set_first_code(error::mmap_failure);
+#if !defined(WITHOUT_MADVISE)
+        else if (!advise_(memory_map_[zero], span))
+            set_first_code(error::madvise_failure);
+#endif
+    }
+
+    shared_.store(shared);
+    transition_.store(false);
+    return shared;
+}
+
+// Return a settled head to the anonymous model without a bulk remap: every
+// full page declares released (the shared mapping is droppable file content),
+// so tracked writers restore segments to anonymous before writing, and the
+// tail above the full-page floor restores here (as the load commits it), so
+// no dirty page is ever transferred from the file mapping (a self-copy, which
+// darwin serves as an uninterruptible wait). Cold pages remain mapped.
+TEMPLATE
+void CLASS::unshare_() NOEXCEPT
+{
+    quiesce_();
+    std::unique_lock map_lock(remap_mutex_);
+
+    const auto floor = page_floor(to_width<zero>(logical_.load()));
+    const auto ceiling = page_ceiling(to_width<zero>(capacity_.load()));
+    const auto restored = (ceiling <= floor) || (mmap_restore(
+        std::next(memory_map_[zero], floor), ceiling - floor) != fail);
+
+    if (restored)
+    {
+        declare_released_();
+        shared_.store(false);
+    }
+    else
+    {
+        set_first_code(error::mmap_failure);
+    }
+
+    transition_.store(false);
+}
+
+// Declare the full-page prefix below logical released and engage the restore
+// protocol (prepare restores a released segment before its write).
+TEMPLATE
+void CLASS::declare_released_() NOEXCEPT
+{
+    using namespace system;
+    const auto flags = page_floor(to_width<zero>(logical_.load())) / page_;
+    for (size_t word{}; word < ceilinged_divide(flags, page_bound); ++word)
+    {
+        const auto first = word * page_bound;
+        released_[word].store((flags >= (first + page_bound)) ?
+            bit_all<uint64_t> : unmask_right<uint64_t>(flags - first));
+    }
+
+    lazy_.store(true);
 }
 
 // Release cold clean head page runs to read-only file mappings (reclaimable),

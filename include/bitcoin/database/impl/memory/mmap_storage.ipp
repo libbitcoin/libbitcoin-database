@@ -201,7 +201,25 @@ void CLASS::prepare(size_t STAGING_ONLY(offset),
     // the count (and aborts) or this writer observes released (and restores).
     // Intent bits age (hot sampling), so they cannot protect a write held
     // in flight across passes; the count persists until mark.
-    writers_.fetch_add(one);
+    // A settle transition pairs the same way, but the writer waits UNCOUNTED
+    // (it retires its count and does not retake one until the transition
+    // clears), so the count drains monotonically and the transition is
+    // guaranteed to observe zero rather than merely likely to.
+    for (;;)
+    {
+        while (transition_.load())
+            std::this_thread::yield();
+
+        writers_.fetch_add(one);
+        if (!transition_.load())
+            break;
+
+        writers_.fetch_sub(one);
+    }
+
+    // A settled head writes through its mapping.
+    if (shared_.load())
+        return;
 
     if (!engaged_.load(relaxed) && !lazy_.load(relaxed))
         return;
@@ -234,14 +252,38 @@ void CLASS::mark(size_t STAGING_ONLY(offset),
         return;
 
     // Marks follow content writes; transfer clears before reading, so pages
-    // remarked during a transfer are simply rewritten by the next pass.
-    remark_(offset, size);
+    // remarked during a transfer are simply rewritten by the next pass. A
+    // settled head writes through its mapping, so its marks count only (the
+    // settler reads the rate); no transition intervenes (the writer is
+    // counted), so the path matches prepare.
+    if (shared_.load())
+        marks_.fetch_add(one, relaxed);
+    else
+        remark_(offset, size);
 
     // Uncount the writer after its marks (sequentially consistent), so a
     // release pass loading a drained count observes the dirty bits. Only
     // prepare() counts, so only mark() may uncount (transfer failure restores
     // marks by remark_, as an unpaired uncount here corrupts the count).
     writers_.fetch_sub(one);
+#endif
+}
+
+TEMPLATE
+void CLASS::current(bool STAGING_ONLY(state)) NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    current_.store(state);
+#endif
+}
+
+TEMPLATE
+bool CLASS::settled() const NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    return shared_.load();
+#else
+    return false;
 #endif
 }
 
@@ -641,7 +683,7 @@ TEMPLATE
 size_t CLASS::allocate(size_t count, uint8_t backfill) NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
-    if (!staged_ && dirty_)
+    if (!staged_ && dirty_ && !shared_.load())
         return allocate_filled_(count, backfill);
 #endif
 

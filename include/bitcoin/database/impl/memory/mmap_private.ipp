@@ -99,6 +99,7 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
     sweep_.reset();
     words_ = zero;
     engaged_.store(false);
+    shared_.store(false);
 #endif
 
     return success;
@@ -157,17 +158,7 @@ bool CLASS::flush_(size_t
 ) NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
-    // Transfer unflushed rows from anonymous memory to the file. Settled rows
-    // are already on disk (staged); unstaged transfers dirty pages only, or
-    // synchronizes its mapping (shared head, which writes through).
-    const auto from = to_width<Column>(settled_.load());
-    const auto to = to_width<Column>(rows);
-
-    const auto success =
-           (staged_ ? ((from >= to) || pwrite_all(opened_[Column],
-               std::next(memory_map_[Column], from), to - from, from)) :
-            head_shared ? (::msync(memory_map_[Column], to, MS_SYNC) != fail) :
-               transfer_<Column>(to))
+    const auto success = persist_<Column>(to_width<Column>(rows))
         && sync_<Column>();
 #elif defined(HAVE_MSC)
     // unmap (and therefore msync) must be called before ftruncate.
@@ -194,6 +185,23 @@ bool CLASS::flush_(size_t
 
     return success;
 }
+
+#if defined(MANAGE_STAGING)
+// Persist rows below to: settled rows are already on disk (staged appends
+// the remainder), a shared head synchronizes its mapping (writes through),
+// an anonymous head transfers its dirty pages.
+TEMPLATE
+template <size_t Column>
+bool CLASS::persist_(size_t to) NOEXCEPT
+{
+    const auto from = to_width<Column>(settled_.load());
+    return staged_ ? ((from >= to) || pwrite_all(opened_[Column],
+        std::next(memory_map_[Column], from), to - from, from)) :
+        (head_shared || shared_.load()) ?
+            (::msync(memory_map_[Column], to, MS_SYNC) != fail) :
+            transfer_<Column>(to);
+}
+#endif
 
 // Always results in unmapped, file is unchanged.
 TEMPLATE
@@ -226,11 +234,7 @@ bool CLASS::unmap_(size_t
 
 #if defined(MANAGE_STAGING)
     // Persist unflushed rows, trim preallocation to logical, sync to disk.
-    const auto from = to_width<Column>(settled_.load());
-    const auto transferred =
-           (staged_ ? ((from >= logical) || pwrite_all(opened_[Column],
-               std::next(memory_map_[Column], from), logical - from, from)) :
-               transfer_<Column>(logical))
+    const auto transferred = persist_<Column>(logical)
         && (::ftruncate(opened_[Column], logical) != fail)
         && sync_<Column>();
 
