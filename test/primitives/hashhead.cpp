@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(hashhead__set_buckets__over_terminal__false)
     data_chunk data{};
     test::chunk_storage store{ data };
     filtered_ head{ store, filtered_buckets };
-    BOOST_REQUIRE(!head.set_buckets(system::add1<size_t>(link4::terminal)));
+    BOOST_REQUIRE(!head.set_buckets(add1<size_t>(link4::terminal)));
     BOOST_REQUIRE_EQUAL(head.buckets(), filtered_buckets);
 }
 
