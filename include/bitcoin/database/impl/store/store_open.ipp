@@ -115,23 +115,6 @@ code CLASS::load_envelope() NOEXCEPT
             return error::verify_table;
     }
 
-    // A configured bucket count must match the store (zero defers to it).
-    const auto conflict = [](uint32_t configured, uint32_t stored) NOEXCEPT
-    {
-        return is_nonzero(configured) && (configured != stored);
-    };
-
-    if (conflict(configuration_.header.buckets, envelope_.header_buckets) ||
-        conflict(configuration_.ins.buckets, envelope_.ins_buckets) ||
-        conflict(configuration_.outs.buckets, envelope_.outs_buckets) ||
-        conflict(configuration_.tx.buckets, envelope_.tx_buckets) ||
-        conflict(configuration_.strong_tx.buckets, envelope_.strong_tx_buckets) ||
-        conflict(configuration_.duplicate.buckets, envelope_.duplicate_buckets) ||
-        conflict(configuration_.validated_tx.buckets, envelope_.validated_tx_buckets))
-    {
-        return error::verify_table;
-    }
-
     // The stored bucket counts govern the heads.
     if (!header.set_buckets(envelope_.header_buckets) ||
         !ins.set_buckets(envelope_.ins_buckets) ||
