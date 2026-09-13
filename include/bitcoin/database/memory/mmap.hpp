@@ -125,6 +125,12 @@ public:
     /// instances under the staging backend only; no effect otherwise).
     void mark(size_t offset, size_t size) NOEXCEPT override;
 
+    /// Report store currency (permits managed head settlement).
+    void current(bool state) NOEXCEPT override;
+
+    /// True when a managed head has settled to its file mapping.
+    bool settled() const NOEXCEPT;
+
     /// Flush memory map(s) to disk, suspend writes for call, must be loaded.
     code flush() NOEXCEPT override;
 
@@ -249,6 +255,11 @@ private:
     // zone of host memory management (heads / chunk fragments worst case).
     static constexpr size_t release_chunk = system::power2(20u);
     static constexpr size_t release_quiet = 128;
+
+    // Writes per tick sustained for unsettle_seconds reinstall a settled head
+    // (a block at the top is a burst of one tick, a catch-up is sustained).
+    static constexpr size_t unsettle_writes = 1000;
+    static constexpr size_t unsettle_seconds = 10;
 #if defined(HAVE_APPLE)
     // Anonymous overflow feeds the darwin compressor (10.8GB measured at
     // 16GB), which mincore hides from the touch guard; release converts
@@ -291,6 +302,8 @@ private:
     // mman wrappers, not thread safe.
     template <size_t Column>
     bool flush_(size_t rows) NOEXCEPT;
+    template <size_t Column>
+    bool persist_(size_t to) NOEXCEPT;
     template <size_t Column>
     bool map_() NOEXCEPT;
     template <size_t Column>
@@ -349,6 +362,10 @@ private:
     // head page release (unstaged instances), synchronized with writers by
     // the prepare/release bit protocol (see release_pages_).
     bool release_pages_() NOEXCEPT;
+    void quiesce_() NOEXCEPT;
+    bool share_(size_t transferred) NOEXCEPT;
+    void unshare_() NOEXCEPT;
+    void declare_released_() NOEXCEPT;
     void restore_(size_t offset, size_t size) NOEXCEPT;
 
     // settle scheduler (instance-owned thread, load/unload lifecycle).
@@ -455,8 +472,11 @@ private:
     size_t evicted_{};
 
 #if defined(STAGING_TELEMETRY)
-    // This is unshared (settler thread only).
+    // These are unshared (settler thread only).
     size_t telemetry_{};
+    size_t marked_{};
+    size_t peaked_{};
+    size_t active_{};
 #endif
 
     // These are thread safe (atomic).
@@ -480,6 +500,15 @@ private:
 
     // Set when a head loads released (gates prepare only, never the drain).
     std::atomic_bool lazy_{};
+
+    // Set when a quiescent head settles to its file mapping (retires tracking).
+    std::atomic_bool shared_{};
+
+    // Set while the store reports currency (permits settle).
+    std::atomic_bool current_{};
+
+    // Set across a settle transition (head writers back off, uncounted).
+    std::atomic_bool transition_{};
 
     // Writers between prepare and mark (unaged, unlike intent bits), so a
     // release pass cannot settle under a preempted in-flight write.

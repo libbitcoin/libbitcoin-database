@@ -114,6 +114,9 @@ public:
     /// Get a transactor object.
     transactor get_transactor() NOEXCEPT;
 
+    /// Reevaluate currency (called by chain writes).
+    void evaluate_currency() NOEXCEPT;
+
 protected:
     using path = std::filesystem::path;
 
@@ -125,11 +128,21 @@ protected:
     code backup(const event_handler& handler, bool prune=false) NOEXCEPT;
     code dump(const path& folder, const event_handler& handler) NOEXCEPT;
 
+    /// Currency (coalesced with a recent top), reported to head storage.
+    bool is_current() const NOEXCEPT;
+    void set_current(bool current) NOEXCEPT;
+
     // This is thread safe.
     const settings& configuration_;
 
     // This is set at create/open and read-only thereafter.
     database::envelope envelope_{};
+
+    // Top header age within which the store is current (two block intervals).
+    static constexpr uint32_t currency_seconds = 1200;
+
+    // This is thread safe.
+    std::atomic_bool current_{};
 
     /// Archives.
     /// -----------------------------------------------------------------------

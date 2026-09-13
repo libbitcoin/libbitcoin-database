@@ -42,7 +42,11 @@ bool CLASS::push_candidate(const header_link& link) NOEXCEPT
     const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.candidate.push(link);
+    const auto pushed = store_.candidate.push(link);
+    if (pushed)
+        store_.evaluate_currency();
+
+    return pushed;
     // ========================================================================
 }
 
@@ -63,7 +67,11 @@ bool CLASS::pop_candidate() NOEXCEPT
 
     ///////////////////////////////////////////////////////////////////////////
     std::unique_lock interlock{ candidate_reorganization_mutex_ };
-    return store_.candidate.truncate(top);
+    const auto popped = store_.candidate.truncate(top);
+    if (popped)
+        store_.evaluate_currency();
+
+    return popped;
     ///////////////////////////////////////////////////////////////////////////
     // ========================================================================
 }
@@ -86,7 +94,11 @@ bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
     if (strong && !set_strong(link, txs.tx_fks, true))
         return false;
 
-    return store_.confirmed.push(link);
+    const auto pushed = store_.confirmed.push(link);
+    if (pushed)
+        store_.evaluate_currency();
+
+    return pushed;
     // ========================================================================
 }
 
@@ -112,7 +124,11 @@ bool CLASS::pop_confirmed() NOEXCEPT
 
     ///////////////////////////////////////////////////////////////////////////
     std::unique_lock interlock{ confirmed_reorganization_mutex_ };
-    return store_.confirmed.truncate(top);
+    const auto popped = store_.confirmed.truncate(top);
+    if (popped)
+        store_.evaluate_currency();
+
+    return popped;
     ///////////////////////////////////////////////////////////////////////////
     // ========================================================================
 }

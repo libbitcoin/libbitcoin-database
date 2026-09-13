@@ -28,6 +28,8 @@ namespace database {
 TEMPLATE
 code CLASS::unload_close(const event_handler& handler) NOEXCEPT
 {
+    set_current(false);
+
     code ec{ error::success };
     const auto unload = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
     {

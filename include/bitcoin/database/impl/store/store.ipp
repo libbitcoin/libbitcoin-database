@@ -204,6 +204,59 @@ typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
     return transactor{ transactor_mutex_ };
 }
 
+// Current is coalesced (confirmed at candidate top) with a recent top header.
+TEMPLATE
+bool CLASS::is_current() const NOEXCEPT
+{
+    const auto count = candidate.count();
+    if (is_zero(count) || (count != confirmed.count()))
+        return false;
+
+    table::header::get_timestamp top{};
+    if (!header.get(candidate.at(sub1(count)), top))
+        return false;
+
+    const auto now = system::possible_narrow_sign_cast<uint32_t>(
+        std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count());
+
+    return (top.timestamp >= now) || ((now - top.timestamp) <= currency_seconds);
+}
+
+TEMPLATE
+void CLASS::set_current(bool current) NOEXCEPT
+{
+    if (current_.exchange(current) == current)
+        return;
+
+    header_head_.current(current);
+    input_head_.current(current);
+    output_head_.current(current);
+    ins_head_.current(current);
+    outs_head_.current(current);
+    tx_head_.current(current);
+    txs_head_.current(current);
+    candidate_head_.current(current);
+    confirmed_head_.current(current);
+    strong_tx_head_.current(current);
+    ecdsa_head_.current(current);
+    schnorr_head_.current(current);
+    silent_head_.current(current);
+    duplicate_head_.current(current);
+    prevalid_head_.current(current);
+    prevout_head_.current(current);
+    validated_bk_head_.current(current);
+    validated_tx_head_.current(current);
+    filter_bk_head_.current(current);
+    filter_tx_head_.current(current);
+}
+
+TEMPLATE
+void CLASS::evaluate_currency() NOEXCEPT
+{
+    set_current(is_current());
+}
+
 } // namespace database
 } // namespace libbitcoin
 
