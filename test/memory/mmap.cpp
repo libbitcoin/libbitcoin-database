@@ -365,9 +365,9 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__no_minimum_expansion__expected_capacity)
 // load commits (stage_), so an unsatisfiable headroom refuses the load itself
 // and these cases cannot isolate growth there.
 
-constexpr uint64_t unsatisfiable_headroom = 0x0001000000000000_u64;
-
 #if !defined(MANAGE_STAGING)
+
+constexpr uint64_t unsatisfiable_headroom = 0x0001000000000000_u64;
 
 BOOST_AUTO_TEST_CASE(mmap__allocate__unsatisfiable_headroom__eof)
 {
