@@ -71,8 +71,8 @@ bool CLASS::pop_candidate() NOEXCEPT
 TEMPLATE
 bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
 {
-    table::txs::get_coinbase_and_count txs{};
-    if (strong && !store_.txs.at(to_txs(link), txs))
+    table::txs::get_txs txs{};
+    if (strong && (!store_.txs.at(to_txs(link), txs) || txs.tx_fks.empty()))
         return false;
 
     // Reserve-push to ensure disk full safety and deferred access.
@@ -83,7 +83,7 @@ bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
     const auto scope = get_transactor();
 
     // This reservation guard assumes no concurrent writes to the table.
-    if (strong && !set_strong(link, txs.number, txs.coinbase_fk, true))
+    if (strong && !set_strong(link, txs.tx_fks, true))
         return false;
 
     return store_.confirmed.push(link);
@@ -99,15 +99,15 @@ bool CLASS::pop_confirmed() NOEXCEPT
         return false;
 
     const auto link = to_confirmed(top);
-    table::txs::get_coinbase_and_count txs{};
-    if (!store_.txs.at(to_txs(link), txs))
-        return {};
+    table::txs::get_txs txs{};
+    if (!store_.txs.at(to_txs(link), txs) || txs.tx_fks.empty())
+        return false;
 
     // ========================================================================
     const auto scope = get_transactor();
 
     // Clean single allocation failure.
-    if (!set_strong(link, txs.number, txs.coinbase_fk, false))
+    if (!set_strong(link, txs.tx_fks, false))
         return false;
 
     ///////////////////////////////////////////////////////////////////////////

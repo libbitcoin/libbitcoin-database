@@ -186,6 +186,19 @@ void CLASS::set_dirty() NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::is_pooling() const NOEXCEPT
+{
+    return pooling_.load(std::memory_order_relaxed);
+}
+
+TEMPLATE
+void CLASS::set_pooling() NOEXCEPT
+{
+    pooling_.store(true, std::memory_order_relaxed);
+    set_dirty();
+}
+
+TEMPLATE
 typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
 {
     return transactor{ transactor_mutex_ };

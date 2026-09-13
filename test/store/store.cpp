@@ -67,6 +67,29 @@ BOOST_AUTO_TEST_CASE(store__set_dirty__initialized__is_dirty)
     BOOST_REQUIRE(!instance.close(test::events));
 }
 
+BOOST_AUTO_TEST_CASE(store__is_pooling__default__false)
+{
+    const settings configuration{};
+    store<database::mmap> instance{ configuration };
+    BOOST_REQUIRE(!instance.is_pooling());
+}
+
+BOOST_AUTO_TEST_CASE(store__set_pooling__initialized__is_pooling_and_dirty)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BOOST_REQUIRE(!instance.is_pooling());
+    BOOST_REQUIRE(!instance.is_dirty());
+    instance.set_pooling();
+    BOOST_REQUIRE(instance.is_pooling());
+    BOOST_REQUIRE(instance.is_dirty());
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
 BOOST_AUTO_TEST_CASE(store__is_dirty__open__false)
 {
     settings configuration{};

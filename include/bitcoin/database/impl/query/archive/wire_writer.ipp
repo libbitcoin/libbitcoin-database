@@ -175,6 +175,23 @@ code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
         error::success : error::tx_tx_commit;
 }
 
+TEMPLATE
+tx_link CLASS::to_pooled(const transaction_view& tx) const NOEXCEPT
+{
+    using namespace system;
+
+    // The same tx duplicates all of its points, so the first is sufficient.
+    if (tx.is_coinbase())
+        return {};
+
+    auto ins = tx.get_inputs_stream();
+    read::bytes::fast isource{ ins };
+    if (!store_.ins.exists(chain::point(isource)))
+        return {};
+
+    return to_tx(tx.hash(false));
+}
+
 // set txs from block
 // ----------------------------------------------------------------------------
 // This sets only the txs of a block with header/context already archived.
@@ -217,7 +234,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     if (key.is_terminal())
         return error::txs_header;
 
-    const auto txs = block.transactions();
+    auto txs = block.transactions();
     if (is_zero(txs))
         return error::txs_empty;
 
@@ -227,8 +244,21 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     size_t outputs{};
     size_t input_bytes{};
     size_t output_bytes{};
-    for (const auto& tx: block.views())
+    const auto pooling = store_.is_pooling();
+    const auto& views = block.views();
+    tx_links links(txs, tx_link::terminal);
+    auto it = links.begin();
+    for (const auto& tx: views)
     {
+        if (pooling)
+            *it = to_pooled(tx);
+
+        if (*it++ != tx_link::terminal)
+        {
+            --txs;
+            continue;
+        }
+
         points += tx.inputs();
         outputs += tx.outputs();
         input_bytes += tx.input_table_size(prune);
@@ -237,9 +267,9 @@ code CLASS::set_code(const block_view& block, const header_link& key,
 
     // Optional hash, only has value on height intervals.
     auto interval = create_interval(key, height);
-
+    
     using bytes = linkage<schema::size>::integer;
-    const auto count = possible_narrow_cast<unsigned_type<schema::count_>>(txs);
+    using count = linkage<schema::count_>::integer;
     const auto light = possible_narrow_cast<bytes>(block.serialized_size(false));
     const auto heavy = possible_narrow_cast<bytes>(block.serialized_size(true));
 
@@ -247,12 +277,10 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     const auto scope = get_transactor();
 
     // Allocate all block rows for each table (one allocation lock each).
-    const auto tx_fks = store_.tx.allocate(count);
-    if (tx_fks.is_terminal())
-        return error::tx_tx_allocate;
-
     allocation fks{};
-    fks.tx_fk = tx_fks;
+    fks.tx_fk = store_.tx.allocate(possible_narrow_cast<count>(txs));
+    if (fks.tx_fk.is_terminal())
+        return error::tx_tx_allocate;
 
     fks.in_fk = store_.input.allocate(
         possible_narrow_cast<in_t>(input_bytes));
@@ -293,20 +321,26 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     // Write all txs into their preallocated rows (write order preserved).
     code ec{};
     std::vector<point> twins{};
-    for (const auto& tx: block.views())
+    it = links.begin();
+    for (const auto& tx: views)
     {
-        if ((ec = set_code(twins, ptrs, fks, tx, bypass, prune)))
-            return ec;
+        if (*it == tx_link::terminal)
+        {
+            if ((ec = set_code(twins, ptrs, fks, tx, bypass, prune)))
+                return ec;
 
-        // Output rows are parent fk prefixed (see table::output::put_view).
-        const auto out_bytes = tx.outputs() * tx_link::size +
-            tx.output_table_size();
+            // Output rows are parent fk prefixed (see table::output::put_view).
+            const auto out_bytes = tx.outputs() * tx_link::size +
+                tx.output_table_size();
 
-        fks.tx_fk++;
-        fks.ins_fk  += possible_narrow_cast<ins_t>(tx.inputs());
-        fks.outs_fk += possible_narrow_cast<outs_t>(tx.outputs());
-        fks.in_fk   += possible_narrow_cast<in_t>(tx.input_table_size(prune));
-        fks.out_fk  += possible_narrow_cast<out_t>(out_bytes);
+            *it = fks.tx_fk++;
+            fks.ins_fk  += possible_narrow_cast<ins_t>(tx.inputs());
+            fks.outs_fk += possible_narrow_cast<outs_t>(tx.outputs());
+            fks.in_fk   += possible_narrow_cast<in_t>(tx.input_table_size(prune));
+            fks.out_fk  += possible_narrow_cast<out_t>(out_bytes);
+        }
+
+        ++it;
     }
 
     // Release all accessors (subsequent writes allocate).
@@ -326,18 +360,17 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     constexpr auto positive = true;
 
     // Transactor assures cannot be restored without txs, as required to unset.
-    if (strong && !set_strong(key, txs, tx_fks, positive))
+    if (strong && !set_strong(key, links, positive))
         return error::txs_confirm;
 
     // Header link is the key for the txs table.
     // Clean single allocation failure (e.g. disk full).
-    return store_.txs.put(to_txs(key), table::txs::put_group
+    return store_.txs.put(to_txs(key), table::txs::slab
     {
         {},
         light,
         heavy,
-        count,
-        tx_fks,
+        std::move(links),
         std::move(interval),
         store_.envelope()
     }) ? error::success : error::txs_txs_put;
