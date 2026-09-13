@@ -25,6 +25,7 @@
     #include <unistd.h>
 #endif
 #if defined(HAVE_APPLE)
+    #include <dlfcn.h>
     #include <mach/mach.h>
     #include <sys/sysctl.h>
 #endif
@@ -35,8 +36,10 @@
     #include <fstream>
     #include <sys/stat.h>
     #include <sys/sysmacros.h>
+    #include <dlfcn.h>
     #include <sys/vfs.h>
 #endif
+#include <charconv>
 #include <filesystem>
 #include <system_error>
 #include <bitcoin/database/define.hpp>
@@ -461,6 +464,283 @@ bool internal_storage(const std::filesystem::path&) NOEXCEPT
 }
 
 #endif // HAVE_MSC
+
+#if defined(HAVE_MSC) || defined(HAVE_LINUX) || defined(HAVE_APPLE)
+
+// Compute runtimes install with the device driver, so their device counts
+// answer for the backends that batch acceleration requires when compiled.
+using cu_init_t = int32_t(*)(uint32_t);
+using cu_count_t = int32_t(*)(int32_t*);
+using cu_get_t = int32_t(*)(int32_t*, int32_t);
+using cu_attribute_t = int32_t(*)(int32_t*, int32_t, int32_t);
+using cl_platform_t = int32_t(*)(uint32_t, void**, uint32_t*);
+using cl_device_t = int32_t(*)(void*, uint64_t, uint32_t, void**, uint32_t*);
+using cl_info_t = int32_t(*)(void*, uint32_t, size_t, void*, size_t*);
+using mtl_device_t = void*(*)();
+using objc_release_t = void(*)(void*);
+
+#if !defined(HAVE_APPLE)
+// CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR/MINOR, and the floor of the
+// compiled cuda kernels (ada lovelace).
+constexpr int32_t cu_major = 75;
+constexpr int32_t cu_minor = 76;
+constexpr int32_t cuda_major = 8;
+constexpr int32_t cuda_minor = 9;
+#endif
+
+// CL_DEVICE_TYPE_GPU, excludes cpu devices exposed by installable clients.
+constexpr auto gpu_type = 4_u64;
+
+// CL_DEVICE_VERSION, and the floor of the compiled opencl kernels.
+constexpr auto cl_version = 0x102f_u32;
+constexpr auto opencl_major = 1_u32;
+constexpr auto opencl_minor = 2_u32;
+
+#if defined(HAVE_MSC)
+
+constexpr auto cuda_library = "nvcuda.dll";
+constexpr auto opencl_library = "OpenCL.dll";
+using library_t = HMODULE;
+
+static library_t load_library(const std::string& name) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return ::LoadLibraryW(system::to_utf16(name).c_str());
+    BC_POP_WARNING()
+}
+
+static void* load_symbol(library_t library, const char* name) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_REINTERPRET_CAST)
+    return reinterpret_cast<void*>(::GetProcAddress(library, name));
+    BC_POP_WARNING()
+}
+
+static void free_library(library_t library) NOEXCEPT
+{
+    ::FreeLibrary(library);
+}
+
+#else
+
+#if defined(HAVE_APPLE)
+constexpr auto opencl_library = "/System/Library/Frameworks/OpenCL.framework/OpenCL";
+constexpr auto metal_library = "/System/Library/Frameworks/Metal.framework/Metal";
+constexpr auto objc_library = "/usr/lib/libobjc.A.dylib";
+#else
+constexpr auto cuda_library = "libcuda.so.1";
+constexpr auto opencl_library = "libOpenCL.so.1";
+#endif
+using library_t = void*;
+
+static library_t load_library(const std::string& name) NOEXCEPT
+{
+    return ::dlopen(name.c_str(), RTLD_LAZY);
+}
+
+static void* load_symbol(library_t library, const char* name) NOEXCEPT
+{
+    return ::dlsym(library, name);
+}
+
+static void free_library(library_t library) NOEXCEPT
+{
+    ::dlclose(library);
+}
+
+#endif
+
+#if !defined(HAVE_APPLE)
+
+static bool cuda_device() NOEXCEPT
+{
+    const auto library = load_library(cuda_library);
+    if (is_null(library))
+        return false;
+
+    BC_PUSH_WARNING(NO_REINTERPRET_CAST)
+    const auto initialize = reinterpret_cast<cu_init_t>(
+        load_symbol(library, "cuInit"));
+    const auto count = reinterpret_cast<cu_count_t>(
+        load_symbol(library, "cuDeviceGetCount"));
+    const auto get = reinterpret_cast<cu_get_t>(
+        load_symbol(library, "cuDeviceGet"));
+    const auto attribute = reinterpret_cast<cu_attribute_t>(
+        load_symbol(library, "cuDeviceGetAttribute"));
+    BC_POP_WARNING()
+
+    auto found = false;
+    int32_t devices{};
+    if (!is_null(initialize) && !is_null(count) && !is_null(get) &&
+        !is_null(attribute) && is_zero(initialize(0)) &&
+        is_zero(count(&devices)))
+    {
+        for (int32_t ordinal{}; ordinal < devices; ++ordinal)
+        {
+            int32_t device{}, major{}, minor{};
+            if (is_zero(get(&device, ordinal)) &&
+                is_zero(attribute(&major, cu_major, device)) &&
+                is_zero(attribute(&minor, cu_minor, device)) &&
+                ((major > cuda_major) ||
+                    (major == cuda_major && minor >= cuda_minor)))
+            {
+                found = true;
+                break;
+            }
+        }
+    }
+
+    free_library(library);
+    return found;
+}
+
+#endif
+
+// Formatted as "OpenCL <major>.<minor> <vendor-specific>".
+static bool opencl_version(const char* text, uint32_t& major,
+    uint32_t& minor) NOEXCEPT
+{
+    constexpr std::string_view prefix{ "OpenCL " };
+    const std::string_view version{ text };
+    if (!version.starts_with(prefix))
+        return false;
+
+    const auto end = std::next(version.data(), version.size());
+    const auto first = std::from_chars(std::next(version.data(),
+        prefix.size()), end, major);
+    if (first.ec != std::errc{} || first.ptr == end || *first.ptr != '.')
+        return false;
+
+    return std::from_chars(std::next(first.ptr), end, minor).ec == std::errc{};
+}
+
+static bool opencl_device() NOEXCEPT
+{
+    const auto library = load_library(opencl_library);
+    if (is_null(library))
+        return false;
+
+    BC_PUSH_WARNING(NO_REINTERPRET_CAST)
+    const auto platforms = reinterpret_cast<cl_platform_t>(
+        load_symbol(library, "clGetPlatformIDs"));
+    const auto devices = reinterpret_cast<cl_device_t>(
+        load_symbol(library, "clGetDeviceIDs"));
+    BC_POP_WARNING()
+
+    auto found = false;
+    uint32_t count{};
+    if (!is_null(platforms) && !is_null(devices) &&
+        is_zero(platforms(0, nullptr, &count)) && !is_zero(count))
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        std::vector<void*> identifiers(count);
+        BC_POP_WARNING()
+
+        BC_PUSH_WARNING(NO_REINTERPRET_CAST)
+        const auto information = reinterpret_cast<cl_info_t>(
+            load_symbol(library, "clGetDeviceInfo"));
+        BC_POP_WARNING()
+
+        if (!is_null(information) &&
+            is_zero(platforms(count, identifiers.data(), nullptr)))
+        {
+            for (const auto identifier: identifiers)
+            {
+                uint32_t gpus{};
+                if (!is_zero(devices(identifier, gpu_type, 0, nullptr, &gpus)) ||
+                    is_zero(gpus))
+                    continue;
+
+                BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+                std::vector<void*> handles(gpus);
+                BC_POP_WARNING()
+
+                if (!is_zero(devices(identifier, gpu_type, gpus, handles.data(),
+                    nullptr)))
+                    continue;
+
+                for (const auto handle: handles)
+                {
+                    char version[64]{};
+                    uint32_t major{}, minor{};
+                    if (is_zero(information(handle, cl_version,
+                        sizeof(version), version, nullptr)) &&
+                        opencl_version(version, major, minor) &&
+                        ((major > opencl_major) ||
+                            (major == opencl_major && minor >= opencl_minor)))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found)
+                    break;
+            }
+        }
+    }
+
+    free_library(library);
+    return found;
+}
+
+#if defined(HAVE_APPLE)
+
+static bool metal_device() NOEXCEPT
+{
+    const auto library = load_library(metal_library);
+    if (is_null(library))
+        return false;
+
+    BC_PUSH_WARNING(NO_REINTERPRET_CAST)
+    const auto create = reinterpret_cast<mtl_device_t>(
+        load_symbol(library, "MTLCreateSystemDefaultDevice"));
+    BC_POP_WARNING()
+
+    const auto device = is_null(create) ? nullptr : create();
+    if (!is_null(device))
+    {
+        // The device is returned retained, so is released by the runtime.
+        if (const auto objc = load_library(objc_library))
+        {
+            BC_PUSH_WARNING(NO_REINTERPRET_CAST)
+            const auto release = reinterpret_cast<objc_release_t>(
+                load_symbol(objc, "objc_release"));
+            BC_POP_WARNING()
+
+            if (!is_null(release))
+                release(device);
+
+            free_library(objc);
+        }
+    }
+
+    free_library(library);
+    return !is_null(device);
+}
+
+bool gpu_device() NOEXCEPT
+{
+    return metal_device() || opencl_device();
+}
+
+#else
+
+bool gpu_device() NOEXCEPT
+{
+    return cuda_device() || opencl_device();
+}
+
+#endif
+
+#else
+
+bool gpu_device() NOEXCEPT
+{
+    return false;
+}
+
+#endif
 
 } // namespace database
 } // namespace libbitcoin
