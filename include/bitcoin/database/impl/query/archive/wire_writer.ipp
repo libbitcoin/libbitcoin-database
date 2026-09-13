@@ -303,10 +303,10 @@ code CLASS::set_code(const block_view& block, const header_link& key,
             tx.output_table_size();
 
         fks.tx_fk++;
-        fks.ins_fk  += tx.inputs();
-        fks.outs_fk += tx.outputs();
-        fks.in_fk   += tx.input_table_size(prune);
-        fks.out_fk  += out_bytes;
+        fks.ins_fk  += possible_narrow_cast<ins_t>(tx.inputs());
+        fks.outs_fk += possible_narrow_cast<outs_t>(tx.outputs());
+        fks.in_fk   += possible_narrow_cast<in_t>(tx.input_table_size(prune));
+        fks.out_fk  += possible_narrow_cast<out_t>(out_bytes);
     }
 
     // Release all accessors (subsequent writes allocate).
