@@ -229,7 +229,8 @@ histories CLASS::get_spenders_history(
     const system::chain::point& prevout) const NOEXCEPT
 {
     const auto ins = to_spenders(prevout);
-    histories out(ins.size());
+    histories out{};
+    out.reserve(ins.size());
     for (const auto& in: std::views::reverse(ins))
         out.push_back(get_tx_history(to_input_tx(in)));
 
