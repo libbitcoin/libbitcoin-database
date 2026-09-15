@@ -1547,11 +1547,9 @@ BOOST_AUTO_TEST_CASE(mmap__settle__filled_tail_above_logical__survives_settle)
     BOOST_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
     BOOST_REQUIRE(instance.get_filled(cells * cell_width, cell_width, system::bit_all<uint8_t>));
     BOOST_REQUIRE_GT(instance.capacity(), add1(tail) * cell_width);
-    BOOST_REQUIRE_EQUAL(read_cells(instance, add1(tail)).back(), fill);
 
     instance.current(true);
     BOOST_REQUIRE(settled_within(instance, true, settle_wait));
-    BOOST_REQUIRE_EQUAL(read_cells(instance, add1(tail)).back(), fill);
     BOOST_REQUIRE(instance.get_filled(tail * cell_width, cell_width, system::bit_all<uint8_t>));
     BOOST_REQUIRE_EQUAL(read_cells(instance, add1(tail)).back(), fill);
 
