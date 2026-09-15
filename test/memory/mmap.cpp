@@ -1532,6 +1532,34 @@ BOOST_AUTO_TEST_CASE(mmap__settle__sustained_writes__unsettled_without_loss)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+BOOST_AUTO_TEST_CASE(mmap__settle__filled_tail_above_logical__survives_settle)
+{
+    constexpr size_t cells = 512;
+    constexpr size_t tail = add1(cells);
+    constexpr auto fill = system::bit_all<uint64_t>;
+
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+    BOOST_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
+    BOOST_REQUIRE(instance.get_filled(cells * cell_width, cell_width, system::bit_all<uint8_t>));
+    BOOST_REQUIRE_GT(instance.capacity(), add1(tail) * cell_width);
+    BOOST_REQUIRE_EQUAL(read_cells(instance, add1(tail)).back(), fill);
+
+    instance.current(true);
+    BOOST_REQUIRE(settled_within(instance, true, settle_wait));
+    BOOST_REQUIRE_EQUAL(read_cells(instance, add1(tail)).back(), fill);
+    BOOST_REQUIRE(instance.get_filled(tail * cell_width, cell_width, system::bit_all<uint8_t>));
+    BOOST_REQUIRE_EQUAL(read_cells(instance, add1(tail)).back(), fill);
+
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 #endif // MANAGE_STAGING
 
 BC_POP_WARNING()

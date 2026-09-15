@@ -1417,11 +1417,19 @@ bool CLASS::share_(size_t transferred) NOEXCEPT
     auto shared = false;
     if (loaded_.load() && !fault_.load() && (marks_.load() == transferred))
     {
+        // The drain transfers below logical; the committed fill above it is
+        // content (a raised logical exposes it unwritten).
+        const auto logical = to_width<zero>(logical_.load());
         const auto span = to_width<zero>(capacity_.load());
-        shared = mmap_share(memory_map_[zero], span, opened_[zero],
-            zero) != fail;
+        const auto persisted = (span <= logical) || pwrite_all(opened_[zero],
+            std::next(memory_map_[zero], logical), span - logical, logical);
 
-        if (!shared)
+        shared = persisted && (mmap_share(memory_map_[zero], span,
+            opened_[zero], zero) != fail);
+
+        if (!persisted)
+            set_first_code(error::fsync_failure);
+        else if (!shared)
             set_first_code(error::mmap_failure);
 #if !defined(WITHOUT_MADVISE)
         else if (!advise_(memory_map_[zero], span))
