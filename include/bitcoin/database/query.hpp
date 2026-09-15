@@ -88,6 +88,10 @@ public:
     /// True if candidate top is fork point header.
     bool is_coalesced() const NOEXCEPT;
 
+    /// Transaction pooling is enabled (one way latch).
+    bool is_pooling() const NOEXCEPT;
+    void set_pooling() NOEXCEPT;
+
     /// Get the space required to clear the disk full condition.
     size_t get_space() const NOEXCEPT;
 
