@@ -161,9 +161,15 @@ bool CLASS::is_unconfirmed_spent(const output_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::is_spent(const output_link& link) const NOEXCEPT
 {
-    // *Any* tx spends the output. Note that this could even be a tx that is in
+    return is_spent(get_outpoint(link).point());
+}
+
+TEMPLATE
+bool CLASS::is_spent(const point& prevout) const NOEXCEPT
+{
+    // *Any* tx spends the point. Note that this could even be a tx that is in
     // conflict with another long-confirmed tx, or a valid tx in invalid block.
-    return store_.ins.exists(get_outpoint(link).point());
+    return store_.ins.exists(prevout);
 }
 
 } // namespace database

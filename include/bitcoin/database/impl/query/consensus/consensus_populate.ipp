@@ -49,31 +49,31 @@ bool CLASS::populate_with_metadata(const block& block,
 }
 
 TEMPLATE
-bool CLASS::populate_with_metadata(const transaction& tx,
-    bool chain) const NOEXCEPT
+bool CLASS::populate_with_metadata(const transaction& tx, bool chain,
+    bool pool) const NOEXCEPT
 {
     // This override makes the public method safe for coinbase calling.
-    return tx.is_coinbase() || populate_with_metadata_(tx, chain);
+    return tx.is_coinbase() || populate_with_metadata_(tx, chain, pool);
 }
 
 // protected
 TEMPLATE
-bool CLASS::populate_with_metadata_(const transaction& tx,
-    bool chain) const NOEXCEPT
+bool CLASS::populate_with_metadata_(const transaction& tx, bool chain,
+    bool pool) const NOEXCEPT
 {
     BC_ASSERT(!tx.is_coinbase());
 
     const auto& ins = tx.inputs_ptr();
     return std::all_of(ins->begin(), ins->end(),
-        [this, chain](const auto& in) NOEXCEPT
+        [this, chain, pool](const auto& in) NOEXCEPT
         {
-            return this->populate_with_metadata(*in, chain);
+            return this->populate_with_metadata(*in, chain, pool);
         });
 }
 
 TEMPLATE
-bool CLASS::populate_with_metadata(const input& input,
-    bool chain) const NOEXCEPT
+bool CLASS::populate_with_metadata(const input& input, bool chain,
+    bool pool) const NOEXCEPT
 {
     // Null point would return nullptr and be interpreted as missing.
     BC_ASSERT(!input.point().is_null());
@@ -119,7 +119,13 @@ bool CLASS::populate_with_metadata(const input& input,
             metadata.median_time_past = max_uint32;
         }
 
-        if (const auto height = find_strong_spender_height(input.point());
+        if (pool)
+        {
+            // Any spender (including duplicate tx) implies spent.
+            const auto spent = is_spent(input.point());
+            metadata.spender_height = spent ? 0_u32 : max_uint32;
+        }
+        else if (const auto height = find_strong_spender_height(input.point());
             !height.is_terminal())
         {
             // Confirmed spender found at height.
