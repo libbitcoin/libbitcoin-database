@@ -119,11 +119,12 @@ bool CLASS::populate_with_metadata(const input& input, bool chain,
             metadata.median_time_past = max_uint32;
         }
 
-        if (pool)
+        // The genesis coinbase is unspendable, so no confirmed spender is at
+        // zero, which therefore distinguishes an unconfirmed spender.
+        if (pool && !is_spent(input.point()))
         {
-            // Any spender (including duplicate tx) implies spent.
-            const auto spent = is_spent(input.point());
-            metadata.spender_height = spent ? 0_u32 : max_uint32;
+            // Any spender (including duplicate tx) not found.
+            metadata.spender_height = max_uint32;
         }
         else if (const auto height = find_strong_spender_height(input.point());
             !height.is_terminal())
@@ -135,7 +136,7 @@ bool CLASS::populate_with_metadata(const input& input, bool chain,
         else
         {
             // Confirmed spender not found.
-            metadata.spender_height = max_uint32;
+            metadata.spender_height = pool ? 0_u32 : max_uint32;
         }
     }
 

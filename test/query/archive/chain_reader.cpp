@@ -852,7 +852,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__metadata__expec
     BOOST_CHECK_EQUAL(tx4.inputs_ptr()->at(1)->metadata.parent_tx, 1u);
 }
 
-// A free tx cannot conflict, so any spender of its prevout implies spent.
+// A free tx conflicts with any spender, but only a confirmed one has height.
 BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__pool_spender__expected)
 {
     settings settings{};
@@ -861,23 +861,35 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__pool_spender__e
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
 
-    // tx5 spends the first output of the first tx of block1a, as does tx4.
+    // tx5 spends the first output of the first tx of block1a, as do tx4 and
+    // the first transaction of block2a.
     const auto& unspent = clean_(test::tx5);
     BOOST_CHECK(query.populate_with_metadata(unspent, true, true));
     BOOST_CHECK_EQUAL(unspent.inputs_ptr()->at(0)->metadata.spender_height, max_uint32);
 
     BOOST_CHECK(query.set(test::tx4));
 
-    const auto& spent = clean_(test::tx5);
-    BOOST_CHECK(query.populate_with_metadata(spent, true, true));
-    BOOST_CHECK_EQUAL(spent.inputs_ptr()->at(0)->metadata.spender_height, 0u);
+    const auto& pooled = clean_(test::tx5);
+    BOOST_CHECK(query.populate_with_metadata(pooled, true, true));
+    BOOST_CHECK_EQUAL(pooled.inputs_ptr()->at(0)->metadata.spender_height, 0u);
 
     // The spender is unassociated, so it is not a confirmed spender.
     const auto& chained = clean_(test::tx5);
     BOOST_CHECK(query.populate_with_metadata(chained, true, false));
     BOOST_CHECK_EQUAL(chained.inputs_ptr()->at(0)->metadata.spender_height, max_uint32);
+
+    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
+    BOOST_CHECK(query.set_strong(2));
+
+    const auto& confirmed = clean_(test::tx5);
+    BOOST_CHECK(query.populate_with_metadata(confirmed, true, true));
+    BOOST_CHECK_EQUAL(confirmed.inputs_ptr()->at(0)->metadata.spender_height, 2u);
+
+    const auto& strong = clean_(test::tx5);
+    BOOST_CHECK(query.populate_with_metadata(strong, true, false));
+    BOOST_CHECK_EQUAL(strong.inputs_ptr()->at(0)->metadata.spender_height, 2u);
 }
 
 // populate_without_metadata
