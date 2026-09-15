@@ -852,6 +852,34 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__metadata__expec
     BOOST_CHECK_EQUAL(tx4.inputs_ptr()->at(1)->metadata.parent_tx, 1u);
 }
 
+// A free tx cannot conflict, so any spender of its prevout implies spent.
+BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__pool_spender__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::block1a, test::context, false, false));
+
+    // tx5 spends the first output of the first tx of block1a, as does tx4.
+    const auto& unspent = clean_(test::tx5);
+    BOOST_CHECK(query.populate_with_metadata(unspent, true, true));
+    BOOST_CHECK_EQUAL(unspent.inputs_ptr()->at(0)->metadata.spender_height, max_uint32);
+
+    BOOST_CHECK(query.set(test::tx4));
+
+    const auto& spent = clean_(test::tx5);
+    BOOST_CHECK(query.populate_with_metadata(spent, true, true));
+    BOOST_CHECK_EQUAL(spent.inputs_ptr()->at(0)->metadata.spender_height, 0u);
+
+    // The spender is unassociated, so it is not a confirmed spender.
+    const auto& chained = clean_(test::tx5);
+    BOOST_CHECK(query.populate_with_metadata(chained, true, false));
+    BOOST_CHECK_EQUAL(chained.inputs_ptr()->at(0)->metadata.spender_height, max_uint32);
+}
+
 // populate_without_metadata
 // ----------------------------------------------------------------------------
 

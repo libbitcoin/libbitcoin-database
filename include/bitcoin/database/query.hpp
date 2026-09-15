@@ -468,9 +468,12 @@ public:
     bool populate_without_metadata(const transaction& tx) const NOEXCEPT;
 
     /// False implies missing prevouts, node input.metadata is populated.
-    bool populate_with_metadata(const input& input, bool chain=false) const NOEXCEPT;
+    /// Pool implies free tx, where any conflict implies is spent at height 0.
+    bool populate_with_metadata(const input& input, bool chain=false,
+        bool pool=false) const NOEXCEPT;
     bool populate_with_metadata(const block& block, bool chain=false) const NOEXCEPT;
-    bool populate_with_metadata(const transaction& tx, bool chain=false) const NOEXCEPT;
+    bool populate_with_metadata(const transaction& tx, bool chain=false,
+        bool pool=false) const NOEXCEPT;
 
     /// Fees.
     /// -----------------------------------------------------------------------
@@ -645,6 +648,7 @@ public:
     bool is_unconfirmed_spent(const output_link& link) const NOEXCEPT;
     bool is_confirmed_spent(const output_link& link) const NOEXCEPT;
     bool is_spent(const output_link& link) const NOEXCEPT;
+    bool is_spent(const point& prevout) const NOEXCEPT;
 
     /// Height index not used by these.
     bool is_strong_tx(const tx_link& link) const NOEXCEPT;
@@ -923,8 +927,8 @@ protected:
         const header_link& link, size_t height) const NOEXCEPT;
 
     /// Bypasses and only asserts coinbase guard (internal use).
-    bool populate_with_metadata_(const transaction& tx,
-        bool chain) const NOEXCEPT;
+    bool populate_with_metadata_(const transaction& tx, bool chain,
+        bool pool) const NOEXCEPT;
 
     /// merkle
     /// -----------------------------------------------------------------------
