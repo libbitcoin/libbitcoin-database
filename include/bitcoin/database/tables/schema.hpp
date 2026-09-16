@@ -38,6 +38,9 @@ namespace libbitcoin {
 namespace database {
 namespace schema {
 
+/// The store schema version, stored as the first envelope value.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 0, 0 };
+
 /// Values.
 /// -----------------------------------------------------------------------
 constexpr size_t bit = 1;       // single bit flag.
@@ -327,6 +330,19 @@ TABLE_COLUMN(silent_correlate, schema::transaction::pk);
 
 // array (same as candidate and confirmed)
 using prevalid = height;
+
+// headmap slab (envelope)
+struct envelope
+{
+    static constexpr size_t pk = sizeof(uint16_t);
+    using link = linkage<pk>;
+    static constexpr size_t minsize = zero;
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = max_size_t;
+    static constexpr size_t cell = max_size_t;
+    static constexpr auto suffix = "envelope"_t;
+    bool operator==(const envelope&) const NOEXCEPT = default;
+};
 
 // record hashmap
 struct duplicate

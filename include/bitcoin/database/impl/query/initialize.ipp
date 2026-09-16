@@ -30,7 +30,7 @@ namespace database {
 TEMPLATE
 const database::envelope& CLASS::envelope() const NOEXCEPT
 {
-    return store_.envelope();
+    return store_.get_envelope();
 }
 
 // server/dumps

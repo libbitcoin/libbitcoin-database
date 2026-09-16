@@ -31,6 +31,8 @@ namespace database {
 /// A head-only array of links indexed by position (no body, no count cell).
 /// The storage logical size is the count, providing count atomicity and
 /// bucket publication as with bodies. Content restores with the heads.
+/// A maximal cell is a slab, in which the link is a byte offset and elements
+/// are serialized, as with bodies (the link accessors do not apply).
 template <class Link, size_t Cell = Link::size,
     if_not_greater<Link::size, Cell> = true>
 class headmap
@@ -95,9 +97,25 @@ public:
     /// Append link at count into reserved capacity (single writer).
     bool push(const Link& link) NOEXCEPT;
 
+    /// Slab.
+    /// -----------------------------------------------------------------------
+
+    /// Allocate slab bytes at returned link (follow with put).
+    Link allocate(const Link& bytes) NOEXCEPT;
+
+    /// Get element at link, false if deserialize error.
+    template <typename Element>
+    bool get(const Link& link, Element& element) const NOEXCEPT;
+
+    /// Put element at allocated link, false if serialize error.
+    template <typename Element>
+    bool put(const Link& link, const Element& element) NOEXCEPT;
+
 private:
-    using cell = unsigned_type<Cell>;
-    static constexpr size_t bucket_size = Cell;
+    // A slab is byte-addressed, so the cell is unused and a byte wide.
+    static constexpr bool is_slab = (Cell == max_size_t);
+    using cell = unsigned_type<is_slab ? one : Cell>;
+    static constexpr size_t bucket_size = is_slab ? one : Cell;
     static constexpr bool aligned = (bucket_size == sizeof(cell));
     static_assert(is_nonzero(Link::size));
     static_assert(std::atomic<cell>::is_always_lock_free);

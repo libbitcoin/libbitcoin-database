@@ -90,6 +90,7 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = schnorr_body_.get_fault())) return ec;
     if ((ec = silent_head_.get_fault())) return ec;
     if ((ec = silent_body_.get_fault())) return ec;
+    if ((ec = envelope_head_.get_fault())) return ec;
     if ((ec = duplicate_head_.get_fault())) return ec;
     if ((ec = duplicate_body_.get_fault())) return ec;
     if ((ec = prevalid_head_.get_fault())) return ec;
@@ -141,6 +142,7 @@ size_t CLASS::get_space() const NOEXCEPT
     space(schnorr_body_);
     space(silent_head_);
     space(silent_body_);
+    space(envelope_head_);
     space(duplicate_head_);
     space(duplicate_body_);
     space(prevalid_head_);

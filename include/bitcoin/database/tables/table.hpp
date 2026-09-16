@@ -73,6 +73,8 @@ enum class table_t
     silent_table,
     silent_head,
     silent_body,
+    envelope_table,
+    envelope_head,
     duplicate_table,
     duplicate_head,
     duplicate_body,

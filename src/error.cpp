@@ -85,6 +85,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { unloaded_file, "file not loaded" },
 
     // tables
+    { schema_version, "store schema version mismatch" },
     { create_table, "failed to create table" },
     { close_table, "failed to close table" },
     { prune_table, "failed to prune table" },

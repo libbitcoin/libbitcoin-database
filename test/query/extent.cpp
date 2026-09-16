@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.input_body_size(), 79u);
     BOOST_REQUIRE_EQUAL(query.ins_body_size(), schema::ins::minrow + schema::ins_sequence::minrow);
     BOOST_REQUIRE_EQUAL(query.outs_body_size(), schema::address::minrow + schema::outs::minrow);
-    BOOST_REQUIRE_EQUAL(query.txs_body_size(), schema::txs::minrow + settings.envelope.serialized_size());
+    BOOST_REQUIRE_EQUAL(query.txs_body_size(), schema::txs::minrow);
     BOOST_REQUIRE_EQUAL(query.tx_body_size(), schema::transaction::minrow);
 
     BOOST_REQUIRE_EQUAL(query.candidate_body_size(), zero);

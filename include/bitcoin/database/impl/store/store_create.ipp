@@ -105,6 +105,7 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, schnorr_body_, table_t::schnorr_body);
     create(ec, silent_head_, table_t::silent_head);
     create(ec, silent_body_, table_t::silent_body);
+    create(ec, envelope_head_, table_t::envelope_head);
     create(ec, duplicate_head_, table_t::duplicate_head);
     create(ec, duplicate_body_, table_t::duplicate_body);
     create(ec, prevalid_head_, table_t::prevalid_head);
@@ -150,6 +151,7 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, ecdsa, table_t::ecdsa_table);
     populate(ec, schnorr, table_t::schnorr_table);
     populate(ec, silent, table_t::silent_table);
+    populate(ec, envelope, table_t::envelope_table);
     populate(ec, duplicate, table_t::duplicate_table);
     populate(ec, prevalid, table_t::prevalid_table);
     populate(ec, prevout, table_t::prevout_table);
@@ -159,6 +161,8 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, filter_bk, table_t::filter_bk_table);
     populate(ec, filter_tx, table_t::filter_tx_table);
 
+    // The envelope is written once the tables it governs are created.
+    store_envelope(ec);
     return ec;
 }
 

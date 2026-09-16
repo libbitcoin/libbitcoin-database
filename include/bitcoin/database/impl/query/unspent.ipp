@@ -38,7 +38,7 @@ bool CLASS::is_bip30_exception(bool& out,
     if (!first && !second)
         return true;
 
-    if (!store_.envelope().forks.bip30)
+    if (!store_.get_envelope().forks.bip30)
         return true;
 
     const auto& hash = first ? bip30::first.hash() : bip30::second.hash();

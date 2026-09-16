@@ -371,8 +371,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
         light,
         heavy,
         std::move(links),
-        std::move(interval),
-        store_.envelope()
+        std::move(interval)
     }) ? error::success : error::txs_txs_put;
     // ========================================================================
 }

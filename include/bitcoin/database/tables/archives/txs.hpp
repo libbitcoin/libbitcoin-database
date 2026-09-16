@@ -21,7 +21,6 @@
 
 #include <optional>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/tables/envelope.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/tables/schema.hpp>
@@ -82,8 +81,7 @@ struct txs
         {
             return system::possible_narrow_cast<link::integer>(
                 skip_sizes + ct::size + (tx_fks.size() * tx::size) +
-                (interval.has_value() ? schema::hash : zero) +
-                (is_genesis() ? envelope.serialized_size() : zero));
+                (interval.has_value() ? schema::hash : zero));
         }
 
         inline bool from_data(reader& source) NOEXCEPT
@@ -103,10 +101,6 @@ struct txs
             // interval (when specified)
             interval.reset();
             if (is_interval(merged)) interval = source.read_hash();
-
-            // envelope (genesis only)
-            if (is_genesis())
-                envelope.from_data(source);
 
             BC_ASSERT(!source || source.get_read_position() == count());
             return source;
@@ -133,10 +127,6 @@ struct txs
             // interval (when specified)
             if (interval.has_value()) sink.write_bytes(interval.value());
 
-            // envelope (genesis only)
-            if (is_genesis())
-                envelope.to_data(sink);
-
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
@@ -147,7 +137,6 @@ struct txs
         bytes::integer heavy{};
         keys tx_fks{};
         hash interval{};
-        database::envelope envelope{};
     };
 
     struct get_interval
@@ -176,37 +165,6 @@ struct txs
         }
 
         hash interval{};
-    };
-
-    // This reader is only applicable to the genesis block.
-    struct get_envelope
-      : public schema::txs
-    {
-        inline link count() const NOEXCEPT
-        {
-            BC_ASSERT(false);
-            return {};
-        }
-
-        // Stored at end since only read once (at startup).
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            // tx sizes
-            const auto merged = source.read_little_endian<bytes::integer, bytes::size>();
-            source.skip_bytes(bytes::size);
-
-            // tx fks
-            const auto number = source.read_little_endian<ct::integer, ct::size>();
-            source.skip_bytes(number * tx::size);
-
-            // interval
-            source.skip_bytes(is_interval(merged) ? schema::hash : zero);
-
-            // envelope
-            return envelope.from_data(source);
-        }
-
-        database::envelope envelope{};
     };
 
     struct get_position
