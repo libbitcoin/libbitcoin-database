@@ -151,6 +151,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         dropped(ec, ecdsa, table_t::ecdsa_table);
         dropped(ec, schnorr, table_t::schnorr_table);
         restore(ec, silent, table_t::silent_table);
+        restore(ec, envelope, table_t::envelope_table);
         restore(ec, duplicate, table_t::duplicate_table);
         dropped(ec, prevalid, table_t::prevalid_table);
         restore(ec, prevout, table_t::prevout_table);

@@ -296,7 +296,7 @@ code CLASS::confirm(unspent_coins& out, size_t offset,
     const header_links& blocks, const std_vector<size_t>& heights) const NOEXCEPT
 {
     header_link block{};
-    const auto fork = store_.envelope().forks.bip30;
+    const auto fork = store_.get_envelope().forks.bip30;
 
     const auto ptr = store_.confirmed.get_memory();
     for (size_t at{}; at < blocks.size(); ++at)

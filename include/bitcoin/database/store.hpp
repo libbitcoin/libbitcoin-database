@@ -95,7 +95,7 @@ public:
     uint8_t interval_depth() const NOEXCEPT;
 
     /// Settings envelope stored at store creation.
-    const database::envelope& envelope() const NOEXCEPT;
+    const database::envelope& get_envelope() const NOEXCEPT;
 
     /// Determine if the store is non-empty/initialized.
     bool is_dirty() const NOEXCEPT;
@@ -124,6 +124,7 @@ protected:
     code create_load(const event_handler& handler) NOEXCEPT;
     code open_load(const event_handler& handler) NOEXCEPT;
     code load_envelope() NOEXCEPT;
+    void store_envelope(code& ec) NOEXCEPT;
     code unload_close(const event_handler& handler) NOEXCEPT;
     code backup(const event_handler& handler, bool prune=false) NOEXCEPT;
     code dump(const path& folder, const event_handler& handler) NOEXCEPT;
@@ -203,6 +204,9 @@ protected:
     // aggregate
     Storage<one> silent_head_;
     table::silent_storage<Storage> silent_body_;
+
+    // headmap slab
+    Storage<one> envelope_head_;
 
     // blob arraymap
     Storage<one> duplicate_head_;
@@ -312,6 +316,7 @@ public:
     table::ecdsa<Storage> ecdsa;
     table::schnorr<Storage> schnorr;
     table::silent<Storage> silent;
+    table::envelope envelope;
     table::duplicate duplicate;
     table::prevalid prevalid;
     table::prevout prevout;

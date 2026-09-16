@@ -31,7 +31,7 @@ struct settings;
 /// values govern the store, configuration is consumed only at creation.
 struct BCD_API envelope
 {
-    static constexpr uint8_t current{ 2 };
+    static constexpr uint8_t current{ 3 };
 
     envelope() NOEXCEPT = default;
     envelope(const system::settings& bitcoin,
@@ -91,6 +91,9 @@ struct BCD_API envelope
     system::chain::checkpoint bip9_bit0_active_checkpoint{};
     system::chain::checkpoint bip9_bit1_active_checkpoint{};
     system::chain::checkpoint bip9_bit2_active_checkpoint{};
+
+    /// Store state.
+    bool pooling{};
 };
 
 } // namespace database

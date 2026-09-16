@@ -30,11 +30,9 @@ const table::txs::slab slab0
     0x000000,
     0x000000,
     {
-        // tx fk 0 uniquely identifies genesis, resulting in envelope storage.
         0x00000000_u32
     },
-    {},         // interval (unused due to default span)
-    {}          // envelope (genesis only)
+    {}          // interval (unused due to default span)
 };
 const table::txs::slab slab1
 {
@@ -80,14 +78,8 @@ const data_chunk expected0 = build_chunk(
         0x01, 0x00,
 
         // slab0 (txs)
-        0x00, 0x00, 0x00, 0x00,
-
-        // envelope version (genesis)
-        0x02
-    },
-
-    // default envelope body (genesis)
-    data_chunk(269, 0x00)
+        0x00, 0x00, 0x00, 0x00
+    }
 });
 const data_chunk expected1
 {
@@ -153,7 +145,6 @@ BOOST_AUTO_TEST_CASE(txs__put__get__expected)
     BOOST_CHECK(slab == slab0);
     BOOST_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0 }));
 
-    slab.envelope = {};
     BOOST_CHECK(instance.put(key, slab1));
     BOOST_CHECK(instance.exists(key));
     BOOST_CHECK(instance.at(key, slab));

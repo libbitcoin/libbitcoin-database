@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 270_size;
+constexpr auto default_size = 271_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {

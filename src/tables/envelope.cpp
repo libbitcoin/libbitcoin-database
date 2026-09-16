@@ -158,6 +158,8 @@ bool envelope::from_data(reader& source) NOEXCEPT
     bip9_bit0_active_checkpoint = read_checkpoint();
     bip9_bit1_active_checkpoint = read_checkpoint();
     bip9_bit2_active_checkpoint = read_checkpoint();
+
+    pooling = to_bool(source.read_byte());
     return source;
 }
 
@@ -241,6 +243,8 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     write_checkpoint(bip9_bit0_active_checkpoint);
     write_checkpoint(bip9_bit1_active_checkpoint);
     write_checkpoint(bip9_bit2_active_checkpoint);
+
+    sink.write_byte(to_int<uint8_t>(pooling));
     return sink;
 }
 
@@ -248,7 +252,7 @@ size_t envelope::serialized_size() const NOEXCEPT
 {
     constexpr auto forks_size = 24_size;
     constexpr auto fixed = one + sizeof(uint16_t) + (7 * sizeof(uint32_t)) +
-        (7 * sizeof(uint8_t)) + one + forks_size + sizeof(uint64_t) +
+        (7 * sizeof(uint8_t)) + two + forks_size + sizeof(uint64_t) +
         (15 * sizeof(uint32_t));
 
     const auto checkpoint_size = [](const chain::checkpoint& in) NOEXCEPT

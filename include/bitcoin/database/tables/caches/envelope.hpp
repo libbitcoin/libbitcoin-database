@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_CONFIGURATION_HPP
-#define LIBBITCOIN_DATABASE_TABLES_INDEXES_CONFIGURATION_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_ENVELOPE_HPP
+#define LIBBITCOIN_DATABASE_TABLES_CACHES_ENVELOPE_HPP
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
@@ -28,12 +28,12 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// configuration is a head-only slab of one element (no body), holding the
-/// store envelope. The element is rewritten in place as settings change.
-struct configuration
-  : public head_map<schema::configuration>
+/// envelope is a head-only slab of one element (no body), holding the store
+/// envelope. The element is rewritten in place as settings change.
+struct envelope
+  : public head_map<schema::envelope>
 {
-    using head_map<schema::configuration>::headmap;
+    using head_map<schema::envelope>::headmap;
 
     struct record
     {

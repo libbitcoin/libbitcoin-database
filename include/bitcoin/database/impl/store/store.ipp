@@ -76,6 +76,7 @@ CLASS::store(const settings& config) NOEXCEPT
     silent_head_(head(config.path / schema::dir::heads, schema::caches::silent), head_settings(config.silent), sequential),
     silent_body_(body(config.path, schema::caches::silent), config.silent, sequential, staged),
 
+    envelope_head_(head(config.path / schema::dir::heads, schema::caches::envelope), head_settings(config.duplicate), sequential),
     duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate), head_settings(config.duplicate), random),
     duplicate_body_(body(config.path, schema::caches::duplicate), config.duplicate, sequential, staged),
 
@@ -124,6 +125,7 @@ CLASS::store(const settings& config) NOEXCEPT
     ecdsa(ecdsa_head_, ecdsa_body_),
     schnorr(schnorr_head_, schnorr_body_),
     silent(silent_head_, silent_body_),
+    envelope(envelope_head_),
     duplicate(duplicate_head_, duplicate_body_, config.duplicate.buckets, config.duplicate.expected),
     prevalid(prevalid_head_, prevalid_body_),
     prevout(prevout_head_, prevout_body_, config.prevout.buckets),
@@ -168,7 +170,7 @@ uint8_t CLASS::interval_depth() const NOEXCEPT
 }
 
 TEMPLATE
-const database::envelope& CLASS::envelope() const NOEXCEPT
+const database::envelope& CLASS::get_envelope() const NOEXCEPT
 {
     return envelope_;
 }
@@ -194,7 +196,14 @@ bool CLASS::is_pooling() const NOEXCEPT
 TEMPLATE
 void CLASS::set_pooling() NOEXCEPT
 {
+    if (is_pooling())
+        return;
+
     pooling_.store(true, std::memory_order_relaxed);
+    envelope_.pooling = true;
+
+    code ec{};
+    store_envelope(ec);
     set_dirty();
 }
 

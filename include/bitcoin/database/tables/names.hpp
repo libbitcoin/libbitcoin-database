@@ -49,7 +49,6 @@ namespace archive
 
 namespace indexes
 {
-    constexpr auto envelope = "envelope";
     constexpr auto candidate = "index_candidate";
     constexpr auto confirmed = "index_confirmed";
     constexpr auto strong_tx = "index_strong";
@@ -77,6 +76,7 @@ namespace caches
     constexpr auto silent_compressed = "point"_t;
     constexpr auto silent_correlate = "identity"_t;
 
+    constexpr auto envelope = "envelope";
     constexpr auto prevalid = "batch_prevalid";
     constexpr auto prevout = "cache_prevout";
     constexpr auto duplicate = "cache_duplicate";

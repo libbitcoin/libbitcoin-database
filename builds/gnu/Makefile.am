@@ -306,6 +306,7 @@ include_bitcoin_database_tables_cachesdir = \
 include_bitcoin_database_tables_caches_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/tables/caches/duplicate.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/ecdsa.hpp \
+    ${srcdir}/../../include/bitcoin/database/tables/caches/envelope.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/prevalid.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/prevout.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/schnorr.hpp \
@@ -317,7 +318,6 @@ include_bitcoin_database_tables_indexesdir = \
     ${includedir}/bitcoin/database/tables/indexes
 
 include_bitcoin_database_tables_indexes_HEADERS = \
-    ${srcdir}/../../include/bitcoin/database/tables/indexes/configuration.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/height.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/strong_tx.hpp
 

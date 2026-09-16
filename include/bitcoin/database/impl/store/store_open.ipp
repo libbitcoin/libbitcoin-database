@@ -79,6 +79,7 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, ecdsa, table_t::ecdsa_table);
     verify(ec, schnorr, table_t::schnorr_table);
     verify(ec, silent, table_t::silent_table);
+    verify(ec, envelope, table_t::envelope_table);
     verify(ec, duplicate, table_t::duplicate_table);
     verify(ec, prevalid, table_t::prevalid_table);
     verify(ec, prevout, table_t::prevout_table);
@@ -102,18 +103,42 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     return ec;
 }
 
+// The envelope is fixed width, so it is rewritten at its allocated link.
+TEMPLATE
+void CLASS::store_envelope(code& ec) NOEXCEPT
+{
+    if (ec)
+        return;
+
+    const table::envelope::record record{ envelope_ };
+    if (is_zero(envelope.head_size()) &&
+        (!envelope.reserve(record.count()) ||
+            envelope.allocate(record.count()).is_terminal()))
+    {
+        ec = error::create_table;
+        return;
+    }
+
+    if (!envelope.put(zero, record))
+        ec = error::create_table;
+}
+
 TEMPLATE
 code CLASS::load_envelope() NOEXCEPT
 {
     // The stored creation envelope governs, configuration is not read.
-    table::txs::get_envelope genesis{};
-    if (!is_zero(txs.body_size()))
+    table::envelope::record record{};
+    if (!is_zero(envelope.head_size()))
     {
-        if (txs.at(zero, genesis))
-            envelope_ = genesis.envelope;
+        if (envelope.get(zero, record))
+            envelope_ = record.envelope;
         else
             return error::verify_table;
     }
+
+    // The stored latch governs, it is one-way and survives the session.
+    if (envelope_.pooling)
+        pooling_.store(true, std::memory_order_relaxed);
 
     // The stored bucket counts govern the heads.
     if (!header.set_buckets(envelope_.header_buckets) ||

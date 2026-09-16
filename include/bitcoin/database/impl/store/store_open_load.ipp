@@ -64,6 +64,7 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, schnorr_body_, table_t::schnorr_body);
     open(ec, silent_head_, table_t::silent_head);
     open(ec, silent_body_, table_t::silent_body);
+    open(ec, envelope_head_, table_t::envelope_head);
     open(ec, duplicate_head_, table_t::duplicate_head);
     open(ec, duplicate_body_, table_t::duplicate_body);
     open(ec, prevalid_head_, table_t::prevalid_head);
@@ -115,6 +116,7 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, schnorr_body_, table_t::schnorr_body);
     load(ec, silent_head_, table_t::silent_head);
     load(ec, silent_body_, table_t::silent_body);
+    load(ec, envelope_head_, table_t::envelope_head);
     load(ec, duplicate_head_, table_t::duplicate_head);
     load(ec, duplicate_body_, table_t::duplicate_body);
     load(ec, prevalid_head_, table_t::prevalid_head);

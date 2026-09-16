@@ -71,6 +71,8 @@ const CLASS::table_map CLASS::tables
     { table_t::silent_table, "silent_table" },
     { table_t::silent_head, "silent_head" },
     { table_t::silent_body, "silent_body" },
+    { table_t::envelope_table, "envelope_table" },
+    { table_t::envelope_head, "envelope_head" },
     { table_t::duplicate_table, "duplicate_table" },
     { table_t::duplicate_head, "duplicate_head" },
     { table_t::duplicate_body, "duplicate_body" },
