@@ -317,6 +317,7 @@ include_bitcoin_database_tables_indexesdir = \
     ${includedir}/bitcoin/database/tables/indexes
 
 include_bitcoin_database_tables_indexes_HEADERS = \
+    ${srcdir}/../../include/bitcoin/database/tables/indexes/configuration.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/height.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/strong_tx.hpp
 

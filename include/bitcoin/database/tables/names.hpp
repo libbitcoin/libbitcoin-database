@@ -49,6 +49,7 @@ namespace archive
 
 namespace indexes
 {
+    constexpr auto envelope = "envelope";
     constexpr auto candidate = "index_candidate";
     constexpr auto confirmed = "index_confirmed";
     constexpr auto strong_tx = "index_strong";

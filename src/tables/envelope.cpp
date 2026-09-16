@@ -161,7 +161,7 @@ bool envelope::from_data(reader& source) NOEXCEPT
     return source;
 }
 
-bool envelope::to_data(finalizer& sink) const NOEXCEPT
+bool envelope::to_data(flipper& sink) const NOEXCEPT
 {
     sink.write_byte(current);
 

@@ -37,6 +37,7 @@
 #include <bitcoin/database/tables/caches/validated_bk.hpp>
 #include <bitcoin/database/tables/caches/validated_tx.hpp>
 
+#include <bitcoin/database/tables/indexes/configuration.hpp>
 #include <bitcoin/database/tables/indexes/height.hpp>
 #include <bitcoin/database/tables/indexes/strong_tx.hpp>
 
