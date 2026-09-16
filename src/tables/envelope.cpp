@@ -26,6 +26,20 @@ namespace database {
 
 using namespace system;
 
+// The version is fixed width, so it is written as segments, not as text.
+const system::config::version envelope::compiled
+{
+    schema::version.at(0),
+    schema::version.at(1),
+    schema::version.at(2),
+    schema::version.at(3)
+};
+
+envelope::envelope() NOEXCEPT
+  : schema(compiled)
+{
+}
+
 void envelope::set(const settings& database) NOEXCEPT
 {
     interval_depth = database.interval_depth;
@@ -42,7 +56,8 @@ void envelope::set(const settings& database) NOEXCEPT
 
 envelope::envelope(const system::settings& bitcoin,
     const settings& database) NOEXCEPT
-  : forks(bitcoin.forks),
+  : schema(compiled),
+    forks(bitcoin.forks),
     initial_subsidy_bitcoin(bitcoin.initial_subsidy_bitcoin),
     subsidy_interval_blocks(bitcoin.subsidy_interval_blocks),
     timestamp_limit_seconds(bitcoin.timestamp_limit_seconds),
@@ -76,7 +91,15 @@ envelope::envelope(const system::settings& bitcoin,
 
 bool envelope::from_data(reader& source) NOEXCEPT
 {
-    if (source.read_byte() != current)
+    schema =
+    {
+        source.read_little_endian<uint32_t>(),
+        source.read_little_endian<uint32_t>(),
+        source.read_little_endian<uint32_t>(),
+        source.read_little_endian<uint32_t>()
+    };
+
+    if (schema != compiled)
     {
         source.invalidate();
         return false;
@@ -165,7 +188,8 @@ bool envelope::from_data(reader& source) NOEXCEPT
 
 bool envelope::to_data(flipper& sink) const NOEXCEPT
 {
-    sink.write_byte(current);
+    for (const auto segment: schema.segments())
+        sink.write_little_endian<uint32_t>(segment);
 
     sink.write_little_endian<uint16_t>(interval_depth);
     sink.write_little_endian<uint32_t>(header_buckets);
@@ -251,7 +275,8 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
 size_t envelope::serialized_size() const NOEXCEPT
 {
     constexpr auto forks_size = 24_size;
-    constexpr auto fixed = one + sizeof(uint16_t) + (7 * sizeof(uint32_t)) +
+    constexpr auto fixed = (4 * sizeof(uint32_t)) + sizeof(uint16_t) +
+        (7 * sizeof(uint32_t)) +
         (7 * sizeof(uint8_t)) + two + forks_size + sizeof(uint64_t) +
         (15 * sizeof(uint32_t));
 

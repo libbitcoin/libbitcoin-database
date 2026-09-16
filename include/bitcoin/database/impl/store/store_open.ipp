@@ -130,10 +130,11 @@ code CLASS::load_envelope() NOEXCEPT
     table::envelope::record record{};
     if (!is_zero(envelope.head_size()))
     {
-        if (envelope.get(zero, record))
-            envelope_ = record.envelope;
-        else
-            return error::verify_table;
+        if (!envelope.get(zero, record))
+            return record.envelope.schema == envelope_.schema ?
+                error::verify_table : error::schema_version;
+
+        envelope_ = record.envelope;
     }
 
     // The stored latch governs, it is one-way and survives the session.

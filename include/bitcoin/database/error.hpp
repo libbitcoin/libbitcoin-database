@@ -87,6 +87,7 @@ enum error_t : uint8_t
 
     /// store
     not_coalesced,
+    schema_version,
     missing_snapshot,
     unloaded_file,
 

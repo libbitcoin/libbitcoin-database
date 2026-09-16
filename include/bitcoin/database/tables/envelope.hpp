@@ -31,9 +31,10 @@ struct settings;
 /// values govern the store, configuration is consumed only at creation.
 struct BCD_API envelope
 {
-    static constexpr uint8_t current{ 3 };
+    /// The schema version compiled into this build (see schema::version).
+    static const system::config::version compiled;
 
-    envelope() NOEXCEPT = default;
+    envelope() NOEXCEPT;
     envelope(const system::settings& bitcoin,
         const settings& database) NOEXCEPT;
 
@@ -43,6 +44,9 @@ struct BCD_API envelope
     bool to_data(flipper& sink) const NOEXCEPT;
     size_t serialized_size() const NOEXCEPT;
     bool operator==(const envelope& other) const NOEXCEPT = default;
+
+    /// Store schema version, fixed width (see schema::version).
+    system::config::version schema{};
 
     /// Database settings.
     uint16_t interval_depth{};

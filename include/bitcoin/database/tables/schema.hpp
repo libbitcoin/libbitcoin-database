@@ -38,6 +38,9 @@ namespace libbitcoin {
 namespace database {
 namespace schema {
 
+/// The store schema version, stored as the first envelope value.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 0, 0 };
+
 /// Values.
 /// -----------------------------------------------------------------------
 constexpr size_t bit = 1;       // single bit flag.
