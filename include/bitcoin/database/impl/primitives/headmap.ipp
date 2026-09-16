@@ -202,6 +202,79 @@ Link CLASS::at(const memory& ptr, size_t index) const NOEXCEPT
     }
 }
 
+// slab
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+Link CLASS::allocate(const Link& bytes) NOEXCEPT
+{
+    static_assert(is_slab);
+
+    if (bytes.is_terminal())
+        return Link::terminal;
+
+    const auto link = file_.allocate(bytes.value);
+    if (link == storage::eof)
+        return Link::terminal;
+
+    return system::possible_narrow_cast<typename Link::integer>(link);
+}
+
+TEMPLATE
+template <typename Element>
+bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
+{
+    using namespace system;
+    static_assert(is_slab);
+
+    if (link.is_terminal())
+        return false;
+
+    const auto ptr = file_.get();
+    if (!ptr)
+        return false;
+
+    const auto size = ptr.size();
+    const auto position = possible_narrow_sign_cast<ptrdiff_t>(link.value);
+    if (position >= size)
+        return false;
+
+    const auto offset = ptr.offset(link.value);
+    if (is_null(offset))
+        return false;
+
+    iostream stream{ offset, size - position };
+    reader source{ stream };
+    return element.from_data(source);
+}
+
+// NOT WRITER-WRITER THREAD SAFE (the element is read-write).
+TEMPLATE
+template <typename Element>
+bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
+{
+    using namespace system;
+    static_assert(is_slab);
+
+    if (link.is_terminal())
+        return false;
+
+    const auto bytes = element.serialized_size();
+    const auto ptr = file_.get(link.value);
+    if (!ptr || (ptr.size() < possible_narrow_sign_cast<ptrdiff_t>(bytes)))
+        return false;
+
+    file_.prepare(link.value, bytes);
+
+    iostream stream{ ptr.data(), bytes };
+    flipper sink{ stream };
+    if (!element.to_data(sink))
+        return false;
+
+    file_.mark(link.value, bytes);
+    return true;
+}
+
 // NOT WRITER-WRITER THREAD SAFE (the logical top is read-write).
 TEMPLATE
 bool CLASS::push(const Link& link) NOEXCEPT
