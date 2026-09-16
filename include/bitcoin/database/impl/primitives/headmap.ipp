@@ -261,12 +261,13 @@ bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 
     const auto ptr = file_.get(link.value);
     const auto bytes = possible_narrow_cast<size_t>(element.count().value);
-    if (!ptr || (ptr.size() < possible_narrow_sign_cast<ptrdiff_t>(bytes)))
+    const auto size = possible_narrow_sign_cast<ptrdiff_t>(bytes);
+    if (!ptr || (ptr.size() < size))
         return false;
 
     file_.prepare(link.value, bytes);
 
-    iostream stream{ ptr.data(), bytes };
+    iostream stream{ ptr.data(), size };
     flipper sink{ stream };
     if (!element.to_data(sink))
         return false;
