@@ -259,8 +259,8 @@ bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
     if (link.is_terminal())
         return false;
 
-    const auto bytes = element.serialized_size();
     const auto ptr = file_.get(link.value);
+    const auto bytes = possible_narrow_cast<size_t>(element.count().value);
     if (!ptr || (ptr.size() < possible_narrow_sign_cast<ptrdiff_t>(bytes)))
         return false;
 
