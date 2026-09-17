@@ -50,12 +50,12 @@ void envelope::set(const settings& database) NOEXCEPT
     strong_tx_buckets = database.strong_tx.buckets;
     duplicate_buckets = database.duplicate.buckets;
     validated_tx_buckets = database.validated_tx.buckets;
-    filter = to_bool(database.filter_bk.buckets) &&
+    provide_filters = to_bool(database.filter_bk.buckets) &&
         to_bool(database.filter_tx.buckets);
 }
 
-envelope::envelope(const system::settings& bitcoin,
-    const settings& database) NOEXCEPT
+envelope::envelope(const system::settings& bitcoin, const settings& database,
+    bool limited) NOEXCEPT
   : schema(compiled),
     forks(bitcoin.forks),
     initial_subsidy_bitcoin(bitcoin.initial_subsidy_bitcoin),
@@ -84,7 +84,10 @@ envelope::envelope(const system::settings& bitcoin,
     bip30_deactivate_checkpoint(bitcoin.bip30_deactivate_checkpoint),
     bip9_bit0_active_checkpoint(bitcoin.bip9_bit0_active_checkpoint),
     bip9_bit1_active_checkpoint(bitcoin.bip9_bit1_active_checkpoint),
-    bip9_bit2_active_checkpoint(bitcoin.bip9_bit2_active_checkpoint)
+    bip9_bit2_active_checkpoint(bitcoin.bip9_bit2_active_checkpoint),
+    top_checkpoint(bitcoin.top_checkpoint()),
+    milestone(bitcoin.milestone),
+    limited_blocks(limited)
 {
     set(database);
 }
@@ -104,23 +107,6 @@ bool envelope::from_data(reader& source) NOEXCEPT
         source.invalidate();
         return false;
     }
-
-    interval_depth = source.read_little_endian<uint16_t>();
-    header_buckets = source.read_little_endian<uint32_t>();
-    ins_buckets = source.read_little_endian<uint32_t>();
-    outs_buckets = source.read_little_endian<uint32_t>();
-    tx_buckets = source.read_little_endian<uint32_t>();
-    strong_tx_buckets = source.read_little_endian<uint32_t>();
-    duplicate_buckets = source.read_little_endian<uint32_t>();
-    validated_tx_buckets = source.read_little_endian<uint32_t>();
-    header_k = source.read_byte();
-    ins_k = source.read_byte();
-    outs_k = source.read_byte();
-    tx_k = source.read_byte();
-    strong_tx_k = source.read_byte();
-    duplicate_k = source.read_byte();
-    validated_tx_k = source.read_byte();
-    filter = to_bool(source.read_byte());
 
     forks.bip16 = to_bool(source.read_byte());
     forks.bip90 = to_bool(source.read_byte());
@@ -181,6 +167,27 @@ bool envelope::from_data(reader& source) NOEXCEPT
     bip9_bit0_active_checkpoint = read_checkpoint();
     bip9_bit1_active_checkpoint = read_checkpoint();
     bip9_bit2_active_checkpoint = read_checkpoint();
+    top_checkpoint = read_checkpoint();
+    milestone = read_checkpoint();
+
+    interval_depth = source.read_little_endian<uint16_t>();
+    header_buckets = source.read_little_endian<uint32_t>();
+    ins_buckets = source.read_little_endian<uint32_t>();
+    outs_buckets = source.read_little_endian<uint32_t>();
+    tx_buckets = source.read_little_endian<uint32_t>();
+    strong_tx_buckets = source.read_little_endian<uint32_t>();
+    duplicate_buckets = source.read_little_endian<uint32_t>();
+    validated_tx_buckets = source.read_little_endian<uint32_t>();
+    header_k = source.read_byte();
+    ins_k = source.read_byte();
+    outs_k = source.read_byte();
+    tx_k = source.read_byte();
+    strong_tx_k = source.read_byte();
+    duplicate_k = source.read_byte();
+    validated_tx_k = source.read_byte();
+
+    limited_blocks = to_bool(source.read_byte());
+    provide_filters = to_bool(source.read_byte());
 
     pooling = to_bool(source.read_byte());
     return source;
@@ -190,23 +197,6 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
 {
     for (const auto segment: schema.segments())
         sink.write_little_endian<uint32_t>(segment);
-
-    sink.write_little_endian<uint16_t>(interval_depth);
-    sink.write_little_endian<uint32_t>(header_buckets);
-    sink.write_little_endian<uint32_t>(ins_buckets);
-    sink.write_little_endian<uint32_t>(outs_buckets);
-    sink.write_little_endian<uint32_t>(tx_buckets);
-    sink.write_little_endian<uint32_t>(strong_tx_buckets);
-    sink.write_little_endian<uint32_t>(duplicate_buckets);
-    sink.write_little_endian<uint32_t>(validated_tx_buckets);
-    sink.write_byte(header_k);
-    sink.write_byte(ins_k);
-    sink.write_byte(outs_k);
-    sink.write_byte(tx_k);
-    sink.write_byte(strong_tx_k);
-    sink.write_byte(duplicate_k);
-    sink.write_byte(validated_tx_k);
-    sink.write_byte(to_int<uint8_t>(filter));
 
     sink.write_byte(to_int<uint8_t>(forks.bip16));
     sink.write_byte(to_int<uint8_t>(forks.bip90));
@@ -267,6 +257,27 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     write_checkpoint(bip9_bit0_active_checkpoint);
     write_checkpoint(bip9_bit1_active_checkpoint);
     write_checkpoint(bip9_bit2_active_checkpoint);
+    write_checkpoint(top_checkpoint);
+    write_checkpoint(milestone);
+
+    sink.write_little_endian<uint16_t>(interval_depth);
+    sink.write_little_endian<uint32_t>(header_buckets);
+    sink.write_little_endian<uint32_t>(ins_buckets);
+    sink.write_little_endian<uint32_t>(outs_buckets);
+    sink.write_little_endian<uint32_t>(tx_buckets);
+    sink.write_little_endian<uint32_t>(strong_tx_buckets);
+    sink.write_little_endian<uint32_t>(duplicate_buckets);
+    sink.write_little_endian<uint32_t>(validated_tx_buckets);
+    sink.write_byte(header_k);
+    sink.write_byte(ins_k);
+    sink.write_byte(outs_k);
+    sink.write_byte(tx_k);
+    sink.write_byte(strong_tx_k);
+    sink.write_byte(duplicate_k);
+    sink.write_byte(validated_tx_k);
+
+    sink.write_byte(to_int<uint8_t>(limited_blocks));
+    sink.write_byte(to_int<uint8_t>(provide_filters));
 
     sink.write_byte(to_int<uint8_t>(pooling));
     return sink;
@@ -276,9 +287,8 @@ size_t envelope::serialized_size() const NOEXCEPT
 {
     constexpr auto forks_size = 24_size;
     constexpr auto fixed = (4 * sizeof(uint32_t)) + sizeof(uint16_t) +
-        (7 * sizeof(uint32_t)) +
-        (7 * sizeof(uint8_t)) + two + forks_size + sizeof(uint64_t) +
-        (15 * sizeof(uint32_t));
+        (7 * sizeof(uint32_t)) + (10 * sizeof(uint8_t)) + forks_size +
+        sizeof(uint64_t) + (15 * sizeof(uint32_t));
 
     const auto checkpoint_size = [](const chain::checkpoint& in) NOEXCEPT
     {
@@ -296,7 +306,9 @@ size_t envelope::serialized_size() const NOEXCEPT
         checkpoint_size(bip30_deactivate_checkpoint) +
         checkpoint_size(bip9_bit0_active_checkpoint) +
         checkpoint_size(bip9_bit1_active_checkpoint) +
-        checkpoint_size(bip9_bit2_active_checkpoint);
+        checkpoint_size(bip9_bit2_active_checkpoint) +
+        checkpoint_size(top_checkpoint) +
+        checkpoint_size(milestone);
 }
 
 } // namespace database

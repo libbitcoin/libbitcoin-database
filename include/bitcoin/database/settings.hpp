@@ -39,7 +39,7 @@ struct BCD_API settings
     settings(system::chain::selection context) NOEXCEPT;
 
     /// Pack the creation envelope, must follow configuration parse.
-    void initialize(const system::settings& bitcoin) NOEXCEPT;
+    void initialize(const system::settings& bitcoin, bool limited) NOEXCEPT;
 
     /// Table settings.
     /// -----------------------------------------------------------------------

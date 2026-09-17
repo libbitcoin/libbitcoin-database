@@ -57,9 +57,10 @@ settings::settings(chain::selection context) NOEXCEPT
     }
 }
 
-void settings::initialize(const system::settings& bitcoin) NOEXCEPT
+void settings::initialize(const system::settings& bitcoin,
+    bool limited) NOEXCEPT
 {
-    envelope = { bitcoin, *this };
+    envelope = { bitcoin, *this, limited };
 }
 
 } // namespace database
