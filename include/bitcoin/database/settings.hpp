@@ -82,7 +82,7 @@ struct BCD_API settings
     database::envelope envelope{};
 
     /// Path to the database directory.
-    std::filesystem::path path{ "bitcoin" };
+    system::config::path path{ "bitcoin" };
 
     /// Archives.
     /// -----------------------------------------------------------------------
