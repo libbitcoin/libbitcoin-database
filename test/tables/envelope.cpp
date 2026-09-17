@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 286_size;
+constexpr auto default_size = 353_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(envelope__set__default_settings__expected)
     BOOST_REQUIRE_EQUAL(instance.strong_tx_buckets, configuration.strong_tx.buckets);
     BOOST_REQUIRE_EQUAL(instance.duplicate_buckets, configuration.duplicate.buckets);
     BOOST_REQUIRE_EQUAL(instance.validated_tx_buckets, configuration.validated_tx.buckets);
-    BOOST_REQUIRE(instance.filter);
+    BOOST_REQUIRE(instance.provide_filters);
 }
 
 BOOST_AUTO_TEST_CASE(envelope__set__unbucketed_filter_bk__false)
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(envelope__set__unbucketed_filter_bk__false)
     configuration.filter_bk.buckets = 0;
     envelope instance{};
     instance.set(configuration);
-    BOOST_REQUIRE(!instance.filter);
+    BOOST_REQUIRE(!instance.provide_filters);
 }
 
 BOOST_AUTO_TEST_CASE(envelope__set__unbucketed_filter_tx__false)
@@ -129,14 +129,14 @@ BOOST_AUTO_TEST_CASE(envelope__set__unbucketed_filter_tx__false)
     configuration.filter_tx.buckets = 0;
     envelope instance{};
     instance.set(configuration);
-    BOOST_REQUIRE(!instance.filter);
+    BOOST_REQUIRE(!instance.provide_filters);
 }
 
 BOOST_AUTO_TEST_CASE(envelope__construct__mainnet__expected)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
     const database::settings configuration{ chain::selection::mainnet };
-    const envelope instance{ bitcoin, configuration };
+    const envelope instance{ bitcoin, configuration, false };
 
     BOOST_REQUIRE_EQUAL(instance.initial_subsidy_bitcoin, 50u);
     BOOST_REQUIRE_EQUAL(instance.subsidy_interval_blocks, 210000u);
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(envelope__construct__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.bip9_bit1_active_checkpoint.height(), 481824u);
     BOOST_REQUIRE_EQUAL(instance.bip9_bit1_active_checkpoint.hash(), bitcoin.bip9_bit1_active_checkpoint.hash());
     BOOST_REQUIRE(instance.forks.bip341);
-    BOOST_REQUIRE(instance.filter);
+    BOOST_REQUIRE(instance.provide_filters);
     BOOST_REQUIRE_EQUAL(instance.interval_depth, configuration.interval_depth);
     BOOST_REQUIRE_EQUAL(instance.header_buckets, configuration.header.buckets);
 }
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(envelope__construct__mainnet__unset_filter_k)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
     const database::settings configuration{ chain::selection::mainnet };
-    const envelope instance{ bitcoin, configuration };
+    const envelope instance{ bitcoin, configuration, false };
 
     BOOST_REQUIRE_EQUAL(instance.header_k, 0u);
     BOOST_REQUIRE_EQUAL(instance.ins_k, 0u);
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(envelope__from_data__mainnet__round_trip)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
     const database::settings configuration{ chain::selection::mainnet };
-    const envelope instance{ bitcoin, configuration };
+    const envelope instance{ bitcoin, configuration, false };
     auto data = to_chunk(instance);
     BOOST_REQUIRE_EQUAL(data.size(), instance.serialized_size());
 
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(envelope__from_data__regtest__round_trip)
 {
     const system::settings bitcoin{ chain::selection::regtest };
     const database::settings configuration{ chain::selection::regtest };
-    const envelope instance{ bitcoin, configuration };
+    const envelope instance{ bitcoin, configuration, false };
     auto data = to_chunk(instance);
     BOOST_REQUIRE_EQUAL(data.size(), instance.serialized_size());
 
@@ -197,9 +197,9 @@ BOOST_AUTO_TEST_CASE(envelope__initialize__mainnet__expected)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
     database::settings configuration{ chain::selection::mainnet };
-    configuration.initialize(bitcoin);
+    configuration.initialize(bitcoin, false);
 
-    BOOST_REQUIRE(configuration.envelope == envelope(bitcoin, configuration));
+    BOOST_REQUIRE(configuration.envelope == envelope(bitcoin, configuration, false));
     BOOST_REQUIRE_EQUAL(configuration.envelope.proof_of_work_limit, bitcoin.proof_of_work_limit);
     BOOST_REQUIRE_EQUAL(configuration.envelope.bip9_bit1_active_checkpoint.height(), 481824u);
 }

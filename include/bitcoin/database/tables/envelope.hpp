@@ -35,8 +35,8 @@ struct BCD_API envelope
     static const system::config::version compiled;
 
     envelope() NOEXCEPT;
-    envelope(const system::settings& bitcoin,
-        const settings& database) NOEXCEPT;
+    envelope(const system::settings& bitcoin, const settings& database,
+        bool limited) NOEXCEPT;
 
     void set(const settings& database) NOEXCEPT;
 
@@ -47,24 +47,6 @@ struct BCD_API envelope
 
     /// Store schema version, fixed width (see schema::version).
     system::config::version schema{};
-
-    /// Database settings.
-    uint16_t interval_depth{};
-    uint32_t header_buckets{};
-    uint32_t ins_buckets{};
-    uint32_t outs_buckets{};
-    uint32_t tx_buckets{};
-    uint32_t strong_tx_buckets{};
-    uint32_t duplicate_buckets{};
-    uint32_t validated_tx_buckets{};
-    uint8_t header_k{};
-    uint8_t ins_k{};
-    uint8_t outs_k{};
-    uint8_t tx_k{};
-    uint8_t strong_tx_k{};
-    uint8_t duplicate_k{};
-    uint8_t validated_tx_k{};
-    bool filter{};
 
     /// System settings.
     system::forks forks{};
@@ -95,8 +77,31 @@ struct BCD_API envelope
     system::chain::checkpoint bip9_bit0_active_checkpoint{};
     system::chain::checkpoint bip9_bit1_active_checkpoint{};
     system::chain::checkpoint bip9_bit2_active_checkpoint{};
+    system::chain::checkpoint top_checkpoint{};
+    system::chain::checkpoint milestone{};
 
-    /// Store state.
+    /// Database settings.
+    uint16_t interval_depth{};
+    uint32_t header_buckets{};
+    uint32_t ins_buckets{};
+    uint32_t outs_buckets{};
+    uint32_t tx_buckets{};
+    uint32_t strong_tx_buckets{};
+    uint32_t duplicate_buckets{};
+    uint32_t validated_tx_buckets{};
+    uint8_t header_k{};
+    uint8_t ins_k{};
+    uint8_t outs_k{};
+    uint8_t tx_k{};
+    uint8_t strong_tx_k{};
+    uint8_t duplicate_k{};
+    uint8_t validated_tx_k{};
+
+    /// Network settings.
+    bool limited_blocks{};
+    bool provide_filters{};
+
+    /// Node state.
     bool pooling{};
 };
 
