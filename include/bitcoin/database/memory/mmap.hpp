@@ -363,6 +363,9 @@ private:
     // the prepare/release bit protocol (see release_pages_).
     bool release_pages_() NOEXCEPT;
     void quiesce_() NOEXCEPT;
+    std::atomic<size_t>& writer_slot_() NOEXCEPT;
+    size_t writers_count_() const NOEXCEPT;
+    void writers_reset_() NOEXCEPT;
     bool share_(size_t transferred) NOEXCEPT;
     void unshare_() NOEXCEPT;
     void declare_released_() NOEXCEPT;
@@ -511,8 +514,11 @@ private:
     std::atomic_bool transition_{};
 
     // Writers between prepare and mark (unaged, unlike intent bits), so a
-    // release pass cannot settle under a preempted in-flight write.
-    std::atomic<size_t> writers_{};
+    // release pass cannot settle under a preempted in-flight write. Sharded
+    // by thread on separate lines: the write path touches one, drains sum.
+    struct alignas(64) writer_shard { std::atomic<size_t> count{}; };
+    static constexpr size_t writer_shards = 16;
+    std::array<writer_shard, writer_shards> writers_{};
 
     // Serializes page release against restore (prepare slow path).
     mutable std::mutex restore_mutex_{};

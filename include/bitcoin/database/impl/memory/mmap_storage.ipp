@@ -205,16 +205,17 @@ void CLASS::prepare(size_t STAGING_ONLY(offset),
     // (it retires its count and does not retake one until the transition
     // clears), so the count drains monotonically and the transition is
     // guaranteed to observe zero rather than merely likely to.
+    auto& writers = writer_slot_();
     for (;;)
     {
         while (transition_.load())
             std::this_thread::yield();
 
-        writers_.fetch_add(one);
+        writers.fetch_add(one);
         if (!transition_.load())
             break;
 
-        writers_.fetch_sub(one);
+        writers.fetch_sub(one);
     }
 
     // A settled head writes through its mapping.
@@ -265,7 +266,7 @@ void CLASS::mark(size_t STAGING_ONLY(offset),
     // release pass loading a drained count observes the dirty bits. Only
     // prepare() counts, so only mark() may uncount (transfer failure restores
     // marks by remark_, as an unpaired uncount here corrupts the count).
-    writers_.fetch_sub(one);
+    writer_slot_().fetch_sub(one);
 #endif
 }
 

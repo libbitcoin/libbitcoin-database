@@ -373,7 +373,7 @@ bool CLASS::stage_() NOEXCEPT
             intent_ = std::make_unique<dirty_bitmaps>(words_);
             released_ = std::make_unique<dirty_bitmaps>(words_);
             sweep_ = std::make_unique<uint64_t[]>(words_);
-            writers_.store(zero);
+            writers_reset_();
         }
     }
 
@@ -500,7 +500,7 @@ bool CLASS::lazy_install_() NOEXCEPT
     intent_ = std::make_unique<dirty_bitmaps>(words_);
     released_ = std::make_unique<dirty_bitmaps>(words_);
     sweep_ = std::make_unique<uint64_t[]>(words_);
-    writers_.store(zero);
+    writers_reset_();
 
     // Released file prefix (full pages below logical).
     const auto floor = page_floor(logical);
@@ -527,6 +527,9 @@ bool CLASS::lazy_install_() NOEXCEPT
         set_first_code(error::fsync_failure);
         return false;
     }
+
+    if (target > floor)
+        mmap_wire(std::next(memory_map_[zero], floor), target - floor);
 
     declare_released_();
 
@@ -634,6 +637,9 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
             return false;
         }
 
+        if (!staged_ && dirty_ && (target > from))
+            mmap_wire(std::next(memory_map_[Column], from), target - from);
+
         // Committed growth is a new (unnamed) vma; reattribute it.
         if (target > from)
             mmap_name(std::next(memory_map_[Column], from), target - from,
@@ -706,6 +712,9 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
     if (settled < logical)
         std::copy_n(std::next(memory_map_[Column], settled),
             logical - settled, std::next(base, settled));
+
+    if (!staged_ && dirty_)
+        mmap_wire(std::next(base, settled), target - settled);
 
     // Convert the settled prefix on the replacement reservation.
     if (!is_zero(settled) &&
@@ -1319,7 +1328,9 @@ void CLASS::head_run_() NOEXCEPT
         // Available includes reclaimable file cache, which a loaded store
         // keeps large while the kernel swaps cold anonymous pages, so free
         // exhaustion also signals scarcity (anon is being displaced).
-        const auto scarcity = head_release && dirty_ &&
+        // A sync writes every head hot (a converted run restores at the next
+        // burst), so release engages only while the store is current.
+        const auto scarcity = head_release && dirty_ && current_.load() &&
             ((system_available() < scarce) || (system_free() < scarce));
 
         // Once engaged, a quiet instance converts independent of momentary
@@ -1401,10 +1412,36 @@ void CLASS::head_run_() NOEXCEPT
 // drain precedes the remap lock, as a writer never takes it (and a transition
 // that waited under it would deadlock the first one that did).
 TEMPLATE
+std::atomic<size_t>& CLASS::writer_slot_() NOEXCEPT
+{
+    static std::atomic<size_t> threads{};
+    static const thread_local size_t slot = threads.fetch_add(one) %
+        writer_shards;
+    return writers_.at(slot).count;
+}
+
+TEMPLATE
+size_t CLASS::writers_count_() const NOEXCEPT
+{
+    size_t count{};
+    for (const auto& shard: writers_)
+        count += shard.count.load();
+
+    return count;
+}
+
+TEMPLATE
+void CLASS::writers_reset_() NOEXCEPT
+{
+    for (auto& shard: writers_)
+        shard.count.store(zero);
+}
+
+TEMPLATE
 void CLASS::quiesce_() NOEXCEPT
 {
     transition_.store(true);
-    while (!is_zero(writers_.load()))
+    while (!is_zero(writers_count_()))
         std::this_thread::yield();
 }
 
@@ -1552,10 +1589,14 @@ bool CLASS::release_pages_() NOEXCEPT
         // invalidates the conversion (whole run). The count loads first: a
         // writer counted later observes released and restores, one drained
         // earlier has published its marks (both sequentially consistent).
-        auto raced = is_nonzero(writers_.load());
+        auto raced = is_nonzero(writers_count_());
         for (auto word = begin; (word <= end) && !raced; ++word)
             raced = !is_zero(bit_and(mask(word),
                 bit_or(intent_[word].load(), dirty_[word].load())));
+
+        if (!raced)
+            mmap_unwire(std::next(memory_map_[zero], first * page_),
+                (second - first) * page_);
 
         if (raced || (mmap_settle(
             std::next(memory_map_[zero], first * page_),
