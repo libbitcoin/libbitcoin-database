@@ -74,6 +74,12 @@ int file_discard(int fd) NOEXCEPT;
 /// anonymous memory carrying its content (readers never observe zeros).
 int mmap_restore(void* address, size_t size) NOEXCEPT;
 
+/// Pin anonymous pages resident (best effort, no-op where not unprivileged).
+int mmap_wire(void* address, size_t size) NOEXCEPT;
+
+/// Release pinned pages to normal reclaim.
+int mmap_unwire(void* address, size_t size) NOEXCEPT;
+
 /// Full-transfer positional file read/write (false on failure or early eof).
 bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT;
 bool pwrite_all(int fd, const uint8_t* from, size_t size,

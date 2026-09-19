@@ -187,9 +187,32 @@ int mmap_resident(const void* address, size_t size,
 
 int mmap_share(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 {
+    mmap_unwire(address, size);
     return ::mmap(address, size, PROT_READ | PROT_WRITE, MAP_SHARED |
         MAP_FIXED, fd, possible_narrow_sign_cast<off_t>(offset)) == MAP_FAILED ?
         -1 : 0;
+}
+
+// Darwin compresses cold anonymous pages, which mincore reports resident, so
+// the touch guard cannot defend a head there; wiring can (the user wire
+// limit leaves the kernel its share, and refusal leaves the pages unpinned).
+// Linux defends by the touch pass (unprivileged mlock is capped at 8MB).
+int mmap_wire(void* address, size_t size) NOEXCEPT
+{
+#if defined(HAVE_APPLE)
+    return ::mlock(address, size);
+#else
+    return (address != nullptr) && !is_zero(size) ? 0 : 0;
+#endif
+}
+
+int mmap_unwire(void* address, size_t size) NOEXCEPT
+{
+#if defined(HAVE_APPLE)
+    return ::munlock(address, size);
+#else
+    return (address != nullptr) && !is_zero(size) ? 0 : 0;
+#endif
 }
 
 int mmap_unsettle(void* address, size_t size) NOEXCEPT
@@ -268,6 +291,7 @@ int mmap_restore(void* address, size_t size) NOEXCEPT
         return -1;
     }
 
+    mmap_wire(address, size);
     return 0;
 }
 
