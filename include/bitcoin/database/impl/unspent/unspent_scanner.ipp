@@ -59,7 +59,7 @@ code CLASS::scan(difference_set& set, unspent_totals& out,
             index.push_back(at);
 
     const auto parallel = poolstl::execution::par_if(turbo_);
-    std::for_each(parallel, index.begin(), index.end(),
+    std::for_each(parallel, index.cbegin(), index.cend(),
         [&](size_t at) NOEXCEPT
         {
             if (fail)
@@ -94,7 +94,7 @@ code CLASS::bounds(std_vector<size_t>& out,
     std::iota(blocks.begin(), blocks.end(), zero);
     const auto parallel = poolstl::execution::par_if(turbo_);
 
-    std::for_each(parallel, blocks.begin(), blocks.end(),
+    std::for_each(parallel, blocks.cbegin(), blocks.cend(),
         [&](size_t block) NOEXCEPT
         {
             counts.at(block) = query_.get_tx_count(branch.at(block));
@@ -222,10 +222,10 @@ code CLASS::toggle_creates(difference_set& set, output_links& exclusions,
         if (!store_.outs.puts.get(ptr, tx.outs_fk, outs))
             return error::integrity;
 
-        auto excluded = outs.excluded.begin();
+        auto excluded = outs.excluded.cbegin();
         for (uint32_t index{}; index < outs.number; ++index)
         {
-            if (excluded != outs.excluded.end() && excluded->first == index)
+            if (excluded != outs.excluded.cend() && excluded->first == index)
                 exclusions.push_back((excluded++)->second);
             else
                 set.toggle(tx.outs_fk + index);

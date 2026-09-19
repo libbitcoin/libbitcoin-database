@@ -118,7 +118,7 @@ code CLASS::partition(unspent_elements& out, sizes& offsets,
     const auto parallel = poolstl::execution::par_if(turbo_);
     std::atomic_bool fail{};
 
-    std::for_each(parallel, index.begin(), index.end(),
+    std::for_each(parallel, index.cbegin(), index.cend(),
         [&](size_t chunk) NOEXCEPT
         {
             if (fail)
@@ -139,7 +139,7 @@ code CLASS::partition(unspent_elements& out, sizes& offsets,
     starts(counts, offsets, chunks);
     out.resize(offsets.back());
 
-    std::for_each(parallel, index.begin(), index.end(),
+    std::for_each(parallel, index.cbegin(), index.cend(),
         [&](size_t chunk) NOEXCEPT
         {
             if (fail)
@@ -261,7 +261,7 @@ code CLASS::fill(unspent_coins& out, output_links& puts,
     std::iota(index.begin(), index.end(), zero);
     std::atomic_bool fail{};
 
-    std::for_each(parallel, index.begin(), index.end(),
+    std::for_each(parallel, index.cbegin(), index.cend(),
         [&](size_t chunk) NOEXCEPT
         {
             if (fail)
@@ -310,7 +310,7 @@ void CLASS::gather(unspent_coins& out, output_links& links,
     std::iota(index.begin(), index.end(), zero);
     const auto parallel = poolstl::execution::par_if(turbo_);
 
-    std::for_each(parallel, index.begin(), index.end(),
+    std::for_each(parallel, index.cbegin(), index.cend(),
         [&](size_t at) NOEXCEPT
         {
             out.at(at) = std::move(coins.at(order.at(at)));
