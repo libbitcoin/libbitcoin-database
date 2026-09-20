@@ -62,7 +62,7 @@ code CLASS::for_each(const difference_set& set, const Span& span) const NOEXCEPT
     std::atomic_bool fail{};
     const auto parallel = poolstl::execution::par_if(turbo_);
 
-    std::for_each(parallel, index.begin(), index.end(),
+    std::for_each(parallel, index.cbegin(), index.cend(),
         [&](size_t chunk) NOEXCEPT
         {
             if (fail)

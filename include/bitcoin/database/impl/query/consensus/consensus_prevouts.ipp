@@ -59,7 +59,7 @@ code CLASS::get_prevouts(point_sets& sets, size_t points,
             return system::error::confirmed_double_spend;
 
     // Augment spend.points with metadata.
-    auto it = cache.spends.begin();
+    auto it = cache.spends.cbegin();
     for (auto& set: sets)
     {
         for (auto& point: set.points)
