@@ -416,6 +416,26 @@ BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__four_leaves_target_three__expec
     BOOST_CHECK_EQUAL(to[1], test::root01);
 }
 
+BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__six_leaves_target_five__expected)
+{
+    hashes to{};
+    hashes from
+    {
+        test::block0_hash,
+        test::block1_hash,
+        test::block2_hash,
+        test::block3_hash,
+        test::block4_hash,
+        test::block5_hash
+    };
+
+    merkle_accessor::merge_merkle(to, std::move(from), 5, 0);
+    BOOST_CHECK_EQUAL(to.size(), 3u);
+    BOOST_CHECK_EQUAL(to[0], test::block4_hash);
+    BOOST_CHECK_EQUAL(to[1], test::root45);
+    BOOST_CHECK_EQUAL(to[2], test::root03);
+}
+
 // get_merkle_proof
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__no_confirmed_blocks__error_merkle_proof)

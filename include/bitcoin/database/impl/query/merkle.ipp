@@ -151,19 +151,13 @@ void CLASS::merge_merkle(hashes& path, hashes&& leaves, size_t first,
 
     for (const auto& row: merkle_branch(first, size + lift))
     {
-        hashes subroot{};
-        if (const auto leaf = row.sibling * row.width; leaf < size)
-        {
-            const auto count = std::min(row.width, size - leaf);
-            const auto next = std::next(leaves.begin(), leaf);
-            const auto it = std::make_move_iterator(next);
-            subroot = { it, std::next(it, count) };
-        }
-        else
-        {
-            subroot = { std::move(leaves.back()) };
-        }
-
+        // A sibling above the leaves is the duplicate of the own node.
+        const auto sibling = row.sibling * row.width;
+        const auto leaf = sibling < size ? sibling : sibling - row.width;
+        const auto count = std::min(row.width, size - leaf);
+        const auto next = std::next(leaves.begin(), leaf);
+        const auto it = std::make_move_iterator(next);
+        hashes subroot(it, std::next(it, count));
         path.push_back(partial_subroot(std::move(subroot), row.width));
     }
 }
