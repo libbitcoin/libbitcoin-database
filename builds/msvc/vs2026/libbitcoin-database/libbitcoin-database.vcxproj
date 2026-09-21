@@ -241,7 +241,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent\unspent_serial.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent\unspent_spans.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent\unspent_writer.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap.ipp" />
@@ -331,6 +330,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\unspent\unspent_serial.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\unspent\unspent_spans.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\unspent\unspent_writer.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\version.hpp.in" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

@@ -449,9 +449,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\unspent\unspent_writer.hpp">
       <Filter>include\bitcoin\database\unspent</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\version.hpp">
-      <Filter>include\bitcoin\database</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap.ipp">
@@ -714,6 +711,9 @@
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\unspent\unspent_writer.ipp">
       <Filter>include\bitcoin\database\impl\unspent</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\version.hpp.in">
+      <Filter>include\bitcoin\database</Filter>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
