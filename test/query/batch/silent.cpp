@@ -22,4 +22,29 @@
 
 BOOST_FIXTURE_TEST_SUITE(query_batch_silent_tests, test::directory_setup_fixture)
 
+// set_silent
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__coinbase_only__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_silent(0, test::genesis));
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__unarchived_block__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(!query.set_silent(1, test::block_coinbase_spend_1a));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

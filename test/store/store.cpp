@@ -192,4 +192,65 @@ BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
     BOOST_REQUIRE(instance.transactor_mutex().try_lock_shared());
 }
 
+// set_pooling
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(store__set_pooling__created__pooling)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(!instance.is_pooling());
+    instance.set_pooling();
+    BOOST_REQUIRE(instance.is_pooling());
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__set_pooling__twice__remains_pooling)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BOOST_REQUIRE(!instance.create(test::events));
+    instance.set_pooling();
+    instance.set_pooling();
+    BOOST_REQUIRE(instance.is_pooling());
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+// set_current
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(store__set_current__created__not_current)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(!instance.is_current_());
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__set_current__changed__applied_to_heads)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BOOST_REQUIRE(!instance.create(test::events));
+    instance.set_current_(true);
+    instance.set_current_(false);
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__set_current__unchanged__no_effect)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BOOST_REQUIRE(!instance.create(test::events));
+    instance.set_current_(false);
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

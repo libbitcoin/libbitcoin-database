@@ -17,7 +17,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "../mocks/map_store.hpp"
 
 BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
+
+// reload
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(store__reload__created__success)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(!instance.reload(test::events));
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__reload__unloaded__error)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BOOST_REQUIRE(instance.reload(test::events));
+}
 
 BOOST_AUTO_TEST_SUITE_END()

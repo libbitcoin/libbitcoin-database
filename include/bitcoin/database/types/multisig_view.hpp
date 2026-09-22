@@ -34,9 +34,9 @@ struct BCD_API multisig_view
     void to_data(system::bytewriter& sink) const NOEXCEPT;
 
 private:
-    uint8_t pair_;
     const system::ec_compressed& point_;
     const system::ec_signature& signature_;
+    uint8_t pair_;
 };
 
 using multisig_views = std::vector<multisig_view>;

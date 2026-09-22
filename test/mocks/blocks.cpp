@@ -517,7 +517,6 @@ const block block1b
         }
     }
 };
-
 const block block1c
 {
     header
@@ -689,6 +688,75 @@ const block block_spend_genesis
     transactions
     {
         tx_spend_genesis
+    }
+};
+const block block_coinbase_spend_1a
+{
+    // Coinbase and one spending tx, so to_spending_txs is non-empty.
+    header
+    {
+        0x31323334,         // version
+        block1a.hash(),     // previous_block_hash
+        hash_digest{ 0x4a },// merkle_root
+        0x41424344,         // timestamp
+        0x51525354,         // bits
+        0x61626364          // nonce
+    },
+    transactions
+    {
+        transaction         // coinbase
+        {
+            0x01,
+            inputs
+            {
+                input
+                {
+                    point{},
+                    script{},
+                    witness{},
+                    0xffffffff
+                }
+            },
+            outputs
+            {
+                output
+                {
+                    0x10,
+                    script{ { { opcode::pick } } }
+                }
+            },
+            0x00
+        },
+        transaction         // spends both block1a outputs
+        {
+            0x02,
+            inputs
+            {
+                input
+                {
+                    point{ block1a.transactions_ptr()->front()->hash(false), 0x00 },
+                    script{ { { opcode::pick } } },
+                    witness{},
+                    0xffffffff
+                },
+                input
+                {
+                    point{ block1a.transactions_ptr()->front()->hash(false), 0x01 },
+                    script{ { { opcode::roll } } },
+                    witness{},
+                    0xffffffff
+                }
+            },
+            outputs
+            {
+                output
+                {
+                    0x20,
+                    script{ { { opcode::pick } } }
+                }
+            },
+            0x00
+        }
     }
 };
 const block block_spend_internal_2b
