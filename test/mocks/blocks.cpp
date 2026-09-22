@@ -517,7 +517,6 @@ const block block1b
         }
     }
 };
-
 const block block1c
 {
     header
@@ -691,9 +690,9 @@ const block block_spend_genesis
         tx_spend_genesis
     }
 };
-// Coinbase and one spending tx, so to_spending_txs is non-empty.
 const block block_coinbase_spend_1a
 {
+    // Coinbase and one spending tx, so to_spending_txs is non-empty.
     header
     {
         0x31323334,         // version

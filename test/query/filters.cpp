@@ -22,7 +22,6 @@
 
 BOOST_FIXTURE_TEST_SUITE(query_filters_tests, test::directory_setup_fixture)
 
-
 // filter_tx
 // ----------------------------------------------------------------------------
 
