@@ -169,4 +169,90 @@ BOOST_AUTO_TEST_CASE(query_extent__filter_enabled__disabled__false)
     BOOST_REQUIRE(!query.filter_enabled());
 }
 
+// aggregate sizes
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(query_extent__archive_head_size__genesis__sum_of_tables)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    const auto expected = query.header_head_size() + query.output_head_size() + query.input_head_size() + query.ins_head_size() + query.outs_head_size() + query.txs_head_size() + query.tx_head_size();
+    BOOST_REQUIRE_EQUAL(query.archive_head_size(), expected);
+}
+
+BOOST_AUTO_TEST_CASE(query_extent__archive_body_size__genesis__sum_of_tables)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    const auto expected = query.header_body_size() + query.output_body_size() + query.input_body_size() + query.ins_body_size() + query.outs_body_size() + query.txs_body_size() + query.tx_body_size();
+    BOOST_REQUIRE_EQUAL(query.archive_body_size(), expected);
+}
+
+BOOST_AUTO_TEST_CASE(query_extent__archive_size__genesis__head_plus_body)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE_EQUAL(query.archive_size(), query.archive_head_size() + query.archive_body_size());
+}
+
+BOOST_AUTO_TEST_CASE(query_extent__store_head_size__genesis__archive_plus_indexes)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    const auto indexes = query.candidate_head_size() + query.confirmed_head_size() + query.strong_tx_head_size() + query.ecdsa_head_size() + query.schnorr_head_size() + query.silent_head_size() + query.duplicate_head_size() + query.prevalid_head_size() + query.prevout_head_size() + query.validated_bk_head_size() + query.validated_tx_head_size() + query.filter_bk_head_size() + query.filter_tx_head_size();
+    BOOST_REQUIRE_EQUAL(query.store_head_size(), query.archive_head_size() + indexes);
+}
+
+BOOST_AUTO_TEST_CASE(query_extent__store_body_size__genesis__archive_plus_indexes)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    const auto indexes = query.candidate_body_size() + query.confirmed_body_size() + query.strong_tx_body_size() + query.ecdsa_body_size() + query.schnorr_body_size() + query.silent_body_size() + query.duplicate_body_size() + query.prevalid_body_size() + query.prevout_body_size() + query.validated_bk_body_size() + query.validated_tx_body_size() + query.filter_bk_body_size() + query.filter_tx_body_size();
+    BOOST_REQUIRE_EQUAL(query.store_body_size(), query.archive_body_size() + indexes);
+}
+
+BOOST_AUTO_TEST_CASE(query_extent__store_size__genesis__head_plus_body)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE_EQUAL(query.store_size(), query.store_head_size() + query.store_body_size());
+}
+
+BOOST_AUTO_TEST_CASE(query_extent__store_size__archived_block__increases)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    const auto initial = query.store_body_size();
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE_GT(query.store_body_size(), initial);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
