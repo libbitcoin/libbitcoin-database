@@ -31,6 +31,9 @@ namespace database {
 // Constructors.
 // ----------------------------------------------------------------------------
 
+// A managed head is an unstaged scalar instance under the anonymous model:
+// page-tracked, transferred by its worker, released and shared by currency.
+// Unstaged aggregates transfer in full, and shared heads map their files.
 TEMPLATE
 CLASS::mmap(const path& filename, const storage_settings& settings,
     bool random, bool staged) NOEXCEPT
@@ -42,6 +45,7 @@ CLASS::mmap(const path& filename, const storage_settings& settings,
     access_(settings.access),
     random_(random),
     staged_(staged),
+    managed_(!staged && !head_shared),
     opened_{ file::invalid }
 {
 }
@@ -57,6 +61,7 @@ CLASS::mmap(const paths& filenames, const storage_settings& settings,
     access_(settings.access),
     random_(random),
     staged_(staged),
+    managed_(false),
     opened_{}
 {
     opened_.fill(file::invalid);
@@ -65,12 +70,8 @@ CLASS::mmap(const paths& filenames, const storage_settings& settings,
 TEMPLATE
 CLASS::~mmap() NOEXCEPT
 {
-#if defined(MANAGE_STAGING)
-    // Join a settler left running by an unload bypass (thread safety).
-    settler_stop_();
-#elif defined(HAVE_MSC)
-    scanner_stop_();
-#endif
+    // Join a worker left running by an unload bypass (thread safety).
+    worker_stop_();
 
     BC_ASSERT(!loaded_.load());
     BC_ASSERT(is_zero(logical_.load()));
@@ -96,6 +97,16 @@ TEMPLATE
 bool CLASS::is_loaded() const NOEXCEPT
 {
     return loaded_.load();
+}
+
+TEMPLATE
+bool CLASS::shared() const NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    return shared_.load();
+#else
+    return false;
+#endif
 }
 
 // protected

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2011-2026 libbitcoin developers
  *
  * This file is part of libbitcoin.
@@ -90,6 +90,9 @@ public:
     /// True if the memory map(s) are loaded.
     bool is_loaded() const NOEXCEPT;
 
+    /// True while a managed head shares its file mapping (settled).
+    bool shared() const NOEXCEPT;
+
     /// storage interface
     /// -----------------------------------------------------------------------
 
@@ -127,9 +130,6 @@ public:
 
     /// Report store currency (permits managed head settlement).
     void current(bool state) NOEXCEPT override;
-
-    /// True when a managed head has settled to its file mapping.
-    bool settled() const NOEXCEPT;
 
     /// Flush memory map(s) to disk, suspend writes for call, must be loaded.
     code flush() NOEXCEPT override;
@@ -202,12 +202,11 @@ protected:
     {
         return bytes / widths.front();
     }
-    
+
     static constexpr size_t to_rows(size_t bytes) NOEXCEPT
     {
         // Convert constructor's byte minimum to row denomination.
-        constexpr auto row = (Widths + ...);
-        return system::ceilinged_divide(bytes, row);
+        return system::ceilinged_divide(bytes, stride);
     }
 
     static size_t to_chunk() NOEXCEPT;
@@ -221,13 +220,26 @@ protected:
 
 private:
     static constexpr size_t page_bound = to_bits(sizeof(uint64_t));
-    static constexpr size_t settle_chunk = system::power2(28u);
-    static constexpr size_t advise_chunk = system::power2(30u);
+    static constexpr auto fail = -1;
+    static constexpr auto relaxed = std::memory_order_relaxed;
+    static constexpr auto release = std::memory_order_release;
+    using sequence = std::make_index_sequence<columns>;
+
+    // Growth (memory commitment and disk provisioning).
     static constexpr size_t commit_chunk = system::power2(28u);
     static constexpr size_t chunk_scale = 256;
+    static constexpr size_t advise_chunk = system::power2(30u);
+    static constexpr size_t reserve_factor = 4;
+
+    // Staged bodies (settle, throttle, evict).
+    static constexpr size_t settle_chunk = system::power2(28u);
     static constexpr size_t evict_chunk = system::power2(30u);
     static constexpr size_t compress_factor = 32;
     static constexpr size_t evict_factor = 32;
+    static constexpr size_t throttle_factor = 8;
+    static constexpr size_t active_factor = 32;
+    static constexpr size_t urgent_factor = 4;
+    static constexpr size_t idle_seconds = 60;
 
     // Settled-extent demotion ceiling (installed memory). Demotion trades
     // body cache for head residency, which pays only while the head set
@@ -243,23 +255,21 @@ private:
     // know that head residency is the store's priority). A higher floor
     // keeps free memory above the watermark, so the sweep is the reclaim.
     static constexpr size_t sweep_factor = 8;
-    static constexpr size_t throttle_factor = 8;
-    static constexpr size_t active_factor = 32;
-    static constexpr size_t urgent_factor = 4;
-    static constexpr size_t idle_seconds = 60;
+
+    // Managed heads (touch, release, share).
     static constexpr size_t touch_seconds = 4;
     static constexpr size_t touch_span = 16384;
+    static constexpr size_t release_quiet = 128;
 
     // Release conversion granularity: chunked runs bound address space
     // fragmentation (each conversion splits a mapping) to the measured flat
     // zone of host memory management (heads / chunk fragments worst case).
     static constexpr size_t release_chunk = system::power2(20u);
-    static constexpr size_t release_quiet = 128;
 
-    // Writes per tick sustained for unsettle_seconds reinstall a settled head
+    // Writes per tick sustained for unshare_seconds reinstall a shared head
     // (a block at the top is a burst of one tick, a catch-up is sustained).
-    static constexpr size_t unsettle_writes = 1000;
-    static constexpr size_t unsettle_seconds = 10;
+    static constexpr size_t unshare_writes = 1000;
+    static constexpr size_t unshare_seconds = 10;
 #if defined(HAVE_APPLE)
     // Anonymous overflow feeds the darwin compressor (10.8GB measured at
     // 16GB), which mincore hides from the touch guard; release converts
@@ -277,16 +287,8 @@ private:
     // ratio tuning does not return with it. Excludes head_release (nothing
     // to release) and the dirty bitmap (nothing to transfer).
     static constexpr bool head_shared = false;
-    static constexpr size_t headroom = 4;
-#if defined(STAGING_TELEMETRY)
-    static constexpr size_t telemetry_seconds = 60;
-#endif
-    static constexpr auto fail = -1;
-    static constexpr auto relaxed = std::memory_order_relaxed;
-    static constexpr auto release = std::memory_order_release;
-    using sequence = std::make_index_sequence<columns>;
 
-    // mman dispatch, not thread safe.
+    // column dispatch, not thread safe.
     template <size_t... Index>
     bool flush_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
@@ -299,26 +301,65 @@ private:
     bool grow_(size_t end) NOEXCEPT;
     bool probe_(size_t capacity) NOEXCEPT;
 
-    // mman wrappers, not thread safe.
+    // backend wrappers (native or staged by build), not thread safe.
     template <size_t Column>
     bool flush_(size_t rows) NOEXCEPT;
     template <size_t Column>
-    bool persist_(size_t to) NOEXCEPT;
-    template <size_t Column>
     bool map_() NOEXCEPT;
-    template <size_t Column>
-    bool release_(size_t size) NOEXCEPT;
     template <size_t Column>
     bool unmap_(size_t size) NOEXCEPT;
     template <size_t Column>
     bool remap_(size_t size, bool final=true) NOEXCEPT;
     template <size_t Column>
     bool resize_(size_t size, bool final=true) NOEXCEPT;
+
+    // worker (instance-owned thread, load/unload lifecycle).
+    void worker_start_() NOEXCEPT;
+    void worker_stop_() NOEXCEPT;
+    void worker_run_() NOEXCEPT;
+    bool tick_() NOEXCEPT;
+
+#if defined(HAVE_MSC)
     template <size_t Column>
-    bool finalize_(size_t size) NOEXCEPT;
+    bool release_(size_t size) NOEXCEPT;
+    template <size_t Column>
+    bool finalize_() NOEXCEPT;
+
+    // Working-set steering for the native (file-backed) mapping. The cache
+    // manager trims without knowing that head residency is the store's
+    // priority, so it takes head pages alongside cold body cache and every
+    // head miss is a serial fault on the probe path. The scan asserts head
+    // residency (a read sets the access bit) and leads the trim on bodies
+    // (unlock moves the range to the standby list, reclaimed first).
+    void scan_run_() NOEXCEPT;
+#endif
 
 #if defined(MANAGE_STAGING)
-    // staging dispatch, not thread safe.
+    // anonymous backend (reservation, commitment, conversion), not thread safe.
+    template <size_t Column>
+    bool stage_() NOEXCEPT;
+    template <size_t Column>
+    bool commit_(size_t size, bool final=true) NOEXCEPT;
+    template <size_t Column>
+    bool persist_(size_t to) NOEXCEPT;
+    template <size_t Column>
+    bool sync_() NOEXCEPT;
+    template <size_t Column>
+    void teardown_(const error::error_t& ec) NOEXCEPT;
+    bool advise_(uint8_t* map, size_t size) const NOEXCEPT;
+    size_t to_reservation(size_t rows) const NOEXCEPT;
+    size_t page_floor(size_t bytes) const NOEXCEPT;
+    size_t page_ceiling(size_t bytes) const NOEXCEPT;
+
+    // extent ring (write completion), locked except claim_ (lock-free).
+    struct extent;
+    size_t record_(size_t count) NOEXCEPT;
+    bool claim_(extent& record, size_t offset, size_t count) NOEXCEPT;
+    void maintain_() NOEXCEPT;
+    void discard_() NOEXCEPT;
+    void trim_(size_t count) NOEXCEPT;
+
+    // staged body (settle, throttle, evict), not thread safe unless noted.
     template <size_t... Index>
     bool settle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
@@ -326,85 +367,43 @@ private:
     template <size_t... Index>
     bool evict_all_(size_t from, size_t to,
         std::index_sequence<Index...>) NOEXCEPT;
-
-    // staging wrappers, not thread safe.
-    template <size_t Column>
-    bool stage_() NOEXCEPT;
-    template <size_t Column>
-    bool commit_(size_t size, bool final=true) NOEXCEPT;
+    template <size_t... Index>
+    bool settle_write_(size_t from, size_t to,
+        std::index_sequence<Index...>) NOEXCEPT;
     template <size_t Column>
     bool settle_(size_t from, size_t to) NOEXCEPT;
     template <size_t Column>
     bool unsettle_(size_t rows) NOEXCEPT;
     template <size_t Column>
     bool evict_(size_t from, size_t to) NOEXCEPT;
-    template <size_t Column>
-    void teardown_(const error::error_t& ec) NOEXCEPT;
-
-    // staging utilities, not thread safe (claim_ is lock-free thread safe).
-    struct extent;
-    size_t allocate_filled_(size_t count, uint8_t backfill) NOEXCEPT;
-    bool lazy_install_() NOEXCEPT;
-    size_t record_(size_t count) NOEXCEPT;
-    bool claim_(extent& record, size_t offset, size_t count) NOEXCEPT;
-    void maintain_() NOEXCEPT;
-    void discard_() NOEXCEPT;
     void throttle_() NOEXCEPT;
     void signal_() NOEXCEPT;
+    void body_run_() NOEXCEPT;
+    bool settle_next_(size_t chunk) NOEXCEPT;
+    bool evict_next_(size_t chunk, size_t& cursor) NOEXCEPT;
 
-    // dirty page transfer (unstaged instances), lock-free with writers.
+    // managed head (lazy install, dirty transfer, release, share).
+    size_t allocate_filled_(size_t count, uint8_t backfill) NOEXCEPT;
+    bool lazy_install_() NOEXCEPT;
     template <size_t Column>
     bool transfer_(size_t bytes) NOEXCEPT;
-    template <size_t Column>
-    bool sync_() NOEXCEPT;
     void remark_(size_t offset, size_t size) NOEXCEPT;
+    void head_run_() NOEXCEPT;
 
-    // head page release (unstaged instances), synchronized with writers by
-    // the prepare/release bit protocol (see release_pages_).
+    // head page release, synchronized with writers by the prepare/release
+    // bit protocol (see release_pages_).
     bool release_pages_() NOEXCEPT;
-    void quiesce_() NOEXCEPT;
+    void restore_(size_t offset, size_t size) NOEXCEPT;
+    void declare_released_() NOEXCEPT;
+
+    // head share transitions, synchronized with writers by the count.
     std::atomic<size_t>& writer_slot_() NOEXCEPT;
     size_t writers_count_() const NOEXCEPT;
     void writers_reset_() NOEXCEPT;
+    void quiesce_() NOEXCEPT;
     bool share_(size_t transferred) NOEXCEPT;
     void unshare_() NOEXCEPT;
-    void declare_released_() NOEXCEPT;
-    void restore_(size_t offset, size_t size) NOEXCEPT;
-
-    // settle scheduler (instance-owned thread, load/unload lifecycle).
-    void settler_start_() NOEXCEPT;
-    void settler_stop_() NOEXCEPT;
-    void settler_run_() NOEXCEPT;
-    void head_run_() NOEXCEPT;
-    bool settle_next_(size_t chunk) NOEXCEPT;
-    bool evict_next_(size_t chunk) NOEXCEPT;
-    template <size_t... Index>
-    bool settle_write_(size_t from, size_t to,
-        std::index_sequence<Index...>) NOEXCEPT;
-    bool advise_(uint8_t* map, size_t size) const NOEXCEPT;
-    size_t to_reservation(size_t rows) const NOEXCEPT;
-    size_t page_floor(size_t bytes) const NOEXCEPT;
-    size_t page_ceiling(size_t bytes) const NOEXCEPT;
 #endif // MANAGE_STAGING
-
-#if defined(HAVE_MSC)
-    // Working-set steering for the native (file-backed) mapping. The cache
-    // manager trims without knowing that head residency is the store's
-    // priority, so it takes head pages alongside cold body cache and every
-    // head miss is a serial fault on the probe path. The scanner asserts head
-    // residency (a read sets the access bit) and leads the trim on bodies
-    // (unlock moves the range to the standby list, reclaimed first).
-    void scanner_start_() NOEXCEPT;
-    void scanner_stop_() NOEXCEPT;
-    void scanner_run_() NOEXCEPT;
-
-    std::thread scanner_{};
-    std::atomic_bool scanning_{};
-    std::condition_variable scanner_cv_{};
-    mutable std::mutex scanner_mutex_{};
-    size_t touched_{};
-    size_t unlocked_{};
-#endif // HAVE_MSC
 
     // These are thread safe (const).
     const paths filenames_;
@@ -414,6 +413,7 @@ private:
     const advice access_;
     const bool random_;
     const bool staged_;
+    const bool managed_;
 
     // These are thread safe (atomic).
     std::atomic<error::error_t> error_{ error::success };
@@ -431,6 +431,12 @@ private:
     // This is protected by remap_mutex_.
     std::array<uint8_t*, columns> memory_map_{};
     mutable std::shared_mutex remap_mutex_{};
+
+    // These are protected by worker_mutex_ (working_ is atomic).
+    std::thread worker_{};
+    std::atomic_bool working_{};
+    std::condition_variable worker_cv_{};
+    mutable std::mutex worker_mutex_{};
 
 #if defined(MANAGE_STAGING)
     // Page-dirty bitmap for unstaged (rewrite-in-place head) instances.
@@ -471,16 +477,9 @@ private:
         std::atomic<uint64_t> state;
     };
 
-    // This is unshared (settler thread only).
-    size_t evicted_{};
-
-#if defined(STAGING_TELEMETRY)
-    // These are unshared (settler thread only).
-    size_t telemetry_{};
-    size_t marked_{};
-    size_t peaked_{};
-    size_t active_{};
-#endif
+    // These are set at map and constant while loaded.
+    size_t page_{};
+    size_t limit_{};
 
     // These are thread safe (atomic).
     std::atomic<size_t> marks_{};
@@ -489,6 +488,7 @@ private:
     std::atomic<uint64_t> window_{};
 
     // These are protected by remap_mutex_.
+    std::array<size_t, columns> reserved_{};
     std::unique_ptr<dirty_bitmaps> dirty_{};
     std::unique_ptr<dirty_bitmaps> intent_{};
     std::unique_ptr<dirty_bitmaps> released_{};
@@ -523,25 +523,16 @@ private:
     // Serializes page release against restore (prepare slow path).
     mutable std::mutex restore_mutex_{};
 
-    // Serializes transfer passes (settler tick against flush), as concurrent
+    // Serializes transfer passes (worker tick against flush), as concurrent
     // passes split the claimed dirty set, allowing a flush to complete while
     // claimed pages remain unwritten (a stale snapshot copy).
     mutable std::mutex transfer_mutex_{};
 
-    // These are protected by extent_mutex_.
-    size_t page_{};
+    // This is protected by extent_mutex_.
     std::array<extent, extents> ring_{};
-    std::array<size_t, columns> reserved_{};
     mutable std::mutex extent_mutex_{};
 
-    // These are protected by settler_mutex_.
-    std::thread settler_{};
-    std::atomic_bool settling_{};
-    std::condition_variable settler_cv_{};
-    mutable std::mutex settler_mutex_{};
-
-    // These are protected by throttle_mutex_.
-    size_t limit_{};
+    // This is protected by throttle_mutex_.
     std::condition_variable throttle_cv_{};
     mutable std::mutex throttle_mutex_{};
 #endif // MANAGE_STAGING
@@ -559,10 +550,13 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 #include <bitcoin/database/impl/memory/mmap.ipp>
 #include <bitcoin/database/impl/memory/mmap_dispatch.ipp>
-#include <bitcoin/database/impl/memory/mmap_native.ipp>
 #include <bitcoin/database/impl/memory/mmap_private.ipp>
-#include <bitcoin/database/impl/memory/mmap_staging.ipp>
 #include <bitcoin/database/impl/memory/mmap_storage.ipp>
+#include <bitcoin/database/impl/memory/mmap_native.ipp>
+#include <bitcoin/database/impl/memory/mmap_staging.ipp>
+#include <bitcoin/database/impl/memory/mmap_extent.ipp>
+#include <bitcoin/database/impl/memory/mmap_body.ipp>
+#include <bitcoin/database/impl/memory/mmap_head.ipp>
 
 BC_POP_WARNING()
 

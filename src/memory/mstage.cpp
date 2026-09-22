@@ -37,8 +37,10 @@
     #include <sys/prctl.h>
 #endif
 
-using namespace libbitcoin;
-using namespace libbitcoin::system;
+namespace libbitcoin {
+namespace database {
+
+using namespace system;
 static constexpr auto transfer_chunk = power2(30u);
 
 void* mmap_reserve(size_t size) NOEXCEPT
@@ -131,30 +133,34 @@ int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 // Mapped pages (released runs, where the file is the live copy) hold a
 // reference and are not discarded. Dirty pages are not discarded either, so
 // a page discards on the pass following its writeback.
+#if defined(POSIX_FADV_DONTNEED)
 int file_discard(int fd) NOEXCEPT
 {
-#if defined(POSIX_FADV_DONTNEED)
     return ::posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED);
-#else
-    return is_zero(fd) ? 0 : 0;
-#endif
 }
+#else
+int file_discard(int) NOEXCEPT
+{
+    return 0;
+}
+#endif
 
+// Deactivation expresses the residency priority the kernel cannot infer:
+// settled bodies stay cached for imminent re-read (validation follows
+// archival) but reclaim first under pressure, before active pages and
+// anonymous heads (which otherwise swap to preserve the body cache). A
+// read reactivates, so genuinely hot pages promote themselves back.
+#if defined(MADV_COLD)
 int mmap_cold(void* address, size_t size) NOEXCEPT
 {
-#if defined(MADV_COLD)
-    // Deactivation expresses the residency priority the kernel cannot infer:
-    // settled bodies stay cached for imminent re-read (validation follows
-    // archival) but reclaim first under pressure, before active pages and
-    // anonymous heads (which otherwise swap to preserve the body cache). A
-    // read reactivates, so genuinely hot pages promote themselves back.
     return ::madvise(address, size, MADV_COLD);
-#else
-    // Both parameters are unused without MADV_COLD (darwin), consumed by the
-    // test as file_discard consumes its own without POSIX_FADV_DONTNEED.
-    return (address != nullptr) && !is_zero(size) ? 0 : 0;
-#endif
 }
+#else
+int mmap_cold(void*, size_t) NOEXCEPT
+{
+    return 0;
+}
+#endif
 
 // Diagnostic attribution: names each anonymous vma in the range so smaps and
 // per-process accounting decompose by table (heads vs staged bodies vs
@@ -197,23 +203,27 @@ int mmap_share(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 // the touch guard cannot defend a head there; wiring can (the user wire
 // limit leaves the kernel its share, and refusal leaves the pages unpinned).
 // Linux defends by the touch pass (unprivileged mlock is capped at 8MB).
+#if defined(HAVE_APPLE)
 int mmap_wire(void* address, size_t size) NOEXCEPT
 {
-#if defined(HAVE_APPLE)
     return ::mlock(address, size);
-#else
-    return (address != nullptr) && !is_zero(size) ? 0 : 0;
-#endif
 }
 
 int mmap_unwire(void* address, size_t size) NOEXCEPT
 {
-#if defined(HAVE_APPLE)
     return ::munlock(address, size);
-#else
-    return (address != nullptr) && !is_zero(size) ? 0 : 0;
-#endif
 }
+#else
+int mmap_wire(void*, size_t) NOEXCEPT
+{
+    return 0;
+}
+
+int mmap_unwire(void*, size_t) NOEXCEPT
+{
+    return 0;
+}
+#endif
 
 int mmap_unsettle(void* address, size_t size) NOEXCEPT
 {
@@ -349,5 +359,8 @@ bool pwrite_all(int fd, const uint8_t* from, size_t size,
 
     return true;
 }
+
+} // namespace database
+} // namespace libbitcoin
 
 #endif // MANAGE_STAGING

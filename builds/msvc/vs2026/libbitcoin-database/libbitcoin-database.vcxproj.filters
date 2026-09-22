@@ -457,7 +457,16 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap.ipp">
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_body.ipp">
+      <Filter>include\bitcoin\database\impl\memory</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_dispatch.ipp">
+      <Filter>include\bitcoin\database\impl\memory</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_extent.ipp">
+      <Filter>include\bitcoin\database\impl\memory</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_head.ipp">
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_native.ipp">
