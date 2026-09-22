@@ -36,6 +36,9 @@
 
 #if defined(MANAGE_STAGING)
 
+namespace libbitcoin {
+namespace database {
+
 /// Reserve inaccessible anonymous address space (MAP_FAILED on failure).
 void* mmap_reserve(size_t size) NOEXCEPT;
 
@@ -84,6 +87,9 @@ int mmap_unwire(void* address, size_t size) NOEXCEPT;
 bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT;
 bool pwrite_all(int fd, const uint8_t* from, size_t size,
     size_t offset) NOEXCEPT;
+
+} // namespace database
+} // namespace libbitcoin
 
 #endif // MANAGE_STAGING
 

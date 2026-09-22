@@ -143,13 +143,7 @@ code CLASS::load() NOEXCEPT
         }
 
         remap_mutex_.unlock();
-
-#if defined(MANAGE_STAGING)
-        settler_start_();
-#elif defined(HAVE_MSC)
-        scanner_start_();
-#endif
-
+        worker_start_();
         return error::success;
     }
 
@@ -186,106 +180,6 @@ code CLASS::reload() NOEXCEPT
 
     // Locked by reader(s), as write suspension is a precondition.
     return error::reload_locked;
-}
-
-TEMPLATE
-void CLASS::prepare(size_t STAGING_ONLY(offset),
-    size_t STAGING_ONLY(size)) NOEXCEPT
-{
-#if defined(MANAGE_STAGING)
-    if (is_zero(size) || !dirty_)
-        return;
-
-    // Count the writer before loading released below (sequentially
-    // consistent), pairing with the release protocol: release either observes
-    // the count (and aborts) or this writer observes released (and restores).
-    // Intent bits age (hot sampling), so they cannot protect a write held
-    // in flight across passes; the count persists until mark.
-    // A settle transition pairs the same way, but the writer waits UNCOUNTED
-    // (it retires its count and does not retake one until the transition
-    // clears), so the count drains monotonically and the transition is
-    // guaranteed to observe zero rather than merely likely to.
-    auto& writers = writer_slot_();
-    for (;;)
-    {
-        while (transition_.load())
-            std::this_thread::yield();
-
-        writers.fetch_add(one);
-        if (!transition_.load())
-            break;
-
-        writers.fetch_sub(one);
-    }
-
-    // A settled head writes through its mapping.
-    if (shared_.load())
-        return;
-
-    if (!engaged_.load(relaxed) && !lazy_.load(relaxed))
-        return;
-
-    // Declare intent before the write (sequentially consistent, pairing with
-    // the release protocol), then restore any released page in the range.
-    auto restore = false;
-    auto page = offset / page_;
-    const auto end = (offset + sub1(size)) / page_;
-    while ((page <= end) && ((page / page_bound) < words_))
-    {
-        const auto word = page / page_bound;
-        const auto flag = system::bit_right<uint64_t>(page % page_bound);
-        intent_[word].fetch_or(flag);
-        restore |= !is_zero(system::bit_and(released_[word].load(), flag));
-        ++page;
-    }
-
-    if (restore)
-        restore_(offset, size);
-#endif
-}
-
-TEMPLATE
-void CLASS::mark(size_t STAGING_ONLY(offset),
-    size_t STAGING_ONLY(size)) NOEXCEPT
-{
-#if defined(MANAGE_STAGING)
-    if (is_zero(size) || !dirty_)
-        return;
-
-    // Marks follow content writes; transfer clears before reading, so pages
-    // remarked during a transfer are simply rewritten by the next pass. A
-    // settled head writes through its mapping, so its marks count only (the
-    // settler reads the rate); no transition intervenes (the writer is
-    // counted), so the path matches prepare.
-    if (shared_.load())
-        marks_.fetch_add(one, relaxed);
-    else
-        remark_(offset, size);
-
-    // Uncount the writer after its marks (sequentially consistent), so a
-    // release pass loading a drained count observes the dirty bits. Only
-    // prepare() counts, so only mark() may uncount (transfer failure restores
-    // marks by remark_, as an unpaired uncount here corrupts the count).
-    writer_slot_().fetch_sub(one);
-#endif
-}
-
-TEMPLATE
-void CLASS::current(bool STAGING_ONLY(state)) NOEXCEPT
-{
-#if defined(MANAGE_STAGING)
-    current_.store(state);
-#endif
-}
-
-TEMPLATE
-bool CLASS::settled() const NOEXCEPT
-{
-#if defined(MANAGE_STAGING)
-    return shared_.load();
-#else
-    return false;
-#endif
 }
 
 // Suspend writes before calling.
@@ -336,12 +230,7 @@ code CLASS::flush() NOEXCEPT
 TEMPLATE
 code CLASS::unload() NOEXCEPT
 {
-#if defined(MANAGE_STAGING)
-    settler_stop_();
-#elif defined(HAVE_MSC)
-    scanner_stop_();
-#endif
-
+    worker_stop_();
     std::unique_lock field_lock(field_mutex_);
 
     if (remap_mutex_.try_lock())
@@ -370,12 +259,7 @@ code CLASS::unload() NOEXCEPT
 TEMPLATE
 code CLASS::shrink() NOEXCEPT
 {
-#if defined(MANAGE_STAGING)
-    settler_stop_();
-#elif defined(HAVE_MSC)
-    scanner_stop_();
-#endif
-
+    worker_stop_();
     std::unique_lock field_lock(field_mutex_);
 
     if (remap_mutex_.try_lock())
@@ -401,13 +285,7 @@ code CLASS::shrink() NOEXCEPT
         }
 
         remap_mutex_.unlock();
-
-#if defined(MANAGE_STAGING)
-        settler_start_();
-#elif defined(HAVE_MSC)
-        scanner_start_();
-#endif
-
+        worker_start_();
         return error::success;
     }
 
@@ -459,84 +337,11 @@ bool CLASS::truncate(size_t count) NOEXCEPT
             return false;
     }
 
-    // Discard extents above the truncation and clamp any overlap.
-    if (staged_)
-    {
-        std::unique_lock extent_lock(extent_mutex_);
-
-        using namespace system;
-        auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
-        while (!is_zero(size))
-        {
-            auto& tail = ring_.at((head + sub1(size)) % extents);
-            const auto start = tail.start.load(relaxed);
-            if (start >= count)
-            {
-                --size;
-                continue;
-            }
-
-            if (ceilinged_add(start, tail.count.load(relaxed)) > count)
-            {
-                const auto trimmed = count - start;
-                tail.count.store(trimmed, relaxed);
-
-                // Clamp outstanding within the state, generation unchanged
-                // (the extent is trimmed, not recycled; writers quiescent).
-                const auto limit = trimmed * columns;
-                const auto state = tail.state.load(relaxed);
-                if (bit_and<uint64_t>(state, outstanding_mask) > limit)
-                    tail.state.store(pack_extent_(shift_right<uint64_t>(
-                        state, generation_shift), limit), relaxed);
-            }
-
-            break;
-        }
-
-        window_.store(pack_word<uint64_t>(head, size), release);
-        frontier_.store(is_zero(size) ? count :
-            ring_.at(head).start.load(relaxed));
-    }
+    trim_(count);
 #endif
 
     logical_.store(count);
     check_invariants_();
-    return true;
-}
-
-// Iterated growth (callers hold the remap lock). Growth asks are amortized
-// (rate surplus over the necessity), and each is admitted only while it
-// leaves the configured headroom of the backing resource unclaimed (probed
-// with the ask, released on grant), so exhaustion never consumes the
-// system's final bytes. A large amortization step can be refused while the
-// necessity fits, so iterate: halve the refused surplus toward the
-// necessity. Refusal of the necessity is exhaustion, not store damage:
-// published as disk full (space set, store intact, writes fail fast until
-// cleared), it clears by settle drainage or operator relief, where teardown
-// would convert a shortage into a restore.
-TEMPLATE
-bool CLASS::grow_(size_t end) NOEXCEPT
-{
-    if (!is_zero(space_.load()))
-        return false;
-
-    using namespace system;
-    for (auto extended = to_growth(end);
-        !remap_all_(extended, sequence{}, false);
-        extended = ceilinged_add(end,
-            to_half(floored_subtract(extended, end))))
-    {
-        if (fault_.load())
-            return false;
-
-        if (extended <= end)
-        {
-            set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
-                floored_subtract(end, capacity_.load()), stride)));
-            return false;
-        }
-    }
-
     return true;
 }
 
@@ -684,7 +489,7 @@ TEMPLATE
 size_t CLASS::allocate(size_t count, uint8_t backfill) NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
-    if (!staged_ && dirty_ && !shared_.load())
+    if (managed_ && !shared_.load())
         return allocate_filled_(count, backfill);
 #endif
 

@@ -19,7 +19,9 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_MMAP_PRIVATE_IPP
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_PRIVATE_IPP
 
+#include <chrono>
 #include <fcntl.h>
+#include <mutex>
 #include <tuple>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/mman.hpp>
@@ -29,7 +31,7 @@
 namespace libbitcoin {
 namespace database {
 
-// mman dispatch, not thread safe.
+// column dispatch, not thread safe.
 // ----------------------------------------------------------------------------
 // private
 
@@ -99,6 +101,7 @@ bool CLASS::unmap_all_(std::index_sequence<Index...>) NOEXCEPT
     sweep_.reset();
     words_ = zero;
     engaged_.store(false);
+    lazy_.store(false);
     shared_.store(false);
 #endif
 
@@ -144,196 +147,61 @@ bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>,
     return true;
 }
 
-// mman wrappers, not thread safe.
-// ----------------------------------------------------------------------------
-// private
-
-// Never results in unmapped.
+// Iterated growth (callers hold the remap lock). Growth asks are amortized
+// (rate surplus over the necessity), and each is admitted only while it
+// leaves the configured headroom of the backing resource unclaimed (probed
+// with the ask, released on grant), so exhaustion never consumes the
+// system's final bytes. A large amortization step can be refused while the
+// necessity fits, so iterate: halve the refused surplus toward the
+// necessity. Refusal of the necessity is exhaustion, not store damage:
+// published as disk full (space set, store intact, writes fail fast until
+// cleared), it clears by settle drainage or operator relief, where teardown
+// would convert a shortage into a restore.
 TEMPLATE
-template <size_t Column>
-bool CLASS::flush_(size_t
-    #if defined(MANAGE_STAGING) || defined(HAVE_MSC)
-    rows
-    #endif
-) NOEXCEPT
+bool CLASS::grow_(size_t end) NOEXCEPT
 {
-#if defined(MANAGE_STAGING)
-    const auto success = persist_<Column>(to_width<Column>(rows))
-        && sync_<Column>();
-#elif defined(HAVE_MSC)
-    // unmap (and therefore msync) must be called before ftruncate.
-    // "To flush all the dirty pages plus the metadata for the file and ensure
-    // that they are physically written to disk..."
-    const auto size = to_width<Column>(rows);
-    const auto success =
-           (::msync(memory_map_[Column], size, MS_SYNC) != fail)
-        && (::fsync(opened_[Column]) != fail);
-#else
-    // msync should not be required on modern linux, see linus et al.
-    // stackoverflow.com/questions/5902629/mmap-msync-and-linux-process-termination
-    // Linux: fsync "transfers ("flushes") all modified in-core data of
-    // (i.e., modified buffer cache pages for) the file referred to by the
-    // file descriptor fd to the disk device so all changed information
-    // can be retrieved even if the system crashes or is rebooted. This
-    // includes writing through or flushing a disk cache if present. The
-    // call blocks until the device reports that transfer has completed."
-    const auto success = ::fsync(opened_[Column]) != fail;
-#endif
-
-    if (!success)
-        set_first_code(error::fsync_failure);
-
-    return success;
-}
-
-#if defined(MANAGE_STAGING)
-// Persist rows below to: settled rows are already on disk (staged appends
-// the remainder), a shared head synchronizes its mapping (writes through),
-// an anonymous head transfers its dirty pages.
-TEMPLATE
-template <size_t Column>
-bool CLASS::persist_(size_t to) NOEXCEPT
-{
-    const auto from = to_width<Column>(settled_.load());
-    return staged_ ? ((from >= to) || pwrite_all(opened_[Column],
-        std::next(memory_map_[Column], from), to - from, from)) :
-        (head_shared || shared_.load()) ?
-            (::msync(memory_map_[Column], to, MS_SYNC) != fail) :
-            transfer_<Column>(to);
-}
-#endif
-
-// Always results in unmapped, file is unchanged.
-TEMPLATE
-template <size_t Column>
-bool CLASS::release_(size_t size) NOEXCEPT
-{
-    const auto success =
-        ::munmap(memory_map_[Column], to_width<Column>(size)) != fail;
-
-    if (!success)
-        set_first_code(error::munmap_failure);
-
-    // loaded_ is caller-owned: unmap_ publishes unloaded, remap_ remains
-    // loaded across replacement (lock-free allocate guards must not observe
-    // a transient unload).
-    memory_map_[Column] = {};
-    return success;
-}
-
-// Always results in unmapped, trims to logical (can be zero).
-TEMPLATE
-template <size_t Column>
-bool CLASS::unmap_(size_t
-    #if !defined(MANAGE_STAGING)
-    size
-    #endif
-) NOEXCEPT
-{
-    const auto logical = to_width<Column>(logical_.load());
-
-#if defined(MANAGE_STAGING)
-    // Persist unflushed rows, trim preallocation to logical, sync to disk.
-    const auto transferred = persist_<Column>(logical)
-        && (::ftruncate(opened_[Column], logical) != fail)
-        && sync_<Column>();
-
-    // Order ensures release of the reservation in case of transfer failure.
-    const auto success = (::munmap(memory_map_[Column],
-        reserved_[Column]) != fail) && transferred;
-
-    memory_map_[Column] = {};
-    reserved_[Column] = zero;
-#elif defined(HAVE_MSC)
-    // Windows cannot resize a mapped file.
-    // msync requires the live mapping, ftruncate requires it gone.
-    const auto synced =
-           (::msync(memory_map_[Column], logical, MS_SYNC) != fail);
-
-    // Order ensures release in case of sync failure.
-    const auto success = release_<Column>(size) && synced
-        && (::ftruncate(opened_[Column], logical) != fail)
-        && (::fsync(opened_[Column]) != fail);
-#else
-    // POSIX permits resizing a mapped file.
-    const auto truncated =
-           (::ftruncate(opened_[Column], logical) != fail)
-        && (::fsync(opened_[Column]) != fail);
-
-    // Order ensures release in case of truncate failure.
-    const auto success = release_<Column>(size) && truncated;
-#endif
-
-    loaded_.store(false);
-
-    if (!success)
-        set_first_code(error::munmap_failure);
-
-    return success;
-}
-
-// Mapping failure results in unmapped.
-// Mapping has no effect on logical size, always maps max(logical, min) size.
-TEMPLATE
-template <size_t Column>
-bool CLASS::map_() NOEXCEPT
-{
-#if defined(MANAGE_STAGING)
-    return stage_<Column>();
-#else
-    // Cannot map empty file, and want minimum capacity, so expand as required.
-    // The classic mapping is file-backed, so commitment is provisioning.
-    // disk_full: space is set but no code is set with false return.
-    const auto size = to_provision();
-    if (!resize_<Column>(size))
+    if (!is_zero(space_.load()))
         return false;
 
-    memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mmap(nullptr, to_width<Column>(size), PROT_READ | PROT_WRITE,
-            MAP_SHARED, opened_[Column], 0));
+    using namespace system;
+    for (auto extended = to_growth(end);
+        !remap_all_(extended, sequence{}, false);
+        extended = ceilinged_add(end,
+            to_half(floored_subtract(extended, end))))
+    {
+        if (fault_.load())
+            return false;
 
-    return finalize_<Column>(size);
-#endif
+        if (extended <= end)
+        {
+            set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+                floored_subtract(end, capacity_.load()), stride)));
+            return false;
+        }
+    }
+
+    return true;
 }
 
-// Remap failure results in unmapped.
-// Remapping has no effect on logical size, sets map_/capacity_.
+// The wave probe reserves the whole extension plus headroom on the store
+// volume (column widths sum to the stride) leaves the headroom unclaimed.
+// An unmeasurable volume admits the wave: growth failure is the store's own
+// disk full detection, and a query failure is not an exhaustion signal.
 TEMPLATE
-template <size_t Column>
-bool CLASS::remap_(size_t size, bool final) NOEXCEPT
+bool CLASS::probe_(size_t capacity) NOEXCEPT
 {
-    BC_ASSERT(size >= logical_.load());
+    using namespace system;
+    const auto bytes = ceilinged_multiply(
+        floored_subtract(capacity, file_.load()), stride);
 
-    // Cannot remap empty file, so expand to minimum capacity if zero.
-    if (is_zero(size))
-        size = minimum_;
+    if (is_zero(bytes) || is_zero(headroom_))
+        return true;
 
-#if defined(MANAGE_STAGING)
-    // The file is preallocated to capacity, preserving disk full detection at
-    // allocation, and growth commits reserved anonymous pages in place, so no
-    // mapping is released and the map base is stable within the reservation.
-    if (!resize_<Column>(size, final))
-        return false;
+    size_t available{};
+    if (!file::space(available, filenames_.front()))
+        return true;
 
-    return commit_<Column>(size, final);
-#else
-    if (!resize_<Column>(size, final))
-        return false;
-
-#if defined(HAVE_MSC)
-    // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
-    memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mremap_(memory_map_[Column], to_width<Column>(capacity_.load()),
-            to_width<Column>(size), PROT_READ | PROT_WRITE, MAP_SHARED,
-            opened_[Column]));
-#else
-    memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mremap(memory_map_[Column], to_width<Column>(capacity_.load()),
-            to_width<Column>(size), MREMAP_MAYMOVE));
-#endif
-
-    return finalize_<Column>(size);
-#endif // MANAGE_STAGING
+    return available >= ceilinged_add(bytes, headroom_);
 }
 
 // disk_full: space is set but no code is set with false return.
@@ -379,95 +247,66 @@ bool CLASS::resize_(size_t size, bool final) NOEXCEPT
     return true;
 }
 
-// The wave probe reserves the whole extension plus headroom on the store
-// volume (column widths sum to the stride) leaves the headroom unclaimed.
-// An unmeasurable volume admits the wave: growth failure is the store's own
-// disk full detection, and a query failure is not an exhaustion signal.
+// worker, instance-owned (load/unload lifecycle).
+// ----------------------------------------------------------------------------
+// private
+
 TEMPLATE
-bool CLASS::probe_(size_t capacity) NOEXCEPT
+void CLASS::worker_start_() NOEXCEPT
 {
-    using namespace system;
-    const auto bytes = ceilinged_multiply(
-        floored_subtract(capacity, file_.load()), stride);
+#if defined(MANAGE_STAGING)
+    // A shared head has no lazy writer (the kernel writes its mapping back).
+    if (!staged_ && head_shared)
+        return;
 
-    if (is_zero(bytes) || is_zero(headroom_))
-        return true;
+    limit_ = system_memory() / throttle_factor;
+#endif
 
-    size_t available{};
-    if (!file::space(available, filenames_.front()))
-        return true;
-
-    return available >= ceilinged_add(bytes, headroom_);
+    working_.store(true);
+    worker_ = std::thread([this]() NOEXCEPT
+    {
+        worker_run_();
+    });
 }
 
-// Finalize failure results in unmapped.
 TEMPLATE
-template <size_t Column>
-bool CLASS::finalize_(size_t
-    #if !defined(HAVE_MSC) && !defined(WITHOUT_MADVISE)
-    size
-    #endif
-) NOEXCEPT
+void CLASS::worker_stop_() NOEXCEPT
 {
-    if (memory_map_[Column] == MAP_FAILED)
-    {
-        loaded_.store(false);
-        memory_map_[Column] = {};
+    if (!working_.exchange(false))
+        return;
 
-        // mmap or mremap failure (not mapped).
-        set_first_code(error::mmap_failure);
-        return false;
+#if defined(MANAGE_STAGING)
+    signal_();
+#endif
+
+    {
+        std::unique_lock worker_lock(worker_mutex_);
+        worker_cv_.notify_all();
     }
 
-#if !defined(HAVE_MSC) && !defined(WITHOUT_MADVISE)
-    // Get page size (usually 4KB).
-    using namespace system;
-    const int page_size = ::sysconf(_SC_PAGESIZE);
-    const auto page = possible_narrow_sign_cast<size_t>(page_size);
-
-    // If not one bit then page size is not a power of two as required.
-    if (page_size == fail || !is_one(ones_count(page)))
-    {
-        set_first_code(error::sysconf_failure);
-        unmap_<Column>(size);
-        return false;
-    }
-
-    // Align mapped bytes up to page boundary.
-    const auto max = sub1(page);
-    const auto target = to_width<Column>(size);
-    const auto align = bit_and(ceilinged_add(target, max), bit_not(max));
-
-    // Advice is elective (normal is the kernel default) and configured from
-    // the read pattern (see database::advice), as advising from the write
-    // pattern (structural) invites fault read amplification on random reads.
-    // Random access preloads (small heads, avoiding initial fault stalls).
-    if (access_ != advice::normal)
-    {
-        const auto random = (access_ != advice::sequential);
-        const auto preload = (access_ == advice::random);
-        const auto behavior = random ? MADV_RANDOM : MADV_SEQUENTIAL;
-
-        for (size_t offset{}; offset < align; offset += advise_chunk)
-        {
-            const auto length = std::min(advise_chunk, align - offset);
-            const auto start = std::next(memory_map_[Column], offset);
-
-            if (::madvise(start, length, behavior) == fail || (preload &&
-                ::madvise(start, length, MADV_WILLNEED) == fail))
-            {
-                set_first_code(error::madvise_failure);
-                unmap_<Column>(size);
-                return false;
-            }
-        }
-    }
-#endif // !HAVE_MSC && !WITHOUT_MADVISE
-
-    loaded_.store(true);
-    return true;
+    if (worker_.joinable())
+        worker_.join();
 }
 
+TEMPLATE
+void CLASS::worker_run_() NOEXCEPT
+{
+#if defined(MANAGE_STAGING)
+    staged_ ? body_run_() : head_run_();
+#else
+    scan_run_();
+#endif
+}
+
+// One second tick, false when stopped.
+TEMPLATE
+bool CLASS::tick_() NOEXCEPT
+{
+    std::unique_lock worker_lock(worker_mutex_);
+    worker_cv_.wait_for(worker_lock, std::chrono::seconds(1));
+    worker_lock.unlock();
+    return working_.load();
+}
 
 } // namespace database
 } // namespace libbitcoin
