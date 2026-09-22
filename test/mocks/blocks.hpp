@@ -105,6 +105,7 @@ extern const system::chain::transaction tx2b;
 extern const system::chain::block block_spend_1a;
 extern const system::chain::transaction tx_spend_genesis;
 extern const system::chain::block block_spend_genesis;
+extern const system::chain::block block_coinbase_spend_1a;
 extern const system::chain::block block_spend_internal_2b;
 extern const system::chain::block block_missing_prevout_2b;
 extern const system::chain::block block_valid_spend_internal_2b;
