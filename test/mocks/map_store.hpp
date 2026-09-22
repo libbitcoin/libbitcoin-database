@@ -60,6 +60,16 @@ public:
         return restore([](auto, auto) {});
     }
 
+    inline void set_current_(bool current) NOEXCEPT
+    {
+        return set_current(current);
+    }
+
+    inline bool is_current_() const NOEXCEPT
+    {
+        return is_current();
+    }
+
     inline const settings& configuration() const NOEXCEPT
     {
         return configuration_;
