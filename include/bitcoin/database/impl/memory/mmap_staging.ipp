@@ -1399,18 +1399,6 @@ void CLASS::head_run_() NOEXCEPT
     }
 }
 
-// Settle a quiescent managed head to a writable mapping of its file over the
-// committed span (as a shared head loads): pages drop under pressure and
-// writes dirty page cache for kernel writeback, so page tracking idles (it
-// remains allocated, as writers read it unlocked). Exclusive remap excludes
-// accessors and the transition excludes counted head writers (raw pointer
-// writes hold no lock), so a mark count still at the drained count proves
-// the file current (a write landing after the drain snapshot would otherwise
-// be lost to the remap).
-// Exclude head writers across a settle transition: they write through raw
-// pointers under no lock, so only the writer count can exclude them. The
-// drain precedes the remap lock, as a writer never takes it (and a transition
-// that waited under it would deadlock the first one that did).
 TEMPLATE
 std::atomic<size_t>& CLASS::writer_slot_() NOEXCEPT
 {
@@ -1445,11 +1433,24 @@ void CLASS::quiesce_() NOEXCEPT
         std::this_thread::yield();
 }
 
+// Settle a quiescent managed head to a writable mapping of its file over the
+// committed span (as a shared head loads): pages drop under pressure and
+// writes dirty page cache for kernel writeback, so page tracking idles (it
+// remains allocated, as writers read it unlocked). Exclusive remap excludes
+// accessors and the transition excludes counted head writers (raw pointer
+// writes hold no lock), so a mark count still at the drained count proves
+// the file current (a write landing after the drain snapshot would otherwise
+// be lost to the remap).
+// The remap lock precedes the drain: a writer holding an accessor waits
+// uncounted at the transition, so a drain that preceded the lock would return
+// on its own and the lock would then wait on that writer forever. Every
+// counted writer either holds no lock or took its accessor before its count,
+// so under the lock the count drains.
 TEMPLATE
 bool CLASS::share_(size_t transferred) NOEXCEPT
 {
-    quiesce_();
     std::unique_lock map_lock(remap_mutex_);
+    quiesce_();
 
     auto shared = false;
     if (loaded_.load() && !fault_.load() && (marks_.load() == transferred))
@@ -1488,8 +1489,8 @@ bool CLASS::share_(size_t transferred) NOEXCEPT
 TEMPLATE
 void CLASS::unshare_() NOEXCEPT
 {
-    quiesce_();
     std::unique_lock map_lock(remap_mutex_);
+    quiesce_();
 
     const auto floor = page_floor(to_width<zero>(logical_.load()));
     const auto ceiling = page_ceiling(to_width<zero>(capacity_.load()));
