@@ -269,11 +269,9 @@ bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 
     iostream stream{ ptr.data(), size };
     flipper sink{ stream };
-    if (!element.to_data(sink))
-        return false;
-
+    const auto written = element.to_data(sink);
     file_.mark(link.value, bytes);
-    return true;
+    return written;
 }
 
 // NOT WRITER-WRITER THREAD SAFE (the logical top is read-write).
