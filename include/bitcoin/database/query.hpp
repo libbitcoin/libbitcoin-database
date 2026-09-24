@@ -515,6 +515,8 @@ public:
     /// Set transaction.
     code set_code(const transaction& tx) NOEXCEPT;
     code set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT;
+    code set_code(tx_link& out_fk, bool& pooled,
+        const transaction& tx) NOEXCEPT;
 
     /// Set header (headers-first).
     code set_code(const header& header, const context& ctx,

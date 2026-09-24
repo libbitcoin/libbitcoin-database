@@ -1585,6 +1585,25 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_duplicate__substituted)
     BOOST_REQUIRE_EQUAL(query.duplicate_records(), 0u);
 }
 
+BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_duplicate__pooled)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    store.set_pooling();
+
+    tx_link first{};
+    tx_link second{};
+    bool pooled{ true };
+    BOOST_REQUIRE_EQUAL(query.set_code(first, pooled, test::tx4), error::success);
+    BOOST_REQUIRE(!pooled);
+    BOOST_REQUIRE_EQUAL(query.set_code(second, pooled, test::tx4), error::success);
+    BOOST_REQUIRE(pooled);
+    BOOST_REQUIRE(first == second);
+}
+
 BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_conflict__written)
 {
     settings settings{};

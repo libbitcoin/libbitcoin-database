@@ -81,9 +81,23 @@ code CLASS::set_code(const transaction& tx) NOEXCEPT
 TEMPLATE
 code CLASS::set_code(tx_link& out_fk, const transaction& tx) NOEXCEPT
 {
+    bool unused{};
+    return set_code(out_fk, unused, tx);
+}
+
+TEMPLATE
+code CLASS::set_code(tx_link& out_fk, bool& pooled,
+    const transaction& tx) NOEXCEPT
+{
+    pooled = false;
     if (store_.is_pooling())
+    {
         if (out_fk = to_pooled(tx); !out_fk.is_terminal())
+        {
+            pooled = true;
             return error::success;
+        }
+    }
 
     // Allocate tx record.
     constexpr auto txs = system::possible_narrow_cast<tx_link::integer>(one);
