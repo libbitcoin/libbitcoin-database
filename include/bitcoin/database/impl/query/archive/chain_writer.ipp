@@ -272,13 +272,7 @@ TEMPLATE
 code CLASS::set_code(header_link& out_fk, const header& header,
     const chain_context& ctx, bool milestone, bool) NOEXCEPT
 {
-    // Map chain context into database context.
-    return set_code(out_fk, header, context
-    {
-        system::possible_narrow_cast<context::flag_t::integer>(ctx.flags),
-        system::possible_narrow_cast<context::height_t::integer>(ctx.height),
-        ctx.median_time_past
-    }, milestone);
+    return set_code(out_fk, header, context::from(ctx), milestone);
 }
 
 TEMPLATE
@@ -335,13 +329,7 @@ TEMPLATE
 code CLASS::set_code(header_link& out_fk, const block& block,
     const chain_context& ctx, bool milestone, bool strong) NOEXCEPT
 {
-    // Map chain context into database context.
-    return set_code(out_fk, block, context
-    {
-        system::possible_narrow_cast<context::flag_t::integer>(ctx.flags),
-        system::possible_narrow_cast<context::height_t::integer>(ctx.height),
-        ctx.median_time_past
-    }, milestone, strong);
+    return set_code(out_fk, block, context::from(ctx), milestone, strong);
 }
 
 TEMPLATE

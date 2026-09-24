@@ -33,6 +33,16 @@ struct context
     using mtp_t = uint32_t;
     static constexpr auto size = flag_t::size + height_t::size + sizeof(mtp_t);
 
+    static constexpr context from(const system::chain::context& ctx) NOEXCEPT
+    {
+        return
+        {
+            system::possible_narrow_cast<flag_t::integer>(ctx.flags),
+            system::possible_narrow_cast<height_t::integer>(ctx.height),
+            ctx.median_time_past
+        };
+    }
+
     static inline void from_data(reader& source, context& context) NOEXCEPT
     {
         context.flags  = source.template read_little_endian<flag_t::integer, flag_t::size>();
@@ -54,8 +64,8 @@ struct context
 
     inline bool operator==(const context&) const NOEXCEPT = default;
 
-    height_t::integer flags{};
-    flag_t::integer height{};
+    flag_t::integer flags{};
+    height_t::integer height{};
     mtp_t mtp{};
 };
 
