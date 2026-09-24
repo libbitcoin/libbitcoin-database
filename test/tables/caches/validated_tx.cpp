@@ -32,9 +32,9 @@ const table::validated_tx::slab in1
         0x55667788, // height
         0x99aabbcc  // mtp
     },
-    0x42,               // code
     0x1122334455667788, // fee
-    0x12345678          // sigops
+    0x12345678,         // sigops
+    { 0x01020304 }      // prevouts
 };
 const table::validated_tx::slab in2
 {
@@ -44,9 +44,9 @@ const table::validated_tx::slab in2
         0x44332211, // height
         0xabcdef99  // mtp
     },
-    0xab,               // code
     0x0000000000000042, // fee
-    0x00000055          // sigops
+    0x00000055,         // sigops
+    { 0x0a0b0c0d, 0x8a0b0c0d } // prevouts
 };
 const table::validated_tx::slab out1
 {
@@ -56,9 +56,9 @@ const table::validated_tx::slab out1
         0x00667788, // height
         0x99aabbcc  // mtp
     },
-    0x42,               // code
     0x1122334455667788, // fee
-    0x12345678          // sigops
+    0x12345678,         // sigops
+    { 0x01020304 }      // prevouts
 };
 const table::validated_tx::slab out2
 {
@@ -68,15 +68,15 @@ const table::validated_tx::slab out2
         0x00332211, // height
         0xabcdef99  // mtp
     },
-    0xab,               // code
     0x0000000000000042, // fee
-    0x00000055          // sigops
+    0x00000055,         // sigops
+    { 0x0a0b0c0d, 0x8a0b0c0d } // prevouts
 };
 const auto expected_head = base16_chunk
 (
     "0000000000"
     "ffffffffff"
-    "2300000000"
+    "2600000000"
     "ffffffffff"
     "ffffffffff"
     "ffffffffff"
@@ -86,9 +86,9 @@ const auto expected_head = base16_chunk
 );
 const auto closed_head = base16_chunk
 (
-    "3a00000000"
+    "4400000000"
     "ffffffffff"
-    "2300000000"
+    "2600000000"
     "ffffffffff"
     "ffffffffff"
     "ffffffffff"
@@ -103,18 +103,19 @@ const auto expected_body = base16_chunk
     "44332211"           // flags1
     "887766"             // height1
     "ccbbaa99"           // mtp1
-    "42"                 // code1
-    "ff8877665544332211" // fees1
+    "ff8877665544332211" // fee1
     "fe78563412"         // sigops1
+    "04030201"           // prevout1
 
     "0000000000"         // next->
     "a1a2a3a4"           // key2
     "ddccbbaa"           // flags2
     "112233"             // height2
     "99efcdab"           // mtp2
-    "ab"                 // code2
-    "42"                 // sigops2
-    "55"                 // fees2
+    "42"                 // fee2
+    "55"                 // sigops2
+    "0d0c0b0a"           // prevout2a
+    "0d0c0b8a"           // prevout2b
 );
 
 BOOST_AUTO_TEST_CASE(validated_tx__put__two__expected)
@@ -130,7 +131,7 @@ BOOST_AUTO_TEST_CASE(validated_tx__put__two__expected)
 
     table::validated_tx::link link2{};
     BOOST_REQUIRE(instance.put_link(link2, key2, in2));
-    BOOST_REQUIRE_EQUAL(link2, 0x23u);
+    BOOST_REQUIRE_EQUAL(link2, 0x26u);
 
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
@@ -149,9 +150,12 @@ BOOST_AUTO_TEST_CASE(validated_tx__get__two__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
 
     table::validated_tx::slab out{};
+    out.prevouts.resize(one);
     BOOST_REQUIRE(instance.get(0, out));
     BOOST_REQUIRE(out == out1);
-    BOOST_REQUIRE(instance.get(0x23, out));
+
+    out.prevouts.resize(two);
+    BOOST_REQUIRE(instance.get(0x26, out));
     BOOST_REQUIRE(out == out2);
 }
 

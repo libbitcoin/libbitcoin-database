@@ -74,6 +74,19 @@ bool CLASS::create() NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::clear() NOEXCEPT
+{
+    const auto ptr = file_.get();
+    if (!ptr)
+        return false;
+
+    file_.prepare(zero, size());
+    std::fill_n(ptr.data(), size(), system::bit_all<uint8_t>);
+    file_.mark(zero, size());
+    return set_body_count(zero);
+}
+
+TEMPLATE
 code CLASS::get_fault() const NOEXCEPT
 {
     return file_.get_fault();

@@ -399,7 +399,7 @@ struct validated_bk
     bool operator==(const validated_bk&) const NOEXCEPT = default;
 };
 
-// slab modest (sk:4) multimap, with low multiple rate.
+// slab modest (sk:4) hashmap.
 struct validated_tx
 {
     static constexpr size_t sk = schema::transaction::pk;
@@ -410,15 +410,15 @@ struct validated_tx
         schema::flags +
         schema::header::pk +
         sizeof(uint32_t) +
-        schema::code +  // TODO: change to variable.
         one +           // fee (variable)
-        one;            // sigops (variable)
+        one +           // sigops (variable)
+        schema::transaction::pk;// prevout (per input)
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = max_size_t;
     static constexpr size_t cell = link::size;
     static inline link count() NOEXCEPT;
-    static_assert(minsize == 14u);
-    static_assert(minrow == 23u);
+    static_assert(minsize == 17u);
+    static_assert(minrow == 26u);
     static_assert(link::size == 5u);
     bool operator==(const validated_tx&) const NOEXCEPT = default;
 };

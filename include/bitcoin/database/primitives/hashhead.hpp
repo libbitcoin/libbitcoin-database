@@ -65,6 +65,9 @@ public:
     /// Create from empty head file (not thread safe).
     bool create() NOEXCEPT;
 
+    /// Clear the existing index of all links.
+    bool clear() NOEXCEPT;
+
     /// The first fault code recorded by the head storage.
     code get_fault() const NOEXCEPT;
 

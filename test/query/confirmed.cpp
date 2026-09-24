@@ -620,6 +620,58 @@ BOOST_AUTO_TEST_CASE(query_confirmed__block_confirmable__spend_non_coinbase__suc
     BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
 }
 
+static bool set_internal_spend(test::query_accessor& query,
+    const system::chain::block& block) NOEXCEPT
+{
+    const auto& parent = *test::block1a.transactions_ptr()->front();
+    const auto& txs = *block.transactions_ptr();
+    auto& metadata = txs.at(1)->inputs_ptr()->front()->metadata;
+    metadata.parent_tx = query.to_tx(parent.hash(false)).value;
+    metadata.coinbase = false;
+
+    return query.set(test::block1a, context{ 0, 1, 0 }, false, false)
+        && query.set_strong(1)
+        && query.set(block, context{ bip68, 2, 0 }, false, false)
+        && query.set_prevouts(2, block)
+        && query.set_strong(2);
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmed__block_confirmable__internal_relative_locked__relative_time_locked)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(set_internal_spend(query, test::block_spend_internal_locked_1a));
+    BOOST_REQUIRE(query.block_confirmable(2) == system::error::relative_time_locked);
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmed__block_confirmable__internal_relative_disabled__success)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(set_internal_spend(query, test::block_spend_internal_disabled_1a));
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(query_confirmed__block_confirmable__internal_relative_zero__success)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(set_internal_spend(query, test::block_spend_internal_unlocked_1a));
+    BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
+}
+
 // These pass but vectors need to be updated to create clear test conditions.
 // ----------------------------------------------------------------------------
 
