@@ -78,8 +78,10 @@ TEMPLATE
 inline bool CLASS::is_sufficient(const context& current,
     const context& evaluated) const NOEXCEPT
 {
-    // Past evaluation at a lesser height and/or mtp is sufficient.
+    // Past evaluation at a lesser height and mtp is sufficient, provided that
+    // absolute locktime is evaluated against mtp (not block timestamp).
     return evaluated.flags == current.flags
+        && evaluated.is_enabled(system::chain::flags::bip113_rule)
         && evaluated.height <= current.height
         && evaluated.mtp <= current.mtp;
 }

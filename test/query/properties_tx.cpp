@@ -111,6 +111,24 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__insufficient__unvalidate
     BOOST_REQUIRE_EQUAL(state.fee, 0u);
 }
 
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__without_bip113__unvalidated)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto& tx = test::tx_spend_one_hash;
+    tx.inputs_ptr()->front()->metadata.parent_tx = 42;
+    BOOST_REQUIRE(query.set_tx_state(1, tx, context{ 0, 8, 9 }));
+
+    tx_state state{};
+    state.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ 0, 8, 9 }), error::unvalidated);
+}
+
 BOOST_AUTO_TEST_CASE(query_properties_tx__set_tx_state__unlinked_parent__resolved)
 {
     settings settings{};
