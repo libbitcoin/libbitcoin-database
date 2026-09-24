@@ -578,8 +578,7 @@ public:
     bool is_validateable(size_t height) const NOEXCEPT;
     code get_block_state(const header_link& link) const NOEXCEPT;
     code get_header_state(const header_link& link) const NOEXCEPT;
-    code get_tx_state(const tx_link& link, const context& ctx) const NOEXCEPT;
-    code get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
+    code get_tx_state(tx_state& state, const tx_link& link,
         const context& ctx) const NOEXCEPT;
 
     /// Header properties.
@@ -598,10 +597,10 @@ public:
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_confirmable(const header_link& link) NOEXCEPT;
     bool set_block_unknown(const header_link& link) NOEXCEPT;
-    bool set_tx_unknown(const tx_link& link) NOEXCEPT;
-    bool set_tx_disconnected(const tx_link& link, const context& ctx) NOEXCEPT;
-    bool set_tx_connected(const tx_link& link, const context& ctx,
-        uint64_t fee, size_t sigops) NOEXCEPT;
+    bool set_tx_state(const tx_link& link, const transaction& tx,
+        const context& ctx) NOEXCEPT;
+    bool set_tx_state(const tx_link& link, const transaction& tx,
+        const chain_context& ctx) NOEXCEPT;
 
     /// Batching.
     /// -----------------------------------------------------------------------
@@ -849,7 +848,6 @@ protected:
     /// Validate.
     /// -----------------------------------------------------------------------
     inline code to_block_code(linkage<schema::code>::integer value) const NOEXCEPT;
-    inline code to_tx_code(linkage<schema::code>::integer value) const NOEXCEPT;
     inline bool is_sufficient(const context& current,
         const context& evaluated) const NOEXCEPT;
 
@@ -861,8 +859,6 @@ protected:
     /// -----------------------------------------------------------------------
     bool set_block_state(const header_link& link,
         block_state state) NOEXCEPT;
-    bool set_tx_state(const tx_link& link, const context& ctx,
-        uint64_t fee, size_t sigops, tx_state state) NOEXCEPT;
 
     /// Confirm.
     /// -----------------------------------------------------------------------

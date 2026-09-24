@@ -20,20 +20,24 @@
 #define LIBBITCOIN_DATABASE_TYPES_TX_STATE_HPP
 
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/tables/tables.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-enum tx_state : uint8_t
+/// Validated tx fee and sigops, with each input's parent tx and coinbase.
+/// The caller sizes prevouts to the tx input count before reading.
+struct tx_state
 {
-    /// final
-    connected = 0,
+    struct prevout
+    {
+        table::transaction::link parent{};
+        bool coinbase{};
+    };
 
-    /// final
-    disconnected = 1,
-
-    /// transitional (debug)
-    tx_unknown = 42
+    uint64_t fee{};
+    size_t sigops{};
+    std::vector<prevout> prevouts{};
 };
 
 } // namespace database

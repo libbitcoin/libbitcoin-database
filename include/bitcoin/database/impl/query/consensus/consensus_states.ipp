@@ -75,32 +75,6 @@ inline code CLASS::to_block_code(
 
 // protected
 TEMPLATE
-inline code CLASS::to_tx_code(
-    linkage<schema::code>::integer value) const NOEXCEPT
-{
-    // Validation states are unrelated to confirmation rules.
-    // All stored transactions are presumed valid in some possible context.
-    // All states below are relevant only to the associated validation context.
-    switch (value)
-    {
-        // Final: Is valid (passed check, accept, and connect).
-        case tx_state::connected:
-            return error::tx_connected;
-
-        // Final: Is not valid (failed check, accept, or connect).
-        case tx_state::disconnected:
-            return error::tx_disconnected;
-
-        // Fault: Has no state, should not happen when read from store.
-        // tx_unknown also used to reset a state (debugging).
-        case tx_state::tx_unknown:
-        default:
-            return error::unknown_state;
-    }
-}
-
-// protected
-TEMPLATE
 inline bool CLASS::is_sufficient(const context& current,
     const context& evaluated) const NOEXCEPT
 {
@@ -179,42 +153,38 @@ bool CLASS::is_block_validated(code& state, const header_link& link,
 }
 
 TEMPLATE
-code CLASS::get_tx_state(const tx_link& link,
+code CLASS::get_tx_state(tx_state& state, const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
-    table::validated_tx::slab_get_code valid{};
-    for (auto it = store_.validated_tx.it(link); it; ++it)
-    {
-        if (!store_.validated_tx.get(it, valid))
-            return error::integrity;
+    using prevout = table::prevout::slab_get;
+    if (!store_.validated_tx.enabled())
+        return error::unvalidated;
 
-        if (is_sufficient(ctx, valid.ctx))
-            return to_tx_code(valid.code);
-    }
-
-    return error::unvalidated;
-}
-
-TEMPLATE
-code CLASS::get_tx_state(uint64_t& fee, size_t& sigops, const tx_link& link,
-    const context& ctx) const NOEXCEPT
-{
+    const auto fk = store_.validated_tx.first(link);
+    if (fk.is_terminal())
+        return error::unvalidated;
 
     table::validated_tx::slab valid{};
-    for (auto it = store_.validated_tx.it(link); it; ++it)
-    {
-        if (!store_.validated_tx.get(it, valid))
-            return error::integrity;
+    valid.prevouts.resize(state.prevouts.size());
+    if (!store_.validated_tx.get(fk, valid))
+        return error::integrity;
 
-        if (is_sufficient(ctx, valid.ctx))
+    if (!is_sufficient(ctx, valid.ctx))
+        return error::unvalidated;
+
+    state.fee = valid.fee;
+    state.sigops = valid.sigops;
+    std::ranges::transform(valid.prevouts, state.prevouts.begin(),
+        [](auto merged) NOEXCEPT
         {
-            fee = valid.fee;
-            sigops = valid.sigops;
-            return to_tx_code(valid.code);
-        }
-    }
+            return tx_state::prevout
+            {
+                prevout::output_tx_fk(merged),
+                prevout::coinbase(merged)
+            };
+        });
 
-    return error::unvalidated;
+    return error::success;
 }
 
 // writers
@@ -262,40 +232,57 @@ bool CLASS::set_block_state(const header_link& link,
 }
 
 TEMPLATE
-bool CLASS::set_tx_unknown(const tx_link& link) NOEXCEPT
+bool CLASS::set_tx_state(const tx_link& link, const transaction& tx,
+    const chain_context& ctx) NOEXCEPT
 {
-    return set_tx_state(link, {}, {}, {}, tx_state::tx_unknown);
+    return set_tx_state(link, tx, context::from(ctx));
 }
 
 TEMPLATE
-bool CLASS::set_tx_disconnected(const tx_link& link,
+bool CLASS::set_tx_state(const tx_link& link, const transaction& tx,
     const context& ctx) NOEXCEPT
 {
-    return set_tx_state(link, ctx, {}, {}, tx_state::disconnected);
-}
+    if (!store_.validated_tx.enabled())
+        return true;
 
-TEMPLATE
-bool CLASS::set_tx_connected(const tx_link& link, const context& ctx,
-    uint64_t fee, size_t sigops) NOEXCEPT
-{
-    return set_tx_state(link, ctx, fee, sigops, tx_state::connected);
-}
-
-// private
-TEMPLATE
-bool CLASS::set_tx_state(const tx_link& link, const context& ctx,
-    uint64_t fee, size_t sigops, tx_state state) NOEXCEPT
-{
+    using namespace system;
     using sigs = linkage<schema::sigops>;
+    const auto& ins = *tx.inputs_ptr();
+    tx_links prevouts(ins.size());
+
+    auto it = prevouts.begin();
+    for (const auto& in: ins)
+    {
+        tx_link parent{ in->metadata.parent_tx };
+        auto coinbase = in->metadata.coinbase;
+
+        // Prevouts populated from the tx's own package are not yet linked.
+        if (in->metadata.parent_tx == max_uint32)
+        {
+            if ((parent = to_tx(in->point().hash())).is_terminal())
+                return false;
+
+            coinbase = is_coinbase(parent);
+        }
+
+        *it++ = table::prevout::merge(coinbase, parent);
+    }
+
+    const auto bip16 = ctx.is_enabled(chain::flags::bip16_rule);
+    const auto bip141 = ctx.is_enabled(chain::flags::bip141_rule);
+    const auto sigops = tx.signature_operations(bip16, bip141);
 
     // ========================================================================
     const auto scope = get_transactor();
-    using namespace system;
 
     // Clean single allocation failure (e.g. disk full).
     return store_.validated_tx.put(link, table::validated_tx::slab
     {
-        {}, ctx, state, fee, possible_narrow_cast<sigs::integer>(sigops)
+        {},
+        ctx,
+        tx.fee(),
+        possible_narrow_cast<sigs::integer>(sigops),
+        std::move(prevouts)
     });
     // ========================================================================
 }

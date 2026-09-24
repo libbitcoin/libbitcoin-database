@@ -909,4 +909,51 @@ const block block_valid_spend_internal_2b
     }
 };
 
+const transaction tx_spend_one_hash
+{
+    0x02,                   // version
+    inputs
+    {
+        input
+        {
+            point{ one_hash, 0x00 },
+            script{},
+            witness{},
+            0xffffffff      // sequence
+        }
+    },
+    outputs
+    {
+        output
+        {
+            0x10,           // value
+            script{}
+        }
+    },
+    0x00                    // locktime
+};
+const transaction tx_spend_tx4
+{
+    0x02,                   // version
+    inputs
+    {
+        input
+        {
+            point{ tx4.hash(false), 0x00 },
+            script{},
+            witness{},
+            0xffffffff      // sequence
+        }
+    },
+    outputs
+    {
+        output
+        {
+            0x10,           // value
+            script{}
+        }
+    },
+    0x00                    // locktime
+};
+
 } // namespace test

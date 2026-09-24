@@ -22,7 +22,11 @@
 
 BOOST_FIXTURE_TEST_SUITE(query_properties_tx_tests, test::directory_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__invalid_link__unvalidated)
+using namespace system::chain;
+using context = database::context;
+constexpr auto bip113 = flags::bip113_rule;
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__no_row__unvalidated)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -31,89 +35,83 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__invalid_link__unvalidate
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    uint64_t fee{};
-    size_t sigops{};
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(1, {}), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 1, {}), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(fee, 0u);
+    tx_state state{};
+    state.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 8, 9 }), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(state.fee, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__unvalidated__unvalidated)
+BOOST_AUTO_TEST_CASE(query_properties_tx__set_tx_state__disabled__no_row)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
+    settings.validated_tx.buckets = 0;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
 
-    uint64_t fee{};
-    size_t sigops{};
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(1, {}), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 1, {}), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(fee, 0u);
+    const auto& tx = test::tx_spend_one_hash;
+    tx.inputs_ptr()->front()->metadata.parent_tx = 42;
+    BOOST_REQUIRE(query.set_tx_state(1, tx, context{ bip113, 8, 9 }));
+
+    tx_state state{};
+    state.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 8, 9 }), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query.validated_tx_body_size(), zero);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__connected_out_of_context__unvalidated)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__sufficient__success)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
-    settings.validated_tx.buckets = 1;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{}, false, false));
 
-    uint64_t fee{};
-    size_t sigops{};
-    constexpr context ctx{ 7, 8, 9 };
+    const auto& tx = test::tx_spend_one_hash;
+    const auto& in = *tx.inputs_ptr()->front();
+    in.prevout = system::to_shared<output>(0x30, script{});
+    in.metadata.parent_tx = 42;
+    in.metadata.coinbase = true;
+    BOOST_REQUIRE(query.set_tx_state(1, tx, context{ bip113, 8, 9 }));
 
-    // Set a context which does not match ctx.
-    BOOST_REQUIRE(query.set_tx_connected(0, { 1, 5, 9 }, 0, 0));
-    BOOST_REQUIRE(query.set_tx_connected(1, { 2, 6, 0 }, 0, 0));
-    BOOST_REQUIRE(query.set_tx_connected(2, { 3, 7, 1 }, 0, 0));
-    BOOST_REQUIRE(query.set_tx_connected(3, { 4, 8, 2 }, 0, 0));
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(1, ctx), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 1, ctx), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(fee, 0u);
-    BOOST_REQUIRE_EQUAL(sigops, 0u);
+    tx_state state{};
+    state.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 8, 9 }), error::success);
+    BOOST_REQUIRE_EQUAL(state.fee, 0x20u);
+    BOOST_REQUIRE_EQUAL(state.sigops, tx.signature_operations(false, false));
+    BOOST_REQUIRE_EQUAL(state.prevouts.front().parent, 42u);
+    BOOST_REQUIRE(state.prevouts.front().coinbase);
+
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 9, 10 }), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__connected_in_context__tx_connected)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__insufficient__unvalidated)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
-    settings.validated_tx.buckets = 1;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{}, false, false));
 
-    uint64_t fee{};
-    size_t sigops{};
-    constexpr uint64_t expected_fee = 42;
-    constexpr size_t expected_sigops = 24;
-    constexpr context ctx{ 7, 8, 9 };
-    BOOST_REQUIRE(query.set_tx_connected(0, ctx, 11, 12));
-    BOOST_REQUIRE(query.set_tx_connected(1, ctx, 13, 14));
-    BOOST_REQUIRE(query.set_tx_connected(2, ctx, expected_fee, expected_sigops));
-    BOOST_REQUIRE(query.set_tx_connected(2, { 1, 5, 9 }, 15, 16));
-    BOOST_REQUIRE(query.set_tx_connected(2, { 2, 6, 0 }, 17, 18));
-    BOOST_REQUIRE(query.set_tx_connected(3, ctx, 19, 20));
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(2, ctx), error::tx_connected);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 2, ctx), error::tx_connected);
-    BOOST_REQUIRE_EQUAL(fee, expected_fee);
-    BOOST_REQUIRE_EQUAL(sigops, expected_sigops);
+    const auto& tx = test::tx_spend_one_hash;
+    const auto& in = *tx.inputs_ptr()->front();
+    in.metadata.parent_tx = 42;
+    in.metadata.coinbase = false;
+    BOOST_REQUIRE(query.set_tx_state(1, tx, context{ bip113, 8, 9 }));
+
+    tx_state state{};
+    state.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 7, 9 }), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 8, 8 }), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113 | flags::bip68_rule, 8, 9 }), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(state.fee, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__connected_in_context__tx_disconnected)
+BOOST_AUTO_TEST_CASE(query_properties_tx__set_tx_state__unlinked_parent__resolved)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -121,18 +119,37 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__connected_in_context__tx
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{}, false, false));
 
-    uint64_t fee{};
-    size_t sigops{};
-    constexpr context ctx{ 7, 8, 9 };
-    BOOST_REQUIRE(query.set_tx_disconnected(4, ctx));
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(4, ctx), error::tx_disconnected);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(fee, sigops, 4, ctx), error::tx_disconnected);
-    BOOST_REQUIRE_EQUAL(fee, 0u);
-    BOOST_REQUIRE_EQUAL(sigops, 0u);
+    tx_link parent{};
+    BOOST_REQUIRE_EQUAL(query.set_code(parent, test::tx4), error::success);
+
+    const auto& tx = test::tx_spend_tx4;
+    tx.inputs_ptr()->front()->metadata.parent_tx = max_uint32;
+    BOOST_REQUIRE(query.set_tx_state(2, tx, context{ bip113, 8, 9 }));
+
+    tx_state state{};
+    state.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 2, context{ bip113, 8, 9 }), error::success);
+    BOOST_REQUIRE_EQUAL(state.prevouts.front().parent, parent);
+    BOOST_REQUIRE(!state.prevouts.front().coinbase);
+}
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__set_tx_state__missing_parent__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto& tx = test::tx_spend_one_hash;
+    tx.inputs_ptr()->front()->metadata.parent_tx = max_uint32;
+    BOOST_REQUIRE(!query.set_tx_state(1, tx, context{ bip113, 8, 9 }));
+
+    tx_state state{};
+    state.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 8, 9 }), error::unvalidated);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

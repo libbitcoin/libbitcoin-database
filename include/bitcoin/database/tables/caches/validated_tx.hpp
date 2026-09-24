@@ -28,12 +28,12 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// validated_tx is a slab multimap of tx validation state.
-/// context is not incorporated into a composite key because of sufficiency.
+/// validated_tx is a slab hashmap of tx validation state, keyed by tx link.
+/// Each input's parent tx link is merged with its coinbase flag (as prevout).
 struct validated_tx
   : public hash_map<schema::validated_tx>
 {
-    using coding = linkage<schema::code>;
+    using tx = schema::transaction::link;
     using sigop = linkage<schema::sigops>;
     using hash_map<schema::validated_tx>::hashmap;
 
@@ -45,18 +45,22 @@ struct validated_tx
             using namespace system;
             return possible_narrow_cast<link::integer>(pk + sk +
                 context::size +
-                coding::size +
                 variable_size(fee) +
-                variable_size(sigops));
+                variable_size(sigops) +
+                prevouts.size() * tx::size);
         }
 
         inline bool from_data(reader& source) NOEXCEPT
         {
             using namespace system;
             context::from_data(source, ctx);
-            code = source.read_little_endian<coding::integer, coding::size>();
             fee = source.read_variable();
             sigops = possible_narrow_cast<sigop::integer>(source.read_variable());
+            std::ranges::for_each(prevouts, [&](auto& value) NOEXCEPT
+            {
+                value = source.read_little_endian<tx::integer, tx::size>();
+            });
+
             BC_ASSERT(!source || source.get_read_position() == count());
             return source;
         }
@@ -64,9 +68,13 @@ struct validated_tx
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             context::to_data(sink, ctx);
-            sink.write_little_endian<coding::integer, coding::size>(code);
             sink.write_variable(fee);
             sink.write_variable(sigops);
+            std::ranges::for_each(prevouts, [&](const auto& value) NOEXCEPT
+            {
+                sink.write_little_endian<tx::integer, tx::size>(value);
+            });
+
             BC_ASSERT(!sink || sink.get_write_position() == count());
             return sink;
         }
@@ -74,29 +82,9 @@ struct validated_tx
         inline bool operator==(const slab&) const NOEXCEPT = default;
 
         context ctx{};
-        coding::integer code{};
         uint64_t fee{};
         sigop::integer sigops{};
-    };
-
-    struct slab_get_code
-      : public schema::validated_tx
-    {
-        inline link count() const NOEXCEPT
-        {
-            BC_ASSERT(false);
-            return {};
-        }
-
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            context::from_data(source, ctx);
-            code = source.read_little_endian<coding::integer, coding::size>();
-            return source;
-        }
-    
-        context ctx{};
-        coding::integer code{};
+        std::vector<tx::integer> prevouts{};
     };
 };
 
