@@ -37,6 +37,7 @@ lib_LTLIBRARIES = src/libbitcoin-database.la
 src_libbitcoin_database_la_LIBS = src/libbitcoin-database.la
 
 src_libbitcoin_database_la_CPPFLAGS = \
+    -I${top_builddir}/include \
     -I${srcdir}/../../include \
     ${libbitcoin_system_BUILD_CPPFLAGS}
 
@@ -79,7 +80,7 @@ include_bitcoin_database_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/query.hpp \
     ${srcdir}/../../include/bitcoin/database/settings.hpp \
     ${srcdir}/../../include/bitcoin/database/store.hpp \
-    ${srcdir}/../../include/bitcoin/database/version.hpp
+    include/bitcoin/database/version.hpp
 
 include_bitcoin_database_filedir = \
     ${includedir}/bitcoin/database/file
