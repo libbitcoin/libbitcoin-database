@@ -64,4 +64,53 @@ BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__success)
     BOOST_REQUIRE(!instance.close(test::events));
 }
 
+constexpr database::context validated_context
+{
+    system::chain::flags::bip113_rule, 8, 9
+};
+
+BOOST_AUTO_TEST_CASE(store__prune__validated_tx__cleared)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    test::tx_spend_one_hash.inputs_ptr()->front()->metadata.parent_tx = 42;
+    BOOST_REQUIRE(query_.set_tx_state(1, test::tx_spend_one_hash, validated_context));
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE_EQUAL(query_.validated_tx_body_size(), zero);
+
+    tx_state state{};
+    state.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query_.get_tx_state(state, 1, validated_context), error::unvalidated);
+    BOOST_REQUIRE(query_.set_tx_state(2, test::tx_spend_one_hash, validated_context));
+    BOOST_REQUIRE_EQUAL(query_.get_tx_state(state, 2, validated_context), error::success);
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__validated_tx_cleared)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    test::tx_spend_one_hash.inputs_ptr()->front()->metadata.parent_tx = 42;
+    BOOST_REQUIRE(query_.set_tx_state(1, test::tx_spend_one_hash, validated_context));
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE(!instance.close(test::events));
+
+    BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
+    BOOST_REQUIRE(!instance.restore(test::events));
+    BOOST_REQUIRE_EQUAL(query_.validated_tx_body_size(), zero);
+
+    tx_state state{};
+    state.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query_.get_tx_state(state, 1, validated_context), error::unvalidated);
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

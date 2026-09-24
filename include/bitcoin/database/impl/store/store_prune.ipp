@@ -46,11 +46,12 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
     else
     {
         handler(event_t::prune_table, table_t::prevout_head);
+        handler(event_t::prune_table, table_t::validated_tx_head);
 
-        // nullify table head, set reference body count to zero.
+        // nullify table heads, set reference body counts to zero.
         // If snapshot from this state fails previous snapshot remains valid.
         // Batch tables drop at start and under lock after verify (not here).
-        if (!prevout.clear())
+        if (!prevout.clear() || !validated_tx.clear())
         {
             ec = error::prune_table;
         }
@@ -66,7 +67,9 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
             {
                 // Reclaim logical extent.
                 handler(event_t::prune_table, table_t::prevout_body);
-                if (!prevout_body_.truncate(0))
+                handler(event_t::prune_table, table_t::validated_tx_body);
+                if (!prevout_body_.truncate(0) ||
+                    !validated_tx_body_.truncate(0))
                 {
                     ec = error::prune_table;
                 }
@@ -76,6 +79,10 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
                     handler(event_t::unload_file, table_t::prevout_body);
                     if (!ec) ec = prevout_body_.shrink();
                     handler(event_t::load_file, table_t::prevout_body);
+
+                    handler(event_t::unload_file, table_t::validated_tx_body);
+                    if (!ec) ec = validated_tx_body_.shrink();
+                    handler(event_t::load_file, table_t::validated_tx_body);
 
                     handler(event_t::unload_file, table_t::ecdsa_body);
                     if (!ec) ec = ecdsa_body_.shrink();
