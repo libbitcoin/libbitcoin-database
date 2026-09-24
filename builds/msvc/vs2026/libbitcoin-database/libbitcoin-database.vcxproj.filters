@@ -451,6 +451,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\build\include\bitcoin\database\version.hpp">
+      <Filter>include\bitcoin\database</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap.ipp">
       <Filter>include\bitcoin\database\impl\memory</Filter>
     </None>
