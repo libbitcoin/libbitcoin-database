@@ -112,6 +112,9 @@ extern const system::chain::block block_valid_spend_internal_2b;
 
 extern const system::chain::transaction tx_spend_one_hash;
 extern const system::chain::transaction tx_spend_tx4;
+extern const system::chain::block block_spend_internal_locked_1a;
+extern const system::chain::block block_spend_internal_disabled_1a;
+extern const system::chain::block block_spend_internal_unlocked_1a;
 
 bool setup_three_block_store(query_t& query) NOEXCEPT;
 bool setup_three_block_witness_store(query_t& query) NOEXCEPT;

@@ -956,4 +956,171 @@ const transaction tx_spend_tx4
     0x00                    // locktime
 };
 
+const transaction tx_coinbase_internal
+{
+    0xb1,                   // version
+    inputs
+    {
+        input
+        {
+            point{},
+            script{ { { opcode::size } } },
+            witness{},
+            0xb1            // sequence
+        }
+    },
+    outputs
+    {
+        output
+        {
+            0x42,           // value
+            script{ { { opcode::pick } } }
+        }
+    },
+    0xc1                    // locktime
+};
+const transaction tx_spend_1a_internal
+{
+    0x01,                   // version
+    inputs
+    {
+        input
+        {
+            point{ block1a.transactions_ptr()->front()->hash(false), 0x00 },
+            script{},
+            witness{},
+            0xffffffff      // sequence
+        }
+    },
+    outputs
+    {
+        output
+        {
+            0x08,           // value
+            script{}
+        }
+    },
+    0x00                    // locktime
+};
+const block block_spend_internal_locked_1a
+{
+    header
+    {
+        0x31323334,         // version
+        block1a.hash(),     // previous_block_hash
+        hash_digest{ 0xf4 },// merkle_root
+        0x41424344,         // timestamp
+        0x51525354,         // bits
+        0x61626364          // nonce
+    },
+    transactions
+    {
+        tx_coinbase_internal,
+        tx_spend_1a_internal,
+        transaction
+        {
+            0x02,           // version
+            inputs
+            {
+                input
+                {
+                    point{ tx_spend_1a_internal.hash(false), 0x00 },
+                    script{},
+                    witness{},
+                    0x00000001 // sequence (one block relative lock)
+                }
+            },
+            outputs
+            {
+                output
+                {
+                    0x04,   // value
+                    script{}
+                }
+            },
+            0x00            // locktime
+        }
+    }
+};
+const block block_spend_internal_disabled_1a
+{
+    header
+    {
+        0x31323334,         // version
+        block1a.hash(),     // previous_block_hash
+        hash_digest{ 0xf5 },// merkle_root
+        0x41424344,         // timestamp
+        0x51525354,         // bits
+        0x61626364          // nonce
+    },
+    transactions
+    {
+        tx_coinbase_internal,
+        tx_spend_1a_internal,
+        transaction
+        {
+            0x02,           // version
+            inputs
+            {
+                input
+                {
+                    point{ tx_spend_1a_internal.hash(false), 0x00 },
+                    script{},
+                    witness{},
+                    0x80000001 // sequence (relative lock disabled)
+                }
+            },
+            outputs
+            {
+                output
+                {
+                    0x04,   // value
+                    script{}
+                }
+            },
+            0x00            // locktime
+        }
+    }
+};
+const block block_spend_internal_unlocked_1a
+{
+    header
+    {
+        0x31323334,         // version
+        block1a.hash(),     // previous_block_hash
+        hash_digest{ 0xf6 },// merkle_root
+        0x41424344,         // timestamp
+        0x51525354,         // bits
+        0x61626364          // nonce
+    },
+    transactions
+    {
+        tx_coinbase_internal,
+        tx_spend_1a_internal,
+        transaction
+        {
+            0x02,           // version
+            inputs
+            {
+                input
+                {
+                    point{ tx_spend_1a_internal.hash(false), 0x00 },
+                    script{},
+                    witness{},
+                    0x00000000 // sequence (zero relative lock)
+                }
+            },
+            outputs
+            {
+                output
+                {
+                    0x04,   // value
+                    script{}
+                }
+            },
+            0x00            // locktime
+        }
+    }
+};
+
 } // namespace test

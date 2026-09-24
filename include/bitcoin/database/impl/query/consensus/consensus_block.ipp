@@ -85,7 +85,6 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         {
             for (const auto& point: set.points)
             {
-                if (point.tx.is_terminal()) continue;
                 if (const auto ec = spendable(point, set.version, ctx))
                 {
                     consensus.store(ec, relaxed);
@@ -113,12 +112,27 @@ system::error::transaction_error_t CLASS::spendable(
     const point_set::point& point, uint32_t version,
     const context& ctx) const NOEXCEPT
 {
+    const auto bip68 = ctx.is_enabled(system::chain::flags::bip68_rule);
+
+    // A spend internal to the block has zero age and a non-coinbase parent
+    // (the merged coinbase bit of a terminal point is not meaningful).
+    if (point.tx.is_terminal())
+    {
+        if (bip68 &&
+            transaction::is_relative_locktime_applied(false, version,
+                point.sequence) &&
+            input::is_relative_locked(point.sequence, ctx.height, ctx.mtp,
+                ctx.height, ctx.mtp))
+            return system::error::relative_time_locked;
+
+        return system::error::transaction_success;
+    }
+
     const auto link = find_strong(point.tx);
     if (link.is_terminal())
         return system::error::unconfirmed_spend;
 
     // Avoids get_context call when relative locktime is not applicable.
-    const auto bip68 = ctx.is_enabled(system::chain::flags::bip68_rule);
     const auto relative = bip68 && transaction::is_relative_locktime_applied(
         point.coinbase, version, point.sequence);
 
