@@ -94,8 +94,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { verify_table, "failed to verify table" },
 
     // states
-    { tx_connected, "transaction connected" },
-    { tx_disconnected, "transaction disconnected" },
     { block_valid, "block valid" },
     { block_confirmable, "block confirmable" },
     { block_unconfirmable, "block unconfirmable" },

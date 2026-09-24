@@ -100,8 +100,6 @@ enum error_t : uint8_t
     verify_table,
 
     /// validation/confirmation
-    tx_connected,
-    tx_disconnected,
     block_valid,
     block_confirmable,
     block_unconfirmable,

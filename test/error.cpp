@@ -477,24 +477,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__verify_table__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "failed to verify table");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__tx_connected__true_expected_message)
-{
-    constexpr auto value = error::tx_connected;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "transaction connected");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__tx_disconnected__true_expected_message)
-{
-    constexpr auto value = error::tx_disconnected;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "transaction disconnected");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__block_valid__true_expected_message)
 {
     constexpr auto value = error::block_valid;
