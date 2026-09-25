@@ -228,6 +228,8 @@ public:
     size_t silent_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
     size_t prevalid_records() const NOEXCEPT;
+    size_t validated_bk_records() const NOEXCEPT;
+    size_t validated_tx_records() const NOEXCEPT;
     size_t spends_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
 
