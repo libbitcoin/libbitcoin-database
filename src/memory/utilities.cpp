@@ -68,6 +68,15 @@ uint64_t system_memory() NOEXCEPT
         status.ullTotalPhys;
 }
 
+uint64_t physical_memory() NOEXCEPT
+{
+    // Total physical excludes only hardware reservations, which rounding up
+    // to a whole gibibyte absorbs.
+    constexpr auto gibibyte = power2<uint64_t>(30u);
+    const auto memory = system_memory();
+    return ceilinged_multiply(ceilinged_divide(memory, gibibyte), gibibyte);
+}
+
 uint64_t system_free() NOEXCEPT
 {
     MEMORYSTATUSEX status{};
@@ -132,6 +141,35 @@ uint64_t system_memory() NOEXCEPT
     }
 
     return zero;
+}
+
+uint64_t physical_memory() NOEXCEPT
+{
+#if defined(HAVE_LINUX)
+    // Zone present pages exclude only firmware carveouts and address holes,
+    // which rounding up to a whole gibibyte absorbs.
+    constexpr auto gibibyte = power2<uint64_t>(30u);
+    if (const auto file = std::fopen("/proc/zoneinfo", "r"))
+    {
+        char line[128];
+        uint64_t pages{};
+        uint64_t present{};
+        while (!is_null(std::fgets(line, sizeof(line), file)))
+        {
+            if (std::sscanf(line, " present %" SCNu64, &present) == 1)
+                pages += present;
+        }
+
+        std::fclose(file);
+        const auto bytes = ceilinged_multiply<uint64_t>(pages, page_size());
+        if (!is_zero(bytes))
+            return ceilinged_multiply(ceilinged_divide(bytes, gibibyte),
+                gibibyte);
+    }
+#endif
+
+    // Failed or no platform source.
+    return system_memory();
 }
 
 uint64_t system_free() NOEXCEPT

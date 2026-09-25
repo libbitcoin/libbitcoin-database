@@ -35,4 +35,9 @@ BOOST_AUTO_TEST_CASE(memory_utilities__system_memory__always__nonzero)
     BOOST_REQUIRE(is_nonzero(system_memory()));
 }
 
+BOOST_AUTO_TEST_CASE(memory_utilities__physical_memory__always__not_less_than_system_memory)
+{
+    BOOST_REQUIRE_GE(physical_memory(), system_memory());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
