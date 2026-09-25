@@ -109,6 +109,8 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.silent_records(), zero);
     BOOST_REQUIRE_EQUAL(query.duplicate_records(), zero);
     BOOST_REQUIRE_EQUAL(query.prevalid_records(), zero);
+    BOOST_REQUIRE_EQUAL(query.validated_bk_records(), zero);
+    BOOST_REQUIRE_EQUAL(query.validated_tx_records(), zero);
     BOOST_REQUIRE_EQUAL(query.spends_records(), zero);
     BOOST_REQUIRE_EQUAL(query.filter_bk_records(), one);
 }

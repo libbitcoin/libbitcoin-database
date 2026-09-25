@@ -194,6 +194,8 @@ DEFINE_RECORDS(schnorr)
 DEFINE_RECORDS(silent)
 DEFINE_RECORDS(duplicate)
 DEFINE_RECORDS(prevalid)
+DEFINE_RECORDS(validated_bk)
+DEFINE_RECORDS(validated_tx)
 DEFINE_RECORDS(spends)
 DEFINE_RECORDS(filter_bk)
 
