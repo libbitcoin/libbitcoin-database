@@ -72,6 +72,9 @@ bool CLASS::get_tx_spend(uint64_t& out, const tx_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::get_tx_fee(uint64_t& out, const tx_link& link) const NOEXCEPT
 {
+    if (get_pooled_fee(out, link))
+        return true;
+
     uint64_t value{};
     if (!get_tx_value(value, link))
         return false;

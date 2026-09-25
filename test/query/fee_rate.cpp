@@ -82,6 +82,33 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__missing_prevouts__false)
     BOOST_CHECK(!query.get_tx_fees(rate, 3));
 }
 
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__pooled_missing_prevouts__pooled_fee)
+{
+    uint64_t out{};
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::block1a, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, test::context, {}, false, false));
+
+    // Missing prevout fails value, but a pooled fee is returned directly.
+    constexpr uint64_t expected_fee = 42;
+    BOOST_CHECK(store.validated_tx.put(tx_link{ 3 }, table::validated_tx::record{ {}, {}, expected_fee, {}, {} }));
+    BOOST_CHECK(!query.get_tx_value(out, 3));
+    BOOST_CHECK(query.get_tx_fee(out, 3));
+    BOOST_CHECK_EQUAL(out, expected_fee);
+
+    size_t bytes{};
+    fee_rate rate{};
+    BOOST_CHECK(query.get_tx_virtual_size(bytes, 3));
+    BOOST_CHECK(query.get_tx_fees(rate, 3));
+    BOOST_CHECK_EQUAL(rate.fee, expected_fee);
+    BOOST_CHECK_EQUAL(rate.bytes, bytes);
+}
+
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__coinbase__zero)
 {
     uint64_t out{};

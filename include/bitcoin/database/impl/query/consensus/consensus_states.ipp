@@ -193,6 +193,25 @@ code CLASS::get_tx_state(tx_state& state, const tx_link& link,
     return error::success;
 }
 
+// protected
+TEMPLATE
+bool CLASS::get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT
+{
+    if (!store_.validated_tx.enabled())
+        return false;
+
+    const auto fk = store_.validated_tx.first(link);
+    if (fk.is_terminal())
+        return false;
+
+    table::validated_tx::get_fee pooled{};
+    if (!store_.validated_tx.get(fk, pooled))
+        return false;
+
+    out = pooled.fee;
+    return true;
+}
+
 // writers
 // ----------------------------------------------------------------------------
 

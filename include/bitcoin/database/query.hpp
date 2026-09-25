@@ -860,6 +860,7 @@ protected:
     inline code to_block_code(linkage<schema::code>::integer value) const NOEXCEPT;
     inline bool is_sufficient(const context& current,
         const context& evaluated) const NOEXCEPT;
+    bool get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT;
 
     /// Called by confirmation chaser.
     bool is_block_validated(code& state, const header_link& link,

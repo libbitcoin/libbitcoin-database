@@ -32,6 +32,9 @@ namespace database {
 TEMPLATE
 bool CLASS::get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT
 {
+    if (get_pooled_fee(out.fee, link))
+        return get_tx_virtual_size(out.bytes, link);
+
     // This is somehow ~15-20% less efficient.
     ////return get_tx_virtual_size(out.bytes, link) && get_tx_fee(out.fee, link);
     const auto tx = get_transaction(link, false);

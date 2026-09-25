@@ -133,6 +133,19 @@ struct validated_tx
         spend::integer spends_fk{};
     };
 
+    struct get_fee
+      : public schema::validated_tx
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(context::size);
+            fee = source.read_little_endian<uint64_t>();
+            return source;
+        }
+
+        uint64_t fee{};
+    };
+
     /// The identifier word columns (rows aligned with the spine).
     column<base, 1> id0{ *this };
     column<base, 2> id1{ *this };
