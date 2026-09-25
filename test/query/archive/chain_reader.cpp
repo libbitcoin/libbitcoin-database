@@ -63,7 +63,8 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__invalid_parent__expected)
         "44434241" // timestamp
         "54535251" // bits
         "64636261" // nonce
-        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
+        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
+        "0000000000000000000000000000000000000000000000000000000000000000"); // work
 
     settings settings{};
     settings.header.buckets = 16;
@@ -125,7 +126,8 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__default__expected)
         "44434241" // timestamp
         "54535251" // bits
         "64636261" // nonce
-        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
+        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
+        "0000000000000000000000000000000000000000000000000000000000000000"); // work
 
     settings settings{};
     settings.header.buckets = 16;

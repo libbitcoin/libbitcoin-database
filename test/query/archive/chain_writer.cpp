@@ -118,7 +118,8 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_header__is_header__expected)
         "44434241" // timestamp
         "54535251" // bits
         "64636261" // nonce
-        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); //merkle_root
+        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
+        "0000000000000000000000000000000000000000000000000000000000000000"); // work
 
     header_link link{};
     settings settings{};
@@ -481,7 +482,8 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
         "29ab5f49"     // timestamp
         "ffff001d"     // bits
         "1dac2b7c"     // nonce
-        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"); // merkle_root
+        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // merkle_root
+        "0000000000000000000000000000000000000000000000000000000000000000"); // work
     const auto genesis_tx_head = system::base16_chunk(
         "01000000"     // record count
         "ffffffff"     // bucket[0]...
@@ -636,7 +638,8 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
         "29ab5f49"     // timestamp
         "ffff001d"     // bits
         "1dac2b7c"     // nonce
-        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"); // merkle_root
+        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // merkle_root
+        "0000000000000000000000000000000000000000000000000000000000000000"); // work
     const auto genesis_tx_head = system::base16_chunk(
         "01000000"     // record count
         "ffffffff"     // bucket[0]...
@@ -1045,7 +1048,8 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__get_header__invalid_parent__expected)
         "44434241" // timestamp
         "54535251" // bits
         "64636261" // nonce
-        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
+        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
+        "0000000000000000000000000000000000000000000000000000000000000000"); // work
 
     settings settings{};
     settings.header.buckets = 16;
@@ -1107,7 +1111,8 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__get_header__default__expected)
         "44434241" // timestamp
         "54535251" // bits
         "64636261" // nonce
-        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f"); // merkle_root
+        "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
+        "0000000000000000000000000000000000000000000000000000000000000000"); // work
 
     settings settings{};
     settings.header.buckets = 16;

@@ -38,7 +38,8 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__genesis__expected)
         "29ab5f49"     // timestamp
         "ffff001d"     // bits
         "1dac2b7c"     // nonce
-        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"); // merkle_root
+        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // merkle_root
+        "0000000000000000000000000000000000000000000000000000000000000000"); // work
     const auto genesis_tx_body = system::base16_chunk(
         "ffffff7f"     // next->
         "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // sk (tx.hash(false))
