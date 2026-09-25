@@ -137,21 +137,7 @@ TEMPLATE
 bool CLASS::populate_work(chain_state::data& data,
     header_link link) const NOEXCEPT
 {
-    uint256_t work{};
-    data.cumulative_work = work;
-
-    // This may scan the entire chain.
-    while (get_work(work, link))
-    {
-        data.cumulative_work += work;
-        link = to_parent(link);
-
-        // Genesis parent link is terminal.
-        if (link.is_terminal())
-            return true;
-    }
-
-    return false;
+    return get_branch_work(data.cumulative_work, link);
 }
 
 TEMPLATE
@@ -272,15 +258,10 @@ TEMPLATE
 bool CLASS::populate_candidate_work(chain_state::data& data,
     const header& header) const NOEXCEPT
 {
-    uint256_t work{};
-    data.cumulative_work = work;
-
-    // This may scan the entire chain.
-    for (auto height = zero; height < data.height; ++height)
-        if (get_work(work, to_candidate(height)))
-            data.cumulative_work += work;
-        else
-            return false;
+    data.cumulative_work = zero;
+    if (!is_zero(data.height) &&
+        !get_branch_work(data.cumulative_work, to_candidate(sub1(data.height))))
+        return false;
 
     data.cumulative_work += header.proof();
     return true;

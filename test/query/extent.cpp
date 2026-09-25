@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(query_extent__store_size__archived_block__increases)
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     const auto initial = query.store_body_size();
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE_GT(query.store_body_size(), initial);
 }
 

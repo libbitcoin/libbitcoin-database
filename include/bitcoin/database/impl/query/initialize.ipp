@@ -204,7 +204,7 @@ bool CLASS::initialize(const block& genesis) NOEXCEPT
     // ========================================================================
     const auto scope = get_transactor();
 
-    if (!set(genesis, context{}, false, false))
+    if (!set(genesis, context{}, genesis.header().proof(), false, false))
         return false;
 
     const auto link = to_header(genesis.hash());

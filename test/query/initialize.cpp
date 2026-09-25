@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__unconfirmed__false)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(!query.is_initialized());
 }
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__candidate__false)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(!query.is_initialized());
 }
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__confirmed__false)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
     BOOST_REQUIRE(!query.is_initialized());
 }
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__candidate_and_confirmed__
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
     BOOST_REQUIRE(query.is_initialized());
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top__genesis_confirmed__0)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
     ////BOOST_REQUIRE(query.push_candidate(query.to_header(genesis.hash())));
     BOOST_REQUIRE_EQUAL(query.get_top_confirmed(), 0u);
@@ -128,9 +128,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top__three_blocks_confirmed__2)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block1.hash()), false));
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top_candidate__genesis_candidated__0)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
     ////BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
     BOOST_REQUIRE_EQUAL(query.get_top_candidate(), 0u);
@@ -161,9 +161,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top__three_blocks_candidated__2)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_fork__initialized__0)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
     BOOST_REQUIRE_EQUAL(query.get_fork(), 0u);
@@ -194,9 +194,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_fork__candidate_ahead__expected)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
@@ -212,9 +212,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_fork__confirmed_ahead__expected)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.set(test::genesis, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
@@ -264,9 +264,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__non_candidate__e
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block3, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
     BOOST_REQUIRE_EQUAL(query.get_top_associated(), 2u);
@@ -286,9 +286,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__gapped_candidate
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2.header(), test::context, false)); // header only
-    BOOST_REQUIRE(query.set(test::block3, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2.header(), test::context, {}, false)); // header only
+    BOOST_REQUIRE(query.set(test::block3, test::context, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block3.hash())));
@@ -339,9 +339,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate_
         0x21222323  // mtp
     };
     BOOST_REQUIRE(query.initialize(test::genesis));            // associated
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));     // associated
-    BOOST_REQUIRE(query.set(test::block2.header(), context2, false)); // header only
-    BOOST_REQUIRE(query.set(test::block3.header(), context3, false)); // header only
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));     // associated
+    BOOST_REQUIRE(query.set(test::block2.header(), context2, {}, false)); // header only
+    BOOST_REQUIRE(query.set(test::block3.header(), context3, {}, false)); // header only
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block3.hash())));
@@ -450,9 +450,9 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_count_above__gapped_cand
         0x21222323  // mtp
     };
     BOOST_REQUIRE(query.initialize(test::genesis));                   // associated
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));     // associated
-    BOOST_REQUIRE(query.set(test::block2.header(), context2, false)); // header only
-    BOOST_REQUIRE(query.set(test::block3.header(), context3, false)); // header only
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));     // associated
+    BOOST_REQUIRE(query.set(test::block2.header(), context2, {}, false)); // header only
+    BOOST_REQUIRE(query.set(test::block3.header(), context3, {}, false)); // header only
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block3.hash())));

@@ -35,10 +35,10 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_parent__always__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE_EQUAL(query.to_parent(0), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_parent(1), 0u);
     BOOST_REQUIRE_EQUAL(query.to_parent(2), 1u);
@@ -278,8 +278,8 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__progression__expected)
     BOOST_REQUIRE_EQUAL(out.at(5), 81u);
 
     // Add two unconfirmed blocks with 3 outputs, all matching address.
-    BOOST_REQUIRE(query.set(test::block1b, database::context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2b, database::context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1b, database::context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2b, database::context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(!query.to_address_outputs(cancel, cursor, out, address0, max_size_t));
     BOOST_REQUIRE_EQUAL(cursor.value, 10u);
     BOOST_REQUIRE_EQUAL(out.size(), 3u);
@@ -311,10 +311,10 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_output_tx__to_output__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
 
     // All 5 blocks have one transaction with 1 output.
     BOOST_REQUIRE_EQUAL(query.to_output_tx(0 * 0x51), 0u);
@@ -378,8 +378,8 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_prevout_tx__to_prevout__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2a, context{ 0, 1, 0 }, {}, false, false));
 
     // inputs in link order.
     BOOST_REQUIRE_EQUAL(query.to_prevout_tx(0), tx_link::terminal);
@@ -432,8 +432,8 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_block__always__expected)
     accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 1, 0 }, {}, false, false));
 
     // Either not strong or not found, except genesis.
     BOOST_REQUIRE(!query.to_block(0).is_terminal());

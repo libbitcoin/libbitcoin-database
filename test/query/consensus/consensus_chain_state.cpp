@@ -82,7 +82,8 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expecte
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context, true, false));
+    const auto work = test::genesis.header().proof() + test::block1.header().proof();
+    BOOST_REQUIRE(query.set(test::block1, context, work, true, false));
     BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
 
     const auto state = query.get_candidate_chain_state(system_settings);

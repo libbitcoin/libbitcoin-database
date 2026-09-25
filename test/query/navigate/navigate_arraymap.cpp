@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_txs__multiple__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block1a, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2a, test::context, {}, false, false));
 
     const tx_links expected_links2{ 2, 3 };
     BOOST_REQUIRE_EQUAL(query.to_transactions(0), tx_links{ 0 });

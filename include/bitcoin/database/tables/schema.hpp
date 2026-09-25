@@ -39,7 +39,7 @@ namespace database {
 namespace schema {
 
 /// The store schema version, stored as the first envelope value.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 0, 0 };
+constexpr std::array<uint32_t, 4> version{ 4, 0, 1, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
@@ -93,13 +93,14 @@ struct header
         sizeof(uint32_t) +      // timestamp
         sizeof(uint32_t) +      // bits
         sizeof(uint32_t) +      // nonce
-        schema::hash;           // merkle root
+        schema::hash +          // merkle root
+        schema::hash;           // work (cumulative)
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = sizeof(unsigned_type<link::size>);
     static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 62u);
-    static_assert(minrow == 97u);
+    static_assert(minsize == 94u);
+    static_assert(minrow == 129u);
     static_assert(link::size == 3u);
     static_assert(cell == 4u);
     bool operator==(const header&) const NOEXCEPT = default;

@@ -109,25 +109,15 @@ bool CLASS::get_work(uint256_t& work, const header_link& link) const NOEXCEPT
     return result;
 }
 
-// TODO: optimize with stored aggregate.
 TEMPLATE
 bool CLASS::get_branch_work(uint256_t& work, const header_link& link) const NOEXCEPT
 {
-    uint256_t proof{};
-    auto parent = link;
-    work = zero;
+    table::header::get_work header{};
+    if (!store_.header.get(link, header))
+        return false;
 
-    while (get_work(proof, parent))
-    {
-        work += proof;
-        parent = to_parent(parent);
-
-        // Genesis parent link is terminal.
-        if (parent.is_terminal())
-            return true;
-    }
-
-    return false;
+    work = header.work;
+    return true;
 }
 
 TEMPLATE

@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_candidate__always__expected)
 
     // initialize pushes the genesis candidate. 
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
     BOOST_REQUIRE_EQUAL(query.to_candidate(0), 0u);
     BOOST_REQUIRE_EQUAL(query.to_candidate(1), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_candidate(2), header_link::terminal);
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_confirmed__always__expected)
 
     // initialize pushes the genesis confirmed. 
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
     BOOST_REQUIRE_EQUAL(query.to_confirmed(0), 0u);
     BOOST_REQUIRE_EQUAL(query.to_confirmed(1), header_link::terminal);
     BOOST_REQUIRE_EQUAL(query.to_confirmed(2), header_link::terminal);
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_header__always__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE_EQUAL(query.to_header(test::genesis.hash()), 0u);
     BOOST_REQUIRE_EQUAL(query.to_header(test::block1.hash()), header_link::terminal);
-    BOOST_REQUIRE_EQUAL(query.set_code(link, test::block1.header(), test::context, false), error::success);
+    BOOST_REQUIRE_EQUAL(query.set_code(link, test::block1.header(), test::context, {}, false), error::success);
     BOOST_REQUIRE_EQUAL(link, 1u);
     BOOST_REQUIRE_EQUAL(query.to_header(test::block1.hash()), 1u);
 }
@@ -132,8 +132,8 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_tx__transactions__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
 
     // All four blocks have one transaction.
     BOOST_REQUIRE_EQUAL(query.to_tx(test::genesis.transactions_ptr()->front()->hash(true)), 0u);

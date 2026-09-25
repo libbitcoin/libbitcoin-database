@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__bypassed_filters_pendi
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.filter_enabled());
-    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, database::context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, database::context{ 0, 2, 0 }, {}, false, false));
 
     const auto link1 = query.to_header(test::block1_hash);
     const auto link2 = query.to_header(test::block2_hash);
@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__filters_disabled__bypa
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(!query.filter_enabled());
-    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, database::context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, database::context{ 0, 2, 0 }, {}, false, false));
 
     const auto link1 = query.to_header(test::block1_hash);
     const auto link2 = query.to_header(test::block2_hash);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__milestone_filter_pendi
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.filter_enabled());
-    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, true, false));
+    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, {}, true, false));
 
     const auto link = query.to_header(test::block1_hash);
     BOOST_REQUIRE(query.push_candidate(link));

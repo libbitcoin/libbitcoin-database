@@ -48,10 +48,10 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_totals__two_block_branch__expect
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.push_confirmed(2, false));
 
@@ -92,10 +92,10 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_muhash__two_block_branch__expect
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.push_confirmed(2, false));
 
@@ -124,10 +124,10 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_block_branch__ex
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.push_confirmed(2, false));
 
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_output_coinbase_
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1c, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1c, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.push_confirmed(1, false));
 
@@ -200,10 +200,10 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_matches__two_block_branch__one_m
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.push_confirmed(2, false));
 
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_matches__no_keys__no_matches)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.push_confirmed(1, false));
 
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_totals__cancelled__query_cancele
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
     BOOST_REQUIRE(query.push_confirmed(1, false));
 

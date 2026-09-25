@@ -354,8 +354,8 @@ private:
 
     // These are thread safe.
     const paths paths_;
-    mutable std::shared_mutex field_mutex_{};
-    mutable std::shared_mutex map_mutex_{};
+    mutable shared_mutex field_mutex_{};
+    mutable shared_mutex map_mutex_{};
 };
 
 BC_POP_WARNING()

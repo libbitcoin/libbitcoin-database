@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__missing_prevouts__false)
     BOOST_CHECK(query.initialize(test::genesis));
     BOOST_CHECK(query.get_tx_fee(out, 0));
     BOOST_CHECK_EQUAL(out, 0u);
-    BOOST_CHECK(query.set(test::block1a, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2a, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1a, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, test::context, {}, false, false));
 
     // Missing prevout fails value (and therefore also fee) but spend is valid.
     BOOST_CHECK(!query.get_tx_fee(out, 3));
@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__valid_non_coinbase__expected)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1b, test::context, false, false));
-    BOOST_CHECK(query.set(test::block_valid_spend_internal_2b, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1b, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block_valid_spend_internal_2b, test::context, {}, false, false));
     BOOST_CHECK(query.get_tx_fee(out, 4));
     BOOST_CHECK_EQUAL(out, (0xb1u + 0xb1u) - 0xb2u);
     BOOST_CHECK(query.get_tx_value(out, 4));
@@ -162,8 +162,8 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_block_fee__block_missing_prevout__false
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1b, test::context, false, false));
-    BOOST_CHECK(query.set(test::block_missing_prevout_2b, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1b, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block_missing_prevout_2b, test::context, {}, false, false));
     BOOST_CHECK(!query.get_block_fee(out, 2));
 
     fee_rates rates{};
@@ -179,8 +179,8 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_block_fee__coinbases__zero)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, test::context, {}, false, false));
     BOOST_CHECK(query.get_block_fee(out, 2));
     BOOST_CHECK_EQUAL(out, 0u);
 
@@ -198,8 +198,8 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_block_fee__valid__expected)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1b, test::context, false, false));
-    BOOST_CHECK(query.set(test::block_valid_spend_internal_2b, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1b, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block_valid_spend_internal_2b, test::context, {}, false, false));
     BOOST_CHECK(query.get_block_fee(out, 2));
     BOOST_CHECK_EQUAL(out, 0xb1u);
 
@@ -275,8 +275,8 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__unconfirmed_blocks__false)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, test::context, {}, false, false));
 
     std::atomic_bool cancel{};
     fee_rate_sets rates_sets{};
@@ -291,8 +291,8 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_overflow__false)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, test::context, {}, false, false));
     BOOST_CHECK(query.push_confirmed(1, true));
     BOOST_CHECK(query.push_confirmed(2, true));
 
@@ -327,8 +327,8 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_empty_blocks__al
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, test::context, {}, false, false));
     BOOST_CHECK(query.push_confirmed(1, true));
     BOOST_CHECK(query.push_confirmed(2, true));
 
@@ -364,8 +364,8 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_non_empty_blocks
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1b, test::context, false, false));
-    BOOST_CHECK(query.set(test::block_valid_spend_internal_2b, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1b, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block_valid_spend_internal_2b, test::context, {}, false, false));
     BOOST_CHECK(query.push_confirmed(1, true));
     BOOST_CHECK(query.push_confirmed(2, true));
 
@@ -444,8 +444,8 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__cancel_three_blocks__false
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, test::context, {}, false, false));
 
     std::atomic_bool cancel{ true };
     fee_rate_sets rates_sets{};

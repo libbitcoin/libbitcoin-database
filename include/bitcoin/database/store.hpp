@@ -44,7 +44,7 @@ public:
 
     typedef std::function<void(event_t, table_t)> event_handler;
     typedef std::function<void(const code&, table_t)> error_handler;
-    typedef std::shared_lock<std::shared_timed_mutex> transactor;
+    typedef std::shared_lock<shared_timed_mutex> transactor;
 
     /// Event and table names, useful for internal logging.
     using event_map = std::unordered_map<event_t, std::string>;
@@ -247,7 +247,7 @@ protected:
     // These are protected by mutex.
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
-    std::shared_timed_mutex transactor_mutex_{};
+    shared_timed_mutex transactor_mutex_{};
 
     // This is thread safe.
     stopper dirty_{ true };

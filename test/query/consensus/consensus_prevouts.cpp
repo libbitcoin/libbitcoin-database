@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__set_prevouts__coinbase_only__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_prevouts(1, test::block1));
 }
 
@@ -45,9 +45,9 @@ BOOST_AUTO_TEST_CASE(query_consensus__set_prevouts__spending_block__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.set_prevouts(2, test::block_spend_1a));
 }
@@ -60,9 +60,9 @@ BOOST_AUTO_TEST_CASE(query_consensus__set_prevouts__coinbase_and_spend__true)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.set(test::block_coinbase_spend_1a, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block_coinbase_spend_1a, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(!query.to_spending_txs(2).empty());
     BOOST_REQUIRE(query.set_prevouts(2, test::block_coinbase_spend_1a));
@@ -79,9 +79,9 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_prevouts__cached__success)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.set(test::block_coinbase_spend_1a, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block_coinbase_spend_1a, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.set_prevouts(2, test::block_coinbase_spend_1a));
     BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
@@ -95,9 +95,9 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_prevouts__populated_metadata__success)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.set(test::block_coinbase_spend_1a, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block_coinbase_spend_1a, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE(query.populate_with_metadata(test::block_coinbase_spend_1a));
     BOOST_REQUIRE(query.set_prevouts(2, test::block_coinbase_spend_1a));
@@ -112,9 +112,9 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_prevouts__not_cached__integrity_get_pr
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.set(test::block_coinbase_spend_1a, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block_coinbase_spend_1a, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_strong(2));
     BOOST_REQUIRE_EQUAL(query.block_confirmable(2), error::integrity_get_prevouts);
 }

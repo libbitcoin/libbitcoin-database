@@ -38,7 +38,8 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__genesis__expected)
         "29ab5f49"     // timestamp
         "ffff001d"     // bits
         "1dac2b7c"     // nonce
-        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"); // merkle_root
+        "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // merkle_root
+        "0000000000000000000000000000000000000000000000000000000000000000"); // work
     const auto genesis_tx_body = system::base16_chunk(
         "ffffff7f"     // next->
         "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // sk (tx.hash(false))
@@ -87,7 +88,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__genesis__expected)
     BOOST_CHECK(!store.create(test::events_handler));
 
     // Set header, then txs from the parsed view of the serialized block.
-    BOOST_CHECK(query.set(test::genesis.header(), test::context, milestone));
+    BOOST_CHECK(query.set(test::genesis.header(), test::context, {}, milestone));
     system::chain::block_view view{ test::genesis.to_data(true), true };
     BOOST_CHECK(view.is_valid());
     BOOST_CHECK_EQUAL(query.set_code(view, false, true), error::success);
@@ -126,7 +127,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__not_pooling_pooled_tx__w
     tx_link pooled{};
     BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
     BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
-    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
     block_view view{ block.to_data(true), true };
     BOOST_REQUIRE(view.is_valid());
     BOOST_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
@@ -151,7 +152,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_pooled_tx__subst
     tx_link pooled{};
     BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
     BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
-    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
     block_view view{ block.to_data(true), true };
     BOOST_REQUIRE(view.is_valid());
     BOOST_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
@@ -183,7 +184,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_conflict__writte
 
     tx_link pooled{};
     BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
-    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
     block_view view{ block.to_data(true), true };
     BOOST_REQUIRE(view.is_valid());
     BOOST_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
