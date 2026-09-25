@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(envelope__serialized_size__default__expected)
 BOOST_AUTO_TEST_CASE(envelope__to_data__default__expected_version)
 {
     const envelope instance{};
-    BOOST_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0));
+    BOOST_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 1, 0));
     BOOST_REQUIRE_EQUAL(to_chunk(instance).front(), schema::version.front());
 }
 
