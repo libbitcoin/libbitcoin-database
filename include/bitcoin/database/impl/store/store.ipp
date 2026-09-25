@@ -86,11 +86,11 @@ CLASS::store(const settings& config) NOEXCEPT
     prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout), head_settings(config.prevout), random),
     prevout_body_(body(config.path, schema::caches::prevout), config.prevout, sequential, staged),
 
-    validated_bk_head_(head(config.path / schema::dir::heads, schema::caches::validated_bk), head_settings(config.validated_bk), random),
-    validated_bk_body_(body(config.path, schema::caches::validated_bk), config.validated_bk, sequential, staged),
+    state_head_(head(config.path / schema::dir::heads, schema::caches::state), head_settings(config.state), random),
+    state_body_(body(config.path, schema::caches::state), config.state, sequential, staged),
 
-    validated_tx_head_(head(config.path / schema::dir::heads, schema::caches::validated_tx), head_settings(config.validated_tx), random),
-    validated_tx_body_(body(config.path, schema::caches::validated_tx), config.validated_tx, sequential, staged),
+    pool_head_(head(config.path / schema::dir::heads, schema::caches::pool), head_settings(config.pool), random),
+    pool_body_(body(config.path, schema::caches::pool), config.pool, sequential, staged),
     spends_head_(head(config.path / schema::dir::heads, schema::caches::spends), head_settings(config.spends), sequential),
     spends_body_(body(config.path, schema::caches::spends), config.spends, sequential, staged),
 
@@ -131,8 +131,8 @@ CLASS::store(const settings& config) NOEXCEPT
     duplicate(duplicate_head_, duplicate_body_, config.duplicate.buckets, config.duplicate.expected),
     prevalid(prevalid_head_, prevalid_body_),
     prevout(prevout_head_, prevout_body_, config.prevout.buckets),
-    validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk.buckets),
-    validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx.buckets, config.validated_tx.expected),
+    state(state_head_, state_body_, config.state.buckets),
+    pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected),
     spends(spends_head_, spends_body_),
 
     filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk.buckets),
@@ -149,7 +149,7 @@ CLASS::store(const settings& config) NOEXCEPT
     envelope_.tx_k = possible_narrow_cast<uint8_t>(tx.filter_k());
     envelope_.strong_tx_k = possible_narrow_cast<uint8_t>(strong_tx.filter_k());
     envelope_.duplicate_k = possible_narrow_cast<uint8_t>(duplicate.filter_k());
-    envelope_.validated_tx_k = possible_narrow_cast<uint8_t>(validated_tx.filter_k());
+    envelope_.pool_k = possible_narrow_cast<uint8_t>(pool.filter_k());
 }
 
 TEMPLATE
@@ -257,8 +257,8 @@ void CLASS::set_current(bool current) NOEXCEPT
     duplicate_head_.current(current);
     prevalid_head_.current(current);
     prevout_head_.current(current);
-    validated_bk_head_.current(current);
-    validated_tx_head_.current(current);
+    state_head_.current(current);
+    pool_head_.current(current);
     spends_head_.current(current);
     filter_bk_head_.current(current);
     filter_tx_head_.current(current);

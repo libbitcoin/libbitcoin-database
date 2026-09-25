@@ -145,8 +145,8 @@ public:
     size_t duplicate_head_size() const NOEXCEPT;
     size_t prevalid_head_size() const NOEXCEPT;
     size_t prevout_head_size() const NOEXCEPT;
-    size_t validated_bk_head_size() const NOEXCEPT;
-    size_t validated_tx_head_size() const NOEXCEPT;
+    size_t state_head_size() const NOEXCEPT;
+    size_t pool_head_size() const NOEXCEPT;
     size_t spends_head_size() const NOEXCEPT;
     size_t filter_bk_head_size() const NOEXCEPT;
     size_t filter_tx_head_size() const NOEXCEPT;
@@ -169,8 +169,8 @@ public:
     size_t duplicate_body_size() const NOEXCEPT;
     size_t prevalid_body_size() const NOEXCEPT;
     size_t prevout_body_size() const NOEXCEPT;
-    size_t validated_bk_body_size() const NOEXCEPT;
-    size_t validated_tx_body_size() const NOEXCEPT;
+    size_t state_body_size() const NOEXCEPT;
+    size_t pool_body_size() const NOEXCEPT;
     size_t spends_body_size() const NOEXCEPT;
     size_t filter_bk_body_size() const NOEXCEPT;
     size_t filter_tx_body_size() const NOEXCEPT;
@@ -193,8 +193,8 @@ public:
     size_t duplicate_size() const NOEXCEPT;
     size_t prevalid_size() const NOEXCEPT;
     size_t prevout_size() const NOEXCEPT;
-    size_t validated_bk_size() const NOEXCEPT;
-    size_t validated_tx_size() const NOEXCEPT;
+    size_t state_size() const NOEXCEPT;
+    size_t pool_size() const NOEXCEPT;
     size_t spends_size() const NOEXCEPT;
     size_t filter_bk_size() const NOEXCEPT;
     size_t filter_tx_size() const NOEXCEPT;
@@ -209,8 +209,8 @@ public:
     size_t strong_tx_buckets() const NOEXCEPT;
     size_t duplicate_buckets() const NOEXCEPT;
     size_t prevout_buckets() const NOEXCEPT;
-    size_t validated_bk_buckets() const NOEXCEPT;
-    size_t validated_tx_buckets() const NOEXCEPT;
+    size_t state_buckets() const NOEXCEPT;
+    size_t pool_buckets() const NOEXCEPT;
     size_t filter_bk_buckets() const NOEXCEPT;
     size_t filter_tx_buckets() const NOEXCEPT;
 
@@ -228,8 +228,8 @@ public:
     size_t silent_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
     size_t prevalid_records() const NOEXCEPT;
-    size_t validated_bk_records() const NOEXCEPT;
-    size_t validated_tx_records() const NOEXCEPT;
+    size_t state_records() const NOEXCEPT;
+    size_t pool_records() const NOEXCEPT;
     size_t spends_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
 
@@ -341,7 +341,7 @@ public:
         size_t position) const NOEXCEPT;
 
     /// header to arraymap tables (guard domain transitions)
-    constexpr size_t to_validated_bk(const header_link& link) const NOEXCEPT;
+    constexpr size_t to_state(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_bk(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_tx(const header_link& link) const NOEXCEPT;
     constexpr size_t to_prevout(const header_link& link) const NOEXCEPT;
@@ -588,7 +588,7 @@ public:
     bool is_validateable(size_t height) const NOEXCEPT;
     code get_block_state(const header_link& link) const NOEXCEPT;
     code get_header_state(const header_link& link) const NOEXCEPT;
-    code get_tx_state(tx_state& state, const tx_link& link,
+    code get_pooled(pooled_tx& out, const tx_link& link,
         const context& ctx) const NOEXCEPT;
 
     /// Header properties.
@@ -607,9 +607,9 @@ public:
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_confirmable(const header_link& link) NOEXCEPT;
     bool set_block_unknown(const header_link& link) NOEXCEPT;
-    bool set_tx_state(const tx_link& link, const transaction& tx,
+    bool set_pooled(const tx_link& link, const transaction& tx,
         const context& ctx) NOEXCEPT;
-    bool set_tx_state(const tx_link& link, const transaction& tx,
+    bool set_pooled(const tx_link& link, const transaction& tx,
         const chain_context& ctx) NOEXCEPT;
 
     /// Batching.
@@ -863,13 +863,13 @@ protected:
     bool get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT;
 
     /// Called by confirmation chaser.
-    bool is_block_validated(code& state, const header_link& link,
+    bool is_block_validated(code& ec, const header_link& link,
         size_t height, size_t checkpoint) const NOEXCEPT;
 
     /// Setters.
     /// -----------------------------------------------------------------------
     bool set_block_state(const header_link& link,
-        block_state state) NOEXCEPT;
+        block_state value) NOEXCEPT;
 
     /// Confirm.
     /// -----------------------------------------------------------------------

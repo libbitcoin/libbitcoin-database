@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.envelope.tx_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.strong_tx_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.duplicate_buckets, 128u);
-    BOOST_REQUIRE_EQUAL(configuration.envelope.validated_tx_buckets, 128u);
+    BOOST_REQUIRE_EQUAL(configuration.envelope.pool_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.provide_filters, true);
     BOOST_REQUIRE_EQUAL(configuration.path, "bitcoin");
 
@@ -88,13 +88,13 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.prevout.buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.prevout.size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.prevout.rate, 5u);
-    BOOST_REQUIRE_EQUAL(configuration.validated_bk.buckets, 128u);
-    BOOST_REQUIRE_EQUAL(configuration.validated_bk.size, 1u);
-    BOOST_REQUIRE_EQUAL(configuration.validated_bk.rate, 5u);
-    BOOST_REQUIRE_EQUAL(configuration.validated_tx.buckets, 128u);
-    BOOST_REQUIRE_EQUAL(configuration.validated_tx.expected, 0u);
-    BOOST_REQUIRE_EQUAL(configuration.validated_tx.size, 1u);
-    BOOST_REQUIRE_EQUAL(configuration.validated_tx.rate, 5u);
+    BOOST_REQUIRE_EQUAL(configuration.state.buckets, 128u);
+    BOOST_REQUIRE_EQUAL(configuration.state.size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.state.rate, 5u);
+    BOOST_REQUIRE_EQUAL(configuration.pool.buckets, 128u);
+    BOOST_REQUIRE_EQUAL(configuration.pool.expected, 0u);
+    BOOST_REQUIRE_EQUAL(configuration.pool.size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.pool.rate, 5u);
     BOOST_REQUIRE_EQUAL(configuration.spends.size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.spends.rate, 5u);
 

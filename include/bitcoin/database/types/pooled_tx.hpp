@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TYPES_TX_STATE_HPP
-#define LIBBITCOIN_DATABASE_TYPES_TX_STATE_HPP
+#ifndef LIBBITCOIN_DATABASE_TYPES_POOLED_TX_HPP
+#define LIBBITCOIN_DATABASE_TYPES_POOLED_TX_HPP
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/tables.hpp>
@@ -27,7 +27,7 @@ namespace database {
 
 /// Validated tx fee and sigops, with each input's parent tx and coinbase.
 /// The caller sizes prevouts to the tx input count before reading.
-struct tx_state
+struct pooled_tx
 {
     struct prevout
     {

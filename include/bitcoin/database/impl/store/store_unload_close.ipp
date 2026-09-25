@@ -73,10 +73,10 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, prevalid_body_, table_t::prevalid_body);
     unload(ec, prevout_head_, table_t::prevout_head);
     unload(ec, prevout_body_, table_t::prevout_body);
-    unload(ec, validated_bk_head_, table_t::validated_bk_head);
-    unload(ec, validated_bk_body_, table_t::validated_bk_body);
-    unload(ec, validated_tx_head_, table_t::validated_tx_head);
-    unload(ec, validated_tx_body_, table_t::validated_tx_body);
+    unload(ec, state_head_, table_t::state_head);
+    unload(ec, state_body_, table_t::state_body);
+    unload(ec, pool_head_, table_t::pool_head);
+    unload(ec, pool_body_, table_t::pool_body);
     unload(ec, spends_head_, table_t::spends_head);
     unload(ec, spends_body_, table_t::spends_body);
 
@@ -127,10 +127,10 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, prevalid_body_, table_t::prevalid_body);
     close(ec, prevout_head_, table_t::prevout_head);
     close(ec, prevout_body_, table_t::prevout_body);
-    close(ec, validated_bk_head_, table_t::validated_bk_head);
-    close(ec, validated_bk_body_, table_t::validated_bk_body);
-    close(ec, validated_tx_head_, table_t::validated_tx_head);
-    close(ec, validated_tx_body_, table_t::validated_tx_body);
+    close(ec, state_head_, table_t::state_head);
+    close(ec, state_body_, table_t::state_body);
+    close(ec, pool_head_, table_t::pool_head);
+    close(ec, pool_body_, table_t::pool_body);
     close(ec, spends_head_, table_t::spends_head);
     close(ec, spends_body_, table_t::spends_body);
 

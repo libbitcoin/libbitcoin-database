@@ -83,8 +83,8 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, duplicate, table_t::duplicate_table);
     verify(ec, prevalid, table_t::prevalid_table);
     verify(ec, prevout, table_t::prevout_table);
-    verify(ec, validated_bk, table_t::validated_bk_table);
-    verify(ec, validated_tx, table_t::validated_tx_table);
+    verify(ec, state, table_t::state_table);
+    verify(ec, pool, table_t::pool_table);
     verify(ec, spends, table_t::spends_table);
 
     verify(ec, filter_bk, table_t::filter_bk_table);
@@ -149,7 +149,7 @@ code CLASS::load_envelope() NOEXCEPT
         !tx.set_buckets(envelope_.tx_buckets) ||
         !strong_tx.set_buckets(envelope_.strong_tx_buckets) ||
         !duplicate.set_buckets(envelope_.duplicate_buckets) ||
-        !validated_tx.set_buckets(envelope_.validated_tx_buckets))
+        !pool.set_buckets(envelope_.pool_buckets))
     {
         return error::verify_table;
     }
@@ -161,7 +161,7 @@ code CLASS::load_envelope() NOEXCEPT
         !tx.set_filter_k(envelope_.tx_k) ||
         !strong_tx.set_filter_k(envelope_.strong_tx_k) ||
         !duplicate.set_filter_k(envelope_.duplicate_k) ||
-        !validated_tx.set_filter_k(envelope_.validated_tx_k))
+        !pool.set_filter_k(envelope_.pool_k))
     {
         return error::verify_table;
     }

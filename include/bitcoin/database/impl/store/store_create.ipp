@@ -112,10 +112,10 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, prevalid_body_, table_t::prevalid_body);
     create(ec, prevout_head_, table_t::prevout_head);
     create(ec, prevout_body_, table_t::prevout_body);
-    create(ec, validated_bk_head_, table_t::validated_bk_head);
-    create(ec, validated_bk_body_, table_t::validated_bk_body);
-    create(ec, validated_tx_head_, table_t::validated_tx_head);
-    create(ec, validated_tx_body_, table_t::validated_tx_body);
+    create(ec, state_head_, table_t::state_head);
+    create(ec, state_body_, table_t::state_body);
+    create(ec, pool_head_, table_t::pool_head);
+    create(ec, pool_body_, table_t::pool_body);
     create(ec, spends_head_, table_t::spends_head);
     create(ec, spends_body_, table_t::spends_body);
 
@@ -157,8 +157,8 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, duplicate, table_t::duplicate_table);
     populate(ec, prevalid, table_t::prevalid_table);
     populate(ec, prevout, table_t::prevout_table);
-    populate(ec, validated_bk, table_t::validated_bk_table);
-    populate(ec, validated_tx, table_t::validated_tx_table);
+    populate(ec, state, table_t::state_table);
+    populate(ec, pool, table_t::pool_table);
     populate(ec, spends, table_t::spends_table);
 
     populate(ec, filter_bk, table_t::filter_bk_table);

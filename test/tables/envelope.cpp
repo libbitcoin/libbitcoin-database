@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(envelope__set__default_settings__expected)
     BOOST_REQUIRE_EQUAL(instance.tx_buckets, configuration.tx.buckets);
     BOOST_REQUIRE_EQUAL(instance.strong_tx_buckets, configuration.strong_tx.buckets);
     BOOST_REQUIRE_EQUAL(instance.duplicate_buckets, configuration.duplicate.buckets);
-    BOOST_REQUIRE_EQUAL(instance.validated_tx_buckets, configuration.validated_tx.buckets);
+    BOOST_REQUIRE_EQUAL(instance.pool_buckets, configuration.pool.buckets);
     BOOST_REQUIRE(instance.provide_filters);
 }
 
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(envelope__construct__mainnet__unset_filter_k)
     BOOST_REQUIRE_EQUAL(instance.tx_k, 0u);
     BOOST_REQUIRE_EQUAL(instance.strong_tx_k, 0u);
     BOOST_REQUIRE_EQUAL(instance.duplicate_k, 0u);
-    BOOST_REQUIRE_EQUAL(instance.validated_tx_k, 0u);
+    BOOST_REQUIRE_EQUAL(instance.pool_k, 0u);
 }
 
 BOOST_AUTO_TEST_CASE(envelope__from_data__mainnet__round_trip)

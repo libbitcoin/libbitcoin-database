@@ -76,13 +76,13 @@
 #include <bitcoin/database/tables/caches/duplicate.hpp>
 #include <bitcoin/database/tables/caches/ecdsa.hpp>
 #include <bitcoin/database/tables/caches/envelope.hpp>
+#include <bitcoin/database/tables/caches/pool.hpp>
 #include <bitcoin/database/tables/caches/prevalid.hpp>
 #include <bitcoin/database/tables/caches/prevout.hpp>
 #include <bitcoin/database/tables/caches/schnorr.hpp>
 #include <bitcoin/database/tables/caches/silent.hpp>
 #include <bitcoin/database/tables/caches/spends.hpp>
-#include <bitcoin/database/tables/caches/validated_bk.hpp>
-#include <bitcoin/database/tables/caches/validated_tx.hpp>
+#include <bitcoin/database/tables/caches/state.hpp>
 #include <bitcoin/database/tables/indexes/height.hpp>
 #include <bitcoin/database/tables/indexes/strong_tx.hpp>
 #include <bitcoin/database/tables/optionals/address.hpp>
@@ -99,9 +99,9 @@
 #include <bitcoin/database/types/history.hpp>
 #include <bitcoin/database/types/multisig_view.hpp>
 #include <bitcoin/database/types/point_set.hpp>
+#include <bitcoin/database/types/pooled_tx.hpp>
 #include <bitcoin/database/types/position.hpp>
 #include <bitcoin/database/types/span.hpp>
-#include <bitcoin/database/types/tx_state.hpp>
 #include <bitcoin/database/types/type.hpp>
 #include <bitcoin/database/types/types.hpp>
 #include <bitcoin/database/types/unspent_coin.hpp>

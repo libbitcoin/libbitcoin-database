@@ -237,24 +237,24 @@ public:
         return prevout_body_.buffer();
     }
 
-    system::data_chunk& validated_bk_head() NOEXCEPT
+    system::data_chunk& state_head() NOEXCEPT
     {
-        return validated_bk_head_.buffer();
+        return state_head_.buffer();
     }
 
-    system::data_chunk& validated_bk_body() NOEXCEPT
+    system::data_chunk& state_body() NOEXCEPT
     {
-        return validated_bk_body_.buffer();
+        return state_body_.buffer();
     }
 
-    system::data_chunk& validated_tx_head() NOEXCEPT
+    system::data_chunk& pool_head() NOEXCEPT
     {
-        return validated_tx_head_.buffer();
+        return pool_head_.buffer();
     }
 
-    system::data_chunk& validated_tx_body() NOEXCEPT
+    system::data_chunk& pool_body() NOEXCEPT
     {
-        return validated_tx_body_.buffer();
+        return pool_body_.buffer();
     }
 
     system::data_chunk& spends_head() NOEXCEPT

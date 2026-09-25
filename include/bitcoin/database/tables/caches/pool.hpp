@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_VALIDATED_TX_HPP
-#define LIBBITCOIN_DATABASE_TABLES_CACHES_VALIDATED_TX_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_POOL_HPP
+#define LIBBITCOIN_DATABASE_TABLES_CACHES_POOL_HPP
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
@@ -29,17 +29,17 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// Spine column (search key and validation state).
-struct validated_tx_state
+/// Spine column (search key and validation context).
+struct pool_context
 {
-    using link = schema::validated_tx::link;
-    static constexpr auto width = schema::validated_tx::minrow;
-    static constexpr auto suffix = "state"_t;
+    using link = schema::pool::link;
+    static constexpr auto width = schema::pool::minrow;
+    static constexpr auto suffix = "context"_t;
 };
 
 /// One 64 bit word of the short id hash (common to the id columns).
-struct validated_tx_word
-  : public schema::validated_tx_id0
+struct pool_word
+  : public schema::pool_id0
 {
     static constexpr link count() NOEXCEPT
     {
@@ -60,50 +60,48 @@ struct validated_tx_word
         return sink;
     }
 
-    inline bool operator==(const validated_tx_word&) const NOEXCEPT = default;
+    inline bool operator==(const pool_word&) const NOEXCEPT = default;
 
     uint64_t word{};
 };
 
 /// Transaction identifier columns (words 0-3 of the short id hash).
-struct validated_tx_id0
-  : public no_map<schema::validated_tx_id0>
+struct pool_id0
+  : public no_map<schema::pool_id0>
 {
-    using no_map<schema::validated_tx_id0>::nomap;
+    using no_map<schema::pool_id0>::nomap;
 };
 
-struct validated_tx_id1
-  : public no_map<schema::validated_tx_id1>
+struct pool_id1
+  : public no_map<schema::pool_id1>
 {
-    using no_map<schema::validated_tx_id1>::nomap;
+    using no_map<schema::pool_id1>::nomap;
 };
 
-struct validated_tx_id2
-  : public no_map<schema::validated_tx_id2>
+struct pool_id2
+  : public no_map<schema::pool_id2>
 {
-    using no_map<schema::validated_tx_id2>::nomap;
+    using no_map<schema::pool_id2>::nomap;
 };
 
-struct validated_tx_id3
-  : public no_map<schema::validated_tx_id3>
+struct pool_id3
+  : public no_map<schema::pool_id3>
 {
-    using no_map<schema::validated_tx_id3>::nomap;
+    using no_map<schema::pool_id3>::nomap;
 };
 
-/// validated_tx is a record hashmap of pool tx validation state keyed by tx
+/// pool is a record hashmap of pooled tx validation context keyed by tx
 /// link, with the short id hash (txid or wtxid) as four word columns.
-struct validated_tx
-  : public hash_maps<schema::validated_tx, validated_tx_id0,
-      validated_tx_id1, validated_tx_id2, validated_tx_id3>
+struct pool
+  : public hash_maps<schema::pool, pool_id0, pool_id1, pool_id2, pool_id3>
 {
-    using base = hash_maps<schema::validated_tx, validated_tx_id0,
-        validated_tx_id1, validated_tx_id2, validated_tx_id3>;
+    using base = hash_maps<schema::pool, pool_id0, pool_id1, pool_id2, pool_id3>;
     using sigop = linkage<schema::sigops>;
     using spend = schema::spends::link;
     using base::hashmaps;
 
     struct record
-      : public schema::validated_tx
+      : public schema::pool
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
@@ -134,7 +132,7 @@ struct validated_tx
     };
 
     struct get_fee
-      : public schema::validated_tx
+      : public schema::pool
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
@@ -155,8 +153,8 @@ struct validated_tx
 
 /// Aggregate (files).
 template <template <size_t...> class Storage>
-using validated_tx_storage = mmaps<Storage, validated_tx_state,
-    validated_tx_id0, validated_tx_id1, validated_tx_id2, validated_tx_id3>;
+using pool_storage = mmaps<Storage, pool_context,
+    pool_id0, pool_id1, pool_id2, pool_id3>;
 
 } // namespace table
 } // namespace database

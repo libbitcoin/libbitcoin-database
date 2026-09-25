@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__pooled_missing_prevouts__pooled
 
     // Missing prevout fails value, but a pooled fee is returned directly.
     constexpr uint64_t expected_fee = 42;
-    BOOST_CHECK(store.validated_tx.put(tx_link{ 3 }, table::validated_tx::record{ {}, {}, expected_fee, {}, {} }));
+    BOOST_CHECK(store.pool.put(tx_link{ 3 }, table::pool::record{ {}, {}, expected_fee, {}, {} }));
     BOOST_CHECK(!query.get_tx_value(out, 3));
     BOOST_CHECK(query.get_tx_fee(out, 3));
     BOOST_CHECK_EQUAL(out, expected_fee);

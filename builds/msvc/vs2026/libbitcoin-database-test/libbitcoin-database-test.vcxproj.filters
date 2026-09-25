@@ -339,6 +339,9 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\ecdsa.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\pool.cpp">
+      <Filter>src\tables\caches</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\prevalid.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
@@ -354,10 +357,7 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\spends.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp">
-      <Filter>src\tables\caches</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp">
+    <ClCompile Include="..\..\..\..\test\tables\caches\state.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\envelope.cpp">

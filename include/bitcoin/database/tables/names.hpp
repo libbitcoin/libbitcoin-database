@@ -79,12 +79,12 @@ namespace caches
     constexpr auto prevalid = "batch_prevalid";
     constexpr auto prevout = "cache_prevout";
     constexpr auto duplicate = "cache_duplicate";
-    constexpr auto validated_bk = "cache_validated_bk";
-    constexpr auto validated_tx = "cache_validated_tx";
-    constexpr auto validated_tx_id0 = "id0"_t;
-    constexpr auto validated_tx_id1 = "id1"_t;
-    constexpr auto validated_tx_id2 = "id2"_t;
-    constexpr auto validated_tx_id3 = "id3"_t;
+    constexpr auto state = "cache_state";
+    constexpr auto pool = "cache_pool";
+    constexpr auto pool_id0 = "id0"_t;
+    constexpr auto pool_id1 = "id1"_t;
+    constexpr auto pool_id2 = "id2"_t;
+    constexpr auto pool_id3 = "id3"_t;
     constexpr auto spends = "cache_spends";
 }
 

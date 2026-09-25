@@ -207,13 +207,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\duplicate.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\ecdsa.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\envelope.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\pool.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevalid.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevout.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\schnorr.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\silent.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\spends.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_tx.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\envelope.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\event.hpp" />
@@ -237,9 +237,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\history.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\multisig_view.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\point_set.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\pooled_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\position.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\span.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\tx_state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\type.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\unspent_coin.hpp" />

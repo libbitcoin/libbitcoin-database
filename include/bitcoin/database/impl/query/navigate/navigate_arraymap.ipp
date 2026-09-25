@@ -28,10 +28,10 @@ namespace database {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-constexpr size_t CLASS::to_validated_bk(const header_link& link) const NOEXCEPT
+constexpr size_t CLASS::to_state(const header_link& link) const NOEXCEPT
 {
-    static_assert(header_link::terminal <= table::validated_bk::link::terminal);
-    return link.is_terminal() ? table::validated_bk::link::terminal : link.value;
+    static_assert(header_link::terminal <= table::state::link::terminal);
+    return link.is_terminal() ? table::state::link::terminal : link.value;
 }
 
 TEMPLATE

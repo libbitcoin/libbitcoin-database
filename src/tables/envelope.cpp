@@ -49,7 +49,7 @@ void envelope::set(const settings& database) NOEXCEPT
     tx_buckets = database.tx.buckets;
     strong_tx_buckets = database.strong_tx.buckets;
     duplicate_buckets = database.duplicate.buckets;
-    validated_tx_buckets = database.validated_tx.buckets;
+    pool_buckets = database.pool.buckets;
     provide_filters = to_bool(database.filter_bk.buckets) &&
         to_bool(database.filter_tx.buckets);
 }
@@ -177,14 +177,14 @@ bool envelope::from_data(reader& source) NOEXCEPT
     tx_buckets = source.read_little_endian<uint32_t>();
     strong_tx_buckets = source.read_little_endian<uint32_t>();
     duplicate_buckets = source.read_little_endian<uint32_t>();
-    validated_tx_buckets = source.read_little_endian<uint32_t>();
+    pool_buckets = source.read_little_endian<uint32_t>();
     header_k = source.read_byte();
     ins_k = source.read_byte();
     outs_k = source.read_byte();
     tx_k = source.read_byte();
     strong_tx_k = source.read_byte();
     duplicate_k = source.read_byte();
-    validated_tx_k = source.read_byte();
+    pool_k = source.read_byte();
 
     limited_blocks = to_bool(source.read_byte());
     provide_filters = to_bool(source.read_byte());
@@ -267,14 +267,14 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_little_endian<uint32_t>(tx_buckets);
     sink.write_little_endian<uint32_t>(strong_tx_buckets);
     sink.write_little_endian<uint32_t>(duplicate_buckets);
-    sink.write_little_endian<uint32_t>(validated_tx_buckets);
+    sink.write_little_endian<uint32_t>(pool_buckets);
     sink.write_byte(header_k);
     sink.write_byte(ins_k);
     sink.write_byte(outs_k);
     sink.write_byte(tx_k);
     sink.write_byte(strong_tx_k);
     sink.write_byte(duplicate_k);
-    sink.write_byte(validated_tx_k);
+    sink.write_byte(pool_k);
 
     sink.write_byte(to_int<uint8_t>(limited_blocks));
     sink.write_byte(to_int<uint8_t>(provide_filters));

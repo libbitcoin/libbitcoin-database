@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_VALIDATED_BK_HPP
-#define LIBBITCOIN_DATABASE_TABLES_CACHES_VALIDATED_BK_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_STATE_HPP
+#define LIBBITCOIN_DATABASE_TABLES_CACHES_STATE_HPP
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
@@ -27,15 +27,15 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// validated_bk is a record arraymap of block state, indexed by header.fk.
-struct validated_bk
-  : public array_map<schema::validated_bk>
+/// state is a record arraymap of block state, indexed by header.fk.
+struct state
+  : public array_map<schema::state>
 {
     using coding = linkage<schema::code>;
-    using array_map<schema::validated_bk>::arraymap;
+    using array_map<schema::state>::arraymap;
 
     struct record
-      : public schema::validated_bk
+      : public schema::state
     {
         inline bool from_data(reader& source) NOEXCEPT
         {

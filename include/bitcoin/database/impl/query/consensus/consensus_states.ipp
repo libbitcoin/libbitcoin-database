@@ -99,8 +99,8 @@ bool CLASS::is_unconfirmable(const header_link& link) const NOEXCEPT
 TEMPLATE
 code CLASS::get_header_state(const header_link& link) const NOEXCEPT
 {
-    table::validated_bk::record valid{};
-    if (!store_.validated_bk.at(to_validated_bk(link), valid))
+    table::state::record valid{};
+    if (!store_.state.at(to_state(link), valid))
         return error::unvalidated;
 
     return to_block_code(valid.code);
@@ -114,8 +114,8 @@ code CLASS::get_header_state(const header_link& link) const NOEXCEPT
 TEMPLATE
 code CLASS::get_block_state(const header_link& link) const NOEXCEPT
 {
-    table::validated_bk::record valid{};
-    if (!store_.validated_bk.at(to_validated_bk(link), valid))
+    table::state::record valid{};
+    if (!store_.state.at(to_state(link), valid))
         return is_associated(link) ? error::unvalidated : error::unassociated;
 
     return to_block_code(valid.code);
@@ -125,65 +125,65 @@ TEMPLATE
 inline bool CLASS::is_validated(const header_link& link) const NOEXCEPT
 {
     // Validated and not invalid (checkpoint/milestone shows false).
-    const auto state = get_header_state(link);
-    return state == error::block_valid || state == error::block_confirmable;
+    const auto ec = get_header_state(link);
+    return ec == error::block_valid || ec == error::block_confirmable;
 }
 
 TEMPLATE
-bool CLASS::is_block_validated(code& state, const header_link& link,
+bool CLASS::is_block_validated(code& ec, const header_link& link,
     size_t height, size_t checkpoint) const NOEXCEPT
 {
     if (height <= checkpoint || is_milestone(link))
     {
         if (is_associated(link))
         {
-            state = error::bypassed;
+            ec = error::bypassed;
             return true;
         }
         else
         {
-            state = error::unassociated;
+            ec = error::unassociated;
             return false;
         }
     }
     else
     {
-        state = get_header_state(link);
-        return state == error::block_valid
-            || state == error::block_confirmable;
+        ec = get_header_state(link);
+        return ec == error::block_valid
+            || ec == error::block_confirmable;
     }
 }
 
 TEMPLATE
-code CLASS::get_tx_state(tx_state& state, const tx_link& link,
+code CLASS::get_pooled(pooled_tx& out, const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
     using prevout = table::prevout::slab_get;
-    if (!store_.validated_tx.enabled())
+    if (!store_.pool.enabled())
         return error::unvalidated;
 
-    const auto fk = store_.validated_tx.first(link);
+    const auto fk = store_.pool.first(link);
     if (fk.is_terminal())
         return error::unvalidated;
 
-    table::validated_tx::record valid{};
-    if (!store_.validated_tx.get(fk, valid))
+    table::pool::record valid{};
+    if (!store_.pool.get(fk, valid))
         return error::integrity;
 
     if (!is_sufficient(ctx, valid.ctx))
         return error::unvalidated;
 
-    table::spends::get_refs::parents parents(state.prevouts.size());
+    table::spends::get_refs::parents parents(out.prevouts.size());
     table::spends::get_refs run{ {}, parents };
     if (!store_.spends.get(valid.spends_fk, run))
         return error::integrity;
 
-    state.fee = valid.fee;
-    state.sigops = valid.sigops;
-    std::ranges::transform(parents, state.prevouts.begin(),
+    out.fee = valid.fee;
+    out.sigops = valid.sigops;
+    std::ranges::transform(parents, out.prevouts.begin(),
         [](auto merged) NOEXCEPT
         {
-            return tx_state::prevout
+            return pooled_tx::prevout
             {
                 prevout::output_tx_fk(merged),
                 prevout::coinbase(merged)
@@ -197,15 +197,15 @@ code CLASS::get_tx_state(tx_state& state, const tx_link& link,
 TEMPLATE
 bool CLASS::get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT
 {
-    if (!store_.validated_tx.enabled())
+    if (!store_.pool.enabled())
         return false;
 
-    const auto fk = store_.validated_tx.first(link);
+    const auto fk = store_.pool.first(link);
     if (fk.is_terminal())
         return false;
 
-    table::validated_tx::get_fee pooled{};
-    if (!store_.validated_tx.get(fk, pooled))
+    table::pool::get_fee pooled{};
+    if (!store_.pool.get(fk, pooled))
         return false;
 
     out = pooled.fee;
@@ -243,31 +243,31 @@ bool CLASS::set_block_unknown(const header_link& link) NOEXCEPT
 // private
 TEMPLATE
 bool CLASS::set_block_state(const header_link& link,
-    block_state state) NOEXCEPT
+    block_state value) NOEXCEPT
 {
-    const auto record = to_validated_bk(link);
+    const auto record = to_state(link);
 
     // ========================================================================
     const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.validated_bk.put(record,
-        table::validated_bk::record{ {}, state });
+    return store_.state.put(record,
+        table::state::record{ {}, value });
     // ========================================================================
 }
 
 TEMPLATE
-bool CLASS::set_tx_state(const tx_link& link, const transaction& tx,
+bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
     const chain_context& ctx) NOEXCEPT
 {
-    return set_tx_state(link, tx, context::from(ctx));
+    return set_pooled(link, tx, context::from(ctx));
 }
 
 TEMPLATE
-bool CLASS::set_tx_state(const tx_link& link, const transaction& tx,
+bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
     const context& ctx) NOEXCEPT
 {
-    if (!store_.validated_tx.enabled())
+    if (!store_.pool.enabled())
         return true;
 
     using namespace system;
@@ -307,13 +307,13 @@ bool CLASS::set_tx_state(const tx_link& link, const transaction& tx,
     if (!store_.spends.put_link(first, table::spends::put_refs{ {}, prevouts }))
         return false;
 
-    auto& vtx = store_.validated_tx;
+    auto& vtx = store_.pool;
     const auto row = vtx.allocate(1);
     if (row.is_terminal())
         return false;
 
     // Column puts are unguarded, the accessor guards their rows against remap.
-    using word = table::validated_tx_word;
+    using word = table::pool_word;
     auto guard = vtx.get_memory();
     if (!guard ||
         !vtx.id0.put(row, word{ {}, std::get<0>(words) }) ||
@@ -325,7 +325,7 @@ bool CLASS::set_tx_state(const tx_link& link, const transaction& tx,
     guard.reset();
 
     // Commit is deferred until the columns are set.
-    return vtx.put(row, link, table::validated_tx::record
+    return vtx.put(row, link, table::pool::record
     {
         {},
         ctx,
