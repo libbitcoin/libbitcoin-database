@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_branch__uncandidate_header__branch_of_
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     header_states branch{};
     BOOST_REQUIRE(query.get_branch(branch, test::block1.hash()));
     BOOST_REQUIRE_EQUAL(branch.size(), 1u);

@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(query_filters__set_filter_body__filter__round_trips)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     const auto expected = system::base16_chunk("00010203");
     BOOST_REQUIRE(query.set_filter_body(1, expected));
     BOOST_REQUIRE(query.is_filtered_body(1));
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(query_filters__set_filter_head__head_and_hash__round_trips)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     const auto head = system::base16_hash("0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20");
     const auto hash = system::base16_hash("2122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f40");
     BOOST_REQUIRE(query.set_filter_head(1, head, hash));

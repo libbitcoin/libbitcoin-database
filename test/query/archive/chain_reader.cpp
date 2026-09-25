@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__default__expected)
 
     ////store.header_head() = expected_header_head;
     ////store.header_body() = expected_header_body;
-    BOOST_CHECK(query.set(header, context{ 0x11121314, 0x01020304, 0x21222324 }, true));
+    BOOST_CHECK(query.set(header, context{ 0x11121314, 0x01020304, 0x21222324 }, {}, true));
     BOOST_CHECK_EQUAL(store.header_head(), expected_header_head);
     BOOST_CHECK_EQUAL(store.header_body(), expected_header_body);
 
@@ -159,9 +159,9 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__is_coinbase__coinbase__true)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{}, false, false));
-    BOOST_CHECK(query.set(test::block2, context{}, false, false));
-    BOOST_CHECK(query.set(test::block3, context{}, false, false));
+    BOOST_CHECK(query.set(test::block1, context{}, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{}, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{}, {}, false, false));
     BOOST_CHECK(query.is_coinbase(0));
     BOOST_CHECK(query.is_coinbase(1));
     BOOST_CHECK(query.is_coinbase(2));
@@ -176,8 +176,8 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__is_coinbase__non_coinbase__false)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, context{}, false, false));
-    BOOST_CHECK(query.set(test::block2a, context{}, false, false));
+    BOOST_CHECK(query.set(test::block1a, context{}, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, context{}, {}, false, false));
     BOOST_CHECK(!query.is_coinbase(1));
     BOOST_CHECK(!query.is_coinbase(2));
     BOOST_CHECK(!query.is_coinbase(3));
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__is_tx_segregated__always__expected)
     test::query_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, context{}, false, false));
+    BOOST_CHECK(query.set(test::block1a, context{}, {}, false, false));
     BOOST_CHECK(!query.is_tx_segregated(0));
     BOOST_CHECK( query.is_tx_segregated(1));
     BOOST_CHECK(!query.is_tx_segregated(2));
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__is_block_segregated__always__expected)
     test::query_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, context{}, false, false));
+    BOOST_CHECK(query.set(test::block1a, context{}, {}, false, false));
     BOOST_CHECK(!query.is_block_segregated(0));
     BOOST_CHECK( query.is_block_segregated(1));
     BOOST_CHECK(!query.is_block_segregated(2));
@@ -240,8 +240,8 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__is_milestone__set__expected)
     test::query_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{}, true, false));
-    BOOST_CHECK(query.set(test::block2, context{}, false, false));;
+    BOOST_CHECK(query.set(test::block1, context{}, {}, true, false));
+    BOOST_CHECK(query.set(test::block2, context{}, {}, false, false));;
     BOOST_CHECK(!query.is_milestone(0));
     BOOST_CHECK(query.is_milestone(1));
     BOOST_CHECK(!query.is_milestone(2));
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_point_key__always__expected)
     BOOST_CHECK_EQUAL(query.get_point_hash(2), test::block1a.transactions_ptr()->front()->hash(false));
 
     // block1a adds three prevouts of two txs.
-    BOOST_CHECK(query.set(test::block1a, context{}, false, false));
+    BOOST_CHECK(query.set(test::block1a, context{}, {}, false, false));
     BOOST_CHECK_EQUAL(query.get_point_hash(4), system::one_hash);
 }
 
@@ -316,11 +316,11 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_height1__always__expected)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, {}, false, false));
 
     size_t out{};
     BOOST_CHECK(query.get_height(out, 0));
@@ -346,11 +346,11 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_height2__always__expected)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, {}, false, false));
 
     size_t out{};
     BOOST_CHECK(query.get_height(out, test::genesis.hash()));
@@ -390,9 +390,9 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_tx_position__strong__expected)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3a, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3a, context{ 0, 3, 0 }, {}, false, false));
 
     size_t out{};
     const auto foo = query.get_tx_position(out, 0);
@@ -435,9 +435,9 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_tx_position__always__expected)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3a, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3a, context{ 0, 3, 0 }, {}, false, false));
     BOOST_CHECK(query.set(test::tx4));
 
     size_t out{};
@@ -477,9 +477,9 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_position_tx__always__expected)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3a, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3a, context{ 0, 3, 0 }, {}, false, false));
 
     BOOST_CHECK_EQUAL(query.get_position_tx(0, 0), 0u);
     BOOST_CHECK_EQUAL(query.get_position_tx(1, 0), 1u);
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_input__genesis__expected)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(query.set(test::genesis, test::context, false, false));
+    BOOST_CHECK(query.set(test::genesis, test::context, {}, false, false));
 
     const auto tx = test::genesis.transactions_ptr()->front();
     const auto input = tx->inputs_ptr()->front();
@@ -629,7 +629,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_output__genesis__expected)
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(query.set(test::genesis, test::context, false, false));
+    BOOST_CHECK(query.set(test::genesis, test::context, {}, false, false));
 
     const auto tx = test::genesis.transactions_ptr()->front();
     const auto output = tx->outputs_ptr()->front();
@@ -682,8 +682,8 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_transactions__found__expected)
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2a, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1a, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, test::context, {}, false, false));
     BOOST_CHECK(query.set(test::tx4));
     BOOST_CHECK_EQUAL(query.get_transactions(0, false)->size(), 1u);
     BOOST_CHECK_EQUAL(query.get_transactions(1, false)->size(), 1u);
@@ -698,9 +698,9 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_spenders__unspent_or_not_found__exp
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2, test::context, false, false));
-    BOOST_CHECK(query.set(test::block3, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, test::context, {}, false, false));
 
     // Caller should always test for nullptr.
     BOOST_CHECK(query.get_spenders(output_link::terminal, true)->empty());
@@ -755,9 +755,9 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__null_prevouts__
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2, test::context, false, false));
-    BOOST_CHECK(query.set(test::block3, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, test::context, {}, false, false));
 
     const auto& copy = clean_(test::genesis);
     const auto& copy1 = clean_(test::block1);
@@ -778,8 +778,8 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__partial_prevout
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2a, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1a, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, test::context, {}, false, false));
     BOOST_CHECK(query.set(test::tx4));
 
     const auto& block1a = clean_(test::block1a);
@@ -812,8 +812,8 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__metadata__expec
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2a, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1a, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, test::context, {}, false, false));
     BOOST_CHECK(query.set(test::tx4));
     BOOST_CHECK(!query.is_coinbase(1));
 
@@ -861,7 +861,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__pool_spender__e
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
 
     // tx5 spends the first output of the first tx of block1a, as do tx4 and
     // the first transaction of block2a.
@@ -880,7 +880,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__populate_with_metadata__pool_spender__e
     BOOST_CHECK(query.populate_with_metadata(chained, true, false));
     BOOST_CHECK_EQUAL(chained.inputs_ptr()->at(0)->metadata.spender_height, max_uint32);
 
-    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, {}, false, false));
     BOOST_CHECK(query.set_strong(2));
 
     const auto& confirmed = clean_(test::tx5);
@@ -904,9 +904,9 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__populate_without_metadata__null_prevout
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2, test::context, false, false));
-    BOOST_CHECK(query.set(test::block3, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, test::context, {}, false, false));
     BOOST_CHECK(query.populate_without_metadata(test::genesis));
     BOOST_CHECK(query.populate_without_metadata(test::block1));
     BOOST_CHECK(query.populate_without_metadata(test::block2));
@@ -921,8 +921,8 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__populate_without_metadata__partial_prev
     test::query_accessor query{ store };
     BOOST_CHECK(!store.create(test::events_handler));
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1a, test::context, false, false));
-    BOOST_CHECK(query.set(test::block2a, test::context, false, false));
+    BOOST_CHECK(query.set(test::block1a, test::context, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, test::context, {}, false, false));
     BOOST_CHECK(query.set(test::tx4));
 
     // Block populate treates first tx as null point.

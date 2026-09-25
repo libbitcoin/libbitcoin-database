@@ -46,10 +46,10 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_output__various__expected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block2, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block3, test::context, false, false));
-    BOOST_REQUIRE(query.set(test::block1a, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block1a, test::context, {}, false, false));
 
     // All 5 blocks have one transaction with 1 output.
     BOOST_REQUIRE_EQUAL(query.to_output_tx(0 * 0x51), 0u);
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_coinbase__always__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE_EQUAL(query.to_coinbase(0), 0u);
     BOOST_REQUIRE(query.to_coinbase(1).is_terminal());
-    BOOST_REQUIRE(query.set(test::block1, test::context, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
     BOOST_REQUIRE_EQUAL(query.to_coinbase(1), 1u);
 }
 

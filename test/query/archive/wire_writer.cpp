@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__genesis__expected)
     BOOST_CHECK(!store.create(test::events_handler));
 
     // Set header, then txs from the parsed view of the serialized block.
-    BOOST_CHECK(query.set(test::genesis.header(), test::context, milestone));
+    BOOST_CHECK(query.set(test::genesis.header(), test::context, {}, milestone));
     system::chain::block_view view{ test::genesis.to_data(true), true };
     BOOST_CHECK(view.is_valid());
     BOOST_CHECK_EQUAL(query.set_code(view, false, true), error::success);
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__not_pooling_pooled_tx__w
     tx_link pooled{};
     BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
     BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
-    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
     block_view view{ block.to_data(true), true };
     BOOST_REQUIRE(view.is_valid());
     BOOST_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_pooled_tx__subst
     tx_link pooled{};
     BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
     BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
-    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
     block_view view{ block.to_data(true), true };
     BOOST_REQUIRE(view.is_valid());
     BOOST_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_conflict__writte
 
     tx_link pooled{};
     BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
-    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, false));
+    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
     block_view view{ block.to_data(true), true };
     BOOST_REQUIRE(view.is_valid());
     BOOST_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);

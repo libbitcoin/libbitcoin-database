@@ -64,22 +64,21 @@ TEMPLATE
 bool CLASS::get_strong_branch(bool& strong, const uint256_t& branch_work,
     size_t branch_point, bool tie) const NOEXCEPT
 {
-    uint256_t work{};
-    for (auto height = get_top_candidate(); height > branch_point; --height)
+    const auto top = get_top_candidate();
+    if (branch_point >= top)
     {
-        uint32_t bits{};
-        if (!get_bits(bits, to_candidate(height)))
-            return false;
-
-        work += system::chain::header::proof(bits);
-        if (tie ? (work > branch_work) : (work >= branch_work))
-        {
-            strong = false;
-            return true;
-        }
+        strong = true;
+        return true;
     }
 
-    strong = true;
+    uint256_t top_work{};
+    uint256_t point_work{};
+    if (!get_branch_work(top_work, to_candidate(top)) ||
+        !get_branch_work(point_work, to_candidate(branch_point)))
+        return false;
+
+    const auto work = top_work - point_work;
+    strong = tie ? !(work > branch_work) : !(work >= branch_work);
     return true;
 }
 
@@ -87,22 +86,21 @@ TEMPLATE
 bool CLASS::get_strong_fork(bool& strong, const uint256_t& fork_work,
     size_t fork_point, bool tie) const NOEXCEPT
 {
-    uint256_t work{};
-    for (auto height = get_top_confirmed(); height > fork_point; --height)
+    const auto top = get_top_confirmed();
+    if (fork_point >= top)
     {
-        uint32_t bits{};
-        if (!get_bits(bits, to_confirmed(height)))
-            return false;
-
-        work += system::chain::header::proof(bits);
-        if (tie ? (work > fork_work) : (work >= fork_work))
-        {
-            strong = false;
-            return true;
-        }
+        strong = true;
+        return true;
     }
 
-    strong = true;
+    uint256_t top_work{};
+    uint256_t point_work{};
+    if (!get_branch_work(top_work, to_confirmed(top)) ||
+        !get_branch_work(point_work, to_confirmed(fork_point)))
+        return false;
+
+    const auto work = top_work - point_work;
+    strong = tie ? !(work > fork_work) : !(work >= fork_work);
     return true;
 }
 

@@ -46,9 +46,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__empty_locator__returns_confirme
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__genesis_locator__returns_all_co
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
 
@@ -89,9 +89,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__mid_chain_locator__starts_after
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -111,9 +111,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__highest_first_locator__correct)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -132,9 +132,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__stop_hash__excludes_stop_and_la
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -153,9 +153,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__limit__respects_limit)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -189,8 +189,8 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__reorg_terminal__returns_empty)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
 
     // Simulate a reorg by not confirming height 2, to_confirmed(2) is terminal.
     BOOST_REQUIRE(query.push_confirmed(1, false));
@@ -211,9 +211,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__empty_locator__confirmed_headers
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -234,8 +234,8 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__genesis_locator__all_confirmed)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
 
@@ -254,9 +254,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__mid_chain_locator__starts_after_
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -276,9 +276,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__highest_first_locator__expected)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -297,9 +297,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__stop_hash__excludes_stop_and_aft
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -318,9 +318,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__limit__respects_limit)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -354,8 +354,8 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__reorg_terminal__returns_empty)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
 
     // Simulate a reorg by not confirming height 2, to_confirmed(2) is terminal.
     BOOST_REQUIRE(query.push_confirmed(1, false));
@@ -376,9 +376,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__empty_locator__starts_afte
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -398,8 +398,8 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__genesis_locator__starts_af
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
 
@@ -418,9 +418,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__mid_chain_locator__starts_
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -440,9 +440,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_hash__limits_to_stop_
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -462,9 +462,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__limit_smaller_than_range__
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__no_confirmed_blocks__empty
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
 
     const hashes locator{};
     const auto span = query.get_locator_span(locator, system::null_hash, 10);
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_before_start__empty_s
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
 
     const hashes locator{ test::block1_hash };
@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__large_limit__capped_by_top
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
 
     const hashes locator{};
@@ -561,9 +561,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__unconfirmed__zero)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE_EQUAL(query.get_locator_start({ test::block1_hash }), 0u);
 }
 
@@ -575,9 +575,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__confirmed__first_match)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_REQUIRE(query.push_confirmed(1, false));
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
@@ -623,7 +623,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_ancestry__single_block__itself)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
 
     header_links ancestry{};
     BOOST_REQUIRE(query.get_ancestry(ancestry, 1, 10));
@@ -640,9 +640,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_ancestry__linear_chain__full_ancestry)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
 
     header_links ancestry{};
     BOOST_REQUIRE(query.get_ancestry(ancestry, 3, 10));
@@ -661,9 +661,9 @@ BOOST_AUTO_TEST_CASE(query_locator__get_ancestry__count_limit__truncated)
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
 
     header_links ancestry{};
     BOOST_REQUIRE(query.get_ancestry(ancestry, 3, 2));
@@ -680,8 +680,8 @@ BOOST_AUTO_TEST_CASE(query_locator__get_ancestry__count_exceeds_height__full_to_
     query_access query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
 
     header_links ancestry{};
     BOOST_REQUIRE(query.get_ancestry(ancestry, 2, 100));

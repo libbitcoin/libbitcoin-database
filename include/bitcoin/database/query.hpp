@@ -506,13 +506,13 @@ public:
 
     /// Bool returns.
     bool set(const header& header, const chain_context& ctx,
-        bool milestone) NOEXCEPT;
+        const uint256_t& work, bool milestone) NOEXCEPT;
     bool set(const header& header, const context& ctx,
-        bool milestone) NOEXCEPT;
+        const uint256_t& work, bool milestone) NOEXCEPT;
     bool set(const block& block, const chain_context& ctx,
-        bool milestone, bool strong) NOEXCEPT;
+        const uint256_t& work, bool milestone, bool strong) NOEXCEPT;
     bool set(const block& block, const context& ctx,
-        bool milestone, bool strong) NOEXCEPT;
+        const uint256_t& work, bool milestone, bool strong) NOEXCEPT;
     bool set(const transaction& tx) NOEXCEPT;
     bool set(const block& block, bool strong, bool bypass,
         bool prune=false) NOEXCEPT;
@@ -525,23 +525,26 @@ public:
 
     /// Set header (headers-first).
     code set_code(const header& header, const context& ctx,
-        bool milestone) NOEXCEPT;
+        const uint256_t& work, bool milestone) NOEXCEPT;
     code set_code(const header& header, const chain_context& ctx,
-        bool milestone) NOEXCEPT;
+        const uint256_t& work, bool milestone) NOEXCEPT;
     code set_code(header_link& out_fk, const header& header,
-        const context& ctx, bool milestone, bool=false) NOEXCEPT;
+        const context& ctx, const uint256_t& work, bool milestone,
+        bool=false) NOEXCEPT;
     code set_code(header_link& out_fk, const header& header,
-        const chain_context& ctx, bool milestone, bool=false) NOEXCEPT;
+        const chain_context& ctx, const uint256_t& work, bool milestone,
+        bool=false) NOEXCEPT;
 
     /// Set full block (blocks-first).
-    code set_code(const block& block, const context& ctx, bool milestone,
-        bool strong) NOEXCEPT;
-    code set_code(const block& block, const chain_context& ctx, bool milestone,
-        bool strong) NOEXCEPT;
+    code set_code(const block& block, const context& ctx,
+        const uint256_t& work, bool milestone, bool strong) NOEXCEPT;
+    code set_code(const block& block, const chain_context& ctx,
+        const uint256_t& work, bool milestone, bool strong) NOEXCEPT;
     code set_code(header_link& out_fk, const block& block, const context& ctx,
-        bool milestone, bool strong) NOEXCEPT;
+        const uint256_t& work, bool milestone, bool strong) NOEXCEPT;
     code set_code(header_link& out_fk, const block& block,
-        const chain_context& ctx, bool milestone, bool strong) NOEXCEPT;
+        const chain_context& ctx, const uint256_t& work, bool milestone,
+        bool strong) NOEXCEPT;
 
     /// Set block.txs (headers-first). Prune strips input scripts/witnesses.
     code set_code(const block& block, bool strong, bool bypass,

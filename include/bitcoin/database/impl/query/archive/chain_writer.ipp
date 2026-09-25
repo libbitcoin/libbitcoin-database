@@ -29,29 +29,30 @@ namespace database {
 
 TEMPLATE
 bool CLASS::set(const header& header, const chain_context& ctx,
-    bool milestone) NOEXCEPT
+    const uint256_t& work, bool milestone) NOEXCEPT
 {
-    return !set_code(header, ctx, milestone);
+    return !set_code(header, ctx, work, milestone);
 }
 
 TEMPLATE
-bool CLASS::set(const header& header, const context& ctx, bool milestone) NOEXCEPT
+bool CLASS::set(const header& header, const context& ctx,
+    const uint256_t& work, bool milestone) NOEXCEPT
 {
-    return !set_code(header, ctx, milestone);
+    return !set_code(header, ctx, work, milestone);
 }
 
 TEMPLATE
-bool CLASS::set(const block& block, const chain_context& ctx, bool milestone,
-    bool strong) NOEXCEPT
+bool CLASS::set(const block& block, const chain_context& ctx,
+    const uint256_t& work, bool milestone, bool strong) NOEXCEPT
 {
-    return !set_code(block, ctx, milestone, strong);
+    return !set_code(block, ctx, work, milestone, strong);
 }
 
 TEMPLATE
-bool CLASS::set(const block& block, const context& ctx, bool milestone,
-    bool strong) NOEXCEPT
+bool CLASS::set(const block& block, const context& ctx,
+    const uint256_t& work, bool milestone, bool strong) NOEXCEPT
 {
-    return !set_code(block, ctx, milestone, strong);
+    return !set_code(block, ctx, work, milestone, strong);
 }
 
 TEMPLATE
@@ -268,30 +269,31 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
 
 TEMPLATE
 code CLASS::set_code(const header& header, const context& ctx,
-    bool milestone) NOEXCEPT
+    const uint256_t& work, bool milestone) NOEXCEPT
 {
     header_link unused{};
-    return set_code(unused, header, ctx, milestone);
+    return set_code(unused, header, ctx, work, milestone);
 }
 
 TEMPLATE
 code CLASS::set_code(const header& header, const chain_context& ctx,
-    bool milestone) NOEXCEPT
+    const uint256_t& work, bool milestone) NOEXCEPT
 {
     header_link unused{};
-    return set_code(unused, header, ctx, milestone);
+    return set_code(unused, header, ctx, work, milestone);
 }
 
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const header& header,
-    const chain_context& ctx, bool milestone, bool) NOEXCEPT
+    const chain_context& ctx, const uint256_t& work, bool milestone,
+    bool) NOEXCEPT
 {
-    return set_code(out_fk, header, context::from(ctx), milestone);
+    return set_code(out_fk, header, context::from(ctx), work, milestone);
 }
 
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const header& header,
-    const context& ctx, bool milestone, bool) NOEXCEPT
+    const context& ctx, const uint256_t& work, bool milestone, bool) NOEXCEPT
 {
     // header.get_hash() assumes cached or is not thread safe.
     const auto& key = header.get_hash();
@@ -312,7 +314,8 @@ code CLASS::set_code(header_link& out_fk, const header& header,
         ctx,
         milestone,
         parent_fk,
-        header
+        header,
+        work
     });
 
     return out_fk.is_terminal() ? error::header_put : error::success;
@@ -324,33 +327,36 @@ code CLASS::set_code(header_link& out_fk, const header& header,
 // strong is set for checkpointed blocks only, as they are always strong chain.
 
 TEMPLATE
-code CLASS::set_code(const block& block, const context& ctx, bool milestone,
-    bool strong) NOEXCEPT
+code CLASS::set_code(const block& block, const context& ctx,
+    const uint256_t& work, bool milestone, bool strong) NOEXCEPT
 {
     header_link unused{};
-    return set_code(unused, block, ctx, milestone, strong);
+    return set_code(unused, block, ctx, work, milestone, strong);
 }
 
 TEMPLATE
 code CLASS::set_code(const block& block, const chain_context& ctx,
-    bool milestone, bool strong) NOEXCEPT
+    const uint256_t& work, bool milestone, bool strong) NOEXCEPT
 {
     header_link unused{};
-    return set_code(unused, block, ctx, milestone, strong);
+    return set_code(unused, block, ctx, work, milestone, strong);
 }
 
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const block& block,
-    const chain_context& ctx, bool milestone, bool strong) NOEXCEPT
+    const chain_context& ctx, const uint256_t& work, bool milestone,
+    bool strong) NOEXCEPT
 {
-    return set_code(out_fk, block, context::from(ctx), milestone, strong);
+    return set_code(out_fk, block, context::from(ctx), work, milestone,
+        strong);
 }
 
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const block& block,
-    const context& ctx, bool milestone, bool strong) NOEXCEPT
+    const context& ctx, const uint256_t& work, bool milestone,
+    bool strong) NOEXCEPT
 {
-    const auto ec = set_code(out_fk, block.header(), ctx, milestone);
+    const auto ec = set_code(out_fk, block.header(), ctx, work, milestone);
     return ec ? ec : set_code(block, out_fk, strong, strong || milestone,
         ctx.height);
 }

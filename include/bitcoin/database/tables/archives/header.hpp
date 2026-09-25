@@ -61,6 +61,12 @@ struct header
         skip_to_timestamp +
         sizeof(uint32_t);
 
+    static constexpr size_t skip_to_work =
+        skip_to_bits +
+        sizeof(uint32_t) +
+        sizeof(uint32_t) +
+        schema::hash;
+
     static constexpr head::integer merge(bool milestone,
         head::integer parent_fk) NOEXCEPT
     {
@@ -93,6 +99,7 @@ struct header
             bits        = source.read_little_endian<uint32_t>();
             nonce       = source.read_little_endian<uint32_t>();
             merkle_root = source.read_hash();
+            work        = system::to_uintx(source.read_hash());
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
@@ -106,6 +113,7 @@ struct header
             sink.write_little_endian<uint32_t>(bits);
             sink.write_little_endian<uint32_t>(nonce);
             sink.write_bytes(merkle_root);
+            sink.write_bytes(system::from_uintx(work));
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
@@ -120,6 +128,7 @@ struct header
         uint32_t bits{};
         uint32_t nonce{};
         hash_digest merkle_root{};
+        uint256_t work{};
     };
 
     // This is redundant with record_put_ptr except this does not capture.
@@ -136,6 +145,7 @@ struct header
             sink.write_little_endian<uint32_t>(header.bits());
             sink.write_little_endian<uint32_t>(header.nonce());
             sink.write_bytes(header.merkle_root());
+            sink.write_bytes(system::from_uintx(work));
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
@@ -144,6 +154,7 @@ struct header
         const bool milestone{};
         const link::integer parent_fk{};
         const system::chain::header& header;
+        const uint256_t& work;
     };
 
     struct record_with_sk
@@ -294,6 +305,19 @@ struct header
         }
 
         uint32_t bits{};
+    };
+
+    struct get_work
+      : public schema::header
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(skip_to_work);
+            work = system::to_uintx(source.read_hash());
+            return source;
+        }
+
+        uint256_t work{};
     };
 
     struct get_milestone

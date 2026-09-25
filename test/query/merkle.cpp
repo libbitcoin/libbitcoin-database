@@ -240,9 +240,9 @@ BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_0__block_hash)
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
 
     const auto header0 = query.to_header(test::block0_hash);
     const auto header1 = query.to_header(test::block1_hash);
@@ -271,9 +271,9 @@ BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_1__expected)
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
 
     const auto header0 = query.to_header(test::block0_hash);
     const auto header1 = query.to_header(test::block1_hash);
@@ -300,9 +300,9 @@ BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_2__expected)
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
 
     const auto header3 = query.to_header(test::block3_hash);
     BOOST_CHECK(!header3.is_terminal());
@@ -340,9 +340,9 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__multiple__expected_va
     BOOST_CHECK_EQUAL(query.interval_span(), system::power2(settings.interval_depth));
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
@@ -462,9 +462,9 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__target_in_first_interval__e
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
@@ -485,9 +485,9 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__multiple_intervals__expecte
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
@@ -533,9 +533,9 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__one_full_interval__expec
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
@@ -557,11 +557,11 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__full_and_partial_interva
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block4, context{ 0, 4, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block5, context{ 0, 5, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block4, context{ 0, 4, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block5, context{ 0, 5, 0 }, {}, false, false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
@@ -591,9 +591,9 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_equals_wayp
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
@@ -617,9 +617,9 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_less_than_w
     merkle_accessor query{ store };
     BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
     BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, false, false));
+    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
     BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
@@ -637,14 +637,14 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_less_than_w
 bool setup_eight_block_store(merkle_accessor& query)
 {
     return query.initialize(test::genesis) &&
-        query.set(test::block1, context{ 0, 1, 0 }, false, false) &&
-        query.set(test::block2, context{ 0, 2, 0 }, false, false) &&
-        query.set(test::block3, context{ 0, 3, 0 }, false, false) &&
-        query.set(test::block4, context{ 0, 4, 0 }, false, false) &&
-        query.set(test::block5, context{ 0, 5, 0 }, false, false) &&
-        query.set(test::block6, context{ 0, 6, 0 }, false, false) &&
-        query.set(test::block7, context{ 0, 7, 0 }, false, false) &&
-        query.set(test::block8, context{ 0, 8, 0 }, false, false) &&
+        query.set(test::block1, context{ 0, 1, 0 }, {}, false, false) &&
+        query.set(test::block2, context{ 0, 2, 0 }, {}, false, false) &&
+        query.set(test::block3, context{ 0, 3, 0 }, {}, false, false) &&
+        query.set(test::block4, context{ 0, 4, 0 }, {}, false, false) &&
+        query.set(test::block5, context{ 0, 5, 0 }, {}, false, false) &&
+        query.set(test::block6, context{ 0, 6, 0 }, {}, false, false) &&
+        query.set(test::block7, context{ 0, 7, 0 }, {}, false, false) &&
+        query.set(test::block8, context{ 0, 8, 0 }, {}, false, false) &&
         query.push_confirmed(query.to_header(test::block1_hash), false) &&
         query.push_confirmed(query.to_header(test::block2_hash), false) &&
         query.push_confirmed(query.to_header(test::block3_hash), false) &&

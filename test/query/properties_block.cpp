@@ -30,9 +30,9 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_top_timestamp__always__expected
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{}, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{}, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, context{}, {}, false, false));
     BOOST_REQUIRE(query.push_candidate(1));
     BOOST_REQUIRE_EQUAL(query.get_top_timestamp(true), 0x495fab29_u32);
     BOOST_REQUIRE_EQUAL(query.get_top_timestamp(false), 0x4966bc61_u32);
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_context__block1__expected)
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     const context expected{ 12, 34, 56 };
-    BOOST_REQUIRE(query.set(test::block1, expected, false, false));
+    BOOST_REQUIRE(query.set(test::block1, expected, {}, false, false));
 
     context ctx{};
     BOOST_REQUIRE(query.get_context(ctx, 1));
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__unassociated_link_
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1.header(), context{}, false));
+    BOOST_REQUIRE(query.set(test::block1.header(), context{}, {}, false));
     BOOST_REQUIRE(query.set(*test::block1.transactions_ptr()->front()));
 
     uint64_t fees{};
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__unvalidated_link__
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{}, {}, false, false));
 
     uint64_t fees{};
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::unvalidated);
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__confirmable__block
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{}, {}, false, false));
 
     uint64_t fees{};
     BOOST_REQUIRE_EQUAL(query.get_header_state(0), error::unvalidated);
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__valid__block_valid
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{}, {}, false, false));
 
     BOOST_REQUIRE(query.set_block_valid(1));
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_valid);
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__unconfirmable__blo
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, context{}, {}, false, false));
 
     BOOST_REQUIRE(query.set_block_unconfirmable(1));
     BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_unconfirmable);
