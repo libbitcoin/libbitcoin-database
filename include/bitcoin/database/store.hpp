@@ -226,7 +226,9 @@ protected:
 
     // record multimap
     Storage<one> validated_tx_head_;
-    Storage<one> validated_tx_body_;
+    table::validated_tx_storage<Storage> validated_tx_body_;
+    Storage<one> spends_head_;
+    Storage<one> spends_body_;
 
     /// Optionals.
     /// -----------------------------------------------------------------------
@@ -322,6 +324,7 @@ public:
     table::prevout prevout;
     table::validated_bk validated_bk;
     table::validated_tx validated_tx;
+    table::spends spends;
 
     /// Optionals.
     table::filter_bk filter_bk;

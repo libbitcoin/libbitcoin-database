@@ -291,6 +291,16 @@ public:
         return validated_tx_body_.file();
     }
 
+    inline const path& spends_head_file() const NOEXCEPT
+    {
+        return spends_head_.file();
+    }
+
+    inline const path& spends_body_file() const NOEXCEPT
+    {
+        return spends_body_.file();
+    }
+
     // Optionals.
 
     inline const path& filter_bk_head_file() const NOEXCEPT

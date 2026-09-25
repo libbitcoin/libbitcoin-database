@@ -87,6 +87,9 @@ enum class table_t
     validated_tx_table,
     validated_tx_head,
     validated_tx_body,
+    spends_table,
+    spends_head,
+    spends_body,
 
     /// Optionals.
     address_table,

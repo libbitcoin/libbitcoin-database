@@ -88,6 +88,9 @@ const CLASS::table_map CLASS::tables
     { table_t::validated_tx_table, "validated_tx_table" },
     { table_t::validated_tx_head, "validated_tx_head" },
     { table_t::validated_tx_body, "validated_tx_body" },
+    { table_t::spends_table, "spends_table" },
+    { table_t::spends_head, "spends_head" },
+    { table_t::spends_body, "spends_body" },
 
     // Optionals.
     { table_t::address_table, "address_table" },

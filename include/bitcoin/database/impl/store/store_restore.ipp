@@ -157,6 +157,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, prevout, table_t::prevout_table);
         restore(ec, validated_bk, table_t::validated_bk_table);
         restore(ec, validated_tx, table_t::validated_tx_table);
+        restore(ec, spends, table_t::spends_table);
 
         restore(ec, filter_bk, table_t::filter_bk_table);
         restore(ec, filter_tx, table_t::filter_tx_table);

@@ -234,6 +234,7 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\silent.cpp">
       <ObjectFileName>$(IntDir)test_tables_caches_silent.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\caches\spends.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\validated_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\envelope.cpp" />

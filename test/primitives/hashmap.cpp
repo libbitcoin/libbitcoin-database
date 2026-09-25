@@ -1133,6 +1133,31 @@ BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_backup__two)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+BOOST_AUTO_TEST_CASE(hashmap__record_body_count__two_backup_prune__zero)
+{
+    data_chunk head(head_size, 0xff);
+    auto body = base16_chunk("1122334455667788990011223344556677889911223344556677889900112233445566778899");
+    test::chunk_storage head_store{ head };
+    test::chunk_storage body_store{ body };
+    record_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.backup(true));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__record_clear__populated_head__cleared)
+{
+    data_chunk head(head_size, 0x00);
+    auto body = base16_chunk("1122334455667788990011223344556677889911223344556677889900112233445566778899");
+    test::chunk_storage head_store{ head };
+    test::chunk_storage body_store{ body };
+    record_table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.clear());
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(body_store.buffer().size(), 2u * element_size);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(hashmap__record_body_count__empty_restore__truncates)
 {
     auto head = base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");

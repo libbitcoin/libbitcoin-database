@@ -292,4 +292,40 @@ BOOST_AUTO_TEST_CASE(hashmaps__close__populated__verifies)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+BOOST_AUTO_TEST_CASE(hashmaps__clear__populated__not_found)
+{
+    test::chunk_storage head_store{};
+    body_storages body_store{ body_paths };
+    table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr key1 key_first{ 0x41 };
+    BOOST_REQUIRE(instance.put(key_first, little_record{ 0x04030201_u32 }));
+    BOOST_REQUIRE(instance.exists(key_first));
+    BOOST_REQUIRE(instance.clear());
+    BOOST_REQUIRE(!instance.exists(key_first));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(hashmaps__backup__prune__zero_count)
+{
+    test::chunk_storage head_store{};
+    body_storages body_store{ body_paths };
+    table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr key1 key_first{ 0x41 };
+    BOOST_REQUIRE(instance.put(key_first, little_record{ 0x04030201_u32 }));
+
+    const auto& buffer = head_store.buffer();
+    BOOST_REQUIRE(instance.backup(true));
+    BOOST_REQUIRE_EQUAL(data_chunk(buffer.begin(), std::next(buffer.begin(), link5::size)), base16_chunk("0000000000"));
+    BOOST_REQUIRE(instance.backup());
+    BOOST_REQUIRE_EQUAL(data_chunk(buffer.begin(), std::next(buffer.begin(), link5::size)), base16_chunk("0100000000"));
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

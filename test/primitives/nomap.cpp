@@ -538,6 +538,19 @@ BOOST_AUTO_TEST_CASE(nomap__record_body_count__two_backup__two)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+BOOST_AUTO_TEST_CASE(nomap__record_body_count__two_backup_prune__zero)
+{
+    auto head = base16_chunk("0200000000");
+    auto body = base16_chunk("1234567812345678");
+    test::chunk_storage head_store{ head };
+    test::chunk_storage body_store{ body };
+    record_table instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.backup(true));
+    BOOST_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000"));
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(nomap__record_body_count__empty_restore__truncates)
 {
     auto head = base16_chunk("0100000000");

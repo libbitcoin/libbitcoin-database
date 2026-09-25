@@ -95,6 +95,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.validated_tx.expected, 0u);
     BOOST_REQUIRE_EQUAL(configuration.validated_tx.size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.validated_tx.rate, 5u);
+    BOOST_REQUIRE_EQUAL(configuration.spends.size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.spends.rate, 5u);
 
     // Optionals.
     BOOST_REQUIRE_EQUAL(configuration.filter_bk.buckets, 128u);

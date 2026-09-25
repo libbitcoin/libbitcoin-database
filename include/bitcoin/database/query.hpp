@@ -146,6 +146,7 @@ public:
     size_t prevout_head_size() const NOEXCEPT;
     size_t validated_bk_head_size() const NOEXCEPT;
     size_t validated_tx_head_size() const NOEXCEPT;
+    size_t spends_head_size() const NOEXCEPT;
     size_t filter_bk_head_size() const NOEXCEPT;
     size_t filter_tx_head_size() const NOEXCEPT;
 
@@ -169,6 +170,7 @@ public:
     size_t prevout_body_size() const NOEXCEPT;
     size_t validated_bk_body_size() const NOEXCEPT;
     size_t validated_tx_body_size() const NOEXCEPT;
+    size_t spends_body_size() const NOEXCEPT;
     size_t filter_bk_body_size() const NOEXCEPT;
     size_t filter_tx_body_size() const NOEXCEPT;
 
@@ -192,6 +194,7 @@ public:
     size_t prevout_size() const NOEXCEPT;
     size_t validated_bk_size() const NOEXCEPT;
     size_t validated_tx_size() const NOEXCEPT;
+    size_t spends_size() const NOEXCEPT;
     size_t filter_bk_size() const NOEXCEPT;
     size_t filter_tx_size() const NOEXCEPT;
 
@@ -224,6 +227,7 @@ public:
     size_t silent_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
     size_t prevalid_records() const NOEXCEPT;
+    size_t spends_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
 
     /// Counters (archive slabs - txs/puts/filter_tx can be derived).

@@ -315,6 +315,7 @@ include_bitcoin_database_tables_caches_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/tables/caches/prevout.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/schnorr.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/silent.hpp \
+    ${srcdir}/../../include/bitcoin/database/tables/caches/spends.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/validated_bk.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/validated_tx.hpp
 
@@ -492,6 +493,7 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/tables/caches/prevout.cpp \
     ${srcdir}/../../test/tables/caches/schnorr.cpp \
     ${srcdir}/../../test/tables/caches/silent.cpp \
+    ${srcdir}/../../test/tables/caches/spends.cpp \
     ${srcdir}/../../test/tables/caches/validated_bk.cpp \
     ${srcdir}/../../test/tables/caches/validated_tx.cpp \
     ${srcdir}/../../test/tables/indexes/height.cpp \

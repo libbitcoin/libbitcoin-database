@@ -113,6 +113,7 @@ struct BCD_API settings
     bucket_table prevout{};
     bucket_table validated_bk{};
     hash_table validated_tx{};
+    simple_table spends{};
 
     /// Optionals.
     /// -----------------------------------------------------------------------

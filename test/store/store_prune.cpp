@@ -113,4 +113,42 @@ BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__validated_tx_cleared)
     BOOST_REQUIRE(!instance.close(test::events));
 }
 
+BOOST_AUTO_TEST_CASE(store__prune__spends__cleared)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+
+    const table::spends::put_refs::parents parents{ 1, 2, 3 };
+    BOOST_REQUIRE(instance.spends.put(table::spends::put_refs{ {}, parents }));
+    BOOST_REQUIRE_EQUAL(query_.spends_records(), 3u);
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE_EQUAL(query_.spends_records(), zero);
+    BOOST_REQUIRE_EQUAL(query_.spends_body_size(), zero);
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__spends_cleared)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+
+    const table::spends::put_refs::parents parents{ 1, 2, 3 };
+    BOOST_REQUIRE(instance.spends.put(table::spends::put_refs{ {}, parents }));
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE(!instance.close(test::events));
+
+    BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
+    BOOST_REQUIRE(!instance.restore(test::events));
+    BOOST_REQUIRE_EQUAL(query_.spends_records(), zero);
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

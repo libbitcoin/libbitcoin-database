@@ -209,6 +209,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\prevout.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\schnorr.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\silent.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\spends.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_bk.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\validated_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\context.hpp" />

@@ -75,6 +75,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, validated_bk_body_, table_t::validated_bk_body);
     open(ec, validated_tx_head_, table_t::validated_tx_head);
     open(ec, validated_tx_body_, table_t::validated_tx_body);
+    open(ec, spends_head_, table_t::spends_head);
+    open(ec, spends_body_, table_t::spends_body);
 
     open(ec, filter_bk_head_, table_t::filter_bk_head);
     open(ec, filter_bk_body_, table_t::filter_bk_body);
@@ -127,6 +129,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, validated_bk_body_, table_t::validated_bk_body);
     load(ec, validated_tx_head_, table_t::validated_tx_head);
     load(ec, validated_tx_body_, table_t::validated_tx_body);
+    load(ec, spends_head_, table_t::spends_head);
+    load(ec, spends_body_, table_t::spends_body);
 
     load(ec, filter_bk_head_, table_t::filter_bk_head);
     load(ec, filter_bk_body_, table_t::filter_bk_body);

@@ -22,33 +22,19 @@
 BOOST_AUTO_TEST_SUITE(validated_tx_tests)
 
 using namespace system;
+using word = table::validated_tx_word;
+using body_storages = test::chunk_storages<schema::validated_tx::minrow,
+    schema::validated_tx_id0::size, schema::validated_tx_id0::size,
+    schema::validated_tx_id0::size, schema::validated_tx_id0::size>;
+static const body_storages::paths body_paths
+{
+    "state", "id0", "id1", "id2", "id3"
+};
+
+constexpr auto buckets = 8u;
 const table::validated_tx::key key1{ 0x01, 0x02, 0x03, 0x04 };
 const table::validated_tx::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
-const table::validated_tx::slab in1
-{
-    {},
-    {
-        0x11223344, // flags
-        0x55667788, // height
-        0x99aabbcc  // mtp
-    },
-    0x1122334455667788, // fee
-    0x12345678,         // sigops
-    { 0x01020304 }      // prevouts
-};
-const table::validated_tx::slab in2
-{
-    {},
-    {
-        0xaabbccdd, // flags
-        0x44332211, // height
-        0xabcdef99  // mtp
-    },
-    0x0000000000000042, // fee
-    0x00000055,         // sigops
-    { 0x0a0b0c0d, 0x8a0b0c0d } // prevouts
-};
-const table::validated_tx::slab out1
+const table::validated_tx::record in1
 {
     {},
     {
@@ -57,10 +43,10 @@ const table::validated_tx::slab out1
         0x99aabbcc  // mtp
     },
     0x1122334455667788, // fee
-    0x12345678,         // sigops
-    { 0x01020304 }      // prevouts
+    0x00345678,         // sigops
+    0x01020304          // spends_fk
 };
-const table::validated_tx::slab out2
+const table::validated_tx::record in2
 {
     {},
     {
@@ -70,93 +56,85 @@ const table::validated_tx::slab out2
     },
     0x0000000000000042, // fee
     0x00000055,         // sigops
-    { 0x0a0b0c0d, 0x8a0b0c0d } // prevouts
+    0x0a0b0c0d          // spends_fk
 };
-const auto expected_head = base16_chunk
-(
-    "0000000000"
-    "ffffffffff"
-    "2600000000"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-);
-const auto closed_head = base16_chunk
-(
-    "4400000000"
-    "ffffffffff"
-    "2600000000"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-    "ffffffffff"
-);
-const auto expected_body = base16_chunk
-(
-    "ffffffffff"         // next->end
-    "01020304"           // key1
-    "44332211"           // flags1
-    "887766"             // height1
-    "ccbbaa99"           // mtp1
-    "ff8877665544332211" // fee1
-    "fe78563412"         // sigops1
-    "04030201"           // prevout1
 
-    "0000000000"         // next->
-    "a1a2a3a4"           // key2
-    "ddccbbaa"           // flags2
-    "112233"             // height2
-    "99efcdab"           // mtp2
-    "42"                 // fee2
-    "55"                 // sigops2
-    "0d0c0b0a"           // prevout2a
-    "0d0c0b8a"           // prevout2b
-);
-
-BOOST_AUTO_TEST_CASE(validated_tx__put__two__expected)
+BOOST_AUTO_TEST_CASE(validated_tx__put__two__found)
 {
     test::chunk_storage head_store{};
-    test::chunk_storage body_store{};
-    table::validated_tx instance{ head_store, body_store, 8 };
+    body_storages body_store{ body_paths };
+    table::validated_tx instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     table::validated_tx::link link1{};
-    BOOST_REQUIRE(instance.put_link(link1, key1, in1));
-    BOOST_REQUIRE_EQUAL(link1, 0x00u);
-
     table::validated_tx::link link2{};
+    BOOST_REQUIRE(instance.put_link(link1, key1, in1));
     BOOST_REQUIRE(instance.put_link(link2, key2, in2));
-    BOOST_REQUIRE_EQUAL(link2, 0x26u);
+    BOOST_REQUIRE_EQUAL(link1, 0u);
+    BOOST_REQUIRE_EQUAL(link2, 1u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.first(key1), link1);
+    BOOST_REQUIRE_EQUAL(instance.first(key2), link2);
 
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
-    BOOST_REQUIRE(instance.close());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), closed_head);
+    table::validated_tx::record out{};
+    BOOST_REQUIRE(instance.get(link1, out));
+    BOOST_REQUIRE(out == in1);
+    BOOST_REQUIRE(instance.get(link2, out));
+    BOOST_REQUIRE(out == in2);
 }
 
-BOOST_AUTO_TEST_CASE(validated_tx__get__two__expected)
+BOOST_AUTO_TEST_CASE(validated_tx__put__spine__expected_row)
 {
-    auto head = expected_head;
-    auto body = expected_body;
-    test::chunk_storage head_store{ head };
-    test::chunk_storage body_store{ body };
-    table::validated_tx instance{ head_store, body_store, 8 };
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
+    test::chunk_storage head_store{};
+    body_storages body_store{ body_paths };
+    table::validated_tx instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.put(key1, in1));
 
-    table::validated_tx::slab out{};
-    out.prevouts.resize(one);
-    BOOST_REQUIRE(instance.get(0, out));
-    BOOST_REQUIRE(out == out1);
+    const auto expected_row = base16_chunk
+    (
+        "ffffffff"         // next->end
+        "01020304"         // key1
+        "44332211"         // flags
+        "887766"           // height
+        "ccbbaa99"         // mtp
+        "8877665544332211" // fee
+        "785634"           // sigops
+        "04030201"         // spends_fk
+    );
+    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(0), expected_row);
+}
 
-    out.prevouts.resize(two);
-    BOOST_REQUIRE(instance.get(0x26, out));
-    BOOST_REQUIRE(out == out2);
+BOOST_AUTO_TEST_CASE(validated_tx__put__columns_then_commit__expected)
+{
+    test::chunk_storage head_store{};
+    body_storages body_store{ body_paths };
+    table::validated_tx instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    const auto row = instance.allocate(1);
+    BOOST_REQUIRE_EQUAL(row, 0u);
+
+    auto guard = instance.get_memory();
+    BOOST_REQUIRE(guard);
+    BOOST_REQUIRE(instance.id0.put(row, word{ {}, 0x0706050403020100 }));
+    BOOST_REQUIRE(instance.id1.put(row, word{ {}, 0x0f0e0d0c0b0a0908 }));
+    BOOST_REQUIRE(instance.id2.put(row, word{ {}, 0x1716151413121110 }));
+    BOOST_REQUIRE(instance.id3.put(row, word{ {}, 0x1f1e1d1c1b1a1918 }));
+    guard.reset();
+
+    BOOST_REQUIRE(instance.first(key1).is_terminal());
+    BOOST_REQUIRE(instance.put(row, key1, in1));
+    BOOST_REQUIRE_EQUAL(instance.first(key1), row);
+
+    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(1), base16_chunk("0001020304050607"));
+    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(2), base16_chunk("08090a0b0c0d0e0f"));
+    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(3), base16_chunk("1011121314151617"));
+    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(4), base16_chunk("18191a1b1c1d1e1f"));
+
+    word out{};
+    BOOST_REQUIRE(instance.id2.get(row, out));
+    BOOST_REQUIRE_EQUAL(out.word, 0x1716151413121110u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
