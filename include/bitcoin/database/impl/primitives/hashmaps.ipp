@@ -43,15 +43,21 @@ bool CLASS::create() NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::clear() NOEXCEPT
+{
+    return head_.clear();
+}
+
+TEMPLATE
 bool CLASS::close() NOEXCEPT
 {
     return head_.set_body_count(body_.count());
 }
 
 TEMPLATE
-bool CLASS::backup(bool) NOEXCEPT
+bool CLASS::backup(bool prune) NOEXCEPT
 {
-    return head_.set_body_count(body_.count());
+    return head_.set_body_count(prune ? Link{ 0 } : body_.count());
 }
 
 TEMPLATE
