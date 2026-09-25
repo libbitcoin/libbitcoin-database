@@ -60,6 +60,7 @@ constexpr size_t dup = 3;       // ->duplicate
 constexpr size_t put = 5;       // ->input/output slab.
 constexpr size_t ins_ = 4;      // ->point|ins record.
 constexpr size_t outs_ = 4;     // ->outs (puts) record.
+constexpr size_t spends_ = 4;   // ->spends record.
 constexpr size_t prevout_ = 5;  // ->prevout slab.
 constexpr size_t txs_ = 5;      // ->txs slab.
 constexpr size_t tx = 4;        // ->tx record.
@@ -420,6 +421,22 @@ struct validated_tx
     static_assert(minrow == 26u);
     static_assert(link::size == 5u);
     bool operator==(const validated_tx&) const NOEXCEPT = default;
+};
+
+// record nomap
+struct spends
+{
+    static constexpr size_t pk = schema::spends_;
+    using link = linkage<pk, to_bits(pk)>;
+    static constexpr size_t minsize =
+        schema::transaction::pk;// parent->tx|coinbase
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static constexpr auto suffix = "spends"_t;
+    static_assert(minsize == 4u);
+    static_assert(minrow == 4u);
+    static_assert(link::size == 4u);
+    bool operator==(const spends&) const NOEXCEPT = default;
 };
 
 /// Optional tables.

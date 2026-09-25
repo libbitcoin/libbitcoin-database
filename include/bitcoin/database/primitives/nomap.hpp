@@ -48,7 +48,7 @@ public:
 
     bool create() NOEXCEPT;
     bool close() NOEXCEPT;
-    bool backup(bool=false) NOEXCEPT;
+    bool backup(bool prune=false) NOEXCEPT;
     bool restore() NOEXCEPT;
     bool verify() const NOEXCEPT;
 

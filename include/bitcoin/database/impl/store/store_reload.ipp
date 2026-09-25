@@ -90,6 +90,8 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, validated_bk_body_, table_t::validated_bk_body);
     reload(ec, validated_tx_head_, table_t::validated_tx_head);
     reload(ec, validated_tx_body_, table_t::validated_tx_body);
+    reload(ec, spends_head_, table_t::spends_head);
+    reload(ec, spends_body_, table_t::spends_body);
 
     reload(ec, filter_bk_head_, table_t::filter_bk_head);
     reload(ec, filter_bk_body_, table_t::filter_bk_body);

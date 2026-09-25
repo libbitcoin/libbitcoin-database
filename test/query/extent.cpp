@@ -58,6 +58,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.prevout_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.validated_bk_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.validated_tx_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query.spends_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.filter_bk_body_size(), schema::filter_bk::minrow);
     BOOST_REQUIRE_EQUAL(query.filter_tx_body_size(), 5u);
 }
@@ -108,6 +109,7 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.silent_records(), zero);
     BOOST_REQUIRE_EQUAL(query.duplicate_records(), zero);
     BOOST_REQUIRE_EQUAL(query.prevalid_records(), zero);
+    BOOST_REQUIRE_EQUAL(query.spends_records(), zero);
     BOOST_REQUIRE_EQUAL(query.filter_bk_records(), one);
 }
 
@@ -180,7 +182,13 @@ BOOST_AUTO_TEST_CASE(query_extent__archive_head_size__genesis__sum_of_tables)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    const auto expected = query.header_head_size() + query.output_head_size() + query.input_head_size() + query.ins_head_size() + query.outs_head_size() + query.txs_head_size() + query.tx_head_size();
+    const auto expected = query.header_head_size()
+        + query.output_head_size()
+        + query.input_head_size()
+        + query.ins_head_size()
+        + query.outs_head_size()
+        + query.txs_head_size()
+        + query.tx_head_size();
     BOOST_REQUIRE_EQUAL(query.archive_head_size(), expected);
 }
 
@@ -192,7 +200,13 @@ BOOST_AUTO_TEST_CASE(query_extent__archive_body_size__genesis__sum_of_tables)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    const auto expected = query.header_body_size() + query.output_body_size() + query.input_body_size() + query.ins_body_size() + query.outs_body_size() + query.txs_body_size() + query.tx_body_size();
+    const auto expected = query.header_body_size()
+        + query.output_body_size()
+        + query.input_body_size()
+        + query.ins_body_size()
+        + query.outs_body_size()
+        + query.txs_body_size()
+        + query.tx_body_size();
     BOOST_REQUIRE_EQUAL(query.archive_body_size(), expected);
 }
 
@@ -215,7 +229,20 @@ BOOST_AUTO_TEST_CASE(query_extent__store_head_size__genesis__archive_plus_indexe
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    const auto indexes = query.candidate_head_size() + query.confirmed_head_size() + query.strong_tx_head_size() + query.ecdsa_head_size() + query.schnorr_head_size() + query.silent_head_size() + query.duplicate_head_size() + query.prevalid_head_size() + query.prevout_head_size() + query.validated_bk_head_size() + query.validated_tx_head_size() + query.filter_bk_head_size() + query.filter_tx_head_size();
+    const auto indexes = query.candidate_head_size()
+        + query.confirmed_head_size()
+        + query.strong_tx_head_size()
+        + query.ecdsa_head_size()
+        + query.schnorr_head_size()
+        + query.silent_head_size()
+        + query.duplicate_head_size()
+        + query.prevalid_head_size()
+        + query.prevout_head_size()
+        + query.validated_bk_head_size()
+        + query.validated_tx_head_size()
+        + query.spends_head_size()
+        + query.filter_bk_head_size()
+        + query.filter_tx_head_size();
     BOOST_REQUIRE_EQUAL(query.store_head_size(), query.archive_head_size() + indexes);
 }
 
@@ -227,7 +254,20 @@ BOOST_AUTO_TEST_CASE(query_extent__store_body_size__genesis__archive_plus_indexe
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    const auto indexes = query.candidate_body_size() + query.confirmed_body_size() + query.strong_tx_body_size() + query.ecdsa_body_size() + query.schnorr_body_size() + query.silent_body_size() + query.duplicate_body_size() + query.prevalid_body_size() + query.prevout_body_size() + query.validated_bk_body_size() + query.validated_tx_body_size() + query.filter_bk_body_size() + query.filter_tx_body_size();
+    const auto indexes = query.candidate_body_size()
+        + query.confirmed_body_size()
+        + query.strong_tx_body_size()
+        + query.ecdsa_body_size()
+        + query.schnorr_body_size()
+        + query.silent_body_size()
+        + query.duplicate_body_size()
+        + query.prevalid_body_size()
+        + query.prevout_body_size()
+        + query.validated_bk_body_size()
+        + query.validated_tx_body_size()
+        + query.spends_body_size()
+        + query.filter_bk_body_size()
+        + query.filter_tx_body_size();
     BOOST_REQUIRE_EQUAL(query.store_body_size(), query.archive_body_size() + indexes);
 }
 

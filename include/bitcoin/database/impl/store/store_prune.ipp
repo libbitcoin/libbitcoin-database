@@ -68,8 +68,10 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
                 // Reclaim logical extent.
                 handler(event_t::prune_table, table_t::prevout_body);
                 handler(event_t::prune_table, table_t::validated_tx_body);
+                handler(event_t::prune_table, table_t::spends_body);
                 if (!prevout_body_.truncate(0) ||
-                    !validated_tx_body_.truncate(0))
+                    !validated_tx_body_.truncate(0) ||
+                    !spends_body_.truncate(0))
                 {
                     ec = error::prune_table;
                 }
@@ -83,6 +85,10 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
                     handler(event_t::unload_file, table_t::validated_tx_body);
                     if (!ec) ec = validated_tx_body_.shrink();
                     handler(event_t::load_file, table_t::validated_tx_body);
+
+                    handler(event_t::unload_file, table_t::spends_body);
+                    if (!ec) ec = spends_body_.shrink();
+                    handler(event_t::load_file, table_t::spends_body);
 
                     handler(event_t::unload_file, table_t::ecdsa_body);
                     if (!ec) ec = ecdsa_body_.shrink();

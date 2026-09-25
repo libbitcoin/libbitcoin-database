@@ -98,6 +98,7 @@ size_t CLASS::store_body_size() const NOEXCEPT
         + prevout_body_size()
         + validated_bk_body_size()
         + validated_tx_body_size()
+        + spends_body_size()
         + filter_bk_body_size()
         + filter_tx_body_size();
 }
@@ -129,6 +130,7 @@ size_t CLASS::store_head_size() const NOEXCEPT
         + prevout_head_size()
         + validated_bk_head_size()
         + validated_tx_head_size()
+        + spends_head_size()
         + filter_bk_head_size()
         + filter_tx_head_size();
 }
@@ -155,6 +157,7 @@ DEFINE_SIZES(prevalid)
 DEFINE_SIZES(prevout)
 DEFINE_SIZES(validated_bk)
 DEFINE_SIZES(validated_tx)
+DEFINE_SIZES(spends)
 DEFINE_SIZES(filter_bk)
 DEFINE_SIZES(filter_tx)
 
@@ -191,6 +194,7 @@ DEFINE_RECORDS(schnorr)
 DEFINE_RECORDS(silent)
 DEFINE_RECORDS(duplicate)
 DEFINE_RECORDS(prevalid)
+DEFINE_RECORDS(spends)
 DEFINE_RECORDS(filter_bk)
 
 // Counters (archive slabs).

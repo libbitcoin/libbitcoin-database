@@ -91,6 +91,8 @@ CLASS::store(const settings& config) NOEXCEPT
 
     validated_tx_head_(head(config.path / schema::dir::heads, schema::caches::validated_tx), head_settings(config.validated_tx), random),
     validated_tx_body_(body(config.path, schema::caches::validated_tx), config.validated_tx, sequential, staged),
+    spends_head_(head(config.path / schema::dir::heads, schema::caches::spends), head_settings(config.spends), sequential),
+    spends_body_(body(config.path, schema::caches::spends), config.spends, sequential, staged),
 
     // Optionals.
     // ------------------------------------------------------------------------
@@ -131,6 +133,7 @@ CLASS::store(const settings& config) NOEXCEPT
     prevout(prevout_head_, prevout_body_, config.prevout.buckets),
     validated_bk(validated_bk_head_, validated_bk_body_, config.validated_bk.buckets),
     validated_tx(validated_tx_head_, validated_tx_body_, config.validated_tx.buckets, config.validated_tx.expected),
+    spends(spends_head_, spends_body_),
 
     filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk.buckets),
     filter_tx(filter_tx_head_, filter_tx_body_, config.filter_tx.buckets)
@@ -256,6 +259,7 @@ void CLASS::set_current(bool current) NOEXCEPT
     prevout_head_.current(current);
     validated_bk_head_.current(current);
     validated_tx_head_.current(current);
+    spends_head_.current(current);
     filter_bk_head_.current(current);
     filter_tx_head_.current(current);
 }

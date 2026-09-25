@@ -257,6 +257,16 @@ public:
         return validated_tx_body_.buffer();
     }
 
+    system::data_chunk& spends_head() NOEXCEPT
+    {
+        return spends_head_.buffer();
+    }
+
+    system::data_chunk& spends_body() NOEXCEPT
+    {
+        return spends_body_.buffer();
+    }
+
     // Optionals.
 
     system::data_chunk& filter_bk_head() NOEXCEPT

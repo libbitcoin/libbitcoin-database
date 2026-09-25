@@ -116,6 +116,8 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, validated_bk_body_, table_t::validated_bk_body);
     create(ec, validated_tx_head_, table_t::validated_tx_head);
     create(ec, validated_tx_body_, table_t::validated_tx_body);
+    create(ec, spends_head_, table_t::spends_head);
+    create(ec, spends_body_, table_t::spends_body);
 
     create(ec, filter_bk_head_, table_t::filter_bk_head);
     create(ec, filter_bk_body_, table_t::filter_bk_body);
@@ -157,6 +159,7 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, prevout, table_t::prevout_table);
     populate(ec, validated_bk, table_t::validated_bk_table);
     populate(ec, validated_tx, table_t::validated_tx_table);
+    populate(ec, spends, table_t::spends_table);
 
     populate(ec, filter_bk, table_t::filter_bk_table);
     populate(ec, filter_tx, table_t::filter_tx_table);
