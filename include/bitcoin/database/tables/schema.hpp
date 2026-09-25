@@ -32,6 +32,7 @@ struct table \
     static constexpr size_t minrow = minsize; \
     static constexpr size_t size = minsize; \
     static constexpr auto suffix = schema::caches::table; \
+    bool operator==(const table&) const NOEXCEPT = default; \
 }
 
 namespace libbitcoin {
