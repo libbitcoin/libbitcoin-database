@@ -60,7 +60,6 @@ constexpr size_t dup = 3;       // ->duplicate
 constexpr size_t put = 5;       // ->input/output slab.
 constexpr size_t ins_ = 4;      // ->point|ins record.
 constexpr size_t outs_ = 4;     // ->outs (puts) record.
-constexpr size_t spend_ = 4;    // ->spend record.
 constexpr size_t prevout_ = 5;  // ->prevout slab.
 constexpr size_t txs_ = 5;      // ->txs slab.
 constexpr size_t tx = 4;        // ->tx record.
