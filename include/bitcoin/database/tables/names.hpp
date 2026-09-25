@@ -42,7 +42,6 @@ namespace archive
     constexpr auto output = "archive_output";
     constexpr auto ins = "archive_ins";
     constexpr auto outs = "archive_outs";
-    constexpr auto spend = "archive_spend";
     constexpr auto tx = "archive_tx";
     constexpr auto txs = "archive_txs";
 }
