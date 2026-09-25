@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
     BOOST_REQUIRE_EQUAL(instance.prevout_head_file(), "bitcoin/heads/cache_prevout.head");
     BOOST_REQUIRE_EQUAL(instance.prevout_body_file(), "bitcoin/cache_prevout.data");
     BOOST_REQUIRE_EQUAL(instance.validated_tx_head_file(), "bitcoin/heads/cache_validated_tx.head");
-    BOOST_REQUIRE_EQUAL(instance.validated_tx_body_file(), "bitcoin/cache_validated_tx.data");
+    BOOST_REQUIRE_EQUAL(instance.validated_tx_body_file(), "bitcoin/cache_validated_tx_state.data");
 
     /// Option.
     BOOST_REQUIRE_EQUAL(instance.filter_bk_head_file(), "bitcoin/heads/option_filter_bk.head");

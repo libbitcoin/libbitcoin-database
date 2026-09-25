@@ -81,6 +81,10 @@ namespace caches
     constexpr auto duplicate = "cache_duplicate";
     constexpr auto validated_bk = "cache_validated_bk";
     constexpr auto validated_tx = "cache_validated_tx";
+    constexpr auto validated_tx_id0 = "id0"_t;
+    constexpr auto validated_tx_id1 = "id1"_t;
+    constexpr auto validated_tx_id2 = "id2"_t;
+    constexpr auto validated_tx_id3 = "id3"_t;
     constexpr auto spends = "cache_spends";
 }
 

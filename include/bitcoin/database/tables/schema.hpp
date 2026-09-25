@@ -65,7 +65,7 @@ constexpr size_t prevout_ = 5;  // ->prevout slab.
 constexpr size_t txs_ = 5;      // ->txs slab.
 constexpr size_t tx = 4;        // ->tx record.
 constexpr size_t block = 3;     // ->header record.
-constexpr size_t tx_slab = 5;   // ->validated_tx record.
+constexpr size_t valid_tx_ = 4; // ->validated_tx record.
 constexpr size_t filter_ = 5;   // ->filter record.
 constexpr size_t doubles_ = 4;  // doubles bucket (no actual keys).
 
@@ -399,29 +399,37 @@ struct validated_bk
     bool operator==(const validated_bk&) const NOEXCEPT = default;
 };
 
-// slab modest (sk:4) hashmap.
+// record hashmap (sk:4), with transaction identifier word columns.
 struct validated_tx
 {
     static constexpr size_t sk = schema::transaction::pk;
-    static constexpr size_t pk = schema::tx_slab;
+    static constexpr size_t pk = schema::valid_tx_;
     using link = linkage<pk, to_bits(pk)>;
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
-        schema::flags +
-        schema::header::pk +
-        sizeof(uint32_t) +
-        one +           // fee (variable)
-        one +           // sigops (variable)
-        schema::transaction::pk;// prevout (per input)
+        schema::flags +         // context.flags
+        schema::height_ +       // context.height
+        sizeof(uint32_t) +      // context.mtp
+        sizeof(uint64_t) +      // fee (could narrow to 3, skipping larger)
+        schema::sigops +        // sigops (could narrow to 2, skipping larger)
+        schema::spends_;        // spends->spends (first of tx inputs)
     static constexpr size_t minrow = pk + sk + minsize;
-    static constexpr size_t size = max_size_t;
+    static constexpr size_t size = minsize;
     static constexpr size_t cell = link::size;
-    static inline link count() NOEXCEPT;
-    static_assert(minsize == 17u);
-    static_assert(minrow == 26u);
-    static_assert(link::size == 5u);
+    static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 26u);
+    static_assert(minrow == 34u);
+    static_assert(link::size == 4u);
+    static_assert(cell == 4u);
     bool operator==(const validated_tx&) const NOEXCEPT = default;
 };
+
+// validated_tx columns (records aligned with the validated_tx spine).
+TABLE_COLUMN(validated_tx_id0, sizeof(uint64_t));
+TABLE_COLUMN(validated_tx_id1, sizeof(uint64_t));
+TABLE_COLUMN(validated_tx_id2, sizeof(uint64_t));
+TABLE_COLUMN(validated_tx_id3, sizeof(uint64_t));
+static_assert(is_same_type<validated_tx_id0::link, validated_tx::link>);
 
 // record nomap
 struct spends

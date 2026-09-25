@@ -166,17 +166,21 @@ code CLASS::get_tx_state(tx_state& state, const tx_link& link,
     if (fk.is_terminal())
         return error::unvalidated;
 
-    table::validated_tx::slab valid{};
-    valid.prevouts.resize(state.prevouts.size());
+    table::validated_tx::record valid{};
     if (!store_.validated_tx.get(fk, valid))
         return error::integrity;
 
     if (!is_sufficient(ctx, valid.ctx))
         return error::unvalidated;
 
+    table::spends::get_refs::parents parents(state.prevouts.size());
+    table::spends::get_refs run{ {}, parents };
+    if (!store_.spends.get(valid.spends_fk, run))
+        return error::integrity;
+
     state.fee = valid.fee;
     state.sigops = valid.sigops;
-    std::ranges::transform(valid.prevouts, state.prevouts.begin(),
+    std::ranges::transform(parents, state.prevouts.begin(),
         [](auto merged) NOEXCEPT
         {
             return tx_state::prevout
@@ -273,18 +277,42 @@ bool CLASS::set_tx_state(const tx_link& link, const transaction& tx,
     const auto bip16 = ctx.is_enabled(chain::flags::bip16_rule);
     const auto bip141 = ctx.is_enabled(chain::flags::bip141_rule);
     const auto sigops = tx.signature_operations(bip16, bip141);
+    const auto words = from_little_endians(array_cast<uint64_t>(
+        tx.get_hash(true)));
 
     // ========================================================================
     const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.validated_tx.put(link, table::validated_tx::slab
+    table::spends::link first{};
+    if (!store_.spends.put_link(first, table::spends::put_refs{ {}, prevouts }))
+        return false;
+
+    auto& vtx = store_.validated_tx;
+    const auto row = vtx.allocate(1);
+    if (row.is_terminal())
+        return false;
+
+    // Column puts are unguarded, the accessor guards their rows against remap.
+    using word = table::validated_tx_word;
+    auto guard = vtx.get_memory();
+    if (!guard ||
+        !vtx.id0.put(row, word{ {}, std::get<0>(words) }) ||
+        !vtx.id1.put(row, word{ {}, std::get<1>(words) }) ||
+        !vtx.id2.put(row, word{ {}, std::get<2>(words) }) ||
+        !vtx.id3.put(row, word{ {}, std::get<3>(words) }))
+        return false;
+
+    guard.reset();
+
+    // Commit is deferred until the columns are set.
+    return vtx.put(row, link, table::validated_tx::record
     {
         {},
         ctx,
         tx.fee(),
         possible_narrow_cast<sigs::integer>(sigops),
-        std::move(prevouts)
+        first
     });
     // ========================================================================
 }

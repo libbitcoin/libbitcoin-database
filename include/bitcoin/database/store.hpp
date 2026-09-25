@@ -226,7 +226,7 @@ protected:
 
     // record multimap
     Storage<one> validated_tx_head_;
-    Storage<one> validated_tx_body_;
+    table::validated_tx_storage<Storage> validated_tx_body_;
     Storage<one> spends_head_;
     Storage<one> spends_body_;
 
