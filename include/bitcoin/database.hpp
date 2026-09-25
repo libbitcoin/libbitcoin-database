@@ -30,6 +30,7 @@
 #include <bitcoin/database/locks/flush_lock.hpp>
 #include <bitcoin/database/locks/interprocess_lock.hpp>
 #include <bitcoin/database/locks/locks.hpp>
+#include <bitcoin/database/locks/shared_mutex.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/finalizer.hpp>
 #include <bitcoin/database/memory/memory.hpp>

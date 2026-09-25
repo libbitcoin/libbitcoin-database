@@ -22,6 +22,7 @@
 #include <mutex>
 #include <span>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/settings.hpp>
 #include <bitcoin/database/types/types.hpp>
 #include <bitcoin/database/unspent/unspent.hpp>
@@ -1026,8 +1027,8 @@ private:
     size_t get_fork_() const NOEXCEPT;
 
     // These are thread safe.
-    mutable std::shared_mutex candidate_reorganization_mutex_{};
-    mutable std::shared_mutex confirmed_reorganization_mutex_{};
+    mutable shared_mutex candidate_reorganization_mutex_{};
+    mutable shared_mutex confirmed_reorganization_mutex_{};
     mutable std::atomic<size_t> span_{};
     Store& store_;
 };

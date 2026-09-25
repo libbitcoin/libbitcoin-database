@@ -21,6 +21,7 @@
 
 #include <shared_mutex>
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/locks/locks.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -44,7 +45,7 @@ public:
     }
 
     /// Mutex guards against remap while object in scope.
-    inline accessor(std::shared_mutex& mutex) NOEXCEPT
+    inline accessor(shared_mutex& mutex) NOEXCEPT
       : shared_lock_{ mutex }
     {
     }
@@ -122,7 +123,7 @@ private:
     uint8_t* end_{};
 
     // This is thread safe.
-    std::shared_lock<std::shared_mutex> shared_lock_;
+    std::shared_lock<shared_mutex> shared_lock_;
 };
 
 using memory = accessor;

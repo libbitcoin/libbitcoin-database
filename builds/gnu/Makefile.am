@@ -56,6 +56,7 @@ src_libbitcoin_database_la_SOURCES = \
     ${srcdir}/../../src/locks/file_lock.cpp \
     ${srcdir}/../../src/locks/flush_lock.cpp \
     ${srcdir}/../../src/locks/interprocess_lock.cpp \
+    ${srcdir}/../../src/locks/shared_mutex.cpp \
     ${srcdir}/../../src/memory/mman.cpp \
     ${srcdir}/../../src/memory/mstage.cpp \
     ${srcdir}/../../src/memory/utilities.cpp \
@@ -235,7 +236,8 @@ include_bitcoin_database_locks_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/locks/file_lock.hpp \
     ${srcdir}/../../include/bitcoin/database/locks/flush_lock.hpp \
     ${srcdir}/../../include/bitcoin/database/locks/interprocess_lock.hpp \
-    ${srcdir}/../../include/bitcoin/database/locks/locks.hpp
+    ${srcdir}/../../include/bitcoin/database/locks/locks.hpp \
+    ${srcdir}/../../include/bitcoin/database/locks/shared_mutex.hpp
 
 include_bitcoin_database_memorydir = \
     ${includedir}/bitcoin/database/memory

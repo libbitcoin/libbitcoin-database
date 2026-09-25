@@ -126,6 +126,9 @@
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp">
       <Filter>src\locks</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\locks\shared_mutex.cpp">
+      <Filter>src\locks</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\memory\mman.cpp">
       <Filter>src\memory</Filter>
     </ClCompile>
@@ -186,6 +189,9 @@
       <Filter>include\bitcoin\database\locks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\locks.hpp">
+      <Filter>include\bitcoin\database\locks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\shared_mutex.hpp">
       <Filter>include\bitcoin\database\locks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp">
