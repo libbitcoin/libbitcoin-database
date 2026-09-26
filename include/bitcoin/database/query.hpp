@@ -976,8 +976,8 @@ protected:
     /// The archived link of a pooled duplicate of the tx, or terminal.
     tx_link to_pooled(const transaction& tx) const NOEXCEPT;
     tx_link to_pooled(const transaction_view& tx) const NOEXCEPT;
-    bool is_witness_match(const tx_link& link, size_t inputs, size_t light,
-        size_t heavy, const system::data_slice& witnesses) const NOEXCEPT;
+    bool is_size_match(table::transaction::record& out, const tx_link& link,
+        size_t inputs, size_t light, size_t heavy) const NOEXCEPT;
 
     /// Block write batching (all rows preallocated, all accessors held).
     /// -----------------------------------------------------------------------

@@ -30,57 +30,49 @@ namespace database {
 // duplicated navigations to store_.ins and store_.input by the witness reader.
 // This normalized approach is also the most efficient.
 
+// The stored tx is presumed to have the txid of the tx, so only the witness
+// may differ. Stored witnesses are wire encoded, so are compared in place.
 TEMPLATE
 bool CLASS::is_witness_match(const tx_link& link,
     const transaction& tx) const NOEXCEPT
 {
-    using namespace system;
-    data_chunk witnesses{};
-    if (tx.is_segregated())
-    {
-        const auto& ins = *tx.inputs_ptr();
-        const auto sum = [](size_t total, const auto& in) NOEXCEPT
-        {
-            return ceilinged_add(total, in->witness().serialized_size(true));
-        };
+    table::transaction::record record{};
+    if (!is_size_match(record, link, tx.inputs(), tx.serialized_size(false),
+        tx.serialized_size(true)))
+        return false;
 
-        witnesses.resize(std::accumulate(ins.begin(), ins.end(), zero, sum));
-        write::bytes::copy sink{ witnesses };
-        for (const auto& in: ins)
-            in->witness().to_data(sink, true);
+    if (!tx.is_segregated())
+        return true;
+
+    // Point links are contiguous (computed).
+    auto fk = record.point_fk;
+    table::input::match_stack match{};
+    const auto ptr = store_.input.get_memory();
+    for (const auto& in: *tx.inputs_ptr())
+    {
+        table::ins_sequence::get_input ins{};
+        match.expected = &in->witness().stack();
+        if (!store_.ins.sequence.get(fk++, ins) ||
+            !store_.input.raw(ptr, ins.input_fk, match) || !match.match)
+            return false;
     }
 
-    return is_witness_match(link, tx.inputs(), tx.serialized_size(false),
-        tx.serialized_size(true), witnesses);
+    return true;
 }
 
 TEMPLATE
 bool CLASS::is_witness_match(const tx_link& link,
     const transaction_view& tx) const NOEXCEPT
 {
-    const auto witnesses = tx.is_segregated() ? tx.witnesses() :
-        system::data_slice{};
-    return is_witness_match(link, tx.inputs(), tx.serialized_size(false),
-        tx.serialized_size(true), witnesses);
-}
-
-// protected
-// The stored tx is presumed to have the txid of the tx, so only the witness
-// may differ. Stored witnesses are wire encoded, so are compared in place.
-TEMPLATE
-bool CLASS::is_witness_match(const tx_link& link, size_t inputs, size_t light,
-    size_t heavy, const system::data_slice& witnesses) const NOEXCEPT
-{
     table::transaction::record record{};
-    if (!store_.tx.get(link, record) ||
-        (record.ins_count != inputs) ||
-        (record.light != light) ||
-        (record.heavy != heavy))
+    if (!is_size_match(record, link, tx.inputs(), tx.serialized_size(false),
+        tx.serialized_size(true)))
         return false;
 
-    if (witnesses.empty())
+    if (!tx.is_segregated())
         return true;
 
+    const auto witnesses = tx.witnesses();
     table::input::match_witness match{ {}, witnesses.data(),
         witnesses.size() };
 
@@ -97,6 +89,18 @@ bool CLASS::is_witness_match(const tx_link& link, size_t inputs, size_t light,
     }
 
     return is_zero(match.remaining);
+}
+
+// protected
+TEMPLATE
+bool CLASS::is_size_match(table::transaction::record& out,
+    const tx_link& link, size_t inputs, size_t light,
+    size_t heavy) const NOEXCEPT
+{
+    return store_.tx.get(link, out)
+        && (out.ins_count == inputs)
+        && (out.light == light)
+        && (out.heavy == heavy);
 }
 
 TEMPLATE

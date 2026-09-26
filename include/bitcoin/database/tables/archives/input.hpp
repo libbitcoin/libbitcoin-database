@@ -337,13 +337,51 @@ struct input
         const uint8_t* expected{};
         size_t remaining{};
         bool match{};
-
-    private:
-        static constexpr ptrdiff_t to_offset(uint64_t size) NOEXCEPT
-        {
-            return system::possible_narrow_and_sign_cast<ptrdiff_t>(size);
-        }
     };
+
+    /// Unstreamed, compares the witness in place to the expected stack.
+    struct match_stack
+      : public schema::input
+    {
+        inline bool from_data(memory::iterator start) NOEXCEPT
+        {
+            using namespace system;
+
+            // Skip the script.
+            const auto* position = start;
+            const auto script = unsafe_from_variable(position);
+            std::advance(position, to_offset(script));
+
+            // Compare the witness (count, then size prefixed elements).
+            const auto& stack = *expected;
+            match = (unsafe_from_variable(position) == stack.size());
+            if (match)
+            {
+                for (const auto& element: stack)
+                {
+                    const auto size = unsafe_from_variable(position);
+                    match = (size == element->size()) && std::equal(
+                        element->cbegin(), element->cend(), position);
+
+                    if (!match)
+                        break;
+
+                    std::advance(position, to_offset(size));
+                }
+            }
+
+            return true;
+        }
+
+        const system::chunk_cptrs* expected{};
+        bool match{};
+    };
+
+private:
+    static constexpr ptrdiff_t to_offset(uint64_t size) NOEXCEPT
+    {
+        return system::possible_narrow_and_sign_cast<ptrdiff_t>(size);
+    }
 };
 
 BC_POP_WARNING()
