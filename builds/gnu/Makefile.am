@@ -313,13 +313,13 @@ include_bitcoin_database_tables_caches_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/tables/caches/duplicate.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/ecdsa.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/envelope.hpp \
+    ${srcdir}/../../include/bitcoin/database/tables/caches/pool.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/prevalid.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/prevout.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/schnorr.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/silent.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/spends.hpp \
-    ${srcdir}/../../include/bitcoin/database/tables/caches/validated_bk.hpp \
-    ${srcdir}/../../include/bitcoin/database/tables/caches/validated_tx.hpp
+    ${srcdir}/../../include/bitcoin/database/tables/caches/state.hpp
 
 include_bitcoin_database_tables_indexesdir = \
     ${includedir}/bitcoin/database/tables/indexes
@@ -351,9 +351,9 @@ include_bitcoin_database_types_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/types/history.hpp \
     ${srcdir}/../../include/bitcoin/database/types/multisig_view.hpp \
     ${srcdir}/../../include/bitcoin/database/types/point_set.hpp \
+    ${srcdir}/../../include/bitcoin/database/types/pooled_tx.hpp \
     ${srcdir}/../../include/bitcoin/database/types/position.hpp \
     ${srcdir}/../../include/bitcoin/database/types/span.hpp \
-    ${srcdir}/../../include/bitcoin/database/types/tx_state.hpp \
     ${srcdir}/../../include/bitcoin/database/types/type.hpp \
     ${srcdir}/../../include/bitcoin/database/types/types.hpp \
     ${srcdir}/../../include/bitcoin/database/types/unspent_coin.hpp \
@@ -491,13 +491,13 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/tables/archives/txs.cpp \
     ${srcdir}/../../test/tables/caches/duplicate.cpp \
     ${srcdir}/../../test/tables/caches/ecdsa.cpp \
+    ${srcdir}/../../test/tables/caches/pool.cpp \
     ${srcdir}/../../test/tables/caches/prevalid.cpp \
     ${srcdir}/../../test/tables/caches/prevout.cpp \
     ${srcdir}/../../test/tables/caches/schnorr.cpp \
     ${srcdir}/../../test/tables/caches/silent.cpp \
     ${srcdir}/../../test/tables/caches/spends.cpp \
-    ${srcdir}/../../test/tables/caches/validated_bk.cpp \
-    ${srcdir}/../../test/tables/caches/validated_tx.cpp \
+    ${srcdir}/../../test/tables/caches/state.cpp \
     ${srcdir}/../../test/tables/indexes/height.cpp \
     ${srcdir}/../../test/tables/indexes/strong_tx.cpp \
     ${srcdir}/../../test/tables/optional/address.cpp \

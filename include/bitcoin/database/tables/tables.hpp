@@ -36,8 +36,8 @@
 #include <bitcoin/database/tables/caches/schnorr.hpp>
 #include <bitcoin/database/tables/caches/silent.hpp>
 #include <bitcoin/database/tables/caches/spends.hpp>
-#include <bitcoin/database/tables/caches/validated_bk.hpp>
-#include <bitcoin/database/tables/caches/validated_tx.hpp>
+#include <bitcoin/database/tables/caches/state.hpp>
+#include <bitcoin/database/tables/caches/pool.hpp>
 
 #include <bitcoin/database/tables/indexes/height.hpp>
 #include <bitcoin/database/tables/indexes/strong_tx.hpp>

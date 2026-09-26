@@ -66,7 +66,7 @@ constexpr size_t prevout_ = 5;  // ->prevout slab.
 constexpr size_t txs_ = 5;      // ->txs slab.
 constexpr size_t tx = 4;        // ->tx record.
 constexpr size_t block = 3;     // ->header record.
-constexpr size_t valid_tx_ = 4; // ->validated_tx record.
+constexpr size_t pool_ = 4; // ->pool record.
 constexpr size_t filter_ = 5;   // ->filter record.
 constexpr size_t doubles_ = 4;  // doubles bucket (no actual keys).
 
@@ -385,7 +385,7 @@ struct prevout
 };
 
 // record arraymap
-struct validated_bk
+struct state
 {
     static constexpr size_t align = false;
     static constexpr size_t pk = schema::block;
@@ -398,14 +398,14 @@ struct validated_bk
     static_assert(minsize == 1u);
     static_assert(minrow == 1u);
     static_assert(link::size == 3u);
-    bool operator==(const validated_bk&) const NOEXCEPT = default;
+    bool operator==(const state&) const NOEXCEPT = default;
 };
 
 // record hashmap (sk:4), with transaction identifier word columns.
-struct validated_tx
+struct pool
 {
     static constexpr size_t sk = schema::transaction::pk;
-    static constexpr size_t pk = schema::valid_tx_;
+    static constexpr size_t pk = schema::pool_;
     using link = linkage<pk, to_bits(pk)>;
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
@@ -423,15 +423,15 @@ struct validated_tx
     static_assert(minrow == 34u);
     static_assert(link::size == 4u);
     static_assert(cell == 4u);
-    bool operator==(const validated_tx&) const NOEXCEPT = default;
+    bool operator==(const pool&) const NOEXCEPT = default;
 };
 
-// validated_tx columns (records aligned with the validated_tx spine).
-TABLE_COLUMN(validated_tx_id0, sizeof(uint64_t));
-TABLE_COLUMN(validated_tx_id1, sizeof(uint64_t));
-TABLE_COLUMN(validated_tx_id2, sizeof(uint64_t));
-TABLE_COLUMN(validated_tx_id3, sizeof(uint64_t));
-static_assert(is_same_type<validated_tx_id0::link, validated_tx::link>);
+// pool columns (records aligned with the pool spine).
+TABLE_COLUMN(pool_id0, sizeof(uint64_t));
+TABLE_COLUMN(pool_id1, sizeof(uint64_t));
+TABLE_COLUMN(pool_id2, sizeof(uint64_t));
+TABLE_COLUMN(pool_id3, sizeof(uint64_t));
+static_assert(is_same_type<pool_id0::link, pool::link>);
 
 // record nomap
 struct spends

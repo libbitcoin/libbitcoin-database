@@ -111,8 +111,8 @@ struct BCD_API settings
     hash_table duplicate{};
     simple_table prevalid{};
     bucket_table prevout{};
-    bucket_table validated_bk{};
-    hash_table validated_tx{};
+    bucket_table state{};
+    hash_table pool{};
     simple_table spends{};
 
     /// Optionals.

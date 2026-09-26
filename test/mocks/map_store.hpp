@@ -271,24 +271,24 @@ public:
         return prevout_body_.file();
     }
 
-    inline const path& validated_bk_head_file() const NOEXCEPT
+    inline const path& state_head_file() const NOEXCEPT
     {
-        return validated_bk_head_.file();
+        return state_head_.file();
     }
 
-    inline const path& validated_bk_body_file() const NOEXCEPT
+    inline const path& state_body_file() const NOEXCEPT
     {
-        return validated_bk_body_.file();
+        return state_body_.file();
     }
 
-    inline const path& validated_tx_head_file() const NOEXCEPT
+    inline const path& pool_head_file() const NOEXCEPT
     {
-        return validated_tx_head_.file();
+        return pool_head_.file();
     }
 
-    inline const path& validated_tx_body_file() const NOEXCEPT
+    inline const path& pool_body_file() const NOEXCEPT
     {
-        return validated_tx_body_.file();
+        return pool_body_.file();
     }
 
     inline const path& spends_head_file() const NOEXCEPT

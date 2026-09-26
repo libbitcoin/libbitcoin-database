@@ -19,22 +19,22 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(validated_tx_tests)
+BOOST_AUTO_TEST_SUITE(pool_tests)
 
 using namespace system;
-using word = table::validated_tx_word;
-using body_storages = test::chunk_storages<schema::validated_tx::minrow,
-    schema::validated_tx_id0::size, schema::validated_tx_id0::size,
-    schema::validated_tx_id0::size, schema::validated_tx_id0::size>;
+using word = table::pool_word;
+using body_storages = test::chunk_storages<schema::pool::minrow,
+    schema::pool_id0::size, schema::pool_id0::size,
+    schema::pool_id0::size, schema::pool_id0::size>;
 static const body_storages::paths body_paths
 {
     "state", "id0", "id1", "id2", "id3"
 };
 
 constexpr auto buckets = 8u;
-const table::validated_tx::key key1{ 0x01, 0x02, 0x03, 0x04 };
-const table::validated_tx::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
-const table::validated_tx::record in1
+const table::pool::key key1{ 0x01, 0x02, 0x03, 0x04 };
+const table::pool::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
+const table::pool::record in1
 {
     {},
     {
@@ -46,7 +46,7 @@ const table::validated_tx::record in1
     0x00345678,         // sigops
     0x01020304          // spends_fk
 };
-const table::validated_tx::record in2
+const table::pool::record in2
 {
     {},
     {
@@ -59,15 +59,15 @@ const table::validated_tx::record in2
     0x0a0b0c0d          // spends_fk
 };
 
-BOOST_AUTO_TEST_CASE(validated_tx__put__two__found)
+BOOST_AUTO_TEST_CASE(pool__put__two__found)
 {
     test::chunk_storage head_store{};
     body_storages body_store{ body_paths };
-    table::validated_tx instance{ head_store, body_store, buckets };
+    table::pool instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
-    table::validated_tx::link link1{};
-    table::validated_tx::link link2{};
+    table::pool::link link1{};
+    table::pool::link link2{};
     BOOST_REQUIRE(instance.put_link(link1, key1, in1));
     BOOST_REQUIRE(instance.put_link(link2, key2, in2));
     BOOST_REQUIRE_EQUAL(link1, 0u);
@@ -76,18 +76,18 @@ BOOST_AUTO_TEST_CASE(validated_tx__put__two__found)
     BOOST_REQUIRE_EQUAL(instance.first(key1), link1);
     BOOST_REQUIRE_EQUAL(instance.first(key2), link2);
 
-    table::validated_tx::record out{};
+    table::pool::record out{};
     BOOST_REQUIRE(instance.get(link1, out));
     BOOST_REQUIRE(out == in1);
     BOOST_REQUIRE(instance.get(link2, out));
     BOOST_REQUIRE(out == in2);
 }
 
-BOOST_AUTO_TEST_CASE(validated_tx__put__spine__expected_row)
+BOOST_AUTO_TEST_CASE(pool__put__spine__expected_row)
 {
     test::chunk_storage head_store{};
     body_storages body_store{ body_paths };
-    table::validated_tx instance{ head_store, body_store, buckets };
+    table::pool instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.put(key1, in1));
 
@@ -105,11 +105,11 @@ BOOST_AUTO_TEST_CASE(validated_tx__put__spine__expected_row)
     BOOST_REQUIRE_EQUAL(body_store.buffers_.at(0), expected_row);
 }
 
-BOOST_AUTO_TEST_CASE(validated_tx__put__columns_then_commit__expected)
+BOOST_AUTO_TEST_CASE(pool__put__columns_then_commit__expected)
 {
     test::chunk_storage head_store{};
     body_storages body_store{ body_paths };
-    table::validated_tx instance{ head_store, body_store, buckets };
+    table::pool instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
     const auto row = instance.allocate(1);

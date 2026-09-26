@@ -26,7 +26,7 @@ using namespace system::chain;
 using context = database::context;
 constexpr auto bip113 = flags::bip113_rule;
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__no_row__unvalidated)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled__no_row__unvalidated)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -35,17 +35,17 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__no_row__unvalidated)
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    tx_state state{};
-    state.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 8, 9 }), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(state.fee, 0u);
+    pooled_tx pooled{};
+    pooled.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ bip113, 8, 9 }), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(pooled.fee, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__set_tx_state__disabled__no_row)
+BOOST_AUTO_TEST_CASE(query_properties_tx__set_pooled__disabled__no_row)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
-    settings.validated_tx.buckets = 0;
+    settings.pool.buckets = 0;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
@@ -53,15 +53,15 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__set_tx_state__disabled__no_row)
 
     const auto& tx = test::tx_spend_one_hash;
     tx.inputs_ptr()->front()->metadata.parent_tx = 42;
-    BOOST_REQUIRE(query.set_tx_state(1, tx, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(1, tx, context{ bip113, 8, 9 }));
 
-    tx_state state{};
-    state.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 8, 9 }), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query.validated_tx_body_size(), zero);
+    pooled_tx pooled{};
+    pooled.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ bip113, 8, 9 }), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query.pool_body_size(), zero);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__sufficient__success)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled__sufficient__success)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -75,20 +75,20 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__sufficient__success)
     in.prevout = system::to_shared<output>(0x30, script{});
     in.metadata.parent_tx = 42;
     in.metadata.coinbase = true;
-    BOOST_REQUIRE(query.set_tx_state(1, tx, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(1, tx, context{ bip113, 8, 9 }));
 
-    tx_state state{};
-    state.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 8, 9 }), error::success);
-    BOOST_REQUIRE_EQUAL(state.fee, 0x20u);
-    BOOST_REQUIRE_EQUAL(state.sigops, tx.signature_operations(false, false));
-    BOOST_REQUIRE_EQUAL(state.prevouts.front().parent, 42u);
-    BOOST_REQUIRE(state.prevouts.front().coinbase);
+    pooled_tx pooled{};
+    pooled.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ bip113, 8, 9 }), error::success);
+    BOOST_REQUIRE_EQUAL(pooled.fee, 0x20u);
+    BOOST_REQUIRE_EQUAL(pooled.sigops, tx.signature_operations(false, false));
+    BOOST_REQUIRE_EQUAL(pooled.prevouts.front().parent, 42u);
+    BOOST_REQUIRE(pooled.prevouts.front().coinbase);
 
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 9, 10 }), error::success);
+    BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ bip113, 9, 10 }), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__insufficient__unvalidated)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled__insufficient__unvalidated)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -101,17 +101,17 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__insufficient__unvalidate
     const auto& in = *tx.inputs_ptr()->front();
     in.metadata.parent_tx = 42;
     in.metadata.coinbase = false;
-    BOOST_REQUIRE(query.set_tx_state(1, tx, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(1, tx, context{ bip113, 8, 9 }));
 
-    tx_state state{};
-    state.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 7, 9 }), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 8, 8 }), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113 | flags::bip68_rule, 8, 9 }), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(state.fee, 0u);
+    pooled_tx pooled{};
+    pooled.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ bip113, 7, 9 }), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ bip113, 8, 8 }), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ bip113 | flags::bip68_rule, 8, 9 }), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(pooled.fee, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__without_bip113__unvalidated)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled__without_bip113__unvalidated)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -122,14 +122,14 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_state__without_bip113__unvalida
 
     const auto& tx = test::tx_spend_one_hash;
     tx.inputs_ptr()->front()->metadata.parent_tx = 42;
-    BOOST_REQUIRE(query.set_tx_state(1, tx, context{ 0, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(1, tx, context{ 0, 8, 9 }));
 
-    tx_state state{};
-    state.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ 0, 8, 9 }), error::unvalidated);
+    pooled_tx pooled{};
+    pooled.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ 0, 8, 9 }), error::unvalidated);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__set_tx_state__unlinked_parent__resolved)
+BOOST_AUTO_TEST_CASE(query_properties_tx__set_pooled__unlinked_parent__resolved)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -143,16 +143,16 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__set_tx_state__unlinked_parent__resolve
 
     const auto& tx = test::tx_spend_tx4;
     tx.inputs_ptr()->front()->metadata.parent_tx = max_uint32;
-    BOOST_REQUIRE(query.set_tx_state(2, tx, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(2, tx, context{ bip113, 8, 9 }));
 
-    tx_state state{};
-    state.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 2, context{ bip113, 8, 9 }), error::success);
-    BOOST_REQUIRE_EQUAL(state.prevouts.front().parent, parent);
-    BOOST_REQUIRE(!state.prevouts.front().coinbase);
+    pooled_tx pooled{};
+    pooled.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 2, context{ bip113, 8, 9 }), error::success);
+    BOOST_REQUIRE_EQUAL(pooled.prevouts.front().parent, parent);
+    BOOST_REQUIRE(!pooled.prevouts.front().coinbase);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__set_tx_state__missing_parent__false)
+BOOST_AUTO_TEST_CASE(query_properties_tx__set_pooled__missing_parent__false)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -163,11 +163,11 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__set_tx_state__missing_parent__false)
 
     const auto& tx = test::tx_spend_one_hash;
     tx.inputs_ptr()->front()->metadata.parent_tx = max_uint32;
-    BOOST_REQUIRE(!query.set_tx_state(1, tx, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(!query.set_pooled(1, tx, context{ bip113, 8, 9 }));
 
-    tx_state state{};
-    state.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query.get_tx_state(state, 1, context{ bip113, 8, 9 }), error::unvalidated);
+    pooled_tx pooled{};
+    pooled.prevouts.resize(one);
+    BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ bip113, 8, 9 }), error::unvalidated);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

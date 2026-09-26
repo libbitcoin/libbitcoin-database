@@ -221,12 +221,12 @@ protected:
     Storage<one> prevout_body_;
 
     // record hashmap
-    Storage<one> validated_bk_head_;
-    Storage<one> validated_bk_body_;
+    Storage<one> state_head_;
+    Storage<one> state_body_;
 
     // record multimap
-    Storage<one> validated_tx_head_;
-    table::validated_tx_storage<Storage> validated_tx_body_;
+    Storage<one> pool_head_;
+    table::pool_storage<Storage> pool_body_;
     Storage<one> spends_head_;
     Storage<one> spends_body_;
 
@@ -322,8 +322,8 @@ public:
     table::duplicate duplicate;
     table::prevalid prevalid;
     table::prevout prevout;
-    table::validated_bk validated_bk;
-    table::validated_tx validated_tx;
+    table::state state;
+    table::pool pool;
     table::spends spends;
 
     /// Optionals.
