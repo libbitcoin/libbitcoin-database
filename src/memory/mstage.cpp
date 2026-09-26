@@ -301,7 +301,6 @@ int mmap_restore(void* address, size_t size) NOEXCEPT
         return -1;
     }
 
-    mmap_wire(address, size);
     return 0;
 }
 

@@ -44,7 +44,7 @@ CLASS::store(const settings& config) NOEXCEPT
     ins_head_(head(config.path / schema::dir::heads, schema::archive::ins), head_settings(config.ins), random),
     ins_body_(body(config.path, schema::archive::ins), config.ins, sequential, staged),
 
-    outs_head_(head(config.path / schema::dir::heads, schema::archive::outs), head_settings(config.outs), random),
+    outs_head_(head(config.path / schema::dir::heads, schema::archive::outs), head_settings(config.outs), sequential),
     outs_body_(body(config.path, schema::archive::outs), config.outs, sequential, staged),
 
     tx_head_(head(config.path / schema::dir::heads, schema::archive::tx), head_settings(config.tx), random),
