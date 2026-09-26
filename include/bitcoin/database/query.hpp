@@ -425,6 +425,8 @@ public:
     /// Wire.
     /// -----------------------------------------------------------------------
 
+    bool is_witness_match(const tx_link& link,
+        const transaction_view& tx) const NOEXCEPT;
     bool get_wire_input(bytewriter& sink, const ins_link& link) const NOEXCEPT;
     bool get_wire_output(bytewriter& sink, const output_link& link) const NOEXCEPT;
     bool get_wire_witness(bytewriter& sink, const ins_link& link) const NOEXCEPT;

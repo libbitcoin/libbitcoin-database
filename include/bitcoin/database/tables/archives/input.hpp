@@ -296,6 +296,54 @@ struct input
 
         bytewriter& sink;
     };
+
+    /// Unstreamed, compares the witness in place to the next expected witness.
+    struct match_witness
+      : public schema::input
+    {
+        inline bool from_data(memory::iterator start) NOEXCEPT
+        {
+            using namespace system;
+
+            // Skip the script.
+            const auto* position = start;
+            const auto script = unsafe_from_variable(position);
+            std::advance(position, to_offset(script));
+
+            // Span the witness (count, then size prefixed elements).
+            const auto* witness = position;
+            auto count = unsafe_from_variable(position);
+            for (; is_nonzero(count); --count)
+            {
+                const auto size = unsafe_from_variable(position);
+                std::advance(position, to_offset(size));
+            }
+
+            const auto bytes = possible_narrow_sign_cast<size_t>(
+                std::distance(witness, position));
+
+            match = (bytes <= remaining) &&
+                std::equal(witness, position, expected);
+
+            if (match)
+            {
+                std::advance(expected, bytes);
+                remaining -= bytes;
+            }
+
+            return true;
+        }
+
+        const uint8_t* expected{};
+        size_t remaining{};
+        bool match{};
+
+    private:
+        static constexpr ptrdiff_t to_offset(uint64_t size) NOEXCEPT
+        {
+            return system::possible_narrow_and_sign_cast<ptrdiff_t>(size);
+        }
+    };
 };
 
 BC_POP_WARNING()

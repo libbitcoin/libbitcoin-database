@@ -22,6 +22,90 @@
 
 BOOST_FIXTURE_TEST_SUITE(query_wire_reader_reader_tests, test::directory_setup_fixture)
 
+// is_witness_match
+
+BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__non_segregated__true)
+{
+    using namespace system;
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::store_t store{ settings };
+    test::query_t query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(test::setup_three_block_witness_store(query));
+
+    const auto data = test::genesis.transactions_ptr()->at(0)->to_data(true);
+    stream::in::fast istream{ data };
+    read::bytes::fast reader{ istream };
+    const chain::transaction_view view{ reader, data, true, true };
+    BOOST_REQUIRE(view.is_valid());
+    BOOST_REQUIRE(!view.is_segregated());
+    BOOST_CHECK(query.is_witness_match(0, view));
+    BOOST_CHECK(!store.close(test::events_handler));
+}
+
+BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__same_witness__true)
+{
+    using namespace system;
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::store_t store{ settings };
+    test::query_t query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(test::setup_three_block_witness_store(query));
+
+    const auto data = test::block2a.transactions_ptr()->at(1)->to_data(true);
+    stream::in::fast istream{ data };
+    read::bytes::fast reader{ istream };
+    const chain::transaction_view view{ reader, data, false, true };
+    BOOST_REQUIRE(view.is_valid());
+    BOOST_REQUIRE(view.is_segregated());
+    BOOST_CHECK(query.is_witness_match(3, view));
+    BOOST_CHECK(!store.close(test::events_handler));
+}
+
+BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__changed_witness__false)
+{
+    using namespace system;
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::store_t store{ settings };
+    test::query_t query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(test::setup_three_block_witness_store(query));
+
+    // Last witness byte precedes the four byte locktime.
+    auto data = test::block2a.transactions_ptr()->at(1)->to_data(true);
+    data.at(data.size() - 5) ^= 0xff;
+    stream::in::fast istream{ data };
+    read::bytes::fast reader{ istream };
+    const chain::transaction_view view{ reader, data, false, true };
+    BOOST_REQUIRE(view.is_valid());
+    BOOST_REQUIRE(view.is_segregated());
+    BOOST_REQUIRE_EQUAL(view.hash(false), test::block2a.transactions_ptr()->at(1)->hash(false));
+    BOOST_CHECK(!query.is_witness_match(3, view));
+    BOOST_CHECK(!store.close(test::events_handler));
+}
+
+BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__other_size__false)
+{
+    using namespace system;
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::store_t store{ settings };
+    test::query_t query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(test::setup_three_block_witness_store(query));
+
+    const auto data = test::block2a.transactions_ptr()->at(1)->to_data(true);
+    stream::in::fast istream{ data };
+    read::bytes::fast reader{ istream };
+    const chain::transaction_view view{ reader, data, false, true };
+    BOOST_REQUIRE(view.is_valid());
+    BOOST_CHECK(!query.is_witness_match(0, view));
+    BOOST_CHECK(!store.close(test::events_handler));
+}
+
 // get_wire_header
 
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_header__genesis_and_not__expected)
