@@ -88,6 +88,83 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled__sufficient__success)
     BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ bip113, 9, 10 }), error::success);
 }
 
+BOOST_AUTO_TEST_CASE(query_properties_tx__populate_pooled__sufficient__external_metadata)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const transaction source{ test::tx_spend_one_hash.to_data(true), true };
+    const auto& source_in = *source.inputs_ptr()->front();
+    source_in.prevout = system::to_shared<output>(0x30, script{});
+    source_in.metadata.parent_tx = 42;
+    source_in.metadata.coinbase = true;
+    BOOST_REQUIRE(query.set_pooled(1, source, context{ bip113, 8, 9 }));
+
+    const transaction tx{ test::tx_spend_one_hash.to_data(true), true };
+    const auto& in = *tx.inputs_ptr()->front();
+
+    pooled_tx pooled{};
+    BOOST_REQUIRE_EQUAL(query.populate_pooled(pooled, tx, 1, context{ bip113, 9, 10 }), error::success);
+    BOOST_REQUIRE_EQUAL(pooled.fee, 0x20u);
+    BOOST_REQUIRE_EQUAL(in.metadata.parent_tx, 42u);
+    BOOST_REQUIRE(in.metadata.coinbase);
+    BOOST_REQUIRE(!in.prevout);
+}
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__populate_pooled__internal_spend__terminal_metadata)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const transaction source{ test::tx_spend_one_hash.to_data(true), true };
+    const auto& source_in = *source.inputs_ptr()->front();
+    source_in.prevout = system::to_shared<output>(0x30, script{});
+    source_in.metadata.parent_tx = 42;
+    source_in.metadata.coinbase = true;
+    BOOST_REQUIRE(query.set_pooled(1, source, context{ bip113, 8, 9 }));
+
+    const transaction tx{ test::tx_spend_one_hash.to_data(true), true };
+    const auto& in = *tx.inputs_ptr()->front();
+    in.prevout = system::to_shared<output>(0x30, script{});
+    in.metadata.coinbase = false;
+
+    pooled_tx pooled{};
+    BOOST_REQUIRE_EQUAL(query.populate_pooled(pooled, tx, 1, context{ bip113, 8, 9 }), error::success);
+    BOOST_REQUIRE_EQUAL(in.metadata.parent_tx, max_uint32);
+    BOOST_REQUIRE(!in.metadata.coinbase);
+}
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__populate_pooled__insufficient__unvalidated)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const transaction source{ test::tx_spend_one_hash.to_data(true), true };
+    const auto& source_in = *source.inputs_ptr()->front();
+    source_in.prevout = system::to_shared<output>(0x30, script{});
+    source_in.metadata.parent_tx = 42;
+    BOOST_REQUIRE(query.set_pooled(1, source, context{ bip113, 8, 9 }));
+
+    const transaction tx{ test::tx_spend_one_hash.to_data(true), true };
+    const auto& in = *tx.inputs_ptr()->front();
+
+    pooled_tx pooled{};
+    BOOST_REQUIRE_EQUAL(query.populate_pooled(pooled, tx, 1, context{ bip113, 7, 9 }), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(in.metadata.parent_tx, max_uint32);
+}
+
 BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled__insufficient__unvalidated)
 {
     settings settings{};

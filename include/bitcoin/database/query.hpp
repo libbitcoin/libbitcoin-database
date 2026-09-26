@@ -482,6 +482,11 @@ public:
     bool populate_with_metadata(const transaction& tx, bool chain=false,
         bool pool=false) const NOEXCEPT;
 
+    /// Success implies tx pooled under sufficient context, input.metadata is
+    /// populated for each input not populated by its block (internal spend).
+    code populate_pooled(pooled_tx& out, const transaction& tx,
+        const tx_link& link, const context& ctx) const NOEXCEPT;
+
     /// Fees.
     /// -----------------------------------------------------------------------
 
