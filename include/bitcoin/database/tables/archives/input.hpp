@@ -315,8 +315,8 @@ struct input
             auto count = unsafe_from_variable(position);
             for (; is_nonzero(count); --count)
             {
-                const auto size = unsafe_from_variable(position);
-                std::advance(position, to_offset(size));
+                const auto size_ = unsafe_from_variable(position);
+                std::advance(position, to_offset(size_));
             }
 
             const auto bytes = possible_narrow_sign_cast<size_t>(
@@ -359,14 +359,14 @@ struct input
             {
                 for (const auto& element: stack)
                 {
-                    const auto size = unsafe_from_variable(position);
-                    match = (size == element->size()) && std::equal(
+                    const auto size_ = unsafe_from_variable(position);
+                    match = (size_ == element->size()) && std::equal(
                         element->cbegin(), element->cend(), position);
 
                     if (!match)
                         break;
 
-                    std::advance(position, to_offset(size));
+                    std::advance(position, to_offset(size_));
                 }
             }
 
