@@ -426,6 +426,8 @@ public:
     /// -----------------------------------------------------------------------
 
     bool is_witness_match(const tx_link& link,
+        const transaction& tx) const NOEXCEPT;
+    bool is_witness_match(const tx_link& link,
         const transaction_view& tx) const NOEXCEPT;
     bool get_wire_input(bytewriter& sink, const ins_link& link) const NOEXCEPT;
     bool get_wire_output(bytewriter& sink, const output_link& link) const NOEXCEPT;
@@ -974,6 +976,8 @@ protected:
     /// The archived link of a pooled duplicate of the tx, or terminal.
     tx_link to_pooled(const transaction& tx) const NOEXCEPT;
     tx_link to_pooled(const transaction_view& tx) const NOEXCEPT;
+    bool is_witness_match(const tx_link& link, size_t inputs, size_t light,
+        size_t heavy, const system::data_slice& witnesses) const NOEXCEPT;
 
     /// Block write batching (all rows preallocated, all accessors held).
     /// -----------------------------------------------------------------------

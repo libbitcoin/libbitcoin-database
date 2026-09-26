@@ -30,23 +30,57 @@ namespace database {
 // duplicated navigations to store_.ins and store_.input by the witness reader.
 // This normalized approach is also the most efficient.
 
-// The stored tx is presumed to have the txid of the view, so only the witness
-// may differ. Stored witnesses are wire encoded, so are compared in place.
+TEMPLATE
+bool CLASS::is_witness_match(const tx_link& link,
+    const transaction& tx) const NOEXCEPT
+{
+    using namespace system;
+    data_chunk witnesses{};
+    if (tx.is_segregated())
+    {
+        const auto& ins = *tx.inputs_ptr();
+        const auto sum = [](size_t total, const auto& in) NOEXCEPT
+        {
+            return ceilinged_add(total, in->witness().serialized_size(true));
+        };
+
+        witnesses.resize(std::accumulate(ins.begin(), ins.end(), zero, sum));
+        write::bytes::copy sink{ witnesses };
+        for (const auto& in: ins)
+            in->witness().to_data(sink, true);
+    }
+
+    return is_witness_match(link, tx.inputs(), tx.serialized_size(false),
+        tx.serialized_size(true), witnesses);
+}
+
 TEMPLATE
 bool CLASS::is_witness_match(const tx_link& link,
     const transaction_view& tx) const NOEXCEPT
 {
+    const auto witnesses = tx.is_segregated() ? tx.witnesses() :
+        system::data_slice{};
+    return is_witness_match(link, tx.inputs(), tx.serialized_size(false),
+        tx.serialized_size(true), witnesses);
+}
+
+// protected
+// The stored tx is presumed to have the txid of the tx, so only the witness
+// may differ. Stored witnesses are wire encoded, so are compared in place.
+TEMPLATE
+bool CLASS::is_witness_match(const tx_link& link, size_t inputs, size_t light,
+    size_t heavy, const system::data_slice& witnesses) const NOEXCEPT
+{
     table::transaction::record record{};
     if (!store_.tx.get(link, record) ||
-        (record.ins_count != tx.inputs()) ||
-        (record.light != tx.serialized_size(false)) ||
-        (record.heavy != tx.serialized_size(true)))
+        (record.ins_count != inputs) ||
+        (record.light != light) ||
+        (record.heavy != heavy))
         return false;
 
-    if (!tx.is_segregated())
+    if (witnesses.empty())
         return true;
 
-    const auto witnesses = tx.witnesses();
     table::input::match_witness match{ {}, witnesses.data(),
         witnesses.size() };
 
