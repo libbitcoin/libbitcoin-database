@@ -30,6 +30,79 @@ namespace database {
 // duplicated navigations to store_.ins and store_.input by the witness reader.
 // This normalized approach is also the most efficient.
 
+// The stored tx is presumed to have the txid of the tx, so only the witness
+// may differ. Stored witnesses are wire encoded, so are compared in place.
+TEMPLATE
+bool CLASS::is_witness_match(const tx_link& link,
+    const transaction& tx) const NOEXCEPT
+{
+    table::transaction::record record{};
+    if (!is_size_match(record, link, tx.inputs(), tx.serialized_size(false),
+        tx.serialized_size(true)))
+        return false;
+
+    if (!tx.is_segregated())
+        return true;
+
+    // Point links are contiguous (computed).
+    auto fk = record.point_fk;
+    table::input::match_stack match{};
+    const auto ptr = store_.input.get_memory();
+    for (const auto& in: *tx.inputs_ptr())
+    {
+        table::ins_sequence::get_input ins{};
+        match.expected = &in->witness().stack();
+        if (!store_.ins.sequence.get(fk++, ins) ||
+            !store_.input.raw(ptr, ins.input_fk, match) || !match.match)
+            return false;
+    }
+
+    return true;
+}
+
+TEMPLATE
+bool CLASS::is_witness_match(const tx_link& link,
+    const transaction_view& tx) const NOEXCEPT
+{
+    table::transaction::record record{};
+    if (!is_size_match(record, link, tx.inputs(), tx.serialized_size(false),
+        tx.serialized_size(true)))
+        return false;
+
+    if (!tx.is_segregated())
+        return true;
+
+    const auto witnesses = tx.witnesses();
+    table::input::match_witness match{ {}, witnesses.data(),
+        witnesses.size() };
+
+    // Point links are contiguous (computed).
+    const auto ins_begin = record.point_fk;
+    const auto ins_final = ins_begin + record.ins_count;
+    const auto ptr = store_.input.get_memory();
+    for (auto fk = ins_begin; fk < ins_final; ++fk)
+    {
+        table::ins_sequence::get_input ins{};
+        if (!store_.ins.sequence.get(fk, ins) ||
+            !store_.input.raw(ptr, ins.input_fk, match) || !match.match)
+            return false;
+    }
+
+    return is_zero(match.remaining);
+}
+
+// protected
+TEMPLATE
+bool CLASS::is_size_match(table::transaction::record& out,
+    const tx_link& link, size_t inputs, size_t light,
+    size_t heavy) const NOEXCEPT
+{
+    return store_.tx.get(link, out)
+        && (out.ins_count == inputs)
+        && (out.light == light)
+        && (out.heavy == heavy);
+}
+
 TEMPLATE
 bool CLASS::get_wire_header(bytewriter& sink,
     const header_link& link) const NOEXCEPT

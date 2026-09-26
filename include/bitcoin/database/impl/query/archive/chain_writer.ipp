@@ -116,7 +116,12 @@ tx_link CLASS::to_pooled(const transaction& tx) const NOEXCEPT
         !store_.ins.exists(tx.inputs_ptr()->front()->point()))
         return {};
 
-    return to_tx(tx.get_hash(false));
+    // A duplicate with another witness is not the same tx for validation.
+    for (const auto& link: to_duplicates(tx.get_hash(false)))
+        if (is_witness_match(link, tx))
+            return link;
+
+    return {};
 }
 
 TEMPLATE

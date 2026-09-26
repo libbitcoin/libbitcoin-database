@@ -189,7 +189,12 @@ tx_link CLASS::to_pooled(const transaction_view& tx) const NOEXCEPT
     if (!store_.ins.exists(chain::point(isource)))
         return {};
 
-    return to_tx(tx.hash(false));
+    // One tx with distinct witnesses can both validate unconfirmed, so guard.
+    for (const auto& link: to_duplicates(tx.hash(false)))
+        if (is_witness_match(link, tx))
+            return link;
+
+    return {};
 }
 
 // set txs from block

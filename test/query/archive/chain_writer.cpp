@@ -1681,4 +1681,34 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_pooled_tx__substitut
     BOOST_REQUIRE(!query.is_strong_tx(pooled));
 }
 
+BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_malleated_tx__written)
+{
+    using namespace system::chain;
+    auto data = test::tx4.to_data(true);
+    data.at(data.size() - 5) ^= 0xff;
+    const transaction malleated{ data, true };
+    const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf6 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, malleated } };
+
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    tx_link pooled{};
+    BOOST_REQUIRE_EQUAL(malleated.hash(false), test::tx4.hash(false));
+    BOOST_REQUIRE_NE(malleated.hash(true), test::tx4.hash(true));
+    BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
+    BOOST_REQUIRE(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE_EQUAL(query.tx_records(), 4u);
+
+    const auto link = query.to_header(block.hash());
+    const auto pointer = query.get_block(link, true);
+    BOOST_REQUIRE(pointer);
+    BOOST_REQUIRE(query.to_transactions(link).back() != pooled);
+    BOOST_REQUIRE_EQUAL(pointer->transactions_ptr()->back()->hash(true), malleated.hash(true));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
