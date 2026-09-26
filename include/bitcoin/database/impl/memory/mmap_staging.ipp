@@ -300,7 +300,7 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
             return false;
         }
 
-        if (managed_ && (target > from))
+        if (wired_ && (target > from))
             mmap_wire(std::next(memory_map_[Column], from), target - from);
 
         // Committed growth is a new (unnamed) vma; reattribute it.
@@ -376,7 +376,7 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
         std::copy_n(std::next(memory_map_[Column], settled),
             logical - settled, std::next(base, settled));
 
-    if (managed_)
+    if (wired_)
         mmap_wire(std::next(base, settled), target - settled);
 
     // Convert the settled prefix on the replacement reservation.
