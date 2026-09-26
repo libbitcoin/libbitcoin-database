@@ -143,6 +143,35 @@ bool CLASS::populate_with_metadata(const input& input, bool chain,
     return !is_null(input.prevout);
 }
 
+// populate_pooled
+// ----------------------------------------------------------------------------
+// This is used in validation of a block containing a tx validated in the pool,
+// caching the pool's metadata for later confirmation. A block-internal spend
+// is populated by the block, so its metadata remains that of internal spend.
+
+TEMPLATE
+code CLASS::populate_pooled(pooled_tx& out, const transaction& tx,
+    const tx_link& link, const context& ctx) const NOEXCEPT
+{
+    const auto& ins = *tx.inputs_ptr();
+    out.prevouts.resize(ins.size());
+    if (const auto ec = get_pooled(out, link, ctx))
+        return ec;
+
+    auto prevout = out.prevouts.cbegin();
+    for (const auto& in: ins)
+    {
+        const auto& pooled = *prevout++;
+        if (in->prevout)
+            continue;
+
+        in->metadata.parent_tx = pooled.parent;
+        in->metadata.coinbase = pooled.coinbase;
+    }
+
+    return error::success;
+}
+
 // populate_without_metadata
 // ----------------------------------------------------------------------------
 // These are used when not performing confirmation. This also implies that
