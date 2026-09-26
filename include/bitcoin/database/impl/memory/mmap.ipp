@@ -46,7 +46,6 @@ CLASS::mmap(const path& filename, const storage_settings& settings,
     random_(random),
     staged_(staged),
     managed_(!staged && !head_shared),
-    wired_(!staged && !head_shared && random),
     opened_{ file::invalid }
 {
 }
@@ -63,7 +62,6 @@ CLASS::mmap(const paths& filenames, const storage_settings& settings,
     random_(random),
     staged_(staged),
     managed_(false),
-    wired_(false),
     opened_{}
 {
     opened_.fill(file::invalid);

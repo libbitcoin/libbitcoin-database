@@ -415,7 +415,6 @@ private:
     const bool random_;
     const bool staged_;
     const bool managed_;
-    const bool wired_;
 
     // These are thread safe (atomic).
     std::atomic<error::error_t> error_{ error::success };

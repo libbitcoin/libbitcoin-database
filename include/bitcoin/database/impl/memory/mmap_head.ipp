@@ -240,7 +240,7 @@ bool CLASS::lazy_install_() NOEXCEPT
         return false;
     }
 
-    if (wired_ && (target > floor))
+    if (target > floor)
         mmap_wire(std::next(memory_map_[zero], floor), target - floor);
 
     declare_released_();
@@ -694,10 +694,6 @@ void CLASS::restore_(size_t offset, size_t size) NOEXCEPT
             return;
         }
 
-        if (wired_)
-            mmap_wire(std::next(memory_map_[zero], page * page_),
-                (stop - page) * page_);
-
         for (auto word = begin; word <= end; ++word)
             released_[word].fetch_and(bit_not(mask(word)));
     }
@@ -809,9 +805,6 @@ void CLASS::unshare_() NOEXCEPT
 
     if (restored)
     {
-        if (wired_ && (ceiling > floor))
-            mmap_wire(std::next(memory_map_[zero], floor), ceiling - floor);
-
         declare_released_();
         shared_.store(false);
     }
