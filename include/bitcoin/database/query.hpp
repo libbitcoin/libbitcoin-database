@@ -607,6 +607,12 @@ public:
     code get_pooled(pooled_tx& out, const tx_link& link,
         const context& ctx) const NOEXCEPT;
 
+    /// Pooled tx links by compact block short id (low 48 bits of the siphash
+    /// of wtxid), terminal where not pooled or ambiguous.
+    code get_compact_links(tx_links& out,
+        const std::vector<uint64_t>& short_ids,
+        const system::siphash_key& key) const NOEXCEPT;
+
     /// Header properties.
     uint32_t get_top_timestamp(bool confirmed) const NOEXCEPT;
     bool get_timestamp(uint32_t& timestamp, const header_link& link) const NOEXCEPT;
