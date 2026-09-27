@@ -566,6 +566,10 @@ public:
     code set_code(const block& block, const header_link& key, bool strong,
         bool bypass, size_t height, bool prune=false) NOEXCEPT;
 
+    /// Set block.txs from archived txs (e.g. compact block).
+    code set_code(const header_link& key, const tx_links& links,
+        bool strong) NOEXCEPT;
+
     /// Set block_view (wire). Prune strips input scripts/witnesses.
     code set_code(const block_view& block, bool strong, bool bypass,
         bool prune=false) NOEXCEPT;
@@ -973,6 +977,10 @@ protected:
     /// -----------------------------------------------------------------------
     code set_code(const tx_link& tx_fk, const transaction& tx,
         bool bypass, bool prune) NOEXCEPT;
+
+    /// Associate txs to header, caller must hold transactor.
+    code set_txs(const header_link& key, tx_links&& links, size_t light,
+        size_t heavy, hash_option&& interval, bool strong) NOEXCEPT;
 
     /// The archived link of a pooled duplicate of the tx, or terminal.
     tx_link to_pooled(const transaction& tx) const NOEXCEPT;

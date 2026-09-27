@@ -445,14 +445,60 @@ code CLASS::set_code(const block& block, const header_link& key,
     // Optional hash, only has value on height intervals.
     auto interval = create_interval(key, height);
 
-    using bytes = linkage<schema::size>::integer;
-    const auto light = possible_narrow_cast<bytes>(
-        block.serialized_size(false));
-    const auto heavy = possible_narrow_cast<bytes>
-        (block.serialized_size(true));
+    const auto light = block.serialized_size(false);
+    const auto heavy = block.serialized_size(true);
 
     // ========================================================================
     const auto scope = get_transactor();
+    return set_txs(key, std::move(links), light, heavy, std::move(interval),
+        strong);
+    // ========================================================================
+}
+
+TEMPLATE
+code CLASS::set_code(const header_link& key, const tx_links& links,
+    bool strong) NOEXCEPT
+{
+    if (key.is_terminal())
+        return error::txs_header;
+
+    if (links.empty())
+        return error::txs_empty;
+
+    size_t height{};
+    if (!get_height(height, key))
+        return error::txs_height;
+
+    using namespace system;
+    auto light = header::serialized_size() + variable_size(links.size());
+    auto heavy = light;
+    for (const auto& link: links)
+    {
+        size_t tx_light{}, tx_heavy{};
+        if (!get_tx_sizes(tx_light, tx_heavy, link))
+            return error::integrity;
+
+        light = ceilinged_add(light, tx_light);
+        heavy = ceilinged_add(heavy, tx_heavy);
+    }
+
+    // Optional hash, only has value on height intervals.
+    auto interval = create_interval(key, height);
+
+    // ========================================================================
+    const auto scope = get_transactor();
+    return set_txs(key, tx_links{ links }, light, heavy, std::move(interval),
+        strong);
+    // ========================================================================
+}
+
+// protected
+TEMPLATE
+code CLASS::set_txs(const header_link& key, tx_links&& links, size_t light,
+    size_t heavy, hash_option&& interval, bool strong) NOEXCEPT
+{
+    using namespace system;
+    using bytes = linkage<schema::size>::integer;
     constexpr auto positive = true;
 
     // Transactor assures cannot be restored without txs, as required to unset.
@@ -464,12 +510,11 @@ code CLASS::set_code(const block& block, const header_link& key,
     return store_.txs.put(to_txs(key), table::txs::slab
     {
         {},
-        light,
-        heavy,
+        possible_narrow_cast<bytes>(light),
+        possible_narrow_cast<bytes>(heavy),
         std::move(links),
         std::move(interval)
     }) ? error::success : error::txs_txs_put;
-    // ========================================================================
 }
 
 } // namespace database

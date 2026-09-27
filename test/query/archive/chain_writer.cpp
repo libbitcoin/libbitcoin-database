@@ -1734,4 +1734,54 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_header__unstorable_work__header_wor
     BOOST_REQUIRE(!link.is_terminal());
 }
 
+BOOST_AUTO_TEST_CASE(query_chain_writer__set_links__archived_txs__associated)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto& block = test::block1a;
+    const auto& txs = *block.transactions_ptr();
+    header_link key{};
+    BOOST_REQUIRE(!query.set_code(key, block.header(), context{ 0, 1, 0 }, {}, false));
+
+    tx_links links{};
+    for (const auto& tx: txs)
+    {
+        tx_link link{};
+        BOOST_REQUIRE(!query.set_code(link, *tx));
+        links.push_back(link);
+    }
+
+    BOOST_REQUIRE(!query.is_associated(key));
+    BOOST_REQUIRE_EQUAL(query.set_code(key, links, false), error::success);
+    BOOST_REQUIRE(query.is_associated(key));
+    BOOST_REQUIRE_EQUAL(query.to_transactions(key), links);
+
+    size_t light{}, heavy{};
+    BOOST_REQUIRE(query.get_block_sizes(light, heavy, key));
+    BOOST_REQUIRE_EQUAL(light, block.serialized_size(false));
+    BOOST_REQUIRE_EQUAL(heavy, block.serialized_size(true));
+
+    const auto pointer = query.get_block(key, true);
+    BOOST_REQUIRE(pointer);
+    BOOST_REQUIRE(*pointer == block);
+}
+
+BOOST_AUTO_TEST_CASE(query_chain_writer__set_links__empty_or_terminal__error)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    BOOST_REQUIRE_EQUAL(query.set_code(header_link{}, tx_links{ 0 }, false), error::txs_header);
+    BOOST_REQUIRE_EQUAL(query.set_code(header_link{ 0 }, tx_links{}, false), error::txs_empty);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
