@@ -247,4 +247,52 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__set_pooled__missing_parent__false)
     BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ bip113, 8, 9 }), error::unvalidated);
 }
 
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_wtxid__not_pooled__computed)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    tx_link link{};
+    BOOST_REQUIRE(!query.set_code(link, test::tx4));
+    BOOST_REQUIRE_EQUAL(query.get_wtxid(link), test::tx4.hash(true));
+    BOOST_REQUIRE_NE(query.get_wtxid(link), test::tx4.hash(false));
+}
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_wtxid__pooled__pool_columns)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    tx_link link{};
+    BOOST_REQUIRE(!query.set_code(link, test::tx4));
+
+    // Pool another tx under the link, so the result must come from the pool.
+    const transaction source{ test::tx5.to_data(true), true };
+    source.inputs_ptr()->front()->metadata.parent_tx = 42;
+    BOOST_REQUIRE(query.set_pooled(link, source, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE_EQUAL(query.get_wtxid(link), test::tx5.hash(true));
+}
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_wtxids__genesis__coinbase_witness_hash)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto& coinbase = *test::genesis.transactions_ptr()->front();
+    BOOST_REQUIRE_EQUAL(query.get_wtxids(0), system::hashes{ coinbase.hash(true) });
+    BOOST_REQUIRE(query.get_wtxids(1).empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

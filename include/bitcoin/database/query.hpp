@@ -387,10 +387,12 @@ public:
     hash_digest get_top_confirmed_hash() const NOEXCEPT;
     hash_digest get_top_candidate_hash() const NOEXCEPT;
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
+    hashes get_wtxids(const header_link& link) const NOEXCEPT;
     size_t get_tx_count(const header_link& link) const NOEXCEPT;
     size_t get_branch_tx_count(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
+    hash_digest get_wtxid(const tx_link& link) const NOEXCEPT;
     inline ins_key get_point_key(const ins_link& link) const NOEXCEPT;
     inline hash_digest get_point_hash(const ins_link& link) const NOEXCEPT;
 
