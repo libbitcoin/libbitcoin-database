@@ -33,13 +33,14 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__genesis__expected)
         "04030201"     // flags
         "141312"       // height
         "24232221"     // mtp
-        "ffffff"       // previous_block_hash (header_fk - not found) (milestone true)
+        "ffff7f"       // previous_block_hash (header_fk - not found)
         "01000000"     // version
         "29ab5f49"     // timestamp
         "ffff001d"     // bits
         "1dac2b7c"     // nonce
         "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // merkle_root
-        "0000000000000000000000000000000000000000000000000000000000000000"); // work
+        "00000000000000000000000000000000" // work
+        "01"); // header flags (milestone)
     const auto genesis_tx_body = system::base16_chunk(
         "ffffff7f"     // next->
         "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // sk (tx.hash(false))

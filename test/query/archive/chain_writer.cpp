@@ -113,13 +113,14 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_header__is_header__expected)
         "04030201" // flags
         "141312"   // height
         "24232221" // mtp
-        "ffffff"   // previous_block_hash (header_fk - not found) (milestone true)
+        "ffff7f"   // previous_block_hash (header_fk - not found)
         "34333231" // version
         "44434241" // timestamp
         "54535251" // bits
         "64636261" // nonce
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
-        "0000000000000000000000000000000000000000000000000000000000000000"); // work
+        "00000000000000000000000000000000" // work
+        "01"); // header flags (milestone)
 
     header_link link{};
     settings settings{};
@@ -477,13 +478,14 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
         "04030201"     // flags
         "141312"       // height
         "24232221"     // mtp
-        "ffffff"       // previous_block_hash (header_fk - not found) (milestone true)
+        "ffff7f"       // previous_block_hash (header_fk - not found)
         "01000000"     // version
         "29ab5f49"     // timestamp
         "ffff001d"     // bits
         "1dac2b7c"     // nonce
         "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // merkle_root
-        "0000000000000000000000000000000000000000000000000000000000000000"); // work
+        "00000000000000000000000000000000" // work
+        "01"); // header flags (milestone)
     const auto genesis_tx_head = system::base16_chunk(
         "01000000"     // record count
         "ffffffff"     // bucket[0]...
@@ -633,13 +635,14 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
         "04030201"     // flags
         "141312"       // height
         "24232221"     // mtp
-        "ffffff"       // previous_block_hash (header_fk - not found) (milestone true)
+        "ffff7f"       // previous_block_hash (header_fk - not found)
         "01000000"     // version
         "29ab5f49"     // timestamp
         "ffff001d"     // bits
         "1dac2b7c"     // nonce
         "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // merkle_root
-        "0000000000000000000000000000000000000000000000000000000000000000"); // work
+        "00000000000000000000000000000000" // work
+        "01"); // header flags (milestone)
     const auto genesis_tx_head = system::base16_chunk(
         "01000000"     // record count
         "ffffffff"     // bucket[0]...
@@ -1043,13 +1046,14 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__get_header__invalid_parent__expected)
         "14131211" // flags
         "040302"   // height
         "24232221" // mtp
-        "424242"   // previous_block_hash (header_fk - invalid) (milestone false)
+        "424242"   // previous_block_hash (header_fk - invalid)
         "34333231" // version
         "44434241" // timestamp
         "54535251" // bits
         "64636261" // nonce
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
-        "0000000000000000000000000000000000000000000000000000000000000000"); // work
+        "00000000000000000000000000000000" // work
+        "00"); // header flags (milestone false)
 
     settings settings{};
     settings.header.buckets = 16;
@@ -1106,13 +1110,14 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__get_header__default__expected)
         "14131211" // flags
         "040302"   // height
         "24232221" // mtp
-        "ffffff"   // previous_block_hash (header_fk - terminal) (milestone true)
+        "ffff7f"   // previous_block_hash (header_fk - terminal)
         "34333231" // version
         "44434241" // timestamp
         "54535251" // bits
         "64636261" // nonce
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
-        "0000000000000000000000000000000000000000000000000000000000000000"); // work
+        "00000000000000000000000000000000" // work
+        "01"); // header flags (milestone)
 
     settings settings{};
     settings.header.buckets = 16;
@@ -1709,6 +1714,24 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_malleated_tx__writte
     BOOST_REQUIRE(pointer);
     BOOST_REQUIRE(query.to_transactions(link).back() != pooled);
     BOOST_REQUIRE_EQUAL(pointer->transactions_ptr()->back()->hash(true), malleated.hash(true));
+}
+
+BOOST_AUTO_TEST_CASE(query_chain_writer__set_header__unstorable_work__header_work)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    header_link link{};
+    const uint256_t work = uint256_t{ 1 } << to_bits(schema::work);
+    BOOST_REQUIRE_EQUAL(query.set_code(link, test::block1.header(), context{}, work, false), error::header_work);
+    BOOST_REQUIRE(link.is_terminal());
+    BOOST_REQUIRE_EQUAL(query.header_records(), 1u);
+    BOOST_REQUIRE_EQUAL(query.set_code(link, test::block1.header(), context{}, sub1(work), false), error::success);
+    BOOST_REQUIRE(!link.is_terminal());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

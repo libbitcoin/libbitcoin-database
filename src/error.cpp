@@ -119,6 +119,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // header archive
     { header_put, "header_put" },
+    { header_work, "header_work" },
 
     // txs archive
     { txs_header, "txs_header" },

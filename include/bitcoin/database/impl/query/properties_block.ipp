@@ -54,6 +54,13 @@ inline bool CLASS::is_milestone(const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+inline bool CLASS::is_compact(const header_link& link) const NOEXCEPT
+{
+    table::header::get_compact header{};
+    return store_.header.get(link, header) && header.compact;
+}
+
+TEMPLATE
 inline bool CLASS::is_associated(const header_link& link) const NOEXCEPT
 {
     table::txs::get_associated txs{};

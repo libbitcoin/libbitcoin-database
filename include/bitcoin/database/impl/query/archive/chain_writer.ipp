@@ -291,17 +291,22 @@ code CLASS::set_code(const header& header, const chain_context& ctx,
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const header& header,
     const chain_context& ctx, const uint256_t& work, bool milestone,
-    bool) NOEXCEPT
+    bool compact) NOEXCEPT
 {
-    return set_code(out_fk, header, context::from(ctx), work, milestone);
+    return set_code(out_fk, header, context::from(ctx), work, milestone,
+        compact);
 }
 
 TEMPLATE
 code CLASS::set_code(header_link& out_fk, const header& header,
-    const context& ctx, const uint256_t& work, bool milestone, bool) NOEXCEPT
+    const context& ctx, const uint256_t& work, bool milestone,
+    bool compact) NOEXCEPT
 {
     // header.get_hash() assumes cached or is not thread safe.
     const auto& key = header.get_hash();
+
+    if (!table::header::is_storable(work))
+        return error::header_work;
 
     // Parent must be missing iff its hash is null.
     const auto& previous = header.previous_block_hash();
@@ -318,6 +323,7 @@ code CLASS::set_code(header_link& out_fk, const header& header,
         {},
         ctx,
         milestone,
+        compact,
         parent_fk,
         header,
         work

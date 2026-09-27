@@ -378,6 +378,7 @@ public:
     inline bool is_tx_segregated(const tx_link& link) const NOEXCEPT;
     inline bool is_block_segregated(const header_link& link) const NOEXCEPT;
     inline bool is_milestone(const header_link& link) const NOEXCEPT;
+    inline bool is_compact(const header_link& link) const NOEXCEPT;
     inline bool is_associated(const header_link& link) const NOEXCEPT;
     inline bool is_confirmable(const header_link& link) const NOEXCEPT;
     inline bool is_validated(const header_link& link) const NOEXCEPT;
@@ -541,10 +542,10 @@ public:
         const uint256_t& work, bool milestone) NOEXCEPT;
     code set_code(header_link& out_fk, const header& header,
         const context& ctx, const uint256_t& work, bool milestone,
-        bool=false) NOEXCEPT;
+        bool compact=false) NOEXCEPT;
     code set_code(header_link& out_fk, const header& header,
         const chain_context& ctx, const uint256_t& work, bool milestone,
-        bool=false) NOEXCEPT;
+        bool compact=false) NOEXCEPT;
 
     /// Set full block (blocks-first).
     code set_code(const block& block, const context& ctx,

@@ -58,13 +58,14 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__invalid_parent__expected)
         "14131211" // flags
         "040302"   // height
         "24232221" // mtp
-        "424242"   // previous_block_hash (header_fk - invalid) (milestone false)
+        "424242"   // previous_block_hash (header_fk - invalid)
         "34333231" // version
         "44434241" // timestamp
         "54535251" // bits
         "64636261" // nonce
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
-        "0000000000000000000000000000000000000000000000000000000000000000"); // work
+        "00000000000000000000000000000000" // work
+        "00"); // header flags (milestone false)
 
     settings settings{};
     settings.header.buckets = 16;
@@ -121,13 +122,14 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__default__expected)
         "14131211" // flags
         "040302"   // height
         "24232221" // mtp
-        "ffffff"   // previous_block_hash (header_fk - terminal) (milestone true)
+        "ffff7f"   // previous_block_hash (header_fk - terminal)
         "34333231" // version
         "44434241" // timestamp
         "54535251" // bits
         "64636261" // nonce
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
-        "0000000000000000000000000000000000000000000000000000000000000000"); // work
+        "00000000000000000000000000000000" // work
+        "01"); // header flags (milestone)
 
     settings settings{};
     settings.header.buckets = 16;
@@ -247,6 +249,27 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__is_milestone__set__expected)
     BOOST_CHECK(!query.is_milestone(0));
     BOOST_CHECK(query.is_milestone(1));
     BOOST_CHECK(!query.is_milestone(2));
+}
+
+// is_compact
+
+BOOST_AUTO_TEST_CASE(query_chain_reader__is_compact__set__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_CHECK(query.initialize(test::genesis));
+    header_link link1{};
+    header_link link2{};
+    BOOST_CHECK(!query.set_code(link1, test::block1.header(), context{}, {}, false, true));
+    BOOST_CHECK(!query.set_code(link2, test::block2.header(), context{}, {}, true, false));
+    BOOST_CHECK(!query.is_compact(0));
+    BOOST_CHECK(query.is_compact(link1));
+    BOOST_CHECK(!query.is_milestone(link1));
+    BOOST_CHECK(!query.is_compact(link2));
+    BOOST_CHECK(query.is_milestone(link2));
 }
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_tx_keys__not_found__empty)

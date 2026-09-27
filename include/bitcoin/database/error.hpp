@@ -125,6 +125,7 @@ enum error_t : uint8_t
 
     /// header archive
     header_put,
+    header_work,
 
     /// txs archive
     txs_header,
