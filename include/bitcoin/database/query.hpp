@@ -607,6 +607,12 @@ public:
     code get_pooled(pooled_tx& out, const tx_link& link,
         const context& ctx) const NOEXCEPT;
 
+    /// Validate a block whose txs are pooled under a context sufficient for
+    /// the block, writing its prevouts. Unvalidated implies a tx is not
+    /// sufficiently pooled (block requires full validation).
+    code validate_pooled(const header_link& link, const chain_context& ctx,
+        uint64_t subsidy_interval, uint64_t initial_subsidy) NOEXCEPT;
+
     /// Pooled tx links by compact block short id (low 48 bits of the siphash
     /// of wtxid), terminal where not pooled or ambiguous.
     code get_compact_links(tx_links& out,

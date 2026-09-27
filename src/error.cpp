@@ -128,6 +128,9 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { txs_confirm, "txs_confirm" },
     { txs_txs_put, "txs_txs_put" },
 
+    // prevouts cache
+    { prevouts_put, "prevouts_put" },
+
     // services
     { not_found, "not_found" },
     { empty_block, "empty_block" },

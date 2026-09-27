@@ -103,6 +103,178 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     return result;
 }
 
+// Called by validator for a current block, prior to block production.
+// ----------------------------------------------------------------------------
+// Each non-coinbase tx is validated under its pooled context, which is
+// sufficient for the block (absolute locktime is monotonic under bip113). What
+// remains is the coinbase, the block checks over all txs, and the prevouts
+// row, from which block_confirmable performs the chain checks.
+
+TEMPLATE
+code CLASS::validate_pooled(const header_link& link, const chain_context& ctx,
+    uint64_t subsidy_interval, uint64_t initial_subsidy) NOEXCEPT
+{
+    using namespace system;
+    using prevout = table::prevout;
+    if (!store_.pool.enabled())
+        return error::unvalidated;
+
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return error::integrity;
+
+    const auto count = txs.size();
+    std::vector<table::transaction::record> records(count);
+    for (size_t index{}; index < count; ++index)
+        if (!store_.tx.get(txs.at(index), records.at(index)))
+            return error::integrity;
+
+    // Sufficiency (early, as insufficiency implies full validation).
+    uint64_t fees{};
+    size_t sigops{};
+    const auto pool = context::from(ctx);
+    std::vector<pooled_tx> pooled(count);
+    for (size_t index = one; index < count; ++index)
+    {
+        auto& tx = pooled.at(index);
+        tx.prevouts.resize(records.at(index).ins_count);
+        if (const auto ec = get_pooled(tx, txs.at(index), pool))
+            return ec;
+
+        fees = ceilinged_add(fees, tx.fee);
+        sigops = ceilinged_add(sigops, tx.sigops);
+    }
+
+    // Block check.
+    // ------------------------------------------------------------------------
+
+    size_t light{}, heavy{};
+    if (!get_block_sizes(light, heavy, link))
+        return error::integrity;
+
+    if (light > chain::max_block_size)
+        return system::error::block_size_limit;
+
+    if (!records.front().coinbase)
+        return system::error::first_not_coinbase;
+
+    for (size_t index = one; index < count; ++index)
+        if (records.at(index).coinbase)
+            return system::error::extra_coinbases;
+
+    std::unordered_map<hash_digest, size_t> positions{};
+    positions.reserve(count);
+    for (size_t index{}; index < count; ++index)
+        positions.emplace(get_tx_key(txs.at(index)), index);
+
+    // Points, spends (parent|terminal, sequence), and conflicts (doubles).
+    using spend = prevout::slab_put_spends::spend;
+    std::unordered_set<chain::point> points{};
+    std::vector<spend> spends{};
+    tx_links conflicts{};
+    const auto doubles = !is_zero(store_.duplicate.body_size());
+    for (size_t index = one; index < count; ++index)
+    {
+        const auto& record = records.at(index);
+        auto parent = pooled.at(index).prevouts.cbegin();
+        const auto end = record.point_fk + record.ins_count;
+        for (auto fk = record.point_fk; fk < end; ++fk, ++parent)
+        {
+            const auto point = get_point_key(fk);
+            if (!points.insert(point).second)
+                return system::error::block_internal_double_spend;
+
+            table::ins_sequence::get_input input{};
+            if (!store_.ins.sequence.get(fk, input))
+                return error::integrity;
+
+            // An internal spend (by hash) is terminal, as confirmation of the
+            // pooled parent would otherwise be required.
+            auto merged = prevout::tx::terminal;
+            if (const auto it = positions.find(point.hash());
+                it == positions.end())
+                merged = prevout::merge(parent->coinbase, parent->parent);
+            else if (it->second >= index)
+                return system::error::forward_reference;
+            else if (is_zero(it->second))
+                return system::error::coinbase_maturity;
+
+            spends.emplace_back(merged, input.sequence);
+            if (doubles && !get_doubles(conflicts, point))
+                return error::integrity;
+        }
+    }
+
+    // Block check (context).
+    // ------------------------------------------------------------------------
+
+    const auto bip16 = ctx.is_enabled(chain::flags::bip16_rule);
+    const auto bip34 = ctx.is_enabled(chain::flags::bip34_rule);
+    const auto bip42 = ctx.is_enabled(chain::flags::bip42_rule);
+    const auto bip50 = ctx.is_enabled(chain::flags::bip50_rule);
+    const auto bip141 = ctx.is_enabled(chain::flags::bip141_rule);
+
+    const auto weight = ceilinged_add(
+        ceilinged_multiply(chain::base_size_contribution, light),
+        ceilinged_multiply(chain::total_size_contribution, heavy));
+    if (bip141 && weight > chain::max_block_weight)
+        return system::error::block_weight_limit;
+
+    const auto coinbase = get_transaction(txs.front(), true);
+    if (!coinbase)
+        return error::integrity;
+
+    if (const auto ec = coinbase->check())
+        return ec;
+
+    if (const auto ec = coinbase->check(ctx))
+        return ec;
+
+    const auto& ins = *coinbase->inputs_ptr();
+    if (bip34 && !ins.empty() &&
+        !chain::script::is_coinbase_pattern(ins.front()->script().ops(),
+            ctx.height))
+        return system::error::coinbase_height_mismatch;
+
+    if (bip50)
+    {
+        std::unordered_set<hash_digest> hashes{};
+        for (const auto& position: positions)
+            hashes.insert(position.first);
+
+        for (const auto& point: points)
+            hashes.insert(point.hash());
+
+        if (hashes.size() > chain::hash_limit)
+            return system::error::temporary_hash_limit;
+    }
+
+    // Block accept.
+    // ------------------------------------------------------------------------
+
+    const auto subsidy = chain::block::subsidy(ctx.height, subsidy_interval,
+        initial_subsidy, bip42);
+    if (coinbase->spend() > ceilinged_add(fees, subsidy))
+        return system::error::coinbase_value_limit;
+
+    sigops = ceilinged_add(sigops, coinbase->signature_operations(bip16,
+        bip141));
+    if (sigops > (bip141 ? chain::max_fast_sigops : chain::max_block_sigops))
+        return system::error::block_sigop_limit;
+
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    return store_.prevout.put(to_prevout(link), prevout::slab_put_spends
+    {
+        {},
+        conflicts,
+        spends
+    }) ? error::success : error::prevouts_put;
+    // ========================================================================
+}
+
 // utility
 // ----------------------------------------------------------------------------
 // All return codes must be system::error::transaction_error_t (see atomic).

@@ -134,6 +134,9 @@ enum error_t : uint8_t
     txs_confirm,
     txs_txs_put,
 
+    /// prevouts cache
+    prevouts_put,
+
     /// services
     not_found,
     empty_block,
