@@ -40,6 +40,9 @@ namespace database {
 namespace schema {
 
 /// The store schema version, stored as the first envelope value.
+/// 4.0.0.0 Versioned envelope.
+/// 4.0.1.0 Header work column, spends table, pool id columns, and the
+///         validated_bk/validated_tx to state/pool table renames.
 constexpr std::array<uint32_t, 4> version{ 4, 0, 1, 0 };
 
 /// Values.
