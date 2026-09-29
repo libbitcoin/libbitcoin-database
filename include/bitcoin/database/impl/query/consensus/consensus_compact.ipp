@@ -103,54 +103,6 @@ code CLASS::get_compact_links(tx_links& out,
     return error::success;
 }
 
-// Compact blocks.
-/// TODO: apply these to compact block confirmation, as the block will
-/// TODO: associate existing txs, making it impossible to rely on the
-/// TODO: duplicates table. The full query approach must be used instead.
-// ----------------------------------------------------------------------------
-// protected
-
-TEMPLATE
-bool CLASS::get_double_spenders(tx_links& out, const point& point,
-    const ins_link& self) const NOEXCEPT
-{
-    // This is most of the expense of compact block confirmation.
-    // It is not mitigated by the point table filter, since self always exists.
-
-    ins_links points{};
-    for (auto it = store_.ins.it(point); it; ++it)
-        if (*it != self)
-            points.push_back(*it);
-
-    for (auto point: points)
-    {
-        table::ins_sequence::get_parent get{};
-        if (!store_.ins.sequence.get(point, get))
-            return false;
-
-        out.push_back(get.parent_fk);
-    }
-
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_double_spenders(tx_links& out,
-    const block& block) const NOEXCEPT
-{
-    // Empty or coinbase only implies no spends.
-    const auto& txs = *block.transactions_ptr();
-    if (txs.size() <= one)
-        return true;
-
-    for (auto tx = std::next(txs.cbegin()); tx != txs.cend(); ++tx)
-        for (const auto& in: *(*tx)->inputs_ptr())
-            if (!get_double_spenders(out, in->point(), in->metadata.point_link))
-                return false;
-
-    return true;
-}
-
 } // namespace database
 } // namespace libbitcoin
 

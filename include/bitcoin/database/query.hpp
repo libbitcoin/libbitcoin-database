@@ -915,11 +915,6 @@ protected:
     code get_prevouts(point_sets& sets, size_t points,
         const header_link& link) const NOEXCEPT;
 
-    /// TODO: compact blocks confirmation.
-    bool get_double_spenders(tx_links& out, const block& block) const NOEXCEPT;
-    bool get_double_spenders(tx_links& out, const point& point,
-        const ins_link& self) const NOEXCEPT;
-
     /// Support set_strong and set_unstrong writers.
     bool set_strong(const header_link& link, const tx_links& fks,
         bool positive) NOEXCEPT;
