@@ -427,6 +427,58 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate_
     BOOST_REQUIRE_EQUAL(query.get_all_unassociated().size(), 0u);
 }
 
+// associations
+
+static association make_association(size_t height, uint8_t id) NOEXCEPT
+{
+    association item{};
+    item.hash.front() = id;
+    item.context.height = height;
+    return item;
+}
+
+BOOST_AUTO_TEST_CASE(query_initialize__associations__insert_duplicate__false)
+{
+    associations map{};
+    BOOST_REQUIRE(map.insert(make_association(1, 0x01)).second);
+    BOOST_REQUIRE(!map.insert(make_association(1, 0x02)).second);
+    BOOST_REQUIRE(!map.insert(make_association(2, 0x01)).second);
+    BOOST_REQUIRE_EQUAL(map.size(), 1u);
+    BOOST_REQUIRE(map.exists(1));
+    BOOST_REQUIRE(!map.exists(2));
+}
+
+BOOST_AUTO_TEST_CASE(query_initialize__associations__pos_begin__height_order)
+{
+    associations map{};
+    BOOST_REQUIRE(map.insert(make_association(3, 0x03)).second);
+    BOOST_REQUIRE(map.insert(make_association(1, 0x01)).second);
+    BOOST_REQUIRE(map.insert(make_association(2, 0x02)).second);
+
+    auto it = map.pos_begin();
+    BOOST_REQUIRE_EQUAL((it++)->context.height, 1u);
+    BOOST_REQUIRE_EQUAL((it++)->context.height, 2u);
+    BOOST_REQUIRE_EQUAL((it++)->context.height, 3u);
+    BOOST_REQUIRE(it == map.pos_end());
+    BOOST_REQUIRE_EQUAL(map.top().height, 3u);
+}
+
+BOOST_AUTO_TEST_CASE(query_initialize__associations__erase__removed_from_both_indexes)
+{
+    associations map{};
+    const auto item = make_association(1, 0x01);
+    BOOST_REQUIRE(map.insert(item).second);
+    BOOST_REQUIRE(map.insert(make_association(2, 0x02)).second);
+
+    const auto it = map.find(item.hash);
+    BOOST_REQUIRE(it != map.end());
+    map.erase(it);
+    BOOST_REQUIRE_EQUAL(map.size(), 1u);
+    BOOST_REQUIRE(!map.exists(item.hash));
+    BOOST_REQUIRE(!map.exists(1));
+    BOOST_REQUIRE(map.insert(item).second);
+}
+
 // get_unassociated_count_above/get_unassociated_count
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_count_above__gapped_candidate__expected)
