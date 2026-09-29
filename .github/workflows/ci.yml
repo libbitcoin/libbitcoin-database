@@ -10,7 +10,21 @@ name: Continuous Integration
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
+    paths:
+      - 'builds/cmake/**'
+      - 'builds/gnu/**'
+      - 'builds/msvc/**'
+      - 'src/**'
+      - 'test/**'
+      - 'tools/initchain/**'
   push:
+    paths:
+      - 'builds/cmake/**'
+      - 'builds/gnu/**'
+      - 'builds/msvc/**'
+      - 'src/**'
+      - 'test/**'
+      - 'tools/initchain/**'
   workflow_dispatch:
 
 concurrency:
