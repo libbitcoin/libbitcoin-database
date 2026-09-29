@@ -407,6 +407,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\point_set.hpp">
       <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\pooled_block.hpp">
+      <Filter>include\bitcoin\database\types</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\pooled_tx.hpp">
       <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>

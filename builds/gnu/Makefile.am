@@ -351,6 +351,7 @@ include_bitcoin_database_types_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/types/history.hpp \
     ${srcdir}/../../include/bitcoin/database/types/multisig_view.hpp \
     ${srcdir}/../../include/bitcoin/database/types/point_set.hpp \
+    ${srcdir}/../../include/bitcoin/database/types/pooled_block.hpp \
     ${srcdir}/../../include/bitcoin/database/types/pooled_tx.hpp \
     ${srcdir}/../../include/bitcoin/database/types/position.hpp \
     ${srcdir}/../../include/bitcoin/database/types/span.hpp \
