@@ -69,13 +69,12 @@ code CLASS::get_compact_links(tx_links& out,
                 !store_.pool.id3.get(ptr3, row, id3))
                 return error::integrity;
 
-            const auto words = to_little_endians(std_array<uint64_t, 4>
+            const siphash_words words
             {
                 id0.word, id1.word, id2.word, id3.word
-            });
+            };
 
-            const auto id = bit_and(siphash(key, array_cast<uint8_t>(words)),
-                mask);
+            const auto id = bit_and(siphash(key, words), mask);
 
             if (const auto it = positions.find(id); it != positions.end())
                 matches.emplace_back(it->second, row);
