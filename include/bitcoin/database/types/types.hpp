@@ -29,6 +29,7 @@
 #include <bitcoin/database/types/history.hpp>
 #include <bitcoin/database/types/multisig_view.hpp>
 #include <bitcoin/database/types/point_set.hpp>
+#include <bitcoin/database/types/pooled_block.hpp>
 #include <bitcoin/database/types/pooled_tx.hpp>
 #include <bitcoin/database/types/position.hpp>
 #include <bitcoin/database/types/span.hpp>

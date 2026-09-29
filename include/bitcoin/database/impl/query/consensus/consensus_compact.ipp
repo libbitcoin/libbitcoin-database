@@ -49,38 +49,9 @@ code CLASS::get_compact_links(tx_links& out,
             ambiguous.at(index) = ambiguous.at(it->second) = true;
     }
 
-    // Scan the id columns, resolving tx links only after guards release.
-    std::vector<std::pair<size_t, table::pool::link>> matches{};
-    {
-        const auto ptr0 = store_.pool.id0.get_memory();
-        const auto ptr1 = store_.pool.id1.get_memory();
-        const auto ptr2 = store_.pool.id2.get_memory();
-        const auto ptr3 = store_.pool.id3.get_memory();
-        if (!ptr0 || !ptr1 || !ptr2 || !ptr3)
-            return error::integrity;
-
-        table::pool_word id0{}, id1{}, id2{}, id3{};
-        const auto rows = store_.pool.count();
-        for (table::pool::link row{ 0 }; row < rows; ++row)
-        {
-            if (!store_.pool.id0.get(ptr0, row, id0) ||
-                !store_.pool.id1.get(ptr1, row, id1) ||
-                !store_.pool.id2.get(ptr2, row, id2) ||
-                !store_.pool.id3.get(ptr3, row, id3))
-                return error::integrity;
-
-            const auto words = to_little_endians(std_array<uint64_t, 4>
-            {
-                id0.word, id1.word, id2.word, id3.word
-            });
-
-            const auto id = bit_and(siphash(key, array_cast<uint8_t>(words)),
-                mask);
-
-            if (const auto it = positions.find(id); it != positions.end())
-                matches.emplace_back(it->second, row);
-        }
-    }
+    compact_matches matches{};
+    if (!get_compact_matches(matches, positions, key))
+        return error::integrity;
 
     for (const auto& [index, row]: matches)
     {
@@ -103,50 +74,36 @@ code CLASS::get_compact_links(tx_links& out,
     return error::success;
 }
 
-// Compact blocks.
-/// TODO: apply these to compact block confirmation, as the block will
-/// TODO: associate existing txs, making it impossible to rely on the
-/// TODO: duplicates table. The full query approach must be used instead.
-// ----------------------------------------------------------------------------
-// protected
-
+// Scan the id columns, resolving tx links only after the guards release.
 TEMPLATE
-bool CLASS::get_double_spenders(tx_links& out, const point& point,
-    const ins_link& self) const NOEXCEPT
+bool CLASS::get_compact_matches(compact_matches& out,
+    const std::unordered_map<uint64_t, size_t>& positions,
+    const system::siphash_key& key) const NOEXCEPT
 {
-    // This is most of the expense of compact block confirmation.
-    // It is not mitigated by the point table filter, since self always exists.
+    using namespace system;
+    constexpr auto mask = unmask_right<uint64_t>(48);
+    const auto ptr0 = store_.pool.id0.get_memory();
+    const auto ptr1 = store_.pool.id1.get_memory();
+    const auto ptr2 = store_.pool.id2.get_memory();
+    const auto ptr3 = store_.pool.id3.get_memory();
+    if (!ptr0 || !ptr1 || !ptr2 || !ptr3)
+        return false;
 
-    ins_links points{};
-    for (auto it = store_.ins.it(point); it; ++it)
-        if (*it != self)
-            points.push_back(*it);
-
-    for (auto point: points)
+    table::pool_word id0{}, id1{}, id2{}, id3{};
+    const auto rows = store_.pool.count();
+    for (table::pool::link row{ 0 }; row < rows; ++row)
     {
-        table::ins_sequence::get_parent get{};
-        if (!store_.ins.sequence.get(point, get))
+        if (!store_.pool.id0.get(ptr0, row, id0) ||
+            !store_.pool.id1.get(ptr1, row, id1) ||
+            !store_.pool.id2.get(ptr2, row, id2) ||
+            !store_.pool.id3.get(ptr3, row, id3))
             return false;
 
-        out.push_back(get.parent_fk);
+        const siphash_words words{ id0.word, id1.word, id2.word, id3.word };
+        const auto id = bit_and(siphash(key, words), mask);
+        if (const auto it = positions.find(id); it != positions.end())
+            out.emplace_back(it->second, row);
     }
-
-    return true;
-}
-
-TEMPLATE
-bool CLASS::get_double_spenders(tx_links& out,
-    const block& block) const NOEXCEPT
-{
-    // Empty or coinbase only implies no spends.
-    const auto& txs = *block.transactions_ptr();
-    if (txs.size() <= one)
-        return true;
-
-    for (auto tx = std::next(txs.cbegin()); tx != txs.cend(); ++tx)
-        for (const auto& in: *(*tx)->inputs_ptr())
-            if (!get_double_spenders(out, in->point(), in->metadata.point_link))
-                return false;
 
     return true;
 }

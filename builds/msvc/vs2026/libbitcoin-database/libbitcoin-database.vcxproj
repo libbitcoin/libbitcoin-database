@@ -213,6 +213,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\history.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\multisig_view.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\point_set.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\pooled_block.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\pooled_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\position.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\span.hpp" />

@@ -114,74 +114,94 @@ TEMPLATE
 code CLASS::validate_pooled(const header_link& link, const chain_context& ctx,
     uint64_t subsidy_interval, uint64_t initial_subsidy) NOEXCEPT
 {
-    using namespace system;
     using prevout = table::prevout;
     if (!store_.pool.enabled())
         return error::unvalidated;
 
-    const auto txs = to_transactions(link);
-    if (txs.empty())
+    code ec{};
+    pooled_block block{};
+    if ((ec = get_pooled_block(block, link, context::from(ctx))) ||
+        (ec = check_pooled_block(block)) ||
+        (ec = accept_pooled_block(block, ctx, subsidy_interval,
+            initial_subsidy)))
+        return ec;
+
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    return store_.prevout.put(to_prevout(link), prevout::slab_put_spends
+    {
+        {},
+        block.conflicts,
+        block.spends
+    }) ? error::success : error::prevouts_put;
+    // ========================================================================
+}
+
+// Tx records and pool rows (early, as insufficiency implies full validation).
+TEMPLATE
+code CLASS::get_pooled_block(pooled_block& out, const header_link& link,
+    const context& ctx) const NOEXCEPT
+{
+    using namespace system;
+    out.txs = to_transactions(link);
+    if (out.txs.empty() || !get_block_sizes(out.light, out.heavy, link))
         return error::integrity;
 
-    const auto count = txs.size();
-    std::vector<table::transaction::record> records(count);
+    const auto count = out.txs.size();
+    out.records.resize(count);
     for (size_t index{}; index < count; ++index)
-        if (!store_.tx.get(txs.at(index), records.at(index)))
+        if (!store_.tx.get(out.txs.at(index), out.records.at(index)))
             return error::integrity;
 
-    // Sufficiency (early, as insufficiency implies full validation).
-    uint64_t fees{};
-    size_t sigops{};
-    const auto pool = context::from(ctx);
-    std::vector<pooled_tx> pooled(count);
+    out.pooled.resize(count);
     for (size_t index = one; index < count; ++index)
     {
-        auto& tx = pooled.at(index);
-        tx.prevouts.resize(records.at(index).ins_count);
-        if (const auto ec = get_pooled(tx, txs.at(index), pool))
+        auto& tx = out.pooled.at(index);
+        tx.prevouts.resize(out.records.at(index).ins_count);
+        if (const auto ec = get_pooled(tx, out.txs.at(index), ctx))
             return ec;
 
-        fees = ceilinged_add(fees, tx.fee);
-        sigops = ceilinged_add(sigops, tx.sigops);
+        out.fees = ceilinged_add(out.fees, tx.fee);
+        out.sigops = ceilinged_add(out.sigops, tx.sigops);
     }
 
-    // Block check.
-    // ------------------------------------------------------------------------
+    return error::success;
+}
 
-    size_t light{}, heavy{};
-    if (!get_block_sizes(light, heavy, link))
-        return error::integrity;
+// Block check: structure, and the points pass (spends and conflicts).
+TEMPLATE
+code CLASS::check_pooled_block(pooled_block& block) const NOEXCEPT
+{
+    using namespace system;
+    using prevout = table::prevout;
+    const auto count = block.txs.size();
 
-    if (light > chain::max_block_size)
+    if (block.light > chain::max_block_size)
         return system::error::block_size_limit;
 
-    if (!records.front().coinbase)
+    if (!block.records.front().coinbase)
         return system::error::first_not_coinbase;
 
     for (size_t index = one; index < count; ++index)
-        if (records.at(index).coinbase)
+        if (block.records.at(index).coinbase)
             return system::error::extra_coinbases;
 
-    std::unordered_map<hash_digest, size_t> positions{};
-    positions.reserve(count);
+    block.positions.reserve(count);
     for (size_t index{}; index < count; ++index)
-        positions.emplace(get_tx_key(txs.at(index)), index);
+        block.positions.emplace(get_tx_key(block.txs.at(index)), index);
 
-    // Points, spends (parent|terminal, sequence), and conflicts (doubles).
-    using spend = prevout::slab_put_spends::spend;
-    std::unordered_set<chain::point> points{};
-    std::vector<spend> spends{};
-    tx_links conflicts{};
     const auto doubles = !is_zero(store_.duplicate.body_size());
     for (size_t index = one; index < count; ++index)
     {
-        const auto& record = records.at(index);
-        auto parent = pooled.at(index).prevouts.cbegin();
+        const auto& record = block.records.at(index);
+        auto parent = block.pooled.at(index).prevouts.cbegin();
         const auto end = record.point_fk + record.ins_count;
         for (auto fk = record.point_fk; fk < end; ++fk, ++parent)
         {
             const auto point = get_point_key(fk);
-            if (!points.insert(point).second)
+            if (!block.points.insert(point).second)
                 return system::error::block_internal_double_spend;
 
             table::ins_sequence::get_input input{};
@@ -191,23 +211,30 @@ code CLASS::validate_pooled(const header_link& link, const chain_context& ctx,
             // An internal spend (by hash) is terminal, as confirmation of the
             // pooled parent would otherwise be required.
             auto merged = prevout::tx::terminal;
-            if (const auto it = positions.find(point.hash());
-                it == positions.end())
+            if (const auto it = block.positions.find(point.hash());
+                it == block.positions.end())
                 merged = prevout::merge(parent->coinbase, parent->parent);
             else if (it->second >= index)
                 return system::error::forward_reference;
             else if (is_zero(it->second))
                 return system::error::coinbase_maturity;
 
-            spends.emplace_back(merged, input.sequence);
-            if (doubles && !get_doubles(conflicts, point))
+            block.spends.emplace_back(merged, input.sequence);
+            if (doubles && !get_doubles(block.conflicts, point))
                 return error::integrity;
         }
     }
 
-    // Block check (context).
-    // ------------------------------------------------------------------------
+    return error::success;
+}
 
+// Block check (context) and accept: weight, coinbase, hash limit, claim, sigops.
+TEMPLATE
+code CLASS::accept_pooled_block(const pooled_block& block,
+    const chain_context& ctx, uint64_t subsidy_interval,
+    uint64_t initial_subsidy) const NOEXCEPT
+{
+    using namespace system;
     const auto bip16 = ctx.is_enabled(chain::flags::bip16_rule);
     const auto bip34 = ctx.is_enabled(chain::flags::bip34_rule);
     const auto bip42 = ctx.is_enabled(chain::flags::bip42_rule);
@@ -215,12 +242,12 @@ code CLASS::validate_pooled(const header_link& link, const chain_context& ctx,
     const auto bip141 = ctx.is_enabled(chain::flags::bip141_rule);
 
     const auto weight = ceilinged_add(
-        ceilinged_multiply(chain::base_size_contribution, light),
-        ceilinged_multiply(chain::total_size_contribution, heavy));
+        ceilinged_multiply(chain::base_size_contribution, block.light),
+        ceilinged_multiply(chain::total_size_contribution, block.heavy));
     if (bip141 && weight > chain::max_block_weight)
         return system::error::block_weight_limit;
 
-    const auto coinbase = get_transaction(txs.front(), true);
+    const auto coinbase = get_transaction(block.txs.front(), true);
     if (!coinbase)
         return error::integrity;
 
@@ -239,40 +266,27 @@ code CLASS::validate_pooled(const header_link& link, const chain_context& ctx,
     if (bip50)
     {
         std::unordered_set<hash_digest> hashes{};
-        for (const auto& position: positions)
+        for (const auto& position: block.positions)
             hashes.insert(position.first);
 
-        for (const auto& point: points)
+        for (const auto& point: block.points)
             hashes.insert(point.hash());
 
         if (hashes.size() > chain::hash_limit)
             return system::error::temporary_hash_limit;
     }
 
-    // Block accept.
-    // ------------------------------------------------------------------------
-
     const auto subsidy = chain::block::subsidy(ctx.height, subsidy_interval,
         initial_subsidy, bip42);
-    if (coinbase->spend() > ceilinged_add(fees, subsidy))
+    if (coinbase->spend() > ceilinged_add(block.fees, subsidy))
         return system::error::coinbase_value_limit;
 
-    sigops = ceilinged_add(sigops, coinbase->signature_operations(bip16,
-        bip141));
+    const auto sigops = ceilinged_add(block.sigops,
+        coinbase->signature_operations(bip16, bip141));
     if (sigops > (bip141 ? chain::max_fast_sigops : chain::max_block_sigops))
         return system::error::block_sigop_limit;
 
-    // ========================================================================
-    const auto scope = get_transactor();
-
-    // Clean single allocation failure (e.g. disk full).
-    return store_.prevout.put(to_prevout(link), prevout::slab_put_spends
-    {
-        {},
-        conflicts,
-        spends
-    }) ? error::success : error::prevouts_put;
-    // ========================================================================
+    return error::success;
 }
 
 // utility

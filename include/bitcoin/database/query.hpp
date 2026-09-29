@@ -915,10 +915,19 @@ protected:
     code get_prevouts(point_sets& sets, size_t points,
         const header_link& link) const NOEXCEPT;
 
-    /// TODO: compact blocks confirmation.
-    bool get_double_spenders(tx_links& out, const block& block) const NOEXCEPT;
-    bool get_double_spenders(tx_links& out, const point& point,
-        const ins_link& self) const NOEXCEPT;
+    /// Called by validate_pooled.
+    code get_pooled_block(pooled_block& out, const header_link& link,
+        const context& ctx) const NOEXCEPT;
+    code check_pooled_block(pooled_block& block) const NOEXCEPT;
+    code accept_pooled_block(const pooled_block& block,
+        const chain_context& ctx, uint64_t subsidy_interval,
+        uint64_t initial_subsidy) const NOEXCEPT;
+
+    /// Called by get_compact_links.
+    using compact_matches = std::vector<std::pair<size_t, table::pool::link>>;
+    bool get_compact_matches(compact_matches& out,
+        const std::unordered_map<uint64_t, size_t>& positions,
+        const system::siphash_key& key) const NOEXCEPT;
 
     /// Support set_strong and set_unstrong writers.
     bool set_strong(const header_link& link, const tx_links& fks,
