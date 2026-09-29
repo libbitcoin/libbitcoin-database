@@ -915,6 +915,35 @@ protected:
     code get_prevouts(point_sets& sets, size_t points,
         const header_link& link) const NOEXCEPT;
 
+    /// Called by validate_pooled.
+    struct pooled_block
+    {
+        tx_links txs{};
+        std::vector<table::transaction::record> records{};
+        std::vector<pooled_tx> pooled{};
+        std::unordered_map<hash_digest, size_t> positions{};
+        std::unordered_set<point> points{};
+        std::vector<table::prevout::slab_put_spends::spend> spends{};
+        tx_links conflicts{};
+        uint64_t fees{};
+        size_t sigops{};
+        size_t light{};
+        size_t heavy{};
+    };
+
+    code get_pooled_block(pooled_block& out, const header_link& link,
+        const context& ctx) const NOEXCEPT;
+    code check_pooled_block(pooled_block& block) const NOEXCEPT;
+    code accept_pooled_block(const pooled_block& block,
+        const chain_context& ctx, uint64_t subsidy_interval,
+        uint64_t initial_subsidy) const NOEXCEPT;
+
+    /// Called by get_compact_links.
+    using compact_matches = std::vector<std::pair<size_t, table::pool::link>>;
+    bool get_compact_matches(compact_matches& out,
+        const std::unordered_map<uint64_t, size_t>& positions,
+        const system::siphash_key& key) const NOEXCEPT;
+
     /// Support set_strong and set_unstrong writers.
     bool set_strong(const header_link& link, const tx_links& fks,
         bool positive) NOEXCEPT;

@@ -49,37 +49,9 @@ code CLASS::get_compact_links(tx_links& out,
             ambiguous.at(index) = ambiguous.at(it->second) = true;
     }
 
-    // Scan the id columns, resolving tx links only after guards release.
-    std::vector<std::pair<size_t, table::pool::link>> matches{};
-    {
-        const auto ptr0 = store_.pool.id0.get_memory();
-        const auto ptr1 = store_.pool.id1.get_memory();
-        const auto ptr2 = store_.pool.id2.get_memory();
-        const auto ptr3 = store_.pool.id3.get_memory();
-        if (!ptr0 || !ptr1 || !ptr2 || !ptr3)
-            return error::integrity;
-
-        table::pool_word id0{}, id1{}, id2{}, id3{};
-        const auto rows = store_.pool.count();
-        for (table::pool::link row{ 0 }; row < rows; ++row)
-        {
-            if (!store_.pool.id0.get(ptr0, row, id0) ||
-                !store_.pool.id1.get(ptr1, row, id1) ||
-                !store_.pool.id2.get(ptr2, row, id2) ||
-                !store_.pool.id3.get(ptr3, row, id3))
-                return error::integrity;
-
-            const siphash_words words
-            {
-                id0.word, id1.word, id2.word, id3.word
-            };
-
-            const auto id = bit_and(siphash(key, words), mask);
-
-            if (const auto it = positions.find(id); it != positions.end())
-                matches.emplace_back(it->second, row);
-        }
-    }
+    compact_matches matches{};
+    if (!get_compact_matches(matches, positions, key))
+        return error::integrity;
 
     for (const auto& [index, row]: matches)
     {
@@ -100,6 +72,40 @@ code CLASS::get_compact_links(tx_links& out,
     }
 
     return error::success;
+}
+
+// Scan the id columns, resolving tx links only after the guards release.
+TEMPLATE
+bool CLASS::get_compact_matches(compact_matches& out,
+    const std::unordered_map<uint64_t, size_t>& positions,
+    const system::siphash_key& key) const NOEXCEPT
+{
+    using namespace system;
+    constexpr auto mask = unmask_right<uint64_t>(48);
+    const auto ptr0 = store_.pool.id0.get_memory();
+    const auto ptr1 = store_.pool.id1.get_memory();
+    const auto ptr2 = store_.pool.id2.get_memory();
+    const auto ptr3 = store_.pool.id3.get_memory();
+    if (!ptr0 || !ptr1 || !ptr2 || !ptr3)
+        return false;
+
+    table::pool_word id0{}, id1{}, id2{}, id3{};
+    const auto rows = store_.pool.count();
+    for (table::pool::link row{ 0 }; row < rows; ++row)
+    {
+        if (!store_.pool.id0.get(ptr0, row, id0) ||
+            !store_.pool.id1.get(ptr1, row, id1) ||
+            !store_.pool.id2.get(ptr2, row, id2) ||
+            !store_.pool.id3.get(ptr3, row, id3))
+            return false;
+
+        const siphash_words words{ id0.word, id1.word, id2.word, id3.word };
+        const auto id = bit_and(siphash(key, words), mask);
+        if (const auto it = positions.find(id); it != positions.end())
+            out.emplace_back(it->second, row);
+    }
+
+    return true;
 }
 
 } // namespace database
