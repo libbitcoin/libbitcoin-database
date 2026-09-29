@@ -54,6 +54,13 @@ inline bool CLASS::is_milestone(const header_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+inline bool CLASS::is_compact(const header_link& link) const NOEXCEPT
+{
+    table::header::get_compact header{};
+    return store_.header.get(link, header) && header.compact;
+}
+
+TEMPLATE
 inline bool CLASS::is_associated(const header_link& link) const NOEXCEPT
 {
     table::txs::get_associated txs{};
@@ -246,6 +253,54 @@ hashes CLASS::get_tx_keys(const header_link& link) const NOEXCEPT
 
     // Return of any null_hash implies failure.
     return hashes;
+}
+
+TEMPLATE
+hashes CLASS::get_wtxids(const header_link& link) const NOEXCEPT
+{
+    const auto tx_fks = to_transactions(link);
+    if (tx_fks.empty())
+        return {};
+
+    system::hashes hashes(tx_fks.size());
+    std::transform(tx_fks.begin(), tx_fks.end(), hashes.begin(),
+        [this](const auto& tx_fk) NOEXCEPT
+        {
+            return this->get_wtxid(tx_fk);
+        });
+
+    // Return of any null_hash implies failure.
+    return hashes;
+}
+
+// The pool id columns hold the witness hash of a pooled tx, otherwise (such as
+// for any coinbase) the witness hash is computed from the stored tx.
+TEMPLATE
+hash_digest CLASS::get_wtxid(const tx_link& link) const NOEXCEPT
+{
+    using namespace system;
+    if (store_.pool.enabled())
+    {
+        if (const auto row = store_.pool.first(link); !row.is_terminal())
+        {
+            table::pool_word id0{}, id1{}, id2{}, id3{};
+            if (!store_.pool.id0.get(row, id0) ||
+                !store_.pool.id1.get(row, id1) ||
+                !store_.pool.id2.get(row, id2) ||
+                !store_.pool.id3.get(row, id3))
+                return {};
+
+            const auto words = to_little_endians(std_array<uint64_t, 4>
+            {
+                id0.word, id1.word, id2.word, id3.word
+            });
+
+            return array_cast<uint8_t>(words);
+        }
+    }
+
+    const auto tx = get_transaction(link, true);
+    return tx ? tx->hash(true) : null_hash;
 }
 
 TEMPLATE

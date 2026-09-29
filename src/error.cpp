@@ -119,6 +119,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // header archive
     { header_put, "header_put" },
+    { header_work, "header_work" },
 
     // txs archive
     { txs_header, "txs_header" },
@@ -126,6 +127,9 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { txs_height, "txs_height" },
     { txs_confirm, "txs_confirm" },
     { txs_txs_put, "txs_txs_put" },
+
+    // prevouts cache
+    { prevouts_put, "prevouts_put" },
 
     // services
     { not_found, "not_found" },

@@ -111,6 +111,47 @@ struct prevout
         const system::chain::block& block{};
     };
 
+    /// Spends are the merged parent tx (or terminal) and input sequence.
+    struct slab_put_spends
+      : public schema::prevout
+    {
+        using spend = std::pair<tx::integer, uint32_t>;
+
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            const auto conflicts_ = conflicts.size();
+            return variable_size(conflicts_) + (conflicts_ * tx::size) +
+                (spends.size() * (tx::size + sizeof(uint32_t)));
+        }
+
+        inline bool to_data(finalizer& sink) const NOEXCEPT
+        {
+            using namespace system;
+            const auto number = possible_narrow_cast<tx::integer>(
+                conflicts.size());
+
+            // Count is written as a tx link so the table can remain an array.
+            sink.write_variable(number);
+            std::ranges::for_each(conflicts, [&](const auto& con) NOEXCEPT
+            {
+                sink.write_little_endian<tx::integer, tx::size>(con);
+            });
+
+            std::ranges::for_each(spends, [&](const auto& spend) NOEXCEPT
+            {
+                sink.write_little_endian<tx::integer, tx::size>(spend.first);
+                sink.write_little_endian<uint32_t>(spend.second);
+            });
+
+            BC_ASSERT(!sink || (sink.get_write_position() == count()));
+            return sink;
+        }
+
+        const std::vector<tx::integer>& conflicts{};
+        const std::vector<spend>& spends{};
+    };
+
     struct slab_get
       : public schema::prevout
     {

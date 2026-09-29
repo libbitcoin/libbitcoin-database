@@ -378,6 +378,7 @@ public:
     inline bool is_tx_segregated(const tx_link& link) const NOEXCEPT;
     inline bool is_block_segregated(const header_link& link) const NOEXCEPT;
     inline bool is_milestone(const header_link& link) const NOEXCEPT;
+    inline bool is_compact(const header_link& link) const NOEXCEPT;
     inline bool is_associated(const header_link& link) const NOEXCEPT;
     inline bool is_confirmable(const header_link& link) const NOEXCEPT;
     inline bool is_validated(const header_link& link) const NOEXCEPT;
@@ -386,10 +387,12 @@ public:
     hash_digest get_top_confirmed_hash() const NOEXCEPT;
     hash_digest get_top_candidate_hash() const NOEXCEPT;
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
+    hashes get_wtxids(const header_link& link) const NOEXCEPT;
     size_t get_tx_count(const header_link& link) const NOEXCEPT;
     size_t get_branch_tx_count(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
+    hash_digest get_wtxid(const tx_link& link) const NOEXCEPT;
     inline ins_key get_point_key(const ins_link& link) const NOEXCEPT;
     inline hash_digest get_point_hash(const ins_link& link) const NOEXCEPT;
 
@@ -541,10 +544,10 @@ public:
         const uint256_t& work, bool milestone) NOEXCEPT;
     code set_code(header_link& out_fk, const header& header,
         const context& ctx, const uint256_t& work, bool milestone,
-        bool=false) NOEXCEPT;
+        bool compact=false) NOEXCEPT;
     code set_code(header_link& out_fk, const header& header,
         const chain_context& ctx, const uint256_t& work, bool milestone,
-        bool=false) NOEXCEPT;
+        bool compact=false) NOEXCEPT;
 
     /// Set full block (blocks-first).
     code set_code(const block& block, const context& ctx,
@@ -564,6 +567,10 @@ public:
         bool bypass, bool prune=false) NOEXCEPT;
     code set_code(const block& block, const header_link& key, bool strong,
         bool bypass, size_t height, bool prune=false) NOEXCEPT;
+
+    /// Set block.txs from archived txs (e.g. compact block).
+    code set_code(const header_link& key, const tx_links& links,
+        bool strong) NOEXCEPT;
 
     /// Set block_view (wire). Prune strips input scripts/witnesses.
     code set_code(const block_view& block, bool strong, bool bypass,
@@ -599,6 +606,18 @@ public:
     code get_header_state(const header_link& link) const NOEXCEPT;
     code get_pooled(pooled_tx& out, const tx_link& link,
         const context& ctx) const NOEXCEPT;
+
+    /// Validate a block whose txs are pooled under a context sufficient for
+    /// the block, writing its prevouts. Unvalidated implies a tx is not
+    /// sufficiently pooled (block requires full validation).
+    code validate_pooled(const header_link& link, const chain_context& ctx,
+        uint64_t subsidy_interval, uint64_t initial_subsidy) NOEXCEPT;
+
+    /// Pooled tx links by compact block short id (low 48 bits of the siphash
+    /// of wtxid), terminal where not pooled or ambiguous.
+    code get_compact_links(tx_links& out,
+        const std::vector<uint64_t>& short_ids,
+        const system::siphash_key& key) const NOEXCEPT;
 
     /// Header properties.
     uint32_t get_top_timestamp(bool confirmed) const NOEXCEPT;
@@ -972,6 +991,10 @@ protected:
     /// -----------------------------------------------------------------------
     code set_code(const tx_link& tx_fk, const transaction& tx,
         bool bypass, bool prune) NOEXCEPT;
+
+    /// Associate txs to header, caller must hold transactor.
+    code set_txs(const header_link& key, tx_links&& links, size_t light,
+        size_t heavy, hash_option&& interval, bool strong) NOEXCEPT;
 
     /// The archived link of a pooled duplicate of the tx, or terminal.
     tx_link to_pooled(const transaction& tx) const NOEXCEPT;

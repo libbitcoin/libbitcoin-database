@@ -273,10 +273,9 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     // Optional hash, only has value on height intervals.
     auto interval = create_interval(key, height);
     
-    using bytes = linkage<schema::size>::integer;
     using count = linkage<schema::count_>::integer;
-    const auto light = possible_narrow_cast<bytes>(block.serialized_size(false));
-    const auto heavy = possible_narrow_cast<bytes>(block.serialized_size(true));
+    const auto light = block.serialized_size(false);
+    const auto heavy = block.serialized_size(true);
 
     // ========================================================================
     const auto scope = get_transactor();
@@ -362,22 +361,8 @@ code CLASS::set_code(const block_view& block, const header_link& key,
             if (!store_.duplicate.put(twin, table::duplicate::record{}))
                 return error::tx_duplicate_put;
 
-    constexpr auto positive = true;
-
-    // Transactor assures cannot be restored without txs, as required to unset.
-    if (strong && !set_strong(key, links, positive))
-        return error::txs_confirm;
-
-    // Header link is the key for the txs table.
-    // Clean single allocation failure (e.g. disk full).
-    return store_.txs.put(to_txs(key), table::txs::slab
-    {
-        {},
-        light,
-        heavy,
-        std::move(links),
-        std::move(interval)
-    }) ? error::success : error::txs_txs_put;
+    return set_txs(key, std::move(links), light, heavy, std::move(interval),
+        strong);
     // ========================================================================
 }
 

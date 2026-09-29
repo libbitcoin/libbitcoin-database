@@ -40,7 +40,12 @@ namespace database {
 namespace schema {
 
 /// The store schema version, stored as the first envelope value.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 1, 0 };
+/// 4.0.0.0 Versioned envelope.
+/// 4.0.1.0 Header work column, spends table, pool id columns, and the
+///         validated_bk/validated_tx to state/pool table renames.
+/// 4.0.2.0 Header work reduced to 16 bytes, milestone (formerly merged into
+///         parent pk) and compact in a new header flags byte.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 2, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
@@ -52,6 +57,7 @@ constexpr size_t count_ = 2;    // txs/block count, inputs/block count.
 constexpr size_t index = 3;     // input/output index.
 constexpr size_t sigops = 3;    // signature op count.
 constexpr size_t flags = 4;     // fork flags.
+constexpr size_t work = 16;     // cumulative work.
 constexpr size_t prefix = 8;    // silent payment output prefix.
 constexpr size_t hash = system::hash_size;
 
@@ -82,26 +88,26 @@ struct header
 {
     static constexpr size_t sk = schema::hash;
     static constexpr size_t pk = schema::block;
-    using link = linkage<pk, sub1(to_bits(pk))>; // reduced for milestone
-    using key = system::data_array<sk>;          // ...and strong_tx merges.
+    using link = linkage<pk, sub1(to_bits(pk))>; // reduced for strong_tx merge.
+    using key = system::data_array<sk>;
     static constexpr size_t minsize =
         schema::flags +         // context.flags
         schema::height_ +       // context.height
         sizeof(uint32_t) +      // context.mtp
-        ///schema::bit +        // milestone (merged into parent pk)
         pk +                    // parent.pk
         sizeof(uint32_t) +      // version
         sizeof(uint32_t) +      // timestamp
         sizeof(uint32_t) +      // bits
         sizeof(uint32_t) +      // nonce
         schema::hash +          // merkle root
-        schema::hash;           // work (cumulative)
+        schema::work +          // work (cumulative)
+        sizeof(uint8_t);        // header flags (milestone, compact)
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = sizeof(unsigned_type<link::size>);
     static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 94u);
-    static_assert(minrow == 129u);
+    static_assert(minsize == 79u);
+    static_assert(minrow == 114u);
     static_assert(link::size == 3u);
     static_assert(cell == 4u);
     bool operator==(const header&) const NOEXCEPT = default;

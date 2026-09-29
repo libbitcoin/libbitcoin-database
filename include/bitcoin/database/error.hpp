@@ -125,6 +125,7 @@ enum error_t : uint8_t
 
     /// header archive
     header_put,
+    header_work,
 
     /// txs archive
     txs_header,
@@ -132,6 +133,9 @@ enum error_t : uint8_t
     txs_height,
     txs_confirm,
     txs_txs_put,
+
+    /// prevouts cache
+    prevouts_put,
 
     /// services
     not_found,

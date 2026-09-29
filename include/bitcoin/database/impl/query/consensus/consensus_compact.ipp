@@ -24,6 +24,85 @@
 namespace libbitcoin {
 namespace database {
 
+// Compact block short ids.
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+code CLASS::get_compact_links(tx_links& out,
+    const std::vector<uint64_t>& short_ids,
+    const system::siphash_key& key) const NOEXCEPT
+{
+    using namespace system;
+    constexpr auto mask = unmask_right<uint64_t>(48);
+    out.assign(short_ids.size(), tx_link::terminal);
+    if (short_ids.empty() || !store_.pool.enabled())
+        return error::success;
+
+    // A short id duplicated within the block is ambiguous.
+    std::vector<bool> ambiguous(short_ids.size());
+    std::unordered_map<uint64_t, size_t> positions{};
+    positions.reserve(short_ids.size());
+    for (size_t index{}; index < short_ids.size(); ++index)
+    {
+        const auto id = bit_and(short_ids.at(index), mask);
+        if (const auto [it, added] = positions.emplace(id, index); !added)
+            ambiguous.at(index) = ambiguous.at(it->second) = true;
+    }
+
+    // Scan the id columns, resolving tx links only after guards release.
+    std::vector<std::pair<size_t, table::pool::link>> matches{};
+    {
+        const auto ptr0 = store_.pool.id0.get_memory();
+        const auto ptr1 = store_.pool.id1.get_memory();
+        const auto ptr2 = store_.pool.id2.get_memory();
+        const auto ptr3 = store_.pool.id3.get_memory();
+        if (!ptr0 || !ptr1 || !ptr2 || !ptr3)
+            return error::integrity;
+
+        table::pool_word id0{}, id1{}, id2{}, id3{};
+        const auto rows = store_.pool.count();
+        for (table::pool::link row{ 0 }; row < rows; ++row)
+        {
+            if (!store_.pool.id0.get(ptr0, row, id0) ||
+                !store_.pool.id1.get(ptr1, row, id1) ||
+                !store_.pool.id2.get(ptr2, row, id2) ||
+                !store_.pool.id3.get(ptr3, row, id3))
+                return error::integrity;
+
+            const auto words = to_little_endians(std_array<uint64_t, 4>
+            {
+                id0.word, id1.word, id2.word, id3.word
+            });
+
+            const auto id = bit_and(siphash(key, array_cast<uint8_t>(words)),
+                mask);
+
+            if (const auto it = positions.find(id); it != positions.end())
+                matches.emplace_back(it->second, row);
+        }
+    }
+
+    for (const auto& [index, row]: matches)
+    {
+        if (ambiguous.at(index))
+            continue;
+
+        const tx_link link{ store_.pool.get_key(row) };
+        auto& found = out.at(index);
+        if (found == tx_link::terminal)
+        {
+            found = link;
+        }
+        else if (found != link)
+        {
+            found = tx_link::terminal;
+            ambiguous.at(index) = true;
+        }
+    }
+
+    return error::success;
+}
+
 // Compact blocks.
 /// TODO: apply these to compact block confirmation, as the block will
 /// TODO: associate existing txs, making it impossible to rely on the
