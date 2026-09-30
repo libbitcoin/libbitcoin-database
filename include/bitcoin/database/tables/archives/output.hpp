@@ -381,7 +381,7 @@ struct output
         }
 
         const tx::integer parent_fk{};
-        const system::chain::transaction_view& tx_;
+        const system::chain::view::transaction& tx_;
     };
 
     struct wire_script

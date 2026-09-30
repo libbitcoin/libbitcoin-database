@@ -247,7 +247,7 @@ struct outs_puts
         }
 
         const out::integer output_fk{};
-        const system::chain::transaction_view& tx_;
+        const system::chain::view::transaction& tx_;
     };
 };
 

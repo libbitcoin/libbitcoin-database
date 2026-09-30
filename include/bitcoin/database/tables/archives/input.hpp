@@ -252,7 +252,7 @@ struct input
             return sink && isource;
         }
 
-        const system::chain::transaction_view& tx_;
+        const system::chain::view::transaction& tx_;
         bool prune_{};
     };
 

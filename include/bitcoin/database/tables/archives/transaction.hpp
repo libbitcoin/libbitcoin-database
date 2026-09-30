@@ -207,7 +207,7 @@ struct transaction
             return sink;
         }
 
-        const system::chain::transaction_view& tx;
+        const system::chain::view::transaction& tx;
         ix::integer ins_count{};
         ix::integer outs_count{};
         ins::integer point_fk{};
