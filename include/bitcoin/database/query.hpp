@@ -40,7 +40,7 @@ public:
 
     /// Chain type aliases.
     using block = system::chain::block;
-    using block_view = system::chain::block_view;
+    using block_view = system::chain::view::block;
     using point = system::chain::point;
     using input = system::chain::input;
     using output = system::chain::output;
@@ -49,7 +49,7 @@ public:
     using witness = system::chain::witness;
     using headers = system::chain::header_cptrs;
     using transaction = system::chain::transaction;
-    using transaction_view = system::chain::transaction_view;
+    using transaction_view = system::chain::view::transaction;
     using transactions = system::chain::transaction_cptrs;
     using inputs_ptr = system::chain::inputs_ptr;
     using outputs_ptr = system::chain::outputs_ptr;

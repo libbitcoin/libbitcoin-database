@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(query_filters__set_filter_body__block_view__matches_block)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
 
-    system::chain::block_view view{ test::block1.to_data(true), true };
+    system::chain::view::block view{ test::block1.to_data(true), true };
     BOOST_REQUIRE(view.is_valid());
     BOOST_REQUIRE_EQUAL(view.populate(system::chain::context{}, {}), system::error::block_success);
     BOOST_REQUIRE(query.set_filter_body(1, view));

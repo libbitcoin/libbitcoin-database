@@ -268,7 +268,7 @@ struct ins_sequence
 
         const in::integer input_fk{};
         const tx::integer parent_fk{};
-        const system::chain::transaction_view& tx_;
+        const system::chain::view::transaction& tx_;
     };
 
     struct wire_sequence
