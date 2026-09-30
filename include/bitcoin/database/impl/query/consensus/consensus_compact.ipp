@@ -75,6 +75,7 @@ code CLASS::get_compact_links(tx_links& out,
 }
 
 // Scan the id columns, resolving tx links only after the guards release.
+// The columns are little-endian words, hashed in place across vector lanes.
 TEMPLATE
 bool CLASS::get_compact_matches(compact_matches& out,
     const std::unordered_map<uint64_t, size_t>& positions,
@@ -89,21 +90,52 @@ bool CLASS::get_compact_matches(compact_matches& out,
     if (!ptr0 || !ptr1 || !ptr2 || !ptr3)
         return false;
 
-    table::pool_word id0{}, id1{}, id2{}, id3{};
-    const auto rows = store_.pool.count();
-    for (table::pool::link row{ 0 }; row < rows; ++row)
+    const auto rows = possible_narrow_cast<size_t>(store_.pool.count().value);
+    std::vector<uint64_t> ids(rows);
+
+    if constexpr (is_little_endian)
     {
-        if (!store_.pool.id0.get(ptr0, row, id0) ||
-            !store_.pool.id1.get(ptr1, row, id1) ||
-            !store_.pool.id2.get(ptr2, row, id2) ||
-            !store_.pool.id3.get(ptr3, row, id3))
+        const auto bytes = rows * sizeof(uint64_t);
+        const auto column = [rows](const memory& ptr) NOEXCEPT
+        {
+            return std::span<const uint64_t>
+            {
+                pointer_cast<const uint64_t>(ptr.data()), rows
+            };
+        };
+
+        if (is_lesser(ptr0.size(), bytes) || is_lesser(ptr1.size(), bytes) ||
+            is_lesser(ptr2.size(), bytes) || is_lesser(ptr3.size(), bytes))
             return false;
 
-        const siphash_words words{ id0.word, id1.word, id2.word, id3.word };
-        const auto id = bit_and(siphash(key, words), mask);
-        if (const auto it = positions.find(id); it != positions.end())
-            out.emplace_back(it->second, row);
+        siphash(ids, key, siphash_columns
+        {
+            column(ptr0), column(ptr1), column(ptr2), column(ptr3)
+        });
     }
+    else
+    {
+        table::pool_word id0{}, id1{}, id2{}, id3{};
+        for (table::pool::link row{ 0 }; row < rows; ++row)
+        {
+            if (!store_.pool.id0.get(ptr0, row, id0) ||
+                !store_.pool.id1.get(ptr1, row, id1) ||
+                !store_.pool.id2.get(ptr2, row, id2) ||
+                !store_.pool.id3.get(ptr3, row, id3))
+                return false;
+
+            ids[row.value] = siphash(key, siphash_words
+            {
+                id0.word, id1.word, id2.word, id3.word
+            });
+        }
+    }
+
+    for (size_t row{}; row < rows; ++row)
+        if (const auto it = positions.find(bit_and(ids[row], mask));
+            it != positions.end())
+            out.emplace_back(it->second,
+                possible_narrow_cast<table::pool::link::integer>(row));
 
     return true;
 }
