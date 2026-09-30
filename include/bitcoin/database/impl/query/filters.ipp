@@ -144,6 +144,20 @@ bool CLASS::get_filter_heads(hashes& filter_heads,
 // node/validator
 TEMPLATE
 bool CLASS::set_filter_body(const header_link& link,
+    const block_view& block) NOEXCEPT
+{
+    using namespace system::neutrino;
+    if (!filter_enabled())
+        return true;
+
+    // Compute the current filter from the block view and store under the link.
+    filter body{};
+    return compute_filter(body, block) && set_filter_body(link, body);
+}
+
+// node/validator
+TEMPLATE
+bool CLASS::set_filter_body(const header_link& link,
     const block& block) NOEXCEPT
 {
     using namespace system::neutrino;

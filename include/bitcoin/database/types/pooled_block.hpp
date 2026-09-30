@@ -32,7 +32,7 @@ namespace database {
 /// Working set of a block validated from its pooled txs.
 struct pooled_block
 {
-    using spend = table::prevout::slab_put_spends::spend;
+    using spend = table::prevout::spend;
 
     tx_links txs{};
     std::vector<table::transaction::record> records{};

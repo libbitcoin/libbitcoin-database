@@ -95,10 +95,56 @@ bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::set_silent(const header_link& link,
+    const block_view& block) NOEXCEPT
+{
+    const auto& txs = block.views();
+    const auto count = txs.size();
+    if (is_one(count))
+        return true;
+
+    const auto links = to_transactions(link);
+    if (links.size() != count)
+        return false;
+
+    stopper fail{};
+    std::vector<size_t> it(sub1(count));
+    std::iota(it.begin(), it.end(), one);
+    constexpr auto parallel = poolstl::execution::par;
+    constexpr auto relaxed = std::memory_order_relaxed;
+
+    std::for_each(parallel, it.cbegin(), it.cend(), [&](size_t index) NOEXCEPT
+    {
+        if (fail.load(relaxed))
+            return;
+
+        if (!set_silent(links.at(index), txs.at(index)))
+            fail.store(true, relaxed);
+    });
+
+    return !fail.load(relaxed);
+}
+
+TEMPLATE
 bool CLASS::set_silent(const tx_link& link,
     const transaction& BC_DEBUG_ONLY(tx)) NOEXCEPT
 {
     BC_ASSERT(!tx.is_coinbase());
+    return set_silent_(link);
+}
+
+TEMPLATE
+bool CLASS::set_silent(const tx_link& link,
+    const transaction_view& BC_DEBUG_ONLY(tx)) NOEXCEPT
+{
+    BC_ASSERT(!tx.is_coinbase());
+    return set_silent_(link);
+}
+
+// protected
+TEMPLATE
+bool CLASS::set_silent_(const tx_link& link) NOEXCEPT
+{
     if (link.is_terminal())
         return false;
 

@@ -112,11 +112,12 @@ struct prevout
     };
 
     /// Spends are the merged parent tx (or terminal) and input sequence.
+    using spend = std::pair<tx::integer, uint32_t>;
+    using spends = std::vector<spend>;
+
     struct slab_put_spends
       : public schema::prevout
     {
-        using spend = std::pair<tx::integer, uint32_t>;
-
         inline link count() const NOEXCEPT
         {
             using namespace system;
