@@ -77,6 +77,28 @@ BOOST_AUTO_TEST_CASE(query_filters__set_filter_body__filter__round_trips)
     BOOST_REQUIRE_EQUAL(out, expected);
 }
 
+BOOST_AUTO_TEST_CASE(query_filters__set_filter_body__block_view__matches_block)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+
+    system::chain::block_view view{ test::block1.to_data(true), true };
+    BOOST_REQUIRE(view.is_valid());
+    BOOST_REQUIRE_EQUAL(view.populate(system::chain::context{}, {}), system::error::block_success);
+    BOOST_REQUIRE(query.set_filter_body(1, view));
+
+    system::data_chunk expected{};
+    BOOST_REQUIRE(system::neutrino::compute_filter(expected, test::block1));
+    system::data_chunk out{};
+    BOOST_REQUIRE(query.get_filter_body(out, 1));
+    BOOST_REQUIRE_EQUAL(out, expected);
+}
+
 // filter_bk
 // ----------------------------------------------------------------------------
 

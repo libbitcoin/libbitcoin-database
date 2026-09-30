@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_CONSENSUS_PREVOUTS_IPP
 #define LIBBITCOIN_DATABASE_QUERY_CONSENSUS_PREVOUTS_IPP
 
+#include <unordered_map>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -95,6 +96,92 @@ bool CLASS::set_prevouts(const header_link& link, const block& block) NOEXCEPT
     const table::prevout::slab_put_ref prevouts{ {}, doubles, block };
     return store_.prevout.put(prevout, prevouts);
     // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::set_prevouts(const header_link& link,
+    const prevout_spends& spends, const tx_links& conflicts) NOEXCEPT
+{
+    // Empty or coinbase only implies no spends.
+    if (spends.empty())
+        return true;
+
+    const auto prevout = to_prevout(link);
+
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    const table::prevout::slab_put_spends prevouts{ {}, conflicts, spends };
+    return store_.prevout.put(prevout, prevouts);
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::get_block_prevouts(data_chunk& prevouts, prevout_spends& spends,
+    tx_links& conflicts, const header_link& link) const NOEXCEPT
+{
+    using namespace system;
+    using prevout = table::prevout;
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return false;
+
+    // A parent within the block (by hash) is an internal spend (terminal).
+    std::unordered_map<hash_digest, tx_link> internal{};
+    internal.reserve(txs.size());
+    for (const auto& tx: txs)
+        internal.emplace(get_tx_key(tx), tx);
+
+    const auto doubles = !is_zero(store_.duplicate.body_size());
+    stream::out::data ostream(prevouts);
+    write::bytes::ostream sink(ostream);
+
+    for (auto tx = std::next(txs.begin()); tx != txs.end(); ++tx)
+    {
+        table::transaction::get_puts record{};
+        if (!store_.tx.get(*tx, record))
+            return false;
+
+        // Point links are contiguous (computed).
+        const auto end = record.points_fk + record.ins_count;
+        for (auto fk = record.points_fk; fk < end; ++fk)
+        {
+            const auto point = get_point_key(fk);
+            table::ins_sequence::get_input input{};
+            if (!store_.ins.sequence.get(fk, input))
+                return false;
+
+            // Any instance of the parent hash yields the same output.
+            const auto it = internal.find(point.hash());
+            const auto found = (it != internal.end());
+            const auto parent = found ? it->second : to_tx(point.hash());
+            if (parent.is_terminal())
+                return false;
+
+            table::transaction::get_output parent_tx{ {}, point.index() };
+            if (!store_.tx.get(parent, parent_tx) ||
+                parent_tx.outs_fk == table::transaction::outs::terminal)
+                return false;
+
+            table::outs::get_output outs{};
+            if (!store_.outs.puts.get(parent_tx.outs_fk, outs))
+                return false;
+
+            if (!get_wire_output(sink, outs.out_fk))
+                return false;
+
+            const auto merged = found ? prevout::tx::terminal :
+                prevout::merge(parent_tx.coinbase, parent.value);
+
+            spends.emplace_back(merged, input.sequence);
+            if (doubles && !get_doubles(conflicts, point))
+                return false;
+        }
+    }
+
+    sink.flush();
+    return !!sink;
 }
 
 // utility

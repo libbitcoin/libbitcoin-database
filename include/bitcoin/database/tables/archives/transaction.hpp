@@ -337,7 +337,9 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_outs);
+            const auto merged = source.read_little_endian<bytes::integer, bytes::size>();
+            coinbase = is_coinbase(merged);
+            source.skip_bytes(skip_to_outs - bytes::size);
             number = source.read_little_endian<ix::integer, ix::size>();
 
             if (index >= number)
@@ -355,6 +357,7 @@ struct transaction
         const outs::integer index{};
         outs::integer outs_fk{};
         ix::integer number{};
+        bool coinbase{};
     };
 
     struct get_coinbase

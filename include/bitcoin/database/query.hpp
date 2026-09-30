@@ -57,6 +57,7 @@ public:
     using chain_state = system::chain::chain_state;
     using chain_state_cptr = system::chain::chain_state::cptr;
     using chain_context = system::chain::context;
+    using prevout_spends = table::prevout::spends;
     using ec_compresseds = system::ec_compresseds;
     using ec_compressed = system::ec_compressed;
     using ec_signatures = system::ec_signatures;
@@ -645,7 +646,9 @@ public:
 
     /// Set silent payment records.
     bool set_silent(const tx_link& link, const transaction& tx) NOEXCEPT;
+    bool set_silent(const tx_link& link, const transaction_view& tx) NOEXCEPT;
     bool set_silent(const header_link& link, const block& block) NOEXCEPT;
+    bool set_silent(const header_link& link, const block_view& block) NOEXCEPT;
 
     /// Commit a block's captured ecdsa signature groups (band-expanded).
     bool set_signatures(const system::chain::ecdsa_signatures& sigs,
@@ -703,12 +706,20 @@ public:
     bool set_strong(const header_link& link) NOEXCEPT;
     bool set_unstrong(const header_link& link) NOEXCEPT;
     bool set_prevouts(const header_link& link, const block& block) NOEXCEPT;
+    bool set_prevouts(const header_link& link, const prevout_spends& spends,
+        const tx_links& conflicts) NOEXCEPT;
+
     bool get_branch(header_states& branch, const hash_digest& hash) const NOEXCEPT;
     bool get_work(uint256_t& work, const header_states& states) const NOEXCEPT;
     bool get_strong_branch(bool& strong, const uint256_t& branch_work,
         size_t branch_point, bool tie=false) const NOEXCEPT;
     bool get_strong_fork(bool& strong, const uint256_t& fork_work,
         size_t fork_point, bool tie=false) const NOEXCEPT;
+
+    /// Wire-encoded prevouts of each spend of the block (in block order),
+    /// with the spends and conflicts for set_prevouts. False if any missing.
+    bool get_block_prevouts(data_chunk& prevouts, prevout_spends& spends,
+        tx_links& conflicts, const header_link& link) const NOEXCEPT;
 
     /// Height indexation.
     /// -----------------------------------------------------------------------
@@ -818,6 +829,7 @@ public:
         size_t interval) const NOEXCEPT;
 
     bool set_filter_body(const header_link& link, const block& block) NOEXCEPT;
+    bool set_filter_body(const header_link& link, const block_view& block) NOEXCEPT;
     bool set_filter_body(const header_link& link, const filter& body) NOEXCEPT;
     bool set_filter_head(const header_link& link) NOEXCEPT;
     bool set_filter_head(const header_link& link, const hash_digest& head,
@@ -976,7 +988,7 @@ protected:
     bool populate_with_metadata_(const transaction& tx, bool chain,
         bool pool) const NOEXCEPT;
 
-    /// merkle
+    /// Merkle
     /// -----------------------------------------------------------------------
 
     /// merkle related utilities
@@ -996,8 +1008,9 @@ protected:
     code get_merkle_proof(hashes& proof, hashes roots, size_t target,
         size_t waypoint) const NOEXCEPT;
 
-    /// tx_fk must be allocated.
+    /// Writers
     /// -----------------------------------------------------------------------
+
     code set_code(const tx_link& tx_fk, const transaction& tx,
         bool bypass, bool prune) NOEXCEPT;
 
@@ -1005,6 +1018,11 @@ protected:
     code set_txs(const header_link& key, tx_links&& links, size_t light,
         size_t heavy, hash_option&& interval, bool strong) NOEXCEPT;
 
+    /// Set silent payment records of a non-coinbase tx.
+    bool set_silent_(const tx_link& link) NOEXCEPT;
+
+    /// Pooling.
+    /// -----------------------------------------------------------------------
     /// The archived link of a pooled duplicate of the tx, or terminal.
     tx_link to_pooled(const transaction& tx) const NOEXCEPT;
     tx_link to_pooled(const transaction_view& tx) const NOEXCEPT;
