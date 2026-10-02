@@ -40,4 +40,22 @@ BOOST_AUTO_TEST_CASE(memory_utilities__physical_memory__always__not_less_than_sy
     BOOST_REQUIRE_GE(physical_memory(), system_memory());
 }
 
+BOOST_AUTO_TEST_CASE(memory_utilities__cuda_ecc__always__implies_cuda_device)
+{
+    const auto ecc = cuda_ecc();
+    BOOST_REQUIRE(!ecc || cuda_device());
+}
+
+BOOST_AUTO_TEST_CASE(memory_utilities__cuda_ecc_enabled__always__implies_cuda_ecc)
+{
+    const auto enabled = cuda_ecc_enabled();
+    BOOST_REQUIRE(!enabled || cuda_ecc());
+}
+
+BOOST_AUTO_TEST_CASE(memory_utilities__gpu_device__always__any_runtime_device)
+{
+    const auto any = cuda_device() || opencl_device() || metal_device();
+    BOOST_REQUIRE_EQUAL(gpu_device(), any);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
