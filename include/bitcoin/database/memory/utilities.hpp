@@ -64,6 +64,21 @@ BCD_API bool internal_storage(const std::filesystem::path& path) NOEXCEPT;
 /// True if an installed compute runtime reports a gpu device.
 BCD_API bool gpu_device() NOEXCEPT;
 
+/// True if the cuda runtime reports a device the compiled kernels support.
+BCD_API bool cuda_device() NOEXCEPT;
+
+/// True if a cuda device is present and supports ecc memory.
+BCD_API bool cuda_ecc() NOEXCEPT;
+
+/// True if a cuda device is present and reports ecc memory enabled.
+BCD_API bool cuda_ecc_enabled() NOEXCEPT;
+
+/// True if the opencl runtime reports a gpu device.
+BCD_API bool opencl_device() NOEXCEPT;
+
+/// True if the metal runtime reports a device.
+BCD_API bool metal_device() NOEXCEPT;
+
 } // namespace database
 } // namespace libbitcoin
 

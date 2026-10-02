@@ -511,6 +511,11 @@ using cu_init_t = int32_t(*)(uint32_t);
 using cu_count_t = int32_t(*)(int32_t*);
 using cu_get_t = int32_t(*)(int32_t*, int32_t);
 using cu_attribute_t = int32_t(*)(int32_t*, int32_t, int32_t);
+using cu_bus_t = int32_t(*)(char*, int32_t, int32_t);
+using nvml_init_t = int32_t(*)();
+using nvml_shutdown_t = int32_t(*)();
+using nvml_handle_t = int32_t(*)(const char*, void**);
+using nvml_ecc_t = int32_t(*)(void*, int32_t*, int32_t*);
 using cl_platform_t = int32_t(*)(uint32_t, void**, uint32_t*);
 using cl_device_t = int32_t(*)(void*, uint64_t, uint32_t, void**, uint32_t*);
 using cl_info_t = int32_t(*)(void*, uint32_t, size_t, void*, size_t*);
@@ -519,11 +524,20 @@ using objc_release_t = void(*)(void*);
 
 #if !defined(HAVE_APPLE)
 // CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR/MINOR, and the floor of the
-// compiled cuda kernels (ada lovelace).
+// compiled cuda kernels (turing).
 constexpr int32_t cu_major = 75;
 constexpr int32_t cu_minor = 76;
-constexpr int32_t cuda_major = 8;
-constexpr int32_t cuda_minor = 9;
+constexpr int32_t cuda_major = 7;
+constexpr int32_t cuda_minor = 5;
+
+// CU_DEVICE_ATTRIBUTE_ECC_ENABLED.
+constexpr int32_t cu_ecc = 32;
+
+// NVML_ERROR_NOT_SUPPORTED, returned for a device without ecc memory.
+constexpr int32_t nvml_unsupported = 3;
+
+// NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE.
+constexpr int32_t bus_size = 32;
 #endif
 
 // CL_DEVICE_TYPE_GPU, excludes cpu devices exposed by installable clients.
@@ -537,6 +551,7 @@ constexpr auto opencl_minor = 2_u32;
 #if defined(HAVE_MSC)
 
 constexpr auto cuda_library = "nvcuda.dll";
+constexpr auto nvml_library = "nvml.dll";
 constexpr auto opencl_library = "OpenCL.dll";
 using library_t = HMODULE;
 
@@ -567,6 +582,7 @@ constexpr auto metal_library = "/System/Library/Frameworks/Metal.framework/Metal
 constexpr auto objc_library = "/usr/lib/libobjc.A.dylib";
 #else
 constexpr auto cuda_library = "libcuda.so.1";
+constexpr auto nvml_library = "libnvidia-ml.so.1";
 constexpr auto opencl_library = "libOpenCL.so.1";
 #endif
 using library_t = void*;
@@ -590,12 +606,13 @@ static void free_library(library_t library) NOEXCEPT
 
 #if !defined(HAVE_APPLE)
 
-static bool cuda_device() NOEXCEPT
+static bool find_cuda(bool& ecc, std::string& bus) NOEXCEPT
 {
     const auto library = load_library(cuda_library);
     if (is_null(library))
         return false;
 
+    LCOV_EXCL_START("Requires a cuda driver.")
     BC_PUSH_WARNING(NO_REINTERPRET_CAST)
     const auto initialize = reinterpret_cast<cu_init_t>(
         load_symbol(library, "cuInit"));
@@ -605,6 +622,8 @@ static bool cuda_device() NOEXCEPT
         load_symbol(library, "cuDeviceGet"));
     const auto attribute = reinterpret_cast<cu_attribute_t>(
         load_symbol(library, "cuDeviceGetAttribute"));
+    const auto bus_id = reinterpret_cast<cu_bus_t>(
+        load_symbol(library, "cuDeviceGetPCIBusId"));
     BC_POP_WARNING()
 
     auto found = false;
@@ -622,6 +641,14 @@ static bool cuda_device() NOEXCEPT
                 ((major > cuda_major) ||
                     (major == cuda_major && minor >= cuda_minor)))
             {
+                int32_t enabled{};
+                ecc = is_zero(attribute(&enabled, cu_ecc, device)) &&
+                    !is_zero(enabled);
+
+                char id[bus_size]{};
+                if (!is_null(bus_id) && is_zero(bus_id(id, bus_size, device)))
+                    bus = id;
+
                 found = true;
                 break;
             }
@@ -630,6 +657,47 @@ static bool cuda_device() NOEXCEPT
 
     free_library(library);
     return found;
+    LCOV_EXCL_STOP()
+}
+
+// Ecc support of the device at the bus, false if not determinable.
+static bool nvml_ecc(bool& supported, const std::string& bus) NOEXCEPT
+{
+    const auto library = load_library(nvml_library);
+    if (is_null(library))
+        return false;
+
+    LCOV_EXCL_START("Requires an nvidia driver.")
+    BC_PUSH_WARNING(NO_REINTERPRET_CAST)
+    const auto initialize = reinterpret_cast<nvml_init_t>(
+        load_symbol(library, "nvmlInit_v2"));
+    const auto shutdown = reinterpret_cast<nvml_shutdown_t>(
+        load_symbol(library, "nvmlShutdown"));
+    const auto handle = reinterpret_cast<nvml_handle_t>(
+        load_symbol(library, "nvmlDeviceGetHandleByPciBusId_v2"));
+    const auto mode = reinterpret_cast<nvml_ecc_t>(
+        load_symbol(library, "nvmlDeviceGetEccMode"));
+    BC_POP_WARNING()
+
+    auto known = false;
+    if (!bus.empty() && !is_null(initialize) && !is_null(shutdown) &&
+        !is_null(handle) && !is_null(mode) && is_zero(initialize()))
+    {
+        void* device{};
+        int32_t current{}, pending{};
+        if (is_zero(handle(bus.c_str(), &device)))
+        {
+            const auto result = mode(device, &current, &pending);
+            known = is_zero(result) || result == nvml_unsupported;
+            supported = is_zero(result);
+        }
+
+        shutdown();
+    }
+
+    free_library(library);
+    return known;
+    LCOV_EXCL_STOP()
 }
 
 #endif
@@ -652,7 +720,7 @@ static bool opencl_version(const char* text, uint32_t& major,
     return std::from_chars(std::next(first.ptr), end, minor).ec == std::errc{};
 }
 
-static bool opencl_device() NOEXCEPT
+static bool find_opencl() NOEXCEPT
 {
     const auto library = load_library(opencl_library);
     if (is_null(library))
@@ -724,7 +792,7 @@ static bool opencl_device() NOEXCEPT
 
 #if defined(HAVE_APPLE)
 
-static bool metal_device() NOEXCEPT
+static bool find_metal() NOEXCEPT
 {
     const auto library = load_library(metal_library);
     if (is_null(library))
@@ -757,23 +825,96 @@ static bool metal_device() NOEXCEPT
     return !is_null(device);
 }
 
-bool gpu_device() NOEXCEPT
+bool cuda_device() NOEXCEPT
 {
-    return metal_device() || opencl_device();
+    return false;
+}
+
+bool cuda_ecc() NOEXCEPT
+{
+    return false;
+}
+
+bool cuda_ecc_enabled() NOEXCEPT
+{
+    return false;
+}
+
+bool metal_device() NOEXCEPT
+{
+    return find_metal();
 }
 
 #else
 
-bool gpu_device() NOEXCEPT
+bool cuda_device() NOEXCEPT
 {
-    return cuda_device() || opencl_device();
+    bool enabled{};
+    std::string bus{};
+    return find_cuda(enabled, bus);
+}
+
+// Enabled implies supported where the management library is unavailable.
+bool cuda_ecc() NOEXCEPT
+{
+    bool enabled{}, supported{};
+    std::string bus{};
+    return find_cuda(enabled, bus) &&
+        (nvml_ecc(supported, bus) ? supported : enabled);
+}
+
+bool cuda_ecc_enabled() NOEXCEPT
+{
+    bool enabled{};
+    std::string bus{};
+    return find_cuda(enabled, bus) && enabled;
+}
+
+bool metal_device() NOEXCEPT
+{
+    return false;
 }
 
 #endif
 
+bool opencl_device() NOEXCEPT
+{
+    return find_opencl();
+}
+
+bool gpu_device() NOEXCEPT
+{
+    return cuda_device() || opencl_device() || metal_device();
+}
+
 #else
 
 bool gpu_device() NOEXCEPT
+{
+    return false;
+}
+
+bool cuda_device() NOEXCEPT
+{
+    return false;
+}
+
+bool cuda_ecc() NOEXCEPT
+{
+    return false;
+}
+
+bool cuda_ecc_enabled() NOEXCEPT
+{
+    return false;
+}
+
+bool opencl_device() NOEXCEPT
+{
+    return false;
+}
+
+bool metal_device() NOEXCEPT
 {
     return false;
 }
