@@ -254,6 +254,7 @@ void CLASS::set_current(bool current) NOEXCEPT
     ecdsa_head_.current(current);
     schnorr_head_.current(current);
     silent_head_.current(current);
+    envelope_head_.current(current);
     duplicate_head_.current(current);
     prevalid_head_.current(current);
     prevout_head_.current(current);
