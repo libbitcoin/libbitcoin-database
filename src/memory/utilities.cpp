@@ -519,11 +519,11 @@ using objc_release_t = void(*)(void*);
 
 #if !defined(HAVE_APPLE)
 // CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR/MINOR, and the floor of the
-// compiled cuda kernels (ada lovelace).
+// compiled cuda kernels (turing).
 constexpr int32_t cu_major = 75;
 constexpr int32_t cu_minor = 76;
-constexpr int32_t cuda_major = 8;
-constexpr int32_t cuda_minor = 9;
+constexpr int32_t cuda_major = 7;
+constexpr int32_t cuda_minor = 5;
 #endif
 
 // CL_DEVICE_TYPE_GPU, excludes cpu devices exposed by installable clients.
