@@ -326,12 +326,11 @@ private:
     template <size_t Column>
     bool finalize_() NOEXCEPT;
 
-    // Working-set steering for the native (file-backed) mapping. The cache
-    // manager trims without knowing that head residency is the store's
-    // priority, so it takes head pages alongside cold body cache and every
-    // head miss is a serial fault on the probe path. The scan asserts head
-    // residency (a read sets the access bit) and leads the trim on bodies
-    // (unlock moves the range to the standby list, reclaimed first).
+    // Head working-set steering for the native (file-backed) mapping. The
+    // cache manager trims without knowing that head residency is the store's
+    // priority, and every head miss is a serial fault on the probe path, so
+    // the scan asserts residency (a read sets the access bit). Body placement
+    // is left to the cache manager.
     void scan_run_() NOEXCEPT;
 #endif
 
