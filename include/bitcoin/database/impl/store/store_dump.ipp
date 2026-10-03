@@ -54,12 +54,15 @@ code CLASS::dump(const path& folder,
     dump(ec, confirmed_head_, schema::indexes::confirmed, table_t::confirmed_head);
     dump(ec, strong_tx_head_, schema::indexes::strong_tx, table_t::strong_tx_head);
 
-    dump(ec, ecdsa_head_, schema::caches::ecdsa, table_t::ecdsa_head);
-    dump(ec, schnorr_head_, schema::caches::schnorr, table_t::schnorr_head);
+    dump(ec, ecdsa0_head_, schema::caches::ecdsa0, table_t::ecdsa0_head);
+    dump(ec, ecdsa1_head_, schema::caches::ecdsa1, table_t::ecdsa1_head);
+    dump(ec, schnorr0_head_, schema::caches::schnorr0, table_t::schnorr0_head);
+    dump(ec, schnorr1_head_, schema::caches::schnorr1, table_t::schnorr1_head);
     dump(ec, silent_head_, schema::caches::silent, table_t::silent_head);
     dump(ec, envelope_head_, schema::caches::envelope, table_t::envelope_head);
     dump(ec, duplicate_head_, schema::caches::duplicate, table_t::duplicate_head);
-    dump(ec, prevalid_head_, schema::caches::prevalid, table_t::prevalid_head);
+    dump(ec, prevalid0_head_, schema::caches::prevalid0, table_t::prevalid0_head);
+    dump(ec, prevalid1_head_, schema::caches::prevalid1, table_t::prevalid1_head);
     dump(ec, prevout_head_, schema::caches::prevout, table_t::prevout_head);
     dump(ec, state_head_, schema::caches::state, table_t::state_head);
     dump(ec, pool_head_, schema::caches::pool, table_t::pool_head);

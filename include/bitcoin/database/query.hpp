@@ -140,11 +140,14 @@ public:
     size_t candidate_head_size() const NOEXCEPT;
     size_t confirmed_head_size() const NOEXCEPT;
     size_t strong_tx_head_size() const NOEXCEPT;
-    size_t ecdsa_head_size() const NOEXCEPT;
-    size_t schnorr_head_size() const NOEXCEPT;
+    size_t ecdsa0_head_size() const NOEXCEPT;
+    size_t ecdsa1_head_size() const NOEXCEPT;
+    size_t schnorr0_head_size() const NOEXCEPT;
+    size_t schnorr1_head_size() const NOEXCEPT;
     size_t silent_head_size() const NOEXCEPT;
     size_t duplicate_head_size() const NOEXCEPT;
-    size_t prevalid_head_size() const NOEXCEPT;
+    size_t prevalid0_head_size() const NOEXCEPT;
+    size_t prevalid1_head_size() const NOEXCEPT;
     size_t prevout_head_size() const NOEXCEPT;
     size_t state_head_size() const NOEXCEPT;
     size_t pool_head_size() const NOEXCEPT;
@@ -164,11 +167,14 @@ public:
     size_t candidate_body_size() const NOEXCEPT;
     size_t confirmed_body_size() const NOEXCEPT;
     size_t strong_tx_body_size() const NOEXCEPT;
-    size_t ecdsa_body_size() const NOEXCEPT;
-    size_t schnorr_body_size() const NOEXCEPT;
+    size_t ecdsa0_body_size() const NOEXCEPT;
+    size_t ecdsa1_body_size() const NOEXCEPT;
+    size_t schnorr0_body_size() const NOEXCEPT;
+    size_t schnorr1_body_size() const NOEXCEPT;
     size_t silent_body_size() const NOEXCEPT;
     size_t duplicate_body_size() const NOEXCEPT;
-    size_t prevalid_body_size() const NOEXCEPT;
+    size_t prevalid0_body_size() const NOEXCEPT;
+    size_t prevalid1_body_size() const NOEXCEPT;
     size_t prevout_body_size() const NOEXCEPT;
     size_t state_body_size() const NOEXCEPT;
     size_t pool_body_size() const NOEXCEPT;
@@ -188,11 +194,14 @@ public:
     size_t candidate_size() const NOEXCEPT;
     size_t confirmed_size() const NOEXCEPT;
     size_t strong_tx_size() const NOEXCEPT;
-    size_t ecdsa_size() const NOEXCEPT;
-    size_t schnorr_size() const NOEXCEPT;
+    size_t ecdsa0_size() const NOEXCEPT;
+    size_t ecdsa1_size() const NOEXCEPT;
+    size_t schnorr0_size() const NOEXCEPT;
+    size_t schnorr1_size() const NOEXCEPT;
     size_t silent_size() const NOEXCEPT;
     size_t duplicate_size() const NOEXCEPT;
-    size_t prevalid_size() const NOEXCEPT;
+    size_t prevalid0_size() const NOEXCEPT;
+    size_t prevalid1_size() const NOEXCEPT;
     size_t prevout_size() const NOEXCEPT;
     size_t state_size() const NOEXCEPT;
     size_t pool_size() const NOEXCEPT;
@@ -224,11 +233,14 @@ public:
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;
-    size_t ecdsa_records() const NOEXCEPT;
-    size_t schnorr_records() const NOEXCEPT;
+    size_t ecdsa0_records() const NOEXCEPT;
+    size_t ecdsa1_records() const NOEXCEPT;
+    size_t schnorr0_records() const NOEXCEPT;
+    size_t schnorr1_records() const NOEXCEPT;
     size_t silent_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
-    size_t prevalid_records() const NOEXCEPT;
+    size_t prevalid0_records() const NOEXCEPT;
+    size_t prevalid1_records() const NOEXCEPT;
     size_t state_records() const NOEXCEPT;
     size_t pool_records() const NOEXCEPT;
     size_t spends_records() const NOEXCEPT;
@@ -652,29 +664,36 @@ public:
 
     /// Commit a block's captured ecdsa signature groups (band-expanded).
     bool set_signatures(const system::chain::ecdsa_signatures& sigs,
-        const header_link& link) NOEXCEPT;
+        const header_link& link, bool bank) NOEXCEPT;
 
     /// Commit a block's captured schnorr signature rows.
     bool set_signatures(const system::chain::schnorr_signatures& sigs,
-        const header_link& link) NOEXCEPT;
+        const header_link& link, bool bank) NOEXCEPT;
 
     /// Invoke callback for each candidate match, false implies cancel.
     bool scan_silent(const stopper& cancel, const ec_secret& scan_key,
         const silent_handler& callback) NOEXCEPT;
 
     /// Verify all signatures in table, false implies cancel.
-    bool verify_ecdsa_signatures(const stopper& cancel, header_links&) NOEXCEPT;
-    bool verify_schnorr_signatures(const stopper& cancel, header_links&) NOEXCEPT;
+    bool verify_ecdsa_signatures(const stopper& cancel, header_links&,
+        bool bank) NOEXCEPT;
+    bool verify_schnorr_signatures(const stopper& cancel, header_links&,
+        bool bank) NOEXCEPT;
 
     /// Purge all entries in table.
-    bool purge_prevalids() NOEXCEPT;
-    bool purge_ecdsa_signatures() NOEXCEPT;
-    bool purge_schnorr_signatures() NOEXCEPT;
+    bool purge_prevalids(bool bank) NOEXCEPT;
+    bool purge_ecdsa_signatures(bool bank) NOEXCEPT;
+    bool purge_schnorr_signatures(bool bank) NOEXCEPT;
 
     /// Cache all prevalids.
-    header_links get_prevalids() const NOEXCEPT;
-    bool set_prevalid(const header_link& link) NOEXCEPT;
-    bool set_prevalids(const header_links& links) NOEXCEPT;
+    header_links get_prevalids(bool bank) const NOEXCEPT;
+    bool set_prevalid(const header_link& link, bool bank) NOEXCEPT;
+    bool set_prevalids(const header_links& links, bool bank) NOEXCEPT;
+
+    /// Records of a batch table bank.
+    size_t ecdsa_records(bool bank) const NOEXCEPT;
+    size_t schnorr_records(bool bank) const NOEXCEPT;
+    size_t prevalid_records(bool bank) const NOEXCEPT;
 
     /// Confirmation.
     /// -----------------------------------------------------------------------

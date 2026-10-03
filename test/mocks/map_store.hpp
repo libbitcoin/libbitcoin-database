@@ -171,54 +171,54 @@ public:
 
     // Caches.
 
-    inline const path& ecdsa_head_file() const NOEXCEPT
+    inline const path& ecdsa0_head_file() const NOEXCEPT
     {
-        return ecdsa_head_.file();
+        return ecdsa0_head_.file();
     }
 
     ////inline const path& ecdsa_body_correlate_file() const NOEXCEPT
     ////{
-    ////    return ecdsa_body_.correlate.file();
+    ////    return ecdsa0_body_.correlate.file();
     ////}
 
     ////inline const path& ecdsa_body_digest_file() const NOEXCEPT
     ////{
-    ////    return ecdsa_body_.digest.file();
+    ////    return ecdsa0_body_.digest.file();
     ////}
 
     ////inline const path& ecdsa_body_compressed_file() const NOEXCEPT
     ////{
-    ////    return ecdsa_body_.compressed.file();
+    ////    return ecdsa0_body_.compressed.file();
     ////}
 
     ////inline const path& ecdsa_body_signature_file() const NOEXCEPT
     ////{
-    ////    return ecdsa_body_.signature.file();
+    ////    return ecdsa0_body_.signature.file();
     ////}
 
-    inline const path& schnorr_head_file() const NOEXCEPT
+    inline const path& schnorr0_head_file() const NOEXCEPT
     {
-        return schnorr_head_.file();
+        return schnorr0_head_.file();
     }
 
     ////inline const path& schnorr_body_correlate_file() const NOEXCEPT
     ////{
-    ////    return schnorr_body_.correlate.file();
+    ////    return schnorr0_body_.correlate.file();
     ////}
 
     ////inline const path& schnorr_body_digest_file() const NOEXCEPT
     ////{
-    ////    return schnorr_body_.digest.file();
+    ////    return schnorr0_body_.digest.file();
     ////}
 
     ////inline const path& schnorr_body_xonly_file() const NOEXCEPT
     ////{
-    ////    return schnorr_body_.xonly.file();
+    ////    return schnorr0_body_.xonly.file();
     ////}
 
     ////inline const path& schnorr_body_signature_file() const NOEXCEPT
     ////{
-    ////    return schnorr_body_.signature.file();
+    ////    return schnorr0_body_.signature.file();
     ////}
 
     inline const path& silent_head_file() const NOEXCEPT
@@ -251,14 +251,14 @@ public:
         return duplicate_body_.file();
     }
 
-    inline const path& prevalid_head_file() const NOEXCEPT
+    inline const path& prevalid0_head_file() const NOEXCEPT
     {
-        return prevalid_head_.file();
+        return prevalid0_head_.file();
     }
 
-    inline const path& prevalid_body_file() const NOEXCEPT
+    inline const path& prevalid0_body_file() const NOEXCEPT
     {
-        return prevalid_body_.file();
+        return prevalid0_body_.file();
     }
 
     inline const path& prevout_head_file() const NOEXCEPT

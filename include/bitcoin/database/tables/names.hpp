@@ -56,14 +56,16 @@ namespace indexes
 namespace caches
 {
     // aggregate
-    constexpr auto ecdsa = "batch_ecdsa";
+    constexpr auto ecdsa0 = "batch_ecdsa0";
+    constexpr auto ecdsa1 = "batch_ecdsa1";
     constexpr auto ecdsa_digest = "message"_t;
     constexpr auto ecdsa_compressed = "key"_t;
     constexpr auto ecdsa_signature = "signature"_t;
     constexpr auto ecdsa_correlate = "identity"_t;
 
     // aggregate
-    constexpr auto schnorr  = "batch_schnorr";
+    constexpr auto schnorr0 = "batch_schnorr0";
+    constexpr auto schnorr1 = "batch_schnorr1";
     constexpr auto schnorr_digest = "message"_t;
     constexpr auto schnorr_xonly = "key"_t;
     constexpr auto schnorr_signature = "signature"_t;
@@ -76,7 +78,8 @@ namespace caches
     constexpr auto silent_correlate = "identity"_t;
 
     constexpr auto envelope = "envelope";
-    constexpr auto prevalid = "batch_prevalid";
+    constexpr auto prevalid0 = "batch_prevalid0";
+    constexpr auto prevalid1 = "batch_prevalid1";
     constexpr auto prevout = "cache_prevout";
     constexpr auto duplicate = "cache_duplicate";
     constexpr auto state = "cache_state";

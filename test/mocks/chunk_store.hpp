@@ -137,54 +137,54 @@ public:
 
     // Caches.
 
-    system::data_chunk& ecdsa_head() NOEXCEPT
+    system::data_chunk& ecdsa0_head() NOEXCEPT
     {
-        return ecdsa_head_.buffer();
+        return ecdsa0_head_.buffer();
     }
 
     ////system::data_chunk& ecdsa_body_correlate() NOEXCEPT
     ////{
-    ////    return ecdsa_body_.correlate.buffer();
+    ////    return ecdsa0_body_.correlate.buffer();
     ////}
 
     ////system::data_chunk& ecdsa_body_digest() NOEXCEPT
     ////{
-    ////    return ecdsa_body_.digest.buffer();
+    ////    return ecdsa0_body_.digest.buffer();
     ////}
 
     ////system::data_chunk& ecdsa_body_compressed() NOEXCEPT
     ////{
-    ////    return ecdsa_body_.compressed.buffer();
+    ////    return ecdsa0_body_.compressed.buffer();
     ////}
 
     ////system::data_chunk& ecdsa_body_signature() NOEXCEPT
     ////{
-    ////    return ecdsa_body_.signature.buffer();
+    ////    return ecdsa0_body_.signature.buffer();
     ////}
 
-    system::data_chunk& schnorr_head() NOEXCEPT
+    system::data_chunk& schnorr0_head() NOEXCEPT
     {
-        return schnorr_head_.buffer();
+        return schnorr0_head_.buffer();
     }
 
     ////system::data_chunk& schnorr_body_correlate() NOEXCEPT
     ////{
-    ////    return schnorr_body_.correlate.buffer();
+    ////    return schnorr0_body_.correlate.buffer();
     ////}
 
     ////system::data_chunk& schnorr_body_digest() NOEXCEPT
     ////{
-    ////    return schnorr_body_.digest.buffer();
+    ////    return schnorr0_body_.digest.buffer();
     ////}
 
     ////system::data_chunk& schnorr_body_xonly() NOEXCEPT
     ////{
-    ////    return schnorr_body_.xonly.buffer();
+    ////    return schnorr0_body_.xonly.buffer();
     ////}
 
     ////system::data_chunk& schnorr_body_signature() NOEXCEPT
     ////{
-    ////    return schnorr_body_.signature.buffer();
+    ////    return schnorr0_body_.signature.buffer();
     ////}
 
     system::data_chunk& silent_head() NOEXCEPT
@@ -217,14 +217,14 @@ public:
         return duplicate_body_.buffer();
     }
 
-    system::data_chunk& prevalid_head() NOEXCEPT
+    system::data_chunk& prevalid0_head() NOEXCEPT
     {
-        return prevalid_head_.buffer();
+        return prevalid0_head_.buffer();
     }
 
-    system::data_chunk& prevalid_body() NOEXCEPT
+    system::data_chunk& prevalid0_body() NOEXCEPT
     {
-        return prevalid_body_.buffer();
+        return prevalid0_body_.buffer();
     }
 
     system::data_chunk& prevout_head() NOEXCEPT

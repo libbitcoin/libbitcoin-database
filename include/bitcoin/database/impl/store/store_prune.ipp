@@ -90,13 +90,19 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
                     if (!ec) ec = spends_body_.shrink();
                     handler(event_t::load_file, table_t::spends_body);
 
-                    handler(event_t::unload_file, table_t::ecdsa_body);
-                    if (!ec) ec = ecdsa_body_.shrink();
-                    handler(event_t::load_file, table_t::ecdsa_body);
+                    handler(event_t::unload_file, table_t::ecdsa0_body);
+                    if (!ec) ec = ecdsa0_body_.shrink();
+                    handler(event_t::load_file, table_t::ecdsa0_body);
+                    handler(event_t::unload_file, table_t::ecdsa1_body);
+                    if (!ec) ec = ecdsa1_body_.shrink();
+                    handler(event_t::load_file, table_t::ecdsa1_body);
 
-                    handler(event_t::unload_file, table_t::schnorr_body);
-                    if (!ec) ec = schnorr_body_.shrink();
-                    handler(event_t::load_file, table_t::schnorr_body);
+                    handler(event_t::unload_file, table_t::schnorr0_body);
+                    if (!ec) ec = schnorr0_body_.shrink();
+                    handler(event_t::load_file, table_t::schnorr0_body);
+                    handler(event_t::unload_file, table_t::schnorr1_body);
+                    if (!ec) ec = schnorr1_body_.shrink();
+                    handler(event_t::load_file, table_t::schnorr1_body);
                 }
             }
         }

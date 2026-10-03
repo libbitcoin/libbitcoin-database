@@ -148,12 +148,15 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         // threshold batched rows to prevent recovering unpopulated rows. The
         // extra complexity isn't probably worth saving the batch for a snap.
         //---------------------------------------------------------------------
-        dropped(ec, ecdsa, table_t::ecdsa_table);
-        dropped(ec, schnorr, table_t::schnorr_table);
+        dropped(ec, ecdsa0, table_t::ecdsa0_table);
+        dropped(ec, ecdsa1, table_t::ecdsa1_table);
+        dropped(ec, schnorr0, table_t::schnorr0_table);
+        dropped(ec, schnorr1, table_t::schnorr1_table);
         restore(ec, silent, table_t::silent_table);
         restore(ec, envelope, table_t::envelope_table);
         restore(ec, duplicate, table_t::duplicate_table);
-        dropped(ec, prevalid, table_t::prevalid_table);
+        dropped(ec, prevalid0, table_t::prevalid0_table);
+        dropped(ec, prevalid1, table_t::prevalid1_table);
         restore(ec, prevout, table_t::prevout_table);
         restore(ec, state, table_t::state_table);
         restore(ec, pool, table_t::pool_table);

@@ -24,8 +24,17 @@ BOOST_AUTO_TEST_SUITE(strong_tx_tests)
 using namespace system;
 const table::strong_tx::key key1{ 0x01, 0x02, 0x03, 0x04 };
 const table::strong_tx::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
-const table::strong_tx::record strong1{ {}, table::strong_tx::merge(true, 0x0078f87f) };
-const table::strong_tx::record strong2{ {}, table::strong_tx::merge(false, 0x0078f87f) };
+const table::strong_tx::record strong1
+{
+    {},
+    table::strong_tx::merge(true, 0x0078f87f)
+};
+
+const table::strong_tx::record strong2
+{
+    {},
+    table::strong_tx::merge(false, 0x0078f87f)
+};
 
 const auto expected_head = base16_chunk
 (

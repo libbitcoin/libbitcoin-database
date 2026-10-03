@@ -49,7 +49,7 @@ static bool set_one(test::query_accessor& query, const hash_digest& digest,
 {
     chain::schnorr_signatures sigs{};
     sigs.append(digest, point, sig);
-    return query.set_signatures(sigs, link);
+    return query.set_signatures(sigs, link, false);
 }
 
 BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__empty__empty)
@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__empty__empty)
     test::query_accessor query{ store };
 
     header_links links{};
-    BOOST_REQUIRE_EQUAL(query.schnorr_records(), 0u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links));
+    BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 0u);
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, false));
     BOOST_REQUIRE(links.empty());
 }
 
@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_valid__em
     BOOST_REQUIRE(set_one(query, schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
 
     header_links links{};
-    BOOST_REQUIRE_EQUAL(query.schnorr_records(), 1u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links));
+    BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 1u);
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, false));
     BOOST_REQUIRE(links.empty());
 }
 
@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_invalid__
     BOOST_REQUIRE(set_one(query, sighash_bad, schnorr_xonly, schnorr_signature, expected));
 
     header_links links{};
-    BOOST_REQUIRE_EQUAL(query.schnorr_records(), 1u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links));
+    BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 1u);
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, false));
     BOOST_REQUIRE_EQUAL(links.size(), 1u);
     BOOST_REQUIRE_EQUAL(links.front(), expected);
 }
@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__various__expe
     BOOST_REQUIRE(set_one(query, schnorr_sighash, schnorr_xonly, schnorr_signature, 6));
 
     header_links links{};
-    BOOST_REQUIRE_EQUAL(query.schnorr_records(), 8u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links));
+    BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 8u);
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, false));
     BOOST_REQUIRE_EQUAL(links.size(), 2u);
 
     const auto back = links.back();

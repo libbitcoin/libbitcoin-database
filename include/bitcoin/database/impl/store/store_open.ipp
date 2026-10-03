@@ -76,12 +76,15 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, confirmed, table_t::confirmed_table);
     verify(ec, strong_tx, table_t::strong_tx_table);
 
-    verify(ec, ecdsa, table_t::ecdsa_table);
-    verify(ec, schnorr, table_t::schnorr_table);
+    verify(ec, ecdsa0, table_t::ecdsa0_table);
+    verify(ec, ecdsa1, table_t::ecdsa1_table);
+    verify(ec, schnorr0, table_t::schnorr0_table);
+    verify(ec, schnorr1, table_t::schnorr1_table);
     verify(ec, silent, table_t::silent_table);
     verify(ec, envelope, table_t::envelope_table);
     verify(ec, duplicate, table_t::duplicate_table);
-    verify(ec, prevalid, table_t::prevalid_table);
+    verify(ec, prevalid0, table_t::prevalid0_table);
+    verify(ec, prevalid1, table_t::prevalid1_table);
     verify(ec, prevout, table_t::prevout_table);
     verify(ec, state, table_t::state_table);
     verify(ec, pool, table_t::pool_table);

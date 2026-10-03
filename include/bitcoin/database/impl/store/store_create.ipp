@@ -99,17 +99,23 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, strong_tx_head_, table_t::strong_tx_head);
     create(ec, strong_tx_body_, table_t::strong_tx_body);
 
-    create(ec, ecdsa_head_, table_t::ecdsa_head);
-    create(ec, ecdsa_body_, table_t::ecdsa_body);
-    create(ec, schnorr_head_, table_t::schnorr_head);
-    create(ec, schnorr_body_, table_t::schnorr_body);
+    create(ec, ecdsa0_head_, table_t::ecdsa0_head);
+    create(ec, ecdsa0_body_, table_t::ecdsa0_body);
+    create(ec, ecdsa1_head_, table_t::ecdsa1_head);
+    create(ec, ecdsa1_body_, table_t::ecdsa1_body);
+    create(ec, schnorr0_head_, table_t::schnorr0_head);
+    create(ec, schnorr0_body_, table_t::schnorr0_body);
+    create(ec, schnorr1_head_, table_t::schnorr1_head);
+    create(ec, schnorr1_body_, table_t::schnorr1_body);
     create(ec, silent_head_, table_t::silent_head);
     create(ec, silent_body_, table_t::silent_body);
     create(ec, envelope_head_, table_t::envelope_head);
     create(ec, duplicate_head_, table_t::duplicate_head);
     create(ec, duplicate_body_, table_t::duplicate_body);
-    create(ec, prevalid_head_, table_t::prevalid_head);
-    create(ec, prevalid_body_, table_t::prevalid_body);
+    create(ec, prevalid0_head_, table_t::prevalid0_head);
+    create(ec, prevalid0_body_, table_t::prevalid0_body);
+    create(ec, prevalid1_head_, table_t::prevalid1_head);
+    create(ec, prevalid1_body_, table_t::prevalid1_body);
     create(ec, prevout_head_, table_t::prevout_head);
     create(ec, prevout_body_, table_t::prevout_body);
     create(ec, state_head_, table_t::state_head);
@@ -150,12 +156,15 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, confirmed, table_t::confirmed_table);
     populate(ec, strong_tx, table_t::strong_tx_table);
 
-    populate(ec, ecdsa, table_t::ecdsa_table);
-    populate(ec, schnorr, table_t::schnorr_table);
+    populate(ec, ecdsa0, table_t::ecdsa0_table);
+    populate(ec, ecdsa1, table_t::ecdsa1_table);
+    populate(ec, schnorr0, table_t::schnorr0_table);
+    populate(ec, schnorr1, table_t::schnorr1_table);
     populate(ec, silent, table_t::silent_table);
     populate(ec, envelope, table_t::envelope_table);
     populate(ec, duplicate, table_t::duplicate_table);
-    populate(ec, prevalid, table_t::prevalid_table);
+    populate(ec, prevalid0, table_t::prevalid0_table);
+    populate(ec, prevalid1, table_t::prevalid1_table);
     populate(ec, prevout, table_t::prevout_table);
     populate(ec, state, table_t::state_table);
     populate(ec, pool, table_t::pool_table);

@@ -1394,7 +1394,8 @@ constexpr size_t share_wait = 120;
 constexpr size_t unshare_wait = 60;
 constexpr size_t cell_width = sizeof(uint64_t);
 
-static bool shared_within(const map& instance, bool state, size_t seconds) NOEXCEPT
+static bool shared_within(const map& instance, bool state,
+    size_t seconds) NOEXCEPT
 {
     const std::vector<size_t> ticks(seconds);
     return std::any_of(ticks.begin(), ticks.end(), [&](size_t) NOEXCEPT
@@ -1424,29 +1425,34 @@ static void stamp_held(map& instance, size_t cell, uint64_t generation) NOEXCEPT
     instance.mark(offset, cell_width);
 }
 
-static std::vector<uint64_t> read_cells(const map& instance, size_t cells) NOEXCEPT
+static std::vector<uint64_t> read_cells(const map& instance,
+    size_t cells) NOEXCEPT
 {
     std::vector<size_t> positions(cells);
     std::iota(positions.begin(), positions.end(), zero);
 
-    std::vector<uint64_t> values(cells);
-    std::transform(positions.begin(), positions.end(), values.begin(), [&](size_t cell) NOEXCEPT
+    const auto read = [&](size_t cell) NOEXCEPT
     {
-        return system::unsafe_from_little_endian<uint64_t>(instance.get_raw(cell * cell_width));
-    });
+        const auto raw = instance.get_raw(cell * cell_width);
+        return system::unsafe_from_little_endian<uint64_t>(raw);
+    };
 
+    std::vector<uint64_t> values(cells);
+    std::transform(positions.begin(), positions.end(), values.begin(), read);
     return values;
 }
 
 // Sustained volume is repetition by definition, so the writer drive iterates.
 // Stamps rising generations across the cells until stopped, returning the
 // last generation stamped into each.
-static std::vector<uint64_t> drive(map& instance, size_t cells, const std::atomic_bool& stop, bool held=false) NOEXCEPT
+static std::vector<uint64_t> drive(map& instance, size_t cells,
+    const std::atomic_bool& stop, bool held=false) NOEXCEPT
 {
+    const auto write = held ? stamp_held : stamp;
     std::vector<uint64_t> last(cells);
     for (uint64_t generation = one; !stop.load(); ++generation)
         for (size_t cell = zero; cell < cells; ++cell)
-            (held ? stamp_held : stamp)(instance, cell, last.at(cell) = generation);
+            write(instance, cell, last.at(cell) = generation);
 
     return last;
 }

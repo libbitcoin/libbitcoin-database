@@ -25,7 +25,10 @@ BOOST_AUTO_TEST_SUITE(ins_tests)
 ////00000000 110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f 420000
 
 using namespace system;
-constexpr auto hash = base16_array("110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f");
+constexpr auto hash = base16_array
+(
+    "110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f"
+);
 
 using body_storages = test::chunk_storages<schema::ins::minrow,
     schema::ins_sequence::size>;
