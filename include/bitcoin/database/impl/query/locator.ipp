@@ -34,7 +34,7 @@ CLASS::headers CLASS::get_headers(const hashes& locator,
     const hash_digest& stop, size_t limit) const NOEXCEPT
 {
     headers out{};
-    const auto span = get_locator_span(locator, stop, limit);
+    const auto span = get_locator_span(locator, stop, limit, true);
     out.reserve(span.size());
 
     for (auto height = span.begin; height < span.end; ++height)
@@ -57,7 +57,7 @@ hashes CLASS::get_blocks(const hashes& locator,
     const hash_digest& stop, size_t limit) const NOEXCEPT
 {
     hashes out{};
-    const auto span = get_locator_span(locator, stop, limit);
+    const auto span = get_locator_span(locator, stop, limit, false);
     out.reserve(span.size());
 
     for (auto height = span.begin; height < span.end; ++height)
@@ -80,14 +80,15 @@ hashes CLASS::get_blocks(const hashes& locator,
 
 TEMPLATE
 span CLASS::get_locator_span(const hashes& locator, const hash_digest& stop,
-    size_t limit) const NOEXCEPT
+    size_t limit, bool inclusive) const NOEXCEPT
 {
     using namespace system;
 
-    // Start at fork point, stop at given header (both excluded).
+    // Start after fork point, stop at given header (included if inclusive).
     const auto start = add1(get_locator_start(locator));
     const auto last1 = (stop == null_hash) ? max_uint32 :
-        get_height(to_header(stop)).value;
+        ceilinged_add<size_t>(get_height(to_header(stop)).value,
+            inclusive ? one : zero);
 
     // Determine number of headers requested, limited by max allowed.
     const auto request = floored_subtract<size_t>(last1, start);

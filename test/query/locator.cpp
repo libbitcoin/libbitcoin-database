@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__highest_first_locator__correct)
     BOOST_REQUIRE_EQUAL(headers[0]->hash(), test::block3_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_headers__stop_hash__excludes_stop_and_later)
+BOOST_AUTO_TEST_CASE(query_locator__get_headers__stop_hash__includes_stop_excludes_later)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -141,6 +141,26 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__stop_hash__excludes_stop_and_la
 
     const hashes locator{};
     const auto headers = query.get_headers(locator, test::block2_hash, 10);
+    BOOST_REQUIRE_EQUAL(headers.size(), 2u);
+    BOOST_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
+    BOOST_REQUIRE_EQUAL(headers[1]->hash(), test::block2_hash);
+}
+
+BOOST_AUTO_TEST_CASE(query_locator__get_headers__genesis_locator_stop_next__stop_header)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    query_access query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+
+    const hashes locator{ test::block0_hash };
+    const auto headers = query.get_headers(locator, test::block1_hash, 10);
     BOOST_REQUIRE_EQUAL(headers.size(), 1u);
     BOOST_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
 }
@@ -384,7 +404,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__empty_locator__starts_afte
     BOOST_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
-    const auto span = query.get_locator_span(locator, system::null_hash, 10);
+    const auto span = query.get_locator_span(locator, system::null_hash, 10, false);
     BOOST_REQUIRE_EQUAL(span.begin, 1u);
     BOOST_REQUIRE_EQUAL(span.end, 4u);
     BOOST_REQUIRE_EQUAL(span.size(), 3u);
@@ -404,7 +424,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__genesis_locator__starts_af
     BOOST_REQUIRE(query.push_confirmed(2, false));
 
     const hashes locator{ test::block0_hash };
-    const auto span = query.get_locator_span(locator, system::null_hash, 10);
+    const auto span = query.get_locator_span(locator, system::null_hash, 10, false);
     BOOST_REQUIRE_EQUAL(span.begin, 1u);
     BOOST_REQUIRE_EQUAL(span.end, 3u);
     BOOST_REQUIRE_EQUAL(span.size(), 2u);
@@ -426,7 +446,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__mid_chain_locator__starts_
     BOOST_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{ test::block1_hash, test::block0_hash };
-    const auto span = query.get_locator_span(locator, system::null_hash, 10);
+    const auto span = query.get_locator_span(locator, system::null_hash, 10, false);
     BOOST_REQUIRE_EQUAL(span.begin, 2u);
     BOOST_REQUIRE_EQUAL(span.end, 4u);
     BOOST_REQUIRE_EQUAL(span.size(), 2u);
@@ -448,10 +468,48 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_hash__limits_to_stop_
     BOOST_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
-    const auto span = query.get_locator_span(locator, test::block2_hash, 10);
+    const auto span = query.get_locator_span(locator, test::block2_hash, 10, false);
     BOOST_REQUIRE_EQUAL(span.begin, 1u);
     BOOST_REQUIRE_EQUAL(span.end, 2u);
     BOOST_REQUIRE_EQUAL(span.size(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_hash_inclusive__limits_to_stop_inclusive)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    query_access query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+
+    const hashes locator{ test::block0_hash };
+    const auto span = query.get_locator_span(locator, test::block1_hash, 10, true);
+    BOOST_REQUIRE_EQUAL(span.begin, 1u);
+    BOOST_REQUIRE_EQUAL(span.end, 2u);
+    BOOST_REQUIRE_EQUAL(span.size(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_at_fork_inclusive__empty_span)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    query_access query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+
+    const hashes locator{ test::block1_hash };
+    const auto span = query.get_locator_span(locator, test::block1_hash, 10, true);
+    BOOST_REQUIRE_EQUAL(span.begin, 2u);
+    BOOST_REQUIRE_EQUAL(span.end, 2u);
+    BOOST_REQUIRE_EQUAL(span.size(), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__limit_smaller_than_range__respects_limit)
@@ -470,7 +528,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__limit_smaller_than_range__
     BOOST_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
-    const auto span = query.get_locator_span(locator, system::null_hash, 2);
+    const auto span = query.get_locator_span(locator, system::null_hash, 2, false);
     BOOST_REQUIRE_EQUAL(span.begin, 1u);
     BOOST_REQUIRE_EQUAL(span.end, 3u);
     BOOST_REQUIRE_EQUAL(span.size(), 2u);
@@ -487,7 +545,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__no_confirmed_blocks__empty
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
 
     const hashes locator{};
-    const auto span = query.get_locator_span(locator, system::null_hash, 10);
+    const auto span = query.get_locator_span(locator, system::null_hash, 10, false);
     BOOST_REQUIRE_EQUAL(span.begin, 1u);
     BOOST_REQUIRE_EQUAL(span.end, 1u);
     BOOST_REQUIRE_EQUAL(span.size(), 0u);
@@ -505,7 +563,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_before_start__empty_s
     BOOST_REQUIRE(query.push_confirmed(1, false));
 
     const hashes locator{ test::block1_hash };
-    const auto span = query.get_locator_span(locator, test::block0_hash, 10);
+    const auto span = query.get_locator_span(locator, test::block0_hash, 10, false);
     BOOST_REQUIRE_EQUAL(span.begin, 2u);
     BOOST_REQUIRE_EQUAL(span.end, 2u);
     BOOST_REQUIRE_EQUAL(span.size(), 0u);
@@ -523,7 +581,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__large_limit__capped_by_top
     BOOST_REQUIRE(query.push_confirmed(1, false));
 
     const hashes locator{};
-    const auto span = query.get_locator_span(locator, system::null_hash, 1000);
+    const auto span = query.get_locator_span(locator, system::null_hash, 1000, false);
     BOOST_REQUIRE_EQUAL(span.begin, 1u);
     BOOST_REQUIRE_EQUAL(span.end, 2u);
     BOOST_REQUIRE_EQUAL(span.size(), 1u);

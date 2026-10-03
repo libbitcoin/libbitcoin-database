@@ -908,7 +908,7 @@ protected:
 
     /// Height of highest confirmed block (assumes locator descending).
     span get_locator_span(const hashes& locator, const hash_digest& stop,
-        size_t limit) const NOEXCEPT;
+        size_t limit, bool inclusive) const NOEXCEPT;
 
     /// Support unassociated gathering.
     bool get_unassociated(association& out,
