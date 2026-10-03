@@ -194,4 +194,53 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__no_match__none)
     BOOST_REQUIRE_EQUAL(calls, 0u);
 }
 
+BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__range__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_silent(42, simple_send()));
+    BOOST_REQUIRE(query.set_silent(43, simple_send()));
+
+    std::vector<uint32_t> links{};
+    const stopper cancel{};
+    BOOST_REQUIRE(query.scan_silent(cancel, get_keys(), 1, 2,
+        [&](const code&, uint32_t tx, const system::ec_compressed&) NOEXCEPT
+        {
+            links.push_back(tx);
+        }));
+    BOOST_REQUIRE_EQUAL(links, std::vector<uint32_t>{ 43 });
+}
+
+// get_silent_frontier
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_frontier__empty__zero)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE_EQUAL(query.get_silent_frontier(0), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_frontier__written__count)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_silent(42, simple_send()));
+    BOOST_REQUIRE(query.set_silent(43, simple_send()));
+    BOOST_REQUIRE_EQUAL(query.get_silent_frontier(0), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_silent_frontier(1), 2u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

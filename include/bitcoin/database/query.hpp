@@ -675,6 +675,12 @@ public:
     bool scan_silent(const stopper& cancel,
         const system::silent::batch::receiver& keys,
         const silent_handler& callback) NOEXCEPT;
+    bool scan_silent(const stopper& cancel,
+        const system::silent::batch::receiver& keys, size_t first,
+        size_t last, const silent_handler& callback) NOEXCEPT;
+
+    /// The first silent row at or above first that is not fully written.
+    size_t get_silent_frontier(size_t first) const NOEXCEPT;
 
     /// Verify all signatures in table, false implies cancel.
     bool verify_ecdsa_signatures(const stopper& cancel, header_links&,

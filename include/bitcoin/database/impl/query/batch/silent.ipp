@@ -31,6 +31,15 @@ bool CLASS::scan_silent(const stopper& cancel,
     const system::silent::batch::receiver& keys,
     const silent_handler& callback) NOEXCEPT
 {
+    return scan_silent(cancel, keys, zero, store_.silent.count(), callback);
+}
+
+// Rows [first, last) must begin and end on transaction boundaries.
+TEMPLATE
+bool CLASS::scan_silent(const stopper& cancel,
+    const system::silent::batch::receiver& keys, size_t first, size_t last,
+    const silent_handler& callback) NOEXCEPT
+{
     const auto prefix_ptr = store_.silent.prefix.get_memory();
     const auto compressed_ptr = store_.silent.compressed.get_memory();
     const auto correlate_ptr = store_.silent.correlate.get_memory();
@@ -44,19 +53,38 @@ bool CLASS::scan_silent(const stopper& cancel,
     const auto prefix = pointer_cast<prefix_t>(prefix_ptr.data());
     const auto compressed = pointer_cast<compressed_t>(compressed_ptr.data());
 
-    // Shortest column.
-    const auto count = store_.silent.count();
+    BC_ASSERT(first <= last && last <= store_.silent.count());
+    const auto count = last - first;
     const silent::batch batch
     {
-        .correlates = { correlate, count },
-        .prefixes = { prefix, count },
-        .points = { compressed, count }
+        .correlates = { std::next(correlate, first), count },
+        .prefixes = { std::next(prefix, first), count },
+        .points = { std::next(compressed, first), count }
     };
 
     // False return only implies canceled.
     // Callbacks invoked on caller thread if turbo is false.
     silent::batch::scan(cancel, batch, keys, callback, store_.turbo());
     return !cancel;
+}
+
+// Rows are allocated zero-filled and a nonzero correlate publishes the row.
+TEMPLATE
+size_t CLASS::get_silent_frontier(size_t first) const NOEXCEPT
+{
+    using namespace system;
+    const auto guard = store_.silent.guard();
+    const auto words = pointer_cast<uint32_t>(guard.data());
+    const auto count = store_.silent.count();
+
+    for (auto row = first; row < count; ++row)
+    {
+        std::atomic_ref<uint32_t> word{ *std::next(words, row) };
+        if (is_zero(word.load(std::memory_order_acquire)))
+            return row;
+    }
+
+    return count;
 }
 
 // setters
@@ -175,14 +203,9 @@ bool CLASS::set_silent_(const tx_link& link, const ec_compressed& summary,
             return unsafe_from_little_endian<uint64_t>(output.key.data());
         });
 
-    using correlate_t = table::silent_correlate::records;
     using prefix_t = table::silent_prefix::put_ref;
     using compressed_t = table::silent_compressed::put_ref;
 
-    // TODO: Caller must guard reads, this is writing into hot storage. This
-    // TODO: requires caller to chase writers and account for the last contig-
-    // TODO: uously populated row (for searching) and to update subscriptions
-    // TODO: with additional scans as this position increases.
     // ========================================================================
     const auto scope = get_transactor();
     auto rows = possible_narrow_cast<silent_link::integer>(prefixes.size());
@@ -196,10 +219,23 @@ bool CLASS::set_silent_(const tx_link& link, const ec_compressed& summary,
     const auto guard = store_.silent.guard();
 
     // Write values to each column in corresponding positions.
-    return
-        store_.silent.correlate.put(fk, correlate_t{ {}, rows, link }) &&
-        store_.silent.prefix.put(fk, prefix_t{ {}, prefixes }) &&
-        store_.silent.compressed.put(fk, compressed_t{ {}, rows, summary });
+    if (!store_.silent.prefix.put(fk, prefix_t{ {}, prefixes }) ||
+        !store_.silent.compressed.put(fk, compressed_t{ {}, rows, summary }))
+        return false;
+
+    // The guard is the correlate column, published last (get_silent_frontier).
+    static_assert(schema::silent_correlate::minrow == sizeof(uint32_t));
+    const auto words = pointer_cast<uint32_t>(guard.data());
+    const auto value = native_to_little_end(
+        possible_narrow_cast<uint32_t>(link.value));
+
+    for (auto row = fk.value; row < fk.value + rows; ++row)
+    {
+        std::atomic_ref<uint32_t> word{ *std::next(words, row) };
+        word.store(value, std::memory_order_release);
+    }
+
+    return true;
     // ========================================================================
 }
 
