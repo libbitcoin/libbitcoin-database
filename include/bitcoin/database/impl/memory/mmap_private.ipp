@@ -209,42 +209,49 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::resize_(size_t size, bool final) NOEXCEPT
 {
-    // The file is provisioned ahead of commitment, so growth within the
-    // provisioned extent requires no disk operation (the space is reserved).
-    const auto extent = file_.load();
-    if (size <= extent)
-        return true;
-
-    using namespace system;
-    const auto target = to_width<Column>(size);
-    const auto capacity = to_width<Column>(extent);
-
-    // Disk full detection, any other failure is an abort. The wave probe
-    // (remap_all_) precedes, so refusal here is a raced foreign consumer.
-#if !defined(WITHOUT_FALLOCATE)
-    if (::fallocate(opened_[Column], 0, capacity, target - capacity) == fail)
-#else
-    if (::ftruncate(opened_[Column], target) == fail)
-#endif
+    if constexpr (is_zero(widths.at(Column)))
     {
-        // Disk full is the only restartable store failure (leave mapped).
-        // A non-final refusal is not published: the caller retries reduced.
-        // The published requirement includes the headroom (a retry probes).
-        if (errno == ENOSPC)
-        {
-            if (final)
-                set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
-                    floored_subtract(size, extent), stride)));
+        return true;
+    }
+    else
+    {
+        // The file is provisioned ahead of commitment, so growth within the
+        // provisioned extent requires no disk operation (space is reserved).
+        const auto extent = file_.load();
+        if (size <= extent)
+            return true;
 
+        using namespace system;
+        const auto target = to_width<Column>(size);
+        const auto capacity = to_width<Column>(extent);
+
+        // Disk full detection, any other failure is an abort. The wave probe
+        // (remap_all_) precedes, so refusal here is a raced foreign consumer.
+#if !defined(WITHOUT_FALLOCATE)
+        if (::fallocate(opened_[Column], 0, capacity, target - capacity) == fail)
+#else
+        if (::ftruncate(opened_[Column], target) == fail)
+#endif
+        {
+            // Disk full is the only restartable store failure (leave mapped).
+            // A non-final refusal is not published: the caller retries reduced.
+            // The published requirement includes the headroom (a retry probes).
+            if (errno == ENOSPC)
+            {
+                if (final)
+                    set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+                        floored_subtract(size, extent), stride)));
+
+                return false;
+            }
+
+            set_first_code(error::ftruncate_failure);
+            unmap_<Column>(capacity_.load());
             return false;
         }
 
-        set_first_code(error::ftruncate_failure);
-        unmap_<Column>(capacity_.load());
-        return false;
+        return true;
     }
-
-    return true;
 }
 
 // worker, instance-owned (load/unload lifecycle).

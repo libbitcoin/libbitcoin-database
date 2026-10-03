@@ -31,6 +31,8 @@ namespace database {
 class storage
 {
 public:
+    virtual ~storage() NOEXCEPT = default;
+
     static constexpr auto eof = system::bit_all<size_t>;
     using path = std::filesystem::path;
 
@@ -60,21 +62,15 @@ public:
 
     /// Declare content mutation of size bytes at offset (rewritable tables),
     /// before the write. Restores released pages; no effect where unneeded.
-    virtual void prepare(size_t, size_t) NOEXCEPT
-    {
-    }
+    virtual void prepare(size_t offset, size_t size) NOEXCEPT = 0;
 
     /// Report content mutation of size bytes at offset (rewritable tables),
     /// after the write. Advisory dirty tracking; no effect where unneeded.
-    virtual void mark(size_t, size_t) NOEXCEPT
-    {
-    }
+    virtual void mark(size_t offset, size_t size) NOEXCEPT = 0;
 
     /// Report store currency (permits managed head settlement); no effect
     /// where unneeded.
-    virtual void current(bool) NOEXCEPT
-    {
-    }
+    virtual void current(bool state) NOEXCEPT = 0;
 
     /// Flush memory map to disk, suspend writes for call, must be loaded.
     virtual code flush() NOEXCEPT = 0;
@@ -87,6 +83,9 @@ public:
 
     /// Dump current logical map to a new file in path, must not exist.
     virtual code dump(const path& path) const NOEXCEPT = 0;
+
+    /// Bytes per element row (the backed column stride, one if scalar).
+    virtual size_t width() const NOEXCEPT = 0;
 
     /// Current of rows/bytes in map (zero if closed).
     virtual size_t size() const NOEXCEPT = 0;

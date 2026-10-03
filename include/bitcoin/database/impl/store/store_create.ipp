@@ -88,7 +88,7 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, ins_head_, table_t::ins_head);
     create(ec, ins_body_, table_t::ins_body);
     create(ec, outs_head_, table_t::outs_head);
-    create(ec, outs_body_, table_t::outs_body);
+    create(ec, *outs_body_, table_t::outs_body);
     create(ec, tx_head_, table_t::tx_head);
     create(ec, tx_body_, table_t::tx_body);
     create(ec, txs_head_, table_t::txs_head);

@@ -311,7 +311,8 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     accessors ptrs{};
     ptrs.tx = store_.tx.get_memory();
     ptrs.ins = store_.ins.get_memory();
-    ptrs.outs = store_.outs.get_memory();
+    ptrs.outs = address_enabled() ? store_.outs.get_memory() :
+        store_.outs.template get_memory<one>();
     ptrs.input  = store_.input.get_memory();
     ptrs.output = store_.output.get_memory();
 

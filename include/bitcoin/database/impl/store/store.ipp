@@ -24,6 +24,20 @@
 namespace libbitcoin {
 namespace database {
 
+// The address spine is unbacked when its hash head is disabled.
+TEMPLATE
+std::unique_ptr<storage> CLASS::to_outs(const settings& config) NOEXCEPT
+{
+    if (is_zero(config.outs.buckets))
+        return std::make_unique<table::outs_storage_unbacked<Storage>>(
+            body(config.path, schema::archive::outs), config.outs,
+            sequential, staged);
+
+    return std::make_unique<table::outs_storage<Storage>>(
+        body(config.path, schema::archive::outs), config.outs,
+        sequential, staged);
+}
+
 TEMPLATE
 CLASS::store(const settings& config) NOEXCEPT
   : configuration_(config),
@@ -45,7 +59,7 @@ CLASS::store(const settings& config) NOEXCEPT
     ins_body_(body(config.path, schema::archive::ins), config.ins, sequential, staged),
 
     outs_head_(head(config.path / schema::dir::heads, schema::archive::outs), head_settings(config.outs), random),
-    outs_body_(body(config.path, schema::archive::outs), config.outs, sequential, staged),
+    outs_body_(to_outs(config)),
 
     tx_head_(head(config.path / schema::dir::heads, schema::archive::tx), head_settings(config.tx), random),
     tx_body_(body(config.path, schema::archive::tx), config.tx, sequential, staged),
@@ -122,7 +136,7 @@ CLASS::store(const settings& config) NOEXCEPT
     input(input_head_, input_body_),
     output(output_head_, output_body_),
     ins(ins_head_, ins_body_, config.ins.buckets, config.ins.expected),
-    outs(outs_head_, outs_body_, config.outs.buckets, config.outs.expected),
+    outs(outs_head_, *outs_body_, config.outs.buckets, config.outs.expected),
     tx(tx_head_, tx_body_, config.tx.buckets, config.tx.expected),
     txs(txs_head_, txs_body_, config.txs.buckets),
 

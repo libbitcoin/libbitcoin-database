@@ -124,7 +124,7 @@ public:
 
     inline const path& outs_body_file() const NOEXCEPT
     {
-        return outs_body_.file();
+        return outs_body_->file();
     }
 
     inline const path& tx_head_file() const NOEXCEPT

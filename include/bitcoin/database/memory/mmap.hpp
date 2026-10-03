@@ -54,10 +54,12 @@ public:
     using sizes = std::array<size_t, columns>;
 
     /// Per-column record widths; transpose row<->byte by these (constexpr).
+    /// A zero width column is unbacked: its file is never grown or mapped.
     static constexpr sizes widths{ Widths... };
 
     /// Bytes per logical row across the aggregate (sum of column widths).
     static constexpr size_t stride = (Widths + ...);
+    static_assert(is_nonzero(stride), "requires a backed column");
 
     /// Constructors.
     /// -----------------------------------------------------------------------
@@ -144,6 +146,9 @@ public:
     /// Dump current logical map to a new file in path, must not exist.
     code dump(const path& path) const NOEXCEPT override;
 
+    /// Bytes per element row (the backed column stride, one if scalar).
+    size_t width() const NOEXCEPT override;
+
     /// The current count of rows/bytes in map (zero if closed).
     size_t size() const NOEXCEPT override;
 
@@ -199,9 +204,18 @@ protected:
         return offset * widths.at(Column);
     }
 
+    static constexpr size_t backed() NOEXCEPT
+    {
+        size_t column{};
+        while (is_zero(widths.at(column)))
+            ++column;
+
+        return column;
+    }
+
     static constexpr size_t logical_rows(size_t bytes) NOEXCEPT
     {
-        return bytes / widths.front();
+        return bytes / widths.at(backed());
     }
 
     static constexpr size_t to_rows(size_t bytes) NOEXCEPT

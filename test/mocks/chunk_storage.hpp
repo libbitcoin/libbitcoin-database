@@ -131,6 +131,18 @@ public:
         return error::success;
     }
 
+    void prepare(size_t, size_t) NOEXCEPT override
+    {
+    }
+
+    void mark(size_t, size_t) NOEXCEPT override
+    {
+    }
+
+    void current(bool) NOEXCEPT override
+    {
+    }
+
     code flush() NOEXCEPT override
     {
         return error::success;
@@ -158,6 +170,11 @@ public:
 
     // sizing (row-denominated, shared across columns).
     // ------------------------------------------------------------------------
+
+    size_t width() const NOEXCEPT override
+    {
+        return stride;
+    }
 
     size_t capacity() const NOEXCEPT override
     {

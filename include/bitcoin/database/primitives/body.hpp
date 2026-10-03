@@ -104,8 +104,6 @@ private:
 
     template <size_t Column>
     static constexpr size_t stride() NOEXCEPT;
-    template <size_t... Index>
-    static constexpr size_t strides(std::index_sequence<Index...>) NOEXCEPT;
 
     /// Convert between record links and the file's native denomination
     /// (elements). Single column file elements are BYTES (width one), so
