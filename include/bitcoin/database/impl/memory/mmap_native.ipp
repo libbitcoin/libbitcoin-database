@@ -162,9 +162,7 @@ bool CLASS::finalize_() NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
-// Heads assert residency, bodies lead the trim. Both are advisory: failure
-// alters nothing and is not a fault (unlike the staged eviction primitives,
-// which own persistence).
+// Heads assert residency. Advisory: failure alters nothing and is not a fault.
 TEMPLATE
 void CLASS::scan_run_() NOEXCEPT
 {
@@ -177,9 +175,7 @@ void CLASS::scan_run_() NOEXCEPT
     const auto memory = system_memory();
     /* int */ ::working_floor((memory / 4) * 3, memory);
 
-    const auto span = std::max(one, evict_chunk / stride);
     size_t touched{};
-    size_t unlocked{};
 
     while (tick_())
     {
@@ -193,47 +189,26 @@ void CLASS::scan_run_() NOEXCEPT
         if (!loaded_.load() || fault_.load())
             continue;
 
-        if (staged_)
+        // Revisit every head page each touch_seconds regardless of instance
+        // size. A read sets the access bit without dirtying the page;
+        // volatile prevents elision.
+        const auto pages = to_width<zero>(logical_.load()) / page;
+        const volatile auto* map = memory_map_[zero];
+        auto budget = ceilinged_divide(pages, touch_seconds);
+
+        while (!is_zero(pages) && !is_zero(budget))
         {
-            // Unlock a wrapping lap of the oldest rows (offset is write age
-            // in an append-only body, and re-read probability decays with
-            // it), so the trim takes these before the head set.
-            const auto rows = logical_.load();
-            const auto from = (unlocked < rows) ? unlocked : zero;
-            const auto to = std::min(rows, ceilinged_add(from, span));
-            if (to <= from)
-                continue;
+            if (touched >= pages)
+                touched = zero;
 
-            const auto at = to_width<zero>(from);
-            /* bool */ ::munlock(std::next(memory_map_[zero], at),
-                to_width<zero>(to) - at);
+            const auto at = touched * page;
+            const auto count = std::min({ touch_span, pages - touched, budget });
 
-            unlocked = (to == rows) ? zero : to;
-        }
-        else
-        {
-            // Revisit every head page each touch_seconds regardless of
-            // instance size. A read sets the access bit without dirtying
-            // the page; volatile prevents elision.
-            const auto pages = to_width<zero>(logical_.load()) / page;
-            const volatile auto* map = memory_map_[zero];
-            auto budget = ceilinged_divide(pages, touch_seconds);
+            for (size_t index{}; index < count; ++index)
+                (void)map[at + index * page];
 
-            while (!is_zero(pages) && !is_zero(budget))
-            {
-                if (touched >= pages)
-                    touched = zero;
-
-                const auto at = touched * page;
-                const auto count = std::min(
-                    { touch_span, pages - touched, budget });
-
-                for (size_t index{}; index < count; ++index)
-                    (void)map[at + index * page];
-
-                touched += count;
-                budget = floored_subtract(budget, count);
-            }
+            touched += count;
+            budget = floored_subtract(budget, count);
         }
     }
 }

@@ -260,6 +260,10 @@ void CLASS::worker_start_() NOEXCEPT
         return;
 
     limit_ = system_memory() / throttle_factor;
+#else
+    // Only heads steer residency; bodies are the cache manager's to place.
+    if (staged_)
+        return;
 #endif
 
     working_.store(true);
