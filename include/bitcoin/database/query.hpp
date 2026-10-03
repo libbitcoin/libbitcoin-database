@@ -258,6 +258,8 @@ public:
     /// Optional/configured table state.
     bool address_enabled() const NOEXCEPT;
     bool filter_enabled() const NOEXCEPT;
+    bool silent_enabled() const NOEXCEPT;
+    size_t silent_start_height() const NOEXCEPT;
     size_t interval_span() const NOEXCEPT;
 
     /// Initialization (natural-keyed).

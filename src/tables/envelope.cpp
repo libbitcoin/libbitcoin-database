@@ -55,7 +55,7 @@ void envelope::set(const settings& database) NOEXCEPT
 }
 
 envelope::envelope(const system::settings& bitcoin, const settings& database,
-    bool limited) NOEXCEPT
+    bool limited, uint32_t silent) NOEXCEPT
   : schema(compiled),
     forks(bitcoin.forks),
     initial_subsidy_bitcoin(bitcoin.initial_subsidy_bitcoin),
@@ -87,7 +87,8 @@ envelope::envelope(const system::settings& bitcoin, const settings& database,
     bip9_bit2_active_checkpoint(bitcoin.bip9_bit2_active_checkpoint),
     top_checkpoint(bitcoin.top_checkpoint()),
     milestone(bitcoin.milestone),
-    limited_blocks(limited)
+    limited_blocks(limited),
+    silent_start_height(silent)
 {
     set(database);
 }
@@ -189,6 +190,8 @@ bool envelope::from_data(reader& source) NOEXCEPT
     limited_blocks = to_bool(source.read_byte());
     provide_filters = to_bool(source.read_byte());
 
+    silent_start_height = source.read_little_endian<uint32_t>();
+
     pooling = to_bool(source.read_byte());
     return source;
 }
@@ -279,6 +282,8 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_byte(to_int<uint8_t>(limited_blocks));
     sink.write_byte(to_int<uint8_t>(provide_filters));
 
+    sink.write_little_endian<uint32_t>(silent_start_height);
+
     sink.write_byte(to_int<uint8_t>(pooling));
     return sink;
 }
@@ -288,7 +293,7 @@ size_t envelope::serialized_size() const NOEXCEPT
     constexpr auto forks_size = 24_size;
     constexpr auto fixed = (4 * sizeof(uint32_t)) + sizeof(uint16_t) +
         (7 * sizeof(uint32_t)) + (10 * sizeof(uint8_t)) + forks_size +
-        sizeof(uint64_t) + (15 * sizeof(uint32_t));
+        sizeof(uint64_t) + (15 * sizeof(uint32_t)) + sizeof(uint32_t);
 
     const auto checkpoint_size = [](const chain::checkpoint& in) NOEXCEPT
     {

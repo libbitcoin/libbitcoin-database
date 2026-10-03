@@ -282,6 +282,18 @@ bool CLASS::filter_enabled() const NOEXCEPT
     return store_.filter_bk.enabled() && store_.filter_tx.enabled();
 }
 
+TEMPLATE
+bool CLASS::silent_enabled() const NOEXCEPT
+{
+    return store_.get_envelope().silent_start_height != max_uint32;
+}
+
+TEMPLATE
+size_t CLASS::silent_start_height() const NOEXCEPT
+{
+    return store_.get_envelope().silent_start_height;
+}
+
 } // namespace database
 } // namespace libbitcoin
 
