@@ -671,8 +671,9 @@ public:
     bool set_signatures(const system::chain::schnorr_signatures& sigs,
         const header_link& link, bool bank) NOEXCEPT;
 
-    /// Invoke callback for each candidate match, false implies cancel.
-    bool scan_silent(const stopper& cancel, const ec_secret& scan_key,
+    /// Invoke callback for each matched tx, false implies cancel.
+    bool scan_silent(const stopper& cancel,
+        const system::silent::batch::receiver& keys,
         const silent_handler& callback) NOEXCEPT;
 
     /// Verify all signatures in table, false implies cancel.
@@ -1039,7 +1040,8 @@ protected:
         size_t heavy, hash_option&& interval, bool strong) NOEXCEPT;
 
     /// Set silent payment records of a non-coinbase tx.
-    bool set_silent_(const tx_link& link) NOEXCEPT;
+    bool set_silent_(const tx_link& link, const ec_compressed& summary,
+        const system::wallet::silent_payment::scan_outputs& outputs) NOEXCEPT;
 
     /// Pooling.
     /// -----------------------------------------------------------------------

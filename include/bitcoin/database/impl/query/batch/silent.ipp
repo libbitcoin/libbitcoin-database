@@ -27,7 +27,8 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-bool CLASS::scan_silent(const stopper& cancel, const ec_secret& scan_key,
+bool CLASS::scan_silent(const stopper& cancel,
+    const system::silent::batch::receiver& keys,
     const silent_handler& callback) NOEXCEPT
 {
     const auto prefix_ptr = store_.silent.prefix.get_memory();
@@ -54,13 +55,15 @@ bool CLASS::scan_silent(const stopper& cancel, const ec_secret& scan_key,
 
     // False return only implies canceled.
     // Callbacks invoked on caller thread if turbo is false.
-    silent::batch::scan(cancel, batch, scan_key, callback, store_.turbo());
+    silent::batch::scan(cancel, batch, keys, callback, store_.turbo());
     return !cancel;
 }
 
 // setters
 // ----------------------------------------------------------------------------
 // Caller (node) controls which txs are indexed (e.g. by confirmed height).
+// The coinbase is the first tx archived for a block, so txs linked below it
+// were archived (and indexed) before it, as pooled or by another block.
 
 TEMPLATE
 bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
@@ -73,6 +76,8 @@ bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
     const auto links = to_transactions(link);
     if (links.size() != count)
         return false;
+
+    const auto first = links.front();
 
     stopper fail{};
     std::vector<size_t> it(sub1(count));
@@ -87,7 +92,8 @@ bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
         if (fail.load(relaxed))
             return;
 
-        if (!set_silent(links.at(index), *txs->at(index)))
+        const auto& tx = links.at(index);
+        if (tx >= first && !set_silent(tx, *txs->at(index)))
             fail.store(true, relaxed);
     });
     
@@ -107,6 +113,8 @@ bool CLASS::set_silent(const header_link& link,
     if (links.size() != count)
         return false;
 
+    const auto first = links.front();
+
     stopper fail{};
     std::vector<size_t> it(sub1(count));
     std::iota(it.begin(), it.end(), one);
@@ -118,45 +126,54 @@ bool CLASS::set_silent(const header_link& link,
         if (fail.load(relaxed))
             return;
 
-        if (!set_silent(links.at(index), txs.at(index)))
+        const auto& tx = links.at(index);
+        if (tx >= first && !set_silent(tx, txs.at(index)))
             fail.store(true, relaxed);
     });
 
     return !fail.load(relaxed);
 }
 
+// Ineligible txs have no records.
 TEMPLATE
-bool CLASS::set_silent(const tx_link& link,
-    const transaction& BC_DEBUG_ONLY(tx)) NOEXCEPT
+bool CLASS::set_silent(const tx_link& link, const transaction& tx) NOEXCEPT
 {
-    BC_ASSERT(!tx.is_coinbase());
-    return set_silent_(link);
+    using namespace system::wallet;
+    ec_compressed summary{};
+    silent_payment::scan_outputs outputs{};
+    return !silent_payment::get_outputs(outputs, tx)
+        || !silent_payment::summarize(summary, tx)
+        || set_silent_(link, summary, outputs);
 }
 
 TEMPLATE
 bool CLASS::set_silent(const tx_link& link,
-    const transaction_view& BC_DEBUG_ONLY(tx)) NOEXCEPT
+    const transaction_view& tx) NOEXCEPT
 {
-    BC_ASSERT(!tx.is_coinbase());
-    return set_silent_(link);
+    using namespace system::wallet;
+    ec_compressed summary{};
+    silent_payment::scan_outputs outputs{};
+    return !silent_payment::get_outputs(outputs, tx)
+        || !silent_payment::summarize(summary, tx)
+        || set_silent_(link, summary, outputs);
 }
 
 // protected
 TEMPLATE
-bool CLASS::set_silent_(const tx_link& link) NOEXCEPT
+bool CLASS::set_silent_(const tx_link& link, const ec_compressed& summary,
+    const system::wallet::silent_payment::scan_outputs& outputs) NOEXCEPT
 {
     if (link.is_terminal())
         return false;
 
-    // Short-circuits with success on empty.
-    ////using namespace system::wallet;
-    ////silent_payment::scan_record record{};
-    ////if (!silent_payment::compute_scan_record(record, tx))
-    ////    return true;
-
-    // TODO: aliases for record above;
-    const ec_compressed key{};
-    const std::vector<uint64_t> prefixes{};
+    // The prefix is ec_xonly[0..7] read as little-endian.
+    using namespace system;
+    std::vector<uint64_t> prefixes(outputs.size());
+    std::transform(outputs.cbegin(), outputs.cend(), prefixes.begin(),
+        [](const auto& output) NOEXCEPT
+        {
+            return unsafe_from_little_endian<uint64_t>(output.key.data());
+        });
 
     using correlate_t = table::silent_correlate::records;
     using prefix_t = table::silent_prefix::put_ref;
@@ -168,8 +185,6 @@ bool CLASS::set_silent_(const tx_link& link) NOEXCEPT
     // TODO: with additional scans as this position increases.
     // ========================================================================
     const auto scope = get_transactor();
-
-    using namespace system;
     auto rows = possible_narrow_cast<silent_link::integer>(prefixes.size());
 
     // Allocate rows across all columns.
@@ -184,7 +199,7 @@ bool CLASS::set_silent_(const tx_link& link) NOEXCEPT
     return
         store_.silent.correlate.put(fk, correlate_t{ {}, rows, link }) &&
         store_.silent.prefix.put(fk, prefix_t{ {}, prefixes }) &&
-        store_.silent.compressed.put(fk, compressed_t{ {}, rows, key });
+        store_.silent.compressed.put(fk, compressed_t{ {}, rows, summary });
     // ========================================================================
 }
 
