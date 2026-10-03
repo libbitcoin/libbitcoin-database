@@ -26,13 +26,20 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-bool CLASS::verify_schnorr_signatures(const stopper& cancel,
-    header_links& links) NOEXCEPT
+size_t CLASS::schnorr_records(bool bank) const NOEXCEPT
 {
-    const auto correlate_ptr = store_.schnorr.correlate.get_memory();
-    const auto digest_ptr = store_.schnorr.digest.get_memory();
-    const auto xonly_ptr = store_.schnorr.xonly.get_memory();
-    const auto signature_ptr = store_.schnorr.signature.get_memory();
+    return store_.schnorr_bank(bank).count();
+}
+
+TEMPLATE
+bool CLASS::verify_schnorr_signatures(const stopper& cancel,
+    header_links& links, bool bank) NOEXCEPT
+{
+    auto& bank_table = store_.schnorr_bank(bank);
+    const auto correlate_ptr = bank_table.correlate.get_memory();
+    const auto digest_ptr = bank_table.digest.get_memory();
+    const auto xonly_ptr = bank_table.xonly.get_memory();
+    const auto signature_ptr = bank_table.signature.get_memory();
 
     using correlate_t = const system::schnorr::batch::correlate_t;
     using digest_t = const table::schnorr_digest::span;
@@ -46,7 +53,7 @@ bool CLASS::verify_schnorr_signatures(const stopper& cancel,
     const auto signature = pointer_cast<signature_t>(signature_ptr.data());
 
     // Shortest column.
-    const auto count = store_.schnorr.count();
+    const auto count = bank_table.count();
     const schnorr::batch batch
     {
         .correlates = { correlate, count },
@@ -64,17 +71,17 @@ bool CLASS::verify_schnorr_signatures(const stopper& cancel,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::purge_schnorr_signatures() NOEXCEPT
+bool CLASS::purge_schnorr_signatures(bool bank) NOEXCEPT
 {
     // ========================================================================
     const auto scope = get_transactor();
-    return store_.schnorr.truncate(0);
+    return store_.schnorr_bank(bank).truncate(0);
     // ========================================================================
 }
 
 TEMPLATE
 bool CLASS::set_signatures(const system::chain::schnorr_signatures& sigs,
-    const header_link& link) NOEXCEPT
+    const header_link& link, bool bank) NOEXCEPT
 {
     using correlate_t = table::schnorr_correlate::put_signatures;
     using digest_t = table::schnorr_digest::put_signatures;
@@ -91,21 +98,22 @@ bool CLASS::set_signatures(const system::chain::schnorr_signatures& sigs,
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
     const auto scope = get_transactor();
+    auto& bank_table = store_.schnorr_bank(bank);
 
     // Allocate all of the block's rows across all columns.
-    const auto fk = store_.schnorr.allocate(rows);
+    const auto fk = bank_table.allocate(rows);
     if (fk.is_terminal())
         return false;
 
     // Guard against remap (required for nomaps::put(fk)).
-    const auto guard = store_.schnorr.guard();
+    const auto guard = bank_table.guard();
 
     // Deinterleave the accumulator into the columns.
     return
-        store_.schnorr.correlate.put(fk, correlate_t{ {}, link, sigs }) &&
-        store_.schnorr.digest.put(fk, digest_t{ {}, sigs }) &&
-        store_.schnorr.xonly.put(fk, xonly_t{ {}, sigs }) &&
-        store_.schnorr.signature.put(fk, signature_t{ {}, sigs });
+        bank_table.correlate.put(fk, correlate_t{ {}, link, sigs }) &&
+        bank_table.digest.put(fk, digest_t{ {}, sigs }) &&
+        bank_table.xonly.put(fk, xonly_t{ {}, sigs }) &&
+        bank_table.signature.put(fk, signature_t{ {}, sigs });
     // ========================================================================
 }
 

@@ -66,12 +66,16 @@ CLASS::store(const settings& config) NOEXCEPT
     // ------------------------------------------------------------------------
 
     // TODO: body not random, but keep in memory.
-    ecdsa_head_(head(config.path / schema::dir::heads, schema::caches::ecdsa), head_settings(config.ecdsa), sequential),
-    ecdsa_body_(body(config.path, schema::caches::ecdsa), config.ecdsa, sequential, staged),
+    ecdsa0_head_(head(config.path / schema::dir::heads, schema::caches::ecdsa0), head_settings(config.ecdsa), sequential),
+    ecdsa0_body_(body(config.path, schema::caches::ecdsa0), config.ecdsa, sequential, staged),
+    ecdsa1_head_(head(config.path / schema::dir::heads, schema::caches::ecdsa1), head_settings(config.ecdsa), sequential),
+    ecdsa1_body_(body(config.path, schema::caches::ecdsa1), config.ecdsa, sequential, staged),
 
     // TODO: body not random, but keep in memory.
-    schnorr_head_(head(config.path / schema::dir::heads, schema::caches::schnorr), head_settings(config.schnorr), sequential),
-    schnorr_body_(body(config.path, schema::caches::schnorr), config.schnorr, sequential, staged),
+    schnorr0_head_(head(config.path / schema::dir::heads, schema::caches::schnorr0), head_settings(config.schnorr), sequential),
+    schnorr0_body_(body(config.path, schema::caches::schnorr0), config.schnorr, sequential, staged),
+    schnorr1_head_(head(config.path / schema::dir::heads, schema::caches::schnorr1), head_settings(config.schnorr), sequential),
+    schnorr1_body_(body(config.path, schema::caches::schnorr1), config.schnorr, sequential, staged),
 
     silent_head_(head(config.path / schema::dir::heads, schema::caches::silent), head_settings(config.silent), sequential),
     silent_body_(body(config.path, schema::caches::silent), config.silent, sequential, staged),
@@ -80,8 +84,10 @@ CLASS::store(const settings& config) NOEXCEPT
     duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate), head_settings(config.duplicate), random),
     duplicate_body_(body(config.path, schema::caches::duplicate), config.duplicate, sequential, staged),
 
-    prevalid_head_(head(config.path / schema::dir::heads, schema::caches::prevalid), head_settings(config.prevalid), sequential),
-    prevalid_body_(body(config.path, schema::caches::prevalid), config.prevalid, sequential, staged),
+    prevalid0_head_(head(config.path / schema::dir::heads, schema::caches::prevalid0), head_settings(config.prevalid), sequential),
+    prevalid0_body_(body(config.path, schema::caches::prevalid0), config.prevalid, sequential, staged),
+    prevalid1_head_(head(config.path / schema::dir::heads, schema::caches::prevalid1), head_settings(config.prevalid), sequential),
+    prevalid1_body_(body(config.path, schema::caches::prevalid1), config.prevalid, sequential, staged),
 
     prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout), head_settings(config.prevout), random),
     prevout_body_(body(config.path, schema::caches::prevout), config.prevout, sequential, staged),
@@ -124,12 +130,15 @@ CLASS::store(const settings& config) NOEXCEPT
     confirmed(confirmed_head_),
     strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx.buckets, config.strong_tx.expected),
 
-    ecdsa(ecdsa_head_, ecdsa_body_),
-    schnorr(schnorr_head_, schnorr_body_),
+    ecdsa0(ecdsa0_head_, ecdsa0_body_),
+    ecdsa1(ecdsa1_head_, ecdsa1_body_),
+    schnorr0(schnorr0_head_, schnorr0_body_),
+    schnorr1(schnorr1_head_, schnorr1_body_),
     silent(silent_head_, silent_body_),
     envelope(envelope_head_),
     duplicate(duplicate_head_, duplicate_body_, config.duplicate.buckets, config.duplicate.expected),
-    prevalid(prevalid_head_, prevalid_body_),
+    prevalid0(prevalid0_head_, prevalid0_body_),
+    prevalid1(prevalid1_head_, prevalid1_body_),
     prevout(prevout_head_, prevout_body_, config.prevout.buckets),
     state(state_head_, state_body_, config.state.buckets),
     pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected),
@@ -216,6 +225,24 @@ typename CLASS::transactor CLASS::get_transactor() NOEXCEPT
     return transactor{ transactor_mutex_ };
 }
 
+TEMPLATE
+table::ecdsa<Storage>& CLASS::ecdsa_bank(bool bank) NOEXCEPT
+{
+    return bank ? ecdsa1 : ecdsa0;
+}
+
+TEMPLATE
+table::schnorr<Storage>& CLASS::schnorr_bank(bool bank) NOEXCEPT
+{
+    return bank ? schnorr1 : schnorr0;
+}
+
+TEMPLATE
+table::prevalid& CLASS::prevalid_bank(bool bank) NOEXCEPT
+{
+    return bank ? prevalid1 : prevalid0;
+}
+
 // Current is coalesced (confirmed at candidate top) with a recent top header.
 TEMPLATE
 bool CLASS::is_current() const NOEXCEPT
@@ -251,12 +278,15 @@ void CLASS::set_current(bool current) NOEXCEPT
     candidate_head_.current(current);
     confirmed_head_.current(current);
     strong_tx_head_.current(current);
-    ecdsa_head_.current(current);
-    schnorr_head_.current(current);
+    ecdsa0_head_.current(current);
+    ecdsa1_head_.current(current);
+    schnorr0_head_.current(current);
+    schnorr1_head_.current(current);
     silent_head_.current(current);
     envelope_head_.current(current);
     duplicate_head_.current(current);
-    prevalid_head_.current(current);
+    prevalid0_head_.current(current);
+    prevalid1_head_.current(current);
     prevout_head_.current(current);
     state_head_.current(current);
     pool_head_.current(current);

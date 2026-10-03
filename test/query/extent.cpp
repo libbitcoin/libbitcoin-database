@@ -50,11 +50,11 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.candidate_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.confirmed_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.strong_tx_body_size(), schema::strong_tx::minrow);
-    BOOST_REQUIRE_EQUAL(query.ecdsa_body_size(), zero);
-    BOOST_REQUIRE_EQUAL(query.schnorr_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query.ecdsa0_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query.schnorr0_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.silent_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.duplicate_body_size(), zero);
-    BOOST_REQUIRE_EQUAL(query.prevalid_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query.prevalid0_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.prevout_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.state_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.pool_body_size(), zero);
@@ -104,11 +104,11 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.candidate_records(), one);
     BOOST_REQUIRE_EQUAL(query.confirmed_records(), one);
     BOOST_REQUIRE_EQUAL(query.strong_tx_records(), one);
-    BOOST_REQUIRE_EQUAL(query.ecdsa_records(), zero);
-    BOOST_REQUIRE_EQUAL(query.schnorr_records(), zero);
+    BOOST_REQUIRE_EQUAL(query.ecdsa0_records(), zero);
+    BOOST_REQUIRE_EQUAL(query.schnorr0_records(), zero);
     BOOST_REQUIRE_EQUAL(query.silent_records(), zero);
     BOOST_REQUIRE_EQUAL(query.duplicate_records(), zero);
-    BOOST_REQUIRE_EQUAL(query.prevalid_records(), zero);
+    BOOST_REQUIRE_EQUAL(query.prevalid0_records(), zero);
     BOOST_REQUIRE_EQUAL(query.state_records(), zero);
     BOOST_REQUIRE_EQUAL(query.pool_records(), zero);
     BOOST_REQUIRE_EQUAL(query.spends_records(), zero);
@@ -234,11 +234,14 @@ BOOST_AUTO_TEST_CASE(query_extent__store_head_size__genesis__archive_plus_indexe
     const auto indexes = query.candidate_head_size()
         + query.confirmed_head_size()
         + query.strong_tx_head_size()
-        + query.ecdsa_head_size()
-        + query.schnorr_head_size()
+        + query.ecdsa0_head_size()
+        + query.ecdsa1_head_size()
+        + query.schnorr0_head_size()
+        + query.schnorr1_head_size()
         + query.silent_head_size()
         + query.duplicate_head_size()
-        + query.prevalid_head_size()
+        + query.prevalid0_head_size()
+        + query.prevalid1_head_size()
         + query.prevout_head_size()
         + query.state_head_size()
         + query.pool_head_size()
@@ -259,11 +262,14 @@ BOOST_AUTO_TEST_CASE(query_extent__store_body_size__genesis__archive_plus_indexe
     const auto indexes = query.candidate_body_size()
         + query.confirmed_body_size()
         + query.strong_tx_body_size()
-        + query.ecdsa_body_size()
-        + query.schnorr_body_size()
+        + query.ecdsa0_body_size()
+        + query.ecdsa1_body_size()
+        + query.schnorr0_body_size()
+        + query.schnorr1_body_size()
         + query.silent_body_size()
         + query.duplicate_body_size()
-        + query.prevalid_body_size()
+        + query.prevalid0_body_size()
+        + query.prevalid1_body_size()
         + query.prevout_body_size()
         + query.state_body_size()
         + query.pool_body_size()

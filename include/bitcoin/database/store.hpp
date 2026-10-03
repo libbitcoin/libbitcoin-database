@@ -114,6 +114,11 @@ public:
     /// Get a transactor object.
     transactor get_transactor() NOEXCEPT;
 
+    /// Batch tables of a bank.
+    table::ecdsa<Storage>& ecdsa_bank(bool bank) NOEXCEPT;
+    table::schnorr<Storage>& schnorr_bank(bool bank) NOEXCEPT;
+    table::prevalid& prevalid_bank(bool bank) NOEXCEPT;
+
     /// Reevaluate currency (called by chain writes).
     void evaluate_currency() NOEXCEPT;
 
@@ -194,12 +199,16 @@ protected:
     /// -----------------------------------------------------------------------
 
     // aggregate
-    Storage<one> ecdsa_head_;
-    table::ecdsa_storage<Storage> ecdsa_body_;
+    Storage<one> ecdsa0_head_;
+    table::ecdsa_storage<Storage> ecdsa0_body_;
+    Storage<one> ecdsa1_head_;
+    table::ecdsa_storage<Storage> ecdsa1_body_;
 
     // aggregate
-    Storage<one> schnorr_head_;
-    table::schnorr_storage<Storage> schnorr_body_;
+    Storage<one> schnorr0_head_;
+    table::schnorr_storage<Storage> schnorr0_body_;
+    Storage<one> schnorr1_head_;
+    table::schnorr_storage<Storage> schnorr1_body_;
 
     // aggregate
     Storage<one> silent_head_;
@@ -213,8 +222,10 @@ protected:
     Storage<one> duplicate_body_;
 
     // array
-    Storage<one> prevalid_head_;
-    Storage<one> prevalid_body_;
+    Storage<one> prevalid0_head_;
+    Storage<one> prevalid0_body_;
+    Storage<one> prevalid1_head_;
+    Storage<one> prevalid1_body_;
 
     // blob arraymap
     Storage<one> prevout_head_;
@@ -315,12 +326,15 @@ public:
     table::strong_tx strong_tx;
 
     /// Caches.
-    table::ecdsa<Storage> ecdsa;
-    table::schnorr<Storage> schnorr;
+    table::ecdsa<Storage> ecdsa0;
+    table::ecdsa<Storage> ecdsa1;
+    table::schnorr<Storage> schnorr0;
+    table::schnorr<Storage> schnorr1;
     table::silent<Storage> silent;
     table::envelope envelope;
     table::duplicate duplicate;
-    table::prevalid prevalid;
+    table::prevalid prevalid0;
+    table::prevalid prevalid1;
     table::prevout prevout;
     table::state state;
     table::pool pool;

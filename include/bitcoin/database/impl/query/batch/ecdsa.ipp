@@ -27,13 +27,20 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-bool CLASS::verify_ecdsa_signatures(const stopper& cancel,
-    header_links& links) NOEXCEPT
+size_t CLASS::ecdsa_records(bool bank) const NOEXCEPT
 {
-    const auto correlate_ptr = store_.ecdsa.correlate.get_memory();
-    const auto digest_ptr = store_.ecdsa.digest.get_memory();
-    const auto compressed_ptr = store_.ecdsa.compressed.get_memory();
-    const auto signature_ptr = store_.ecdsa.signature.get_memory();
+    return store_.ecdsa_bank(bank).count();
+}
+
+TEMPLATE
+bool CLASS::verify_ecdsa_signatures(const stopper& cancel,
+    header_links& links, bool bank) NOEXCEPT
+{
+    auto& bank_table = store_.ecdsa_bank(bank);
+    const auto correlate_ptr = bank_table.correlate.get_memory();
+    const auto digest_ptr = bank_table.digest.get_memory();
+    const auto compressed_ptr = bank_table.compressed.get_memory();
+    const auto signature_ptr = bank_table.signature.get_memory();
 
     using correlate_t = const system::ecdsa::batch::correlate_t;
     using digest_t = const table::ecdsa_digest::span;
@@ -47,7 +54,7 @@ bool CLASS::verify_ecdsa_signatures(const stopper& cancel,
     const auto signature = pointer_cast<signature_t>(signature_ptr.data());
 
     // Shortest column.
-    const auto count = store_.ecdsa.count();
+    const auto count = bank_table.count();
     const ecdsa::batch batch
     {
         .correlates = { correlate, count },
@@ -65,17 +72,17 @@ bool CLASS::verify_ecdsa_signatures(const stopper& cancel,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::purge_ecdsa_signatures() NOEXCEPT
+bool CLASS::purge_ecdsa_signatures(bool bank) NOEXCEPT
 {
     // ========================================================================
     const auto scope = get_transactor();
-    return store_.ecdsa.truncate(0);
+    return store_.ecdsa_bank(bank).truncate(0);
     // ========================================================================
 }
 
 TEMPLATE
 bool CLASS::set_signatures(const system::chain::ecdsa_signatures& sigs,
-    const header_link& link) NOEXCEPT
+    const header_link& link, bool bank) NOEXCEPT
 {
     using correlate_t = table::ecdsa_correlate::put_signatures;
     using digest_t = table::ecdsa_digest::put_signatures;
@@ -91,21 +98,22 @@ bool CLASS::set_signatures(const system::chain::ecdsa_signatures& sigs,
     // Caller must guard reads, this is writing into hot storage.
     // ========================================================================
     const auto scope = get_transactor();
+    auto& bank_table = store_.ecdsa_bank(bank);
 
     // Allocate all of the block's rows across all columns.
-    const auto fk = store_.ecdsa.allocate(rows);
+    const auto fk = bank_table.allocate(rows);
     if (fk.is_terminal())
         return false;
 
     // Guard against remap (required for nomaps::put(fk)).
-    const auto guard = store_.ecdsa.guard();
+    const auto guard = bank_table.guard();
 
     // Deinterleave the accumulator into the columns, expanding group bands.
     return
-        store_.ecdsa.correlate.put(fk, correlate_t{ {}, link, sigs }) &&
-        store_.ecdsa.digest.put(fk, digest_t{ {}, sigs }) &&
-        store_.ecdsa.compressed.put(fk, compressed_t{ {}, sigs }) &&
-        store_.ecdsa.signature.put(fk, signature_t{ {}, sigs });
+        bank_table.correlate.put(fk, correlate_t{ {}, link, sigs }) &&
+        bank_table.digest.put(fk, digest_t{ {}, sigs }) &&
+        bank_table.compressed.put(fk, compressed_t{ {}, sigs }) &&
+        bank_table.signature.put(fk, signature_t{ {}, sigs });
     // ========================================================================
 }
 

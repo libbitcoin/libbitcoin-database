@@ -55,11 +55,14 @@ code CLASS::snapshot(const event_handler& handler, bool prune) NOEXCEPT
 
     flush(ec, strong_tx_body_, table_t::strong_tx_body);
 
-    flush(ec, ecdsa_body_, table_t::ecdsa_body);
-    flush(ec, schnorr_body_, table_t::schnorr_body);
+    flush(ec, ecdsa0_body_, table_t::ecdsa0_body);
+    flush(ec, ecdsa1_body_, table_t::ecdsa1_body);
+    flush(ec, schnorr0_body_, table_t::schnorr0_body);
+    flush(ec, schnorr1_body_, table_t::schnorr1_body);
     flush(ec, silent_body_, table_t::silent_body);
     flush(ec, duplicate_body_, table_t::duplicate_body);
-    flush(ec, prevalid_body_, table_t::prevalid_body);
+    flush(ec, prevalid0_body_, table_t::prevalid0_body);
+    flush(ec, prevalid1_body_, table_t::prevalid1_body);
     if (!prune) flush(ec, prevout_body_, table_t::prevout_body);
     flush(ec, state_body_, table_t::state_body);
     if (!prune) flush(ec, pool_body_, table_t::pool_body);

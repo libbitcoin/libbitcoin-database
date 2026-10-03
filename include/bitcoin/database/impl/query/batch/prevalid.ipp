@@ -27,15 +27,21 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-header_links CLASS::get_prevalids() const NOEXCEPT
+size_t CLASS::prevalid_records(bool bank) const NOEXCEPT
+{
+    return store_.prevalid_bank(bank).count();
+}
+
+TEMPLATE
+header_links CLASS::get_prevalids(bool bank) const NOEXCEPT
 {
     // Get all records, starting at the first position.
-    const auto all = prevalid_records();
+    const auto all = prevalid_records(bank);
     const table::prevalid::link first{ 0 };
 
     header_links links(all);
     table::prevalid::get_refs out{ {}, links };
-    if (store_.prevalid.get(first, out))
+    if (store_.prevalid_bank(bank).get(first, out))
         return links;
 
     // Empty return in case of fault is an efficiency loss, table is dropped.
@@ -46,33 +52,35 @@ header_links CLASS::get_prevalids() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-bool CLASS::purge_prevalids() NOEXCEPT
+bool CLASS::purge_prevalids(bool bank) NOEXCEPT
 {
     // ========================================================================
     const auto scope = get_transactor();
-    return store_.prevalid.truncate(0);
+    return store_.prevalid_bank(bank).truncate(0);
     // ========================================================================
 }
 
 TEMPLATE
-bool CLASS::set_prevalid(const header_link& link) NOEXCEPT
+bool CLASS::set_prevalid(const header_link& link, bool bank) NOEXCEPT
 {
     // ========================================================================
     const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.prevalid.put(table::prevalid::record{ {}, link });
+    return store_.prevalid_bank(bank).put(table::prevalid::record{ {}, link });
     // ========================================================================
 }
 
 TEMPLATE
-bool CLASS::set_prevalids(const header_links& links) NOEXCEPT
+bool CLASS::set_prevalids(const header_links& links,
+    bool bank) NOEXCEPT
 {
     // ========================================================================
     const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.prevalid.put(table::prevalid::put_refs{ {}, links });
+    return store_.prevalid_bank(bank).put(
+        table::prevalid::put_refs{ {}, links });
     // ========================================================================
 }
 
