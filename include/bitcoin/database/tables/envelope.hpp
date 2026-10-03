@@ -36,7 +36,7 @@ struct BCD_API envelope
 
     envelope() NOEXCEPT;
     envelope(const system::settings& bitcoin, const settings& database,
-        bool limited) NOEXCEPT;
+        bool limited, uint32_t silent) NOEXCEPT;
 
     void set(const settings& database) NOEXCEPT;
 
@@ -100,6 +100,9 @@ struct BCD_API envelope
     /// Network settings.
     bool limited_blocks{};
     bool provide_filters{};
+
+    /// Node settings.
+    uint32_t silent_start_height{ max_uint32 };
 
     /// Node state.
     bool pooling{};
