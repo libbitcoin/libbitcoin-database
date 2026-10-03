@@ -82,7 +82,10 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::map_() NOEXCEPT
 {
-    return stage_<Column>();
+    if constexpr (is_zero(widths.at(Column)))
+        return true;
+    else
+        return stage_<Column>();
 }
 
 // Always results in unmapped, trims to logical (can be zero).
@@ -90,25 +93,33 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::unmap_(size_t) NOEXCEPT
 {
-    const auto logical = to_width<Column>(logical_.load());
+    if constexpr (is_zero(widths.at(Column)))
+    {
+        loaded_.store(false);
+        return true;
+    }
+    else
+    {
+        const auto logical = to_width<Column>(logical_.load());
 
-    // Persist unflushed rows, trim preallocation to logical, sync to disk.
-    const auto transferred = persist_<Column>(logical)
-        && (::ftruncate(opened_[Column], logical) != fail)
-        && sync_<Column>();
+        // Persist unflushed rows, trim preallocation to logical, sync to disk.
+        const auto transferred = persist_<Column>(logical)
+            && (::ftruncate(opened_[Column], logical) != fail)
+            && sync_<Column>();
 
-    // Order ensures release of the reservation in case of transfer failure.
-    const auto success = (::munmap(memory_map_[Column],
-        reserved_[Column]) != fail) && transferred;
+        // Order ensures release of the reservation on transfer failure.
+        const auto success = (::munmap(memory_map_[Column],
+            reserved_[Column]) != fail) && transferred;
 
-    memory_map_[Column] = {};
-    reserved_[Column] = zero;
-    loaded_.store(false);
+        memory_map_[Column] = {};
+        reserved_[Column] = zero;
+        loaded_.store(false);
 
-    if (!success)
-        set_first_code(error::munmap_failure);
+        if (!success)
+            set_first_code(error::munmap_failure);
 
-    return success;
+        return success;
+    }
 }
 
 // Remap failure results in unmapped.

@@ -170,9 +170,9 @@ protected:
     Storage<one> ins_head_;
     table::ins_storage<Storage> ins_body_;
 
-    // aggregate (address spine + outs column)
+    // aggregate (address spine + outs column), spine unbacked when disabled
     Storage<one> outs_head_;
-    table::outs_storage<Storage> outs_body_;
+    const std::unique_ptr<storage> outs_body_;
 
     // record hashmap
     Storage<one> tx_head_;
@@ -306,6 +306,8 @@ private:
     {
         return folder / (name + schema::ext::lock);
     }
+
+    static std::unique_ptr<storage> to_outs(const settings& config) NOEXCEPT;
 
 public:
     /// Tables.

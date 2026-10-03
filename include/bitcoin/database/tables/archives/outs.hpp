@@ -274,9 +274,21 @@ struct outs
     column<base, one> puts{ *this };
 };
 
+/// Address spine (column zero) without backing (address indexing disabled).
+struct outs_address_unbacked
+{
+    using link = schema::address::link;
+    static constexpr size_t width = zero;
+    static constexpr auto suffix = outs_address::suffix;
+};
+
 /// Aggregate (files).
 template <template <size_t...> class Storage>
 using outs_storage = mmaps<Storage, outs_address, outs_puts>;
+
+/// Aggregate (files) without address spine backing (indexing disabled).
+template <template <size_t...> class Storage>
+using outs_storage_unbacked = mmaps<Storage, outs_address_unbacked, outs_puts>;
 
 } // namespace table
 } // namespace database

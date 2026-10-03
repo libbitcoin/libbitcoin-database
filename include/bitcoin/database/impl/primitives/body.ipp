@@ -88,7 +88,7 @@ inline size_t CLASS::size() const NOEXCEPT
     if constexpr (is_one(columns))
         return files_.size();
     else
-        return files_.size() * strides(std::make_index_sequence<columns>{});
+        return files_.size() * files_.width();
 }
 
 TEMPLATE
@@ -97,7 +97,7 @@ inline size_t CLASS::capacity() const NOEXCEPT
     if constexpr (is_one(columns))
         return files_.capacity();
     else
-        return files_.capacity() * strides(std::make_index_sequence<columns>{});
+        return files_.capacity() * files_.width();
 }
 
 TEMPLATE
@@ -209,14 +209,6 @@ constexpr size_t CLASS::stride() NOEXCEPT
         static_assert(is_nonzero(size));
         return size;
     }
-}
-
-// private
-TEMPLATE
-template <size_t... Index>
-constexpr size_t CLASS::strides(std::index_sequence<Index...>) NOEXCEPT
-{
-    return (stride<Index>() + ...);
 }
 
 TEMPLATE

@@ -83,14 +83,17 @@ public:
         return outs_head_.buffer();
     }
 
+    // Casts imply enabled address indexing (outs buckets nonzero).
     system::data_chunk& outs_body() NOEXCEPT
     {
-        return outs_body_.buffers_.at(one);
+        using backed = table::outs_storage<test::chunk_storages>;
+        return static_cast<backed&>(*outs_body_).buffers_.at(one);
     }
 
     system::data_chunk& address_body() NOEXCEPT
     {
-        return outs_body_.buffer();
+        using backed = table::outs_storage<test::chunk_storages>;
+        return static_cast<backed&>(*outs_body_).buffer();
     }
 
     system::data_chunk& tx_head() NOEXCEPT

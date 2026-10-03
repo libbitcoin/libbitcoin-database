@@ -47,7 +47,7 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, ins_head_, table_t::ins_head);
     open(ec, ins_body_, table_t::ins_body);
     open(ec, outs_head_, table_t::outs_head);
-    open(ec, outs_body_, table_t::outs_body);
+    open(ec, *outs_body_, table_t::outs_body);
     open(ec, tx_head_, table_t::tx_head);
     open(ec, tx_body_, table_t::tx_body);
     open(ec, txs_head_, table_t::txs_head);
@@ -107,7 +107,7 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, ins_head_, table_t::ins_head);
     load(ec, ins_body_, table_t::ins_body);
     load(ec, outs_head_, table_t::outs_head);
-    load(ec, outs_body_, table_t::outs_body);
+    load(ec, *outs_body_, table_t::outs_body);
     load(ec, tx_head_, table_t::tx_head);
     load(ec, tx_body_, table_t::tx_body);
     load(ec, txs_head_, table_t::txs_head);

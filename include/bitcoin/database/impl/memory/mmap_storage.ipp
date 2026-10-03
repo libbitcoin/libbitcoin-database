@@ -78,9 +78,9 @@ code CLASS::open() NOEXCEPT
             filenames_.at(index), random_, access_))
             return ec;
 
-    // logical_ is the shared row count, derived from column 0's byte size.
+    // logical_ is the shared row count, derived from the backed column size.
     size_t bytes{};
-    if (const auto ec = file::size_ex(bytes, opened_.front()))
+    if (const auto ec = file::size_ex(bytes, opened_.at(backed())))
         return ec;
 
     // The file as opened is its own provisioning (extent tracks the file).
@@ -305,6 +305,12 @@ code CLASS::dump(const std::filesystem::path& path) const NOEXCEPT
 }
 
 // ----------------------------------------------------------------------------
+
+TEMPLATE
+size_t CLASS::width() const NOEXCEPT
+{
+    return stride;
+}
 
 TEMPLATE
 size_t CLASS::size() const NOEXCEPT

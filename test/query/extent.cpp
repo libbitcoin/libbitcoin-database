@@ -63,6 +63,22 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.filter_tx_body_size(), 5u);
 }
 
+BOOST_AUTO_TEST_CASE(query_extent__outs_body_size__address_disabled__puts_only)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    settings.outs.buckets = 0;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    // The address spine is unbacked when the hash head is disabled.
+    BOOST_REQUIRE(!query.address_enabled());
+    BOOST_REQUIRE_EQUAL(query.outs_body_size(), schema::outs::minrow);
+    BOOST_REQUIRE_EQUAL(query.outs_head_size(), schema::address::link::size);
+}
+
 BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
 {
     settings settings{};

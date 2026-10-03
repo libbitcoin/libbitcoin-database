@@ -38,18 +38,25 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::flush_(size_t rows) NOEXCEPT
 {
-    // unmap (and therefore msync) must be called before ftruncate.
-    // "To flush all the dirty pages plus the metadata for the file and ensure
-    // that they are physically written to disk..."
-    const auto size = to_width<Column>(rows);
-    const auto success =
-           (::msync(memory_map_[Column], size, MS_SYNC) != fail)
-        && (::fsync(opened_[Column]) != fail);
+    if constexpr (is_zero(widths.at(Column)))
+    {
+        return true;
+    }
+    else
+    {
+        // unmap (and therefore msync) must be called before ftruncate.
+        // "To flush all the dirty pages plus the metadata for the file and
+        // ensure that they are physically written to disk..."
+        const auto size = to_width<Column>(rows);
+        const auto success =
+               (::msync(memory_map_[Column], size, MS_SYNC) != fail)
+            && (::fsync(opened_[Column]) != fail);
 
-    if (!success)
-        set_first_code(error::fsync_failure);
+        if (!success)
+            set_first_code(error::fsync_failure);
 
-    return success;
+        return success;
+    }
 }
 
 // Mapping failure results in unmapped.
@@ -58,18 +65,25 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::map_() NOEXCEPT
 {
-    // Cannot map empty file, and want minimum capacity, so expand as required.
-    // The classic mapping is file-backed, so commitment is provisioning.
-    // disk_full: space is set but no code is set with false return.
-    const auto size = to_provision();
-    if (!resize_<Column>(size))
-        return false;
+    if constexpr (is_zero(widths.at(Column)))
+    {
+        return true;
+    }
+    else
+    {
+        // Cannot map empty file, want minimum capacity, expand as required.
+        // The classic mapping is file-backed, so commitment is provisioning.
+        // disk_full: space is set but no code is set with false return.
+        const auto size = to_provision();
+        if (!resize_<Column>(size))
+            return false;
 
-    memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mmap(nullptr, to_width<Column>(size), PROT_READ | PROT_WRITE,
-            MAP_SHARED, opened_[Column], 0));
+        memory_map_[Column] = system::pointer_cast<uint8_t>(
+            ::mmap(nullptr, to_width<Column>(size), PROT_READ | PROT_WRITE,
+                MAP_SHARED, opened_[Column], 0));
 
-    return finalize_<Column>();
+        return finalize_<Column>();
+    }
 }
 
 // Always results in unmapped, trims to logical (can be zero).
@@ -77,24 +91,32 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::unmap_(size_t size) NOEXCEPT
 {
-    const auto logical = to_width<Column>(logical_.load());
+    if constexpr (is_zero(widths.at(Column)))
+    {
+        loaded_.store(false);
+        return true;
+    }
+    else
+    {
+        const auto logical = to_width<Column>(logical_.load());
 
-    // Windows cannot resize a mapped file.
-    // msync requires the live mapping, ftruncate requires it gone.
-    const auto synced =
-           (::msync(memory_map_[Column], logical, MS_SYNC) != fail);
+        // Windows cannot resize a mapped file.
+        // msync requires the live mapping, ftruncate requires it gone.
+        const auto synced =
+               (::msync(memory_map_[Column], logical, MS_SYNC) != fail);
 
-    // Order ensures release in case of sync failure.
-    const auto success = release_<Column>(size) && synced
-        && (::ftruncate(opened_[Column], logical) != fail)
-        && (::fsync(opened_[Column]) != fail);
+        // Order ensures release in case of sync failure.
+        const auto success = release_<Column>(size) && synced
+            && (::ftruncate(opened_[Column], logical) != fail)
+            && (::fsync(opened_[Column]) != fail);
 
-    loaded_.store(false);
+        loaded_.store(false);
 
-    if (!success)
-        set_first_code(error::munmap_failure);
+        if (!success)
+            set_first_code(error::munmap_failure);
 
-    return success;
+        return success;
+    }
 }
 
 // Remap failure results in unmapped.
@@ -103,22 +125,29 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::remap_(size_t size, bool final) NOEXCEPT
 {
-    BC_ASSERT(size >= logical_.load());
+    if constexpr (is_zero(widths.at(Column)))
+    {
+        return true;
+    }
+    else
+    {
+        BC_ASSERT(size >= logical_.load());
 
-    // Cannot remap empty file, so expand to minimum capacity if zero.
-    if (is_zero(size))
-        size = minimum_;
+        // Cannot remap empty file, so expand to minimum capacity if zero.
+        if (is_zero(size))
+            size = minimum_;
 
-    if (!resize_<Column>(size, final))
-        return false;
+        if (!resize_<Column>(size, final))
+            return false;
 
-    // mman-win32 mremap hack (umap/map) requires flags and file descriptor.
-    memory_map_[Column] = system::pointer_cast<uint8_t>(
-        ::mremap_(memory_map_[Column], to_width<Column>(capacity_.load()),
-            to_width<Column>(size), PROT_READ | PROT_WRITE, MAP_SHARED,
-            opened_[Column]));
+        // mman-win32 mremap hack (umap/map) requires flags and descriptor.
+        memory_map_[Column] = system::pointer_cast<uint8_t>(
+            ::mremap_(memory_map_[Column], to_width<Column>(capacity_.load()),
+                to_width<Column>(size), PROT_READ | PROT_WRITE, MAP_SHARED,
+                opened_[Column]));
 
-    return finalize_<Column>();
+        return finalize_<Column>();
+    }
 }
 
 // Always results in unmapped, file is unchanged.
@@ -126,17 +155,24 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::release_(size_t size) NOEXCEPT
 {
-    const auto success =
-        ::munmap(memory_map_[Column], to_width<Column>(size)) != fail;
+    if constexpr (is_zero(widths.at(Column)))
+    {
+        return true;
+    }
+    else
+    {
+        const auto success =
+            ::munmap(memory_map_[Column], to_width<Column>(size)) != fail;
 
-    if (!success)
-        set_first_code(error::munmap_failure);
+        if (!success)
+            set_first_code(error::munmap_failure);
 
-    // loaded_ is caller-owned: unmap_ publishes unloaded, remap_ remains
-    // loaded across replacement (lock-free allocate guards must not observe
-    // a transient unload).
-    memory_map_[Column] = {};
-    return success;
+        // loaded_ is caller-owned: unmap_ publishes unloaded, remap_ remains
+        // loaded across replacement (lock-free allocate guards must not
+        // observe a transient unload).
+        memory_map_[Column] = {};
+        return success;
+    }
 }
 
 // Finalize failure results in unmapped.
