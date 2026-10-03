@@ -21,7 +21,8 @@
 #include "../../mocks/chunk_store.hpp"
 
 // ensure context::flags is same size as chain_context::flags.
-static_assert(is_same_type < database::context::flag_t::integer, decltype(system::chain::context{}.flags) > );
+static_assert(is_same_type<database::context::flag_t::integer,
+    decltype(system::chain::context{}.flags)>);
 
 BOOST_FIXTURE_TEST_SUITE(query_chain_reader_tests, test::directory_setup_fixture)
 

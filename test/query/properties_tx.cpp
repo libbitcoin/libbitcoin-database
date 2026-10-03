@@ -297,11 +297,16 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_wtxids__genesis__coinbase_witness_
 
 // get_compact_links
 
-constexpr system::siphash_key compact_key{ 0x0102030405060708_u64, 0x1112131415161718_u64 };
+constexpr system::siphash_key compact_key
+{
+    0x0102030405060708_u64,
+    0x1112131415161718_u64
+};
 
 static uint64_t to_short_id(const transaction& tx) NOEXCEPT
 {
-    return system::bit_and(system::siphash(compact_key, tx.hash(true)), system::unmask_right<uint64_t>(48));
+    const auto short_hash = system::siphash(compact_key, tx.hash(true));
+    return system::bit_and(short_hash, system::unmask_right<uint64_t>(48));
 }
 
 BOOST_AUTO_TEST_CASE(query_properties_tx__get_compact_links__pooled__expected)

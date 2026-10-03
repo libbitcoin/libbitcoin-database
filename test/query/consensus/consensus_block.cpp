@@ -35,16 +35,18 @@ const auto genesis_hash = test::genesis.transactions_ptr()->front()->hash(false)
 
 static transaction make_coinbase(uint64_t value) NOEXCEPT
 {
+    const script nops{ { { opcode::nop }, { opcode::nop } } };
     return
     {
         1,
-        inputs{ input{ point{}, script{ { { opcode::nop }, { opcode::nop } } }, witness{}, max_uint32 } },
+        inputs{ input{ point{}, nops, witness{}, max_uint32 } },
         outputs{ output{ value, script{} } },
         0
     };
 }
 
-static transaction make_spend(const hash_digest& hash, uint32_t index, uint64_t value) NOEXCEPT
+static transaction make_spend(const hash_digest& hash, uint32_t index,
+    uint64_t value) NOEXCEPT
 {
     return
     {
@@ -57,7 +59,8 @@ static transaction make_spend(const hash_digest& hash, uint32_t index, uint64_t 
 
 static block make_block(const transactions& txs) NOEXCEPT
 {
-    return { header{ 1, test::block0_hash, hash_digest{ 0x42 }, 0, 0, 0 }, transactions{ txs } };
+    const header head{ 1, test::block0_hash, hash_digest{ 0x42 }, 0, 0, 0 };
+    return { head, transactions{ txs } };
 }
 
 static bool store_block(test::query_accessor& query, const block& block) NOEXCEPT
@@ -65,7 +68,8 @@ static bool store_block(test::query_accessor& query, const block& block) NOEXCEP
     return query.set(block, pooled_context, {}, false, false);
 }
 
-static bool pool_tx(test::query_accessor& query, const transaction& tx, uint64_t prevout, const database::context& ctx) NOEXCEPT
+static bool pool_tx(test::query_accessor& query, const transaction& tx,
+    uint64_t prevout, const database::context& ctx) NOEXCEPT
 {
     const auto link = query.to_tx(tx.hash(false));
     for (const auto& in: *tx.inputs_ptr())

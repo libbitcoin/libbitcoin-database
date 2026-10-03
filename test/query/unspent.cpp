@@ -67,7 +67,8 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_totals__two_block_branch__expect
 }
 
 // The commitment element (bitcoind coin serialization) of a confirmed output.
-static system::data_chunk output_element(const system::chain::transaction& tx, uint32_t index, size_t height)
+static system::data_chunk output_element(const system::chain::transaction& tx,
+    uint32_t index, size_t height)
 {
     const auto& output = *tx.outputs_ptr()->at(index);
     const auto script = output.script().to_data(false);
@@ -75,11 +76,14 @@ static system::data_chunk output_element(const system::chain::transaction& tx, u
     const auto coded = system::possible_narrow_cast<uint32_t>((height << 1) | 1u);
     const auto code = system::to_little_endian(coded);
     const auto value = system::to_little_endian(output.value());
-    const auto size = system::to_array(system::possible_narrow_cast<uint8_t>(script.size()));
-    return system::build_chunk({ txid, system::to_little_endian(index), code, value, size, script });
+    const auto length = system::possible_narrow_cast<uint8_t>(script.size());
+    const auto size = system::to_array(length);
+    const auto vout = system::to_little_endian(index);
+    return system::build_chunk({ txid, vout, code, value, size, script });
 }
 
-static system::data_chunk coin_element(const system::chain::block& block, size_t height)
+static system::data_chunk coin_element(const system::chain::block& block,
+    size_t height)
 {
     return output_element(*block.transactions_ptr()->front(), 0, height);
 }

@@ -28,8 +28,15 @@ using body_storages = test::chunk_storages<schema::address::minrow,
 static const body_storages::paths body_paths{ "address", "puts" };
 
 // Both keys select bucket zero (of 8), forming one chain of two rows.
-constexpr auto key1 = base16_array("1000000000000000aa000000000000000000000000000000000000000000000a");
-constexpr auto key2 = base16_array("2000000000000000bb000000000000000000000000000000000000000000000b");
+constexpr auto key1 = base16_array
+(
+    "1000000000000000aa000000000000000000000000000000000000000000000a"
+);
+
+constexpr auto key2 = base16_array
+(
+    "2000000000000000bb000000000000000000000000000000000000000000000b"
+);
 
 const table::outs::record in{ {}, { 0x7890abcdef, 0x1234567890 } };
 const data_chunk expected_address_body
