@@ -46,7 +46,8 @@ namespace schema {
 /// 4.0.2.0 Header work reduced to 16 bytes, milestone (formerly merged into
 ///         parent pk) and compact in a new header flags byte.
 /// 4.0.3.0 Second bank of ecdsa, schnorr, and prevalid batch tables.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 3, 0 };
+/// 4.0.4.0 Silent payment start height in the envelope.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 4, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------

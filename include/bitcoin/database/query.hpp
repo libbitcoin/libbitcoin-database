@@ -258,6 +258,8 @@ public:
     /// Optional/configured table state.
     bool address_enabled() const NOEXCEPT;
     bool filter_enabled() const NOEXCEPT;
+    bool silent_enabled() const NOEXCEPT;
+    size_t silent_start_height() const NOEXCEPT;
     size_t interval_span() const NOEXCEPT;
 
     /// Initialization (natural-keyed).
@@ -671,9 +673,16 @@ public:
     bool set_signatures(const system::chain::schnorr_signatures& sigs,
         const header_link& link, bool bank) NOEXCEPT;
 
-    /// Invoke callback for each candidate match, false implies cancel.
-    bool scan_silent(const stopper& cancel, const ec_secret& scan_key,
+    /// Invoke callback for each matched tx, false implies cancel.
+    bool scan_silent(const stopper& cancel,
+        const system::silent::batch::receiver& keys,
         const silent_handler& callback) NOEXCEPT;
+    bool scan_silent(const stopper& cancel,
+        const system::silent::batch::receiver& keys, size_t first,
+        size_t last, const silent_handler& callback) NOEXCEPT;
+
+    /// The first silent row at or above first that is not fully written.
+    size_t get_silent_frontier(size_t first) const NOEXCEPT;
 
     /// Verify all signatures in table, false implies cancel.
     bool verify_ecdsa_signatures(const stopper& cancel, header_links&,
@@ -1039,7 +1048,8 @@ protected:
         size_t heavy, hash_option&& interval, bool strong) NOEXCEPT;
 
     /// Set silent payment records of a non-coinbase tx.
-    bool set_silent_(const tx_link& link) NOEXCEPT;
+    bool set_silent_(const tx_link& link, const ec_compressed& summary,
+        const system::wallet::silent_payment::scan_outputs& outputs) NOEXCEPT;
 
     /// Pooling.
     /// -----------------------------------------------------------------------
