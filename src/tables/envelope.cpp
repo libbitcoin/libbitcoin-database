@@ -293,7 +293,7 @@ size_t envelope::serialized_size() const NOEXCEPT
     constexpr auto forks_size = 24_size;
     constexpr auto fixed = (4 * sizeof(uint32_t)) + sizeof(uint16_t) +
         (7 * sizeof(uint32_t)) + (10 * sizeof(uint8_t)) + forks_size +
-        sizeof(uint64_t) + (15 * sizeof(uint32_t)) + sizeof(uint32_t);
+        sizeof(uint64_t) + (16 * sizeof(uint32_t));
 
     const auto checkpoint_size = [](const chain::checkpoint& in) NOEXCEPT
     {

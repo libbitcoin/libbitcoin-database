@@ -73,13 +73,14 @@ TEMPLATE
 size_t CLASS::get_silent_frontier(size_t first) const NOEXCEPT
 {
     using namespace system;
+    using word_t = table::silent_correlate::tx::integer;
     const auto guard = store_.silent.guard();
-    const auto words = pointer_cast<uint32_t>(guard.data());
+    const auto words = pointer_cast<word_t>(guard.data());
     const auto count = store_.silent.count();
 
     for (auto row = first; row < count; ++row)
     {
-        std::atomic_ref<uint32_t> word{ *std::next(words, row) };
+        std::atomic_ref<word_t> word{ *std::next(words, row) };
         if (is_zero(word.load(std::memory_order_acquire)))
             return row;
     }
@@ -120,8 +121,8 @@ bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
         if (fail.load(relaxed))
             return;
 
-        const auto& tx = links.at(index);
-        if (tx >= first && !set_silent(tx, *txs->at(index)))
+        const auto& fk = links.at(index);
+        if (fk >= first && !set_silent(fk, *txs->at(index)))
             fail.store(true, relaxed);
     });
     
@@ -154,8 +155,8 @@ bool CLASS::set_silent(const header_link& link,
         if (fail.load(relaxed))
             return;
 
-        const auto& tx = links.at(index);
-        if (tx >= first && !set_silent(tx, txs.at(index)))
+        const auto& fk = links.at(index);
+        if (fk >= first && !set_silent(fk, txs.at(index)))
             fail.store(true, relaxed);
     });
 
@@ -196,14 +197,15 @@ bool CLASS::set_silent_(const tx_link& link, const ec_compressed& summary,
 
     // The prefix is ec_xonly[0..7] read as little-endian.
     using namespace system;
-    std::vector<uint64_t> prefixes(outputs.size());
+    using prefix_t = table::silent_prefix::integral;
+    std::vector<prefix_t> prefixes(outputs.size());
     std::transform(outputs.cbegin(), outputs.cend(), prefixes.begin(),
         [](const auto& output) NOEXCEPT
         {
-            return unsafe_from_little_endian<uint64_t>(output.key.data());
+            return unsafe_from_little_endian<prefix_t>(output.key.data());
         });
 
-    using prefix_t = table::silent_prefix::put_ref;
+    using prefixes_t = table::silent_prefix::put_ref;
     using compressed_t = table::silent_compressed::put_ref;
 
     // ========================================================================
@@ -219,19 +221,19 @@ bool CLASS::set_silent_(const tx_link& link, const ec_compressed& summary,
     const auto guard = store_.silent.guard();
 
     // Write values to each column in corresponding positions.
-    if (!store_.silent.prefix.put(fk, prefix_t{ {}, prefixes }) ||
+    if (!store_.silent.prefix.put(fk, prefixes_t{ {}, prefixes }) ||
         !store_.silent.compressed.put(fk, compressed_t{ {}, rows, summary }))
         return false;
 
     // The guard is the correlate column, published last (get_silent_frontier).
-    static_assert(schema::silent_correlate::minrow == sizeof(uint32_t));
-    const auto words = pointer_cast<uint32_t>(guard.data());
-    const auto value = native_to_little_end(
-        possible_narrow_cast<uint32_t>(link.value));
+    using word_t = table::silent_correlate::tx::integer;
+    static_assert(schema::silent_correlate::minrow == sizeof(word_t));
+    const auto words = pointer_cast<word_t>(guard.data());
+    const auto value = native_to_little_end(link.value);
 
     for (auto row = fk.value; row < fk.value + rows; ++row)
     {
-        std::atomic_ref<uint32_t> word{ *std::next(words, row) };
+        std::atomic_ref<word_t> word{ *std::next(words, row) };
         word.store(value, std::memory_order_release);
     }
 
