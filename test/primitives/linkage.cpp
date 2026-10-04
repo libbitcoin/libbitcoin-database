@@ -367,33 +367,33 @@ BOOST_AUTO_TEST_CASE(linkage__increment__8__expected)
 
 BOOST_AUTO_TEST_CASE(linkage__add_assign__4__expected)
 {
-    linkage<4> instance{ 0x42010200 };
-    instance += 1u;
-    BOOST_REQUIRE_EQUAL(instance, 0x42010201u);
+    linkage<4> instance{ 0x42010200_u32 };
+    instance += 1_u32;
+    BOOST_REQUIRE_EQUAL(instance, 0x42010201_u32);
 
-    instance += 0x10_size;
-    BOOST_REQUIRE_EQUAL(instance, 0x42010211u);
+    instance += 0x10_u32;
+    BOOST_REQUIRE_EQUAL(instance, 0x42010211_u32);
 }
 
 BOOST_AUTO_TEST_CASE(linkage__add_assign__2__expected)
 {
-    linkage<2> instance{ 0x4200 };
-    instance += 2u;
-    BOOST_REQUIRE_EQUAL(instance, 0x4202u);
+    linkage<2> instance{ 0x4200_u16 };
+    instance += 2_u16;
+    BOOST_REQUIRE_EQUAL(instance, 0x4202_u16);
 }
 
 BOOST_AUTO_TEST_CASE(linkage__add_assign__5__expected)
 {
-    linkage<5> instance{ 0x4201020300 };
-    instance += 0x100u;
-    BOOST_REQUIRE_EQUAL(instance, 0x4201020400u);
+    linkage<5> instance{ 0x4201020300_u64 };
+    instance += 0x100_u64;
+    BOOST_REQUIRE_EQUAL(instance, 0x4201020400_u64);
 }
 
 BOOST_AUTO_TEST_CASE(linkage__add_assign__8__expected)
 {
-    linkage<8> instance{ 0x4201020304050600 };
-    instance += 0x42u;
-    BOOST_REQUIRE_EQUAL(instance, 0x4201020304050642u);
+    linkage<8> instance{ 0x4201020304050600_u64 };
+    instance += 0x42_u64;
+    BOOST_REQUIRE_EQUAL(instance, 0x4201020304050642_u64);
 }
 
 // cast bytes
