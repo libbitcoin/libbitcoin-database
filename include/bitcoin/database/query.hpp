@@ -404,6 +404,8 @@ public:
     hash_digest get_top_candidate_hash() const NOEXCEPT;
     hashes get_tx_keys(const header_link& link) const NOEXCEPT;
     hashes get_wtxids(const header_link& link) const NOEXCEPT;
+    bool is_witness_committed(const hash_digest& witness_root,
+        const header_link& link) const NOEXCEPT;
     size_t get_tx_count(const header_link& link) const NOEXCEPT;
     size_t get_branch_tx_count(const header_link& link) const NOEXCEPT;
     inline hash_digest get_header_key(const header_link& link) const NOEXCEPT;
@@ -711,6 +713,7 @@ public:
 
     /// These compare strong with height index.
     bool is_candidate_header(const header_link& link) const NOEXCEPT;
+    bool is_candidate_extension(const header_link& link) const NOEXCEPT;
     bool is_confirmed_block(const header_link& link) const NOEXCEPT;
     bool is_confirmed_tx(const tx_link& link) const NOEXCEPT;
     bool is_confirmed_input(const ins_link& link) const NOEXCEPT;
