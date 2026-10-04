@@ -296,8 +296,9 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
     const auto bip16 = ctx.is_enabled(chain::flags::bip16_rule);
     const auto bip141 = ctx.is_enabled(chain::flags::bip141_rule);
     const auto sigops = tx.signature_operations(bip16, bip141);
-    const auto words = from_little_endians(array_cast<uint64_t>(
-        tx.get_hash(true)));
+    using lane_t = schema::pool::witness_lane;
+    const auto hash = tx.get_hash(true);
+    const auto words = from_little_endians(array_cast<lane_t>(hash));
 
     // ========================================================================
     const auto scope = get_transactor();

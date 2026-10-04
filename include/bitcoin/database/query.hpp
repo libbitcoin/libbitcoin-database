@@ -58,6 +58,7 @@ public:
     using chain_state_cptr = system::chain::chain_state::cptr;
     using chain_context = system::chain::context;
     using prevout_spends = table::prevout::spends;
+    using short_id = system::chain::short_id::integer;
     using ec_compresseds = system::ec_compresseds;
     using ec_compressed = system::ec_compressed;
     using ec_signatures = system::ec_signatures;
@@ -626,10 +627,10 @@ public:
     code validate_pooled(const header_link& link, const chain_context& ctx,
         uint64_t subsidy_interval, uint64_t initial_subsidy) NOEXCEPT;
 
-    /// Pooled tx links by compact block short id (low 48 bits of the siphash
-    /// of wtxid), terminal where not pooled or ambiguous.
+    /// Pooled tx links by compact block short id (masked siphash of wtxid),
+    /// terminal where not pooled or ambiguous.
     code get_compact_links(tx_links& out,
-        const std::vector<uint64_t>& short_ids,
+        const std::vector<short_id>& short_ids,
         const system::siphash_key& key) const NOEXCEPT;
 
     /// Header properties.
@@ -957,7 +958,7 @@ protected:
     /// Called by get_compact_links.
     using compact_matches = std::vector<std::pair<size_t, table::pool::link>>;
     bool get_compact_matches(compact_matches& out,
-        const std::unordered_map<uint64_t, size_t>& positions,
+        const std::unordered_map<short_id, size_t>& positions,
         const system::siphash_key& key) const NOEXCEPT;
 
     /// Support set_strong and set_unstrong writers.
@@ -1090,6 +1091,9 @@ protected:
 private:
     // This value should never be read, but may be useful in debugging.
     static constexpr uint32_t unspecified_timestamp = max_uint32;
+
+    // Pool rows hashed by one task of the compact block short id scan.
+    static constexpr size_t short_id_chunk_rows = system::power2(14u);
 
     // Chain objects.
     template <typename Bool>

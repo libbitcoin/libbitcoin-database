@@ -29,22 +29,21 @@ namespace database {
 
 TEMPLATE
 code CLASS::get_compact_links(tx_links& out,
-    const std::vector<uint64_t>& short_ids,
+    const std::vector<short_id>& short_ids,
     const system::siphash_key& key) const NOEXCEPT
 {
     using namespace system;
-    constexpr auto mask = unmask_right<uint64_t>(48);
     out.assign(short_ids.size(), tx_link::terminal);
     if (short_ids.empty() || !store_.pool.enabled())
         return error::success;
 
     // A short id duplicated within the block is ambiguous.
     std::vector<bool> ambiguous(short_ids.size());
-    std::unordered_map<uint64_t, size_t> positions{};
+    std::unordered_map<short_id, size_t> positions{};
     positions.reserve(short_ids.size());
     for (size_t index{}; index < short_ids.size(); ++index)
     {
-        const auto id = bit_and(short_ids.at(index), mask);
+        const auto id = bit_and(short_ids.at(index), chain::short_id::mask);
         if (const auto [it, added] = positions.emplace(id, index); !added)
             ambiguous.at(index) = ambiguous.at(it->second) = true;
     }
@@ -78,12 +77,15 @@ code CLASS::get_compact_links(tx_links& out,
 // The columns are little-endian words, hashed in place across vector lanes.
 TEMPLATE
 bool CLASS::get_compact_matches(compact_matches& out,
-    const std::unordered_map<uint64_t, size_t>& positions,
+    const std::unordered_map<short_id, size_t>& positions,
     const system::siphash_key& key) const NOEXCEPT
 {
     using namespace system;
-    constexpr auto mask = unmask_right<uint64_t>(48);
-    constexpr size_t chunk_rows = 16384;
+    using lane_t = schema::pool::witness_lane;
+    using link_t = table::pool::link::integer;
+    static_assert(is_same_type<siphash_columns::value_type,
+        std::span<const lane_t>>);
+    constexpr auto chunk_rows = short_id_chunk_rows;
     const auto ptr0 = store_.pool.id0.get_memory();
     const auto ptr1 = store_.pool.id1.get_memory();
     const auto ptr2 = store_.pool.id2.get_memory();
@@ -94,7 +96,7 @@ bool CLASS::get_compact_matches(compact_matches& out,
     const auto rows = possible_narrow_cast<size_t>(store_.pool.count().value);
     if constexpr (is_little_endian)
     {
-        const auto bytes = rows * sizeof(uint64_t);
+        const auto bytes = rows * sizeof(lane_t);
         if (is_lesser(ptr0.size(), bytes) || is_lesser(ptr1.size(), bytes) ||
             is_lesser(ptr2.size(), bytes) || is_lesser(ptr3.size(), bytes))
             return false;
@@ -110,16 +112,16 @@ bool CLASS::get_compact_matches(compact_matches& out,
         [&](size_t chunk) NOEXCEPT
         {
             const auto first = chunk * chunk_rows;
-            std::vector<uint64_t> ids(std::min(chunk_rows, rows - first));
+            std::vector<short_id> ids(std::min(chunk_rows, rows - first));
 
             if constexpr (is_little_endian)
             {
                 const auto column = [&](const memory& ptr) NOEXCEPT
                 {
-                    return std::span<const uint64_t>
+                    const auto data = pointer_cast<const lane_t>(ptr.data());
+                    return std::span<const lane_t>
                     {
-                        std::next(pointer_cast<const uint64_t>(ptr.data()),
-                            first), ids.size()
+                        std::next(data, first), ids.size()
                     };
                 };
 
@@ -135,8 +137,7 @@ bool CLASS::get_compact_matches(compact_matches& out,
                 {
                     const table::pool::link link
                     {
-                        possible_narrow_cast<table::pool::link::integer>(
-                            first + row)
+                        possible_narrow_cast<link_t>(first + row)
                     };
 
                     if (!store_.pool.id0.get(ptr0, link, id0) ||
@@ -157,18 +158,19 @@ bool CLASS::get_compact_matches(compact_matches& out,
 
             auto& matches = found.at(chunk);
             for (size_t row{}; row < ids.size(); ++row)
-                if (const auto it = positions.find(bit_and(ids[row], mask));
-                    it != positions.end())
+            {
+                const auto id = bit_and(ids[row], chain::short_id::mask);
+                if (const auto it = positions.find(id); it != positions.end())
                     matches.emplace_back(it->second,
-                        possible_narrow_cast<table::pool::link::integer>(
-                            first + row));
+                        possible_narrow_cast<link_t>(first + row));
+            }
         });
 
     if (fail.load(std::memory_order_relaxed))
         return false;
 
     for (const auto& matches: found)
-        out.insert(out.end(), matches.begin(), matches.end());
+        out.insert(out.end(), matches.cbegin(), matches.cend());
 
     return true;
 }

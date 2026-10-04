@@ -290,7 +290,9 @@ hash_digest CLASS::get_wtxid(const tx_link& link) const NOEXCEPT
                 !store_.pool.id3.get(row, id3))
                 return {};
 
-            const auto words = to_little_endians(std_array<uint64_t, 4>
+            using lane_t = schema::pool::witness_lane;
+            using lanes_t = std_array<lane_t, schema::pool::witness_lanes>;
+            const auto words = to_little_endians(lanes_t
             {
                 id0.word, id1.word, id2.word, id3.word
             });
