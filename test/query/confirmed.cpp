@@ -56,6 +56,28 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_candidate_block__push_pop_candidate__ex
     BOOST_REQUIRE(!query.is_candidate_header(database::header_link::terminal));
 }
 
+BOOST_AUTO_TEST_CASE(query_confirmed__is_candidate_extension__candidates__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1.header(), context{ 0, 1, 0 }, {}, false));
+    BOOST_REQUIRE(query.set(test::block2.header(), context{ 0, 2, 0 }, {}, false));
+    BOOST_REQUIRE(!query.is_candidate_extension(0));
+    BOOST_REQUIRE(!query.is_candidate_extension(1));
+
+    BOOST_REQUIRE(query.push_candidate(1));
+    BOOST_REQUIRE(query.push_candidate(2));
+    BOOST_REQUIRE(query.is_candidate_extension(1));
+    BOOST_REQUIRE(!query.is_candidate_extension(2));
+
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(!query.is_candidate_extension(1));
+}
+
 BOOST_AUTO_TEST_CASE(query_confirmed__get_confirmed_height__push_pop_confirmed__expected)
 {
     settings settings{};

@@ -80,6 +80,14 @@ bool CLASS::is_candidate_header(const header_link& link) const NOEXCEPT
     return store_.candidate.at(height) == link;
 }
 
+// An unassociated candidate extending the confirmed top.
+TEMPLATE
+bool CLASS::is_candidate_extension(const header_link& link) const NOEXCEPT
+{
+    return !is_associated(link) && is_candidate_header(link) &&
+        (to_confirmed(get_top_confirmed()) == to_parent(link));
+}
+
 TEMPLATE
 bool CLASS::is_confirmed_block(const header_link& link) const NOEXCEPT
 {

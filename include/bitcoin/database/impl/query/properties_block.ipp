@@ -273,6 +273,29 @@ hashes CLASS::get_wtxids(const header_link& link) const NOEXCEPT
     return hashes;
 }
 
+// The coinbase commits to the witness root, otherwise the block is
+// unsegregated and its witness root is the header merkle root.
+TEMPLATE
+bool CLASS::is_witness_committed(const hash_digest& witness_root,
+    const header_link& link) const NOEXCEPT
+{
+    using namespace system;
+    const auto coinbase = get_transaction(to_coinbase(link), true);
+    if (!coinbase)
+        return false;
+
+    hash_cref commitment{ null_hash };
+    hash_cref reservation{ null_hash };
+    if (!coinbase->get_witness_commitment(commitment))
+    {
+        const auto header = get_header(link);
+        return header && (header->merkle_root() == witness_root);
+    }
+
+    return coinbase->get_witness_reservation(reservation) &&
+        (bitcoin_hash(witness_root, reservation) == commitment.get());
+}
+
 // The pool id columns hold the witness hash of a pooled tx, otherwise (such as
 // for any coinbase) the witness hash is computed from the stored tx.
 TEMPLATE
