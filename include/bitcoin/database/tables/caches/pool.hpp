@@ -37,10 +37,12 @@ struct pool_context
     static constexpr auto suffix = "context"_t;
 };
 
-/// One 64 bit word of the short id hash (common to the id columns).
+/// One lane of the witness hash (common to the id columns).
 struct pool_word
   : public schema::pool_id0
 {
+    using lane = schema::pool::witness_lane;
+
     static constexpr link count() NOEXCEPT
     {
         return 1;
@@ -48,21 +50,21 @@ struct pool_word
 
     inline bool from_data(reader& source) NOEXCEPT
     {
-        word = source.read_little_endian<uint64_t>();
+        word = source.read_little_endian<lane>();
         BC_ASSERT(!source || source.get_read_position() == minrow);
         return source;
     }
 
     inline bool to_data(flipper& sink) const NOEXCEPT
     {
-        sink.write_little_endian<uint64_t>(word);
+        sink.write_little_endian<lane>(word);
         BC_ASSERT(!sink || sink.get_write_position() == minrow);
         return sink;
     }
 
     inline bool operator==(const pool_word&) const NOEXCEPT = default;
 
-    uint64_t word{};
+    lane word{};
 };
 
 /// Transaction identifier columns (words 0-3 of the short id hash).

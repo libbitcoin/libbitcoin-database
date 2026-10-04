@@ -73,7 +73,7 @@ constexpr size_t prevout_ = 5;  // ->prevout slab.
 constexpr size_t txs_ = 5;      // ->txs slab.
 constexpr size_t tx = 4;        // ->tx record.
 constexpr size_t block = 3;     // ->header record.
-constexpr size_t pool_ = 4; // ->pool record.
+constexpr size_t pool_ = 4;     // ->pool record.
 constexpr size_t filter_ = 5;   // ->filter record.
 constexpr size_t doubles_ = 4;  // doubles bucket (no actual keys).
 
@@ -415,6 +415,8 @@ struct pool
     static constexpr size_t pk = schema::pool_;
     using link = linkage<pk, to_bits(pk)>;
     using key = system::data_array<sk>;
+    static constexpr size_t witness_lanes = 4;
+    using witness_lane = unsigned_type<schema::hash / witness_lanes>;
     static constexpr size_t minsize =
         schema::flags +         // context.flags
         schema::height_ +       // context.height
@@ -430,14 +432,15 @@ struct pool
     static_assert(minrow == 34u);
     static_assert(link::size == 4u);
     static_assert(cell == 4u);
+    static_assert(witness_lanes * sizeof(witness_lane) == schema::hash);
     bool operator==(const pool&) const NOEXCEPT = default;
 };
 
 // pool columns (records aligned with the pool spine).
-TABLE_COLUMN(pool_id0, sizeof(uint64_t));
-TABLE_COLUMN(pool_id1, sizeof(uint64_t));
-TABLE_COLUMN(pool_id2, sizeof(uint64_t));
-TABLE_COLUMN(pool_id3, sizeof(uint64_t));
+TABLE_COLUMN(pool_id0, sizeof(pool::witness_lane));
+TABLE_COLUMN(pool_id1, sizeof(pool::witness_lane));
+TABLE_COLUMN(pool_id2, sizeof(pool::witness_lane));
+TABLE_COLUMN(pool_id3, sizeof(pool::witness_lane));
 static_assert(is_same_type<pool_id0::link, pool::link>);
 
 // record nomap
