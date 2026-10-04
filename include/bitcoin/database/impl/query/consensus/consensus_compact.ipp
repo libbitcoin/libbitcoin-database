@@ -85,7 +85,6 @@ bool CLASS::get_compact_matches(compact_matches& out,
     using link_t = table::pool::link::integer;
     static_assert(is_same_type<siphash_columns::value_type,
         std::span<const lane_t>>);
-    constexpr auto chunk_rows = short_id_chunk_rows;
     const auto ptr0 = store_.pool.id0.get_memory();
     const auto ptr1 = store_.pool.id1.get_memory();
     const auto ptr2 = store_.pool.id2.get_memory();
@@ -99,6 +98,8 @@ bool CLASS::get_compact_matches(compact_matches& out,
         is_lesser(ptr2.size(), bytes) || is_lesser(ptr3.size(), bytes))
         return false;
 
+    const auto chunk_rows = std::max(short_id_minimum_rows,
+        ceilinged_divide(rows, two * cores()));
     std::vector<compact_matches> found(ceilinged_divide(rows, chunk_rows));
     std::vector<size_t> chunks(found.size());
     std::iota(chunks.begin(), chunks.end(), zero);
