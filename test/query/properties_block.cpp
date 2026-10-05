@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__is_witness_committed__genesis__head
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     BOOST_REQUIRE(query.is_witness_committed(test::genesis.header().merkle_root(), 0));
-    BOOST_REQUIRE(!query.is_witness_committed(one_hash, 0));
+    BOOST_REQUIRE(!query.is_witness_committed(system::one_hash, 0));
 }
 
 BOOST_AUTO_TEST_CASE(query_properties_block__is_witness_committed__committed__expected)
@@ -278,17 +278,17 @@ BOOST_AUTO_TEST_CASE(query_properties_block__is_witness_committed__committed__ex
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    const hash_digest reserved_hash{ 0x02 };
-    const auto commitment = bitcoin_hash(one_hash, reserved_hash);
-    const script commitment_script(splice(base16_chunk("6a24aa21a9ed"), commitment), false);
-    const witness reserved{ chunk_cptrs{ to_shared(to_chunk(reserved_hash)) } };
-    const inputs ins{ input{ point{}, script{ operations{ operation{ data_chunk{ 0x01, 0x02 }, false } } }, reserved, 0xffffffff } };
+    const system::hash_digest reserved_hash{ 0x02 };
+    const auto commitment = system::bitcoin_hash(system::one_hash, reserved_hash);
+    const script commitment_script(system::splice(system::base16_chunk("6a24aa21a9ed"), commitment), false);
+    const witness reserved{ system::chunk_cptrs{ system::to_shared(system::to_chunk(reserved_hash)) } };
+    const inputs ins{ input{ point{}, script{ operations{ operation{ system::data_chunk{ 0x01, 0x02 }, false } } }, reserved, 0xffffffff } };
     const transaction coinbase{ 1, ins, outputs{ output{ 0, commitment_script } }, 0 };
-    const block block1{ header{ 1, test::genesis.hash(), null_hash, 0, 0, 0 }, transactions{ coinbase } };
-    BOOST_REQUIRE(query.set(block1, context{}, {}, false, false));
+    const block block1{ header{ 1, test::genesis.hash(), system::null_hash, 0, 0, 0 }, transactions{ coinbase } };
+    BOOST_REQUIRE(query.set(block1, database::context{}, {}, false, false));
 
     const auto link = query.to_header(block1.hash());
-    BOOST_REQUIRE(query.is_witness_committed(one_hash, link));
+    BOOST_REQUIRE(query.is_witness_committed(system::one_hash, link));
     BOOST_REQUIRE(!query.is_witness_committed(reserved_hash, link));
 }
 
