@@ -97,4 +97,53 @@ BOOST_AUTO_TEST_CASE(store__open__created__success)
     BOOST_REQUIRE(!instance.close(test::events));
 }
 
+BOOST_AUTO_TEST_CASE(store__open__schema_mismatch__schema_version)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(!instance.close(test::events));
+    BOOST_REQUIRE(test::create(instance.envelope_head_file(), std::string(16, '')));
+    BOOST_REQUIRE_EQUAL(instance.open(test::events), error::schema_version);
+}
+
+// read_schema
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(store__read_schema__uncreated__failure)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    system::config::version schema{};
+    test::map_store instance{ configuration };
+    BOOST_REQUIRE(instance.read_schema(schema));
+}
+
+BOOST_AUTO_TEST_CASE(store__read_schema__created__compiled)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    system::config::version schema{};
+    test::map_store instance{ configuration };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(!instance.close(test::events));
+    BOOST_REQUIRE(!instance.read_schema(schema));
+    BOOST_REQUIRE(schema == envelope::compiled);
+}
+
+BOOST_AUTO_TEST_CASE(store__read_schema__schema_mismatch__stored)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    system::config::version schema{};
+    const system::config::version expected{ 0x01010101, 0x01010101, 0x01010101, 0x01010101 };
+    test::map_store instance{ configuration };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(!instance.close(test::events));
+    BOOST_REQUIRE(test::create(instance.envelope_head_file(), std::string(16, '')));
+    BOOST_REQUIRE(!instance.read_schema(schema));
+    BOOST_REQUIRE(schema == expected);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

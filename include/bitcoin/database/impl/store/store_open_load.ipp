@@ -38,6 +38,21 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
         }
     };
 
+    const auto load = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::load_file, table);
+            ec = file.load();
+        }
+    };
+
+    // The schema version governs all other files, so it precedes them.
+    open(ec, envelope_head_, table_t::envelope_head);
+    load(ec, envelope_head_, table_t::envelope_head);
+    if (!ec)
+        ec = load_schema();
+
     open(ec, header_head_, table_t::header_head);
     open(ec, header_body_, table_t::header_body);
     open(ec, input_head_, table_t::input_head);
@@ -68,7 +83,6 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, schnorr1_body_, table_t::schnorr1_body);
     open(ec, silent_head_, table_t::silent_head);
     open(ec, silent_body_, table_t::silent_body);
-    open(ec, envelope_head_, table_t::envelope_head);
     open(ec, duplicate_head_, table_t::duplicate_head);
     open(ec, duplicate_body_, table_t::duplicate_body);
     open(ec, prevalid0_head_, table_t::prevalid0_head);
@@ -88,15 +102,6 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, filter_bk_body_, table_t::filter_bk_body);
     open(ec, filter_tx_head_, table_t::filter_tx_head);
     open(ec, filter_tx_body_, table_t::filter_tx_body);
-
-    const auto load = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
-    {
-        if (!ec)
-        {
-            handler(event_t::load_file, table);
-            ec = file.load();
-        }
-    };
 
     load(ec, header_head_, table_t::header_head);
     load(ec, header_body_, table_t::header_body);
@@ -128,7 +133,6 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, schnorr1_body_, table_t::schnorr1_body);
     load(ec, silent_head_, table_t::silent_head);
     load(ec, silent_body_, table_t::silent_body);
-    load(ec, envelope_head_, table_t::envelope_head);
     load(ec, duplicate_head_, table_t::duplicate_head);
     load(ec, duplicate_body_, table_t::duplicate_body);
     load(ec, prevalid0_head_, table_t::prevalid0_head);

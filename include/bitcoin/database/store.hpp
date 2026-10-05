@@ -97,6 +97,9 @@ public:
     /// Settings envelope stored at store creation.
     const database::envelope& get_envelope() const NOEXCEPT;
 
+    /// Read the stored schema version without opening the store.
+    code read_schema(system::config::version& schema) NOEXCEPT;
+
     /// Determine if the store is non-empty/initialized.
     bool is_dirty() const NOEXCEPT;
     void set_dirty() NOEXCEPT;
@@ -128,6 +131,8 @@ protected:
     /// Method helpers.
     code create_load(const event_handler& handler) NOEXCEPT;
     code open_load(const event_handler& handler) NOEXCEPT;
+    bool get_schema(system::config::version& schema) const NOEXCEPT;
+    code load_schema() NOEXCEPT;
     code load_envelope() NOEXCEPT;
     void store_envelope(code& ec) NOEXCEPT;
     code unload_close(const event_handler& handler) NOEXCEPT;

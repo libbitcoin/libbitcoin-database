@@ -241,6 +241,11 @@ public:
     ////    return silent_body_.compressed.file();
     ////}
 
+    inline const path& envelope_head_file() const NOEXCEPT
+    {
+        return envelope_head_.file();
+    }
+
     inline const path& duplicate_head_file() const NOEXCEPT
     {
         return duplicate_head_.file();
