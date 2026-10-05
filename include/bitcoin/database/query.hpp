@@ -1105,8 +1105,8 @@ private:
     // This value should never be read, but may be useful in debugging.
     static constexpr uint32_t unspecified_timestamp = max_uint32;
 
-    // Pool rows hashed by one task of the compact block short id scan.
-    static constexpr size_t short_id_chunk_rows = system::power2(14u);
+    // Fewest pool rows hashed by one task of the compact block short id scan.
+    static constexpr size_t short_id_minimum_rows = system::power2(10u);
 
     // Chain objects.
     template <typename Bool>

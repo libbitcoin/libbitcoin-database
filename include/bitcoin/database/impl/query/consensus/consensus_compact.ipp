@@ -85,7 +85,6 @@ bool CLASS::get_compact_matches(compact_matches& out,
     using link_t = table::pool::link::integer;
     static_assert(is_same_type<siphash_columns::value_type,
         std::span<const lane_t>>);
-    constexpr auto chunk_rows = short_id_chunk_rows;
     const auto ptr0 = store_.pool.id0.get_memory();
     const auto ptr1 = store_.pool.id1.get_memory();
     const auto ptr2 = store_.pool.id2.get_memory();
@@ -94,15 +93,13 @@ bool CLASS::get_compact_matches(compact_matches& out,
         return false;
 
     const auto rows = possible_narrow_cast<size_t>(store_.pool.count().value);
-    if constexpr (is_little_endian)
-    {
-        const auto bytes = rows * sizeof(lane_t);
-        if (is_lesser(ptr0.size(), bytes) || is_lesser(ptr1.size(), bytes) ||
-            is_lesser(ptr2.size(), bytes) || is_lesser(ptr3.size(), bytes))
-            return false;
-    }
+    const auto bytes = rows * sizeof(lane_t);
+    if (is_lesser(ptr0.size(), bytes) || is_lesser(ptr1.size(), bytes) ||
+        is_lesser(ptr2.size(), bytes) || is_lesser(ptr3.size(), bytes))
+        return false;
 
-    std::atomic_bool fail{};
+    const auto chunk_rows = std::max(short_id_minimum_rows,
+        ceilinged_divide(rows, two * cores()));
     std::vector<compact_matches> found(ceilinged_divide(rows, chunk_rows));
     std::vector<size_t> chunks(found.size());
     std::iota(chunks.begin(), chunks.end(), zero);
@@ -114,47 +111,19 @@ bool CLASS::get_compact_matches(compact_matches& out,
             const auto first = chunk * chunk_rows;
             std::vector<short_id> ids(std::min(chunk_rows, rows - first));
 
-            if constexpr (is_little_endian)
+            const auto column = [&](const memory& ptr) NOEXCEPT
             {
-                const auto column = [&](const memory& ptr) NOEXCEPT
+                const auto data = pointer_cast<const lane_t>(ptr.data());
+                return std::span<const lane_t>
                 {
-                    const auto data = pointer_cast<const lane_t>(ptr.data());
-                    return std::span<const lane_t>
-                    {
-                        std::next(data, first), ids.size()
-                    };
+                    std::next(data, first), ids.size()
                 };
+            };
 
-                siphash(ids, key, siphash_columns
-                {
-                    column(ptr0), column(ptr1), column(ptr2), column(ptr3)
-                });
-            }
-            else
+            siphash(ids, key, siphash_columns
             {
-                table::pool_word id0{}, id1{}, id2{}, id3{};
-                for (size_t row{}; row < ids.size(); ++row)
-                {
-                    const table::pool::link link
-                    {
-                        possible_narrow_cast<link_t>(first + row)
-                    };
-
-                    if (!store_.pool.id0.get(ptr0, link, id0) ||
-                        !store_.pool.id1.get(ptr1, link, id1) ||
-                        !store_.pool.id2.get(ptr2, link, id2) ||
-                        !store_.pool.id3.get(ptr3, link, id3))
-                    {
-                        fail.store(true, std::memory_order_relaxed);
-                        return;
-                    }
-
-                    ids[row] = siphash(key, siphash_words
-                    {
-                        id0.word, id1.word, id2.word, id3.word
-                    });
-                }
-            }
+                column(ptr0), column(ptr1), column(ptr2), column(ptr3)
+            });
 
             auto& matches = found.at(chunk);
             for (size_t row{}; row < ids.size(); ++row)
@@ -165,9 +134,6 @@ bool CLASS::get_compact_matches(compact_matches& out,
                         possible_narrow_cast<link_t>(first + row));
             }
         });
-
-    if (fail.load(std::memory_order_relaxed))
-        return false;
 
     for (const auto& matches: found)
         out.insert(out.end(), matches.cbegin(), matches.cend());
