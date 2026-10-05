@@ -293,6 +293,7 @@ public:
     inline header_link to_confirmed(size_t height) const NOEXCEPT;
     inline header_link to_header(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
+    inline tx_link to_witness_tx(const hash_digest& key) const NOEXCEPT;
     inline filter_link to_filter(const header_link& key) const NOEXCEPT;
     inline output_link to_output(const point& prevout) const NOEXCEPT;
     inline output_link to_output(const hash_digest& key,

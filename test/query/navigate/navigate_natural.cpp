@@ -124,6 +124,22 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_header__always__expected)
 
 // to_tx
 
+BOOST_AUTO_TEST_CASE(query_navigate__to_witness_tx__unsegregated__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+
+    // An unsegregated tx has the same hash with and without witness.
+    BOOST_REQUIRE_EQUAL(query.to_witness_tx(test::genesis.transactions_ptr()->front()->hash(true)), 0u);
+    BOOST_REQUIRE_EQUAL(query.to_witness_tx(test::block1.transactions_ptr()->front()->hash(true)), 1u);
+    BOOST_REQUIRE(query.to_witness_tx(system::one_hash).is_terminal());
+}
+
 BOOST_AUTO_TEST_CASE(query_navigate__to_tx__transactions__expected)
 {
     settings settings{};
