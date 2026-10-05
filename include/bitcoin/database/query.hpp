@@ -526,6 +526,9 @@ public:
     bool get_branch_fees(const stopper& cancel, fee_rate_sets& out, size_t start,
         size_t count) const NOEXCEPT;
 
+    /// Fee rate tuples of the unconfirmed pooled txs.
+    bool get_pool_fees(fee_rates& out) const NOEXCEPT;
+
     /// Merkle.
     /// -----------------------------------------------------------------------
 
@@ -934,6 +937,8 @@ protected:
     inline bool is_sufficient(const context& current,
         const context& evaluated) const NOEXCEPT;
     bool get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT;
+    bool get_pooled_fee(uint64_t& fee, size_t& height,
+        const tx_link& link) const NOEXCEPT;
 
     /// Called by confirmation chaser.
     bool is_block_validated(code& ec, const header_link& link,
