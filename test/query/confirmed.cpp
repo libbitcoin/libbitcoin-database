@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_candidate_extension__candidates__expect
     BOOST_REQUIRE(query.is_candidate_extension(1));
     BOOST_REQUIRE(!query.is_candidate_extension(2));
 
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, false, false));
     BOOST_REQUIRE(!query.is_candidate_extension(1));
 }
 
