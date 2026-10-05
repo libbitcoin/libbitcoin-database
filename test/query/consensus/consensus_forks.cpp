@@ -87,6 +87,40 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__filters_disabled__bypa
     BOOST_REQUIRE(fork.back().ec == error::bypassed);
 }
 
+BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__bypassed_silent_pending__stops_at_first_unvalidated)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    settings.filter_tx.buckets = 0;
+    settings.initialize(system::settings{ system::chain::selection::regtest }, false, 2);
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(!query.filter_enabled());
+    BOOST_REQUIRE_EQUAL(query.silent_start_height(), 2u);
+    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, database::context{ 0, 2, 0 }, {}, false, false));
+
+    const auto link1 = query.to_header(test::block1_hash);
+    const auto link2 = query.to_header(test::block2_hash);
+    BOOST_REQUIRE(query.push_candidate(link1));
+    BOOST_REQUIRE(query.push_candidate(link2));
+
+    size_t fork_point{};
+    auto fork = query.get_validated_fork(fork_point, 2);
+    BOOST_REQUIRE_EQUAL(fork_point, 0u);
+    BOOST_REQUIRE_EQUAL(fork.size(), 1u);
+    BOOST_REQUIRE(fork.front().link == link1);
+    BOOST_REQUIRE(fork.front().ec == error::bypassed);
+
+    BOOST_REQUIRE(query.set_block_valid(link2));
+    fork = query.get_validated_fork(fork_point, 2);
+    BOOST_REQUIRE_EQUAL(fork.size(), 2u);
+    BOOST_REQUIRE(fork.back().link == link2);
+    BOOST_REQUIRE(fork.back().ec == error::bypassed);
+}
+
 BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__milestone_filter_pending__empty)
 {
     settings settings{};
