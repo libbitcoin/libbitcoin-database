@@ -127,6 +127,54 @@ void CLASS::store_envelope(code& ec) NOEXCEPT
         ec = error::create_table;
 }
 
+// public
+TEMPLATE
+code CLASS::read_schema(system::config::version& schema) NOEXCEPT
+{
+    if (!transactor_mutex_.try_lock())
+        return error::transactor_lock;
+
+    auto ec = envelope_head_.open();
+    if (!ec) ec = envelope_head_.load();
+    if (!ec && !get_schema(schema)) ec = error::verify_table;
+
+    // unload and close errors override ec.
+    if (const auto unloaded = envelope_head_.unload()) ec = unloaded;
+    if (const auto closed = envelope_head_.close()) ec = closed;
+
+    transactor_mutex_.unlock();
+    return ec;
+}
+
+// The schema is deserialized before it is validated, so the record holds it
+// when envelope deserialization fails.
+TEMPLATE
+bool CLASS::get_schema(system::config::version& schema) const NOEXCEPT
+{
+    if (is_zero(envelope.head_size()))
+        return false;
+
+    table::envelope::record record{};
+    const auto valid = envelope.get(zero, record);
+    schema = record.envelope.schema;
+    return valid || (schema != database::envelope::compiled);
+}
+
+// A created store has no envelope until it is populated.
+TEMPLATE
+code CLASS::load_schema() NOEXCEPT
+{
+    if (is_zero(envelope.head_size()))
+        return error::success;
+
+    system::config::version schema{};
+    if (!get_schema(schema))
+        return error::verify_table;
+
+    return (schema == database::envelope::compiled) ? error::success :
+        error::schema_version;
+}
+
 TEMPLATE
 code CLASS::load_envelope() NOEXCEPT
 {
@@ -135,8 +183,7 @@ code CLASS::load_envelope() NOEXCEPT
     if (!is_zero(envelope.head_size()))
     {
         if (!envelope.get(zero, record))
-            return record.envelope.schema == envelope_.schema ?
-                error::verify_table : error::schema_version;
+            return error::verify_table;
 
         envelope_ = record.envelope;
     }

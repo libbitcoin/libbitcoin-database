@@ -124,7 +124,7 @@ code CLASS::get_block_state(const header_link& link) const NOEXCEPT
 TEMPLATE
 inline bool CLASS::is_validated(const header_link& link) const NOEXCEPT
 {
-    // Validated and not invalid (checkpoint/milestone shows false).
+    // Validated and not invalid (bypassed shows false unless indexed).
     const auto ec = get_header_state(link);
     return ec == error::block_valid || ec == error::block_confirmable;
 }
@@ -135,22 +135,20 @@ bool CLASS::is_block_validated(code& ec, const header_link& link,
 {
     if (height <= checkpoint || is_milestone(link))
     {
-        if (is_associated(link))
-        {
-            ec = error::bypassed;
-            return true;
-        }
-        else
+        if (!is_associated(link))
         {
             ec = error::unassociated;
             return false;
         }
+
+        // A bypassed block requiring silent indexing is validated to index it.
+        ec = error::bypassed;
+        return !is_silent(link, height) || is_validated(link);
     }
     else
     {
         ec = get_header_state(link);
-        return ec == error::block_valid
-            || ec == error::block_confirmable;
+        return ec == error::block_valid || ec == error::block_confirmable;
     }
 }
 
@@ -185,8 +183,7 @@ code CLASS::get_pooled(pooled_tx& out, const tx_link& link,
         {
             return pooled_tx::prevout
             {
-                prevout::output_tx_fk(merged),
-                prevout::coinbase(merged)
+                prevout::output_tx_fk(merged), prevout::coinbase(merged)
             };
         });
 
