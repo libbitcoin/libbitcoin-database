@@ -143,7 +143,7 @@ bool CLASS::is_block_validated(code& ec, const header_link& link,
 
         // A bypassed block requiring silent indexing is validated to index it.
         ec = error::bypassed;
-        return height < silent_start_height() || is_validated(link);
+        return !is_silent(link, height) || is_validated(link);
     }
     else
     {

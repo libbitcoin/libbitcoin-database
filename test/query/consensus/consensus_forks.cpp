@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__bypassed_silent_pendin
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(!query.filter_enabled());
     BOOST_REQUIRE_EQUAL(query.silent_start_height(), 2u);
-    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, database::context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, database::context{ system::chain::flags::bip341_rule, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, database::context{ system::chain::flags::bip341_rule, 2, 0 }, {}, false, false));
 
     const auto link1 = query.to_header(test::block1_hash);
     const auto link2 = query.to_header(test::block2_hash);
