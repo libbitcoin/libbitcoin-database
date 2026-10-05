@@ -107,26 +107,14 @@ bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
         return false;
 
     const auto first = links.front();
-
-    stopper fail{};
-    std::vector<size_t> it(sub1(count));
-    std::iota(it.begin(), it.end(), one);
-    constexpr auto parallel = poolstl::execution::par;
-    constexpr auto relaxed = std::memory_order_relaxed;
-
-    // TODO: parallel may or may not be optimal.
-    // TODO: alternatively could accumulate block results and write once.
-    std::for_each(parallel, it.cbegin(), it.cend(), [&](size_t index) NOEXCEPT
+    for (auto index = one; index < count; ++index)
     {
-        if (fail.load(relaxed))
-            return;
-
         const auto& fk = links.at(index);
         if (fk >= first && !set_silent(fk, *txs->at(index)))
-            fail.store(true, relaxed);
-    });
-    
-    return !fail.load(relaxed);
+            return false;
+    }
+
+    return true;
 }
 
 TEMPLATE
@@ -143,24 +131,14 @@ bool CLASS::set_silent(const header_link& link,
         return false;
 
     const auto first = links.front();
-
-    stopper fail{};
-    std::vector<size_t> it(sub1(count));
-    std::iota(it.begin(), it.end(), one);
-    constexpr auto parallel = poolstl::execution::par;
-    constexpr auto relaxed = std::memory_order_relaxed;
-
-    std::for_each(parallel, it.cbegin(), it.cend(), [&](size_t index) NOEXCEPT
+    for (auto index = one; index < count; ++index)
     {
-        if (fail.load(relaxed))
-            return;
-
         const auto& fk = links.at(index);
         if (fk >= first && !set_silent(fk, txs.at(index)))
-            fail.store(true, relaxed);
-    });
+            return false;
+    }
 
-    return !fail.load(relaxed);
+    return true;
 }
 
 // Ineligible txs have no records.
