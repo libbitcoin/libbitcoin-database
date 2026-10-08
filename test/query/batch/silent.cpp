@@ -19,6 +19,7 @@
 #include "../../test.hpp"
 #include "../../mocks/blocks.hpp"
 #include "../../mocks/chunk_store.hpp"
+#include "../../mocks/map_store.hpp"
 
 BOOST_FIXTURE_TEST_SUITE(query_batch_silent_tests, test::directory_setup_fixture)
 
@@ -129,6 +130,20 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__eligible__one_record)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set_silent(42, simple_send()));
     BOOST_REQUIRE_EQUAL(query.silent_records(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__eligible__rows_complete)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::map_store store{ settings };
+    database::query<test::map_store> instance{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(instance.initialize(test::genesis));
+    BOOST_REQUIRE(instance.set_silent(42, simple_send()));
+    BOOST_REQUIRE_EQUAL(instance.silent_records(), 1u);
+    BOOST_REQUIRE_EQUAL(store.silent_frontier_(), store.silent_logical_());
+    BOOST_REQUIRE(!store.close(test::events_handler));
 }
 
 // scan_silent

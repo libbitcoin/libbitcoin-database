@@ -93,6 +93,9 @@ public:
     template <size_t Column, typename Element>
     bool put(const Link& link, const Element& element) NOEXCEPT;
 
+    /// Complete count rows at link written directly to a column.
+    void complete(const Link& link, const Link& count) NOEXCEPT;
+
 protected:
     using head = database::nohead<link>;
     using body = database::bodys<link, system::data_array<zero>,
