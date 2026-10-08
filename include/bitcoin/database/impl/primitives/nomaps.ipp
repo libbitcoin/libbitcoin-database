@@ -199,6 +199,12 @@ bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
     return true;
 }
 
+TEMPLATE
+void CLASS::complete(const Link& link, const Link& count) NOEXCEPT
+{
+    body_.complete(link, count);
+}
+
 // protected (unguarded memory access)
 TEMPLATE
 template <size_t Column, typename Element>

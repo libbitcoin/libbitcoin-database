@@ -226,6 +226,16 @@ public:
         return silent_head_.file();
     }
 
+    inline size_t silent_frontier_() const NOEXCEPT
+    {
+        return silent_body_.frontier();
+    }
+
+    inline size_t silent_logical_() const NOEXCEPT
+    {
+        return silent_body_.size();
+    }
+
     ////inline const path& silent_body_correlate_file() const NOEXCEPT
     ////{
     ////    return silent_body_.correlate.file();

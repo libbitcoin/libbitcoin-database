@@ -215,6 +215,7 @@ bool CLASS::set_silent_(const tx_link& link, const ec_compressed& summary,
         word.store(value, std::memory_order_release);
     }
 
+    store_.silent.complete(fk, rows);
     return true;
     // ========================================================================
 }
