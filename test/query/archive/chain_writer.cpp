@@ -774,6 +774,70 @@ BC_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
     BC_CHECK_EQUAL(hashes, test::genesis.transaction_hashes(false));
 }
 
+// allocate transacted
+// ----------------------------------------------------------------------------
+
+static std::shared_timed_mutex* watched{};
+static bool transacted{};
+
+// Clears transacted upon any allocation made without the transactor held.
+template <size_t... Widths>
+class transacted_storages
+  : public test::chunk_storages<Widths...>
+{
+public:
+    using base = test::chunk_storages<Widths...>;
+    using base::base;
+
+    size_t allocate(size_t count) NOEXCEPT override
+    {
+        const std::unique_lock lock{ *watched, std::try_to_lock };
+        transacted = transacted && !lock.owns_lock();
+        return base::allocate(count);
+    }
+};
+
+class transacted_store
+  : public store<transacted_storages>
+{
+public:
+    using store<transacted_storages>::store;
+
+    std::shared_timed_mutex& transactor_mutex() NOEXCEPT
+    {
+        return transactor_mutex_;
+    }
+};
+
+BC_AUTO_TEST_CASE(query_chain_writer__set_tx__allocate__transacted)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    transacted_store store{ settings };
+    query<database::store<transacted_storages>> query{ store };
+    watched = &store.transactor_mutex();
+    BC_REQUIRE(!store.create(test::events_handler));
+
+    transacted = true;
+    BC_REQUIRE(query.set(test::tx4));
+    BC_REQUIRE(transacted);
+}
+
+BC_AUTO_TEST_CASE(query_chain_writer__set_block__allocate__transacted)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    transacted_store store{ settings };
+    query<database::store<transacted_storages>> query{ store };
+    watched = &store.transactor_mutex();
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    transacted = true;
+    BC_REQUIRE(query.set(test::block1a, test::context, {}, false, false));
+    BC_REQUIRE(transacted);
+}
+
 // pooling
 // ----------------------------------------------------------------------------
 
