@@ -526,7 +526,6 @@ tools_initchain_initchain_CPPFLAGS = \
     ${src_libbitcoin_database_la_CPPFLAGS}
 
 tools_initchain_initchain_LDFLAGS = \
-    ${LIBTOOL_ALL_STATIC} \
     ${src_libbitcoin_database_la_LDFLAGS}
 
 tools_initchain_initchain_LDADD = \
