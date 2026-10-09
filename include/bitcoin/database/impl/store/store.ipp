@@ -99,8 +99,8 @@ CLASS::store(const settings& config) NOEXCEPT
     silent1_body_(body(config.path, schema::caches::silent1), config.silent, sequential, staged),
 
     envelope_head_(head(config.path / schema::dir::heads, schema::caches::envelope), head_settings(config.duplicate), sequential),
-    duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate), head_settings(config.duplicate), random),
-    duplicate_body_(body(config.path, schema::caches::duplicate), config.duplicate, sequential, staged),
+    duplicate_head_(head(config.path / schema::dir::heads, schema::indexes::duplicate), head_settings(config.duplicate), random),
+    duplicate_body_(body(config.path, schema::indexes::duplicate), config.duplicate, sequential, staged),
 
     prevalid0_head_(head(config.path / schema::dir::heads, schema::caches::prevalid0), head_settings(config.prevalid), sequential),
     prevalid0_body_(body(config.path, schema::caches::prevalid0), config.prevalid, sequential, staged),
@@ -110,8 +110,8 @@ CLASS::store(const settings& config) NOEXCEPT
     prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout), head_settings(config.prevout), random),
     prevout_body_(body(config.path, schema::caches::prevout), config.prevout, sequential, staged),
 
-    state_head_(head(config.path / schema::dir::heads, schema::caches::state), head_settings(config.state), random),
-    state_body_(body(config.path, schema::caches::state), config.state, sequential, staged),
+    state_head_(head(config.path / schema::dir::heads, schema::indexes::state), head_settings(config.state), random),
+    state_body_(body(config.path, schema::indexes::state), config.state, sequential, staged),
 
     pool_head_(head(config.path / schema::dir::heads, schema::caches::pool), head_settings(config.pool), random),
     pool_body_(body(config.path, schema::caches::pool), config.pool, sequential, staged),

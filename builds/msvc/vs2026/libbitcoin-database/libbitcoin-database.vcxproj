@@ -180,7 +180,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\outs.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\transaction.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\txs.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\duplicate.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\ecdsa.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\envelope.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\pool.hpp" />
@@ -189,11 +188,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\schnorr.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\silent.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\spends.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\envelope.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\event.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\duplicate.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\wtxid.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\names.hpp" />

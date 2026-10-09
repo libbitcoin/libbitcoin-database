@@ -62,11 +62,11 @@ code CLASS::dump(const path& folder,
     dump(ec, silent0_head_, schema::caches::silent0, table_t::silent0_head);
     dump(ec, silent1_head_, schema::caches::silent1, table_t::silent1_head);
     dump(ec, envelope_head_, schema::caches::envelope, table_t::envelope_head);
-    dump(ec, duplicate_head_, schema::caches::duplicate, table_t::duplicate_head);
+    dump(ec, duplicate_head_, schema::indexes::duplicate, table_t::duplicate_head);
     dump(ec, prevalid0_head_, schema::caches::prevalid0, table_t::prevalid0_head);
     dump(ec, prevalid1_head_, schema::caches::prevalid1, table_t::prevalid1_head);
     dump(ec, prevout_head_, schema::caches::prevout, table_t::prevout_head);
-    dump(ec, state_head_, schema::caches::state, table_t::state_head);
+    dump(ec, state_head_, schema::indexes::state, table_t::state_head);
     dump(ec, pool_head_, schema::caches::pool, table_t::pool_head);
     dump(ec, spends_head_, schema::caches::spends, table_t::spends_head);
     dump(ec, wtxid_head_, schema::indexes::wtxid, table_t::wtxid_head);

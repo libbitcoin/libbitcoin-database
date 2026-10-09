@@ -169,6 +169,36 @@ public:
         return strong_tx_body_.file();
     }
 
+    inline const path& duplicate_head_file() const NOEXCEPT
+    {
+        return duplicate_head_.file();
+    }
+
+    inline const path& duplicate_body_file() const NOEXCEPT
+    {
+        return duplicate_body_.file();
+    }
+
+    inline const path& state_head_file() const NOEXCEPT
+    {
+        return state_head_.file();
+    }
+
+    inline const path& state_body_file() const NOEXCEPT
+    {
+        return state_body_.file();
+    }
+
+    inline const path& wtxid_head_file() const NOEXCEPT
+    {
+        return wtxid_head_.file();
+    }
+
+    inline const path& wtxid_body_file() const NOEXCEPT
+    {
+        return wtxid_body_.file();
+    }
+
     // Caches.
 
     inline const path& ecdsa0_head_file() const NOEXCEPT
@@ -256,16 +286,6 @@ public:
         return envelope_head_.file();
     }
 
-    inline const path& duplicate_head_file() const NOEXCEPT
-    {
-        return duplicate_head_.file();
-    }
-
-    inline const path& duplicate_body_file() const NOEXCEPT
-    {
-        return duplicate_body_.file();
-    }
-
     inline const path& prevalid0_head_file() const NOEXCEPT
     {
         return prevalid0_head_.file();
@@ -284,16 +304,6 @@ public:
     inline const path& prevout_body_file() const NOEXCEPT
     {
         return prevout_body_.file();
-    }
-
-    inline const path& state_head_file() const NOEXCEPT
-    {
-        return state_head_.file();
-    }
-
-    inline const path& state_body_file() const NOEXCEPT
-    {
-        return state_body_.file();
     }
 
     inline const path& pool_head_file() const NOEXCEPT

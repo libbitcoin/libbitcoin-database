@@ -196,7 +196,6 @@
     <ClCompile Include="..\..\..\..\test\tables\archives\outs.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\archives\txs.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\caches\duplicate.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\caches\ecdsa.cpp">
       <ObjectFileName>$(IntDir)test_tables_caches_ecdsa.obj</ObjectFileName>
     </ClCompile>
@@ -212,11 +211,12 @@
       <ObjectFileName>$(IntDir)test_tables_caches_silent.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\spends.cpp" />
-    <ClCompile Include="..\..\..\..\test\tables\caches\state.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\envelope.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\indexes\duplicate.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
       <ObjectFileName>$(IntDir)test_tables_indexes_height.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\state.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\wtxid.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\optional\address.cpp" />

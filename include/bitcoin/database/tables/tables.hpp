@@ -29,17 +29,17 @@
 #include <bitcoin/database/tables/archives/txs.hpp>
 
 #include <bitcoin/database/tables/caches/ecdsa.hpp>
-#include <bitcoin/database/tables/caches/duplicate.hpp>
 #include <bitcoin/database/tables/caches/envelope.hpp>
 #include <bitcoin/database/tables/caches/prevalid.hpp>
 #include <bitcoin/database/tables/caches/prevout.hpp>
 #include <bitcoin/database/tables/caches/schnorr.hpp>
 #include <bitcoin/database/tables/caches/silent.hpp>
 #include <bitcoin/database/tables/caches/spends.hpp>
-#include <bitcoin/database/tables/caches/state.hpp>
 #include <bitcoin/database/tables/caches/pool.hpp>
 
+#include <bitcoin/database/tables/indexes/duplicate.hpp>
 #include <bitcoin/database/tables/indexes/height.hpp>
+#include <bitcoin/database/tables/indexes/state.hpp>
 #include <bitcoin/database/tables/indexes/strong_tx.hpp>
 #include <bitcoin/database/tables/indexes/wtxid.hpp>
 

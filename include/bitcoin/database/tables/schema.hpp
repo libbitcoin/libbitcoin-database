@@ -49,7 +49,7 @@ namespace schema {
 /// 4.0.4.0 Silent payment start height in the envelope.
 /// 4.0.5.0 Batch and silent payment tables as correlate and row columns.
 /// 4.0.6.0 Silent payment batch banks and scan table.
-/// 4.0.7.0 Pool witness hash index table (wtxid).
+/// 4.0.7.0 Pool witness hash index (wtxid), state and duplicate as indexes.
 constexpr std::array<uint32_t, 4> version{ 4, 0, 7, 0 };
 
 /// Values.

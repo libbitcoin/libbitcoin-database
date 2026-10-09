@@ -333,9 +333,6 @@
     <ClCompile Include="..\..\..\..\test\tables\archives\txs.cpp">
       <Filter>src\tables\archives</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\caches\duplicate.cpp">
-      <Filter>src\tables\caches</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\ecdsa.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
@@ -357,13 +354,16 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\spends.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\caches\state.cpp">
-      <Filter>src\tables\caches</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\envelope.cpp">
       <Filter>src\tables</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\duplicate.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\state.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp">

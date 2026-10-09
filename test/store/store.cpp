@@ -159,10 +159,14 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
     BOOST_REQUIRE_EQUAL(instance.confirmed_head_file(), "bitcoin/heads/index_confirmed.head");
     BOOST_REQUIRE_EQUAL(instance.strong_tx_head_file(), "bitcoin/heads/index_strong.head");
     BOOST_REQUIRE_EQUAL(instance.strong_tx_body_file(), "bitcoin/index_strong.data");
+    BOOST_REQUIRE_EQUAL(instance.duplicate_head_file(), "bitcoin/heads/index_duplicate.head");
+    BOOST_REQUIRE_EQUAL(instance.duplicate_body_file(), "bitcoin/index_duplicate.data");
+    BOOST_REQUIRE_EQUAL(instance.state_head_file(), "bitcoin/heads/index_state.head");
+    BOOST_REQUIRE_EQUAL(instance.state_body_file(), "bitcoin/index_state.data");
+    BOOST_REQUIRE_EQUAL(instance.wtxid_head_file(), "bitcoin/heads/index_wtxid.head");
+    BOOST_REQUIRE_EQUAL(instance.wtxid_body_file(), "bitcoin/index_wtxid.data");
 
     /// Cache.
-    BOOST_REQUIRE_EQUAL(instance.duplicate_head_file(), "bitcoin/heads/cache_duplicate.head");
-    BOOST_REQUIRE_EQUAL(instance.duplicate_body_file(), "bitcoin/cache_duplicate.data");
     BOOST_REQUIRE_EQUAL(instance.prevout_head_file(), "bitcoin/heads/cache_prevout.head");
     BOOST_REQUIRE_EQUAL(instance.prevout_body_file(), "bitcoin/cache_prevout.data");
     BOOST_REQUIRE_EQUAL(instance.pool_head_file(), "bitcoin/heads/cache_pool.head");
