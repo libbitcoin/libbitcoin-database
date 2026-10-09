@@ -301,31 +301,34 @@ bool CLASS::is_witness_committed(const hash_digest& witness_root,
 TEMPLATE
 hash_digest CLASS::get_wtxid(const tx_link& link) const NOEXCEPT
 {
-    using namespace system;
     if (store_.pool.enabled())
-    {
-        if (const auto row = store_.pool.first(link); !row.is_terminal())
-        {
-            table::pool_word id0{}, id1{}, id2{}, id3{};
-            if (!store_.pool.id0.get(row, id0) ||
-                !store_.pool.id1.get(row, id1) ||
-                !store_.pool.id2.get(row, id2) ||
-                !store_.pool.id3.get(row, id3))
-                return {};
-
-            using lane_t = schema::pool::witness_lane;
-            using lanes_t = std_array<lane_t, schema::pool::witness_lanes>;
-            const auto words = to_little_endians(lanes_t
-            {
-                id0.word, id1.word, id2.word, id3.word
-            });
-
-            return array_cast<uint8_t>(words);
-        }
-    }
+        if (const auto fk = store_.pool.first(link); !fk.is_terminal())
+            return get_pooled_wtxid(fk);
 
     const auto tx = get_transaction(link, true);
-    return tx ? tx->hash(true) : null_hash;
+    return tx ? tx->hash(true) : system::null_hash;
+}
+
+// protected
+TEMPLATE
+hash_digest CLASS::get_pooled_wtxid(const table::pool::link& link) const NOEXCEPT
+{
+    using namespace system;
+    table::pool_word id0{}, id1{}, id2{}, id3{};
+    if (!store_.pool.id0.get(link, id0) ||
+        !store_.pool.id1.get(link, id1) ||
+        !store_.pool.id2.get(link, id2) ||
+        !store_.pool.id3.get(link, id3))
+        return {};
+
+    using lane_t = schema::pool::witness_lane;
+    using lanes_t = std_array<lane_t, schema::pool::witness_lanes>;
+    const auto words = to_little_endians(lanes_t
+    {
+        id0.word, id1.word, id2.word, id3.word
+    });
+
+    return array_cast<uint8_t>(words);
 }
 
 TEMPLATE

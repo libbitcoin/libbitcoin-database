@@ -69,6 +69,7 @@ code CLASS::snapshot(const event_handler& handler, bool prune) NOEXCEPT
     flush(ec, state_body_, table_t::state_body);
     if (!prune) flush(ec, pool_body_, table_t::pool_body);
     if (!prune) flush(ec, spends_body_, table_t::spends_body);
+    if (!prune) flush(ec, wtxid_body_, table_t::wtxid_body);
 
     flush(ec, filter_bk_body_, table_t::filter_bk_body);
     flush(ec, filter_tx_body_, table_t::filter_tx_body);

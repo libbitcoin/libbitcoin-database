@@ -117,6 +117,8 @@ CLASS::store(const settings& config) NOEXCEPT
     pool_body_(body(config.path, schema::caches::pool), config.pool, sequential, staged),
     spends_head_(head(config.path / schema::dir::heads, schema::caches::spends), head_settings(config.spends), sequential),
     spends_body_(body(config.path, schema::caches::spends), config.spends, sequential, staged),
+    wtxid_head_(head(config.path / schema::dir::heads, schema::indexes::wtxid), head_settings(config.pool), random),
+    wtxid_body_(body(config.path, schema::indexes::wtxid), config.pool, sequential, staged),
 
     // Optionals.
     // ------------------------------------------------------------------------
@@ -163,6 +165,7 @@ CLASS::store(const settings& config) NOEXCEPT
     state(state_head_, state_body_, config.state.buckets),
     pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected),
     spends(spends_head_, spends_body_),
+    wtxid(wtxid_head_, wtxid_body_, config.pool.buckets, config.pool.expected),
 
     filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk.buckets),
     filter_tx(filter_tx_head_, filter_tx_body_, config.filter_tx.buckets)
@@ -319,6 +322,7 @@ void CLASS::set_current(bool current) NOEXCEPT
     state_head_.current(current);
     pool_head_.current(current);
     spends_head_.current(current);
+    wtxid_head_.current(current);
     filter_bk_head_.current(current);
     filter_tx_head_.current(current);
 }

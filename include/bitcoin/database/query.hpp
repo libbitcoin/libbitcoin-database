@@ -155,6 +155,7 @@ public:
     size_t state_head_size() const NOEXCEPT;
     size_t pool_head_size() const NOEXCEPT;
     size_t spends_head_size() const NOEXCEPT;
+    size_t wtxid_head_size() const NOEXCEPT;
     size_t filter_bk_head_size() const NOEXCEPT;
     size_t filter_tx_head_size() const NOEXCEPT;
 
@@ -184,6 +185,7 @@ public:
     size_t state_body_size() const NOEXCEPT;
     size_t pool_body_size() const NOEXCEPT;
     size_t spends_body_size() const NOEXCEPT;
+    size_t wtxid_body_size() const NOEXCEPT;
     size_t filter_bk_body_size() const NOEXCEPT;
     size_t filter_tx_body_size() const NOEXCEPT;
 
@@ -213,6 +215,7 @@ public:
     size_t state_size() const NOEXCEPT;
     size_t pool_size() const NOEXCEPT;
     size_t spends_size() const NOEXCEPT;
+    size_t wtxid_size() const NOEXCEPT;
     size_t filter_bk_size() const NOEXCEPT;
     size_t filter_tx_size() const NOEXCEPT;
 
@@ -228,6 +231,7 @@ public:
     size_t prevout_buckets() const NOEXCEPT;
     size_t state_buckets() const NOEXCEPT;
     size_t pool_buckets() const NOEXCEPT;
+    size_t wtxid_buckets() const NOEXCEPT;
     size_t filter_bk_buckets() const NOEXCEPT;
     size_t filter_tx_buckets() const NOEXCEPT;
 
@@ -253,6 +257,7 @@ public:
     size_t state_records() const NOEXCEPT;
     size_t pool_records() const NOEXCEPT;
     size_t spends_records() const NOEXCEPT;
+    size_t wtxid_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
 
     /// Counters (archive slabs - txs/puts/filter_tx can be derived).
@@ -674,6 +679,7 @@ public:
         const context& ctx) NOEXCEPT;
     bool set_pooled(const tx_link& link, const transaction& tx,
         const chain_context& ctx) NOEXCEPT;
+    bool is_pooled(const tx_link& link) const NOEXCEPT;
 
     /// Batching.
     /// -----------------------------------------------------------------------
@@ -970,6 +976,7 @@ protected:
     bool get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT;
     bool get_pooled_fee(uint64_t& fee, size_t& height,
         const tx_link& link) const NOEXCEPT;
+    hash_digest get_pooled_wtxid(const table::pool::link& link) const NOEXCEPT;
 
     /// Called by confirmation chaser.
     bool is_block_validated(code& ec, const header_link& link,

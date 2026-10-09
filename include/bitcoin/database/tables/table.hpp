@@ -105,6 +105,9 @@ enum class table_t
     spends_table,
     spends_head,
     spends_body,
+    wtxid_table,
+    wtxid_head,
+    wtxid_body,
 
     /// Optionals.
     address_table,

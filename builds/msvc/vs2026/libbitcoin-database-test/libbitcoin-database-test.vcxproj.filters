@@ -369,6 +369,9 @@
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\wtxid.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\optional\address.cpp">
       <Filter>src\tables\optional</Filter>
     </ClCompile>

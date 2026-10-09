@@ -104,6 +104,7 @@ size_t CLASS::store_body_size() const NOEXCEPT
         + state_body_size()
         + pool_body_size()
         + spends_body_size()
+        + wtxid_body_size()
         + filter_bk_body_size()
         + filter_tx_body_size();
 }
@@ -141,6 +142,7 @@ size_t CLASS::store_head_size() const NOEXCEPT
         + state_head_size()
         + pool_head_size()
         + spends_head_size()
+        + wtxid_head_size()
         + filter_bk_head_size()
         + filter_tx_head_size();
 }
@@ -173,6 +175,7 @@ DEFINE_SIZES(prevout)
 DEFINE_SIZES(state)
 DEFINE_SIZES(pool)
 DEFINE_SIZES(spends)
+DEFINE_SIZES(wtxid)
 DEFINE_SIZES(filter_bk)
 DEFINE_SIZES(filter_tx)
 
@@ -190,6 +193,7 @@ DEFINE_BUCKETS(duplicate)
 DEFINE_BUCKETS(prevout)
 DEFINE_BUCKETS(state)
 DEFINE_BUCKETS(pool)
+DEFINE_BUCKETS(wtxid)
 DEFINE_BUCKETS(filter_bk)
 DEFINE_BUCKETS(filter_tx)
 
@@ -217,6 +221,7 @@ DEFINE_RECORDS(prevalid1)
 DEFINE_RECORDS(state)
 DEFINE_RECORDS(pool)
 DEFINE_RECORDS(spends)
+DEFINE_RECORDS(wtxid)
 DEFINE_RECORDS(filter_bk)
 
 // Counters (archive slabs).

@@ -106,6 +106,9 @@ const CLASS::table_map CLASS::tables
     { table_t::spends_table, "spends_table" },
     { table_t::spends_head, "spends_head" },
     { table_t::spends_body, "spends_body" },
+    { table_t::wtxid_table, "wtxid_table" },
+    { table_t::wtxid_head, "wtxid_head" },
+    { table_t::wtxid_body, "wtxid_body" },
 
     // Optionals.
     { table_t::address_table, "address_table" },

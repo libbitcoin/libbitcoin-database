@@ -51,6 +51,7 @@ namespace indexes
     constexpr auto candidate = "index_candidate";
     constexpr auto confirmed = "index_confirmed";
     constexpr auto strong_tx = "index_strong";
+    constexpr auto wtxid = "index_wtxid";
 }
 
 namespace caches

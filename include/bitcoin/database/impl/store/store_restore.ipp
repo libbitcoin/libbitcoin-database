@@ -163,6 +163,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, state, table_t::state_table);
         restore(ec, pool, table_t::pool_table);
         restore(ec, spends, table_t::spends_table);
+        restore(ec, wtxid, table_t::wtxid_table);
 
         restore(ec, filter_bk, table_t::filter_bk_table);
         restore(ec, filter_tx, table_t::filter_tx_table);

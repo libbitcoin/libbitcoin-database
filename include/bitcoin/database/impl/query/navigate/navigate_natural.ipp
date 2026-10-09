@@ -51,10 +51,22 @@ inline tx_link CLASS::to_tx(const hash_digest& key) const NOEXCEPT
     return store_.tx.first(key);
 }
 
-// TODO: index pooled txs by witness hash, resolves only unsegregated txs.
+// A pooled tx by witness hash, otherwise an unsegregated tx (txid == wtxid).
+// Candidates are verified against the pool following iterator disposal.
 TEMPLATE
 inline tx_link CLASS::to_witness_tx(const hash_digest& key) const NOEXCEPT
 {
+    std::vector<table::pool::link> candidates{};
+    for (auto it = store_.wtxid.it({ key }); it; ++it)
+        candidates.push_back(*it);
+
+    for (const auto& fk: candidates)
+    {
+        const tx_link link{ store_.pool.get_key(fk) };
+        if (store_.pool.first(link) == fk && get_pooled_wtxid(fk) == key)
+            return link;
+    }
+
     return store_.tx.first(key);
 }
 

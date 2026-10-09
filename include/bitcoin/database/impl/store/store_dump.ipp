@@ -69,6 +69,7 @@ code CLASS::dump(const path& folder,
     dump(ec, state_head_, schema::caches::state, table_t::state_head);
     dump(ec, pool_head_, schema::caches::pool, table_t::pool_head);
     dump(ec, spends_head_, schema::caches::spends, table_t::spends_head);
+    dump(ec, wtxid_head_, schema::indexes::wtxid, table_t::wtxid_head);
 
     dump(ec, filter_bk_head_, schema::optionals::filter_bk, table_t::filter_bk_head);
     dump(ec, filter_tx_head_, schema::optionals::filter_tx, table_t::filter_tx_head);

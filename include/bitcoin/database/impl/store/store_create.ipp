@@ -128,6 +128,8 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, pool_body_, table_t::pool_body);
     create(ec, spends_head_, table_t::spends_head);
     create(ec, spends_body_, table_t::spends_body);
+    create(ec, wtxid_head_, table_t::wtxid_head);
+    create(ec, wtxid_body_, table_t::wtxid_body);
 
     create(ec, filter_bk_head_, table_t::filter_bk_head);
     create(ec, filter_bk_body_, table_t::filter_bk_body);
@@ -175,6 +177,7 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, state, table_t::state_table);
     populate(ec, pool, table_t::pool_table);
     populate(ec, spends, table_t::spends_table);
+    populate(ec, wtxid, table_t::wtxid_table);
 
     populate(ec, filter_bk, table_t::filter_bk_table);
     populate(ec, filter_tx, table_t::filter_tx_table);

@@ -218,6 +218,7 @@
       <ObjectFileName>$(IntDir)test_tables_indexes_height.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\indexes\wtxid.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\optional\address.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\optional\filter_bk.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\optional\filter_tx.cpp" />
