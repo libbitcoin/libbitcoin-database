@@ -112,8 +112,6 @@ CLASS::store(const settings& config) NOEXCEPT
 
     state_head_(head(config.path / schema::dir::heads, schema::caches::state), head_settings(config.state), random),
     state_body_(body(config.path, schema::caches::state), config.state, sequential, staged),
-    silent_bk_head_(head(config.path / schema::dir::heads, schema::caches::silent_bk), head_settings(config.silent_bk), random),
-    silent_bk_body_(body(config.path, schema::caches::silent_bk), config.silent_bk, sequential, staged),
 
     pool_head_(head(config.path / schema::dir::heads, schema::caches::pool), head_settings(config.pool), random),
     pool_body_(body(config.path, schema::caches::pool), config.pool, sequential, staged),
@@ -163,7 +161,6 @@ CLASS::store(const settings& config) NOEXCEPT
     prevalid1(prevalid1_head_, prevalid1_body_),
     prevout(prevout_head_, prevout_body_, config.prevout.buckets),
     state(state_head_, state_body_, config.state.buckets),
-    silent_bk(silent_bk_head_, silent_bk_body_, config.silent_bk.buckets),
     pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected),
     spends(spends_head_, spends_body_),
 
@@ -320,7 +317,6 @@ void CLASS::set_current(bool current) NOEXCEPT
     prevalid1_head_.current(current);
     prevout_head_.current(current);
     state_head_.current(current);
-    silent_bk_head_.current(current);
     pool_head_.current(current);
     spends_head_.current(current);
     filter_bk_head_.current(current);

@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__filters_disabled__bypa
     BOOST_REQUIRE(fork.back().ec == error::bypassed);
 }
 
-BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__bypassed_silent_pending__stops_at_first_unindexed)
+BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__bypassed_silent_limit__stops_below_limit)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -108,13 +108,12 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__bypassed_silent_pendin
     BOOST_REQUIRE(query.push_candidate(link2));
 
     size_t fork_point{};
-    auto fork = query.get_validated_fork(fork_point, 2);
+    auto fork = query.get_validated_fork(fork_point, 2, 2);
     BOOST_REQUIRE_EQUAL(fork_point, 0u);
     BOOST_REQUIRE_EQUAL(fork.size(), 1u);
     BOOST_REQUIRE(fork.front().link == link1);
     BOOST_REQUIRE(fork.front().ec == error::bypassed);
 
-    BOOST_REQUIRE(query.set_silent_indexed(link2));
     fork = query.get_validated_fork(fork_point, 2);
     BOOST_REQUIRE_EQUAL(fork.size(), 2u);
     BOOST_REQUIRE(fork.back().link == link2);

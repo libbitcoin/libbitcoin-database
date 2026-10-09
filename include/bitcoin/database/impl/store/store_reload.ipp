@@ -98,8 +98,6 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, prevout_body_, table_t::prevout_body);
     reload(ec, state_head_, table_t::state_head);
     reload(ec, state_body_, table_t::state_body);
-    reload(ec, silent_bk_head_, table_t::silent_bk_head);
-    reload(ec, silent_bk_body_, table_t::silent_bk_body);
     reload(ec, pool_head_, table_t::pool_head);
     reload(ec, pool_body_, table_t::pool_body);
     reload(ec, spends_head_, table_t::spends_head);

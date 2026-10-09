@@ -161,7 +161,6 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         dropped(ec, prevalid1, table_t::prevalid1_table);
         restore(ec, prevout, table_t::prevout_table);
         restore(ec, state, table_t::state_table);
-        restore(ec, silent_bk, table_t::silent_bk_table);
         restore(ec, pool, table_t::pool_table);
         restore(ec, spends, table_t::spends_table);
 

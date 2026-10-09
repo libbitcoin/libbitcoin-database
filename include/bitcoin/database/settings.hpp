@@ -114,7 +114,6 @@ struct BCD_API settings
     simple_table prevalid{};
     bucket_table prevout{};
     bucket_table state{};
-    bucket_table silent_bk{};
     hash_table pool{};
     simple_table spends{};
 

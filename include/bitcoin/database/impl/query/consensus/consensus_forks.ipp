@@ -115,7 +115,7 @@ header_links CLASS::get_confirmed_fork(const header_link& fork) const NOEXCEPT
 // node/confirmer
 TEMPLATE
 header_states CLASS::get_validated_fork(size_t& fork_point,
-    size_t top_checkpoint) const NOEXCEPT
+    size_t top_checkpoint, size_t silent_limit) const NOEXCEPT
 {
     // Reservation may limit allocation to most common scenario.
     header_states out{};
@@ -135,10 +135,10 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     // Filter body always written before validated, but validated state is not
     // written in the case of bypassed blocks, it's inferred. So for bypassed
     // blocks the existence of the filter must be verified. Silent payment
-    // records may be set after validation, so their indexation is verified.
-    while (is_block_validated(ec, link, height, top_checkpoint) &&
-        (!filter || ec != error::bypassed || is_filtered_body(link)) &&
-        (!is_silent(link, height) || is_silent_indexed(link)))
+    // records of blocks at or above silent_limit are not yet set.
+    while (height < silent_limit &&
+        is_block_validated(ec, link, height, top_checkpoint) &&
+        (!filter || ec != error::bypassed || is_filtered_body(link)))
     {
         out.emplace_back(link, ec);
         link = to_candidate(++height);

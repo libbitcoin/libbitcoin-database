@@ -189,10 +189,9 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__eligible__banked_row)
     BOOST_REQUIRE_EQUAL(query.silent_records(true), 1u);
     BOOST_REQUIRE_EQUAL(query.silent_records(false), 0u);
     BOOST_REQUIRE_EQUAL(query.scan_records(), 0u);
-    BOOST_REQUIRE(!query.is_silent_indexed(link));
 }
 
-BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row__indexed)
+BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row__scanned)
 {
     database::settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -211,7 +210,6 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row__indexed)
     BOOST_REQUIRE(query.set_silents(rows, link, block, false));
     BOOST_REQUIRE_EQUAL(query.compute_silents(cancel, false), database::error::success);
     BOOST_REQUIRE_EQUAL(query.scan_records(), 1u);
-    BOOST_REQUIRE(query.is_silent_indexed(link));
 
     std::vector<tx_link_t> links{};
     const auto handler = [&](const code&, tx_link_t link, const ec_compressed&) NOEXCEPT
@@ -253,19 +251,6 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__purge_silents__banked_row__empty)
     BOOST_REQUIRE(query.set_silents(rows, query.to_header(block.hash()), block, false));
     BOOST_REQUIRE(query.purge_silents(false));
     BOOST_REQUIRE_EQUAL(query.silent_records(false), 0u);
-}
-
-BOOST_AUTO_TEST_CASE(query_batch_silent__is_silent_indexed__set__true)
-{
-    database::settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(!query.is_silent_indexed(0));
-    BOOST_REQUIRE(query.set_silent_indexed(0));
-    BOOST_REQUIRE(query.is_silent_indexed(0));
 }
 
 // scan_silent

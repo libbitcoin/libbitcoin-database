@@ -48,7 +48,7 @@ namespace schema {
 /// 4.0.3.0 Second bank of ecdsa, schnorr, and prevalid batch tables.
 /// 4.0.4.0 Silent payment start height in the envelope.
 /// 4.0.5.0 Batch and silent payment tables as correlate and row columns.
-/// 4.0.6.0 Silent payment batch banks, scan table, and block indexation.
+/// 4.0.6.0 Silent payment batch banks and scan table.
 constexpr std::array<uint32_t, 4> version{ 4, 0, 6, 0 };
 
 /// Values.
@@ -338,7 +338,7 @@ TABLE_COLUMN(scan_correlate, schema::transaction::pk);
 TABLE_COLUMN(scan_row, schema::prefix + system::ec_compressed_size);
 
 // array
-TABLE_COLUMN(silent_correlate, schema::transaction::pk + schema::header::pk);
+TABLE_COLUMN(silent_correlate, schema::transaction::pk);
 TABLE_COLUMN(silent_row, schema::prefix + system::ec_compressed_size +
     system::ec_secret_size);
 
@@ -411,23 +411,6 @@ struct state
     static_assert(minrow == 1u);
     static_assert(link::size == 3u);
     bool operator==(const state&) const NOEXCEPT = default;
-};
-
-// record arraymap
-struct silent_bk
-{
-    static constexpr size_t align = false;
-    static constexpr size_t pk = schema::header::pk;
-    using link = linkage<pk, to_bits(pk)>;
-    static constexpr size_t minsize =
-        schema::bit;
-    static constexpr size_t minrow = minsize;
-    static constexpr size_t size = minsize;
-    static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 1u);
-    static_assert(minrow == 1u);
-    static_assert(link::size == 3u);
-    bool operator==(const silent_bk&) const NOEXCEPT = default;
 };
 
 // record hashmap (sk:4), with transaction identifier word columns.

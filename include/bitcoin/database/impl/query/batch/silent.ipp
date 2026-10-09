@@ -161,27 +161,6 @@ bool CLASS::set_silent(const tx_link& link,
         || set_silent_(link, point, prefixes);
 }
 
-// indexation
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-bool CLASS::is_silent_indexed(const header_link& link) const NOEXCEPT
-{
-    return store_.silent_bk.exists(to_silent_bk(link));
-}
-
-TEMPLATE
-bool CLASS::set_silent_indexed(const header_link& link) NOEXCEPT
-{
-    // ========================================================================
-    const auto scope = get_transactor();
-
-    // Clean single allocation failure (e.g. disk full).
-    return store_.silent_bk.put(to_silent_bk(link),
-        table::silent_bk::record{ {}, 1 });
-    // ========================================================================
-}
-
 // batch
 // ----------------------------------------------------------------------------
 
@@ -265,7 +244,7 @@ bool CLASS::set_silents(size_t& rows, const header_link& link,
         if (!bank_table.row.put(row,
                 row_t{ {}, item.prefixes, item.sum, item.hash }) ||
             !bank_table.correlate.put(row,
-                correlate_t{ {}, size, item.link.value, link.value }))
+                correlate_t{ {}, size, item.link.value }))
             return false;
 
         row += size;
@@ -283,7 +262,6 @@ code CLASS::compute_silents(const stopper& cancel, bool bank) NOEXCEPT
     struct computed
     {
         tx_link link{};
-        header_link header{};
         bool valid{};
         ec_compressed point{};
         std::vector<silent_prefix> prefixes{};
@@ -313,18 +291,12 @@ code CLASS::compute_silents(const stopper& cancel, bool bank) NOEXCEPT
         if (!silent::batch::compute(points, valid, cancel, batch))
             return error::query_canceled;
 
-        using tx_t = table::silent_correlate::tx;
-        using header_t = table::silent_correlate::hd;
         for (size_t row{}; row < count; ++row)
         {
             const auto& correlate = *std::next(correlates, row);
             if (is_zero(row) || correlate != *std::next(correlates, sub1(row)))
             {
-                const auto& link = array_cast<uint8_t, tx_t::size>(correlate);
-                const auto& header = array_cast<uint8_t, header_t::size,
-                    tx_t::size>(correlate);
-                txs.push_back({ tx_link{ link },
-                    header_link{ header }, is_nonzero(valid[row]),
+                txs.push_back({ tx_link{ correlate }, is_nonzero(valid[row]),
                     points[row] });
             }
 
@@ -336,12 +308,6 @@ code CLASS::compute_silents(const stopper& cancel, bool bank) NOEXCEPT
 
     for (const auto& tx: txs)
         if (tx.valid && !set_silent_(tx.link, tx.point, tx.prefixes))
-            return error::integrity;
-
-    // A block's rows are committed together, so each is set once its rows are.
-    for (size_t index{}; index < txs.size(); ++index)
-        if ((is_zero(index) || txs[index].header != txs[sub1(index)].header)
-            && !set_silent_indexed(txs[index].header))
             return error::integrity;
 
     return error::success;

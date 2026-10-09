@@ -124,8 +124,6 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, prevout_body_, table_t::prevout_body);
     create(ec, state_head_, table_t::state_head);
     create(ec, state_body_, table_t::state_body);
-    create(ec, silent_bk_head_, table_t::silent_bk_head);
-    create(ec, silent_bk_body_, table_t::silent_bk_body);
     create(ec, pool_head_, table_t::pool_head);
     create(ec, pool_body_, table_t::pool_body);
     create(ec, spends_head_, table_t::spends_head);
@@ -175,7 +173,6 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, prevalid1, table_t::prevalid1_table);
     populate(ec, prevout, table_t::prevout_table);
     populate(ec, state, table_t::state_table);
-    populate(ec, silent_bk, table_t::silent_bk_table);
     populate(ec, pool, table_t::pool_table);
     populate(ec, spends, table_t::spends_table);
 

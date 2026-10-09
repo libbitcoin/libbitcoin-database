@@ -198,12 +198,11 @@ struct silent_row
     };
 };
 
-/// silent_correlate is an array of silent payment batch tx|header fks.
+/// silent_correlate is an array of silent payment batch tx fks.
 struct silent_correlate
   : public no_map<schema::silent_correlate>
 {
     using tx = schema::transaction::link;
-    using hd = schema::header::link;
     using no_map<schema::silent_correlate>::nomap;
 
     struct record
@@ -217,13 +216,11 @@ struct silent_correlate
         inline bool from_data(reader& source) NOEXCEPT
         {
             tx_fk = source.read_little_endian<tx::integer, tx::size>();
-            header_fk = source.read_little_endian<hd::integer, hd::size>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
 
         tx::integer tx_fk{};
-        hd::integer header_fk{};
     };
 
     struct records
@@ -237,10 +234,7 @@ struct silent_correlate
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             for (size_t row{}; row < rows; ++row)
-            {
                 sink.write_little_endian<tx::integer, tx::size>(tx_fk);
-                sink.write_little_endian<hd::integer, hd::size>(header_fk);
-            }
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
@@ -248,7 +242,6 @@ struct silent_correlate
 
         const size_t rows{};
         const tx::integer tx_fk{};
-        const hd::integer header_fk{};
     };
 };
 
@@ -305,35 +298,6 @@ public:
 static_assert(sizeof(system::silent::batch::row_t) ==
     silent_row::width);
 
-/// silent_bk is a record arraymap of silent payment block indexation, indexed
-/// by header.fk.
-struct silent_bk
-  : public array_map<schema::silent_bk>
-{
-    using array_map<schema::silent_bk>::arraymap;
-
-    struct record
-      : public schema::silent_bk
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            indexed = source.read_byte();
-            BC_ASSERT(!source || source.get_read_position() == count() * minrow);
-            return source;
-        }
-
-        inline bool to_data(finalizer& sink) const NOEXCEPT
-        {
-            sink.write_byte(indexed);
-            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
-            return sink;
-        }
-
-        inline bool operator==(const record&) const NOEXCEPT = default;
-
-        uint8_t indexed{};
-    };
-};
 static_assert(is_same_type<scan_correlate::span,
     system::scan::batch::tx_link>);
 

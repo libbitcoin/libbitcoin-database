@@ -89,7 +89,6 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, prevalid1, table_t::prevalid1_table);
     verify(ec, prevout, table_t::prevout_table);
     verify(ec, state, table_t::state_table);
-    verify(ec, silent_bk, table_t::silent_bk_table);
     verify(ec, pool, table_t::pool_table);
     verify(ec, spends, table_t::spends_table);
 

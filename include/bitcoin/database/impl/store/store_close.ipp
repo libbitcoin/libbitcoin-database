@@ -71,7 +71,6 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     close(ec, prevalid1, table_t::prevalid1_table);
     close(ec, prevout, table_t::prevout_table);
     close(ec, state, table_t::state_table);
-    close(ec, silent_bk, table_t::silent_bk_table);
     close(ec, pool, table_t::pool_table);
     close(ec, spends, table_t::spends_table);
 

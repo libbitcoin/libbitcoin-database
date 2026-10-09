@@ -67,7 +67,6 @@ code CLASS::dump(const path& folder,
     dump(ec, prevalid1_head_, schema::caches::prevalid1, table_t::prevalid1_head);
     dump(ec, prevout_head_, schema::caches::prevout, table_t::prevout_head);
     dump(ec, state_head_, schema::caches::state, table_t::state_head);
-    dump(ec, silent_bk_head_, schema::caches::silent_bk, table_t::silent_bk_head);
     dump(ec, pool_head_, schema::caches::pool, table_t::pool_head);
     dump(ec, spends_head_, schema::caches::spends, table_t::spends_head);
 

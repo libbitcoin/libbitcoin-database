@@ -85,8 +85,6 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, prevout_body_, table_t::prevout_body);
     unload(ec, state_head_, table_t::state_head);
     unload(ec, state_body_, table_t::state_body);
-    unload(ec, silent_bk_head_, table_t::silent_bk_head);
-    unload(ec, silent_bk_body_, table_t::silent_bk_body);
     unload(ec, pool_head_, table_t::pool_head);
     unload(ec, pool_body_, table_t::pool_body);
     unload(ec, spends_head_, table_t::spends_head);
@@ -151,8 +149,6 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, prevout_body_, table_t::prevout_body);
     close(ec, state_head_, table_t::state_head);
     close(ec, state_body_, table_t::state_body);
-    close(ec, silent_bk_head_, table_t::silent_bk_head);
-    close(ec, silent_bk_body_, table_t::silent_bk_body);
     close(ec, pool_head_, table_t::pool_head);
     close(ec, pool_body_, table_t::pool_body);
     close(ec, spends_head_, table_t::spends_head);

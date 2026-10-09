@@ -84,7 +84,6 @@ namespace caches
     constexpr auto prevout = "cache_prevout";
     constexpr auto duplicate = "cache_duplicate";
     constexpr auto state = "cache_state";
-    constexpr auto silent_bk = "cache_silent_bk";
     constexpr auto pool = "cache_pool";
     constexpr auto pool_id0 = "id0"_t;
     constexpr auto pool_id1 = "id1"_t;

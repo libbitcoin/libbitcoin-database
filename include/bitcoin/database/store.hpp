@@ -253,8 +253,6 @@ protected:
     // record hashmap
     Storage<one> state_head_;
     Storage<one> state_body_;
-    Storage<one> silent_bk_head_;
-    Storage<one> silent_bk_body_;
 
     // record multimap
     Storage<one> pool_head_;
@@ -362,7 +360,6 @@ public:
     table::prevalid prevalid1;
     table::prevout prevout;
     table::state state;
-    table::silent_bk silent_bk;
     table::pool pool;
     table::spends spends;
 
