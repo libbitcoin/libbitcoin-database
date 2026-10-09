@@ -139,6 +139,15 @@ protected:
     code backup(const event_handler& handler, bool prune=false) NOEXCEPT;
     code dump(const path& folder, const event_handler& handler) NOEXCEPT;
 
+    /// Retain the pool rows of txs that can yet confirm (prune helper).
+    code compact(const event_handler& handler) NOEXCEPT;
+
+    /// Copy the pool rows accepted by keep, with their spends, in row order.
+    template <typename Keep>
+    bool copy_pool(table::pool& to, table::spends& to_spends,
+        table::pool& from, table::spends& from_spends,
+        const Keep& keep) NOEXCEPT;
+
     /// Currency (coalesced with a recent top), reported to head storage.
     bool is_current() const NOEXCEPT;
     void set_current(bool current) NOEXCEPT;
