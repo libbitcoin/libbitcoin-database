@@ -650,6 +650,10 @@ public:
         const std::vector<short_id>& short_ids,
         const system::siphash_key& key) const NOEXCEPT;
 
+    /// Unconfirmed pooled tx links, from cursor toward end, at most limit.
+    code get_pooled_txs(pool_link& cursor, tx_links& out,
+        const pool_link& end, size_t limit) const NOEXCEPT;
+
     /// Header properties.
     uint32_t get_top_timestamp(bool confirmed) const NOEXCEPT;
     bool get_timestamp(uint32_t& timestamp, const header_link& link) const NOEXCEPT;

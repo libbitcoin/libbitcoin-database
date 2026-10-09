@@ -45,6 +45,7 @@ using schnorr_link = table::schnorr_correlate::link;
 using scan_link = table::scan_correlate::link;
 using silent_link = table::silent_correlate::link;
 using silent_prefix = table::scan_row::integral;
+using pool_link = table::pool::link;
 
 /// Multiples.
 using header_links = std::vector<header_link::integer>;

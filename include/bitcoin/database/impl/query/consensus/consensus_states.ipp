@@ -151,6 +151,35 @@ bool CLASS::is_block_validated(code& ec, const header_link& link,
     }
 }
 
+// A terminal cursor starts at the first row, and the cursor is set to end
+// once the rows are exhausted.
+TEMPLATE
+code CLASS::get_pooled_txs(pool_link& cursor, tx_links& out,
+    const pool_link& end, size_t limit) const NOEXCEPT
+{
+    out.clear();
+    auto row = cursor.is_terminal() ? pool_link::integer{} : cursor.value;
+    if (row > end.value)
+        return error::invalid_cursor;
+
+    if (!store_.pool.enabled())
+    {
+        cursor = end;
+        return error::success;
+    }
+
+    const auto stop = std::min(end.value, store_.pool.count().value);
+    for (; row < stop && out.size() < limit; ++row)
+    {
+        const tx_link link{ store_.pool.get_key(row) };
+        if (!is_confirmed_tx(link))
+            out.push_back(link);
+    }
+
+    cursor = row == stop ? end : pool_link{ row };
+    return error::success;
+}
+
 TEMPLATE
 code CLASS::get_pooled(pooled_tx& out, const tx_link& link,
     const context& ctx) const NOEXCEPT
