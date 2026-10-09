@@ -57,7 +57,11 @@ code CLASS::get_compact_links(tx_links& out,
         if (ambiguous.at(index))
             continue;
 
+        // The columns of a row are written before its spine record.
         const tx_link link{ store_.pool.get_key(row) };
+        if (store_.pool.first(link) != row)
+            continue;
+
         auto& found = out.at(index);
         if (found == tx_link::terminal)
         {
@@ -92,11 +96,9 @@ bool CLASS::get_compact_matches(compact_matches& out,
     if (!ptr0 || !ptr1 || !ptr2 || !ptr3)
         return false;
 
-    const auto rows = possible_narrow_cast<size_t>(store_.pool.count().value);
-    const auto bytes = rows * sizeof(lane_t);
-    if (is_lesser(ptr0.size(), bytes) || is_lesser(ptr1.size(), bytes) ||
-        is_lesser(ptr2.size(), bytes) || is_lesser(ptr3.size(), bytes))
-        return false;
+    // Rows are allocated to the spine before their columns are written.
+    const auto rows = std::min({ ptr0.size(), ptr1.size(), ptr2.size(),
+        ptr3.size() }) / sizeof(lane_t);
 
     const auto chunk_rows = std::max(short_id_minimum_rows,
         ceilinged_divide(rows, two * cores()));
