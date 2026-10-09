@@ -315,6 +315,11 @@ private:
         bool final=true) NOEXCEPT;
     bool grow_(size_t end) NOEXCEPT;
     bool probe_(size_t capacity) NOEXCEPT;
+    template <size_t... Index>
+    void zero_all_(size_t from, size_t to, size_t fresh,
+        std::index_sequence<Index...>) NOEXCEPT;
+    template <size_t Column>
+    void zero_(size_t from, size_t to, size_t fresh) NOEXCEPT;
 
     // backend wrappers (native or staged by build), not thread safe.
     template <size_t Column>
