@@ -95,7 +95,9 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
 
     if (ec)
     {
-        /* code */ unload_close(handler);
+        // open_load leaves nothing open on a schema mismatch.
+        if (ec != error::schema_version)
+            /* code */ unload_close(handler);
 
         // unlock errors override ec.
         if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
@@ -146,20 +148,6 @@ code CLASS::read_schema(system::config::version& schema) NOEXCEPT
     return ec;
 }
 
-// The schema is deserialized before it is validated, so the record holds it
-// when envelope deserialization fails.
-TEMPLATE
-bool CLASS::get_schema(system::config::version& schema) const NOEXCEPT
-{
-    if (is_zero(envelope.head_size()))
-        return false;
-
-    table::envelope::record record{};
-    const auto valid = envelope.get(zero, record);
-    schema = record.envelope.schema;
-    return valid || (schema != database::envelope::compiled);
-}
-
 // A created store has no envelope until it is populated.
 TEMPLATE
 code CLASS::load_schema() NOEXCEPT
@@ -175,6 +163,20 @@ code CLASS::load_schema() NOEXCEPT
         error::schema_version;
 }
 
+// The schema is deserialized before it is validated, so the record holds it
+// when envelope deserialization fails.
+TEMPLATE
+bool CLASS::get_schema(system::config::version& schema) const NOEXCEPT
+{
+    if (is_zero(envelope.head_size()))
+        return false;
+
+    table::envelope::record record{};
+    const auto valid = envelope.get(zero, record);
+    schema = record.envelope.schema;
+    return valid || (schema != database::envelope::compiled);
+}
+
 TEMPLATE
 code CLASS::load_envelope() NOEXCEPT
 {
@@ -183,7 +185,8 @@ code CLASS::load_envelope() NOEXCEPT
     if (!is_zero(envelope.head_size()))
     {
         if (!envelope.get(zero, record))
-            return error::verify_table;
+            return record.envelope.schema == envelope_.schema ?
+                error::verify_table : error::schema_version;
 
         envelope_ = record.envelope;
     }
