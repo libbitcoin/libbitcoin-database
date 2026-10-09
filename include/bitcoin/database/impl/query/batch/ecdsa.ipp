@@ -38,29 +38,20 @@ bool CLASS::verify_ecdsa_signatures(const stopper& cancel,
 {
     auto& bank_table = store_.ecdsa_bank(bank);
     const auto correlate_ptr = bank_table.correlate.get_memory();
-    const auto digest_ptr = bank_table.digest.get_memory();
-    const auto compressed_ptr = bank_table.compressed.get_memory();
-    const auto signature_ptr = bank_table.signature.get_memory();
+    const auto row_ptr = bank_table.row.get_memory();
 
     using correlate_t = const system::ecdsa::batch::correlate_t;
-    using digest_t = const table::ecdsa_digest::span;
-    using compressed_t = const table::ecdsa_compressed::span;
-    using signature_t = const table::ecdsa_signature::span;
+    using row_t = const system::ecdsa::batch::row_t;
 
     using namespace system;
     const auto correlate = pointer_cast<correlate_t>(correlate_ptr.data());
-    const auto digest = pointer_cast<digest_t>(digest_ptr.data());
-    const auto compressed = pointer_cast<compressed_t>(compressed_ptr.data());
-    const auto signature = pointer_cast<signature_t>(signature_ptr.data());
+    const auto row = pointer_cast<row_t>(row_ptr.data());
 
-    // Shortest column.
     const auto count = bank_table.count();
     const ecdsa::batch batch
     {
         .correlates = { correlate, count },
-        .digests = { digest, count },
-        .points = { compressed, count },
-        .signatures = { signature, count }
+        .rows = { row, count }
     };
 
     // False return only implies canceled.
@@ -85,9 +76,7 @@ bool CLASS::set_signatures(const system::chain::ecdsa_signatures& sigs,
     const header_link& link, bool bank) NOEXCEPT
 {
     using correlate_t = table::ecdsa_correlate::put_signatures;
-    using digest_t = table::ecdsa_digest::put_signatures;
-    using compressed_t = table::ecdsa_compressed::put_signatures;
-    using signature_t = table::ecdsa_signature::put_signatures;
+    using row_t = table::ecdsa_row::put_signatures;
 
     if (sigs.empty())
         return true;
@@ -108,12 +97,10 @@ bool CLASS::set_signatures(const system::chain::ecdsa_signatures& sigs,
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = bank_table.guard();
 
-    // Deinterleave the accumulator into the columns, expanding group bands.
+    // Write the accumulator to the columns, expanding group bands.
     return
         bank_table.correlate.put(fk, correlate_t{ {}, link, sigs }) &&
-        bank_table.digest.put(fk, digest_t{ {}, sigs }) &&
-        bank_table.compressed.put(fk, compressed_t{ {}, sigs }) &&
-        bank_table.signature.put(fk, signature_t{ {}, sigs });
+        bank_table.row.put(fk, row_t{ {}, sigs });
     // ========================================================================
 }
 

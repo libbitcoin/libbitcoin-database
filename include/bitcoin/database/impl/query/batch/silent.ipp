@@ -40,26 +40,22 @@ bool CLASS::scan_silent(const stopper& cancel,
     const system::silent::batch::receiver& keys, size_t first, size_t last,
     const silent_handler& callback) NOEXCEPT
 {
-    const auto prefix_ptr = store_.silent.prefix.get_memory();
-    const auto compressed_ptr = store_.silent.compressed.get_memory();
     const auto correlate_ptr = store_.silent.correlate.get_memory();
+    const auto row_ptr = store_.silent.row.get_memory();
 
     using correlate_t = const table::silent_correlate::span;
-    using prefix_t = const table::silent_prefix::span;
-    using compressed_t = const table::silent_compressed::span;
+    using row_t = const system::silent::batch::row_t;
 
     using namespace system;
     const auto correlate = pointer_cast<correlate_t>(correlate_ptr.data());
-    const auto prefix = pointer_cast<prefix_t>(prefix_ptr.data());
-    const auto compressed = pointer_cast<compressed_t>(compressed_ptr.data());
+    const auto row = pointer_cast<row_t>(row_ptr.data());
 
     BC_ASSERT(first <= last && last <= store_.silent.count());
     const auto count = last - first;
     const silent::batch batch
     {
         .correlates = { std::next(correlate, first), count },
-        .prefixes = { std::next(prefix, first), count },
-        .points = { std::next(compressed, first), count }
+        .rows = { std::next(row, first), count }
     };
 
     // False return only implies canceled.
@@ -175,7 +171,7 @@ bool CLASS::set_silent_(const tx_link& link, const ec_compressed& summary,
 
     // The prefix is ec_xonly[0..7] read as little-endian.
     using namespace system;
-    using prefix_t = table::silent_prefix::integral;
+    using prefix_t = table::silent_row::integral;
     std::vector<prefix_t> prefixes(outputs.size());
     std::transform(outputs.cbegin(), outputs.cend(), prefixes.begin(),
         [](const auto& output) NOEXCEPT
@@ -183,8 +179,7 @@ bool CLASS::set_silent_(const tx_link& link, const ec_compressed& summary,
             return unsafe_from_little_endian<prefix_t>(output.key.data());
         });
 
-    using prefixes_t = table::silent_prefix::put_ref;
-    using compressed_t = table::silent_compressed::put_ref;
+    using row_t = table::silent_row::put_ref;
 
     // ========================================================================
     const auto scope = get_transactor();
@@ -198,9 +193,7 @@ bool CLASS::set_silent_(const tx_link& link, const ec_compressed& summary,
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = store_.silent.guard();
 
-    // Write values to each column in corresponding positions.
-    if (!store_.silent.prefix.put(fk, prefixes_t{ {}, prefixes }) ||
-        !store_.silent.compressed.put(fk, compressed_t{ {}, rows, summary }))
+    if (!store_.silent.row.put(fk, row_t{ {}, prefixes, summary }))
         return false;
 
     // The guard is the correlate column, published last (get_silent_frontier).

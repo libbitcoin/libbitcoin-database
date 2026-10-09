@@ -73,9 +73,7 @@ BOOST_AUTO_TEST_CASE(ecdsa__create_verify_close__aggregate__expected)
 BOOST_AUTO_TEST_CASE(ecdsa__set_signature__single__expected)
 {
     using correlate = table::ecdsa_correlate::put_ref;
-    using digest_t = table::ecdsa_digest::put_ref;
-    using compressed_t = table::ecdsa_compressed::put_ref;
-    using signature_t = table::ecdsa_signature::put_ref;
+    using row_t = table::ecdsa_row::put_ref;
 
     ecdsa_storage head{ "head" };
     ecdsa_storage body{ "body" };
@@ -85,31 +83,20 @@ BOOST_AUTO_TEST_CASE(ecdsa__set_signature__single__expected)
     const auto fk = instance.allocate(one);
     BOOST_REQUIRE_EQUAL(fk, 0u);
 
-    BOOST_REQUIRE(instance.digest.put(fk, digest_t{ {}, digest_a }));
-    BOOST_REQUIRE(instance.compressed.put(fk, compressed_t{ {}, point_a }));
-    BOOST_REQUIRE(instance.signature.put(fk, signature_t{ {}, sig_a }));
+    BOOST_REQUIRE(instance.row.put(fk, row_t{ {}, digest_a, point_a, sig_a }));
     BOOST_REQUIRE(instance.correlate.put(fk, correlate{ {}, header_fk, group }));
 
     // Correlate: header_fk(3) | pair=0 | group.
     const auto expected_correlate = base16_chunk("efcdab" "00" "3412");
-    const auto expected_digest = base16_chunk
+    const auto expected_row = base16_chunk
     (
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    );
-    const auto expected_compressed = base16_chunk
-    (
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    );
-    const auto expected_signature = base16_chunk
-    (
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     );
 
     BOOST_REQUIRE_EQUAL(body.buffers_.at(0), expected_correlate);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_digest);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(2), expected_compressed);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(3), expected_signature);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_row);
     BOOST_REQUIRE(instance.close());
 }
 
@@ -186,143 +173,58 @@ BOOST_AUTO_TEST_CASE(ecdsa_correlate__get__using_record__expected)
     BOOST_REQUIRE_EQUAL(out.pair, 0x10_u8);
 }
 
-// ecdsa_digest (single + m-of-n writers)
+// ecdsa_row (single + m-of-n writers)
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(ecdsa_digest__put_ref__single__expected)
+BOOST_AUTO_TEST_CASE(ecdsa_row__put_ref__single__expected)
 {
-    using putter = table::ecdsa_digest::put_ref;
+    using putter = table::ecdsa_row::put_ref;
 
     chunk_storage head_store{};
     chunk_storage body_store{};
-    table::ecdsa_digest instance{ head_store, body_store };
+    table::ecdsa_row instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
 
     const auto expected = base16_chunk
     (
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    );
-
-    BOOST_REQUIRE(instance.put(putter{ {}, digest_a }));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
-}
-
-// m-of-n digest repeats the common signature hash ecdsa_count(m,n) times.
-// 1-of-3 -> 3 rows of the same digest.
-BOOST_AUTO_TEST_CASE(ecdsa_digest__put_refs__repeated__expected)
-{
-    using putter = table::ecdsa_digest::put_refs;
-
-    chunk_storage head_store{};
-    chunk_storage body_store{};
-    table::ecdsa_digest instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.create());
-
-    const auto expected = base16_chunk
-    (
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    );
-
-    // put_refs{ {}, keys, sigs, digest }.
-    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, digest_a }));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
-}
-
-// ecdsa_compressed (single + m-of-n writers)
-// ----------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(ecdsa_compressed__put_ref__single__expected)
-{
-    using putter = table::ecdsa_compressed::put_ref;
-
-    chunk_storage head_store{};
-    chunk_storage body_store{};
-    table::ecdsa_compressed instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.create());
-
-    const auto expected = base16_chunk
-    (
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     );
 
-    BOOST_REQUIRE(instance.put(putter{ {}, point_a }));
+    BOOST_REQUIRE(instance.put(putter{ {}, digest_a, point_a, sig_a }));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
 }
 
-// m-of-n compressed walks the key matrix: for sig in [0,m), key in
-// [sig, gap+sig]. 1-of-3: gap=2, sig=0, keys 0,1,2 -> all three keys once.
-BOOST_AUTO_TEST_CASE(ecdsa_compressed__put_refs__matrix__expected)
+// m-of-n walks the key matrix: for sig in [0,m), key in [sig, gap+sig], each
+// row repeating the common digest and the sig across its key span.
+// 1-of-3: gap=2, sig=0, keys 0,1,2 -> three rows of sig 0 with each key.
+BOOST_AUTO_TEST_CASE(ecdsa_row__put_refs__matrix__expected)
 {
-    using putter = table::ecdsa_compressed::put_refs;
+    using putter = table::ecdsa_row::put_refs;
 
     chunk_storage head_store{};
     chunk_storage body_store{};
-    table::ecdsa_compressed instance{ head_store, body_store };
+    table::ecdsa_row instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
 
     const ec_compresseds keys{ point_a, point_b, point_c };
-
-    const auto expected = base16_chunk
-    (
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-        "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
-    );
-
-    // put_refs{ {}, keys, sigs }.
-    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, keys, 1_size }));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
-}
-
-// ecdsa_signature (single + m-of-n writers)
-// ----------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(ecdsa_signature__put_ref__single__expected)
-{
-    using putter = table::ecdsa_signature::put_ref;
-
-    chunk_storage head_store{};
-    chunk_storage body_store{};
-    table::ecdsa_signature instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.create());
-
-    const auto expected = base16_chunk
-    (
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    );
-
-    BOOST_REQUIRE(instance.put(putter{ {}, sig_a }));
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
-}
-
-// m-of-n signature repeats each sig across its key span: for sig in [0,m),
-// (gap+1) copies. 1-of-3: sig 0 written 3 times.
-BOOST_AUTO_TEST_CASE(ecdsa_signature__put_refs__repeated__expected)
-{
-    using putter = table::ecdsa_signature::put_refs;
-
-    chunk_storage head_store{};
-    chunk_storage body_store{};
-    table::ecdsa_signature instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.create());
-
     const ec_signatures signatures{ sig_a };
 
     const auto expected = base16_chunk
     (
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     );
 
-    // put_refs{ {}, keys, sigs }.
-    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, 3_size, signatures }));
+    BOOST_REQUIRE(instance.put(putter{ {}, 3_size, digest_a, keys, signatures }));
     BOOST_REQUIRE_EQUAL(body_store.buffer(), expected);
 }
 
