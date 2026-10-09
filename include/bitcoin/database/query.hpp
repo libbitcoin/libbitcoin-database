@@ -293,6 +293,7 @@ public:
     inline header_link to_confirmed(size_t height) const NOEXCEPT;
     inline header_link to_header(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
+    inline tx_link to_witness_tx(const hash_digest& key) const NOEXCEPT;
     inline filter_link to_filter(const header_link& key) const NOEXCEPT;
     inline output_link to_output(const point& prevout) const NOEXCEPT;
     inline output_link to_output(const hash_digest& key,
@@ -525,6 +526,9 @@ public:
     bool get_block_fees(fee_rates& out, const header_link& link) const NOEXCEPT;
     bool get_branch_fees(const stopper& cancel, fee_rate_sets& out, size_t start,
         size_t count) const NOEXCEPT;
+
+    /// Fee rate tuples of the unconfirmed pooled txs.
+    bool get_pool_fees(fee_rates& out) const NOEXCEPT;
 
     /// Merkle.
     /// -----------------------------------------------------------------------
@@ -908,7 +912,7 @@ protected:
 
     /// Height of highest confirmed block (assumes locator descending).
     span get_locator_span(const hashes& locator, const hash_digest& stop,
-        size_t limit) const NOEXCEPT;
+        size_t limit, bool inclusive) const NOEXCEPT;
 
     /// Support unassociated gathering.
     bool get_unassociated(association& out,
@@ -934,6 +938,8 @@ protected:
     inline bool is_sufficient(const context& current,
         const context& evaluated) const NOEXCEPT;
     bool get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT;
+    bool get_pooled_fee(uint64_t& fee, size_t& height,
+        const tx_link& link) const NOEXCEPT;
 
     /// Called by confirmation chaser.
     bool is_block_validated(code& ec, const header_link& link,

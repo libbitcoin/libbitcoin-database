@@ -32,7 +32,7 @@ namespace database {
 TEMPLATE
 bool CLASS::get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT
 {
-    if (get_pooled_fee(out.fee, link))
+    if (get_pooled_fee(out.fee, out.height, link))
         return get_tx_virtual_size(out.bytes, link);
 
     // This is somehow ~15-20% less efficient.
@@ -43,6 +43,7 @@ bool CLASS::get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT
 
     out.bytes = tx->virtual_size();
     out.fee = tx->fee();
+    out.height = max_size_t;
     return true;
 }
 
@@ -100,6 +101,27 @@ bool CLASS::get_branch_fees(const stopper& cancel, fee_rate_sets& out,
     const auto failed = fail.load(relaxed);
     if (failed) out.clear();
     return !failed;
+}
+
+TEMPLATE
+bool CLASS::get_pool_fees(fee_rates& out) const NOEXCEPT
+{
+    out.clear();
+    if (!store_.pool.enabled())
+        return true;
+
+    const auto rows = store_.pool.count();
+    for (table::pool::link::integer row{}; row < rows; ++row)
+    {
+        const tx_link link{ store_.pool.get_key(row) };
+        if (is_confirmed_tx(link))
+            continue;
+
+        if (!get_tx_fees(out.emplace_back(), link))
+            return false;
+    }
+
+    return true;
 }
 
 } // namespace database

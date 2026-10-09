@@ -138,11 +138,15 @@ struct pool
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(context::size);
+            using height_t = context::height_t;
+            source.skip_bytes(context::flag_t::size);
+            height = source.read_little_endian<height_t::integer, height_t::size>();
+            source.skip_bytes(sizeof(context::mtp_t));
             fee = source.read_little_endian<uint64_t>();
             return source;
         }
 
+        context::height_t::integer height{};
         uint64_t fee{};
     };
 

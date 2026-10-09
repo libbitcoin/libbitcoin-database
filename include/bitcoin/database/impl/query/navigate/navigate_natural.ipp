@@ -51,6 +51,13 @@ inline tx_link CLASS::to_tx(const hash_digest& key) const NOEXCEPT
     return store_.tx.first(key);
 }
 
+// TODO: index pooled txs by witness hash, resolves only unsegregated txs.
+TEMPLATE
+inline tx_link CLASS::to_witness_tx(const hash_digest& key) const NOEXCEPT
+{
+    return store_.tx.first(key);
+}
+
 TEMPLATE
 inline filter_link CLASS::to_filter(const header_link& key) const NOEXCEPT
 {

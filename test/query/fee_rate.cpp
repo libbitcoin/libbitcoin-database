@@ -96,7 +96,8 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__pooled_missing_prevouts__pooled
 
     // Missing prevout fails value, but a pooled fee is returned directly.
     constexpr uint64_t expected_fee = 42;
-    BOOST_CHECK(store.pool.put(tx_link{ 3 }, table::pool::record{ {}, {}, expected_fee, {}, {} }));
+    constexpr size_t expected_height = 7;
+    BOOST_CHECK(store.pool.put(tx_link{ 3 }, table::pool::record{ {}, { 0, expected_height, 0 }, expected_fee, {}, {} }));
     BOOST_CHECK(!query.get_tx_value(out, 3));
     BOOST_CHECK(query.get_tx_fee(out, 3));
     BOOST_CHECK_EQUAL(out, expected_fee);
@@ -107,6 +108,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__pooled_missing_prevouts__pooled
     BOOST_CHECK(query.get_tx_fees(rate, 3));
     BOOST_CHECK_EQUAL(rate.fee, expected_fee);
     BOOST_CHECK_EQUAL(rate.bytes, bytes);
+    BOOST_CHECK_EQUAL(rate.height, expected_height);
 }
 
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__coinbase__zero)
@@ -157,6 +159,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_tx_fee__valid_non_coinbase__expected)
     BOOST_CHECK_EQUAL(rate.bytes, virtual_size);
     BOOST_CHECK_EQUAL(rate.bytes, test::tx2b.virtual_size());
     BOOST_CHECK_EQUAL(rate.fee, test::tx2b.fee());
+    BOOST_CHECK_EQUAL(rate.height, max_size_t);
 }
 
 // get_block_fee
@@ -478,6 +481,54 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__cancel_three_blocks__false
     fee_rate_sets rates_sets{};
     BOOST_CHECK(!query.get_branch_fees(cancel, rates_sets, 0, 3));
     BOOST_CHECK(rates_sets.empty());
+}
+
+// get_pool_fees
+
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_pool_fees__empty__true_empty)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+
+    fee_rates rates{};
+    BOOST_CHECK(query.get_pool_fees(rates));
+    BOOST_CHECK(rates.empty());
+}
+
+BOOST_AUTO_TEST_CASE(query_fee_rate__get_pool_fees__unconfirmed_and_confirmed__unconfirmed_only)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::block1b, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block_valid_spend_internal_2b, context{ 0, 2, 0 }, {}, false, false));
+
+    // Block 1 is confirmed (tx 1 is strong), block 2 is not (txs 2, 3, 4).
+    BOOST_CHECK(query.push_confirmed(1, false));
+    BOOST_CHECK(query.set_strong(1));
+    BOOST_CHECK(query.set_strong(2));
+    BOOST_CHECK(query.is_confirmed_tx(1));
+    BOOST_CHECK(!query.is_confirmed_tx(3));
+    BOOST_CHECK(!query.is_confirmed_tx(4));
+
+    BOOST_CHECK(store.pool.put(tx_link{ 1 }, table::pool::record{ {}, { 0, 1, 0 }, 10, {}, {} }));
+    BOOST_CHECK(store.pool.put(tx_link{ 3 }, table::pool::record{ {}, { 0, 2, 0 }, 20, {}, {} }));
+    BOOST_CHECK(store.pool.put(tx_link{ 4 }, table::pool::record{ {}, { 0, 3, 0 }, 30, {}, {} }));
+
+    fee_rates rates{};
+    BOOST_CHECK(query.get_pool_fees(rates));
+    BOOST_REQUIRE_EQUAL(rates.size(), 2u);
+    BOOST_CHECK_EQUAL(rates.at(0).fee, 20u);
+    BOOST_CHECK_EQUAL(rates.at(0).height, 2u);
+    BOOST_CHECK_EQUAL(rates.at(1).fee, 30u);
+    BOOST_CHECK_EQUAL(rates.at(1).height, 3u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

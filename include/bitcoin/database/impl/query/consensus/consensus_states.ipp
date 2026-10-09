@@ -194,6 +194,14 @@ code CLASS::get_pooled(pooled_tx& out, const tx_link& link,
 TEMPLATE
 bool CLASS::get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT
 {
+    size_t height{};
+    return get_pooled_fee(out, height, link);
+}
+
+TEMPLATE
+bool CLASS::get_pooled_fee(uint64_t& fee, size_t& height,
+    const tx_link& link) const NOEXCEPT
+{
     if (!store_.pool.enabled())
         return false;
 
@@ -205,7 +213,8 @@ bool CLASS::get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT
     if (!store_.pool.get(fk, pooled))
         return false;
 
-    out = pooled.fee;
+    fee = pooled.fee;
+    height = pooled.height;
     return true;
 }
 
