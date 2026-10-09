@@ -78,9 +78,7 @@ BOOST_AUTO_TEST_CASE(schnorr__create_verify_close__aggregate__expected)
 BOOST_AUTO_TEST_CASE(schnorr__set_signature__allocated_rows__expected)
 {
     using correlate = table::schnorr_correlate::put_ref;
-    using digest_t = table::schnorr_digest::put_ref;
-    using xonly_t = table::schnorr_xonly::put_ref;
-    using signature_t = table::schnorr_signature::put_ref;
+    using row_t = table::schnorr_row::put_ref;
 
     schnorr_storage head{ "head" };
     schnorr_storage body{ "body" };
@@ -91,15 +89,11 @@ BOOST_AUTO_TEST_CASE(schnorr__set_signature__allocated_rows__expected)
     auto fk = instance.allocate(two);
     BOOST_REQUIRE_EQUAL(fk, 0u);
 
-    BOOST_REQUIRE(instance.digest.put(fk, digest_t{ {}, digest_a }));
-    BOOST_REQUIRE(instance.xonly.put(fk, xonly_t{ {}, xonly_a }));
-    BOOST_REQUIRE(instance.signature.put(fk, signature_t{ {}, sig_a }));
+    BOOST_REQUIRE(instance.row.put(fk, row_t{ {}, digest_a, xonly_a, sig_a }));
     BOOST_REQUIRE(instance.correlate.put(fk, correlate{ {}, header_fk }));
 
     ++fk;
-    BOOST_REQUIRE(instance.digest.put(fk, digest_t{ {}, digest_b }));
-    BOOST_REQUIRE(instance.xonly.put(fk, xonly_t{ {}, xonly_b }));
-    BOOST_REQUIRE(instance.signature.put(fk, signature_t{ {}, sig_b }));
+    BOOST_REQUIRE(instance.row.put(fk, row_t{ {}, digest_b, xonly_b, sig_b }));
     BOOST_REQUIRE(instance.correlate.put(fk, correlate{ {}, header_fk2 }));
 
     // Correlate: header_fk(3) per row.
@@ -108,28 +102,18 @@ BOOST_AUTO_TEST_CASE(schnorr__set_signature__allocated_rows__expected)
         "efcdab"
         "785634"
     );
-    const auto expected_digest = base16_chunk
-    (
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-    );
-    const auto expected_xonly = base16_chunk
-    (
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-    );
-    const auto expected_signature = base16_chunk
+    const auto expected_row = base16_chunk
     (
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
     );
 
     BOOST_REQUIRE_EQUAL(body.buffers_.at(0), expected_correlate);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_digest);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(2), expected_xonly);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(3), expected_signature);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_row);
     BOOST_REQUIRE(instance.close());
 }
 

@@ -29,15 +29,15 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// silent_prefix is an array of silent payment record prefixes.
-struct silent_prefix
-  : public no_map<schema::silent_prefix>
+/// silent_row is an array of silent payment prefix|point rows.
+struct silent_row
+  : public no_map<schema::silent_row>
 {
-    using integral = unsigned_type<width>;
-    using no_map<schema::silent_prefix>::nomap;
+    using integral = unsigned_type<schema::prefix>;
+    using no_map<schema::silent_row>::nomap;
 
     struct put_ref
-      : public schema::silent_prefix
+      : public schema::silent_row
     {
         inline link count() const NOEXCEPT
         {
@@ -50,40 +50,16 @@ struct silent_prefix
             // The prefix must be read from ec_xonly[0..7] as LE.
             // Disk sequence will be [0..7] (with no byteswap on LE hardware).
             for (const auto& prefix: prefixes)
+            {
                 sink.write_little_endian<integral>(prefix);
+                sink.write_bytes(compressed);
+            }
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
 
         const std::vector<integral>& prefixes;
-    };
-};
-
-/// silent_compressed is an array of silent payment record compresseds.
-struct silent_compressed
-  : public no_map<schema::silent_compressed>
-{
-    using no_map<schema::silent_compressed>::nomap;
-
-    struct put_ref
-      : public schema::silent_compressed
-    {
-        inline link count() const NOEXCEPT
-        {
-            return system::possible_narrow_cast<link::integer>(rows);
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            for (size_t row{}; row < rows; ++row)
-                sink.write_bytes(compressed);
-
-            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
-            return sink;
-        }
-
-        const size_t rows{};
         const system::ec_compressed& compressed;
     };
 };
@@ -143,8 +119,7 @@ using silent_files = mmaps
 <
     Storage,
     silent_correlate,
-    silent_prefix,
-    silent_compressed
+    silent_row
 >;
 
 template <template <size_t...> class Storage>
@@ -167,8 +142,7 @@ using silent_table = nomaps
 <
     silent_correlate::link,
     silent_correlate,
-    silent_prefix,
-    silent_compressed
+    silent_row
 >;
 
 template <template <size_t...> class Storage>
@@ -179,18 +153,15 @@ public:
     silent(database::storage& head, silent_storage<Storage>& body) NOEXCEPT
       : silent_table(head, body),
         correlate(*this),
-        prefix(*this),
-        compressed(*this)
+        row(*this)
     {
     }
 
     column<silent_table, 0> correlate;
-    column<silent_table, 1> prefix;
-    column<silent_table, 2> compressed;
+    column<silent_table, 1> row;
 };
 
-static_assert(is_same_type<silent_prefix::span,
-    system::silent::batch::prefix>);
+static_assert(sizeof(system::silent::batch::row_t) == silent_row::width);
 static_assert(is_same_type<silent_correlate::span,
     system::silent::batch::tx_link>);
 

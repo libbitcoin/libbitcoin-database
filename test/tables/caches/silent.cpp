@@ -66,11 +66,9 @@ BOOST_AUTO_TEST_CASE(silent__put_columns__three_rows__expected)
     BOOST_REQUIRE_EQUAL(fk, 0u);
 
     const table::silent_correlate::records correlate{ {}, rows, tx_fk };
-    const table::silent_prefix::put_ref prefix{ {}, prefixes };
-    const table::silent_compressed::put_ref compress{ {}, rows, compressed };
+    const table::silent_row::put_ref row{ {}, prefixes, compressed };
     BOOST_REQUIRE(instance.correlate.put(fk, correlate));
-    BOOST_REQUIRE(instance.prefix.put(fk, prefix));
-    BOOST_REQUIRE(instance.compressed.put(fk, compress));
+    BOOST_REQUIRE(instance.row.put(fk, row));
 
     const auto expected_correlate = base16_chunk
     (
@@ -78,22 +76,18 @@ BOOST_AUTO_TEST_CASE(silent__put_columns__three_rows__expected)
         "44332211"
         "44332211"
     );
-    const auto expected_prefix = base16_chunk
+    const auto expected_row = base16_chunk
     (
         "1111111111111111"
+        "111111111111111111111111111111111111111111111111111111111111111111"
         "2222222222222222"
+        "111111111111111111111111111111111111111111111111111111111111111111"
         "3333333333333333"
-    );
-    const auto expected_compressed = base16_chunk
-    (
-        "111111111111111111111111111111111111111111111111111111111111111111"
-        "111111111111111111111111111111111111111111111111111111111111111111"
         "111111111111111111111111111111111111111111111111111111111111111111"
     );
 
     BOOST_REQUIRE_EQUAL(body.buffers_.at(0), expected_correlate);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_prefix);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(2), expected_compressed);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_row);
     BOOST_REQUIRE(instance.close());
 }
 

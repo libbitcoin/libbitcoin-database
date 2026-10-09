@@ -47,7 +47,8 @@ namespace schema {
 ///         parent pk) and compact in a new header flags byte.
 /// 4.0.3.0 Second bank of ecdsa, schnorr, and prevalid batch tables.
 /// 4.0.4.0 Silent payment start height in the envelope.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 4, 0 };
+/// 4.0.5.0 Batch and silent payment tables as correlate and row columns.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 5, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
@@ -322,21 +323,18 @@ struct strong_tx
 /// ---------------------------------------------------------------------------
 
 // array
-TABLE_COLUMN(ecdsa_digest, system::hash_size);
-TABLE_COLUMN(ecdsa_compressed, system::ec_compressed_size);
-TABLE_COLUMN(ecdsa_signature, system::ec_signature_size);
 TABLE_COLUMN(ecdsa_correlate, one + count_ + schema::header::pk);
+TABLE_COLUMN(ecdsa_row, system::hash_size + system::ec_compressed_size +
+    system::ec_signature_size);
 
 // array
-TABLE_COLUMN(schnorr_digest, system::hash_size);
-TABLE_COLUMN(schnorr_xonly, system::ec_xonly_size);
-TABLE_COLUMN(schnorr_signature, system::ec_signature_size);
 TABLE_COLUMN(schnorr_correlate, schema::header::pk);
+TABLE_COLUMN(schnorr_row, system::hash_size + system::ec_xonly_size +
+    system::ec_signature_size);
 
 // array
-TABLE_COLUMN(silent_prefix, schema::prefix);
-TABLE_COLUMN(silent_compressed, system::ec_compressed_size);
 TABLE_COLUMN(silent_correlate, schema::transaction::pk);
+TABLE_COLUMN(silent_row, schema::prefix + system::ec_compressed_size);
 
 // array (same as candidate and confirmed)
 using prevalid = height;
