@@ -47,11 +47,21 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
         }
     };
 
-    // The schema version governs all other files, so it precedes them.
+    // The schema is verified before any other file is opened.
     open(ec, envelope_head_, table_t::envelope_head);
     load(ec, envelope_head_, table_t::envelope_head);
     if (!ec)
         ec = load_schema();
+
+    // A mismatched store is not left open.
+    if (ec == error::schema_version)
+    {
+        handler(event_t::unload_file, table_t::envelope_head);
+        /* code */ envelope_head_.unload();
+        handler(event_t::close_file, table_t::envelope_head);
+        /* code */ envelope_head_.close();
+        return ec;
+    }
 
     open(ec, header_head_, table_t::header_head);
     open(ec, header_body_, table_t::header_body);
