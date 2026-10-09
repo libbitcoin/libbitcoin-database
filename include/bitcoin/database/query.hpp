@@ -145,12 +145,15 @@ public:
     size_t ecdsa1_head_size() const NOEXCEPT;
     size_t schnorr0_head_size() const NOEXCEPT;
     size_t schnorr1_head_size() const NOEXCEPT;
-    size_t silent_head_size() const NOEXCEPT;
+    size_t scan_head_size() const NOEXCEPT;
+    size_t silent0_head_size() const NOEXCEPT;
+    size_t silent1_head_size() const NOEXCEPT;
     size_t duplicate_head_size() const NOEXCEPT;
     size_t prevalid0_head_size() const NOEXCEPT;
     size_t prevalid1_head_size() const NOEXCEPT;
     size_t prevout_head_size() const NOEXCEPT;
     size_t state_head_size() const NOEXCEPT;
+    size_t silent_bk_head_size() const NOEXCEPT;
     size_t pool_head_size() const NOEXCEPT;
     size_t spends_head_size() const NOEXCEPT;
     size_t filter_bk_head_size() const NOEXCEPT;
@@ -172,12 +175,15 @@ public:
     size_t ecdsa1_body_size() const NOEXCEPT;
     size_t schnorr0_body_size() const NOEXCEPT;
     size_t schnorr1_body_size() const NOEXCEPT;
-    size_t silent_body_size() const NOEXCEPT;
+    size_t scan_body_size() const NOEXCEPT;
+    size_t silent0_body_size() const NOEXCEPT;
+    size_t silent1_body_size() const NOEXCEPT;
     size_t duplicate_body_size() const NOEXCEPT;
     size_t prevalid0_body_size() const NOEXCEPT;
     size_t prevalid1_body_size() const NOEXCEPT;
     size_t prevout_body_size() const NOEXCEPT;
     size_t state_body_size() const NOEXCEPT;
+    size_t silent_bk_body_size() const NOEXCEPT;
     size_t pool_body_size() const NOEXCEPT;
     size_t spends_body_size() const NOEXCEPT;
     size_t filter_bk_body_size() const NOEXCEPT;
@@ -199,12 +205,15 @@ public:
     size_t ecdsa1_size() const NOEXCEPT;
     size_t schnorr0_size() const NOEXCEPT;
     size_t schnorr1_size() const NOEXCEPT;
-    size_t silent_size() const NOEXCEPT;
+    size_t scan_size() const NOEXCEPT;
+    size_t silent0_size() const NOEXCEPT;
+    size_t silent1_size() const NOEXCEPT;
     size_t duplicate_size() const NOEXCEPT;
     size_t prevalid0_size() const NOEXCEPT;
     size_t prevalid1_size() const NOEXCEPT;
     size_t prevout_size() const NOEXCEPT;
     size_t state_size() const NOEXCEPT;
+    size_t silent_bk_size() const NOEXCEPT;
     size_t pool_size() const NOEXCEPT;
     size_t spends_size() const NOEXCEPT;
     size_t filter_bk_size() const NOEXCEPT;
@@ -221,6 +230,7 @@ public:
     size_t duplicate_buckets() const NOEXCEPT;
     size_t prevout_buckets() const NOEXCEPT;
     size_t state_buckets() const NOEXCEPT;
+    size_t silent_bk_buckets() const NOEXCEPT;
     size_t pool_buckets() const NOEXCEPT;
     size_t filter_bk_buckets() const NOEXCEPT;
     size_t filter_tx_buckets() const NOEXCEPT;
@@ -238,11 +248,14 @@ public:
     size_t ecdsa1_records() const NOEXCEPT;
     size_t schnorr0_records() const NOEXCEPT;
     size_t schnorr1_records() const NOEXCEPT;
-    size_t silent_records() const NOEXCEPT;
+    size_t scan_records() const NOEXCEPT;
+    size_t silent0_records() const NOEXCEPT;
+    size_t silent1_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
     size_t prevalid0_records() const NOEXCEPT;
     size_t prevalid1_records() const NOEXCEPT;
     size_t state_records() const NOEXCEPT;
+    size_t silent_bk_records() const NOEXCEPT;
     size_t pool_records() const NOEXCEPT;
     size_t spends_records() const NOEXCEPT;
     size_t filter_bk_records() const NOEXCEPT;
@@ -360,6 +373,7 @@ public:
 
     /// header to arraymap tables (guard domain transitions)
     constexpr size_t to_state(const header_link& link) const NOEXCEPT;
+    constexpr size_t to_silent_bk(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_bk(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_tx(const header_link& link) const NOEXCEPT;
     constexpr size_t to_prevout(const header_link& link) const NOEXCEPT;
@@ -672,6 +686,19 @@ public:
     bool set_silent(const header_link& link, const block& block) NOEXCEPT;
     bool set_silent(const header_link& link, const block_view& block) NOEXCEPT;
 
+    /// Silent payment indexation of a block (all of its records are set).
+    bool is_silent_indexed(const header_link& link) const NOEXCEPT;
+    bool set_silent_indexed(const header_link& link) NOEXCEPT;
+
+    /// Commit a block's silent payment batch rows, with rows the number
+    /// committed.
+    bool set_silents(size_t& rows, const header_link& link,
+        const block& block, bool bank) NOEXCEPT;
+
+    /// Compute a bank's silent payment batch, then set its scan records and
+    /// the indexation of its blocks.
+    code compute_silents(const stopper& cancel, bool bank) NOEXCEPT;
+
     /// Commit a block's captured ecdsa signature groups (band-expanded).
     bool set_signatures(const system::chain::ecdsa_signatures& sigs,
         const header_link& link, bool bank) NOEXCEPT;
@@ -682,10 +709,10 @@ public:
 
     /// Invoke callback for each matched tx, false implies cancel.
     bool scan_silent(const stopper& cancel,
-        const system::silent::batch::receiver& keys,
+        const system::scan::batch::receiver& keys,
         const silent_handler& callback) NOEXCEPT;
     bool scan_silent(const stopper& cancel,
-        const system::silent::batch::receiver& keys, size_t first,
+        const system::scan::batch::receiver& keys, size_t first,
         size_t last, const silent_handler& callback) NOEXCEPT;
 
     /// The first silent row at or above first that is not fully written.
@@ -701,6 +728,7 @@ public:
     bool purge_prevalids(bool bank) NOEXCEPT;
     bool purge_ecdsa_signatures(bool bank) NOEXCEPT;
     bool purge_schnorr_signatures(bool bank) NOEXCEPT;
+    bool purge_silents(bool bank) NOEXCEPT;
 
     /// Cache all prevalids.
     header_links get_prevalids(bool bank) const NOEXCEPT;
@@ -710,6 +738,7 @@ public:
     /// Records of a batch table bank.
     size_t ecdsa_records(bool bank) const NOEXCEPT;
     size_t schnorr_records(bool bank) const NOEXCEPT;
+    size_t silent_records(bool bank) const NOEXCEPT;
     size_t prevalid_records(bool bank) const NOEXCEPT;
 
     /// Confirmation.
@@ -1057,9 +1086,14 @@ protected:
     code set_txs(const header_link& key, tx_links&& links, size_t light,
         size_t heavy, hash_option&& interval, bool strong) NOEXCEPT;
 
+    /// Silent payment prefixes of a transaction's outputs, false if none.
+    template <typename Transaction>
+    static bool get_prefixes(std::vector<silent_prefix>& out,
+        const Transaction& tx) NOEXCEPT;
+
     /// Set silent payment records of a non-coinbase tx.
-    bool set_silent_(const tx_link& link, const ec_compressed& summary,
-        const system::wallet::silent_payment::scan_outputs& outputs) NOEXCEPT;
+    bool set_silent_(const tx_link& link, const ec_compressed& point,
+        const std::vector<silent_prefix>& prefixes) NOEXCEPT;
 
     /// Pooling.
     /// -----------------------------------------------------------------------

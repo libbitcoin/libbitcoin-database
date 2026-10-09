@@ -68,8 +68,12 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, schnorr0_body_, table_t::schnorr0_body);
     unload(ec, schnorr1_head_, table_t::schnorr1_head);
     unload(ec, schnorr1_body_, table_t::schnorr1_body);
-    unload(ec, silent_head_, table_t::silent_head);
-    unload(ec, silent_body_, table_t::silent_body);
+    unload(ec, scan_head_, table_t::scan_head);
+    unload(ec, scan_body_, table_t::scan_body);
+    unload(ec, silent0_head_, table_t::silent0_head);
+    unload(ec, silent0_body_, table_t::silent0_body);
+    unload(ec, silent1_head_, table_t::silent1_head);
+    unload(ec, silent1_body_, table_t::silent1_body);
     unload(ec, envelope_head_, table_t::envelope_head);
     unload(ec, duplicate_head_, table_t::duplicate_head);
     unload(ec, duplicate_body_, table_t::duplicate_body);
@@ -81,6 +85,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, prevout_body_, table_t::prevout_body);
     unload(ec, state_head_, table_t::state_head);
     unload(ec, state_body_, table_t::state_body);
+    unload(ec, silent_bk_head_, table_t::silent_bk_head);
+    unload(ec, silent_bk_body_, table_t::silent_bk_body);
     unload(ec, pool_head_, table_t::pool_head);
     unload(ec, pool_body_, table_t::pool_body);
     unload(ec, spends_head_, table_t::spends_head);
@@ -128,8 +134,12 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, schnorr0_body_, table_t::schnorr0_body);
     close(ec, schnorr1_head_, table_t::schnorr1_head);
     close(ec, schnorr1_body_, table_t::schnorr1_body);
-    close(ec, silent_head_, table_t::silent_head);
-    close(ec, silent_body_, table_t::silent_body);
+    close(ec, scan_head_, table_t::scan_head);
+    close(ec, scan_body_, table_t::scan_body);
+    close(ec, silent0_head_, table_t::silent0_head);
+    close(ec, silent0_body_, table_t::silent0_body);
+    close(ec, silent1_head_, table_t::silent1_head);
+    close(ec, silent1_body_, table_t::silent1_body);
     close(ec, envelope_head_, table_t::envelope_head);
     close(ec, duplicate_head_, table_t::duplicate_head);
     close(ec, duplicate_body_, table_t::duplicate_body);
@@ -141,6 +151,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, prevout_body_, table_t::prevout_body);
     close(ec, state_head_, table_t::state_head);
     close(ec, state_body_, table_t::state_body);
+    close(ec, silent_bk_head_, table_t::silent_bk_head);
+    close(ec, silent_bk_body_, table_t::silent_bk_body);
     close(ec, pool_head_, table_t::pool_head);
     close(ec, pool_body_, table_t::pool_body);
     close(ec, spends_head_, table_t::spends_head);

@@ -91,8 +91,12 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, schnorr0_body_, table_t::schnorr0_body);
     open(ec, schnorr1_head_, table_t::schnorr1_head);
     open(ec, schnorr1_body_, table_t::schnorr1_body);
-    open(ec, silent_head_, table_t::silent_head);
-    open(ec, silent_body_, table_t::silent_body);
+    open(ec, scan_head_, table_t::scan_head);
+    open(ec, scan_body_, table_t::scan_body);
+    open(ec, silent0_head_, table_t::silent0_head);
+    open(ec, silent0_body_, table_t::silent0_body);
+    open(ec, silent1_head_, table_t::silent1_head);
+    open(ec, silent1_body_, table_t::silent1_body);
     open(ec, duplicate_head_, table_t::duplicate_head);
     open(ec, duplicate_body_, table_t::duplicate_body);
     open(ec, prevalid0_head_, table_t::prevalid0_head);
@@ -103,6 +107,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, prevout_body_, table_t::prevout_body);
     open(ec, state_head_, table_t::state_head);
     open(ec, state_body_, table_t::state_body);
+    open(ec, silent_bk_head_, table_t::silent_bk_head);
+    open(ec, silent_bk_body_, table_t::silent_bk_body);
     open(ec, pool_head_, table_t::pool_head);
     open(ec, pool_body_, table_t::pool_body);
     open(ec, spends_head_, table_t::spends_head);
@@ -141,8 +147,12 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, schnorr0_body_, table_t::schnorr0_body);
     load(ec, schnorr1_head_, table_t::schnorr1_head);
     load(ec, schnorr1_body_, table_t::schnorr1_body);
-    load(ec, silent_head_, table_t::silent_head);
-    load(ec, silent_body_, table_t::silent_body);
+    load(ec, scan_head_, table_t::scan_head);
+    load(ec, scan_body_, table_t::scan_body);
+    load(ec, silent0_head_, table_t::silent0_head);
+    load(ec, silent0_body_, table_t::silent0_body);
+    load(ec, silent1_head_, table_t::silent1_head);
+    load(ec, silent1_body_, table_t::silent1_body);
     load(ec, duplicate_head_, table_t::duplicate_head);
     load(ec, duplicate_body_, table_t::duplicate_body);
     load(ec, prevalid0_head_, table_t::prevalid0_head);
@@ -153,6 +163,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, prevout_body_, table_t::prevout_body);
     load(ec, state_head_, table_t::state_head);
     load(ec, state_body_, table_t::state_body);
+    load(ec, silent_bk_head_, table_t::silent_bk_head);
+    load(ec, silent_bk_body_, table_t::silent_bk_body);
     load(ec, pool_head_, table_t::pool_head);
     load(ec, pool_body_, table_t::pool_body);
     load(ec, spends_head_, table_t::spends_head);

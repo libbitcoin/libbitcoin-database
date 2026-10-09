@@ -107,8 +107,12 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, schnorr0_body_, table_t::schnorr0_body);
     create(ec, schnorr1_head_, table_t::schnorr1_head);
     create(ec, schnorr1_body_, table_t::schnorr1_body);
-    create(ec, silent_head_, table_t::silent_head);
-    create(ec, silent_body_, table_t::silent_body);
+    create(ec, scan_head_, table_t::scan_head);
+    create(ec, scan_body_, table_t::scan_body);
+    create(ec, silent0_head_, table_t::silent0_head);
+    create(ec, silent0_body_, table_t::silent0_body);
+    create(ec, silent1_head_, table_t::silent1_head);
+    create(ec, silent1_body_, table_t::silent1_body);
     create(ec, envelope_head_, table_t::envelope_head);
     create(ec, duplicate_head_, table_t::duplicate_head);
     create(ec, duplicate_body_, table_t::duplicate_body);
@@ -120,6 +124,8 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, prevout_body_, table_t::prevout_body);
     create(ec, state_head_, table_t::state_head);
     create(ec, state_body_, table_t::state_body);
+    create(ec, silent_bk_head_, table_t::silent_bk_head);
+    create(ec, silent_bk_body_, table_t::silent_bk_body);
     create(ec, pool_head_, table_t::pool_head);
     create(ec, pool_body_, table_t::pool_body);
     create(ec, spends_head_, table_t::spends_head);
@@ -160,13 +166,16 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, ecdsa1, table_t::ecdsa1_table);
     populate(ec, schnorr0, table_t::schnorr0_table);
     populate(ec, schnorr1, table_t::schnorr1_table);
-    populate(ec, silent, table_t::silent_table);
+    populate(ec, scan, table_t::scan_table);
+    populate(ec, silent0, table_t::silent0_table);
+    populate(ec, silent1, table_t::silent1_table);
     populate(ec, envelope, table_t::envelope_table);
     populate(ec, duplicate, table_t::duplicate_table);
     populate(ec, prevalid0, table_t::prevalid0_table);
     populate(ec, prevalid1, table_t::prevalid1_table);
     populate(ec, prevout, table_t::prevout_table);
     populate(ec, state, table_t::state_table);
+    populate(ec, silent_bk, table_t::silent_bk_table);
     populate(ec, pool, table_t::pool_table);
     populate(ec, spends, table_t::spends_table);
 

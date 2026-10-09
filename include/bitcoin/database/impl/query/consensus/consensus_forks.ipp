@@ -134,9 +134,11 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
 
     // Filter body always written before validated, but validated state is not
     // written in the case of bypassed blocks, it's inferred. So for bypassed
-    // blocks the existence of the filter must be verified.
+    // blocks the existence of the filter must be verified. Silent payment
+    // records may be set after validation, so their indexation is verified.
     while (is_block_validated(ec, link, height, top_checkpoint) &&
-        (!filter || ec != error::bypassed || is_filtered_body(link)))
+        (!filter || ec != error::bypassed || is_filtered_body(link)) &&
+        (!is_silent(link, height) || is_silent_indexed(link)))
     {
         out.emplace_back(link, ec);
         link = to_candidate(++height);

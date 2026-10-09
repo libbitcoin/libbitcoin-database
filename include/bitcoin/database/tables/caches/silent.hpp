@@ -29,15 +29,15 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// silent_row is an array of silent payment prefix|point rows.
-struct silent_row
-  : public no_map<schema::silent_row>
+/// scan_row is an array of silent payment prefix|point rows.
+struct scan_row
+  : public no_map<schema::scan_row>
 {
     using integral = unsigned_type<schema::prefix>;
-    using no_map<schema::silent_row>::nomap;
+    using no_map<schema::scan_row>::nomap;
 
     struct put_ref
-      : public schema::silent_row
+      : public schema::scan_row
     {
         inline link count() const NOEXCEPT
         {
@@ -64,15 +64,15 @@ struct silent_row
     };
 };
 
-/// silent_correlate is an array of silent payment correlation tx fks.
-struct silent_correlate
-  : public no_map<schema::silent_correlate>
+/// scan_correlate is an array of silent payment correlation tx fks.
+struct scan_correlate
+  : public no_map<schema::scan_correlate>
 {
     using tx = schema::transaction::link;
-    using no_map<schema::silent_correlate>::nomap;
+    using no_map<schema::scan_correlate>::nomap;
 
     struct record
-      : public schema::silent_correlate
+      : public schema::scan_correlate
     {
         inline link count() const NOEXCEPT
         {
@@ -90,7 +90,7 @@ struct silent_correlate
     };
 
     struct records
-      : public schema::silent_correlate
+      : public schema::scan_correlate
     {
         inline link count() const NOEXCEPT
         {
@@ -108,6 +108,147 @@ struct silent_correlate
 
         const size_t rows{};
         const tx::integer tx_fk{};
+    };
+};
+
+/// Aggregate (files)
+/// ---------------------------------------------------------------------------
+
+template <template <size_t...> class Storage>
+using scan_files = mmaps
+<
+    Storage,
+    scan_correlate,
+    scan_row
+>;
+
+template <template <size_t...> class Storage>
+class scan_storage
+  : public scan_files<Storage>
+{
+public:
+    scan_storage(const std::filesystem::path& path,
+        const storage_settings& settings, bool random_access,
+        bool staged=false) NOEXCEPT
+      : scan_files<Storage>(path, settings, random_access, staged)
+    {
+    }
+};
+
+/// Aggregate (table)
+/// ---------------------------------------------------------------------------
+
+using scan_table = nomaps
+<
+    scan_correlate::link,
+    scan_correlate,
+    scan_row
+>;
+
+template <template <size_t...> class Storage>
+class scan
+  : public scan_table
+{
+public:
+    scan(database::storage& head, scan_storage<Storage>& body) NOEXCEPT
+      : scan_table(head, body),
+        correlate(*this),
+        row(*this)
+    {
+    }
+
+    column<scan_table, 0> correlate;
+    column<scan_table, 1> row;
+};
+
+static_assert(sizeof(system::scan::batch::row_t) == scan_row::width);
+
+/// silent_row is an array of silent payment prefix|sum|hash batch rows.
+struct silent_row
+  : public no_map<schema::silent_row>
+{
+    using integral = scan_row::integral;
+    using no_map<schema::silent_row>::nomap;
+
+    struct put_ref
+      : public schema::silent_row
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(prefixes.size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto& prefix: prefixes)
+            {
+                sink.write_little_endian<integral>(prefix);
+                sink.write_bytes(sum);
+                sink.write_bytes(hash);
+            }
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const std::vector<integral>& prefixes;
+        const system::ec_compressed& sum;
+        const system::ec_secret& hash;
+    };
+};
+
+/// silent_correlate is an array of silent payment batch tx|header fks.
+struct silent_correlate
+  : public no_map<schema::silent_correlate>
+{
+    using tx = schema::transaction::link;
+    using hd = schema::header::link;
+    using no_map<schema::silent_correlate>::nomap;
+
+    struct record
+      : public schema::silent_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return 1;
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            tx_fk = source.read_little_endian<tx::integer, tx::size>();
+            header_fk = source.read_little_endian<hd::integer, hd::size>();
+            BC_ASSERT(!source || source.get_read_position() == minrow);
+            return source;
+        }
+
+        tx::integer tx_fk{};
+        hd::integer header_fk{};
+    };
+
+    struct records
+      : public schema::silent_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(rows);
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (size_t row{}; row < rows; ++row)
+            {
+                sink.write_little_endian<tx::integer, tx::size>(tx_fk);
+                sink.write_little_endian<hd::integer, hd::size>(header_fk);
+            }
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const size_t rows{};
+        const tx::integer tx_fk{};
+        const hd::integer header_fk{};
     };
 };
 
@@ -161,9 +302,40 @@ public:
     column<silent_table, 1> row;
 };
 
-static_assert(sizeof(system::silent::batch::row_t) == silent_row::width);
-static_assert(is_same_type<silent_correlate::span,
-    system::silent::batch::tx_link>);
+static_assert(sizeof(system::silent::batch::row_t) ==
+    silent_row::width);
+
+/// silent_bk is a record arraymap of silent payment block indexation, indexed
+/// by header.fk.
+struct silent_bk
+  : public array_map<schema::silent_bk>
+{
+    using array_map<schema::silent_bk>::arraymap;
+
+    struct record
+      : public schema::silent_bk
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            indexed = source.read_byte();
+            BC_ASSERT(!source || source.get_read_position() == count() * minrow);
+            return source;
+        }
+
+        inline bool to_data(finalizer& sink) const NOEXCEPT
+        {
+            sink.write_byte(indexed);
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        inline bool operator==(const record&) const NOEXCEPT = default;
+
+        uint8_t indexed{};
+    };
+};
+static_assert(is_same_type<scan_correlate::span,
+    system::scan::batch::tx_link>);
 
 } // namespace table
 } // namespace database

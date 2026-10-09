@@ -27,14 +27,14 @@ using namespace test;
 // silent (aggregate)
 // ----------------------------------------------------------------------------
 
-using silent_table = table::silent<chunk_storages>;
-using silent_storage = default_storage<table::silent_storage<chunk_storages>>;
+using scan_table = table::scan<chunk_storages>;
+using scan_storage = default_storage<table::scan_storage<chunk_storages>>;
 
 BOOST_AUTO_TEST_CASE(silent__create_verify_close__aggregate__expected)
 {
-    silent_storage head{ "head" };
-    silent_storage body{ "body" };
-    silent_table instance{ head, body };
+    scan_storage head{ "head" };
+    scan_storage body{ "body" };
+    scan_table instance{ head, body };
 
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
@@ -43,9 +43,9 @@ BOOST_AUTO_TEST_CASE(silent__create_verify_close__aggregate__expected)
 
 BOOST_AUTO_TEST_CASE(silent__put_columns__three_rows__expected)
 {
-    silent_storage head{ "head" };
-    silent_storage body{ "body" };
-    silent_table instance{ head, body };
+    scan_storage head{ "head" };
+    scan_storage body{ "body" };
+    scan_table instance{ head, body };
     BOOST_REQUIRE(instance.create());
 
     constexpr auto rows = 3_size;
@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(silent__put_columns__three_rows__expected)
     const auto fk = instance.allocate(3);
     BOOST_REQUIRE_EQUAL(fk, 0u);
 
-    const table::silent_correlate::records correlate{ {}, rows, tx_fk };
-    const table::silent_row::put_ref row{ {}, prefixes, compressed };
+    const table::scan_correlate::records correlate{ {}, rows, tx_fk };
+    const table::scan_row::put_ref row{ {}, prefixes, compressed };
     BOOST_REQUIRE(instance.correlate.put(fk, correlate));
     BOOST_REQUIRE(instance.row.put(fk, row));
 

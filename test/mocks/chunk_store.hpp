@@ -190,24 +190,24 @@ public:
     ////    return schnorr0_body_.signature.buffer();
     ////}
 
-    system::data_chunk& silent_head() NOEXCEPT
+    system::data_chunk& scan_head() NOEXCEPT
     {
-        return silent_head_.buffer();
+        return scan_head_.buffer();
     }
 
-    ////system::data_chunk& silent_body_correlate() NOEXCEPT
+    ////system::data_chunk& scan_body_correlate() NOEXCEPT
     ////{
-    ////    return silent_body_.correlate.buffer();
+    ////    return scan_body_.correlate.buffer();
     ////}
 
-    ////system::data_chunk& silent_body_prefix() NOEXCEPT
+    ////system::data_chunk& scan_body_prefix() NOEXCEPT
     ////{
-    ////    return silent_body_.prefix.buffer();
+    ////    return scan_body_.prefix.buffer();
     ////}
 
-    ////system::data_chunk& silent_body_compressed() NOEXCEPT
+    ////system::data_chunk& scan_body_compressed() NOEXCEPT
     ////{
-    ////    return silent_body_.compressed.buffer();
+    ////    return scan_body_.compressed.buffer();
     ////}
 
     system::data_chunk& duplicate_head() NOEXCEPT

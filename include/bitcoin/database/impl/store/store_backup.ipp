@@ -58,13 +58,16 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
     backup(ec, ecdsa1, table_t::ecdsa1_table);
     backup(ec, schnorr0, table_t::schnorr0_table);
     backup(ec, schnorr1, table_t::schnorr1_table);
-    backup(ec, silent, table_t::silent_table);
+    backup(ec, scan, table_t::scan_table);
+    backup(ec, silent0, table_t::silent0_table);
+    backup(ec, silent1, table_t::silent1_table);
     backup(ec, envelope, table_t::envelope_table);
     backup(ec, duplicate, table_t::duplicate_table);
     backup(ec, prevalid0, table_t::prevalid0_table, prune);
     backup(ec, prevalid1, table_t::prevalid1_table, prune);
     backup(ec, prevout, table_t::prevout_table, prune);
     backup(ec, state, table_t::state_table);
+    backup(ec, silent_bk, table_t::silent_bk_table);
     backup(ec, pool, table_t::pool_table, prune);
     backup(ec, spends, table_t::spends_table, prune);
 

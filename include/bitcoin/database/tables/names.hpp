@@ -68,7 +68,13 @@ namespace caches
     constexpr auto schnorr_row = "row"_t;
 
     // aggregate
-    constexpr auto silent  = "batch_silent";
+    constexpr auto scan = "batch_scan";
+    constexpr auto scan_correlate = "identity"_t;
+    constexpr auto scan_row = "row"_t;
+
+    // aggregate
+    constexpr auto silent0 = "batch_silent0";
+    constexpr auto silent1 = "batch_silent1";
     constexpr auto silent_correlate = "identity"_t;
     constexpr auto silent_row = "row"_t;
 
@@ -78,6 +84,7 @@ namespace caches
     constexpr auto prevout = "cache_prevout";
     constexpr auto duplicate = "cache_duplicate";
     constexpr auto state = "cache_state";
+    constexpr auto silent_bk = "cache_silent_bk";
     constexpr auto pool = "cache_pool";
     constexpr auto pool_id0 = "id0"_t;
     constexpr auto pool_id1 = "id1"_t;

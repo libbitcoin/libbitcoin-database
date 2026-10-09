@@ -81,8 +81,12 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, schnorr0_body_, table_t::schnorr0_body);
     reload(ec, schnorr1_head_, table_t::schnorr1_head);
     reload(ec, schnorr1_body_, table_t::schnorr1_body);
-    reload(ec, silent_head_, table_t::silent_head);
-    reload(ec, silent_body_, table_t::silent_body);
+    reload(ec, scan_head_, table_t::scan_head);
+    reload(ec, scan_body_, table_t::scan_body);
+    reload(ec, silent0_head_, table_t::silent0_head);
+    reload(ec, silent0_body_, table_t::silent0_body);
+    reload(ec, silent1_head_, table_t::silent1_head);
+    reload(ec, silent1_body_, table_t::silent1_body);
     reload(ec, envelope_head_, table_t::envelope_head);
     reload(ec, duplicate_head_, table_t::duplicate_head);
     reload(ec, duplicate_body_, table_t::duplicate_body);
@@ -94,6 +98,8 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, prevout_body_, table_t::prevout_body);
     reload(ec, state_head_, table_t::state_head);
     reload(ec, state_body_, table_t::state_body);
+    reload(ec, silent_bk_head_, table_t::silent_bk_head);
+    reload(ec, silent_bk_body_, table_t::silent_bk_body);
     reload(ec, pool_head_, table_t::pool_head);
     reload(ec, pool_body_, table_t::pool_body);
     reload(ec, spends_head_, table_t::spends_head);

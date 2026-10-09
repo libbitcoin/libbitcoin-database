@@ -124,7 +124,7 @@ code CLASS::get_block_state(const header_link& link) const NOEXCEPT
 TEMPLATE
 inline bool CLASS::is_validated(const header_link& link) const NOEXCEPT
 {
-    // Validated and not invalid (bypassed shows false unless indexed).
+    // Validated and not invalid (checkpoint/milestone shows false).
     const auto ec = get_header_state(link);
     return ec == error::block_valid || ec == error::block_confirmable;
 }
@@ -141,9 +141,8 @@ bool CLASS::is_block_validated(code& ec, const header_link& link,
             return false;
         }
 
-        // A bypassed block requiring silent indexing is validated to index it.
         ec = error::bypassed;
-        return !is_silent(link, height) || is_validated(link);
+        return true;
     }
     else
     {

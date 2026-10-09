@@ -62,13 +62,16 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     close(ec, ecdsa1, table_t::ecdsa1_table);
     close(ec, schnorr0, table_t::schnorr0_table);
     close(ec, schnorr1, table_t::schnorr1_table);
-    close(ec, silent, table_t::silent_table);
+    close(ec, scan, table_t::scan_table);
+    close(ec, silent0, table_t::silent0_table);
+    close(ec, silent1, table_t::silent1_table);
     close(ec, envelope, table_t::envelope_table);
     close(ec, duplicate, table_t::duplicate_table);
     close(ec, prevalid0, table_t::prevalid0_table);
     close(ec, prevalid1, table_t::prevalid1_table);
     close(ec, prevout, table_t::prevout_table);
     close(ec, state, table_t::state_table);
+    close(ec, silent_bk, table_t::silent_bk_table);
     close(ec, pool, table_t::pool_table);
     close(ec, spends, table_t::spends_table);
 
