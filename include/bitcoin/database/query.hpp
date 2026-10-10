@@ -1105,6 +1105,11 @@ protected:
     bool set_silent_(const tx_link& link, const ec_compressed& point,
         const std::vector<silent_prefix>& prefixes) NOEXCEPT;
 
+    /// Write silent payment records at fk, caller must hold transactor.
+    bool put_silent_(const scan_link& fk, const tx_link& link,
+        const ec_compressed& point, const std::vector<silent_prefix>& prefixes,
+        table::scan_correlate::tx::integer* words) NOEXCEPT;
+
     /// A block's tx is indexed unless linked below its coinbase and pooled.
     bool is_silent_selected(const tx_link& link,
         const tx_link& coinbase) const NOEXCEPT;
