@@ -1103,6 +1103,10 @@ protected:
     bool set_silent_(const tx_link& link, const ec_compressed& point,
         const std::vector<silent_prefix>& prefixes) NOEXCEPT;
 
+    /// A block's tx is indexed unless linked below its coinbase and pooled.
+    bool is_silent_selected(const tx_link& link,
+        const tx_link& coinbase) const NOEXCEPT;
+
     /// Commit the silent payment batch rows of a block's txs.
     template <typename Transactions>
     bool set_silents_(size_t& rows, const header_link& link,

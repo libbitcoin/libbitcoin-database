@@ -88,7 +88,8 @@ size_t CLASS::get_silent_frontier(size_t first) const NOEXCEPT
 // ----------------------------------------------------------------------------
 // Caller (node) controls which txs are indexed (e.g. by confirmed height).
 // The coinbase is the first tx archived for a block, so txs linked below it
-// were archived (and indexed) before it, as pooled or by another block.
+// were archived before it, as pooled (and indexed) or by another block (and
+// indexed only if that block was), so a tx below it is indexed if not pooled.
 
 TEMPLATE
 bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
@@ -106,7 +107,7 @@ bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
     for (auto index = one; index < count; ++index)
     {
         const auto& fk = links.at(index);
-        if (fk >= first && !set_silent(fk, *txs->at(index)))
+        if (is_silent_selected(fk, first) && !set_silent(fk, *txs->at(index)))
             return false;
     }
 
@@ -130,7 +131,7 @@ bool CLASS::set_silent(const header_link& link,
     for (auto index = one; index < count; ++index)
     {
         const auto& fk = links.at(index);
-        if (fk >= first && !set_silent(fk, txs.at(index)))
+        if (is_silent_selected(fk, first) && !set_silent(fk, txs.at(index)))
             return false;
     }
 
@@ -193,7 +194,7 @@ bool CLASS::set_silents(size_t& rows, const header_link& link,
     return set_silents_(rows, link, block.views(), bank);
 }
 
-// Txs linked below the coinbase are not selected (see set_silent).
+// Pooled txs linked below the coinbase are not selected (see set_silent).
 TEMPLATE
 bool CLASS::get_silent_prevouts(data_chunk& prevouts,
     std::vector<bool>& selected, const header_link& link,
@@ -213,7 +214,8 @@ bool CLASS::get_silent_prevouts(data_chunk& prevouts,
     std::vector<silent_prefix> prefixes{};
     for (auto index = one; index < txs.size(); ++index)
     {
-        if (links.at(index) < first || !get_prefixes(prefixes, txs.at(index)))
+        if (!is_silent_selected(links.at(index), first) ||
+            !get_prefixes(prefixes, txs.at(index)))
             continue;
 
         table::transaction::get_puts record{};
@@ -305,7 +307,7 @@ code CLASS::compute_silents(const stopper& cancel, bool bank) NOEXCEPT
 // protected
 // ----------------------------------------------------------------------------
 
-// Txs linked below the coinbase were indexed before it (see set_silent).
+// Pooled txs linked below the coinbase were indexed (see set_silent).
 TEMPLATE
 template <typename Transactions>
 bool CLASS::set_silents_(size_t& rows, const header_link& link,
@@ -345,7 +347,8 @@ bool CLASS::set_silents_(size_t& rows, const header_link& link,
     {
         capture item{ links.at(index) };
         const auto& tx = to_tx(txs.at(index));
-        if (item.link >= first && get_prefixes(item.prefixes, tx) &&
+        if (is_silent_selected(item.link, first) &&
+            get_prefixes(item.prefixes, tx) &&
             silent_payment::prepare(item.sum, item.hash, tx))
         {
             rows += item.prefixes.size();
@@ -388,6 +391,13 @@ bool CLASS::set_silents_(size_t& rows, const header_link& link,
 
     return true;
     // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::is_silent_selected(const tx_link& link,
+    const tx_link& coinbase) const NOEXCEPT
+{
+    return link >= coinbase || !is_pooled(link);
 }
 
 // The prefix is ec_xonly[0..7] read as little-endian.

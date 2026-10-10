@@ -186,6 +186,91 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__coinbase_only__no_rows)
     BOOST_REQUIRE_EQUAL(query.silent_records(false), 0u);
 }
 
+// Archive the block's spend before its coinbase, as a pooled tx is archived.
+static header_link set_below_coinbase(test::query_accessor& query, const chain::block& block) NOEXCEPT
+{
+    tx_link coinbase{};
+    tx_link spend{};
+    const auto& txs = *block.transactions_ptr();
+    const auto stored = query.set(block.header(), database::context{ 0, 1, 0 }, {}, false) && !query.set_code(spend, *txs.back()) && !query.set_code(coinbase, *txs.front());
+    const auto link = query.to_header(block.hash());
+    return stored && !query.set_code(link, { coinbase, spend }, false) ? link : header_link{};
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__unpooled_below_coinbase__one_record)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto block = silent_block();
+    const auto link = set_below_coinbase(query, block);
+    BOOST_REQUIRE(!link.is_terminal());
+    BOOST_REQUIRE(query.set_silent(link, block));
+    BOOST_REQUIRE_EQUAL(query.scan_records(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__pooled_below_coinbase__no_records)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto block = silent_block();
+    const auto link = set_below_coinbase(query, block);
+    BOOST_REQUIRE(!link.is_terminal());
+
+    const auto& spend = *block.transactions_ptr()->back();
+    BOOST_REQUIRE(query.set_pooled(query.to_tx(spend.hash(false)), spend, database::context{ 0, 1, 0 }));
+    BOOST_REQUIRE(query.set_silent(link, block));
+    BOOST_REQUIRE_EQUAL(query.scan_records(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__unpooled_below_coinbase__banked_row)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto block = silent_block();
+    const auto link = set_below_coinbase(query, block);
+    BOOST_REQUIRE(!link.is_terminal());
+
+    size_t rows{};
+    BOOST_REQUIRE(query.set_silents(rows, link, block, true));
+    BOOST_REQUIRE_EQUAL(rows, 1u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__pooled_below_coinbase__no_rows)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto block = silent_block();
+    const auto link = set_below_coinbase(query, block);
+    BOOST_REQUIRE(!link.is_terminal());
+
+    const auto& spend = *block.transactions_ptr()->back();
+    BOOST_REQUIRE(query.set_pooled(query.to_tx(spend.hash(false)), spend, database::context{ 0, 1, 0 }));
+
+    size_t rows{};
+    BOOST_REQUIRE(query.set_silents(rows, link, block, true));
+    BOOST_REQUIRE_EQUAL(rows, 0u);
+}
+
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__eligible__banked_row)
 {
     database::settings settings{};
