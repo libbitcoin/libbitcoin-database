@@ -308,9 +308,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\archives\txs.hpp">
       <Filter>include\bitcoin\database\tables\archives</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\duplicate.hpp">
-      <Filter>include\bitcoin\database\tables\caches</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\ecdsa.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
@@ -335,9 +332,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\spends.hpp">
       <Filter>include\bitcoin\database\tables\caches</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\caches\state.hpp">
-      <Filter>include\bitcoin\database\tables\caches</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\context.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
@@ -347,10 +341,19 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\event.hpp">
       <Filter>include\bitcoin\database\tables</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\duplicate.hpp">
+      <Filter>include\bitcoin\database\tables\indexes</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\state.hpp">
+      <Filter>include\bitcoin\database\tables\indexes</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_tx.hpp">
+      <Filter>include\bitcoin\database\tables\indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\wtxid.hpp">
       <Filter>include\bitcoin\database\tables\indexes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\names.hpp">

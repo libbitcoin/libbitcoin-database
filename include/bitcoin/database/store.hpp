@@ -140,14 +140,18 @@ protected:
     code backup(const event_handler& handler, bool prune=false) NOEXCEPT;
     code dump(const path& folder, const event_handler& handler) NOEXCEPT;
 
-    /// Retain the pool rows of txs that can yet confirm (prune helper).
-    code compact(const event_handler& handler) NOEXCEPT;
+    /// Retain the pool rows of txs that can yet confirm (prune helpers).
+    template <typename Reset>
+    code compact(const event_handler& handler, const Reset& reset) NOEXCEPT;
+    bool is_retained(bool& out, const tx_link& link,
+        table::pool& retained) NOEXCEPT;
 
-    /// Copy the pool rows accepted by keep, with their spends, in row order.
-    template <typename Keep>
+    /// Copy the pool rows accepted by keep, with their spends, in row order,
+    /// passing the link and witness hash of each copied record to index.
+    template <typename Keep, typename Index>
     bool copy_pool(table::pool& to, table::spends& to_spends,
-        table::pool& from, table::spends& from_spends,
-        const Keep& keep) NOEXCEPT;
+        table::pool& from, table::spends& from_spends, const Keep& keep,
+        const Index& index) NOEXCEPT;
 
     /// Currency (coalesced with a recent top), reported to head storage.
     bool is_current() const NOEXCEPT;
@@ -259,6 +263,8 @@ protected:
     table::pool_storage<Storage> pool_body_;
     Storage<one> spends_head_;
     Storage<one> spends_body_;
+    Storage<one> wtxid_head_;
+    Storage<one> wtxid_body_;
 
     /// Optionals.
     /// -----------------------------------------------------------------------
@@ -362,6 +368,7 @@ public:
     table::state state;
     table::pool pool;
     table::spends spends;
+    table::wtxid wtxid;
 
     /// Optionals.
     table::filter_bk filter_bk;

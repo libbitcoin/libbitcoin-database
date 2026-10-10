@@ -49,7 +49,8 @@ namespace schema {
 /// 4.0.4.0 Silent payment start height in the envelope.
 /// 4.0.5.0 Batch and silent payment tables as correlate and row columns.
 /// 4.0.6.0 Silent payment batch banks and scan table.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 6, 0 };
+/// 4.0.7.0 Pool witness hash index (wtxid), state and duplicate as indexes.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 7, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
@@ -447,6 +448,27 @@ TABLE_COLUMN(pool_id1, sizeof(pool::witness_lane));
 TABLE_COLUMN(pool_id2, sizeof(pool::witness_lane));
 TABLE_COLUMN(pool_id3, sizeof(pool::witness_lane));
 static_assert(is_same_type<pool_id0::link, pool::link>);
+
+// record hashmap (sk:0), records aligned by link with the pool.
+struct wtxid
+{
+    static constexpr size_t sk = zero;
+    static constexpr size_t pk = schema::pool_;
+    using link = linkage<pk, to_bits(pk)>;
+    using key = keys::search<sk>;
+    static constexpr size_t minsize =
+        zero;                   // empty row
+    static constexpr size_t minrow = pk + sk + minsize;
+    static constexpr size_t size = minsize;
+    static constexpr size_t cell = link::size;
+    static constexpr link count() NOEXCEPT { return 1; }
+    static_assert(minsize == 0u);
+    static_assert(minrow == 4u);
+    static_assert(link::size == 4u);
+    static_assert(cell == 4u);
+    bool operator==(const wtxid&) const NOEXCEPT = default;
+};
+static_assert(is_same_type<wtxid::link, pool::link>);
 
 // record nomap
 struct spends

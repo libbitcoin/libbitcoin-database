@@ -111,6 +111,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, pool_body_, table_t::pool_body);
     open(ec, spends_head_, table_t::spends_head);
     open(ec, spends_body_, table_t::spends_body);
+    open(ec, wtxid_head_, table_t::wtxid_head);
+    open(ec, wtxid_body_, table_t::wtxid_body);
 
     open(ec, filter_bk_head_, table_t::filter_bk_head);
     open(ec, filter_bk_body_, table_t::filter_bk_body);
@@ -165,6 +167,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, pool_body_, table_t::pool_body);
     load(ec, spends_head_, table_t::spends_head);
     load(ec, spends_body_, table_t::spends_body);
+    load(ec, wtxid_head_, table_t::wtxid_head);
+    load(ec, wtxid_body_, table_t::wtxid_body);
 
     load(ec, filter_bk_head_, table_t::filter_bk_head);
     load(ec, filter_bk_body_, table_t::filter_bk_body);

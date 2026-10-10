@@ -114,7 +114,7 @@ bool CLASS::get_pool_fees(fee_rates& out) const NOEXCEPT
     for (table::pool::link::integer row{}; row < rows; ++row)
     {
         const tx_link link{ store_.pool.get_key(row) };
-        if (is_confirmed_tx(link))
+        if (store_.pool.first(link) != row || is_confirmed_tx(link))
             continue;
 
         if (!get_tx_fees(out.emplace_back(), link))

@@ -1095,6 +1095,75 @@ BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_rewrite__expected)
     BOOST_REQUIRE(!reopened.get_fault());
 }
 
+BOOST_AUTO_TEST_CASE(mmap__truncate__reallocate__zeroed)
+{
+    constexpr size_t initial = 12'000;
+    constexpr size_t retained = 5'000;
+    constexpr size_t appended = 4'000;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+
+    const auto original = stage_vector(stage_repattern, initial, one);
+    auto memory = instance.get(instance.allocate(initial));
+    BOOST_REQUIRE(memory);
+    std::copy_n(original.begin(), original.size(), memory.begin());
+
+    memory.reset();
+    BOOST_REQUIRE(instance.truncate(retained));
+    BOOST_REQUIRE_EQUAL(instance.allocate(appended), retained);
+
+    memory = instance.get(retained);
+    BOOST_REQUIRE(memory);
+
+    const system::data_chunk zeros(appended);
+    const auto end = std::next(memory.begin(), appended);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, zeros.begin(), zeros.end());
+
+    memory.reset();
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_reallocate__zeroed)
+{
+    constexpr size_t initial = 12'000;
+    constexpr size_t retained = 5'000;
+    constexpr size_t appended = 6'000;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 }, true, true);
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+
+    const auto original = stage_vector(stage_repattern, initial, one);
+    auto memory = instance.get(instance.allocate(initial));
+    BOOST_REQUIRE(memory);
+    std::copy_n(original.begin(), original.size(), memory.begin());
+
+    memory.reset();
+    BOOST_REQUIRE(!instance.flush());
+    BOOST_REQUIRE(instance.truncate(retained));
+    BOOST_REQUIRE_EQUAL(instance.allocate(appended), retained);
+
+    memory = instance.get(retained);
+    BOOST_REQUIRE(memory);
+
+    const system::data_chunk zeros(appended);
+    const auto end = std::next(memory.begin(), appended);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, zeros.begin(), zeros.end());
+
+    memory.reset();
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 #if defined(MANAGE_STAGING)
 
 BOOST_AUTO_TEST_CASE(mmap__frontier__staged_out_of_order_completion__expected)

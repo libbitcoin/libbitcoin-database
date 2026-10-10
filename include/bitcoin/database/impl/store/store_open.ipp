@@ -91,6 +91,7 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, state, table_t::state_table);
     verify(ec, pool, table_t::pool_table);
     verify(ec, spends, table_t::spends_table);
+    verify(ec, wtxid, table_t::wtxid_table);
 
     verify(ec, filter_bk, table_t::filter_bk_table);
     verify(ec, filter_tx, table_t::filter_tx_table);
@@ -204,7 +205,8 @@ code CLASS::load_envelope() NOEXCEPT
         !tx.set_buckets(envelope_.tx_buckets) ||
         !strong_tx.set_buckets(envelope_.strong_tx_buckets) ||
         !duplicate.set_buckets(envelope_.duplicate_buckets) ||
-        !pool.set_buckets(envelope_.pool_buckets))
+        !pool.set_buckets(envelope_.pool_buckets) ||
+        !wtxid.set_buckets(envelope_.pool_buckets))
     {
         return error::verify_table;
     }
@@ -216,7 +218,8 @@ code CLASS::load_envelope() NOEXCEPT
         !tx.set_filter_k(envelope_.tx_k) ||
         !strong_tx.set_filter_k(envelope_.strong_tx_k) ||
         !duplicate.set_filter_k(envelope_.duplicate_k) ||
-        !pool.set_filter_k(envelope_.pool_k))
+        !pool.set_filter_k(envelope_.pool_k) ||
+        !wtxid.set_filter_k(envelope_.pool_k))
     {
         return error::verify_table;
     }

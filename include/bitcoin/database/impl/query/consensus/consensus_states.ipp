@@ -347,6 +347,9 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
     if (row.is_terminal())
         return false;
 
+    if (!store_.wtxid.put(row, hash))
+        return false;
+
     // Column puts are unguarded, the accessor guards their rows against remap.
     using word = table::pool_word;
     auto guard = vtx.get_memory();
@@ -369,6 +372,12 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
         first
     });
     // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::is_pooled(const tx_link& link) const NOEXCEPT
+{
+    return store_.pool.enabled() && !store_.pool.first(link).is_terminal();
 }
 
 } // namespace database

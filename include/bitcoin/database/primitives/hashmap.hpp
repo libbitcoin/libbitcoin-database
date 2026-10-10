@@ -138,6 +138,9 @@ public:
     /// Allocate count or slab size at returned link (follow with set|put).
     inline Link allocate(const Link& size) NOEXCEPT;
 
+    /// Complete count allocated records at link that are never written.
+    inline void abandon(const Link& link, const Link& count) NOEXCEPT;
+
     /// Return ptr for batch processing, holds shared lock on storage remap.
     inline memory get_memory() const NOEXCEPT;
 

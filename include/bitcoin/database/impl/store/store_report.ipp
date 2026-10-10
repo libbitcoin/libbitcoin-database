@@ -63,6 +63,7 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(state_body_, table_t::state_body);
     report(pool_body_, table_t::pool_body);
     report(spends_body_, table_t::spends_body);
+    report(wtxid_body_, table_t::wtxid_body);
     report(filter_bk_body_, table_t::filter_bk_body);
     report(filter_tx_body_, table_t::filter_tx_body);
 }
@@ -119,6 +120,8 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = pool_body_.get_fault())) return ec;
     if ((ec = spends_head_.get_fault())) return ec;
     if ((ec = spends_body_.get_fault())) return ec;
+    if ((ec = wtxid_head_.get_fault())) return ec;
+    if ((ec = wtxid_body_.get_fault())) return ec;
     if ((ec = filter_bk_head_.get_fault())) return ec;
     if ((ec = filter_bk_body_.get_fault())) return ec;
     if ((ec = filter_tx_head_.get_fault())) return ec;
@@ -183,6 +186,8 @@ size_t CLASS::get_space() const NOEXCEPT
     space(pool_body_);
     space(spends_head_);
     space(spends_body_);
+    space(wtxid_head_);
+    space(wtxid_body_);
     space(filter_bk_head_);
     space(filter_bk_body_);
     space(filter_tx_head_);

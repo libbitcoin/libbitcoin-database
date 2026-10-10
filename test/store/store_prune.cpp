@@ -78,13 +78,16 @@ BOOST_AUTO_TEST_CASE(store__prune__pool__cleared)
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(query_.initialize(test::genesis));
     test::tx_spend_one_hash.inputs_ptr()->front()->metadata.parent_tx = 42;
-    BOOST_REQUIRE(query_.set_pooled(1, test::tx_spend_one_hash, validated_context));
+    BOOST_REQUIRE(query_.set(test::tx_spend_one_hash));
+
+    const auto link = query_.to_tx(test::tx_spend_one_hash.hash(false));
+    BOOST_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context));
     BOOST_REQUIRE(!instance.prune(test::events));
     BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
 
     pooled_tx pooled{};
     pooled.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, 1, validated_context), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, link, validated_context), error::unvalidated);
     BOOST_REQUIRE(query_.set_pooled(2, test::tx_spend_one_hash, validated_context));
     BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, 2, validated_context), error::success);
     BOOST_REQUIRE(!instance.close(test::events));
@@ -99,7 +102,10 @@ BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__pool_cleared)
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(query_.initialize(test::genesis));
     test::tx_spend_one_hash.inputs_ptr()->front()->metadata.parent_tx = 42;
-    BOOST_REQUIRE(query_.set_pooled(1, test::tx_spend_one_hash, validated_context));
+    BOOST_REQUIRE(query_.set(test::tx_spend_one_hash));
+
+    const auto link = query_.to_tx(test::tx_spend_one_hash.hash(false));
+    BOOST_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context));
     BOOST_REQUIRE(!instance.prune(test::events));
     BOOST_REQUIRE(!instance.close(test::events));
 
@@ -109,7 +115,7 @@ BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__pool_cleared)
 
     pooled_tx pooled{};
     pooled.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, 1, validated_context), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, link, validated_context), error::unvalidated);
     BOOST_REQUIRE(!instance.close(test::events));
 }
 
@@ -209,7 +215,7 @@ BOOST_AUTO_TEST_CASE(store__prune__unconfirmed_pooled__retained)
     const auto unconfirmed = spend(genesis_coinbase(), 1u);
     BOOST_REQUIRE(pool(query_, unconfirmed));
     BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::temporary));
+    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
 
     pooled_tx out{};
     out.prevouts.resize(one);
@@ -332,6 +338,109 @@ BOOST_AUTO_TEST_CASE(store__prune__retained_and_dropped__only_retained)
     BOOST_REQUIRE(!instance.close(test::events));
 }
 
+BOOST_AUTO_TEST_CASE(store__prune__child_pooled_before_parent__retained)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    instance.set_pooling();
+
+    const auto parent = spend(genesis_coinbase(), 2u);
+    const auto child = spend(parent.hash(false), 1u);
+    BOOST_REQUIRE(query_.set(parent));
+    BOOST_REQUIRE(pool(query_, child));
+    BOOST_REQUIRE(query_.set_pooled(query_.to_tx(parent.hash(false)), parent, validated_context));
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE_EQUAL(pooled(query_, parent), error::success);
+    BOOST_REQUIRE_EQUAL(pooled(query_, child), error::success);
+    BOOST_REQUIRE_EQUAL(query_.spends_records(), two);
+    BOOST_REQUIRE_EQUAL(query_.wtxid_records(), two);
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__prune__child_of_unpooled_parent__dropped)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    instance.set_pooling();
+
+    const auto parent = spend(genesis_coinbase(), 2u);
+    const auto child = spend(parent.hash(false), 1u);
+    BOOST_REQUIRE(query_.set(parent));
+    BOOST_REQUIRE(pool(query_, child));
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE_EQUAL(pooled(query_, child), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query_.wtxid_records(), zero);
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__prune__retained__found_by_witness_hash)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    instance.set_pooling();
+
+    const auto conflict = spend(genesis_coinbase(), 2u);
+    const auto retained = spend(spend(genesis_coinbase(), 1u).hash(false), 3u);
+    const auto confirmed = spend(genesis_coinbase(), 1u);
+    BOOST_REQUIRE(pool(query_, conflict));
+    BOOST_REQUIRE(pool(query_, confirmed));
+    BOOST_REQUIRE(pool(query_, retained));
+    BOOST_REQUIRE(confirm(query_, confirmed));
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE_EQUAL(query_.wtxid_records(), one);
+    BOOST_REQUIRE_EQUAL(query_.to_witness_tx(retained.hash(true)), query_.to_tx(retained.hash(false)));
+    BOOST_REQUIRE(!query_.is_pooled(query_.to_tx(conflict.hash(false))));
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__prune__residual_compact_empty_pool__deleted)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BOOST_REQUIRE(test::clear(configuration.path / schema::dir::compact));
+    BOOST_REQUIRE(test::create(configuration.path / schema::dir::compact / "cache_pool.head"));
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__prune__residual_compact_pooled__deleted_retained)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    instance.set_pooling();
+
+    const auto unconfirmed = spend(genesis_coinbase(), 1u);
+    BOOST_REQUIRE(pool(query_, unconfirmed));
+    BOOST_REQUIRE(test::clear(configuration.path / schema::dir::compact));
+    BOOST_REQUIRE(test::create(configuration.path / schema::dir::compact / "cache_pool.head"));
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
+    BOOST_REQUIRE_EQUAL(pooled(query_, unconfirmed), error::success);
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
 BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__retained_pool_empty)
 {
     settings configuration{};
@@ -353,6 +462,8 @@ BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__retained_pool_empty)
     BOOST_REQUIRE(!instance.restore(test::events));
     BOOST_REQUIRE_EQUAL(pooled(query_, unconfirmed), error::unvalidated);
     BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query_.wtxid_body_size(), zero);
+    BOOST_REQUIRE(!query_.is_pooled(query_.to_tx(unconfirmed.hash(false))));
     BOOST_REQUIRE(!instance.close(test::events));
 }
 

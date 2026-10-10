@@ -329,8 +329,12 @@ bool CLASS::truncate(size_t count) NOEXCEPT
 {
     std::unique_lock field_lock(field_mutex_);
 
-    if (count > logical_.load())
+    const auto logical = logical_.load();
+    if (count > logical)
         return false;
+
+    // Rows [count, fresh) are zero (reverted to anonymous memory below).
+    auto fresh = count;
 
 #if defined(MANAGE_STAGING)
     // Truncation below the settle boundary reverts settled rows to anonymous
@@ -339,12 +343,17 @@ bool CLASS::truncate(size_t count) NOEXCEPT
     {
         std::unique_lock remap_lock(remap_mutex_);
 
+        fresh = settled_.load();
         if (!unsettle_all_(count, sequence{}))
             return false;
     }
 
     trim_(count);
 #endif
+
+    // Released rows are zeroed, so an allocation is zero until written.
+    if (loaded_.load())
+        zero_all_(count, logical, fresh, sequence{});
 
     logical_.store(count);
     check_invariants_();

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_DOUBLES_HPP
-#define LIBBITCOIN_DATABASE_TABLES_CACHES_DOUBLES_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_STATE_HPP
+#define LIBBITCOIN_DATABASE_TABLES_INDEXES_STATE_HPP
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
@@ -27,24 +27,33 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-struct duplicate
-  : public hash_map<schema::duplicate>
+/// state is a record arraymap of block state, indexed by header.fk.
+struct state
+  : public array_map<schema::state>
 {
-    using hash_map<schema::duplicate>::hashmap;
+    using coding = linkage<schema::code>;
+    using array_map<schema::state>::arraymap;
 
     struct record
-      : public schema::duplicate
+      : public schema::state
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
+            code = source.read_little_endian<coding::integer, coding::size>();
+            BC_ASSERT(!source || source.get_read_position() == count() * minrow);
             return source;
         }
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
+            sink.write_little_endian<coding::integer, coding::size>(code);
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
+
+        inline bool operator==(const record&) const NOEXCEPT = default;
+
+        coding::integer code{};
     };
 };
 

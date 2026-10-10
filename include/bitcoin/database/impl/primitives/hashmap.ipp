@@ -240,6 +240,12 @@ inline Link CLASS::allocate(const Link& size) NOEXCEPT
 }
 
 TEMPLATE
+inline void CLASS::abandon(const Link& link, const Link& count) NOEXCEPT
+{
+    body_.complete(link, count);
+}
+
+TEMPLATE
 inline memory CLASS::get_memory() const NOEXCEPT
 {
     return body_.get();

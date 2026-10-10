@@ -140,6 +140,33 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_witness_tx__unsegregated__expected)
     BOOST_REQUIRE(query.to_witness_tx(system::one_hash).is_terminal());
 }
 
+BOOST_AUTO_TEST_CASE(query_navigate__to_witness_tx__segregated_pooled__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    using namespace system::chain;
+    const point prevout{ test::genesis.transactions_ptr()->front()->hash(false), 0 };
+    const input in{ prevout, script{}, witness{ system::data_stack{ system::data_chunk{ 0x42 } } }, max_uint32 };
+    const transaction tx{ 2u, inputs{ in }, outputs{ output{ 1u, script{} } }, 0u };
+    tx.inputs_ptr()->front()->prevout = system::to_shared<output>(2u, script{});
+    BOOST_REQUIRE(tx.is_segregated());
+    BOOST_REQUIRE(tx.hash(true) != tx.hash(false));
+    BOOST_REQUIRE(query.set(tx));
+
+    const auto link = query.to_tx(tx.hash(false));
+    BOOST_REQUIRE(query.to_witness_tx(tx.hash(true)).is_terminal());
+    BOOST_REQUIRE(query.set_pooled(link, tx, database::context{ 0, 1, 0 }));
+    BOOST_REQUIRE(query.is_pooled(link));
+    BOOST_REQUIRE_EQUAL(query.to_witness_tx(tx.hash(true)), link);
+    BOOST_REQUIRE(query.to_witness_tx(tx.hash(false)).is_terminal());
+    BOOST_REQUIRE_EQUAL(query.wtxid_records(), query.pool_records());
+}
+
 BOOST_AUTO_TEST_CASE(query_navigate__to_tx__transactions__expected)
 {
     settings settings{};

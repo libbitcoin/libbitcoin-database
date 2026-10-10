@@ -310,7 +310,6 @@ include_bitcoin_database_tables_cachesdir = \
     ${includedir}/bitcoin/database/tables/caches
 
 include_bitcoin_database_tables_caches_HEADERS = \
-    ${srcdir}/../../include/bitcoin/database/tables/caches/duplicate.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/ecdsa.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/envelope.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/pool.hpp \
@@ -318,15 +317,17 @@ include_bitcoin_database_tables_caches_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/tables/caches/prevout.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/schnorr.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/caches/silent.hpp \
-    ${srcdir}/../../include/bitcoin/database/tables/caches/spends.hpp \
-    ${srcdir}/../../include/bitcoin/database/tables/caches/state.hpp
+    ${srcdir}/../../include/bitcoin/database/tables/caches/spends.hpp
 
 include_bitcoin_database_tables_indexesdir = \
     ${includedir}/bitcoin/database/tables/indexes
 
 include_bitcoin_database_tables_indexes_HEADERS = \
+    ${srcdir}/../../include/bitcoin/database/tables/indexes/duplicate.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/height.hpp \
-    ${srcdir}/../../include/bitcoin/database/tables/indexes/strong_tx.hpp
+    ${srcdir}/../../include/bitcoin/database/tables/indexes/state.hpp \
+    ${srcdir}/../../include/bitcoin/database/tables/indexes/strong_tx.hpp \
+    ${srcdir}/../../include/bitcoin/database/tables/indexes/wtxid.hpp
 
 include_bitcoin_database_tables_optionalsdir = \
     ${includedir}/bitcoin/database/tables/optionals
@@ -487,7 +488,6 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/tables/archives/outs.cpp \
     ${srcdir}/../../test/tables/archives/transaction.cpp \
     ${srcdir}/../../test/tables/archives/txs.cpp \
-    ${srcdir}/../../test/tables/caches/duplicate.cpp \
     ${srcdir}/../../test/tables/caches/ecdsa.cpp \
     ${srcdir}/../../test/tables/caches/pool.cpp \
     ${srcdir}/../../test/tables/caches/prevalid.cpp \
@@ -495,9 +495,11 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/tables/caches/schnorr.cpp \
     ${srcdir}/../../test/tables/caches/silent.cpp \
     ${srcdir}/../../test/tables/caches/spends.cpp \
-    ${srcdir}/../../test/tables/caches/state.cpp \
+    ${srcdir}/../../test/tables/indexes/duplicate.cpp \
     ${srcdir}/../../test/tables/indexes/height.cpp \
+    ${srcdir}/../../test/tables/indexes/state.cpp \
     ${srcdir}/../../test/tables/indexes/strong_tx.cpp \
+    ${srcdir}/../../test/tables/indexes/wtxid.cpp \
     ${srcdir}/../../test/tables/optional/address.cpp \
     ${srcdir}/../../test/tables/optional/filter_bk.cpp \
     ${srcdir}/../../test/tables/optional/filter_tx.cpp \

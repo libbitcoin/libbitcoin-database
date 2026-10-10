@@ -59,6 +59,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.state_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.pool_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.spends_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query.wtxid_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.filter_bk_body_size(), schema::filter_bk::minrow);
     BOOST_REQUIRE_EQUAL(query.filter_tx_body_size(), 5u);
 }
@@ -98,6 +99,7 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.duplicate_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.prevout_buckets(), 128);
     BOOST_REQUIRE_EQUAL(query.pool_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.wtxid_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.state_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.filter_tx_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.filter_bk_buckets(), 128u);
@@ -128,6 +130,7 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.state_records(), zero);
     BOOST_REQUIRE_EQUAL(query.pool_records(), zero);
     BOOST_REQUIRE_EQUAL(query.spends_records(), zero);
+    BOOST_REQUIRE_EQUAL(query.wtxid_records(), zero);
     BOOST_REQUIRE_EQUAL(query.filter_bk_records(), one);
 }
 
@@ -264,6 +267,7 @@ BOOST_AUTO_TEST_CASE(query_extent__store_head_size__genesis__archive_plus_indexe
         + query.state_head_size()
         + query.pool_head_size()
         + query.spends_head_size()
+        + query.wtxid_head_size()
         + query.filter_bk_head_size()
         + query.filter_tx_head_size();
     BOOST_REQUIRE_EQUAL(query.store_head_size(), query.archive_head_size() + indexes);
@@ -294,6 +298,7 @@ BOOST_AUTO_TEST_CASE(query_extent__store_body_size__genesis__archive_plus_indexe
         + query.state_body_size()
         + query.pool_body_size()
         + query.spends_body_size()
+        + query.wtxid_body_size()
         + query.filter_bk_body_size()
         + query.filter_tx_body_size();
     BOOST_REQUIRE_EQUAL(query.store_body_size(), query.archive_body_size() + indexes);

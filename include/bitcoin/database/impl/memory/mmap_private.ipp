@@ -183,6 +183,38 @@ bool CLASS::grow_(size_t end) NOEXCEPT
     return true;
 }
 
+TEMPLATE
+template <size_t... Index>
+void CLASS::zero_all_(size_t from, size_t to, size_t fresh,
+    std::index_sequence<Index...>) NOEXCEPT
+{
+    (zero_<Index>(from, to, fresh), ...);
+}
+
+// Zero column bytes of rows [from, to), less the page floored [from, fresh)
+// already zero (the settle boundary page is anonymous and retains its bytes).
+TEMPLATE
+template <size_t Column>
+void CLASS::zero_(size_t from, size_t to, size_t STAGING_ONLY(fresh)) NOEXCEPT
+{
+    if constexpr (!is_zero(widths.at(Column)))
+    {
+        auto begin = to_width<Column>(from);
+#if defined(MANAGE_STAGING)
+        if (fresh > from)
+            begin = std::max(begin, page_floor(to_width<Column>(fresh)));
+#endif
+        const auto end = to_width<Column>(to);
+        if (begin >= end)
+            return;
+
+        const auto size = end - begin;
+        prepare(begin, size);
+        std::fill_n(std::next(memory_map_[Column], begin), size, uint8_t{});
+        mark(begin, size);
+    }
+}
+
 // The wave probe reserves the whole extension plus headroom on the store
 // volume (column widths sum to the stride) leaves the headroom unclaimed.
 // An unmeasurable volume admits the wave: growth failure is the store's own
