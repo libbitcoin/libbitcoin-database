@@ -143,7 +143,8 @@ protected:
     /// Retain the pool rows of txs that can yet confirm (prune helpers).
     template <typename Reset>
     code compact(const event_handler& handler, const Reset& reset) NOEXCEPT;
-    bool is_retained(const tx_link& link, table::pool& retained) NOEXCEPT;
+    bool is_retained(bool& out, const tx_link& link,
+        table::pool& retained) NOEXCEPT;
 
     /// Copy the pool rows accepted by keep, with their spends, in row order,
     /// passing the link and witness hash of each copied record to index.

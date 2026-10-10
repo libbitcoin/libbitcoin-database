@@ -143,8 +143,8 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
 
     // A residual /compact (a fault during compaction) is cleared.
     const auto folder = configuration_.path / schema::dir::compact;
-    if (file::clear_directory_ex(folder))
-        return restart();
+    if (const auto ec = file::clear_directory_ex(folder))
+        return ec;
 
     if (!pool.enabled() || is_zero(pool.count().value))
     {
@@ -220,9 +220,9 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
             ec = error::create_table;
     }
 
-    const auto retained = [&](const tx_link& link) NOEXCEPT
+    const auto retained = [&](bool& out, const tx_link& link) NOEXCEPT
     {
-        return is_retained(link, temp_pool);
+        return is_retained(out, link, temp_pool);
     };
 
     const auto unindexed = [](const table::pool::link&,
@@ -231,12 +231,9 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
         return true;
     };
 
-    // A failure in the temporary tables leaves the live pool empty.
-    const auto copied = !ec && copy_pool(temp_pool, temp_spends, pool,
-        spends, retained, unindexed);
-
-    const auto all = [](const tx_link&) NOEXCEPT
+    const auto all = [](bool& out, const tx_link&) NOEXCEPT
     {
+        out = true;
         return true;
     };
 
@@ -246,31 +243,33 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
         return wtxid.put(link, hash);
     };
 
-    auto result = reset();
-    if (!result)
-    {
-        if (!empty())
-            result = error::prune_table;
-        else if (copied && !copy_pool(pool, spends, temp_pool, temp_spends,
-            all, indexed))
-            result = error::prune_table;
-    }
+    // A failure before the reset leaves the live tables unchanged.
+    if (!ec && !copy_pool(temp_pool, temp_spends, pool, spends, retained,
+        unindexed))
+        ec = error::prune_table;
 
-    const auto unload = [&](auto& storage, table_t table) NOEXCEPT
+    if (!ec)
+        ec = reset();
+
+    if (!ec && (!empty() || !copy_pool(pool, spends, temp_pool, temp_spends,
+        all, indexed)))
+        ec = error::prune_table;
+
+    const auto close = [&](auto& storage, table_t table) NOEXCEPT
     {
         handler(event_t::unload_file, table);
-        /* code */ storage.unload();
+        if (const auto error = storage.unload(); !ec) ec = error;
         handler(event_t::close_file, table);
-        /* code */ storage.close();
+        if (const auto error = storage.close(); !ec) ec = error;
     };
 
-    unload(pool_head, table_t::pool_head);
-    unload(pool_body, table_t::pool_body);
-    unload(spends_head, table_t::spends_head);
-    unload(spends_body, table_t::spends_body);
-    /* bool */ file::clear_directory(folder);
-    /* bool */ file::remove(folder);
-    return result;
+    close(pool_head, table_t::pool_head);
+    close(pool_body, table_t::pool_body);
+    close(spends_head, table_t::spends_head);
+    close(spends_body, table_t::spends_body);
+    if (const auto error = file::clear_directory_ex(folder); !ec) ec = error;
+    if (const auto error = file::remove_ex(folder); !ec) ec = error;
+    return ec;
 }
 
 // protected
@@ -279,7 +278,7 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
 // and every unconfirmed ancestor is pooled. Ancestors are found by key, so row
 // order is not assumed, and an ancestor already retained ends its walk.
 TEMPLATE
-bool CLASS::is_retained(const tx_link& link,
+bool CLASS::is_retained(bool& out, const tx_link& link,
     table::pool& retained) NOEXCEPT
 {
     using parents = table::spends::get_refs::parents;
@@ -288,23 +287,26 @@ bool CLASS::is_retained(const tx_link& link,
     std::vector<tx_link::integer> pending{ link };
     std::unordered_set<tx_link::integer> visited{ link };
 
+    out = false;
     while (!pending.empty())
     {
         const tx_link next{ pending.back() };
         pending.pop_back();
 
+        const auto fk = pool.first(next);
+        if (fk.is_terminal())
+            return true;
+
         table::transaction::only tx_record{};
         table::pool::record record{};
-        const auto fk = pool.first(next);
-        if (fk.is_terminal() || !tx.get(next, tx_record) ||
-            !pool.get(fk, record))
+        if (!tx.get(next, tx_record) || !pool.get(fk, record))
             return false;
 
         const auto end = tx_record.point_fk + tx_record.ins_count;
-        for (auto fk = tx_record.point_fk; fk < end; ++fk)
-            for (const auto spender: reader.to_spenders(reader.get_point_key(fk)))
+        for (auto point = tx_record.point_fk; point < end; ++point)
+            for (const auto spender: reader.to_spenders(reader.get_point_key(point)))
                 if (reader.is_confirmed_input(spender))
-                    return false;
+                    return true;
 
         parents spent(tx_record.ins_count);
         table::spends::get_refs run{ {}, spent };
@@ -323,6 +325,7 @@ bool CLASS::is_retained(const tx_link& link,
         }
     }
 
+    out = true;
     return true;
 }
 
@@ -353,12 +356,12 @@ bool CLASS::copy_pool(table::pool& to, table::spends& to_spends,
             !from.id2.get(link, id2) || !from.id3.get(link, id3))
             return false;
 
-        // A row of an unreadable tx is not retained.
+        bool kept{};
         table::transaction::only tx_record{};
-        if (!tx.get(tx_fk, tx_record))
-            continue;
+        if (!tx.get(tx_fk, tx_record) || !keep(kept, tx_fk))
+            return false;
 
-        if (!keep(tx_fk))
+        if (!kept)
             continue;
 
         parents spent(tx_record.ins_count);
