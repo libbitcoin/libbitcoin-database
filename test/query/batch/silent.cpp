@@ -155,6 +155,22 @@ static chain::block silent_block() NOEXCEPT
     return { test::block1.header(), { coinbase, simple_send() } };
 }
 
+static data_chunk to_prevouts(const chain::block& block) NOEXCEPT
+{
+    data_chunk out{};
+    const auto& txs = *block.transactions_ptr();
+    for (auto tx = std::next(txs.cbegin()); tx != txs.cend(); ++tx)
+    {
+        for (const auto& input: *(*tx)->inputs_ptr())
+        {
+            const auto data = input->prevout->to_data();
+            out.insert(out.end(), data.cbegin(), data.cend());
+        }
+    }
+
+    return out;
+}
+
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__coinbase_only__no_rows)
 {
     database::settings settings{};
@@ -189,6 +205,29 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__eligible__banked_row)
     BOOST_REQUIRE_EQUAL(query.silent_records(true), 1u);
     BOOST_REQUIRE_EQUAL(query.silent_records(false), 0u);
     BOOST_REQUIRE_EQUAL(query.scan_records(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__eligible_view__banked_row)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto block = silent_block();
+    BOOST_REQUIRE(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
+    const auto link = query.to_header(block.hash());
+
+    chain::view::block view{ block.to_data(true), true };
+    BOOST_REQUIRE(!view.populate(chain::context{}, to_prevouts(block)));
+
+    size_t rows{};
+    BOOST_REQUIRE(query.set_silents(rows, link, view, true));
+    BOOST_REQUIRE_EQUAL(rows, 1u);
+    BOOST_REQUIRE_EQUAL(query.silent_records(true), 1u);
+    BOOST_REQUIRE_EQUAL(query.silent_records(false), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row__scanned)

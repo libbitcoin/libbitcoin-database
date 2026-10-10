@@ -179,79 +179,18 @@ bool CLASS::purge_silents(bool bank) NOEXCEPT
     // ========================================================================
 }
 
-// Txs linked below the coinbase were indexed before it (see set_silent).
 TEMPLATE
 bool CLASS::set_silents(size_t& rows, const header_link& link,
     const block& block, bool bank) NOEXCEPT
 {
-    struct capture
-    {
-        tx_link link{};
-        ec_compressed sum{};
-        ec_secret hash{};
-        std::vector<silent_prefix> prefixes{};
-    };
+    return set_silents_(rows, link, *block.transactions_ptr(), bank);
+}
 
-    rows = zero;
-    const auto& txs = block.transactions_ptr();
-    const auto count = txs->size();
-    if (is_one(count))
-        return true;
-
-    const auto links = to_transactions(link);
-    if (links.size() != count)
-        return false;
-
-    using namespace system::wallet;
-    std::vector<capture> captures{};
-    const auto first = links.front();
-    for (auto index = one; index < count; ++index)
-    {
-        capture item{ links.at(index) };
-        const auto& tx = *txs->at(index);
-        if (item.link >= first && get_prefixes(item.prefixes, tx) &&
-            silent_payment::prepare(item.sum, item.hash, tx))
-        {
-            rows += item.prefixes.size();
-            captures.push_back(std::move(item));
-        }
-    }
-
-    if (is_zero(rows))
-        return true;
-
-    using row_t = table::silent_row::put_ref;
-    using correlate_t = table::silent_correlate::records;
-
-    // ========================================================================
-    const auto scope = get_transactor();
-    auto& bank_table = store_.silent_bank(bank);
-
-    // Allocate all of the block's rows across all columns.
-    using namespace system;
-    const auto fk = bank_table.allocate(
-        possible_narrow_cast<silent_link::integer>(rows));
-    if (fk.is_terminal())
-        return false;
-
-    // Guard against remap (required for nomaps::put(fk)).
-    const auto guard = bank_table.guard();
-
-    auto row = fk;
-    for (const auto& item: captures)
-    {
-        const auto size = item.prefixes.size();
-        if (!bank_table.row.put(row,
-                row_t{ {}, item.prefixes, item.sum, item.hash }) ||
-            !bank_table.correlate.put(row,
-                correlate_t{ {}, size, item.link.value }))
-            return false;
-
-        row += size;
-    }
-
-    return true;
-    // ========================================================================
+TEMPLATE
+bool CLASS::set_silents(size_t& rows, const header_link& link,
+    const block_view& block, bool bank) NOEXCEPT
+{
+    return set_silents_(rows, link, block.views(), bank);
 }
 
 // The bank is read and computed under its guard alone, then released before
@@ -315,6 +254,91 @@ code CLASS::compute_silents(const stopper& cancel, bool bank) NOEXCEPT
 
 // protected
 // ----------------------------------------------------------------------------
+
+// Txs linked below the coinbase were indexed before it (see set_silent).
+TEMPLATE
+template <typename Transactions>
+bool CLASS::set_silents_(size_t& rows, const header_link& link,
+    const Transactions& txs, bool bank) NOEXCEPT
+{
+    struct capture
+    {
+        tx_link link{};
+        ec_compressed sum{};
+        ec_secret hash{};
+        std::vector<silent_prefix> prefixes{};
+    };
+
+    rows = zero;
+    const auto count = txs.size();
+    if (is_one(count))
+        return true;
+
+    const auto links = to_transactions(link);
+    if (links.size() != count)
+        return false;
+
+    // Object txs are held by pointer, views by value.
+    const auto to_tx = [](const auto& tx) NOEXCEPT -> decltype(auto)
+    {
+        using type = std::decay_t<decltype(tx)>;
+        if constexpr (is_same_type<type, transaction_view>)
+            return (tx);
+        else
+            return (*tx);
+    };
+
+    using namespace system::wallet;
+    std::vector<capture> captures{};
+    const auto first = links.front();
+    for (auto index = one; index < count; ++index)
+    {
+        capture item{ links.at(index) };
+        const auto& tx = to_tx(txs.at(index));
+        if (item.link >= first && get_prefixes(item.prefixes, tx) &&
+            silent_payment::prepare(item.sum, item.hash, tx))
+        {
+            rows += item.prefixes.size();
+            captures.push_back(std::move(item));
+        }
+    }
+
+    if (is_zero(rows))
+        return true;
+
+    using row_t = table::silent_row::put_ref;
+    using correlate_t = table::silent_correlate::records;
+
+    // ========================================================================
+    const auto scope = get_transactor();
+    auto& bank_table = store_.silent_bank(bank);
+
+    // Allocate all of the block's rows across all columns.
+    using namespace system;
+    const auto fk = bank_table.allocate(
+        possible_narrow_cast<silent_link::integer>(rows));
+    if (fk.is_terminal())
+        return false;
+
+    // Guard against remap (required for nomaps::put(fk)).
+    const auto guard = bank_table.guard();
+
+    auto row = fk;
+    for (const auto& item: captures)
+    {
+        const auto size = item.prefixes.size();
+        if (!bank_table.row.put(row,
+                row_t{ {}, item.prefixes, item.sum, item.hash }) ||
+            !bank_table.correlate.put(row,
+                correlate_t{ {}, size, item.link.value }))
+            return false;
+
+        row += size;
+    }
+
+    return true;
+    // ========================================================================
+}
 
 // The prefix is ec_xonly[0..7] read as little-endian.
 TEMPLATE

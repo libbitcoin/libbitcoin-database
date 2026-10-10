@@ -684,6 +684,8 @@ public:
     /// committed.
     bool set_silents(size_t& rows, const header_link& link,
         const block& block, bool bank) NOEXCEPT;
+    bool set_silents(size_t& rows, const header_link& link,
+        const block_view& block, bool bank) NOEXCEPT;
 
     /// Compute a bank's silent payment batch, then set its scan records.
     code compute_silents(const stopper& cancel, bool bank) NOEXCEPT;
@@ -1084,6 +1086,11 @@ protected:
     /// Set silent payment records of a non-coinbase tx.
     bool set_silent_(const tx_link& link, const ec_compressed& point,
         const std::vector<silent_prefix>& prefixes) NOEXCEPT;
+
+    /// Commit the silent payment batch rows of a block's txs.
+    template <typename Transactions>
+    bool set_silents_(size_t& rows, const header_link& link,
+        const Transactions& txs, bool bank) NOEXCEPT;
 
     /// Pooling.
     /// -----------------------------------------------------------------------
