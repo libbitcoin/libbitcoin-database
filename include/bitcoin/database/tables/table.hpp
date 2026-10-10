@@ -59,6 +59,9 @@ enum class table_t
     strong_tx_table,
     strong_tx_head,
     strong_tx_body,
+    scan_table,
+    scan_head,
+    scan_body,
 
     /// Caches.
     ecdsa0_table,
@@ -73,9 +76,6 @@ enum class table_t
     schnorr1_table,
     schnorr1_head,
     schnorr1_body,
-    scan_table,
-    scan_head,
-    scan_body,
     silent0_table,
     silent0_head,
     silent0_body,

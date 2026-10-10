@@ -60,6 +60,9 @@ const CLASS::table_map CLASS::tables
     { table_t::strong_tx_table, "strong_tx_table" },
     { table_t::strong_tx_head, "strong_tx_head" },
     { table_t::strong_tx_body, "strong_tx_body" },
+    { table_t::scan_table, "scan_table" },
+    { table_t::scan_head, "scan_head" },
+    { table_t::scan_body, "scan_body" },
 
     // Caches.
     { table_t::ecdsa0_table, "ecdsa0_table" },
@@ -74,9 +77,6 @@ const CLASS::table_map CLASS::tables
     { table_t::schnorr1_table, "schnorr1_table" },
     { table_t::schnorr1_head, "schnorr1_head" },
     { table_t::schnorr1_body, "schnorr1_body" },
-    { table_t::scan_table, "scan_table" },
-    { table_t::scan_head, "scan_head" },
-    { table_t::scan_body, "scan_body" },
     { table_t::silent0_table, "silent0_table" },
     { table_t::silent0_head, "silent0_head" },
     { table_t::silent0_body, "silent0_body" },

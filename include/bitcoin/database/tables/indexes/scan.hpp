@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_CACHES_SILENT_HPP
-#define LIBBITCOIN_DATABASE_TABLES_CACHES_SILENT_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_SCAN_HPP
+#define LIBBITCOIN_DATABASE_TABLES_INDEXES_SCAN_HPP
 
 #include <filesystem>
 #include <tuple>
@@ -29,15 +29,15 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// silent_row is an array of silent payment prefix|sum|hash batch rows.
-struct silent_row
-  : public no_map<schema::silent_row>
+/// scan_row is an array of silent payment prefix|point rows.
+struct scan_row
+  : public no_map<schema::scan_row>
 {
-    using integral = scan_row::integral;
-    using no_map<schema::silent_row>::nomap;
+    using integral = unsigned_type<schema::prefix>;
+    using no_map<schema::scan_row>::nomap;
 
     struct put_ref
-      : public schema::silent_row
+      : public schema::scan_row
     {
         inline link count() const NOEXCEPT
         {
@@ -47,11 +47,12 @@ struct silent_row
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
+            // The prefix must be read from ec_xonly[0..7] as LE.
+            // Disk sequence will be [0..7] (with no byteswap on LE hardware).
             for (const auto& prefix: prefixes)
             {
                 sink.write_little_endian<integral>(prefix);
-                sink.write_bytes(sum);
-                sink.write_bytes(hash);
+                sink.write_bytes(compressed);
             }
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
@@ -59,20 +60,19 @@ struct silent_row
         }
 
         const std::vector<integral>& prefixes;
-        const system::ec_compressed& sum;
-        const system::ec_secret& hash;
+        const system::ec_compressed& compressed;
     };
 };
 
-/// silent_correlate is an array of silent payment batch tx fks.
-struct silent_correlate
-  : public no_map<schema::silent_correlate>
+/// scan_correlate is an array of silent payment correlation tx fks.
+struct scan_correlate
+  : public no_map<schema::scan_correlate>
 {
     using tx = schema::transaction::link;
-    using no_map<schema::silent_correlate>::nomap;
+    using no_map<schema::scan_correlate>::nomap;
 
     struct record
-      : public schema::silent_correlate
+      : public schema::scan_correlate
     {
         inline link count() const NOEXCEPT
         {
@@ -90,7 +90,7 @@ struct silent_correlate
     };
 
     struct records
-      : public schema::silent_correlate
+      : public schema::scan_correlate
     {
         inline link count() const NOEXCEPT
         {
@@ -115,22 +115,22 @@ struct silent_correlate
 /// ---------------------------------------------------------------------------
 
 template <template <size_t...> class Storage>
-using silent_files = mmaps
+using scan_files = mmaps
 <
     Storage,
-    silent_correlate,
-    silent_row
+    scan_correlate,
+    scan_row
 >;
 
 template <template <size_t...> class Storage>
-class silent_storage
-  : public silent_files<Storage>
+class scan_storage
+  : public scan_files<Storage>
 {
 public:
-    silent_storage(const std::filesystem::path& path,
+    scan_storage(const std::filesystem::path& path,
         const storage_settings& settings, bool random_access,
         bool staged=false) NOEXCEPT
-      : silent_files<Storage>(path, settings, random_access, staged)
+      : scan_files<Storage>(path, settings, random_access, staged)
     {
     }
 };
@@ -138,31 +138,32 @@ public:
 /// Aggregate (table)
 /// ---------------------------------------------------------------------------
 
-using silent_table = nomaps
+using scan_table = nomaps
 <
-    silent_correlate::link,
-    silent_correlate,
-    silent_row
+    scan_correlate::link,
+    scan_correlate,
+    scan_row
 >;
 
 template <template <size_t...> class Storage>
-class silent
-  : public silent_table
+class scan
+  : public scan_table
 {
 public:
-    silent(database::storage& head, silent_storage<Storage>& body) NOEXCEPT
-      : silent_table(head, body),
+    scan(database::storage& head, scan_storage<Storage>& body) NOEXCEPT
+      : scan_table(head, body),
         correlate(*this),
         row(*this)
     {
     }
 
-    column<silent_table, 0> correlate;
-    column<silent_table, 1> row;
+    column<scan_table, 0> correlate;
+    column<scan_table, 1> row;
 };
 
-static_assert(sizeof(system::silent::batch::row_t) ==
-    silent_row::width);
+static_assert(sizeof(system::scan::batch::row_t) == scan_row::width);
+static_assert(is_same_type<scan_correlate::span,
+    system::scan::batch::tx_link>);
 
 } // namespace table
 } // namespace database

@@ -348,9 +348,6 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\schnorr.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\caches\silent.cpp">
-      <Filter>src\tables\caches</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\spends.cpp">
       <Filter>src\tables\caches</Filter>
     </ClCompile>
@@ -361,6 +358,9 @@
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
+      <Filter>src\tables\indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\scan.cpp">
       <Filter>src\tables\indexes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\indexes\state.cpp">

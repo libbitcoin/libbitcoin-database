@@ -213,6 +213,8 @@ protected:
     // record hashmap
     Storage<one> strong_tx_head_;
     Storage<one> strong_tx_body_;
+    Storage<one> scan_head_;
+    table::scan_storage<Storage> scan_body_;
 
     /// Caches.
     /// -----------------------------------------------------------------------
@@ -230,8 +232,6 @@ protected:
     table::schnorr_storage<Storage> schnorr1_body_;
 
     // aggregate
-    Storage<one> scan_head_;
-    table::scan_storage<Storage> scan_body_;
     Storage<one> silent0_head_;
     table::silent_storage<Storage> silent0_body_;
     Storage<one> silent1_head_;
@@ -351,13 +351,13 @@ public:
     table::height candidate;
     table::height confirmed;
     table::strong_tx strong_tx;
+    table::scan<Storage> scan;
 
     /// Caches.
     table::ecdsa<Storage> ecdsa0;
     table::ecdsa<Storage> ecdsa1;
     table::schnorr<Storage> schnorr0;
     table::schnorr<Storage> schnorr1;
-    table::scan<Storage> scan;
     table::silent<Storage> silent0;
     table::silent<Storage> silent1;
     table::envelope envelope;

@@ -82,6 +82,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, confirmed_head_, table_t::confirmed_head);
     open(ec, strong_tx_head_, table_t::strong_tx_head);
     open(ec, strong_tx_body_, table_t::strong_tx_body);
+    open(ec, scan_head_, table_t::scan_head);
+    open(ec, scan_body_, table_t::scan_body);
 
     open(ec, ecdsa0_head_, table_t::ecdsa0_head);
     open(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -91,8 +93,6 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, schnorr0_body_, table_t::schnorr0_body);
     open(ec, schnorr1_head_, table_t::schnorr1_head);
     open(ec, schnorr1_body_, table_t::schnorr1_body);
-    open(ec, scan_head_, table_t::scan_head);
-    open(ec, scan_body_, table_t::scan_body);
     open(ec, silent0_head_, table_t::silent0_head);
     open(ec, silent0_body_, table_t::silent0_body);
     open(ec, silent1_head_, table_t::silent1_head);
@@ -138,6 +138,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, confirmed_head_, table_t::confirmed_head);
     load(ec, strong_tx_head_, table_t::strong_tx_head);
     load(ec, strong_tx_body_, table_t::strong_tx_body);
+    load(ec, scan_head_, table_t::scan_head);
+    load(ec, scan_body_, table_t::scan_body);
 
     load(ec, ecdsa0_head_, table_t::ecdsa0_head);
     load(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -147,8 +149,6 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, schnorr0_body_, table_t::schnorr0_body);
     load(ec, schnorr1_head_, table_t::schnorr1_head);
     load(ec, schnorr1_body_, table_t::schnorr1_body);
-    load(ec, scan_head_, table_t::scan_head);
-    load(ec, scan_body_, table_t::scan_body);
     load(ec, silent0_head_, table_t::silent0_head);
     load(ec, silent0_body_, table_t::silent0_body);
     load(ec, silent1_head_, table_t::silent1_head);

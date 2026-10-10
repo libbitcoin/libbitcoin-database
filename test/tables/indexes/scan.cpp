@@ -19,18 +19,18 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(silent_tests)
+BOOST_AUTO_TEST_SUITE(scan_tests)
 
 using namespace system;
 using namespace test;
 
-// silent (aggregate)
+// scan (aggregate)
 // ----------------------------------------------------------------------------
 
 using scan_table = table::scan<chunk_storages>;
 using scan_storage = default_storage<table::scan_storage<chunk_storages>>;
 
-BOOST_AUTO_TEST_CASE(silent__create_verify_close__aggregate__expected)
+BOOST_AUTO_TEST_CASE(scan__create_verify_close__aggregate__expected)
 {
     scan_storage head{ "head" };
     scan_storage body{ "body" };
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(silent__create_verify_close__aggregate__expected)
     BOOST_REQUIRE(instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(silent__put_columns__three_rows__expected)
+BOOST_AUTO_TEST_CASE(scan__put_columns__three_rows__expected)
 {
     scan_storage head{ "head" };
     scan_storage body{ "body" };

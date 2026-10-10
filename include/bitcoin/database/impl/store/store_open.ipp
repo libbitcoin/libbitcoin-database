@@ -75,12 +75,12 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, candidate, table_t::candidate_table);
     verify(ec, confirmed, table_t::confirmed_table);
     verify(ec, strong_tx, table_t::strong_tx_table);
+    verify(ec, scan, table_t::scan_table);
 
     verify(ec, ecdsa0, table_t::ecdsa0_table);
     verify(ec, ecdsa1, table_t::ecdsa1_table);
     verify(ec, schnorr0, table_t::schnorr0_table);
     verify(ec, schnorr1, table_t::schnorr1_table);
-    verify(ec, scan, table_t::scan_table);
     verify(ec, silent0, table_t::silent0_table);
     verify(ec, silent1, table_t::silent1_table);
     verify(ec, envelope, table_t::envelope_table);
