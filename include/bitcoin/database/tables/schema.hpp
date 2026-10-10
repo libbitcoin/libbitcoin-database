@@ -23,7 +23,7 @@
 #include <bitcoin/database/primitives/primitives.hpp>
 #include <bitcoin/database/tables/names.hpp>
 
-#define TABLE_COLUMN(table, bytes) \
+#define TABLE_COLUMN(group, table, bytes) \
 struct table \
 { \
     static constexpr size_t pk = schema::outs::pk; \
@@ -31,7 +31,7 @@ struct table \
     static constexpr size_t minsize = bytes; \
     static constexpr size_t minrow = minsize; \
     static constexpr size_t size = minsize; \
-    static constexpr auto suffix = schema::caches::table; \
+    static constexpr auto suffix = schema::group::table; \
     bool operator==(const table&) const NOEXCEPT = default; \
 }
 
@@ -325,22 +325,22 @@ struct strong_tx
 /// ---------------------------------------------------------------------------
 
 // array
-TABLE_COLUMN(ecdsa_correlate, one + count_ + schema::header::pk);
-TABLE_COLUMN(ecdsa_row, system::hash_size + system::ec_compressed_size +
+TABLE_COLUMN(caches, ecdsa_correlate, one + count_ + schema::header::pk);
+TABLE_COLUMN(caches, ecdsa_row, system::hash_size + system::ec_compressed_size +
     system::ec_signature_size);
 
 // array
-TABLE_COLUMN(schnorr_correlate, schema::header::pk);
-TABLE_COLUMN(schnorr_row, system::hash_size + system::ec_xonly_size +
+TABLE_COLUMN(caches, schnorr_correlate, schema::header::pk);
+TABLE_COLUMN(caches, schnorr_row, system::hash_size + system::ec_xonly_size +
     system::ec_signature_size);
 
 // array
-TABLE_COLUMN(scan_correlate, schema::transaction::pk);
-TABLE_COLUMN(scan_row, schema::prefix + system::ec_compressed_size);
+TABLE_COLUMN(indexes, scan_correlate, schema::transaction::pk);
+TABLE_COLUMN(indexes, scan_row, schema::prefix + system::ec_compressed_size);
 
 // array
-TABLE_COLUMN(silent_correlate, schema::transaction::pk);
-TABLE_COLUMN(silent_row, schema::prefix + system::ec_compressed_size +
+TABLE_COLUMN(caches, silent_correlate, schema::transaction::pk);
+TABLE_COLUMN(caches, silent_row, schema::prefix + system::ec_compressed_size +
     system::ec_secret_size);
 
 // array (same as candidate and confirmed)
@@ -443,10 +443,10 @@ struct pool
 };
 
 // pool columns (records aligned with the pool spine).
-TABLE_COLUMN(pool_id0, sizeof(pool::witness_lane));
-TABLE_COLUMN(pool_id1, sizeof(pool::witness_lane));
-TABLE_COLUMN(pool_id2, sizeof(pool::witness_lane));
-TABLE_COLUMN(pool_id3, sizeof(pool::witness_lane));
+TABLE_COLUMN(caches, pool_id0, sizeof(pool::witness_lane));
+TABLE_COLUMN(caches, pool_id1, sizeof(pool::witness_lane));
+TABLE_COLUMN(caches, pool_id2, sizeof(pool::witness_lane));
+TABLE_COLUMN(caches, pool_id3, sizeof(pool::witness_lane));
 static_assert(is_same_type<pool_id0::link, pool::link>);
 
 // record hashmap (sk:0), records aligned by link with the pool.
