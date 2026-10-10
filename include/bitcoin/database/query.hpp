@@ -687,6 +687,11 @@ public:
     bool set_silents(size_t& rows, const header_link& link,
         const block_view& block, bool bank) NOEXCEPT;
 
+    /// The wire prevouts of the spends of the block's silent payment eligible
+    /// txs in block order, with the selection of those txs.
+    bool get_silent_prevouts(data_chunk& prevouts, std::vector<bool>& selected,
+        const header_link& link, const block_view& block) const NOEXCEPT;
+
     /// Compute a bank's silent payment batch, then set its scan records.
     code compute_silents(const stopper& cancel, bool bank) NOEXCEPT;
 

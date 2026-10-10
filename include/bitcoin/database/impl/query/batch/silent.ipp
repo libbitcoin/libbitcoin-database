@@ -193,6 +193,56 @@ bool CLASS::set_silents(size_t& rows, const header_link& link,
     return set_silents_(rows, link, block.views(), bank);
 }
 
+// Txs linked below the coinbase are not selected (see set_silent).
+TEMPLATE
+bool CLASS::get_silent_prevouts(data_chunk& prevouts,
+    std::vector<bool>& selected, const header_link& link,
+    const block_view& block) const NOEXCEPT
+{
+    using namespace system;
+    const auto& txs = block.views();
+    const auto links = to_transactions(link);
+    if (links.empty() || links.size() != txs.size())
+        return false;
+
+    selected.assign(txs.size(), false);
+    stream::out::data ostream(prevouts);
+    write::bytes::ostream sink(ostream);
+
+    const auto first = links.front();
+    std::vector<silent_prefix> prefixes{};
+    for (auto index = one; index < txs.size(); ++index)
+    {
+        if (links.at(index) < first || !get_prefixes(prefixes, txs.at(index)))
+            continue;
+
+        table::transaction::get_puts record{};
+        if (!store_.tx.get(links.at(index), record))
+            return false;
+
+        // Point links are contiguous (computed).
+        const auto end = record.points_fk + record.ins_count;
+        for (auto fk = record.points_fk; fk < end; ++fk)
+        {
+            // Any instance of the parent hash yields the same output.
+            const auto point = get_point_key(fk);
+            const auto parent = to_tx(point.hash());
+            table::transaction::get_output parent_tx{ {}, point.index() };
+            table::outs::get_output outs{};
+            if (parent.is_terminal() || !store_.tx.get(parent, parent_tx) ||
+                parent_tx.outs_fk == table::transaction::outs::terminal ||
+                !store_.outs.puts.get(parent_tx.outs_fk, outs) ||
+                !get_wire_output(sink, outs.out_fk))
+                return false;
+        }
+
+        selected.at(index) = true;
+    }
+
+    sink.flush();
+    return !!sink;
+}
+
 // The bank is read and computed under its guard alone, then released before
 // records are set, as no two tables are guarded at once.
 TEMPLATE

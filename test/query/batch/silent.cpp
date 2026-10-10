@@ -230,6 +230,71 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__eligible_view__banked_row)
     BOOST_REQUIRE_EQUAL(query.silent_records(false), 0u);
 }
 
+static const chain::script taproot_script
+{
+    base16_chunk("51203e9fce73d4e77a4809908e3c3a2e54ee147b9312dc5044a193d1fc85de46e3c1"),
+    false
+};
+static const chain::script witness_script
+{
+    base16_chunk("001419c2f3ae0ca3b642bd3e49598b8da89f50c14161"),
+    false
+};
+
+static chain::block spend_block(const chain::script& script) NOEXCEPT
+{
+    const auto& parent = *test::block1.transactions_ptr()->front();
+    const chain::inputs ins{ { { parent.hash(false), 0 }, {}, max_uint32 } };
+    const chain::outputs outs{ { 0, script } };
+    const auto& coinbase = *test::block2.transactions_ptr()->front();
+    return { test::block2.header(), { coinbase, { 1, ins, outs, 0 } } };
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_prevouts__taproot_spend__selected)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, {}, false, false));
+
+    const auto block = spend_block(taproot_script);
+    BOOST_REQUIRE(query.set(block, database::context{ 0, 2, 0 }, {}, false, false));
+    const auto link = query.to_header(block.hash());
+
+    data_chunk prevouts{};
+    std::vector<bool> selected{};
+    const chain::view::block view{ block.to_data(true), true };
+    const auto& parent = *test::block1.transactions_ptr()->front();
+    BOOST_REQUIRE(query.get_silent_prevouts(prevouts, selected, link, view));
+    BOOST_REQUIRE(selected == (std::vector<bool>{ false, true }));
+    BOOST_REQUIRE_EQUAL(prevouts, parent.outputs_ptr()->front()->to_data());
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_prevouts__no_taproot_output__unselected)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, {}, false, false));
+
+    const auto block = spend_block(witness_script);
+    BOOST_REQUIRE(query.set(block, database::context{ 0, 2, 0 }, {}, false, false));
+    const auto link = query.to_header(block.hash());
+
+    data_chunk prevouts{};
+    std::vector<bool> selected{};
+    const chain::view::block view{ block.to_data(true), true };
+    BOOST_REQUIRE(query.get_silent_prevouts(prevouts, selected, link, view));
+    BOOST_REQUIRE(selected == (std::vector<bool>{ false, false }));
+    BOOST_REQUIRE(prevouts.empty());
+}
+
 BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row__scanned)
 {
     database::settings settings{};
