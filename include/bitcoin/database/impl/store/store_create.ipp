@@ -98,6 +98,8 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, confirmed_head_, table_t::confirmed_head);
     create(ec, strong_tx_head_, table_t::strong_tx_head);
     create(ec, strong_tx_body_, table_t::strong_tx_body);
+    create(ec, scan_head_, table_t::scan_head);
+    create(ec, scan_body_, table_t::scan_body);
 
     create(ec, ecdsa0_head_, table_t::ecdsa0_head);
     create(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -107,8 +109,6 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, schnorr0_body_, table_t::schnorr0_body);
     create(ec, schnorr1_head_, table_t::schnorr1_head);
     create(ec, schnorr1_body_, table_t::schnorr1_body);
-    create(ec, scan_head_, table_t::scan_head);
-    create(ec, scan_body_, table_t::scan_body);
     create(ec, silent0_head_, table_t::silent0_head);
     create(ec, silent0_body_, table_t::silent0_body);
     create(ec, silent1_head_, table_t::silent1_head);
@@ -161,12 +161,12 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, candidate, table_t::candidate_table);
     populate(ec, confirmed, table_t::confirmed_table);
     populate(ec, strong_tx, table_t::strong_tx_table);
+    populate(ec, scan, table_t::scan_table);
 
     populate(ec, ecdsa0, table_t::ecdsa0_table);
     populate(ec, ecdsa1, table_t::ecdsa1_table);
     populate(ec, schnorr0, table_t::schnorr0_table);
     populate(ec, schnorr1, table_t::schnorr1_table);
-    populate(ec, scan, table_t::scan_table);
     populate(ec, silent0, table_t::silent0_table);
     populate(ec, silent1, table_t::silent1_table);
     populate(ec, envelope, table_t::envelope_table);

@@ -141,11 +141,11 @@ public:
     size_t candidate_head_size() const NOEXCEPT;
     size_t confirmed_head_size() const NOEXCEPT;
     size_t strong_tx_head_size() const NOEXCEPT;
+    size_t scan_head_size() const NOEXCEPT;
     size_t ecdsa0_head_size() const NOEXCEPT;
     size_t ecdsa1_head_size() const NOEXCEPT;
     size_t schnorr0_head_size() const NOEXCEPT;
     size_t schnorr1_head_size() const NOEXCEPT;
-    size_t scan_head_size() const NOEXCEPT;
     size_t silent0_head_size() const NOEXCEPT;
     size_t silent1_head_size() const NOEXCEPT;
     size_t duplicate_head_size() const NOEXCEPT;
@@ -171,11 +171,11 @@ public:
     size_t candidate_body_size() const NOEXCEPT;
     size_t confirmed_body_size() const NOEXCEPT;
     size_t strong_tx_body_size() const NOEXCEPT;
+    size_t scan_body_size() const NOEXCEPT;
     size_t ecdsa0_body_size() const NOEXCEPT;
     size_t ecdsa1_body_size() const NOEXCEPT;
     size_t schnorr0_body_size() const NOEXCEPT;
     size_t schnorr1_body_size() const NOEXCEPT;
-    size_t scan_body_size() const NOEXCEPT;
     size_t silent0_body_size() const NOEXCEPT;
     size_t silent1_body_size() const NOEXCEPT;
     size_t duplicate_body_size() const NOEXCEPT;
@@ -201,11 +201,11 @@ public:
     size_t candidate_size() const NOEXCEPT;
     size_t confirmed_size() const NOEXCEPT;
     size_t strong_tx_size() const NOEXCEPT;
+    size_t scan_size() const NOEXCEPT;
     size_t ecdsa0_size() const NOEXCEPT;
     size_t ecdsa1_size() const NOEXCEPT;
     size_t schnorr0_size() const NOEXCEPT;
     size_t schnorr1_size() const NOEXCEPT;
-    size_t scan_size() const NOEXCEPT;
     size_t silent0_size() const NOEXCEPT;
     size_t silent1_size() const NOEXCEPT;
     size_t duplicate_size() const NOEXCEPT;
@@ -244,11 +244,11 @@ public:
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;
+    size_t scan_records() const NOEXCEPT;
     size_t ecdsa0_records() const NOEXCEPT;
     size_t ecdsa1_records() const NOEXCEPT;
     size_t schnorr0_records() const NOEXCEPT;
     size_t schnorr1_records() const NOEXCEPT;
-    size_t scan_records() const NOEXCEPT;
     size_t silent0_records() const NOEXCEPT;
     size_t silent1_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
@@ -703,7 +703,8 @@ public:
         const header_link& link, const block_view& block) const NOEXCEPT;
 
     /// Compute a bank's silent payment batch, then set its scan records.
-    code compute_silents(const stopper& cancel, bool bank) NOEXCEPT;
+    code compute_silents(const stopper& cancel, bool& device,
+        bool bank) NOEXCEPT;
 
     /// Commit a block's captured ecdsa signature groups (band-expanded).
     bool set_signatures(const system::chain::ecdsa_signatures& sigs,
@@ -724,11 +725,12 @@ public:
     /// The first silent row at or above first that is not fully written.
     size_t get_silent_frontier(size_t first) const NOEXCEPT;
 
-    /// Verify all signatures in table, false implies cancel.
+    /// Verify all signatures in table, false implies cancel, device set if
+    /// verified on the device.
     bool verify_ecdsa_signatures(const stopper& cancel, header_links&,
-        bool bank) NOEXCEPT;
+        bool& device, bool bank) NOEXCEPT;
     bool verify_schnorr_signatures(const stopper& cancel, header_links&,
-        bool bank) NOEXCEPT;
+        bool& device, bool bank) NOEXCEPT;
 
     /// Purge all entries in table.
     bool purge_prevalids(bool bank) NOEXCEPT;

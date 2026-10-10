@@ -102,13 +102,13 @@ struct BCD_API settings
     bucket_table candidate{};
     bucket_table confirmed{};
     hash_table strong_tx{};
+    simple_table scan{};
 
     /// Caches.
     /// -----------------------------------------------------------------------
 
     simple_table ecdsa{};
     simple_table schnorr{};
-    simple_table scan{};
     simple_table silent{};
     hash_table duplicate{};
     simple_table prevalid{};

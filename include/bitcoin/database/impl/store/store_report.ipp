@@ -49,13 +49,13 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(tx_body_, table_t::tx_body);
     report(txs_body_, table_t::txs_body);
     report(strong_tx_body_, table_t::strong_tx_body);
+    report(scan_body_, table_t::scan_body);
     report(ecdsa0_body_, table_t::ecdsa0_body);
     report(ecdsa1_body_, table_t::ecdsa1_body);
     report(schnorr0_body_, table_t::schnorr0_body);
     report(schnorr1_body_, table_t::schnorr1_body);
     report(silent0_body_, table_t::silent0_body);
     report(silent1_body_, table_t::silent1_body);
-    report(scan_body_, table_t::scan_body);
     report(duplicate_body_, table_t::duplicate_body);
     report(prevalid0_body_, table_t::prevalid0_body);
     report(prevalid1_body_, table_t::prevalid1_body);
@@ -91,6 +91,8 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = confirmed_head_.get_fault())) return ec;
     if ((ec = strong_tx_head_.get_fault())) return ec;
     if ((ec = strong_tx_body_.get_fault())) return ec;
+    if ((ec = scan_head_.get_fault())) return ec;
+    if ((ec = scan_body_.get_fault())) return ec;
     if ((ec = ecdsa0_head_.get_fault())) return ec;
     if ((ec = ecdsa0_body_.get_fault())) return ec;
     if ((ec = ecdsa1_head_.get_fault())) return ec;
@@ -99,8 +101,6 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = schnorr0_body_.get_fault())) return ec;
     if ((ec = schnorr1_head_.get_fault())) return ec;
     if ((ec = schnorr1_body_.get_fault())) return ec;
-    if ((ec = scan_head_.get_fault())) return ec;
-    if ((ec = scan_body_.get_fault())) return ec;
     if ((ec = silent0_head_.get_fault())) return ec;
     if ((ec = silent0_body_.get_fault())) return ec;
     if ((ec = silent1_head_.get_fault())) return ec;
@@ -157,6 +157,8 @@ size_t CLASS::get_space() const NOEXCEPT
     space(confirmed_head_);
     space(strong_tx_head_);
     space(strong_tx_body_);
+    space(scan_head_);
+    space(scan_body_);
     space(ecdsa0_head_);
     space(ecdsa0_body_);
     space(ecdsa1_head_);
@@ -165,8 +167,6 @@ size_t CLASS::get_space() const NOEXCEPT
     space(schnorr0_body_);
     space(schnorr1_head_);
     space(schnorr1_body_);
-    space(scan_head_);
-    space(scan_body_);
     space(silent0_head_);
     space(silent0_body_);
     space(silent1_head_);

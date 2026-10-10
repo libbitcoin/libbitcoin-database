@@ -34,7 +34,7 @@ size_t CLASS::ecdsa_records(bool bank) const NOEXCEPT
 
 TEMPLATE
 bool CLASS::verify_ecdsa_signatures(const stopper& cancel,
-    header_links& links, bool bank) NOEXCEPT
+    header_links& links, bool& device, bool bank) NOEXCEPT
 {
     auto& bank_table = store_.ecdsa_bank(bank);
     const auto correlate_ptr = bank_table.correlate.get_memory();
@@ -55,7 +55,7 @@ bool CLASS::verify_ecdsa_signatures(const stopper& cancel,
     };
 
     // False return only implies canceled.
-    links = ecdsa::batch::verify(cancel, batch);
+    links = ecdsa::batch::verify(device, cancel, batch);
     return !cancel;
 }
 

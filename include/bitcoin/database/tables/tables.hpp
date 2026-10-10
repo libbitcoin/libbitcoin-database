@@ -39,6 +39,7 @@
 
 #include <bitcoin/database/tables/indexes/duplicate.hpp>
 #include <bitcoin/database/tables/indexes/height.hpp>
+#include <bitcoin/database/tables/indexes/scan.hpp>
 #include <bitcoin/database/tables/indexes/state.hpp>
 #include <bitcoin/database/tables/indexes/strong_tx.hpp>
 #include <bitcoin/database/tables/indexes/wtxid.hpp>

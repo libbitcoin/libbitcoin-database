@@ -140,9 +140,7 @@
     <ClCompile Include="..\..\..\..\test\query\batch\schnorr.cpp">
       <ObjectFileName>$(IntDir)test_query_batch_schnorr.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\batch\silent.cpp">
-      <ObjectFileName>$(IntDir)test_query_batch_silent.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\batch\silent.cpp" />
     <ClCompile Include="..\..\..\..\test\query\confirmed.cpp" />
     <ClCompile Include="..\..\..\..\test\query\consensus\consensus_block.cpp" />
     <ClCompile Include="..\..\..\..\test\query\consensus\consensus_chain_state.cpp" />
@@ -207,15 +205,13 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\schnorr.cpp">
       <ObjectFileName>$(IntDir)test_tables_caches_schnorr.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\caches\silent.cpp">
-      <ObjectFileName>$(IntDir)test_tables_caches_silent.obj</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\spends.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\envelope.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\duplicate.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\height.cpp">
       <ObjectFileName>$(IntDir)test_tables_indexes_height.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tables\indexes\scan.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\state.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\strong_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\tables\indexes\wtxid.cpp" />

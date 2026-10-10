@@ -75,6 +75,8 @@ CLASS::store(const settings& config) NOEXCEPT
 
     strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx), head_settings(config.strong_tx), random),
     strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx, sequential, staged),
+    scan_head_(head(config.path / schema::dir::heads, schema::indexes::scan), head_settings(config.scan), sequential),
+    scan_body_(body(config.path, schema::indexes::scan), config.scan, sequential, staged),
 
     // Caches.
     // ------------------------------------------------------------------------
@@ -91,8 +93,6 @@ CLASS::store(const settings& config) NOEXCEPT
     schnorr1_head_(head(config.path / schema::dir::heads, schema::caches::schnorr1), head_settings(config.schnorr), sequential),
     schnorr1_body_(body(config.path, schema::caches::schnorr1), config.schnorr, sequential, staged),
 
-    scan_head_(head(config.path / schema::dir::heads, schema::caches::scan), head_settings(config.silent), sequential),
-    scan_body_(body(config.path, schema::caches::scan), config.scan, sequential, staged),
     silent0_head_(head(config.path / schema::dir::heads, schema::caches::silent0), head_settings(config.silent), sequential),
     silent0_body_(body(config.path, schema::caches::silent0), config.silent, sequential, staged),
     silent1_head_(head(config.path / schema::dir::heads, schema::caches::silent1), head_settings(config.silent), sequential),
@@ -149,12 +149,12 @@ CLASS::store(const settings& config) NOEXCEPT
     candidate(candidate_head_),
     confirmed(confirmed_head_),
     strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx.buckets, config.strong_tx.expected),
+    scan(scan_head_, scan_body_),
 
     ecdsa0(ecdsa0_head_, ecdsa0_body_),
     ecdsa1(ecdsa1_head_, ecdsa1_body_),
     schnorr0(schnorr0_head_, schnorr0_body_),
     schnorr1(schnorr1_head_, schnorr1_body_),
-    scan(scan_head_, scan_body_),
     silent0(silent0_head_, silent0_body_),
     silent1(silent1_head_, silent1_body_),
     envelope(envelope_head_),
@@ -307,11 +307,11 @@ void CLASS::set_current(bool current) NOEXCEPT
     candidate_head_.current(current);
     confirmed_head_.current(current);
     strong_tx_head_.current(current);
+    scan_head_.current(current);
     ecdsa0_head_.current(current);
     ecdsa1_head_.current(current);
     schnorr0_head_.current(current);
     schnorr1_head_.current(current);
-    scan_head_.current(current);
     silent0_head_.current(current);
     silent1_head_.current(current);
     envelope_head_.current(current);

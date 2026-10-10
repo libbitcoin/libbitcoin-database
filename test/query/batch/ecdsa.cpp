@@ -59,8 +59,9 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__empty__empty)
     test::query_accessor query{ store };
 
     header_links links{};
+    bool device{};
     BOOST_REQUIRE_EQUAL(query.ecdsa0_records(), 0u);
-    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, false));
+    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, device, false));
     BOOST_REQUIRE(links.empty());
 }
 
@@ -72,8 +73,9 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__one_valid__empt
     BOOST_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 42, false));
 
     header_links links{};
+    bool device{};
     BOOST_REQUIRE_EQUAL(query.ecdsa0_records(), 1u);
-    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, false));
+    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, device, false));
     BOOST_REQUIRE(links.empty());
 }
 
@@ -86,8 +88,9 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__one_invalid__ex
     BOOST_REQUIRE(set_one(query, sighash_bad, ecdsa_compressed, ecdsa_signature, expected, false));
 
     header_links links{};
+    bool device{};
     BOOST_REQUIRE_EQUAL(query.ecdsa0_records(), 1u);
-    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, false));
+    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, device, false));
     BOOST_REQUIRE_EQUAL(links.size(), 1u);
     BOOST_REQUIRE_EQUAL(links.front(), expected);
 }
@@ -110,8 +113,9 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__various__expect
     BOOST_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 6, false));
 
     header_links links{};
+    bool device{};
     BOOST_REQUIRE_EQUAL(query.ecdsa0_records(), 8u);
-    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, false));
+    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, device, false));
     BOOST_REQUIRE_EQUAL(links.size(), 2u);
 
     const auto back = links.back();
@@ -131,9 +135,10 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__banks__independ
     BOOST_REQUIRE_EQUAL(query.ecdsa_records(true), 1u);
 
     header_links links{};
-    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, false));
+    bool device{};
+    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, device, false));
     BOOST_REQUIRE(links.empty());
-    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, true));
+    BOOST_REQUIRE(query.verify_ecdsa_signatures({}, links, device, true));
     BOOST_REQUIRE_EQUAL(links.size(), 1u);
     BOOST_REQUIRE_EQUAL(links.front(), expected);
 
