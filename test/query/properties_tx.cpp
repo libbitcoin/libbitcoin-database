@@ -525,6 +525,30 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__confirmed__skipped)
     BOOST_REQUIRE_EQUAL(cursor, 2u);
 }
 
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__duplicate_row__first_only)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+
+    const auto& in = *test::tx_spend_one_hash.inputs_ptr()->front();
+    in.prevout = system::to_shared<output>(0x30, script{});
+    in.metadata.parent_tx = 42;
+    BOOST_REQUIRE(query.set_pooled(1, test::tx_spend_one_hash, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(1, test::tx_spend_one_hash, context{ bip113, 8, 9 }));
+
+    tx_links out{};
+    pool_link cursor{};
+    BOOST_REQUIRE_EQUAL(query.get_pooled_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
+    BOOST_REQUIRE_EQUAL(out.size(), one);
+    BOOST_REQUIRE_EQUAL(out.front(), 1u);
+    BOOST_REQUIRE_EQUAL(cursor, 2u);
+}
+
 BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__limit__resumed)
 {
     settings settings{};
