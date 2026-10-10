@@ -141,12 +141,18 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
         return empty() ? error::success : error::prune_table;
     };
 
-    if (!pool.enabled() || is_zero(pool.count().value))
-        return restart();
-
-    const auto folder = configuration_.path / schema::dir::temporary;
+    // A residual /compact (a fault during compaction) is cleared.
+    const auto folder = configuration_.path / schema::dir::compact;
     if (file::clear_directory_ex(folder))
         return restart();
+
+    if (!pool.enabled() || is_zero(pool.count().value))
+    {
+        if (const auto ec = file::remove_ex(folder))
+            return ec;
+
+        return restart();
+    }
 
     Storage<one> pool_head{ head(folder, schema::caches::pool),
         head_settings(configuration_.pool), random };

@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(store__prune__unconfirmed_pooled__retained)
     const auto unconfirmed = spend(genesis_coinbase(), 1u);
     BOOST_REQUIRE(pool(query_, unconfirmed));
     BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::temporary));
+    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
 
     pooled_tx out{};
     out.prevouts.resize(one);
@@ -397,6 +397,41 @@ BOOST_AUTO_TEST_CASE(store__prune__retained__found_by_witness_hash)
     BOOST_REQUIRE_EQUAL(query_.wtxid_records(), one);
     BOOST_REQUIRE_EQUAL(query_.to_witness_tx(retained.hash(true)), query_.to_tx(retained.hash(false)));
     BOOST_REQUIRE(!query_.is_pooled(query_.to_tx(conflict.hash(false))));
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__prune__residual_compact_empty_pool__deleted)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BOOST_REQUIRE(test::clear(configuration.path / schema::dir::compact));
+    BOOST_REQUIRE(test::create(configuration.path / schema::dir::compact / "cache_pool.head"));
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
+    BOOST_REQUIRE(!instance.close(test::events));
+}
+
+BOOST_AUTO_TEST_CASE(store__prune__residual_compact_pooled__deleted_retained)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    instance.set_pooling();
+
+    const auto unconfirmed = spend(genesis_coinbase(), 1u);
+    BOOST_REQUIRE(pool(query_, unconfirmed));
+    BOOST_REQUIRE(test::clear(configuration.path / schema::dir::compact));
+    BOOST_REQUIRE(test::create(configuration.path / schema::dir::compact / "cache_pool.head"));
+    BOOST_REQUIRE(!instance.prune(test::events));
+    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
+    BOOST_REQUIRE_EQUAL(pooled(query_, unconfirmed), error::success);
     BOOST_REQUIRE(!instance.close(test::events));
 }
 

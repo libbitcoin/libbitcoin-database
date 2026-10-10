@@ -33,6 +33,7 @@ namespace dir
     constexpr auto primary = "primary";
     constexpr auto secondary = "secondary";
     constexpr auto temporary = "temporary";
+    constexpr auto compact = "compact";
 }
 
 namespace archive
