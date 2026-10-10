@@ -33,7 +33,7 @@ namespace table {
 struct silent_row
   : public no_map<schema::silent_row>
 {
-    using integral = scan_row::integral;
+    using integral = unsigned_type<schema::prefix>;
     using no_map<schema::silent_row>::nomap;
 
     struct put_ref
