@@ -858,8 +858,9 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Native queries (outpoints, deduped, arbitrary sort).
-    ////code get_unconfirmed_unspent_outputs(const stopper& cancel, outpoints& out,
-    ////    const hash_digest& key, bool turbo=false) const NOEXCEPT;
+    code get_unconfirmed_unspent_outpoints(const stopper& cancel,
+        outpoints& out, const hash_digest& key,
+        bool turbo=false) const NOEXCEPT;
     code get_confirmed_unspent_outpoints(const stopper& cancel, outpoints& out,
         const hash_digest& key, bool turbo=false) const NOEXCEPT;
     code get_minimum_unspent_outpoints(const stopper& cancel, outpoints& out,
