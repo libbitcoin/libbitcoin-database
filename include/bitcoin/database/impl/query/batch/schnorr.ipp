@@ -33,7 +33,7 @@ size_t CLASS::schnorr_records(bool bank) const NOEXCEPT
 
 TEMPLATE
 bool CLASS::verify_schnorr_signatures(const stopper& cancel,
-    header_links& links, bool bank) NOEXCEPT
+    header_links& links, bool& device, bool bank) NOEXCEPT
 {
     auto& bank_table = store_.schnorr_bank(bank);
     const auto correlate_ptr = bank_table.correlate.get_memory();
@@ -54,7 +54,7 @@ bool CLASS::verify_schnorr_signatures(const stopper& cancel,
     };
 
     // False return only implies canceled.
-    links = schnorr::batch::verify(cancel, batch);
+    links = schnorr::batch::verify(device, cancel, batch);
     return !cancel;
 }
 

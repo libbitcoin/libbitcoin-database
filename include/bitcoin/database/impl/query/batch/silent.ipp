@@ -248,7 +248,8 @@ bool CLASS::get_silent_prevouts(data_chunk& prevouts,
 // The bank is read and computed under its guard alone, then released before
 // records are set, as no two tables are guarded at once.
 TEMPLATE
-code CLASS::compute_silents(const stopper& cancel, bool bank) NOEXCEPT
+code CLASS::compute_silents(const stopper& cancel, bool& device,
+    bool bank) NOEXCEPT
 {
     struct computed
     {
@@ -279,7 +280,7 @@ code CLASS::compute_silents(const stopper& cancel, bool bank) NOEXCEPT
         std_vector<ec_compressed> points{};
         data_chunk valid{};
         const silent::batch batch{ { rows, count } };
-        if (!silent::batch::compute(points, valid, cancel, batch))
+        if (!silent::batch::compute(points, valid, device, cancel, batch))
             return error::query_canceled;
 
         for (size_t row{}; row < count; ++row)
