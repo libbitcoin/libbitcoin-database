@@ -78,13 +78,16 @@ BOOST_AUTO_TEST_CASE(store__prune__pool__cleared)
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(query_.initialize(test::genesis));
     test::tx_spend_one_hash.inputs_ptr()->front()->metadata.parent_tx = 42;
-    BOOST_REQUIRE(query_.set_pooled(1, test::tx_spend_one_hash, validated_context));
+    BOOST_REQUIRE(query_.set(test::tx_spend_one_hash));
+
+    const auto link = query_.to_tx(test::tx_spend_one_hash.hash(false));
+    BOOST_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context));
     BOOST_REQUIRE(!instance.prune(test::events));
     BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
 
     pooled_tx pooled{};
     pooled.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, 1, validated_context), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, link, validated_context), error::unvalidated);
     BOOST_REQUIRE(query_.set_pooled(2, test::tx_spend_one_hash, validated_context));
     BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, 2, validated_context), error::success);
     BOOST_REQUIRE(!instance.close(test::events));
@@ -99,7 +102,10 @@ BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__pool_cleared)
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(query_.initialize(test::genesis));
     test::tx_spend_one_hash.inputs_ptr()->front()->metadata.parent_tx = 42;
-    BOOST_REQUIRE(query_.set_pooled(1, test::tx_spend_one_hash, validated_context));
+    BOOST_REQUIRE(query_.set(test::tx_spend_one_hash));
+
+    const auto link = query_.to_tx(test::tx_spend_one_hash.hash(false));
+    BOOST_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context));
     BOOST_REQUIRE(!instance.prune(test::events));
     BOOST_REQUIRE(!instance.close(test::events));
 
@@ -109,7 +115,7 @@ BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__pool_cleared)
 
     pooled_tx pooled{};
     pooled.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, 1, validated_context), error::unvalidated);
+    BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, link, validated_context), error::unvalidated);
     BOOST_REQUIRE(!instance.close(test::events));
 }
 
