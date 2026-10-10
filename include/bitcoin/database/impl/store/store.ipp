@@ -91,8 +91,12 @@ CLASS::store(const settings& config) NOEXCEPT
     schnorr1_head_(head(config.path / schema::dir::heads, schema::caches::schnorr1), head_settings(config.schnorr), sequential),
     schnorr1_body_(body(config.path, schema::caches::schnorr1), config.schnorr, sequential, staged),
 
-    silent_head_(head(config.path / schema::dir::heads, schema::caches::silent), head_settings(config.silent), sequential),
-    silent_body_(body(config.path, schema::caches::silent), config.silent, sequential, staged),
+    scan_head_(head(config.path / schema::dir::heads, schema::caches::scan), head_settings(config.silent), sequential),
+    scan_body_(body(config.path, schema::caches::scan), config.scan, sequential, staged),
+    silent0_head_(head(config.path / schema::dir::heads, schema::caches::silent0), head_settings(config.silent), sequential),
+    silent0_body_(body(config.path, schema::caches::silent0), config.silent, sequential, staged),
+    silent1_head_(head(config.path / schema::dir::heads, schema::caches::silent1), head_settings(config.silent), sequential),
+    silent1_body_(body(config.path, schema::caches::silent1), config.silent, sequential, staged),
 
     envelope_head_(head(config.path / schema::dir::heads, schema::caches::envelope), head_settings(config.duplicate), sequential),
     duplicate_head_(head(config.path / schema::dir::heads, schema::caches::duplicate), head_settings(config.duplicate), random),
@@ -148,7 +152,9 @@ CLASS::store(const settings& config) NOEXCEPT
     ecdsa1(ecdsa1_head_, ecdsa1_body_),
     schnorr0(schnorr0_head_, schnorr0_body_),
     schnorr1(schnorr1_head_, schnorr1_body_),
-    silent(silent_head_, silent_body_),
+    scan(scan_head_, scan_body_),
+    silent0(silent0_head_, silent0_body_),
+    silent1(silent1_head_, silent1_body_),
     envelope(envelope_head_),
     duplicate(duplicate_head_, duplicate_body_, config.duplicate.buckets, config.duplicate.expected),
     prevalid0(prevalid0_head_, prevalid0_body_),
@@ -246,6 +252,12 @@ table::ecdsa<Storage>& CLASS::ecdsa_bank(bool bank) NOEXCEPT
 }
 
 TEMPLATE
+table::silent<Storage>& CLASS::silent_bank(bool bank) NOEXCEPT
+{
+    return bank ? silent1 : silent0;
+}
+
+TEMPLATE
 table::schnorr<Storage>& CLASS::schnorr_bank(bool bank) NOEXCEPT
 {
     return bank ? schnorr1 : schnorr0;
@@ -296,7 +308,9 @@ void CLASS::set_current(bool current) NOEXCEPT
     ecdsa1_head_.current(current);
     schnorr0_head_.current(current);
     schnorr1_head_.current(current);
-    silent_head_.current(current);
+    scan_head_.current(current);
+    silent0_head_.current(current);
+    silent1_head_.current(current);
     envelope_head_.current(current);
     duplicate_head_.current(current);
     prevalid0_head_.current(current);

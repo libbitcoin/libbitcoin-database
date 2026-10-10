@@ -120,6 +120,7 @@ public:
     /// Batch tables of a bank.
     table::ecdsa<Storage>& ecdsa_bank(bool bank) NOEXCEPT;
     table::schnorr<Storage>& schnorr_bank(bool bank) NOEXCEPT;
+    table::silent<Storage>& silent_bank(bool bank) NOEXCEPT;
     table::prevalid& prevalid_bank(bool bank) NOEXCEPT;
 
     /// Reevaluate currency (called by chain writes).
@@ -225,8 +226,12 @@ protected:
     table::schnorr_storage<Storage> schnorr1_body_;
 
     // aggregate
-    Storage<one> silent_head_;
-    table::silent_storage<Storage> silent_body_;
+    Storage<one> scan_head_;
+    table::scan_storage<Storage> scan_body_;
+    Storage<one> silent0_head_;
+    table::silent_storage<Storage> silent0_body_;
+    Storage<one> silent1_head_;
+    table::silent_storage<Storage> silent1_body_;
 
     // headmap slab
     Storage<one> envelope_head_;
@@ -346,7 +351,9 @@ public:
     table::ecdsa<Storage> ecdsa1;
     table::schnorr<Storage> schnorr0;
     table::schnorr<Storage> schnorr1;
-    table::silent<Storage> silent;
+    table::scan<Storage> scan;
+    table::silent<Storage> silent0;
+    table::silent<Storage> silent1;
     table::envelope envelope;
     table::duplicate duplicate;
     table::prevalid prevalid0;

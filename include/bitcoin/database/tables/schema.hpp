@@ -48,7 +48,8 @@ namespace schema {
 /// 4.0.3.0 Second bank of ecdsa, schnorr, and prevalid batch tables.
 /// 4.0.4.0 Silent payment start height in the envelope.
 /// 4.0.5.0 Batch and silent payment tables as correlate and row columns.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 5, 0 };
+/// 4.0.6.0 Silent payment batch banks and scan table.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 6, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
@@ -333,8 +334,13 @@ TABLE_COLUMN(schnorr_row, system::hash_size + system::ec_xonly_size +
     system::ec_signature_size);
 
 // array
+TABLE_COLUMN(scan_correlate, schema::transaction::pk);
+TABLE_COLUMN(scan_row, schema::prefix + system::ec_compressed_size);
+
+// array
 TABLE_COLUMN(silent_correlate, schema::transaction::pk);
-TABLE_COLUMN(silent_row, schema::prefix + system::ec_compressed_size);
+TABLE_COLUMN(silent_row, schema::prefix + system::ec_compressed_size +
+    system::ec_secret_size);
 
 // array (same as candidate and confirmed)
 using prevalid = height;

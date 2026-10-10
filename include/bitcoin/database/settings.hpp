@@ -108,6 +108,7 @@ struct BCD_API settings
 
     simple_table ecdsa{};
     simple_table schnorr{};
+    simple_table scan{};
     simple_table silent{};
     hash_table duplicate{};
     simple_table prevalid{};

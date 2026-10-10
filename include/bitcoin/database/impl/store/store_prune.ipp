@@ -100,6 +100,13 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
                     handler(event_t::unload_file, table_t::schnorr1_body);
                     if (!ec) ec = schnorr1_body_.shrink();
                     handler(event_t::load_file, table_t::schnorr1_body);
+
+                    handler(event_t::unload_file, table_t::silent0_body);
+                    if (!ec) ec = silent0_body_.shrink();
+                    handler(event_t::load_file, table_t::silent0_body);
+                    handler(event_t::unload_file, table_t::silent1_body);
+                    if (!ec) ec = silent1_body_.shrink();
+                    handler(event_t::load_file, table_t::silent1_body);
                 }
             }
         }

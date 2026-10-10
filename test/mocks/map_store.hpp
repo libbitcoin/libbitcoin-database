@@ -221,34 +221,34 @@ public:
     ////    return schnorr0_body_.signature.file();
     ////}
 
-    inline const path& silent_head_file() const NOEXCEPT
+    inline const path& scan_head_file() const NOEXCEPT
     {
-        return silent_head_.file();
+        return scan_head_.file();
     }
 
-    inline size_t silent_frontier_() const NOEXCEPT
+    inline size_t scan_frontier_() const NOEXCEPT
     {
-        return silent_body_.frontier();
+        return scan_body_.frontier();
     }
 
-    inline size_t silent_logical_() const NOEXCEPT
+    inline size_t scan_logical_() const NOEXCEPT
     {
-        return silent_body_.size();
+        return scan_body_.size();
     }
 
-    ////inline const path& silent_body_correlate_file() const NOEXCEPT
+    ////inline const path& scan_body_correlate_file() const NOEXCEPT
     ////{
-    ////    return silent_body_.correlate.file();
+    ////    return scan_body_.correlate.file();
     ////}
 
-    ////inline const path& silent_body_prefix_file() const NOEXCEPT
+    ////inline const path& scan_body_prefix_file() const NOEXCEPT
     ////{
-    ////    return silent_body_.prefix.file();
+    ////    return scan_body_.prefix.file();
     ////}
 
-    ////inline const path& silent_body_compressed_file() const NOEXCEPT
+    ////inline const path& scan_body_compressed_file() const NOEXCEPT
     ////{
-    ////    return silent_body_.compressed.file();
+    ////    return scan_body_.compressed.file();
     ////}
 
     inline const path& envelope_head_file() const NOEXCEPT

@@ -77,8 +77,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.ecdsa.rate, 5u);
     BOOST_REQUIRE_EQUAL(configuration.schnorr.size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.schnorr.rate, 5u);
-    BOOST_REQUIRE_EQUAL(configuration.silent.size, 1u);
-    BOOST_REQUIRE_EQUAL(configuration.silent.rate, 5u);
+    BOOST_REQUIRE_EQUAL(configuration.scan.size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.scan.rate, 5u);
     BOOST_REQUIRE_EQUAL(configuration.duplicate.buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.duplicate.expected, 0u);
     BOOST_REQUIRE_EQUAL(configuration.duplicate.size, 1u);

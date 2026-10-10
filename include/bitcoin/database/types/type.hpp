@@ -42,7 +42,9 @@ using filter_link = table::filter_tx::link;
 using strong_link = table::strong_tx::link;
 using ecdsa_link = table::ecdsa_correlate::link;
 using schnorr_link = table::schnorr_correlate::link;
+using scan_link = table::scan_correlate::link;
 using silent_link = table::silent_correlate::link;
+using silent_prefix = table::scan_row::integral;
 
 /// Multiples.
 using header_links = std::vector<header_link::integer>;
@@ -65,7 +67,7 @@ using hash_option = std::optional<hash_digest>;
 
 using filter = system::data_chunk;
 using data_chunk = system::data_chunk;
-using silent_handler = system::silent::batch::handler;
+using silent_handler = system::scan::batch::handler;
 
 /// Common system::chain aliases.
 /// ---------------------------------------------------------------------------
