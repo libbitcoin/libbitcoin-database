@@ -67,7 +67,11 @@ inline tx_link CLASS::to_witness_tx(const hash_digest& key) const NOEXCEPT
             return link;
     }
 
-    return store_.tx.first(key);
+    for (const auto& link: to_duplicates(key))
+        if (!is_tx_segregated(link))
+            return link;
+
+    return {};
 }
 
 TEMPLATE

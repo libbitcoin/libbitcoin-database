@@ -197,6 +197,16 @@ static header_link set_below_coinbase(test::query_accessor& query, const chain::
     return stored && !query.set_code(link, { coinbase, spend }, false) ? link : header_link{};
 }
 
+// Pool the block's spend, its parents linked to the genesis coinbase.
+static bool set_pooled(test::query_accessor& query, const chain::block& block) NOEXCEPT
+{
+    const auto& spend = *block.transactions_ptr()->back();
+    for (const auto& in: *spend.inputs_ptr())
+        in->metadata.parent_tx = 0;
+
+    return query.set_pooled(query.to_tx(spend.hash(false)), spend, database::context{ 0, 1, 0 });
+}
+
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__unpooled_below_coinbase__one_record)
 {
     database::settings settings{};
@@ -226,8 +236,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__pooled_below_coinbase__no_r
     const auto link = set_below_coinbase(query, block);
     BOOST_REQUIRE(!link.is_terminal());
 
-    const auto& spend = *block.transactions_ptr()->back();
-    BOOST_REQUIRE(query.set_pooled(query.to_tx(spend.hash(false)), spend, database::context{ 0, 1, 0 }));
+    BOOST_REQUIRE(set_pooled(query, block));
     BOOST_REQUIRE(query.set_silent(link, block));
     BOOST_REQUIRE_EQUAL(query.scan_records(), 0u);
 }
@@ -263,8 +272,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__pooled_below_coinbase__no_
     const auto link = set_below_coinbase(query, block);
     BOOST_REQUIRE(!link.is_terminal());
 
-    const auto& spend = *block.transactions_ptr()->back();
-    BOOST_REQUIRE(query.set_pooled(query.to_tx(spend.hash(false)), spend, database::context{ 0, 1, 0 }));
+    BOOST_REQUIRE(set_pooled(query, block));
 
     size_t rows{};
     BOOST_REQUIRE(query.set_silents(rows, link, block, true));
