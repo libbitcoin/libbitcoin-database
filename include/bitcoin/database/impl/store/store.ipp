@@ -91,8 +91,8 @@ CLASS::store(const settings& config) NOEXCEPT
     schnorr1_head_(head(config.path / schema::dir::heads, schema::caches::schnorr1), head_settings(config.schnorr), sequential),
     schnorr1_body_(body(config.path, schema::caches::schnorr1), config.schnorr, sequential, staged),
 
-    scan_head_(head(config.path / schema::dir::heads, schema::caches::scan), head_settings(config.silent), sequential),
-    scan_body_(body(config.path, schema::caches::scan), config.scan, sequential, staged),
+    scan_head_(head(config.path / schema::dir::heads, schema::indexes::scan), head_settings(config.silent), sequential),
+    scan_body_(body(config.path, schema::indexes::scan), config.scan, sequential, staged),
     silent0_head_(head(config.path / schema::dir::heads, schema::caches::silent0), head_settings(config.silent), sequential),
     silent0_body_(body(config.path, schema::caches::silent0), config.silent, sequential, staged),
     silent1_head_(head(config.path / schema::dir::heads, schema::caches::silent1), head_settings(config.silent), sequential),

@@ -49,6 +49,11 @@ namespace archive
 
 namespace indexes
 {
+    // aggregate
+    constexpr auto scan = "index_scan";
+    constexpr auto scan_correlate = "identity"_t;
+    constexpr auto scan_row = "row"_t;
+
     constexpr auto candidate = "index_candidate";
     constexpr auto confirmed = "index_confirmed";
     constexpr auto duplicate = "index_duplicate";
@@ -70,11 +75,6 @@ namespace caches
     constexpr auto schnorr1 = "batch_schnorr1";
     constexpr auto schnorr_correlate = "identity"_t;
     constexpr auto schnorr_row = "row"_t;
-
-    // aggregate
-    constexpr auto scan = "batch_scan";
-    constexpr auto scan_correlate = "identity"_t;
-    constexpr auto scan_row = "row"_t;
 
     // aggregate
     constexpr auto silent0 = "batch_silent0";
