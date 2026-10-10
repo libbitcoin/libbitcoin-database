@@ -171,9 +171,13 @@ code CLASS::get_pooled_txs(pool_link& cursor, tx_links& out,
     const auto stop = std::min(end.value, store_.pool.count().value);
     for (; row < stop && out.size() < limit; ++row)
     {
+        // The first row of a tx is its last committed, so this skips both its
+        // earlier rows and any uncommitted row (its key does not resolve to it).
         const tx_link link{ store_.pool.get_key(row) };
-        if (!is_confirmed_tx(link))
-            out.push_back(link);
+        if (store_.pool.first(link) != row || is_confirmed_tx(link))
+            continue;
+
+        out.push_back(link);
     }
 
     cursor = row == stop ? end : pool_link{ row };
