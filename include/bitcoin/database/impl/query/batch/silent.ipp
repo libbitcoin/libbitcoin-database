@@ -298,11 +298,44 @@ code CLASS::compute_silents(const stopper& cancel, bool& device,
         }
     }
 
+    size_t rows{};
     for (const auto& tx: txs)
-        if (tx.valid && !set_silent_(tx.link, tx.point, tx.prefixes))
+        if (tx.valid)
+            rows += tx.prefixes.size();
+
+    if (is_zero(rows))
+        return error::success;
+
+    using word_t = table::scan_correlate::tx::integer;
+    const auto total = possible_narrow_cast<scan_link::integer>(rows);
+
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    // The valid rows of the bank are allocated and written together.
+    const auto fk = store_.scan.allocate(total);
+    if (fk.is_terminal())
+        return error::integrity;
+
+    // Guard against remap (required for nomaps::put(fk)).
+    const auto guard = store_.scan.guard();
+    const auto words = pointer_cast<word_t>(guard.data());
+
+    auto row = fk;
+    for (const auto& tx: txs)
+    {
+        if (!tx.valid)
+            continue;
+
+        if (!put_silent_(row, tx.link, tx.point, tx.prefixes, words))
             return error::integrity;
 
+        row += tx.prefixes.size();
+    }
+
+    store_.scan.complete(fk, total);
     return error::success;
+    // ========================================================================
 }
 
 // protected
@@ -431,11 +464,11 @@ bool CLASS::set_silent_(const tx_link& link, const ec_compressed& point,
         return false;
 
     using namespace system;
-    using row_t = table::scan_row::put_ref;
+    using word_t = table::scan_correlate::tx::integer;
+    const auto rows = possible_narrow_cast<scan_link::integer>(prefixes.size());
 
     // ========================================================================
     const auto scope = get_transactor();
-    auto rows = possible_narrow_cast<scan_link::integer>(prefixes.size());
 
     // Allocate rows across all columns.
     const auto fk = store_.scan.allocate(rows);
@@ -444,25 +477,38 @@ bool CLASS::set_silent_(const tx_link& link, const ec_compressed& point,
 
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = store_.scan.guard();
+    const auto words = pointer_cast<word_t>(guard.data());
+    if (!put_silent_(fk, link, point, prefixes, words))
+        return false;
 
+    store_.scan.complete(fk, rows);
+    return true;
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::put_silent_(const scan_link& fk, const tx_link& link,
+    const ec_compressed& point, const std::vector<silent_prefix>& prefixes,
+    table::scan_correlate::tx::integer* words) NOEXCEPT
+{
+    using namespace system;
+    using row_t = table::scan_row::put_ref;
     if (!store_.scan.row.put(fk, row_t{ {}, prefixes, point }))
         return false;
 
     // The guard is the correlate column, published last (get_silent_frontier).
     using word_t = table::scan_correlate::tx::integer;
     static_assert(schema::scan_correlate::minrow == sizeof(word_t));
-    const auto words = pointer_cast<word_t>(guard.data());
     const auto value = native_to_little_end(link.value);
+    const auto end = fk.value + prefixes.size();
 
-    for (auto row = fk.value; row < fk.value + rows; ++row)
+    for (auto row = fk.value; row < end; ++row)
     {
         std::atomic_ref<word_t> word{ *std::next(words, row) };
         word.store(value, std::memory_order_release);
     }
 
-    store_.scan.complete(fk, rows);
     return true;
-    // ========================================================================
 }
 
 } // namespace database
