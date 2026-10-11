@@ -121,6 +121,25 @@ static_assert(linkage<6>{ 40 } + 2u == 42_u64);
 static_assert(linkage<7>{ 40 } + 2u == 42_u64);
 static_assert(linkage<8>{ 40 } + 2u == 42_u64);
 
+// Linkage type trait.
+static_assert(is_linkage<linkage<0>>);
+static_assert(is_linkage<linkage<3>>);
+static_assert(is_linkage<linkage<8>>);
+static_assert(is_linkage<linkage<4, 26>>);
+static_assert(!is_linkage<uint8_t>);
+static_assert(!is_linkage<uint32_t>);
+static_assert(!is_linkage<data_array<3>>);
+
+// Serialized value sizes (not sizeof for links).
+static_assert(value_size<linkage<1>>() == 1);
+static_assert(value_size<linkage<3>>() == 3);
+static_assert(value_size<linkage<5>>() == 5);
+static_assert(value_size<linkage<4, 26>>() == 4);
+static_assert(value_size<uint8_t>() == 1);
+static_assert(value_size<uint16_t>() == 2);
+static_assert(value_size<uint32_t>() == 4);
+static_assert(value_size<uint64_t>() == 8);
+
 // assign integer
 
 BOOST_AUTO_TEST_CASE(linkage__assign_integer__1__expected)
