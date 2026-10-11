@@ -29,6 +29,8 @@ using small_link = linkage<3>;
 using unaligned_headmap = headmap<small_link, small_link::size>;
 using slab_link = linkage<5>;
 using slab_headmap = headmap<slab_link, max_size_t>;
+using value_link = linkage<3>;
+using value_headmap = headmap<value_link, one, uint8_t>;
 
 class little_slab
 {
@@ -49,6 +51,101 @@ public:
     }
 
     uint32_t value{ 0 };
+};
+
+// Opaque byte cell read.
+class byte_get
+{
+public:
+    static constexpr size_t size = one;
+
+    bool from_data(database::reader& source) NOEXCEPT
+    {
+        value = source.read_byte();
+        return source;
+    }
+
+    uint8_t value{};
+};
+
+// Opaque byte cell overwrite.
+class byte_put
+{
+public:
+    static constexpr size_t size = one;
+
+    bool from_data(database::reader& source) NOEXCEPT
+    {
+        source.skip_byte();
+        return source;
+    }
+
+    bool to_data(database::flipper& sink) const NOEXCEPT
+    {
+        sink.write_byte(value);
+        return sink;
+    }
+
+    uint8_t value{};
+};
+
+// Opaque byte cell flag merge.
+class flags_put
+{
+public:
+    static constexpr size_t size = one;
+
+    bool from_data(database::reader& source) NOEXCEPT
+    {
+        current = source.read_byte();
+        return source;
+    }
+
+    bool to_data(database::flipper& sink) const NOEXCEPT
+    {
+        sink.write_byte(bit_or<uint8_t>(current, flags));
+        return sink;
+    }
+
+    uint8_t flags{};
+    uint8_t current{};
+};
+
+// Two byte link cell overwrite.
+class link_put
+{
+public:
+    static constexpr size_t size = link::size;
+
+    bool from_data(database::reader& source) NOEXCEPT
+    {
+        source.skip_bytes(link::size);
+        return source;
+    }
+
+    bool to_data(database::flipper& sink) const NOEXCEPT
+    {
+        sink.write_little_endian<link::integer>(value);
+        return sink;
+    }
+
+    link::integer value{};
+};
+
+// Three byte link cell read.
+class small_link_get
+{
+public:
+    static constexpr size_t size = small_link::size;
+
+    bool from_data(database::reader& source) NOEXCEPT
+    {
+        using integer = small_link::integer;
+        value = source.read_little_endian<integer, small_link::size>();
+        return source;
+    }
+
+    small_link::integer value{};
 };
 
 BOOST_AUTO_TEST_CASE(headmap__create__empty__expected)
@@ -262,6 +359,112 @@ BOOST_AUTO_TEST_CASE(headmap__slab_setup__lifecycle__expected)
     little_slab out{};
     BOOST_REQUIRE(instance.get(link, out));
     BOOST_REQUIRE_EQUAL(out.value, 0x11223344_u32);
+}
+
+// cell get/set
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(headmap__get__beyond_count__false)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    value_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+
+    byte_get out{};
+    BOOST_REQUIRE(!instance.get(0u, out));
+}
+
+BOOST_AUTO_TEST_CASE(headmap__set__byte_beyond_count__filled_empty)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    value_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.set(3u, byte_put{ 0x2a }));
+    BOOST_REQUIRE_EQUAL(instance.count(), 4u);
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0000002a"));
+
+    byte_get out{};
+    BOOST_REQUIRE(instance.get(2u, out));
+    BOOST_REQUIRE_EQUAL(out.value, 0x00u);
+    BOOST_REQUIRE(instance.get(3u, out));
+    BOOST_REQUIRE_EQUAL(out.value, 0x2au);
+    BOOST_REQUIRE(!instance.get(4u, out));
+}
+
+BOOST_AUTO_TEST_CASE(headmap__set__byte_overwrite__expected)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    value_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.set(1u, byte_put{ 0x01 }));
+    BOOST_REQUIRE(instance.set(1u, byte_put{ 0x02 }));
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.at(1), 0x02u);
+}
+
+BOOST_AUTO_TEST_CASE(headmap__set__flags__merged)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    value_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.set(2u, flags_put{ 0x01 }));
+    BOOST_REQUIRE(instance.set(2u, flags_put{ 0x04 }));
+    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("000005"));
+    BOOST_REQUIRE_EQUAL(instance.at(2), 0x05u);
+}
+
+BOOST_AUTO_TEST_CASE(headmap__set__concurrent_flags__all_merged)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    value_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.set(0u, byte_put{}));
+
+    std::vector<size_t> rounds(byte_bits * 1000u);
+    std::iota(rounds.begin(), rounds.end(), zero);
+    std::for_each(poolstl::execution::par, rounds.cbegin(), rounds.cend(),
+        [&](size_t round) NOEXCEPT
+        {
+            const flags_put flag{ shift_left<uint8_t>(1u, round % byte_bits) };
+            instance.set(0u, flag);
+        });
+
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.at(0), 0xffu);
+}
+
+BOOST_AUTO_TEST_CASE(headmap__set__link_beyond_count__filled_terminal)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    test_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.set(2u, link_put{ 0x1122 }));
+    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("ffffffff2211"));
+    BOOST_REQUIRE(instance.at(0).is_terminal());
+    BOOST_REQUIRE(instance.at(1).is_terminal());
+    BOOST_REQUIRE_EQUAL(instance.at(2), 0x1122_u16);
+}
+
+BOOST_AUTO_TEST_CASE(headmap__get__unaligned_link__expected)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    unaligned_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.reserve(1u));
+    BOOST_REQUIRE(instance.push(0x112233_u32));
+
+    small_link_get out{};
+    BOOST_REQUIRE(instance.get(0u, out));
+    BOOST_REQUIRE_EQUAL(out.value, 0x112233_u32);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

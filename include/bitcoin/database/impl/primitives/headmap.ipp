@@ -132,7 +132,13 @@ code CLASS::reload() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-Link CLASS::at(size_t index) const NOEXCEPT
+memory CLASS::get_memory() const NOEXCEPT
+{
+    return file_.get();
+}
+
+TEMPLATE
+Value CLASS::at(size_t index) const NOEXCEPT
 {
     using namespace system;
 
@@ -147,9 +153,9 @@ Link CLASS::at(size_t index) const NOEXCEPT
     const auto raw = ptr.data();
     if constexpr (aligned)
     {
-        // Reads full padded word (masked by to_link).
+        // Reads full padded word (masked by to_value).
         const auto& head = *pointer_cast<std::atomic<cell>>(raw);
-        return to_link(head.load(std::memory_order_relaxed));
+        return to_value(head.load(load_order));
     }
     else
     {
@@ -160,18 +166,12 @@ Link CLASS::at(size_t index) const NOEXCEPT
         cell_array(value) = head;
         mutex_.unlock_shared();
 
-        return to_link(value);
+        return to_value(value);
     }
 }
 
 TEMPLATE
-memory CLASS::get_memory() const NOEXCEPT
-{
-    return file_.get();
-}
-
-TEMPLATE
-Link CLASS::at(const memory& ptr, size_t index) const NOEXCEPT
+Value CLASS::at(const memory& ptr, size_t index) const NOEXCEPT
 {
     using namespace system;
 
@@ -185,9 +185,9 @@ Link CLASS::at(const memory& ptr, size_t index) const NOEXCEPT
 
     if constexpr (aligned)
     {
-        // Reads full padded word (masked by to_link).
+        // Reads full padded word (masked by to_value).
         const auto& head = *pointer_cast<std::atomic<cell>>(raw);
-        return to_link(head.load(std::memory_order_relaxed));
+        return to_value(head.load(load_order));
     }
     else
     {
@@ -198,7 +198,7 @@ Link CLASS::at(const memory& ptr, size_t index) const NOEXCEPT
         cell_array(value) = head;
         mutex_.unlock_shared();
 
-        return to_link(value);
+        return to_value(value);
     }
 }
 
@@ -221,7 +221,7 @@ Link CLASS::allocate(const Link& bytes) NOEXCEPT
 }
 
 TEMPLATE
-template <typename Element>
+template <typename Element, if_equal<Element::size, Cell>>
 bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 {
     using namespace system;
@@ -250,7 +250,7 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 // NOT WRITER-WRITER THREAD SAFE (the element is read-write).
 TEMPLATE
-template <typename Element>
+template <typename Element, if_equal<Element::size, Cell>>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
     using namespace system;
@@ -315,6 +315,82 @@ bool CLASS::push(const Link& link) NOEXCEPT
 
     // Publication of the pre-written bucket is its allocation.
     return file_.allocate(bucket_size) != storage::eof;
+}
+
+// cell
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Cell>,
+    if_not_equal<Element::size, max_size_t>>
+bool CLASS::get(size_t index, Element& element) const NOEXCEPT
+{
+    using namespace system;
+    static_assert(!is_slab);
+
+    // Buckets at or above the logical size are unallocated (count publishes).
+    if (index >= count())
+        return false;
+
+    const auto ptr = file_.get(link_to_position(index));
+    if (!ptr)
+        return false;
+
+    const auto raw = ptr.data();
+    cell value{};
+    if constexpr (aligned)
+    {
+        const auto& head = *pointer_cast<std::atomic<cell>>(raw);
+        value = head.load(load_order);
+    }
+    else
+    {
+        const auto& head = cell_array(raw);
+
+        mutex_.lock_shared();
+        cell_array(value) = head;
+        mutex_.unlock_shared();
+    }
+
+    iostream stream{ pointer_cast<uint8_t>(&value), cell_size };
+    reader source{ stream };
+    return element.from_data(source);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Cell>,
+    if_not_equal<Element::size, max_size_t>>
+bool CLASS::set(size_t index, const Element& element) NOEXCEPT
+{
+    using namespace system;
+    static_assert(!is_slab);
+    static_assert(aligned, "set requires an aligned cell");
+
+    // Allocate as necessary and fill allocations.
+    const auto position = link_to_position(index);
+    const auto ptr = file_.get_filled(position, bucket_size, fill);
+    if (!ptr)
+        return false;
+
+    file_.prepare(position, bucket_size);
+    auto& top = *pointer_cast<std::atomic<cell>>(ptr.data());
+    auto head = top.load(std::memory_order_acquire);
+    auto written = true;
+    cell update{};
+    do
+    {
+        auto copy = element;
+        iostream current{ pointer_cast<uint8_t>(&head), cell_size };
+        reader source{ current };
+        iostream replacement{ pointer_cast<uint8_t>(&update), cell_size };
+        flipper sink{ replacement };
+        written = copy.from_data(source) && copy.to_data(sink);
+    }
+    while (written && !top.compare_exchange_weak(head, update,
+        std::memory_order_release, std::memory_order_acquire));
+
+    file_.mark(position, bucket_size);
+    return written;
 }
 
 } // namespace database

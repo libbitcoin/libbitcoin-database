@@ -29,13 +29,15 @@
 namespace libbitcoin {
 namespace database {
 
-/// A head-only array of links indexed by position (no body, no count cell).
+/// A head-only array of values indexed by position (no body, no count cell).
 /// The storage logical size is the count, providing count atomicity and
 /// bucket publication as with bodies. Content restores with the heads.
-/// A maximal cell is a slab, in which the link is a byte offset and elements
-/// are serialized, as with bodies (the link accessors do not apply).
-template <class Link, size_t Cell = Link::size,
-    if_not_greater<Link::size, Cell> = true>
+/// A value is a link (masked to terminal) or an opaque integral, of no more
+/// bytes than the cell or the link.
+/// A cell size of max_size_t is a slab, in which the link is a byte offset
+/// and elements are serialized as with bodies (cell accessors do not apply).
+template <class Link, size_t Cell = Link::size, class Value = Link,
+    if_not_greater<value_size<Value>(), std::min(Cell, Link::size)> = true>
 class headmap
 {
 public:
@@ -88,15 +90,29 @@ public:
     /// Query interface.
     /// -----------------------------------------------------------------------
 
-    /// Return link at index, terminal if at or above count.
-    Link at(size_t index) const NOEXCEPT;
-
     /// Head accessor (shared lock), for at(ptr, index) over many indexes.
     memory get_memory() const NOEXCEPT;
-    Link at(const memory& ptr, size_t index) const NOEXCEPT;
+
+    /// Return value at index, default (terminal link) if not allocated.
+    Value at(size_t index) const NOEXCEPT;
+
+    /// Return value at index using accessor, default if not allocated.
+    Value at(const memory& ptr, size_t index) const NOEXCEPT;
 
     /// Append link at count into reserved capacity (single writer).
     bool push(const Link& link) NOEXCEPT;
+
+    /// Get element at index, false if not allocated or deserialize error.
+    template <typename Element, if_equal<Element::size, Cell> = true,
+        if_not_equal<Element::size, max_size_t> = true>
+    bool get(size_t index, Element& element) const NOEXCEPT;
+
+    /// Set element at index, extending count as necessary (filled empty).
+    /// The element reads the current cell and writes its replacement, and is
+    /// rerun from a copy for each failed exchange.
+    template <typename Element, if_equal<Element::size, Cell> = true,
+        if_not_equal<Element::size, max_size_t> = true>
+    bool set(size_t index, const Element& element) NOEXCEPT;
 
     /// Slab.
     /// -----------------------------------------------------------------------
@@ -105,11 +121,11 @@ public:
     Link allocate(const Link& bytes) NOEXCEPT;
 
     /// Get element at link, false if deserialize error.
-    template <typename Element>
+    template <typename Element, if_equal<Element::size, Cell> = true>
     bool get(const Link& link, Element& element) const NOEXCEPT;
 
     /// Put element at allocated link, false if serialize error.
-    template <typename Element>
+    template <typename Element, if_equal<Element::size, Cell> = true>
     bool put(const Link& link, const Element& element) NOEXCEPT;
 
 private:
@@ -120,6 +136,16 @@ private:
     static constexpr bool aligned = (bucket_size == sizeof(cell));
     static_assert(is_nonzero(Link::size));
     static_assert(std::atomic<cell>::is_always_lock_free);
+
+    // Links are ordered by count publication, opaque values by the cell.
+    static constexpr auto is_link = is_linkage<Value>;
+    static constexpr auto cell_size = system::possible_narrow_sign_cast<
+        ptrdiff_t>(bucket_size);
+    static constexpr auto fill = is_link ? system::bit_all<uint8_t> : uint8_t{};
+    static constexpr auto load_order = is_link ? std::memory_order_relaxed :
+        std::memory_order_acquire;
+    static constexpr auto store_order = is_link ? std::memory_order_relaxed :
+        std::memory_order_release;
 
     INLINE static auto& cell_array(memory::iterator it) NOEXCEPT
     {
@@ -132,11 +158,14 @@ private:
         return cell_array(system::pointer_cast<uint8_t>(&value));
     }
 
-    INLINE static constexpr Link to_link(cell value) NOEXCEPT
+    INLINE static constexpr Value to_value(cell value) NOEXCEPT
     {
         using namespace system;
-        return possible_narrow_cast<typename Link::integer>(
-            bit_and<cell>(Link::terminal, value));
+        if constexpr (is_link)
+            return possible_narrow_cast<typename Value::integer>(
+                bit_and<cell>(Value::terminal, value));
+        else
+            return possible_narrow_cast<Value>(value);
     }
 
     // Byte offset of bucket index within head file.
@@ -162,12 +191,16 @@ private:
 template <typename Schema>
 using head_map = headmap<typename Schema::link, Schema::cell>;
 
+template <typename Schema>
+using value_map = headmap<typename Schema::link, Schema::cell,
+    typename Schema::value>;
+
 } // namespace database
 } // namespace libbitcoin
 
-#define TEMPLATE template <class Link, size_t Cell, \
-    if_not_greater<Link::size, Cell> If>
-#define CLASS headmap<Link, Cell, If>
+#define TEMPLATE template <class Link, size_t Cell, class Value, \
+    if_not_greater<value_size<Value>(), std::min(Cell, Link::size)> If>
+#define CLASS headmap<Link, Cell, Value, If>
 
 #include <bitcoin/database/impl/primitives/headmap.ipp>
 

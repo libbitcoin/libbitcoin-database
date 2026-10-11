@@ -88,6 +88,23 @@ bool operator!=(const linkage<Size, Bits, If>& left,
     return !(left == right);
 }
 
+/// True if the type is a linkage.
+template <typename Type>
+constexpr bool is_linkage = false;
+
+template <size_t Size, size_t Bits, bool If>
+constexpr bool is_linkage<linkage<Size, Bits, If>> = true;
+
+/// Serialized bytes of a linkage or integral value.
+template <typename Value>
+constexpr size_t value_size() NOEXCEPT
+{
+    if constexpr (is_linkage<Value>)
+        return Value::size;
+    else
+        return sizeof(Value);
+}
+
 } // namespace database
 } // namespace libbitcoin
 
