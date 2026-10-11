@@ -63,6 +63,9 @@ const CLASS::table_map CLASS::tables
     { table_t::scan_table, "scan_table" },
     { table_t::scan_head, "scan_head" },
     { table_t::scan_body, "scan_body" },
+    { table_t::scan_prefix_table, "scan_prefix_table" },
+    { table_t::scan_prefix_head, "scan_prefix_head" },
+    { table_t::scan_prefix_body, "scan_prefix_body" },
 
     // Caches.
     { table_t::ecdsa0_table, "ecdsa0_table" },
@@ -83,6 +86,12 @@ const CLASS::table_map CLASS::tables
     { table_t::silent1_table, "silent1_table" },
     { table_t::silent1_head, "silent1_head" },
     { table_t::silent1_body, "silent1_body" },
+    { table_t::silent0_prefix_table, "silent0_prefix_table" },
+    { table_t::silent0_prefix_head, "silent0_prefix_head" },
+    { table_t::silent0_prefix_body, "silent0_prefix_body" },
+    { table_t::silent1_prefix_table, "silent1_prefix_table" },
+    { table_t::silent1_prefix_head, "silent1_prefix_head" },
+    { table_t::silent1_prefix_body, "silent1_prefix_body" },
     { table_t::envelope_table, "envelope_table" },
     { table_t::envelope_head, "envelope_head" },
     { table_t::duplicate_table, "duplicate_table" },

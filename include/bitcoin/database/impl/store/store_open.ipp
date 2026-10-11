@@ -76,6 +76,7 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, confirmed, table_t::confirmed_table);
     verify(ec, strong_tx, table_t::strong_tx_table);
     verify(ec, scan, table_t::scan_table);
+    verify(ec, scan_prefix, table_t::scan_prefix_table);
 
     verify(ec, ecdsa0, table_t::ecdsa0_table);
     verify(ec, ecdsa1, table_t::ecdsa1_table);
@@ -83,6 +84,8 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, schnorr1, table_t::schnorr1_table);
     verify(ec, silent0, table_t::silent0_table);
     verify(ec, silent1, table_t::silent1_table);
+    verify(ec, silent0_prefix, table_t::silent0_prefix_table);
+    verify(ec, silent1_prefix, table_t::silent1_prefix_table);
     verify(ec, envelope, table_t::envelope_table);
     verify(ec, duplicate, table_t::duplicate_table);
     verify(ec, prevalid0, table_t::prevalid0_table);

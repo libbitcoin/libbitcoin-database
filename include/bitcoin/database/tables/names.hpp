@@ -52,7 +52,11 @@ namespace indexes
     // aggregate
     constexpr auto scan = "index_scan";
     constexpr auto scan_correlate = "identity"_t;
-    constexpr auto scan_row = "row"_t;
+    constexpr auto scan_point = "point"_t;
+    constexpr auto scan_outputs = "outputs"_t;
+
+    // array
+    constexpr auto scan_prefix = "index_scan_prefix";
 
     constexpr auto candidate = "index_candidate";
     constexpr auto confirmed = "index_confirmed";
@@ -67,20 +71,30 @@ namespace caches
     // aggregate
     constexpr auto ecdsa0 = "batch_ecdsa0";
     constexpr auto ecdsa1 = "batch_ecdsa1";
+    constexpr auto ecdsa_digest = "message"_t;
+    constexpr auto ecdsa_compressed = "key"_t;
+    constexpr auto ecdsa_signature = "signature"_t;
     constexpr auto ecdsa_correlate = "identity"_t;
-    constexpr auto ecdsa_row = "row"_t;
 
     // aggregate
     constexpr auto schnorr0 = "batch_schnorr0";
     constexpr auto schnorr1 = "batch_schnorr1";
+    constexpr auto schnorr_digest = "message"_t;
+    constexpr auto schnorr_xonly = "key"_t;
+    constexpr auto schnorr_signature = "signature"_t;
     constexpr auto schnorr_correlate = "identity"_t;
-    constexpr auto schnorr_row = "row"_t;
 
     // aggregate
     constexpr auto silent0 = "batch_silent0";
     constexpr auto silent1 = "batch_silent1";
     constexpr auto silent_correlate = "identity"_t;
-    constexpr auto silent_row = "row"_t;
+    constexpr auto silent_sum = "sum"_t;
+    constexpr auto silent_hash = "hash"_t;
+    constexpr auto silent_outputs = "outputs"_t;
+
+    // array
+    constexpr auto silent0_prefix = "batch_silent0_prefix";
+    constexpr auto silent1_prefix = "batch_silent1_prefix";
 
     constexpr auto envelope = "envelope";
     constexpr auto prevalid0 = "batch_prevalid0";

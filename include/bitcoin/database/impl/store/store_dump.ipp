@@ -54,6 +54,7 @@ code CLASS::dump(const path& folder,
     dump(ec, confirmed_head_, schema::indexes::confirmed, table_t::confirmed_head);
     dump(ec, strong_tx_head_, schema::indexes::strong_tx, table_t::strong_tx_head);
     dump(ec, scan_head_, schema::indexes::scan, table_t::scan_head);
+    dump(ec, scan_prefix_head_, schema::indexes::scan_prefix, table_t::scan_prefix_head);
 
     dump(ec, ecdsa0_head_, schema::caches::ecdsa0, table_t::ecdsa0_head);
     dump(ec, ecdsa1_head_, schema::caches::ecdsa1, table_t::ecdsa1_head);
@@ -61,6 +62,8 @@ code CLASS::dump(const path& folder,
     dump(ec, schnorr1_head_, schema::caches::schnorr1, table_t::schnorr1_head);
     dump(ec, silent0_head_, schema::caches::silent0, table_t::silent0_head);
     dump(ec, silent1_head_, schema::caches::silent1, table_t::silent1_head);
+    dump(ec, silent0_prefix_head_, schema::caches::silent0_prefix, table_t::silent0_prefix_head);
+    dump(ec, silent1_prefix_head_, schema::caches::silent1_prefix, table_t::silent1_prefix_head);
     dump(ec, envelope_head_, schema::caches::envelope, table_t::envelope_head);
     dump(ec, duplicate_head_, schema::indexes::duplicate, table_t::duplicate_head);
     dump(ec, prevalid0_head_, schema::caches::prevalid0, table_t::prevalid0_head);

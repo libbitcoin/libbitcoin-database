@@ -37,20 +37,29 @@ bool CLASS::verify_schnorr_signatures(const stopper& cancel,
 {
     auto& bank_table = store_.schnorr_bank(bank);
     const auto correlate_ptr = bank_table.correlate.get_memory();
-    const auto row_ptr = bank_table.row.get_memory();
+    const auto digest_ptr = bank_table.digest.get_memory();
+    const auto xonly_ptr = bank_table.xonly.get_memory();
+    const auto signature_ptr = bank_table.signature.get_memory();
 
     using correlate_t = const system::schnorr::batch::correlate_t;
-    using row_t = const system::schnorr::batch::row_t;
+    using digest_t = const table::schnorr_digest::span;
+    using xonly_t = const table::schnorr_xonly::span;
+    using signature_t = const table::schnorr_signature::span;
 
     using namespace system;
     const auto correlate = pointer_cast<correlate_t>(correlate_ptr.data());
-    const auto row = pointer_cast<row_t>(row_ptr.data());
+    const auto digest = pointer_cast<digest_t>(digest_ptr.data());
+    const auto xonly = pointer_cast<xonly_t>(xonly_ptr.data());
+    const auto signature = pointer_cast<signature_t>(signature_ptr.data());
 
+    // Shortest column.
     const auto count = bank_table.count();
     const schnorr::batch batch
     {
         .correlates = { correlate, count },
-        .rows = { row, count }
+        .digests = { digest, count },
+        .points = { xonly, count },
+        .signatures = { signature, count }
     };
 
     // False return only implies canceled.
@@ -75,7 +84,9 @@ bool CLASS::set_signatures(const system::chain::schnorr_signatures& sigs,
     const header_link& link, bool bank) NOEXCEPT
 {
     using correlate_t = table::schnorr_correlate::put_signatures;
-    using row_t = table::schnorr_row::put_signatures;
+    using digest_t = table::schnorr_digest::put_signatures;
+    using xonly_t = table::schnorr_xonly::put_signatures;
+    using signature_t = table::schnorr_signature::put_signatures;
 
     if (sigs.empty())
         return true;
@@ -97,10 +108,12 @@ bool CLASS::set_signatures(const system::chain::schnorr_signatures& sigs,
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = bank_table.guard();
 
-    // Write the accumulator to the columns.
+    // Deinterleave the accumulator into the columns.
     return
         bank_table.correlate.put(fk, correlate_t{ {}, link, sigs }) &&
-        bank_table.row.put(fk, row_t{ {}, sigs });
+        bank_table.digest.put(fk, digest_t{ {}, sigs }) &&
+        bank_table.xonly.put(fk, xonly_t{ {}, sigs }) &&
+        bank_table.signature.put(fk, signature_t{ {}, sigs });
     // ========================================================================
 }
 

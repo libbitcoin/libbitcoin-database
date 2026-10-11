@@ -77,6 +77,8 @@ CLASS::store(const settings& config) NOEXCEPT
     strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx, sequential, staged),
     scan_head_(head(config.path / schema::dir::heads, schema::indexes::scan), head_settings(config.scan), sequential),
     scan_body_(body(config.path, schema::indexes::scan), config.scan, sequential, staged),
+    scan_prefix_head_(head(config.path / schema::dir::heads, schema::indexes::scan_prefix), head_settings(config.scan), sequential),
+    scan_prefix_body_(body(config.path, schema::indexes::scan_prefix), config.scan, sequential, staged),
 
     // Caches.
     // ------------------------------------------------------------------------
@@ -97,6 +99,10 @@ CLASS::store(const settings& config) NOEXCEPT
     silent0_body_(body(config.path, schema::caches::silent0), config.silent, sequential, staged),
     silent1_head_(head(config.path / schema::dir::heads, schema::caches::silent1), head_settings(config.silent), sequential),
     silent1_body_(body(config.path, schema::caches::silent1), config.silent, sequential, staged),
+    silent0_prefix_head_(head(config.path / schema::dir::heads, schema::caches::silent0_prefix), head_settings(config.silent), sequential),
+    silent0_prefix_body_(body(config.path, schema::caches::silent0_prefix), config.silent, sequential, staged),
+    silent1_prefix_head_(head(config.path / schema::dir::heads, schema::caches::silent1_prefix), head_settings(config.silent), sequential),
+    silent1_prefix_body_(body(config.path, schema::caches::silent1_prefix), config.silent, sequential, staged),
 
     envelope_head_(head(config.path / schema::dir::heads, schema::caches::envelope), head_settings(config.duplicate), sequential),
     duplicate_head_(head(config.path / schema::dir::heads, schema::indexes::duplicate), head_settings(config.duplicate), random),
@@ -150,6 +156,7 @@ CLASS::store(const settings& config) NOEXCEPT
     confirmed(confirmed_head_),
     strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx.buckets, config.strong_tx.expected),
     scan(scan_head_, scan_body_),
+    scan_prefix(scan_prefix_head_, scan_prefix_body_),
 
     ecdsa0(ecdsa0_head_, ecdsa0_body_),
     ecdsa1(ecdsa1_head_, ecdsa1_body_),
@@ -157,6 +164,8 @@ CLASS::store(const settings& config) NOEXCEPT
     schnorr1(schnorr1_head_, schnorr1_body_),
     silent0(silent0_head_, silent0_body_),
     silent1(silent1_head_, silent1_body_),
+    silent0_prefix(silent0_prefix_head_, silent0_prefix_body_),
+    silent1_prefix(silent1_prefix_head_, silent1_prefix_body_),
     envelope(envelope_head_),
     duplicate(duplicate_head_, duplicate_body_, config.duplicate.buckets, config.duplicate.expected),
     prevalid0(prevalid0_head_, prevalid0_body_),
@@ -261,6 +270,12 @@ table::silent<Storage>& CLASS::silent_bank(bool bank) NOEXCEPT
 }
 
 TEMPLATE
+table::silent_prefix& CLASS::silent_prefix_bank(bool bank) NOEXCEPT
+{
+    return bank ? silent1_prefix : silent0_prefix;
+}
+
+TEMPLATE
 table::schnorr<Storage>& CLASS::schnorr_bank(bool bank) NOEXCEPT
 {
     return bank ? schnorr1 : schnorr0;
@@ -308,12 +323,15 @@ void CLASS::set_current(bool current) NOEXCEPT
     confirmed_head_.current(current);
     strong_tx_head_.current(current);
     scan_head_.current(current);
+    scan_prefix_head_.current(current);
     ecdsa0_head_.current(current);
     ecdsa1_head_.current(current);
     schnorr0_head_.current(current);
     schnorr1_head_.current(current);
     silent0_head_.current(current);
     silent1_head_.current(current);
+    silent0_prefix_head_.current(current);
+    silent1_prefix_head_.current(current);
     envelope_head_.current(current);
     duplicate_head_.current(current);
     prevalid0_head_.current(current);

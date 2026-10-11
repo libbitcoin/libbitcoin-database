@@ -27,14 +27,14 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// schnorr_row is an array of schnorr verification digest|key|signature rows.
-struct schnorr_row
-  : public no_map<schema::schnorr_row>
+/// schnorr_digest is an array of schnorr verification record signature hashes.
+struct schnorr_digest
+  : public no_map<schema::schnorr_digest>
 {
-    using no_map<schema::schnorr_row>::nomap;
+    using no_map<schema::schnorr_digest>::nomap;
 
     struct put_ref
-      : public schema::schnorr_row
+      : public schema::schnorr_digest
     {
         inline link count() const NOEXCEPT
         {
@@ -44,19 +44,15 @@ struct schnorr_row
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             sink.write_bytes(digest);
-            sink.write_bytes(key);
-            sink.write_bytes(signature);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
         const system::hash_digest& digest;
-        const system::ec_xonly& key;
-        const system::ec_signature& signature;
     };
 
     struct put_signatures
-      : public schema::schnorr_row
+      : public schema::schnorr_digest
     {
         inline link count() const NOEXCEPT
         {
@@ -67,11 +63,99 @@ struct schnorr_row
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
             for (const auto& row: sigs.rows())
-            {
                 sink.write_bytes(row.digest);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const system::chain::schnorr_signatures& sigs;
+    };
+};
+
+/// schnorr_xonly is an array of schnorr verification xonly public keys.
+struct schnorr_xonly
+  : public no_map<schema::schnorr_xonly>
+{
+    using no_map<schema::schnorr_xonly>::nomap;
+
+    struct put_ref
+      : public schema::schnorr_xonly
+    {
+        inline link count() const NOEXCEPT
+        {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_bytes(point);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const system::ec_xonly& point;
+    };
+
+    struct put_signatures
+      : public schema::schnorr_xonly
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                sigs.rows().size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto& row: sigs.rows())
                 sink.write_bytes(row.point);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const system::chain::schnorr_signatures& sigs;
+    };
+};
+
+/// schnorr_signature is an array of schnorr verification signatures.
+struct schnorr_signature
+  : public no_map<schema::schnorr_signature>
+{
+    using no_map<schema::schnorr_signature>::nomap;
+
+    struct put_ref
+      : public schema::schnorr_signature
+    {
+        inline link count() const NOEXCEPT
+        {
+            return 1;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_bytes(signature);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const system::ec_signature& signature;
+    };
+
+    struct put_signatures
+      : public schema::schnorr_signature
+    {
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                sigs.rows().size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto& row: sigs.rows())
                 sink.write_bytes(row.signature);
-            }
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
@@ -156,7 +240,9 @@ using schnorr_files = mmaps
 <
     Storage,
     schnorr_correlate,
-    schnorr_row
+    schnorr_digest,
+    schnorr_xonly,
+    schnorr_signature
 >;
 
 template <template <size_t...> class Storage>
@@ -179,7 +265,9 @@ using schnorr_table = nomaps
 <
     schnorr_correlate::link,
     schnorr_correlate,
-    schnorr_row
+    schnorr_digest,
+    schnorr_xonly,
+    schnorr_signature
 >;
 
 template <template <size_t...> class Storage>
@@ -190,17 +278,20 @@ public:
     schnorr(database::storage& head, schnorr_storage<Storage>& body) NOEXCEPT
       : schnorr_table(head, body),
         correlate(*this),
-        row(*this)
+        digest(*this),
+        xonly(*this),
+        signature(*this)
     {
     }
 
     column<schnorr_table, 0> correlate;
-    column<schnorr_table, 1> row;
+    column<schnorr_table, 1> digest;
+    column<schnorr_table, 2> xonly;
+    column<schnorr_table, 3> signature;
 };
 
 static_assert(sizeof(system::schnorr::batch::correlate_t) ==
     schnorr_correlate::width);
-static_assert(sizeof(system::schnorr::batch::row_t) == schnorr_row::width);
 
 } // namespace table
 } // namespace database

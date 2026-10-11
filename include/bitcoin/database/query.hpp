@@ -142,12 +142,15 @@ public:
     size_t confirmed_head_size() const NOEXCEPT;
     size_t strong_tx_head_size() const NOEXCEPT;
     size_t scan_head_size() const NOEXCEPT;
+    size_t scan_prefix_head_size() const NOEXCEPT;
     size_t ecdsa0_head_size() const NOEXCEPT;
     size_t ecdsa1_head_size() const NOEXCEPT;
     size_t schnorr0_head_size() const NOEXCEPT;
     size_t schnorr1_head_size() const NOEXCEPT;
     size_t silent0_head_size() const NOEXCEPT;
     size_t silent1_head_size() const NOEXCEPT;
+    size_t silent0_prefix_head_size() const NOEXCEPT;
+    size_t silent1_prefix_head_size() const NOEXCEPT;
     size_t duplicate_head_size() const NOEXCEPT;
     size_t prevalid0_head_size() const NOEXCEPT;
     size_t prevalid1_head_size() const NOEXCEPT;
@@ -172,12 +175,15 @@ public:
     size_t confirmed_body_size() const NOEXCEPT;
     size_t strong_tx_body_size() const NOEXCEPT;
     size_t scan_body_size() const NOEXCEPT;
+    size_t scan_prefix_body_size() const NOEXCEPT;
     size_t ecdsa0_body_size() const NOEXCEPT;
     size_t ecdsa1_body_size() const NOEXCEPT;
     size_t schnorr0_body_size() const NOEXCEPT;
     size_t schnorr1_body_size() const NOEXCEPT;
     size_t silent0_body_size() const NOEXCEPT;
     size_t silent1_body_size() const NOEXCEPT;
+    size_t silent0_prefix_body_size() const NOEXCEPT;
+    size_t silent1_prefix_body_size() const NOEXCEPT;
     size_t duplicate_body_size() const NOEXCEPT;
     size_t prevalid0_body_size() const NOEXCEPT;
     size_t prevalid1_body_size() const NOEXCEPT;
@@ -202,12 +208,15 @@ public:
     size_t confirmed_size() const NOEXCEPT;
     size_t strong_tx_size() const NOEXCEPT;
     size_t scan_size() const NOEXCEPT;
+    size_t scan_prefix_size() const NOEXCEPT;
     size_t ecdsa0_size() const NOEXCEPT;
     size_t ecdsa1_size() const NOEXCEPT;
     size_t schnorr0_size() const NOEXCEPT;
     size_t schnorr1_size() const NOEXCEPT;
     size_t silent0_size() const NOEXCEPT;
     size_t silent1_size() const NOEXCEPT;
+    size_t silent0_prefix_size() const NOEXCEPT;
+    size_t silent1_prefix_size() const NOEXCEPT;
     size_t duplicate_size() const NOEXCEPT;
     size_t prevalid0_size() const NOEXCEPT;
     size_t prevalid1_size() const NOEXCEPT;
@@ -245,12 +254,15 @@ public:
     size_t confirmed_records() const NOEXCEPT;
     size_t strong_tx_records() const NOEXCEPT;
     size_t scan_records() const NOEXCEPT;
+    size_t scan_prefix_records() const NOEXCEPT;
     size_t ecdsa0_records() const NOEXCEPT;
     size_t ecdsa1_records() const NOEXCEPT;
     size_t schnorr0_records() const NOEXCEPT;
     size_t schnorr1_records() const NOEXCEPT;
     size_t silent0_records() const NOEXCEPT;
     size_t silent1_records() const NOEXCEPT;
+    size_t silent0_prefix_records() const NOEXCEPT;
+    size_t silent1_prefix_records() const NOEXCEPT;
     size_t duplicate_records() const NOEXCEPT;
     size_t prevalid0_records() const NOEXCEPT;
     size_t prevalid1_records() const NOEXCEPT;
@@ -1105,9 +1117,9 @@ protected:
     bool set_silent_(const tx_link& link, const ec_compressed& point,
         const std::vector<silent_prefix>& prefixes) NOEXCEPT;
 
-    /// Write silent payment records at fk, caller must hold transactor.
+    /// Write a scan tx's outputs and publish it, caller must hold transactor.
     bool put_silent_(const scan_link& fk, const tx_link& link,
-        const ec_compressed& point, const std::vector<silent_prefix>& prefixes,
+        const prefix_link& first, size_t outputs,
         table::scan_correlate::tx::integer* words) NOEXCEPT;
 
     /// A block's tx is indexed unless linked below its coinbase and pooled.

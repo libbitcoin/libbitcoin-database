@@ -41,19 +41,64 @@ BOOST_AUTO_TEST_CASE(scan__create_verify_close__aggregate__expected)
     BOOST_REQUIRE(instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(scan__put_columns__three_rows__expected)
+BOOST_AUTO_TEST_CASE(scan__put_columns__two_rows__expected)
 {
     scan_storage head{ "head" };
     scan_storage body{ "body" };
     scan_table instance{ head, body };
     BOOST_REQUIRE(instance.create());
 
-    constexpr auto rows = 3_size;
-    constexpr auto tx_fk = 0x11223344_u32;
     constexpr auto compressed = base16_array
     (
         "111111111111111111111111111111111111111111111111111111111111111111"
     );
+
+    const auto fk = instance.allocate(2);
+    BOOST_REQUIRE_EQUAL(fk, 0u);
+
+    BOOST_REQUIRE(instance.correlate.put(fk, table::scan_correlate::record{ {}, 0x11223344_u32 }));
+    BOOST_REQUIRE(instance.point.put(fk, table::scan_point::put_ref{ {}, compressed }));
+    BOOST_REQUIRE(instance.outputs.put(fk, table::scan_outputs::record{ {}, 0x01020304_u32, 0x060708_u32 }));
+    BOOST_REQUIRE(instance.correlate.put(fk + 1, table::scan_correlate::record{ {}, 0x55667788_u32 }));
+    BOOST_REQUIRE(instance.point.put(fk + 1, table::scan_point::put_ref{ {}, compressed }));
+    BOOST_REQUIRE(instance.outputs.put(fk + 1, table::scan_outputs::record{ {}, 0x0a0b0c0d_u32, 0x0f1011_u32 }));
+
+    const auto expected_correlate = base16_chunk
+    (
+        "44332211"
+        "88776655"
+    );
+    const auto expected_point = base16_chunk
+    (
+        "111111111111111111111111111111111111111111111111111111111111111111"
+        "111111111111111111111111111111111111111111111111111111111111111111"
+    );
+    const auto expected_outputs = base16_chunk
+    (
+        "04030201" "080706"
+        "0d0c0b0a" "11100f"
+    );
+
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(0), expected_correlate);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_point);
+    BOOST_REQUIRE_EQUAL(body.buffers_.at(2), expected_outputs);
+
+    table::scan_outputs::record outputs{};
+    BOOST_REQUIRE(instance.outputs.get(fk + 1, outputs));
+    BOOST_REQUIRE_EQUAL(outputs.first, 0x0a0b0c0d_u32);
+    BOOST_REQUIRE_EQUAL(outputs.outputs, 0x0f1011_u32);
+    BOOST_REQUIRE(instance.close());
+}
+
+// scan_prefix
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(scan_prefix__put_refs__three__expected)
+{
+    test::chunk_storage head{};
+    test::chunk_storage body{};
+    table::scan_prefix instance{ head, body };
+    BOOST_REQUIRE(instance.create());
 
     const std::vector<uint64_t> prefixes
     {
@@ -64,30 +109,43 @@ BOOST_AUTO_TEST_CASE(scan__put_columns__three_rows__expected)
 
     const auto fk = instance.allocate(3);
     BOOST_REQUIRE_EQUAL(fk, 0u);
+    BOOST_REQUIRE(instance.put(fk, table::scan_prefix::put_refs{ {}, prefixes }));
 
-    const table::scan_correlate::records correlate{ {}, rows, tx_fk };
-    const table::scan_row::put_ref row{ {}, prefixes, compressed };
-    BOOST_REQUIRE(instance.correlate.put(fk, correlate));
-    BOOST_REQUIRE(instance.row.put(fk, row));
-
-    const auto expected_correlate = base16_chunk
-    (
-        "44332211"
-        "44332211"
-        "44332211"
-    );
-    const auto expected_row = base16_chunk
+    const auto expected = base16_chunk
     (
         "1111111111111111"
-        "111111111111111111111111111111111111111111111111111111111111111111"
         "2222222222222222"
-        "111111111111111111111111111111111111111111111111111111111111111111"
         "3333333333333333"
-        "111111111111111111111111111111111111111111111111111111111111111111"
     );
 
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(0), expected_correlate);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_row);
+    BOOST_REQUIRE_EQUAL(body.buffer(), expected);
+    BOOST_REQUIRE(instance.close());
+}
+
+BOOST_AUTO_TEST_CASE(scan_prefix__put_span__two__expected)
+{
+    test::chunk_storage head{};
+    test::chunk_storage body{};
+    table::scan_prefix instance{ head, body };
+    BOOST_REQUIRE(instance.create());
+
+    const std::vector<table::scan_prefix::bytes> prefixes
+    {
+        base16_array("0102030405060708"),
+        base16_array("1112131415161718")
+    };
+
+    const auto fk = instance.allocate(2);
+    BOOST_REQUIRE_EQUAL(fk, 0u);
+    BOOST_REQUIRE(instance.put(fk, table::scan_prefix::put_span{ {}, prefixes }));
+
+    const auto expected = base16_chunk
+    (
+        "0102030405060708"
+        "1112131415161718"
+    );
+
+    BOOST_REQUIRE_EQUAL(body.buffer(), expected);
     BOOST_REQUIRE(instance.close());
 }
 

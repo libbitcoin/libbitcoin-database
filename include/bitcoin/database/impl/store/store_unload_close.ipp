@@ -61,6 +61,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, strong_tx_body_, table_t::strong_tx_body);
     unload(ec, scan_head_, table_t::scan_head);
     unload(ec, scan_body_, table_t::scan_body);
+    unload(ec, scan_prefix_head_, table_t::scan_prefix_head);
+    unload(ec, scan_prefix_body_, table_t::scan_prefix_body);
 
     unload(ec, ecdsa0_head_, table_t::ecdsa0_head);
     unload(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -74,6 +76,10 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, silent0_body_, table_t::silent0_body);
     unload(ec, silent1_head_, table_t::silent1_head);
     unload(ec, silent1_body_, table_t::silent1_body);
+    unload(ec, silent0_prefix_head_, table_t::silent0_prefix_head);
+    unload(ec, silent0_prefix_body_, table_t::silent0_prefix_body);
+    unload(ec, silent1_prefix_head_, table_t::silent1_prefix_head);
+    unload(ec, silent1_prefix_body_, table_t::silent1_prefix_body);
     unload(ec, envelope_head_, table_t::envelope_head);
     unload(ec, duplicate_head_, table_t::duplicate_head);
     unload(ec, duplicate_body_, table_t::duplicate_body);
@@ -127,6 +133,8 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, strong_tx_body_, table_t::strong_tx_body);
     close(ec, scan_head_, table_t::scan_head);
     close(ec, scan_body_, table_t::scan_body);
+    close(ec, scan_prefix_head_, table_t::scan_prefix_head);
+    close(ec, scan_prefix_body_, table_t::scan_prefix_body);
 
     close(ec, ecdsa0_head_, table_t::ecdsa0_head);
     close(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -140,6 +148,10 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, silent0_body_, table_t::silent0_body);
     close(ec, silent1_head_, table_t::silent1_head);
     close(ec, silent1_body_, table_t::silent1_body);
+    close(ec, silent0_prefix_head_, table_t::silent0_prefix_head);
+    close(ec, silent0_prefix_body_, table_t::silent0_prefix_body);
+    close(ec, silent1_prefix_head_, table_t::silent1_prefix_head);
+    close(ec, silent1_prefix_body_, table_t::silent1_prefix_body);
     close(ec, envelope_head_, table_t::envelope_head);
     close(ec, duplicate_head_, table_t::duplicate_head);
     close(ec, duplicate_body_, table_t::duplicate_body);

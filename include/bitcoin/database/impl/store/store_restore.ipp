@@ -139,6 +139,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, confirmed, table_t::confirmed_table);
         restore(ec, strong_tx, table_t::strong_tx_table);
         restore(ec, scan, table_t::scan_table);
+        restore(ec, scan_prefix, table_t::scan_prefix_table);
 
         // ecdsa, schnorr, and prevalid are dropped.
         //---------------------------------------------------------------------
@@ -155,6 +156,8 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         dropped(ec, schnorr1, table_t::schnorr1_table);
         restore(ec, silent0, table_t::silent0_table);
         restore(ec, silent1, table_t::silent1_table);
+        restore(ec, silent0_prefix, table_t::silent0_prefix_table);
+        restore(ec, silent1_prefix, table_t::silent1_prefix_table);
         restore(ec, envelope, table_t::envelope_table);
         restore(ec, duplicate, table_t::duplicate_table);
         dropped(ec, prevalid0, table_t::prevalid0_table);
