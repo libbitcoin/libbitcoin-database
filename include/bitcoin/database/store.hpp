@@ -141,13 +141,13 @@ protected:
     code backup(const event_handler& handler, bool prune=false) NOEXCEPT;
     code dump(const path& folder, const event_handler& handler) NOEXCEPT;
 
-    /// Retain the pool rows of txs that can yet confirm (prune helpers).
+    /// Retain the pool records of txs that can yet confirm (prune helpers).
     template <typename Reset>
     code compact(const event_handler& handler, const Reset& reset) NOEXCEPT;
     bool is_retained(bool& out, const tx_link& link,
         table::pool& retained) NOEXCEPT;
 
-    /// Copy the pool rows accepted by keep, with their spends, in row order,
+    /// Copy the pool records accepted by keep, with their spends, in order,
     /// passing the link and witness hash of each copied record to index.
     template <typename Keep, typename Index>
     bool copy_pool(table::pool& to, table::spends& to_spends,

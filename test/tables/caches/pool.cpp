@@ -112,20 +112,20 @@ BOOST_AUTO_TEST_CASE(pool__put__columns_then_commit__expected)
     table::pool instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
 
-    const auto row = instance.allocate(1);
-    BOOST_REQUIRE_EQUAL(row, 0u);
+    const auto link = instance.allocate(1);
+    BOOST_REQUIRE_EQUAL(link, 0u);
 
     auto guard = instance.get_memory();
     BOOST_REQUIRE(guard);
-    BOOST_REQUIRE(instance.id0.put(row, word{ {}, 0x0706050403020100 }));
-    BOOST_REQUIRE(instance.id1.put(row, word{ {}, 0x0f0e0d0c0b0a0908 }));
-    BOOST_REQUIRE(instance.id2.put(row, word{ {}, 0x1716151413121110 }));
-    BOOST_REQUIRE(instance.id3.put(row, word{ {}, 0x1f1e1d1c1b1a1918 }));
+    BOOST_REQUIRE(instance.id0.put(link, word{ {}, 0x0706050403020100 }));
+    BOOST_REQUIRE(instance.id1.put(link, word{ {}, 0x0f0e0d0c0b0a0908 }));
+    BOOST_REQUIRE(instance.id2.put(link, word{ {}, 0x1716151413121110 }));
+    BOOST_REQUIRE(instance.id3.put(link, word{ {}, 0x1f1e1d1c1b1a1918 }));
     guard.reset();
 
     BOOST_REQUIRE(instance.first(key1).is_terminal());
-    BOOST_REQUIRE(instance.put(row, key1, in1));
-    BOOST_REQUIRE_EQUAL(instance.first(key1), row);
+    BOOST_REQUIRE(instance.put(link, key1, in1));
+    BOOST_REQUIRE_EQUAL(instance.first(key1), link);
 
     BOOST_REQUIRE_EQUAL(body_store.buffers_.at(1), base16_chunk("0001020304050607"));
     BOOST_REQUIRE_EQUAL(body_store.buffers_.at(2), base16_chunk("08090a0b0c0d0e0f"));
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(pool__put__columns_then_commit__expected)
     BOOST_REQUIRE_EQUAL(body_store.buffers_.at(4), base16_chunk("18191a1b1c1d1e1f"));
 
     word out{};
-    BOOST_REQUIRE(instance.id2.get(row, out));
+    BOOST_REQUIRE(instance.id2.get(link, out));
     BOOST_REQUIRE_EQUAL(out.word, 0x1716151413121110u);
 }
 

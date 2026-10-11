@@ -166,6 +166,9 @@
     <ClCompile Include="..\..\..\..\test\query\navigate\navigate_hashmap.cpp" />
     <ClCompile Include="..\..\..\..\test\query\navigate\navigate_natural.cpp" />
     <ClCompile Include="..\..\..\..\test\query\navigate\navigate_reverse.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\pool.cpp">
+      <ObjectFileName>$(IntDir)test_query_pool.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\properties_block.cpp" />
     <ClCompile Include="..\..\..\..\test\query\properties_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\query\sequences.cpp" />
@@ -197,7 +200,9 @@
     <ClCompile Include="..\..\..\..\test\tables\caches\ecdsa.cpp">
       <ObjectFileName>$(IntDir)test_tables_caches_ecdsa.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\tables\caches\pool.cpp" />
+    <ClCompile Include="..\..\..\..\test\tables\caches\pool.cpp">
+      <ObjectFileName>$(IntDir)test_tables_caches_pool.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tables\caches\prevalid.cpp">
       <ObjectFileName>$(IntDir)test_tables_caches_prevalid.obj</ObjectFileName>
     </ClCompile>

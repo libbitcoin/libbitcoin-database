@@ -123,10 +123,10 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
 }
 
 // protected
-// The kept rows are copied out while the pool head is intact (ancestors are
+// The kept records are copied out while the pool head is intact (ancestors are
 // found by key), and back after the reset, which snapshots pool, spends and
 // wtxid empty, so a fault before the next snapshot restores to the empty pool.
-// Bodies are staged (settled rows are read-only), so no row is rewritten.
+// Bodies are staged (settled records are read-only), so none is rewritten.
 TEMPLATE
 template <typename Reset>
 code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
@@ -281,7 +281,7 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
 
 // protected
 // A tx is retained if it is confirmable and every unconfirmed ancestor is
-// pooled. Ancestors are found by key, so row order is not assumed, and an
+// pooled. Ancestors are found by key, so link order is not assumed, and an
 // ancestor already retained ends its walk.
 TEMPLATE
 bool CLASS::is_retained(bool& out, const tx_link& link,
@@ -344,10 +344,9 @@ bool CLASS::copy_pool(table::pool& to, table::spends& to_spends,
     using parents = table::spends::get_refs::parents;
     using lane_t = schema::pool::witness_lane;
     using lanes_t = std_array<lane_t, schema::pool::witness_lanes>;
-    const auto rows = from.count();
-    for (table::pool::link::integer row{}; row < rows; ++row)
+    const auto end = from.count().value;
+    for (pool_link::integer link{}; link < end; ++link)
     {
-        const table::pool::link link{ row };
         const tx_link tx_fk{ from.get_key(link) };
         if (from.first(tx_fk) != link)
             continue;

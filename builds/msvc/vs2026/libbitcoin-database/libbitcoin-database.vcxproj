@@ -293,6 +293,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\navigate\navigate_hashmap.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\navigate\navigate_natural.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\navigate\navigate_reverse.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\pool.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\properties_block.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\properties_tx.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\query.ipp" />

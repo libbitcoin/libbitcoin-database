@@ -137,6 +137,7 @@ include_bitcoin_database_impl_query_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/impl/query/initialize.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/locator.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/merkle.ipp \
+    ${srcdir}/../../include/bitcoin/database/impl/query/pool.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/properties_block.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/properties_tx.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/query.ipp \
@@ -434,6 +435,7 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/query/initialize.cpp \
     ${srcdir}/../../test/query/locator.cpp \
     ${srcdir}/../../test/query/merkle.cpp \
+    ${srcdir}/../../test/query/pool.cpp \
     ${srcdir}/../../test/query/properties_block.cpp \
     ${srcdir}/../../test/query/properties_tx.cpp \
     ${srcdir}/../../test/query/sequences.cpp \

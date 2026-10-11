@@ -52,14 +52,14 @@ code CLASS::get_compact_links(tx_links& out,
     if (!get_compact_matches(matches, positions, key))
         return error::integrity;
 
-    for (const auto& [index, row]: matches)
+    for (const auto& [index, fk]: matches)
     {
         if (ambiguous.at(index))
             continue;
 
-        // The columns of a row are written before its spine record.
-        const tx_link link{ store_.pool.get_key(row) };
-        if (store_.pool.first(link) != row)
+        // The columns of a record are written before its spine entry.
+        const auto link = to_pool_tx(fk);
+        if (link.is_terminal())
             continue;
 
         auto& found = out.at(index);
@@ -96,13 +96,13 @@ bool CLASS::get_compact_matches(compact_matches& out,
     if (!ptr0 || !ptr1 || !ptr2 || !ptr3)
         return false;
 
-    // Rows are allocated to the spine before their columns are written.
-    const auto rows = std::min({ ptr0.size(), ptr1.size(), ptr2.size(),
+    // Records are allocated to the spine before their columns are written.
+    const auto count = std::min({ ptr0.size(), ptr1.size(), ptr2.size(),
         ptr3.size() }) / sizeof(lane_t);
 
-    const auto chunk_rows = std::max(short_id_minimum_rows,
-        ceilinged_divide(rows, two * cores()));
-    std::vector<compact_matches> found(ceilinged_divide(rows, chunk_rows));
+    const auto chunk_size = std::max(short_id_minimum_records,
+        ceilinged_divide(count, two * cores()));
+    std::vector<compact_matches> found(ceilinged_divide(count, chunk_size));
     std::vector<size_t> chunks(found.size());
     std::iota(chunks.begin(), chunks.end(), zero);
     const auto policy = poolstl::execution::par_if(store_.turbo());
@@ -110,8 +110,8 @@ bool CLASS::get_compact_matches(compact_matches& out,
     std::for_each(policy, chunks.cbegin(), chunks.cend(),
         [&](size_t chunk) NOEXCEPT
         {
-            const auto first = chunk * chunk_rows;
-            std::vector<short_id> ids(std::min(chunk_rows, rows - first));
+            const auto first = chunk * chunk_size;
+            std::vector<short_id> ids(std::min(chunk_size, count - first));
 
             const auto column = [&](const memory& ptr) NOEXCEPT
             {
@@ -128,12 +128,12 @@ bool CLASS::get_compact_matches(compact_matches& out,
             });
 
             auto& matches = found.at(chunk);
-            for (size_t row{}; row < ids.size(); ++row)
+            for (size_t index{}; index < ids.size(); ++index)
             {
-                const auto id = bit_and(ids[row], chain::short_id::mask);
-                if (const auto it = positions.find(id); it != positions.end())
+                const auto id = bit_and(ids[index], chain::short_id::mask);
+                if (const auto it = positions.find(id); it != positions.cend())
                     matches.emplace_back(it->second,
-                        possible_narrow_cast<link_t>(first + row));
+                        possible_narrow_cast<link_t>(first + index));
             }
         });
 
