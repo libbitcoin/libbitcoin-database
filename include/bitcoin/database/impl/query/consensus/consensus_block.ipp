@@ -108,7 +108,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 // Each non-coinbase tx is validated under its pooled context, which is
 // sufficient for the block (absolute locktime is monotonic under bip113). What
 // remains is the coinbase, the block checks over all txs, and the prevouts
-// row, from which block_confirmable performs the chain checks.
+// record, from which block_confirmable performs the chain checks.
 
 TEMPLATE
 code CLASS::validate_pooled(const header_link& link, const chain_context& ctx,
@@ -139,7 +139,7 @@ code CLASS::validate_pooled(const header_link& link, const chain_context& ctx,
     // ========================================================================
 }
 
-// Tx records and pool rows (early, as insufficiency implies full validation).
+// Tx and pool records (early, as insufficiency implies full validation).
 TEMPLATE
 code CLASS::get_pooled_block(pooled_block& out, const header_link& link,
     const context& ctx) const NOEXCEPT

@@ -249,6 +249,9 @@
     <ClCompile Include="..\..\..\..\test\query\navigate\navigate_reverse.cpp">
       <Filter>src\query\navigate</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\pool.cpp">
+      <Filter>src\query</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\properties_block.cpp">
       <Filter>src\query</Filter>
     </ClCompile>

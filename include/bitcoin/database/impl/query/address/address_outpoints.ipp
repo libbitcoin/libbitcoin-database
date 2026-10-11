@@ -30,6 +30,33 @@ namespace database {
 // Address table is populated during transaction archival.
 
 // server/native
+// Only unconfirmed outputs that are not spent (by an unconfirmed tx).
+TEMPLATE
+code CLASS::get_unconfirmed_unspent_outpoints(const stopper& cancel,
+    outpoints& out, const hash_digest& key, bool turbo) const NOEXCEPT
+{
+    out.clear();
+    output_links links{};
+    if (const code ec = to_address_outputs(cancel, links, key))
+        return ec;
+
+    return parallel_outpoint_transform(cancel, turbo, out, links,
+        [this](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
+        {
+            // Confirmed and spent must be filtered out. An unconfirmed output
+            // can only be spent by an unconfirmed tx, so is_spent() suffices.
+            if (cancel || fail || is_confirmed_output(link) || is_spent(link))
+                return outpoint{};
+
+            const auto point = get_outpoint(link);
+            if (!point.point().is_valid())
+                fail = true;
+
+            return point;
+        });
+}
+
+// server/native
 TEMPLATE
 code CLASS::get_confirmed_unspent_outpoints(const stopper& cancel,
     outpoints& out, const hash_digest& key, bool turbo) const NOEXCEPT

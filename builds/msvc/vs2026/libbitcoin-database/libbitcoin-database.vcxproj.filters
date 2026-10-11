@@ -648,6 +648,9 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\navigate\navigate_reverse.ipp">
       <Filter>include\bitcoin\database\impl\query\navigate</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\pool.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\properties_block.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>

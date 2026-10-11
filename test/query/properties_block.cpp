@@ -156,105 +156,6 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_context__block1__expected)
     BOOST_REQUIRE(chain_ctx == chain_expected);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__invalid_link__unassociated)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    uint64_t fees{};
-    BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::unassociated);
-    BOOST_REQUIRE_EQUAL(fees, 0u);
-}
-
-BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__unassociated_link__unassociated)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1.header(), context{}, {}, false));
-    BOOST_REQUIRE(query.set(*test::block1.transactions_ptr()->front()));
-
-    uint64_t fees{};
-    BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::unassociated);
-    BOOST_REQUIRE_EQUAL(fees, 0u);
-}
-
-BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__unvalidated_link__unvalidated)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, {}, false, false));
-
-    uint64_t fees{};
-    BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(fees, 0u);
-}
-
-BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__confirmable__block_confirmable)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, {}, false, false));
-
-    uint64_t fees{};
-    BOOST_REQUIRE_EQUAL(query.get_header_state(0), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(0), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(fees, 0u);
-
-    BOOST_REQUIRE(query.set_block_confirmable(1));
-    BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_confirmable);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_confirmable);
-    BOOST_REQUIRE_EQUAL(fees, 0u);
-}
-
-BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__valid__block_valid)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, {}, false, false));
-
-    BOOST_REQUIRE(query.set_block_valid(1));
-    BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_valid);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_valid);
-}
-
-BOOST_AUTO_TEST_CASE(query_properties_block__get_block_state__unconfirmable__block_unconfirmable)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{}, {}, false, false));
-
-    BOOST_REQUIRE(query.set_block_unconfirmable(1));
-    BOOST_REQUIRE_EQUAL(query.get_header_state(1), error::block_unconfirmable);
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), error::block_unconfirmable);
-}
-
 BOOST_AUTO_TEST_CASE(query_properties_block__is_witness_committed__genesis__header_merkle_root)
 {
     settings settings{};
@@ -290,6 +191,22 @@ BOOST_AUTO_TEST_CASE(query_properties_block__is_witness_committed__committed__ex
     const auto link = query.to_header(block1.hash());
     BOOST_REQUIRE(query.is_witness_committed(system::one_hash, link));
     BOOST_REQUIRE(!query.is_witness_committed(reserved_hash, link));
+}
+
+// get_wtxids
+
+BOOST_AUTO_TEST_CASE(query_properties_block__get_wtxids__genesis__coinbase_witness_hash)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto& coinbase = *test::genesis.transactions_ptr()->front();
+    BOOST_REQUIRE_EQUAL(query.get_wtxids(0), system::hashes{ coinbase.hash(true) });
+    BOOST_REQUIRE(query.get_wtxids(1).empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

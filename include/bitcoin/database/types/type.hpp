@@ -21,6 +21,7 @@
 
 #include <atomic>
 #include <optional>
+#include <unordered_map>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 
@@ -89,6 +90,8 @@ using sizes = std::pair<size_t, size_t>;
 using counts = std::pair<size_t, size_t>;
 using threshold = std::pair<size_t, tx_link::integer>;
 using thresholds = std::vector<threshold>;
+using confirmables = std::unordered_map<tx_link::integer, bool>;
+using compact_matches = std::vector<std::pair<size_t, pool_link::integer>>;
 
 } // namespace database
 } // namespace libbitcoin
