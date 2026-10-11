@@ -552,8 +552,12 @@ public:
     bool get_branch_fees(const stopper& cancel, fee_rate_sets& out, size_t start,
         size_t count) const NOEXCEPT;
 
-    /// Fee rate tuples of the unconfirmed pooled txs.
-    bool get_pool_fees(fee_rates& out) const NOEXCEPT;
+    /// Fee rate tuples of the confirmable txs.
+    bool get_confirmable_fees(fee_rates& out) const NOEXCEPT;
+
+    /// Fee rate tuples of the pooled txs conflicted by the block.
+    bool get_block_conflict_fees(fee_rates& out,
+        const header_link& link) const NOEXCEPT;
 
     /// Merkle.
     /// -----------------------------------------------------------------------
@@ -667,8 +671,8 @@ public:
         const std::vector<short_id>& short_ids,
         const system::siphash_key& key) const NOEXCEPT;
 
-    /// Unconfirmed pooled tx links, from cursor toward end, at most limit.
-    code get_pooled_txs(pool_link& cursor, tx_links& out,
+    /// Confirmable tx links, from cursor toward end, at most limit.
+    code get_confirmable_txs(pool_link& cursor, tx_links& out,
         const pool_link& end, size_t limit) const NOEXCEPT;
 
     /// Header properties.
@@ -692,6 +696,9 @@ public:
     bool set_pooled(const tx_link& link, const transaction& tx,
         const chain_context& ctx) NOEXCEPT;
     bool is_pooled(const tx_link& link) const NOEXCEPT;
+
+    /// Unconfirmed, and not conflicted by a confirmed tx (or via ancestry).
+    bool is_confirmable_tx(const tx_link& link) const NOEXCEPT;
 
     /// Batching.
     /// -----------------------------------------------------------------------
@@ -994,6 +1001,11 @@ protected:
     bool get_pooled_fee(uint64_t& fee, size_t& height,
         const tx_link& link) const NOEXCEPT;
     hash_digest get_pooled_wtxid(const table::pool::link& link) const NOEXCEPT;
+
+    /// Confirmability memoized across the txs of a scan.
+    using confirmables = std::unordered_map<tx_link::integer, bool>;
+    bool is_confirmable_tx(confirmables& memo,
+        const tx_link& link) const NOEXCEPT;
 
     /// Called by confirmation chaser.
     bool is_block_validated(code& ec, const header_link& link,

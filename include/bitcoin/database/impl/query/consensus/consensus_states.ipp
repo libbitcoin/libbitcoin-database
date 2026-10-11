@@ -154,7 +154,7 @@ bool CLASS::is_block_validated(code& ec, const header_link& link,
 // A terminal cursor starts at the first row, and the cursor is set to end
 // once the rows are exhausted.
 TEMPLATE
-code CLASS::get_pooled_txs(pool_link& cursor, tx_links& out,
+code CLASS::get_confirmable_txs(pool_link& cursor, tx_links& out,
     const pool_link& end, size_t limit) const NOEXCEPT
 {
     out.clear();
@@ -168,13 +168,14 @@ code CLASS::get_pooled_txs(pool_link& cursor, tx_links& out,
         return error::success;
     }
 
+    confirmables memo{};
     const auto stop = std::min(end.value, store_.pool.count().value);
     for (; row < stop && out.size() < limit; ++row)
     {
         // The first row of a tx is its last committed, so this skips both its
         // earlier rows and any uncommitted row (its key does not resolve to it).
         const tx_link link{ store_.pool.get_key(row) };
-        if (store_.pool.first(link) != row || is_confirmed_tx(link))
+        if (store_.pool.first(link) != row || !is_confirmable_tx(memo, link))
             continue;
 
         out.push_back(link);
@@ -382,6 +383,74 @@ TEMPLATE
 bool CLASS::is_pooled(const tx_link& link) const NOEXCEPT
 {
     return store_.pool.enabled() && !store_.pool.first(link).is_terminal();
+}
+
+TEMPLATE
+bool CLASS::is_confirmable_tx(const tx_link& link) const NOEXCEPT
+{
+    confirmables memo{};
+    return is_confirmable_tx(memo, link);
+}
+
+// protected
+// A walk that finds no confirmed spend proves each tx visited confirmable.
+TEMPLATE
+bool CLASS::is_confirmable_tx(confirmables& memo,
+    const tx_link& link) const NOEXCEPT
+{
+    if (const auto it = memo.find(link.value); it != memo.cend())
+        return it->second;
+
+    const auto unconfirmable = [&]() NOEXCEPT
+    {
+        memo.emplace(link.value, false);
+        return false;
+    };
+
+    if (is_confirmed_tx(link))
+        return unconfirmable();
+
+    std::vector<tx_link::integer> pending{ link.value };
+    std::unordered_set<tx_link::integer> visited{ link.value };
+    while (!pending.empty())
+    {
+        const tx_link next{ pending.back() };
+        pending.pop_back();
+
+        if (const auto it = memo.find(next.value); it != memo.cend())
+        {
+            if (!it->second)
+                return unconfirmable();
+
+            continue;
+        }
+
+        table::transaction::only tx{};
+        if (!store_.tx.get(next, tx))
+            return true;
+
+        const auto end = tx.point_fk + tx.ins_count;
+        for (auto fk = tx.point_fk; fk < end; ++fk)
+        {
+            const auto prevout = get_point_key(fk);
+            if (prevout.is_null())
+                continue;
+
+            for (const auto& in: to_spenders(prevout))
+                if (is_confirmed_input(in))
+                    return unconfirmable();
+
+            const auto parent = to_tx(prevout.hash());
+            if (!parent.is_terminal() && !is_confirmed_tx(parent) &&
+                visited.insert(parent.value).second)
+                pending.push_back(parent.value);
+        }
+    }
+
+    for (const auto tx: visited)
+        memo.emplace(tx, true);
+
+    return true;
 }
 
 } // namespace database

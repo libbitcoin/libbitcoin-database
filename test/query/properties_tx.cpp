@@ -452,9 +452,9 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_compact_links__disabled__terminal)
     BOOST_REQUIRE_EQUAL(out.at(0), tx_link::terminal);
 }
 
-// get_pooled_txs
+// get_confirmable_txs
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__empty__end)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_confirmable_txs__empty__end)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -465,12 +465,12 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__empty__end)
 
     tx_links out{};
     pool_link cursor{};
-    BOOST_REQUIRE_EQUAL(query.get_pooled_txs(cursor, out, pool_link{ 0 }, max_size_t), error::success);
+    BOOST_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 0 }, max_size_t), error::success);
     BOOST_REQUIRE(out.empty());
     BOOST_REQUIRE_EQUAL(cursor, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__disabled__end)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_confirmable_txs__disabled__end)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -482,12 +482,12 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__disabled__end)
 
     tx_links out{};
     pool_link cursor{};
-    BOOST_REQUIRE_EQUAL(query.get_pooled_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
+    BOOST_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
     BOOST_REQUIRE(out.empty());
     BOOST_REQUIRE_EQUAL(cursor, 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__cursor_beyond_end__invalid_cursor)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_confirmable_txs__cursor_beyond_end__invalid_cursor)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -498,10 +498,10 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__cursor_beyond_end__inv
 
     tx_links out{};
     pool_link cursor{ 3 };
-    BOOST_REQUIRE_EQUAL(query.get_pooled_txs(cursor, out, pool_link{ 2 }, max_size_t), error::invalid_cursor);
+    BOOST_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, max_size_t), error::invalid_cursor);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__confirmed__skipped)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_confirmable_txs__confirmed__skipped)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -519,13 +519,13 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__confirmed__skipped)
 
     tx_links out{};
     pool_link cursor{};
-    BOOST_REQUIRE_EQUAL(query.get_pooled_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
+    BOOST_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
     BOOST_REQUIRE_EQUAL(out.size(), one);
     BOOST_REQUIRE_EQUAL(out.front(), 1u);
     BOOST_REQUIRE_EQUAL(cursor, 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__duplicate_row__first_only)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_confirmable_txs__duplicate_row__first_only)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -543,13 +543,13 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__duplicate_row__first_o
 
     tx_links out{};
     pool_link cursor{};
-    BOOST_REQUIRE_EQUAL(query.get_pooled_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
+    BOOST_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
     BOOST_REQUIRE_EQUAL(out.size(), one);
     BOOST_REQUIRE_EQUAL(out.front(), 1u);
     BOOST_REQUIRE_EQUAL(cursor, 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__limit__resumed)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_confirmable_txs__limit__resumed)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -568,22 +568,22 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__limit__resumed)
 
     tx_links out{};
     pool_link cursor{};
-    BOOST_REQUIRE_EQUAL(query.get_pooled_txs(cursor, out, pool_link{ 2 }, one), error::success);
+    BOOST_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, one), error::success);
     BOOST_REQUIRE_EQUAL(out.size(), one);
     BOOST_REQUIRE_EQUAL(out.front(), 1u);
     BOOST_REQUIRE_EQUAL(cursor, 1u);
 
-    BOOST_REQUIRE_EQUAL(query.get_pooled_txs(cursor, out, pool_link{ 2 }, one), error::success);
+    BOOST_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, one), error::success);
     BOOST_REQUIRE_EQUAL(out.size(), one);
     BOOST_REQUIRE_EQUAL(out.front(), 2u);
     BOOST_REQUIRE_EQUAL(cursor, 2u);
 
-    BOOST_REQUIRE_EQUAL(query.get_pooled_txs(cursor, out, pool_link{ 2 }, one), error::success);
+    BOOST_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, one), error::success);
     BOOST_REQUIRE(out.empty());
     BOOST_REQUIRE_EQUAL(cursor, 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__end__bounded)
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_confirmable_txs__end__bounded)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -602,10 +602,117 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_pooled_txs__end__bounded)
 
     tx_links out{};
     pool_link cursor{};
-    BOOST_REQUIRE_EQUAL(query.get_pooled_txs(cursor, out, pool_link{ 1 }, max_size_t), error::success);
+    BOOST_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 1 }, max_size_t), error::success);
     BOOST_REQUIRE_EQUAL(out.size(), one);
     BOOST_REQUIRE_EQUAL(out.front(), 1u);
     BOOST_REQUIRE_EQUAL(cursor, 1u);
+}
+
+// is_confirmable_tx
+
+static transaction to_spend(const system::hash_digest& hash, uint64_t value) NOEXCEPT
+{
+    const input input{ point{ hash, 0 }, script{}, max_uint32 };
+    return { 1u, inputs{ input }, outputs{ output{ value, script{} } }, 0u };
+}
+
+static const system::hash_digest& genesis_coinbase() NOEXCEPT
+{
+    static const auto hash = test::genesis.transactions_ptr()->front()->hash(false);
+    return hash;
+}
+
+static bool archive_pool(test::query_accessor& query, const transaction& tx) NOEXCEPT
+{
+    return query.set(tx) && query.set_pooled(query.to_tx(tx.hash(false)), tx, context{ bip113, 8, 9 });
+}
+
+// Confirm a block of a coinbase and the tx above genesis, returning its link.
+static header_link archive_confirm(test::query_accessor& query, const transaction& tx) NOEXCEPT
+{
+    const input null{ point{ system::null_hash, point::null_index }, script{}, max_uint32 };
+    const transaction coinbase{ 1u, inputs{ null }, outputs{ output{ 42u, script{} } }, 0u };
+    const header header{ 1u, test::genesis.hash(), system::null_hash, 1u, 2u, 3u };
+    const block block{ header, { coinbase, tx } };
+    const auto stored = query.set(block, context{ 0, 1, 0 }, {}, false, true);
+    const auto link = query.to_header(block.hash());
+    return stored && query.push_candidate(link) && query.push_confirmed(link, true) ? link : header_link{};
+}
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__is_confirmable_tx__unconflicted_chain__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(archive_pool(query, child));
+    BOOST_REQUIRE(query.is_confirmable_tx(query.to_tx(parent.hash(false))));
+    BOOST_REQUIRE(query.is_confirmable_tx(query.to_tx(child.hash(false))));
+}
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__is_confirmable_tx__confirmed__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto tx = to_spend(genesis_coinbase(), 1u);
+    BOOST_REQUIRE(archive_pool(query, tx));
+    BOOST_REQUIRE(!archive_confirm(query, tx).is_terminal());
+    BOOST_REQUIRE(!query.is_confirmable_tx(query.to_tx(tx.hash(false))));
+    BOOST_REQUIRE(!query.is_confirmable_tx(tx_link{ 0 }));
+}
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__is_confirmable_tx__conflicted_and_child__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto conflicted = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(conflicted.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, conflicted));
+    BOOST_REQUIRE(archive_pool(query, child));
+    BOOST_REQUIRE(!archive_confirm(query, to_spend(genesis_coinbase(), 1u)).is_terminal());
+    BOOST_REQUIRE(!query.is_confirmable_tx(query.to_tx(conflicted.hash(false))));
+    BOOST_REQUIRE(!query.is_confirmable_tx(query.to_tx(child.hash(false))));
+}
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_confirmable_txs__conflicted_and_child__skipped)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto conflicted = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(conflicted.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, conflicted));
+    BOOST_REQUIRE(archive_pool(query, child));
+    BOOST_REQUIRE(!archive_confirm(query, to_spend(genesis_coinbase(), 1u)).is_terminal());
+
+    tx_links out{};
+    pool_link cursor{};
+    BOOST_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
+    BOOST_REQUIRE(out.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

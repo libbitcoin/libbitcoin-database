@@ -280,10 +280,9 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
 }
 
 // protected
-// A tx is retained if no point it or any unconfirmed ancestor spends is spent
-// by a confirmed tx (which drops a confirmed tx, as it spends its own points),
-// and every unconfirmed ancestor is pooled. Ancestors are found by key, so row
-// order is not assumed, and an ancestor already retained ends its walk.
+// A tx is retained if it is confirmable and every unconfirmed ancestor is
+// pooled. Ancestors are found by key, so row order is not assumed, and an
+// ancestor already retained ends its walk.
 TEMPLATE
 bool CLASS::is_retained(bool& out, const tx_link& link,
     table::pool& retained) NOEXCEPT
@@ -295,6 +294,9 @@ bool CLASS::is_retained(bool& out, const tx_link& link,
     std::unordered_set<tx_link::integer> visited{ link };
 
     out = false;
+    if (!reader.is_confirmable_tx(link))
+        return true;
+
     while (!pending.empty())
     {
         const tx_link next{ pending.back() };
@@ -308,12 +310,6 @@ bool CLASS::is_retained(bool& out, const tx_link& link,
         table::pool::record record{};
         if (!tx.get(next, tx_record) || !pool.get(fk, record))
             return false;
-
-        const auto end = tx_record.point_fk + tx_record.ins_count;
-        for (auto point = tx_record.point_fk; point < end; ++point)
-            for (const auto spender: reader.to_spenders(reader.get_point_key(point)))
-                if (reader.is_confirmed_input(spender))
-                    return true;
 
         parents spent(tx_record.ins_count);
         table::spends::get_refs run{ {}, spent };
