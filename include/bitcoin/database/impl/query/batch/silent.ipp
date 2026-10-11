@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_BATCH_SILENT_IPP
 #define LIBBITCOIN_DATABASE_QUERY_BATCH_SILENT_IPP
 
+#include <future>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 #include <bitcoin/database/types/types.hpp>
@@ -259,8 +260,10 @@ bool CLASS::get_silent_prevouts(data_chunk& prevouts,
 
 // The bank is quiescent (drain claimed, no writers), so it is read across the
 // scan write, which is sourced directly from its columns. Scan rows are
-// allocated for every bank tx and prefix, and an invalid tx records no
-// outputs, so the scan allocation never waits on the compute.
+// allocated for every bank tx and prefix, so the prefixes and outputs are
+// written in parallel while the points compute on the device (or after they
+// compute on the processor), and each tx is then published by its correlate
+// (an invalid tx with no outputs).
 TEMPLATE
 code CLASS::compute_silents(const stopper& cancel, bool& device,
     bool bank) NOEXCEPT
@@ -272,13 +275,13 @@ code CLASS::compute_silents(const stopper& cancel, bool& device,
     if (is_zero(txs))
         return error::success;
 
-    using word_t = table::scan_correlate::tx::integer;
-    using correlate_t = const table::silent_correlate::span;
+    using prefix_t = const scan::batch::prefix;
+    using span_t = table::scan_prefix::put_span;
     using sum_t = const table::silent_sum::span;
     using hash_t = const table::silent_hash::span;
     using outputs_t = const scan::batch::outputs_t;
-    using prefix_t = const scan::batch::prefix;
-    using span_t = table::scan_prefix::put_span;
+    using correlate_t = const table::silent_correlate::span;
+    using word_t = table::scan_correlate::tx::integer;
 
     // ========================================================================
     const auto scope = get_transactor();
@@ -292,18 +295,19 @@ code CLASS::compute_silents(const stopper& cancel, bool& device,
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = store_.scan.guard();
     const auto point_ptr = store_.scan.point.get_memory();
-    const auto correlate_ptr = bank_table.correlate.get_memory();
+    const auto prefix_ptr = bank_prefix.get_memory();
     const auto sum_ptr = bank_table.sum.get_memory();
     const auto hash_ptr = bank_table.hash.get_memory();
     const auto outputs_ptr = bank_table.outputs.get_memory();
-    const auto prefix_ptr = bank_prefix.get_memory();
+    const auto correlate_ptr = bank_table.correlate.get_memory();
 
+    const auto scan_prefix_ptr = store_.scan_prefix.get_memory();
+    const auto prefixes = pointer_cast<prefix_t>(prefix_ptr.data());
     const auto words = pointer_cast<word_t>(guard.data());
-    const auto correlates = pointer_cast<correlate_t>(correlate_ptr.data());
     const auto sums = pointer_cast<sum_t>(sum_ptr.data());
     const auto hashes = pointer_cast<hash_t>(hash_ptr.data());
     const auto outputs = pointer_cast<outputs_t>(outputs_ptr.data());
-    const auto prefixes = pointer_cast<prefix_t>(prefix_ptr.data());
+    const auto correlates = pointer_cast<correlate_t>(correlate_ptr.data());
 
     // Points are computed directly into the allocated scan rows.
     const std::span<ec_compressed> points
@@ -313,37 +317,76 @@ code CLASS::compute_silents(const stopper& cancel, bool& device,
 
     data_chunk valid(txs);
     const silent::batch batch{ { sums, txs }, { hashes, txs } };
-    if (!silent::batch::compute(points, valid, device, cancel, batch))
+    const auto compute = [&]() NOEXCEPT
+    {
+        return silent::batch::compute(points, valid, device, cancel, batch);
+    };
+
+    // The device computes concurrently with the write, the processor before.
+    bool success{};
+    std::future<bool> computed{};
+    const auto accelerated = batched::accelerated();
+    if (accelerated)
+        computed = std::async(std::launch::async, compute);
+    else
+        success = compute();
+
+    using scan_int = scan_link::integer;
+    using prefix_int = prefix_link::integer;
+    using outputs_record = table::scan_outputs::record;
+
+    // Bank prefixes are contiguous, so scan prefix rows are at the same
+    // offsets from the allocation, and each tx writes only its own.
+    std::atomic_bool failed{};
+    std_vector<size_t> indexes(txs);
+    std::iota(indexes.begin(), indexes.end(), zero);
+    std::for_each(poolstl::execution::par, indexes.cbegin(), indexes.cend(),
+        [&](size_t tx) NOEXCEPT
+        {
+            const auto& output = *std::next(outputs, tx);
+            const auto first = from_little_endian<uint64_t>(output.first);
+            const auto count = from_little_endian<uint32_t>(output.count);
+            const auto link = possible_narrow_cast<scan_int>(fk.value + tx);
+            const auto row = possible_narrow_cast<prefix_int>(pk.value + first);
+            const span_t span{ {}, { std::next(prefixes, first), count } };
+            const outputs_record record{ {}, row, count };
+
+            if (!store_.scan_prefix.put(scan_prefix_ptr, row, span) ||
+                !store_.scan.outputs.put(link, record))
+                failed.store(true);
+        });
+
+    if (accelerated)
+        success = computed.get();
+
+    if (!success)
         return error::query_canceled;
 
-    auto row = pk;
+    if (failed.load())
+        return error::integrity;
+
+    // The guard is the correlate column, published last (get_silent_frontier).
+    static_assert(schema::scan_correlate::minrow == sizeof(word_t));
     for (size_t tx{}; tx < txs; ++tx)
     {
-        const scan_link link{ possible_narrow_cast<scan_link::integer>(
-            fk.value + tx) };
-        const tx_link correlate{ *std::next(correlates, tx) };
-        const auto& output = *std::next(outputs, tx);
-        const auto first = from_little_endian<uint64_t>(output.first);
-        const auto count = from_little_endian<uint32_t>(output.count);
-
+        const auto link = possible_narrow_cast<scan_int>(fk.value + tx);
         if (is_zero(valid[tx]))
         {
             points[tx] = {};
-            if (!put_silent_(link, correlate, row, zero, words))
+            const auto& output = *std::next(outputs, tx);
+            const auto first = from_little_endian<uint64_t>(output.first);
+            const auto row = possible_narrow_cast<prefix_int>(pk.value + first);
+            if (!store_.scan.outputs.put(link, outputs_record{ {}, row, zero }))
                 return error::integrity;
-
-            continue;
         }
 
-        if (!store_.scan_prefix.put(row, span_t{ {},
-            { std::next(prefixes, first), count } }) ||
-            !put_silent_(link, correlate, row, count, words))
-            return error::integrity;
-
-        row += count;
+        const tx_link correlate{ *std::next(correlates, tx) };
+        std::atomic_ref<word_t> word{ *std::next(words, link) };
+        word.store(native_to_little_end(correlate.value),
+            std::memory_order_release);
     }
 
-    store_.scan.complete(fk, possible_narrow_cast<scan_link::integer>(txs));
+    store_.scan.complete(fk, possible_narrow_cast<scan_int>(txs));
     return error::success;
     // ========================================================================
 }
