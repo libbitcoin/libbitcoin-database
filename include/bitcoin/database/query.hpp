@@ -844,6 +844,9 @@ public:
     bool get_ancestry(header_links& ancestry, const header_link& descendant,
         size_t count) const NOEXCEPT;
 
+    /// Ascending height of lowest tx link for block at or above each height.
+    bool get_thresholds(thresholds& out, const header_link& top) const NOEXCEPT;
+
     /// Address.
     /// -----------------------------------------------------------------------
 

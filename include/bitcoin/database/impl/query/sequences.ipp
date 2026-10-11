@@ -160,6 +160,35 @@ bool CLASS::get_ancestry(header_links& ancestry, const header_link& descendant,
     return true;
 }
 
+TEMPLATE
+bool CLASS::get_thresholds(thresholds& out,
+    const header_link& top) const NOEXCEPT
+{
+    header_links ancestry{};
+    if (!get_ancestry(ancestry, top, max_size_t))
+        return false;
+
+    out.clear();
+    auto floor = tx_link::terminal;
+    auto height = ancestry.size();
+    for (const auto& link: ancestry)
+    {
+        --height;
+        const auto coinbase = to_coinbase(link);
+        if (coinbase.is_terminal())
+            return false;
+
+        if (coinbase.value < floor)
+        {
+            floor = coinbase.value;
+            out.emplace_back(height, floor);
+        }
+    }
+
+    std::reverse(out.begin(), out.end());
+    return true;
+}
+
 } // namespace database
 } // namespace libbitcoin
 
