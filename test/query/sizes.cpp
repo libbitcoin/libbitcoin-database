@@ -22,4 +22,22 @@
 
 BOOST_FIXTURE_TEST_SUITE(query_sizes_tests, test::directory_setup_fixture)
 
+// get_tx_sizes
+
+BOOST_AUTO_TEST_CASE(query_sizes__get_tx_sizes__coinbase__204)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+
+    size_t light{};
+    size_t heavy{};
+    BOOST_CHECK(query.get_tx_sizes(light, heavy, 0));
+    BOOST_CHECK_EQUAL(light, 204u);
+    BOOST_CHECK_EQUAL(heavy, 204u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

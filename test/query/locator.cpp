@@ -31,7 +31,6 @@ public:
     using base::get_fork;
     using base::get_blocks;
     using base::get_headers;
-    using base::get_ancestry;
     using base::get_locator_span;
     using base::get_locator_start;
 };
@@ -640,127 +639,6 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__confirmed__first_match)
     BOOST_REQUIRE(query.push_confirmed(2, false));
     BOOST_REQUIRE(query.push_confirmed(3, false));
     BOOST_REQUIRE_EQUAL(query.get_locator_start({ system::null_hash, test::block2_hash, test::block1_hash }), 2u);
-}
-
-// get_ancestry
-
-BOOST_AUTO_TEST_CASE(query_locator__get_ancestry__genesis__empty)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    header_links ancestry{};
-    BOOST_REQUIRE(query.get_ancestry(ancestry, 0, 0));
-    BOOST_REQUIRE(ancestry.empty());
-}
-
-BOOST_AUTO_TEST_CASE(query_locator__get_ancestry__genesis__itself)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    header_links ancestry{};
-    BOOST_REQUIRE(query.get_ancestry(ancestry, 0, 1));
-    BOOST_REQUIRE_EQUAL(ancestry.size(), 1u);
-    BOOST_REQUIRE_EQUAL(ancestry[0], 0u);
-}
-
-BOOST_AUTO_TEST_CASE(query_locator__get_ancestry__single_block__itself)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-
-    header_links ancestry{};
-    BOOST_REQUIRE(query.get_ancestry(ancestry, 1, 10));
-    BOOST_REQUIRE_EQUAL(ancestry.size(), 2u);
-    BOOST_REQUIRE_EQUAL(ancestry[0], 1u);
-    BOOST_REQUIRE_EQUAL(ancestry[1], 0u);
-}
-
-BOOST_AUTO_TEST_CASE(query_locator__get_ancestry__linear_chain__full_ancestry)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-
-    header_links ancestry{};
-    BOOST_REQUIRE(query.get_ancestry(ancestry, 3, 10));
-    BOOST_REQUIRE_EQUAL(ancestry.size(), 4u);
-    BOOST_REQUIRE_EQUAL(ancestry[0], 3u);
-    BOOST_REQUIRE_EQUAL(ancestry[1], 2u);
-    BOOST_REQUIRE_EQUAL(ancestry[2], 1u);
-    BOOST_REQUIRE_EQUAL(ancestry[3], 0u);
-}
-
-BOOST_AUTO_TEST_CASE(query_locator__get_ancestry__count_limit__truncated)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-
-    header_links ancestry{};
-    BOOST_REQUIRE(query.get_ancestry(ancestry, 3, 2));
-    BOOST_REQUIRE_EQUAL(ancestry.size(), 2u);
-    BOOST_REQUIRE_EQUAL(ancestry[0], 3u);
-    BOOST_REQUIRE_EQUAL(ancestry[1], 2u);
-}
-
-BOOST_AUTO_TEST_CASE(query_locator__get_ancestry__count_exceeds_height__full_to_genesis)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-
-    header_links ancestry{};
-    BOOST_REQUIRE(query.get_ancestry(ancestry, 2, 100));
-    BOOST_REQUIRE_EQUAL(ancestry.size(), 3u);
-    BOOST_REQUIRE_EQUAL(ancestry[0], 2u);
-    BOOST_REQUIRE_EQUAL(ancestry[1], 1u);
-    BOOST_REQUIRE_EQUAL(ancestry[2], 0u);
-}
-
-BOOST_AUTO_TEST_CASE(query_locator__get_ancestry__nonexistent_link__false_empty)
-{
-    settings settings{};
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-
-    header_links ancestry{};
-    BOOST_REQUIRE(!query.get_ancestry(ancestry, 999, 10));
-    BOOST_REQUIRE(ancestry.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

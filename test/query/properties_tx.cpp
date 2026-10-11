@@ -60,4 +60,161 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_wtxid__pooled__pool_columns)
     BOOST_REQUIRE_EQUAL(query.get_wtxid(link), test::tx5.hash(true));
 }
 
+// is_coinbase
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__is_coinbase__coinbase__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::block1, context{}, {}, false, false));
+    BOOST_CHECK(query.set(test::block2, context{}, {}, false, false));
+    BOOST_CHECK(query.set(test::block3, context{}, {}, false, false));
+    BOOST_CHECK(query.is_coinbase(0));
+    BOOST_CHECK(query.is_coinbase(1));
+    BOOST_CHECK(query.is_coinbase(2));
+    BOOST_CHECK(query.is_coinbase(3));
+}
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__is_coinbase__non_coinbase__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::block1a, context{}, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, context{}, {}, false, false));
+    BOOST_CHECK(!query.is_coinbase(1));
+    BOOST_CHECK(!query.is_coinbase(2));
+    BOOST_CHECK(!query.is_coinbase(3));
+    BOOST_CHECK(!query.is_coinbase(4));
+    BOOST_CHECK(!query.is_coinbase(5));
+    BOOST_CHECK(!query.is_coinbase(42));
+}
+
+// is_tx_segregated
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__is_tx_segregated__always__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::block1a, context{}, {}, false, false));
+    BOOST_CHECK(!query.is_tx_segregated(0));
+    BOOST_CHECK( query.is_tx_segregated(1));
+    BOOST_CHECK(!query.is_tx_segregated(2));
+}
+
+// get_tx_height
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_height__not_strong__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::tx4));
+
+    size_t out{};
+    BOOST_CHECK(!query.get_tx_height(out, 1));
+}
+
+// get_tx_position
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_position__strong__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3a, context{ 0, 3, 0 }, {}, false, false));
+
+    size_t out{};
+    const auto foo = query.get_tx_position(out, 0);
+    BOOST_CHECK(foo);
+    BOOST_CHECK_EQUAL(out, 0u);
+
+    BOOST_CHECK(!query.get_tx_position(out, 1));
+    BOOST_CHECK(!query.get_tx_position(out, 2));
+    BOOST_CHECK(!query.get_tx_position(out, 3));
+    BOOST_CHECK(!query.get_tx_position(out, 4));
+    BOOST_CHECK(query.set_strong(1));
+    BOOST_CHECK(query.set_strong(2));
+    BOOST_CHECK(query.set_strong(3));
+
+    BOOST_CHECK_EQUAL(out, 0u);
+    BOOST_CHECK(query.get_tx_position(out, 0));
+    BOOST_CHECK_EQUAL(out, 0u);
+    BOOST_CHECK(query.get_tx_position(out, 1));
+    BOOST_CHECK_EQUAL(out, 0u);
+    BOOST_CHECK(query.get_tx_position(out, 2));
+    BOOST_CHECK_EQUAL(out, 0u);
+    BOOST_CHECK(query.get_tx_position(out, 3));
+    BOOST_CHECK_EQUAL(out, 1u);
+    BOOST_CHECK(query.get_tx_position(out, 4));
+    BOOST_CHECK_EQUAL(out, 0u);
+    BOOST_CHECK(!query.get_tx_position(out, 5));
+
+    BOOST_CHECK_EQUAL(query.get_position_tx(0, 0), 0u);
+    BOOST_CHECK_EQUAL(query.get_position_tx(1, 0), 1u);
+    BOOST_CHECK_EQUAL(query.get_position_tx(2, 0), 2u);
+    BOOST_CHECK_EQUAL(query.get_position_tx(2, 1), 3u);
+    BOOST_CHECK_EQUAL(query.get_position_tx(3, 0), 4u);
+}
+
+BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_position__always__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block2a, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::block3a, context{ 0, 3, 0 }, {}, false, false));
+    BOOST_CHECK(query.set(test::tx4));
+
+    size_t out{};
+    BOOST_CHECK(query.get_tx_position(out, 0));
+    BOOST_CHECK_EQUAL(out, 0u);
+
+    BOOST_CHECK(!query.get_tx_position(out, 1));
+    BOOST_CHECK(!query.get_tx_position(out, 2));
+    BOOST_CHECK(!query.get_tx_position(out, 3));
+    BOOST_CHECK(!query.get_tx_position(out, 4));
+    BOOST_CHECK(query.set_strong(1));
+    BOOST_CHECK(query.set_strong(2));
+    BOOST_CHECK(query.set_strong(3));
+
+    BOOST_CHECK_EQUAL(out, 0u);
+    BOOST_CHECK(query.get_tx_position(out, 0));
+    BOOST_CHECK_EQUAL(out, 0u);
+    BOOST_CHECK(query.get_tx_position(out, 1));
+    BOOST_CHECK_EQUAL(out, 0u);
+    BOOST_CHECK(query.get_tx_position(out, 2));
+    BOOST_CHECK_EQUAL(out, 0u);
+    BOOST_CHECK(query.get_tx_position(out, 3));
+    BOOST_CHECK_EQUAL(out, 1u);
+    BOOST_CHECK(query.get_tx_position(out, 4));
+    BOOST_CHECK_EQUAL(out, 0u);
+
+    // tx4 is unconfirmed.
+    BOOST_CHECK(!query.get_tx_position(out, 5));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
