@@ -62,6 +62,9 @@ enum class table_t
     scan_table,
     scan_head,
     scan_body,
+    scan_prefix_table,
+    scan_prefix_head,
+    scan_prefix_body,
 
     /// Caches.
     ecdsa0_table,
@@ -82,6 +85,12 @@ enum class table_t
     silent1_table,
     silent1_head,
     silent1_body,
+    silent0_prefix_table,
+    silent0_prefix_head,
+    silent0_prefix_body,
+    silent1_prefix_table,
+    silent1_prefix_head,
+    silent1_prefix_body,
     envelope_table,
     envelope_head,
     duplicate_table,

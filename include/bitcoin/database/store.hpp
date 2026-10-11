@@ -121,6 +121,7 @@ public:
     table::ecdsa<Storage>& ecdsa_bank(bool bank) NOEXCEPT;
     table::schnorr<Storage>& schnorr_bank(bool bank) NOEXCEPT;
     table::silent<Storage>& silent_bank(bool bank) NOEXCEPT;
+    table::silent_prefix& silent_prefix_bank(bool bank) NOEXCEPT;
     table::prevalid& prevalid_bank(bool bank) NOEXCEPT;
 
     /// Reevaluate currency (called by chain writes).
@@ -215,6 +216,8 @@ protected:
     Storage<one> strong_tx_body_;
     Storage<one> scan_head_;
     table::scan_storage<Storage> scan_body_;
+    Storage<one> scan_prefix_head_;
+    Storage<one> scan_prefix_body_;
 
     /// Caches.
     /// -----------------------------------------------------------------------
@@ -236,6 +239,10 @@ protected:
     table::silent_storage<Storage> silent0_body_;
     Storage<one> silent1_head_;
     table::silent_storage<Storage> silent1_body_;
+    Storage<one> silent0_prefix_head_;
+    Storage<one> silent0_prefix_body_;
+    Storage<one> silent1_prefix_head_;
+    Storage<one> silent1_prefix_body_;
 
     // headmap slab
     Storage<one> envelope_head_;
@@ -352,6 +359,7 @@ public:
     table::height confirmed;
     table::strong_tx strong_tx;
     table::scan<Storage> scan;
+    table::scan_prefix scan_prefix;
 
     /// Caches.
     table::ecdsa<Storage> ecdsa0;
@@ -360,6 +368,8 @@ public:
     table::schnorr<Storage> schnorr1;
     table::silent<Storage> silent0;
     table::silent<Storage> silent1;
+    table::silent_prefix silent0_prefix;
+    table::silent_prefix silent1_prefix;
     table::envelope envelope;
     table::duplicate duplicate;
     table::prevalid prevalid0;

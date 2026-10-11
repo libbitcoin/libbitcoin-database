@@ -84,6 +84,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, strong_tx_body_, table_t::strong_tx_body);
     open(ec, scan_head_, table_t::scan_head);
     open(ec, scan_body_, table_t::scan_body);
+    open(ec, scan_prefix_head_, table_t::scan_prefix_head);
+    open(ec, scan_prefix_body_, table_t::scan_prefix_body);
 
     open(ec, ecdsa0_head_, table_t::ecdsa0_head);
     open(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -97,6 +99,10 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, silent0_body_, table_t::silent0_body);
     open(ec, silent1_head_, table_t::silent1_head);
     open(ec, silent1_body_, table_t::silent1_body);
+    open(ec, silent0_prefix_head_, table_t::silent0_prefix_head);
+    open(ec, silent0_prefix_body_, table_t::silent0_prefix_body);
+    open(ec, silent1_prefix_head_, table_t::silent1_prefix_head);
+    open(ec, silent1_prefix_body_, table_t::silent1_prefix_body);
     open(ec, duplicate_head_, table_t::duplicate_head);
     open(ec, duplicate_body_, table_t::duplicate_body);
     open(ec, prevalid0_head_, table_t::prevalid0_head);
@@ -140,6 +146,8 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, strong_tx_body_, table_t::strong_tx_body);
     load(ec, scan_head_, table_t::scan_head);
     load(ec, scan_body_, table_t::scan_body);
+    load(ec, scan_prefix_head_, table_t::scan_prefix_head);
+    load(ec, scan_prefix_body_, table_t::scan_prefix_body);
 
     load(ec, ecdsa0_head_, table_t::ecdsa0_head);
     load(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -153,6 +161,10 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, silent0_body_, table_t::silent0_body);
     load(ec, silent1_head_, table_t::silent1_head);
     load(ec, silent1_body_, table_t::silent1_body);
+    load(ec, silent0_prefix_head_, table_t::silent0_prefix_head);
+    load(ec, silent0_prefix_body_, table_t::silent0_prefix_body);
+    load(ec, silent1_prefix_head_, table_t::silent1_prefix_head);
+    load(ec, silent1_prefix_body_, table_t::silent1_prefix_body);
     load(ec, duplicate_head_, table_t::duplicate_head);
     load(ec, duplicate_body_, table_t::duplicate_body);
     load(ec, prevalid0_head_, table_t::prevalid0_head);

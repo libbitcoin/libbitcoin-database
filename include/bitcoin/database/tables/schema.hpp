@@ -50,7 +50,8 @@ namespace schema {
 /// 4.0.5.0 Batch and silent payment tables as correlate and row columns.
 /// 4.0.6.0 Silent payment batch banks and scan table.
 /// 4.0.7.0 Pool witness hash index (wtxid), state and duplicate as indexes.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 7, 0 };
+/// 4.0.8.0 Batch and scan tables as columns, with output prefix tables.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 8, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
@@ -326,22 +327,41 @@ struct strong_tx
 
 // array
 TABLE_COLUMN(caches, ecdsa_correlate, one + count_ + schema::header::pk);
-TABLE_COLUMN(caches, ecdsa_row, system::hash_size + system::ec_compressed_size +
-    system::ec_signature_size);
+TABLE_COLUMN(caches, ecdsa_digest, system::hash_size);
+TABLE_COLUMN(caches, ecdsa_compressed, system::ec_compressed_size);
+TABLE_COLUMN(caches, ecdsa_signature, system::ec_signature_size);
 
 // array
 TABLE_COLUMN(caches, schnorr_correlate, schema::header::pk);
-TABLE_COLUMN(caches, schnorr_row, system::hash_size + system::ec_xonly_size +
-    system::ec_signature_size);
+TABLE_COLUMN(caches, schnorr_digest, system::hash_size);
+TABLE_COLUMN(caches, schnorr_xonly, system::ec_xonly_size);
+TABLE_COLUMN(caches, schnorr_signature, system::ec_signature_size);
+
+// array
+struct scan_prefix
+{
+    static constexpr size_t pk = schema::outs::pk;
+    using link = schema::outs::link;
+    static constexpr size_t minsize = schema::prefix;
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static constexpr auto suffix = "prefix"_t;
+    bool operator==(const scan_prefix&) const NOEXCEPT = default;
+};
 
 // array
 TABLE_COLUMN(indexes, scan_correlate, schema::transaction::pk);
-TABLE_COLUMN(indexes, scan_row, schema::prefix + system::ec_compressed_size);
+TABLE_COLUMN(indexes, scan_point, system::ec_compressed_size);
+TABLE_COLUMN(indexes, scan_outputs, scan_prefix::pk + schema::index);
+
+// array (same as scan_prefix)
+using silent_prefix = scan_prefix;
 
 // array
 TABLE_COLUMN(caches, silent_correlate, schema::transaction::pk);
-TABLE_COLUMN(caches, silent_row, schema::prefix + system::ec_compressed_size +
-    system::ec_secret_size);
+TABLE_COLUMN(caches, silent_sum, system::ec_compressed_size);
+TABLE_COLUMN(caches, silent_hash, system::ec_secret_size);
+TABLE_COLUMN(caches, silent_outputs, silent_prefix::pk + schema::index);
 
 // array (same as candidate and confirmed)
 using prevalid = height;

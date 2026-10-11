@@ -44,7 +44,8 @@ using ecdsa_link = table::ecdsa_correlate::link;
 using schnorr_link = table::schnorr_correlate::link;
 using scan_link = table::scan_correlate::link;
 using silent_link = table::silent_correlate::link;
-using silent_prefix = table::scan_row::integral;
+using prefix_link = table::scan_prefix::link;
+using silent_prefix = table::scan_prefix::integral;
 using pool_link = table::pool::link;
 
 /// Multiples.

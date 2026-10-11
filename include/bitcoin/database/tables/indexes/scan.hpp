@@ -29,41 +29,6 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// scan_row is an array of silent payment prefix|point rows.
-struct scan_row
-  : public no_map<schema::scan_row>
-{
-    using integral = unsigned_type<schema::prefix>;
-    using no_map<schema::scan_row>::nomap;
-
-    struct put_ref
-      : public schema::scan_row
-    {
-        inline link count() const NOEXCEPT
-        {
-            using namespace system;
-            return possible_narrow_cast<link::integer>(prefixes.size());
-        }
-
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            // The prefix must be read from ec_xonly[0..7] as LE.
-            // Disk sequence will be [0..7] (with no byteswap on LE hardware).
-            for (const auto& prefix: prefixes)
-            {
-                sink.write_little_endian<integral>(prefix);
-                sink.write_bytes(compressed);
-            }
-
-            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
-            return sink;
-        }
-
-        const std::vector<integral>& prefixes;
-        const system::ec_compressed& compressed;
-    };
-};
-
 /// scan_correlate is an array of silent payment correlation tx fks.
 struct scan_correlate
   : public no_map<schema::scan_correlate>
@@ -86,28 +51,128 @@ struct scan_correlate
             return source;
         }
 
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_little_endian<tx::integer, tx::size>(tx_fk);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
         tx::integer tx_fk{};
     };
+};
 
-    struct records
-      : public schema::scan_correlate
+/// scan_point is an array of silent payment transaction points.
+struct scan_point
+  : public no_map<schema::scan_point>
+{
+    using no_map<schema::scan_point>::nomap;
+
+    struct put_ref
+      : public schema::scan_point
     {
         inline link count() const NOEXCEPT
         {
-            return system::possible_narrow_cast<link::integer>(rows);
+            return 1;
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            for (size_t row{}; row < rows; ++row)
-                sink.write_little_endian<tx::integer, tx::size>(tx_fk);
+            sink.write_bytes(point);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        const system::ec_compressed& point;
+    };
+};
+
+/// scan_outputs is an array of silent payment transaction prefix spans.
+struct scan_outputs
+  : public no_map<schema::scan_outputs>
+{
+    using prefix = schema::scan_prefix::link;
+    using no_map<schema::scan_outputs>::nomap;
+
+    struct record
+      : public schema::scan_outputs
+    {
+        inline link count() const NOEXCEPT
+        {
+            return 1;
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            first = source.read_little_endian<prefix::integer, prefix::size>();
+            outputs = source.read_little_endian<uint32_t, schema::index>();
+            BC_ASSERT(!source || source.get_read_position() == minrow);
+            return source;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_little_endian<prefix::integer, prefix::size>(first);
+            sink.write_little_endian<uint32_t, schema::index>(outputs);
+            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            return sink;
+        }
+
+        prefix::integer first{};
+        uint32_t outputs{};
+    };
+};
+
+/// scan_prefix is an array of silent payment output key prefixes.
+struct scan_prefix
+  : public no_map<schema::scan_prefix>
+{
+    using integral = unsigned_type<schema::prefix>;
+    using bytes = system::data_array<schema::prefix>;
+    using no_map<schema::scan_prefix>::nomap;
+
+    struct put_refs
+      : public schema::scan_prefix
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(prefixes.size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            // The prefix must be read from ec_xonly[0..7] as LE.
+            // Disk sequence will be [0..7] (with no byteswap on LE hardware).
+            for (const auto& prefix: prefixes)
+                sink.write_little_endian<integral>(prefix);
 
             BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
             return sink;
         }
 
-        const size_t rows{};
-        const tx::integer tx_fk{};
+        const std::vector<integral>& prefixes;
+    };
+
+    struct put_span
+      : public schema::scan_prefix
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(prefixes.size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto& prefix: prefixes)
+                sink.write_bytes(prefix);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const std::span<const bytes> prefixes;
     };
 };
 
@@ -119,7 +184,8 @@ using scan_files = mmaps
 <
     Storage,
     scan_correlate,
-    scan_row
+    scan_point,
+    scan_outputs
 >;
 
 template <template <size_t...> class Storage>
@@ -142,7 +208,8 @@ using scan_table = nomaps
 <
     scan_correlate::link,
     scan_correlate,
-    scan_row
+    scan_point,
+    scan_outputs
 >;
 
 template <template <size_t...> class Storage>
@@ -153,17 +220,21 @@ public:
     scan(database::storage& head, scan_storage<Storage>& body) NOEXCEPT
       : scan_table(head, body),
         correlate(*this),
-        row(*this)
+        point(*this),
+        outputs(*this)
     {
     }
 
     column<scan_table, 0> correlate;
-    column<scan_table, 1> row;
+    column<scan_table, 1> point;
+    column<scan_table, 2> outputs;
 };
 
-static_assert(sizeof(system::scan::batch::row_t) == scan_row::width);
 static_assert(is_same_type<scan_correlate::span,
     system::scan::batch::tx_link>);
+static_assert(is_same_type<scan_point::span, system::ec_compressed>);
+static_assert(sizeof(system::scan::batch::outputs_t) == scan_outputs::width);
+static_assert(is_same_type<scan_prefix::bytes, system::scan::batch::prefix>);
 
 } // namespace table
 } // namespace database

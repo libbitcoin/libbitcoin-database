@@ -108,6 +108,13 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
             handler(event_t::unload_file, table_t::silent1_body);
             if (!ec) ec = silent1_body_.shrink();
             handler(event_t::load_file, table_t::silent1_body);
+
+            handler(event_t::unload_file, table_t::silent0_prefix_body);
+            if (!ec) ec = silent0_prefix_body_.shrink();
+            handler(event_t::load_file, table_t::silent0_prefix_body);
+            handler(event_t::unload_file, table_t::silent1_prefix_body);
+            if (!ec) ec = silent1_prefix_body_.shrink();
+            handler(event_t::load_file, table_t::silent1_prefix_body);
         }
     }
 

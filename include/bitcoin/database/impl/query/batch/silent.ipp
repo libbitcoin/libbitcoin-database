@@ -34,28 +34,39 @@ bool CLASS::scan_silent(const stopper& cancel,
     return scan_silent(cancel, keys, zero, store_.scan.count(), callback);
 }
 
-// Rows [first, last) must begin and end on transaction boundaries.
+// Transactions [first, last) are scanned against all output prefixes.
 TEMPLATE
 bool CLASS::scan_silent(const stopper& cancel,
     const system::scan::batch::receiver& keys, size_t first, size_t last,
     const silent_handler& callback) NOEXCEPT
 {
     const auto correlate_ptr = store_.scan.correlate.get_memory();
-    const auto row_ptr = store_.scan.row.get_memory();
+    const auto point_ptr = store_.scan.point.get_memory();
+    const auto outputs_ptr = store_.scan.outputs.get_memory();
+    const auto prefix_ptr = store_.scan_prefix.get_memory();
 
     using correlate_t = const table::scan_correlate::span;
-    using row_t = const system::scan::batch::row_t;
+    using point_t = const table::scan_point::span;
+    using outputs_t = const system::scan::batch::outputs_t;
+    using prefix_t = const system::scan::batch::prefix;
 
     using namespace system;
     const auto correlate = pointer_cast<correlate_t>(correlate_ptr.data());
-    const auto row = pointer_cast<row_t>(row_ptr.data());
+    const auto point = pointer_cast<point_t>(point_ptr.data());
+    const auto outputs = pointer_cast<outputs_t>(outputs_ptr.data());
+    const auto prefix = pointer_cast<prefix_t>(prefix_ptr.data());
 
     BC_ASSERT(first <= last && last <= store_.scan.count());
     const auto count = last - first;
+    const auto prefixes = possible_narrow_cast<size_t>(
+        store_.scan_prefix.count().value);
+
     const system::scan::batch batch
     {
         .correlates = { std::next(correlate, first), count },
-        .rows = { std::next(row, first), count }
+        .points = { std::next(point, first), count },
+        .outputs = { std::next(outputs, first), count },
+        .prefixes = { prefix, prefixes }
     };
 
     // False return only implies canceled.
@@ -176,7 +187,8 @@ bool CLASS::purge_silents(bool bank) NOEXCEPT
 {
     // ========================================================================
     const auto scope = get_transactor();
-    return store_.silent_bank(bank).truncate(0);
+    return store_.silent_bank(bank).truncate(0) &&
+        store_.silent_prefix_bank(bank).truncate(0);
     // ========================================================================
 }
 
@@ -245,95 +257,93 @@ bool CLASS::get_silent_prevouts(data_chunk& prevouts,
     return !!sink;
 }
 
-// The bank is read and computed under its guard alone, then released before
-// records are set, as no two tables are guarded at once.
+// The bank is quiescent (drain claimed, no writers), so it is read across the
+// scan write, which is sourced directly from its columns. Scan rows are
+// allocated for every bank tx and prefix, and an invalid tx records no
+// outputs, so the scan allocation never waits on the compute.
 TEMPLATE
 code CLASS::compute_silents(const stopper& cancel, bool& device,
     bool bank) NOEXCEPT
 {
-    struct computed
-    {
-        tx_link link{};
-        bool valid{};
-        ec_compressed point{};
-        std::vector<silent_prefix> prefixes{};
-    };
-
     using namespace system;
-    std::vector<computed> txs{};
-    {
-        auto& bank_table = store_.silent_bank(bank);
-        const auto count = possible_narrow_cast<size_t>(
-            bank_table.count().value);
-        if (is_zero(count))
-            return error::success;
-
-        const auto correlate_ptr = bank_table.correlate.get_memory();
-        const auto row_ptr = bank_table.row.get_memory();
-
-        using correlate_t = const table::silent_correlate::span;
-        using row_t = const silent::batch::row_t;
-        const auto correlates = pointer_cast<correlate_t>(
-            correlate_ptr.data());
-        const auto rows = pointer_cast<row_t>(row_ptr.data());
-
-        std_vector<ec_compressed> points{};
-        data_chunk valid{};
-        const silent::batch batch{ { rows, count } };
-        if (!silent::batch::compute(points, valid, device, cancel, batch))
-            return error::query_canceled;
-
-        for (size_t row{}; row < count; ++row)
-        {
-            const auto& correlate = *std::next(correlates, row);
-            if (is_zero(row) || correlate != *std::next(correlates, sub1(row)))
-            {
-                txs.push_back({ tx_link{ correlate }, is_nonzero(valid[row]),
-                    points[row] });
-            }
-
-            const auto& prefix = std::next(rows, row)->prefix;
-            txs.back().prefixes.push_back(
-                unsafe_from_little_endian<silent_prefix>(prefix.data()));
-        }
-    }
-
-    size_t rows{};
-    for (const auto& tx: txs)
-        if (tx.valid)
-            rows += tx.prefixes.size();
-
-    if (is_zero(rows))
+    auto& bank_table = store_.silent_bank(bank);
+    auto& bank_prefix = store_.silent_prefix_bank(bank);
+    const auto txs = possible_narrow_cast<size_t>(bank_table.count().value);
+    if (is_zero(txs))
         return error::success;
 
     using word_t = table::scan_correlate::tx::integer;
-    const auto total = possible_narrow_cast<scan_link::integer>(rows);
+    using correlate_t = const table::silent_correlate::span;
+    using sum_t = const table::silent_sum::span;
+    using hash_t = const table::silent_hash::span;
+    using outputs_t = const scan::batch::outputs_t;
+    using prefix_t = const scan::batch::prefix;
+    using span_t = table::scan_prefix::put_span;
 
     // ========================================================================
     const auto scope = get_transactor();
 
-    // The valid rows of the bank are allocated and written together.
-    const auto fk = store_.scan.allocate(total);
-    if (fk.is_terminal())
+    const auto fk = store_.scan.allocate(
+        possible_narrow_cast<scan_link::integer>(txs));
+    const auto pk = store_.scan_prefix.allocate(bank_prefix.count());
+    if (fk.is_terminal() || pk.is_terminal())
         return error::integrity;
 
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = store_.scan.guard();
+    const auto point_ptr = store_.scan.point.get_memory();
+    const auto correlate_ptr = bank_table.correlate.get_memory();
+    const auto sum_ptr = bank_table.sum.get_memory();
+    const auto hash_ptr = bank_table.hash.get_memory();
+    const auto outputs_ptr = bank_table.outputs.get_memory();
+    const auto prefix_ptr = bank_prefix.get_memory();
+
     const auto words = pointer_cast<word_t>(guard.data());
+    const auto correlates = pointer_cast<correlate_t>(correlate_ptr.data());
+    const auto sums = pointer_cast<sum_t>(sum_ptr.data());
+    const auto hashes = pointer_cast<hash_t>(hash_ptr.data());
+    const auto outputs = pointer_cast<outputs_t>(outputs_ptr.data());
+    const auto prefixes = pointer_cast<prefix_t>(prefix_ptr.data());
 
-    auto row = fk;
-    for (const auto& tx: txs)
+    // Points are computed directly into the allocated scan rows.
+    const std::span<ec_compressed> points
     {
-        if (!tx.valid)
-            continue;
+        std::next(pointer_cast<ec_compressed>(point_ptr.data()), fk.value), txs
+    };
 
-        if (!put_silent_(row, tx.link, tx.point, tx.prefixes, words))
+    data_chunk valid(txs);
+    const silent::batch batch{ { sums, txs }, { hashes, txs } };
+    if (!silent::batch::compute(points, valid, device, cancel, batch))
+        return error::query_canceled;
+
+    auto row = pk;
+    for (size_t tx{}; tx < txs; ++tx)
+    {
+        const scan_link link{ possible_narrow_cast<scan_link::integer>(
+            fk.value + tx) };
+        const tx_link correlate{ *std::next(correlates, tx) };
+        const auto& output = *std::next(outputs, tx);
+        const auto first = from_little_endian<uint64_t>(output.first);
+        const auto count = from_little_endian<uint32_t>(output.count);
+
+        if (is_zero(valid[tx]))
+        {
+            points[tx] = {};
+            if (!put_silent_(link, correlate, row, zero, words))
+                return error::integrity;
+
+            continue;
+        }
+
+        if (!store_.scan_prefix.put(row, span_t{ {},
+            { std::next(prefixes, first), count } }) ||
+            !put_silent_(link, correlate, row, count, words))
             return error::integrity;
 
-        row += tx.prefixes.size();
+        row += count;
     }
 
-    store_.scan.complete(fk, total);
+    store_.scan.complete(fk, possible_narrow_cast<scan_link::integer>(txs));
     return error::success;
     // ========================================================================
 }
@@ -393,34 +403,44 @@ bool CLASS::set_silents_(size_t& rows, const header_link& link,
     if (is_zero(rows))
         return true;
 
-    using row_t = table::silent_row::put_ref;
-    using correlate_t = table::silent_correlate::records;
+    using correlate_t = table::silent_correlate::record;
+    using sum_t = table::silent_sum::put_ref;
+    using hash_t = table::silent_hash::put_ref;
+    using outputs_t = table::silent_outputs::record;
+    using prefix_t = table::silent_prefix::put_refs;
 
     // ========================================================================
     const auto scope = get_transactor();
     auto& bank_table = store_.silent_bank(bank);
+    auto& bank_prefix = store_.silent_prefix_bank(bank);
 
-    // Allocate all of the block's rows across all columns.
+    // Allocate all of the block's txs across all columns, and their outputs.
     using namespace system;
     const auto fk = bank_table.allocate(
-        possible_narrow_cast<silent_link::integer>(rows));
-    if (fk.is_terminal())
+        possible_narrow_cast<silent_link::integer>(captures.size()));
+    const auto pk = bank_prefix.allocate(
+        possible_narrow_cast<prefix_link::integer>(rows));
+    if (fk.is_terminal() || pk.is_terminal())
         return false;
 
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = bank_table.guard();
 
-    auto row = fk;
+    auto tx = fk;
+    auto out = pk;
     for (const auto& item: captures)
     {
-        const auto size = item.prefixes.size();
-        if (!bank_table.row.put(row,
-                row_t{ {}, item.prefixes, item.sum, item.hash }) ||
-            !bank_table.correlate.put(row,
-                correlate_t{ {}, size, item.link.value }))
+        const auto outputs = item.prefixes.size();
+        if (!bank_table.correlate.put(tx, correlate_t{ {}, item.link.value }) ||
+            !bank_table.sum.put(tx, sum_t{ {}, item.sum }) ||
+            !bank_table.hash.put(tx, hash_t{ {}, item.hash }) ||
+            !bank_table.outputs.put(tx, outputs_t{ {}, out.value,
+                possible_narrow_cast<uint32_t>(outputs) }) ||
+            !bank_prefix.put(out, prefix_t{ {}, item.prefixes }))
             return false;
 
-        row += size;
+        tx += one;
+        out += outputs;
     }
 
     return true;
@@ -465,49 +485,49 @@ bool CLASS::set_silent_(const tx_link& link, const ec_compressed& point,
 
     using namespace system;
     using word_t = table::scan_correlate::tx::integer;
-    const auto rows = possible_narrow_cast<scan_link::integer>(prefixes.size());
+    using point_t = table::scan_point::put_ref;
+    using prefix_t = table::scan_prefix::put_refs;
+    const auto outputs = prefixes.size();
 
     // ========================================================================
     const auto scope = get_transactor();
 
-    // Allocate rows across all columns.
-    const auto fk = store_.scan.allocate(rows);
-    if (fk.is_terminal())
+    // Allocate the tx across all columns, and its outputs.
+    const auto fk = store_.scan.allocate(one);
+    const auto pk = store_.scan_prefix.allocate(
+        possible_narrow_cast<prefix_link::integer>(outputs));
+    if (fk.is_terminal() || pk.is_terminal())
         return false;
 
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = store_.scan.guard();
     const auto words = pointer_cast<word_t>(guard.data());
-    if (!put_silent_(fk, link, point, prefixes, words))
+    if (!store_.scan_prefix.put(pk, prefix_t{ {}, prefixes }) ||
+        !store_.scan.point.put(fk, point_t{ {}, point }) ||
+        !put_silent_(fk, link, pk, outputs, words))
         return false;
 
-    store_.scan.complete(fk, rows);
+    store_.scan.complete(fk, one);
     return true;
     // ========================================================================
 }
 
 TEMPLATE
 bool CLASS::put_silent_(const scan_link& fk, const tx_link& link,
-    const ec_compressed& point, const std::vector<silent_prefix>& prefixes,
+    const prefix_link& first, size_t outputs,
     table::scan_correlate::tx::integer* words) NOEXCEPT
 {
     using namespace system;
-    using row_t = table::scan_row::put_ref;
-    if (!store_.scan.row.put(fk, row_t{ {}, prefixes, point }))
+    using outputs_t = table::scan_outputs::record;
+    if (!store_.scan.outputs.put(fk, outputs_t{ {}, first.value,
+        possible_narrow_cast<uint32_t>(outputs) }))
         return false;
 
     // The guard is the correlate column, published last (get_silent_frontier).
     using word_t = table::scan_correlate::tx::integer;
     static_assert(schema::scan_correlate::minrow == sizeof(word_t));
-    const auto value = native_to_little_end(link.value);
-    const auto end = fk.value + prefixes.size();
-
-    for (auto row = fk.value; row < end; ++row)
-    {
-        std::atomic_ref<word_t> word{ *std::next(words, row) };
-        word.store(value, std::memory_order_release);
-    }
-
+    std::atomic_ref<word_t> word{ *std::next(words, fk.value) };
+    word.store(native_to_little_end(link.value), std::memory_order_release);
     return true;
 }
 

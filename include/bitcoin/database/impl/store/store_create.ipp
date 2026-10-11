@@ -100,6 +100,8 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, strong_tx_body_, table_t::strong_tx_body);
     create(ec, scan_head_, table_t::scan_head);
     create(ec, scan_body_, table_t::scan_body);
+    create(ec, scan_prefix_head_, table_t::scan_prefix_head);
+    create(ec, scan_prefix_body_, table_t::scan_prefix_body);
 
     create(ec, ecdsa0_head_, table_t::ecdsa0_head);
     create(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -113,6 +115,10 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, silent0_body_, table_t::silent0_body);
     create(ec, silent1_head_, table_t::silent1_head);
     create(ec, silent1_body_, table_t::silent1_body);
+    create(ec, silent0_prefix_head_, table_t::silent0_prefix_head);
+    create(ec, silent0_prefix_body_, table_t::silent0_prefix_body);
+    create(ec, silent1_prefix_head_, table_t::silent1_prefix_head);
+    create(ec, silent1_prefix_body_, table_t::silent1_prefix_body);
     create(ec, envelope_head_, table_t::envelope_head);
     create(ec, duplicate_head_, table_t::duplicate_head);
     create(ec, duplicate_body_, table_t::duplicate_body);
@@ -162,6 +168,7 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, confirmed, table_t::confirmed_table);
     populate(ec, strong_tx, table_t::strong_tx_table);
     populate(ec, scan, table_t::scan_table);
+    populate(ec, scan_prefix, table_t::scan_prefix_table);
 
     populate(ec, ecdsa0, table_t::ecdsa0_table);
     populate(ec, ecdsa1, table_t::ecdsa1_table);
@@ -169,6 +176,8 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, schnorr1, table_t::schnorr1_table);
     populate(ec, silent0, table_t::silent0_table);
     populate(ec, silent1, table_t::silent1_table);
+    populate(ec, silent0_prefix, table_t::silent0_prefix_table);
+    populate(ec, silent1_prefix, table_t::silent1_prefix_table);
     populate(ec, envelope, table_t::envelope_table);
     populate(ec, duplicate, table_t::duplicate_table);
     populate(ec, prevalid0, table_t::prevalid0_table);
