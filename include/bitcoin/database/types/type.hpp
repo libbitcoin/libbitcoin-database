@@ -87,6 +87,8 @@ using outpoints = std::vector<outpoint>;
 using heights = std::vector<size_t>;
 using sizes = std::pair<size_t, size_t>;
 using counts = std::pair<size_t, size_t>;
+using threshold = std::pair<size_t, tx_link::integer>;
+using thresholds = std::vector<threshold>;
 
 } // namespace database
 } // namespace libbitcoin
