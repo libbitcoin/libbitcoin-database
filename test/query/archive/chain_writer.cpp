@@ -63,7 +63,6 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_header__mmap_get_header__expected)
     BOOST_CHECK_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
     BOOST_CHECK_EQUAL(element1.ctx.flags, test::context.flags);
     BOOST_CHECK_EQUAL(element1.ctx.mtp, test::context.mtp);
-    BOOST_CHECK_EQUAL(element1.milestone, milestone);
     BOOST_CHECK_EQUAL(element1.version, header.version());
     BOOST_CHECK_EQUAL(element1.parent_fk, schema::header::link::terminal);
     BOOST_CHECK_EQUAL(element1.merkle_root, header.merkle_root());
@@ -121,7 +120,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_header__is_header__expected)
         "64636261" // nonce
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
         "00000000000000000000000000000000" // work
-        "01"); // header flags (milestone)
+        "00"); // header flags
 
     header_link link{};
     settings settings{};
@@ -136,6 +135,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_header__is_header__expected)
     BOOST_CHECK(!query.is_associated(0));
     BOOST_CHECK(!query.set_code(link, header, test::context, {}, milestone));
     BOOST_CHECK(!link.is_terminal());
+    BOOST_CHECK_EQUAL(query.is_milestone(link), milestone);
     BOOST_CHECK(query.is_header(header.hash()));
     BOOST_CHECK(!query.is_associated(0));
     table::header::record element1{};
@@ -147,7 +147,6 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_header__is_header__expected)
     BOOST_CHECK_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
     BOOST_CHECK_EQUAL(element1.ctx.flags, test::context.flags);
     BOOST_CHECK_EQUAL(element1.ctx.mtp, test::context.mtp);
-    BOOST_CHECK_EQUAL(element1.milestone, milestone);
     BOOST_CHECK_EQUAL(element1.version, header.version());
     BOOST_CHECK_EQUAL(element1.parent_fk, schema::header::link::terminal);
     BOOST_CHECK_EQUAL(element1.merkle_root, header.merkle_root());
@@ -486,7 +485,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
         "1dac2b7c"     // nonce
         "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // merkle_root
         "00000000000000000000000000000000" // work
-        "01"); // header flags (milestone)
+        "00"); // header flags
     const auto genesis_tx_head = system::base16_chunk(
         "01000000"     // record count
         "ffffffff"     // bucket[0]...
@@ -643,7 +642,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
         "1dac2b7c"     // nonce
         "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a" // merkle_root
         "00000000000000000000000000000000" // work
-        "01"); // header flags (milestone)
+        "00"); // header flags
     const auto genesis_tx_head = system::base16_chunk(
         "01000000"     // record count
         "ffffffff"     // bucket[0]...

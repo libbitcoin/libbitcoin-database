@@ -115,12 +115,11 @@ header_links CLASS::get_confirmed_fork(const header_link& fork) const NOEXCEPT
 // node/confirmer
 TEMPLATE
 header_states CLASS::get_validated_fork(size_t& fork_point,
-    size_t top_checkpoint, size_t silent_limit) const NOEXCEPT
+    size_t silent_limit) const NOEXCEPT
 {
     // Reservation may limit allocation to most common scenario.
     header_states out{};
     out.reserve(one);
-    code ec{};
 
     // Disable filter constraint if filtering is disabled.
     const auto filter = filter_enabled();
@@ -133,14 +132,21 @@ header_states CLASS::get_validated_fork(size_t& fork_point,
     auto link = to_candidate(height);
 
     // Filter body always written before validated, but validated state is not
-    // written in the case of bypassed blocks, it's inferred. So for bypassed
-    // blocks the existence of the filter must be verified. Silent payment
-    // records of blocks at or above silent_limit are not yet set.
-    while (height < silent_limit &&
-        is_block_validated(ec, link, height, top_checkpoint) &&
-        (!filter || ec != error::bypassed || is_filtered_body(link)))
+    // written for bypassed blocks. So for bypassed blocks the existence of the
+    // filter must be verified. Silent payment records of blocks at or above
+    // silent_limit are not yet set.
+    while (height < silent_limit)
     {
-        out.emplace_back(link, ec);
+        const auto state = get_block_state(link);
+        const auto bypass = database::is_bypass(state);
+        if (bypass && (!database::is_associated(state) ||
+            (filter && !is_filtered_body(link))))
+            break;
+
+        if (!bypass && !database::is_validated(state))
+            break;
+
+        out.emplace_back(link, state);
         link = to_candidate(++height);
     }
 

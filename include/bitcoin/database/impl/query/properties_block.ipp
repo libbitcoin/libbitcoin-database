@@ -49,8 +49,13 @@ inline bool CLASS::is_block_segregated(const header_link& link) const NOEXCEPT
 TEMPLATE
 inline bool CLASS::is_milestone(const header_link& link) const NOEXCEPT
 {
-    table::header::get_milestone header{};
-    return store_.header.get(link, header) && header.milestone;
+    return database::is_milestone(get_block_state(link));
+}
+
+TEMPLATE
+inline bool CLASS::is_bypass(const header_link& link) const NOEXCEPT
+{
+    return database::is_bypass(get_block_state(link));
 }
 
 TEMPLATE
@@ -63,8 +68,7 @@ inline bool CLASS::is_compact(const header_link& link) const NOEXCEPT
 TEMPLATE
 inline bool CLASS::is_associated(const header_link& link) const NOEXCEPT
 {
-    table::txs::get_associated txs{};
-    return store_.txs.at(to_txs(link), txs) && txs.associated;
+    return database::is_associated(get_block_state(link));
 }
 
 // properties

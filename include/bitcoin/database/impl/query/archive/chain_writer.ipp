@@ -315,6 +315,13 @@ code CLASS::set_code(header_link& out_fk, const header& header,
     if (parent_fk.is_terminal() != (previous == system::null_hash))
         return system::error::orphan_block;
 
+    using namespace system;
+    const auto checkpoint = ctx.height <=
+        store_.get_envelope().top_checkpoint.height();
+    const auto bypass = bit_or<uint8_t>(
+        milestone ? block_state::milestoned : block_state::no_state,
+        checkpoint ? block_state::checkpointed : block_state::no_state);
+
     // ========================================================================
     const auto scope = get_transactor();
 
@@ -323,14 +330,21 @@ code CLASS::set_code(header_link& out_fk, const header& header,
     {
         {},
         ctx,
-        milestone,
         compact,
         parent_fk,
         header,
         work
     });
 
-    return out_fk.is_terminal() ? error::header_put : error::success;
+    if (out_fk.is_terminal())
+        return error::header_put;
+
+    // Clean single allocation failure (e.g. disk full).
+    if (is_nonzero(bypass) && !store_.state.set(to_state(out_fk),
+        table::state::merge{ {}, bypass }))
+        return error::header_state_put;
+
+    return error::success;
     // ========================================================================
 }
 
@@ -508,14 +522,22 @@ code CLASS::set_txs(const header_link& key, tx_links&& links, size_t light,
 
     // Header link is the key for the txs table.
     // Clean single allocation failure (e.g. disk full).
-    return store_.txs.put(to_txs(key), table::txs::slab
+    if (!store_.txs.put(to_txs(key), table::txs::slab
     {
         {},
         possible_narrow_cast<bytes>(light),
         possible_narrow_cast<bytes>(heavy),
         std::move(links),
         std::move(interval)
-    }) ? error::success : error::txs_txs_put;
+    }))
+        return error::txs_txs_put;
+
+    // Clean single allocation failure (e.g. disk full).
+    return store_.state.set(to_state(key), table::state::merge
+    {
+        {},
+        block_state::associated
+    }) ? error::success : error::txs_state_put;
 }
 
 } // namespace database

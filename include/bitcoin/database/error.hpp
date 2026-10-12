@@ -34,7 +34,6 @@ enum error_t : uint8_t
 {
     /// general
     success,
-    unknown_state,
 
     /// integrity (internal fault)
     integrity,
@@ -100,12 +99,8 @@ enum error_t : uint8_t
     verify_table,
 
     /// validation/confirmation
-    block_valid,
-    block_confirmable,
     block_unconfirmable,
-    unassociated,
     unvalidated,
-    bypassed,
 
     /// tx archive
     tx_empty,
@@ -126,6 +121,7 @@ enum error_t : uint8_t
     /// header archive
     header_put,
     header_work,
+    header_state_put,
 
     /// txs archive
     txs_header,
@@ -133,6 +129,7 @@ enum error_t : uint8_t
     txs_height,
     txs_confirm,
     txs_txs_put,
+    txs_state_put,
 
     /// prevouts cache
     prevouts_put,

@@ -305,28 +305,6 @@ struct txs
         bytes::integer heavy{};
     };
 
-    struct get_associated
-      : public schema::txs
-    {
-        inline link count() const NOEXCEPT
-        {
-            BC_ASSERT(false);
-            return {};
-        }
-
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            // tx sizes
-            source.skip_bytes(skip_sizes);
-
-            // tx fks
-            associated = to_bool(source.read_little_endian<ct::integer, ct::size>());
-            return source;
-        }
-
-        bool associated{};
-    };
-
     struct get_txs
       : public schema::txs
     {

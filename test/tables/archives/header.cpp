@@ -40,7 +40,6 @@ constexpr table::header::record expected
         0x00341201_u32, // height
         0x56341203_u32  // mtp
     },
-    true,           // milestone
     false,          // compact
     0x00341204_u32, // parent_fk
     0x56341205_u32, // version
@@ -104,7 +103,7 @@ const data_chunk expected_file
     0x33, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
     0x44, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
     0x09, 0x12, 0x34, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x01
+    0x00
 };
 
 BOOST_AUTO_TEST_CASE(header__put__get__expected)
@@ -137,7 +136,6 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
 ////    {
 ////        {},
 ////        expected.ctx,
-////        expected.milestone,
 ////        expected.parent_fk,
 ////        system::to_shared(expected_header)
 ////    };
@@ -167,7 +165,6 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
     {
         {},
         expected.ctx,
-        expected.milestone,
         expected.compact,
         expected.parent_fk,
         expected_header,
@@ -275,11 +272,10 @@ BOOST_AUTO_TEST_CASE(header__put__compact__round_trip)
     BOOST_REQUIRE(instance.create());
 
     auto compact = expected;
-    compact.milestone = false;
     compact.compact = true;
     const auto link = instance.put_link(key, compact);
     BOOST_REQUIRE(!link.is_terminal());
-    BOOST_REQUIRE_EQUAL(body_store.buffer().back(), 0x02u);
+    BOOST_REQUIRE_EQUAL(body_store.buffer().back(), 0x01u);
 
     table::header::record element{};
     BOOST_REQUIRE(instance.get(link, element));
@@ -288,10 +284,6 @@ BOOST_AUTO_TEST_CASE(header__put__compact__round_trip)
     table::header::get_compact flag{};
     BOOST_REQUIRE(instance.get(link, flag));
     BOOST_REQUIRE(flag.compact);
-
-    table::header::get_milestone milestone{};
-    BOOST_REQUIRE(instance.get(link, milestone));
-    BOOST_REQUIRE(!milestone.milestone);
 }
 
 BOOST_AUTO_TEST_CASE(header__is_storable__work_bound__expected)

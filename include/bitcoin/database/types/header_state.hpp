@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_TYPES_HEADER_STATE_HPP
 
 #include <bitcoin/database/define.hpp>
+#include <bitcoin/database/types/block_state.hpp>
 #include <bitcoin/database/types/type.hpp>
 
 namespace libbitcoin {
@@ -28,7 +29,7 @@ namespace database {
 struct BCD_API header_state
 {
     header_link link;
-    code ec;
+    block_state state;
 };
 
 using header_states = std::vector<header_state>;

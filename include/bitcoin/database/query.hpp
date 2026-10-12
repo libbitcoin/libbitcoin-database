@@ -425,6 +425,7 @@ public:
     inline bool is_tx_segregated(const tx_link& link) const NOEXCEPT;
     inline bool is_block_segregated(const header_link& link) const NOEXCEPT;
     inline bool is_milestone(const header_link& link) const NOEXCEPT;
+    inline bool is_bypass(const header_link& link) const NOEXCEPT;
     inline bool is_compact(const header_link& link) const NOEXCEPT;
     inline bool is_associated(const header_link& link) const NOEXCEPT;
     inline bool is_confirmable(const header_link& link) const NOEXCEPT;
@@ -651,8 +652,8 @@ public:
 
     /// States.
     bool is_validateable(size_t height) const NOEXCEPT;
-    code get_block_state(const header_link& link) const NOEXCEPT;
-    code get_header_state(const header_link& link) const NOEXCEPT;
+    inline block_state get_block_state(
+        const header_link& link) const NOEXCEPT;
 
     /// Validate a block whose txs are pooled under a context sufficient for
     /// the block, writing its prevouts. Unvalidated implies a tx is not
@@ -864,7 +865,6 @@ public:
     header_links get_confirmed_fork(const header_link& fork) const NOEXCEPT;
     header_links get_candidate_fork(size_t& fork_point) const NOEXCEPT;
     header_states get_validated_fork(size_t& fork_point,
-        size_t top_checkpoint=zero,
         size_t silent_limit=max_size_t) const NOEXCEPT;
 
     bool initialize(const block& genesis) NOEXCEPT;
@@ -1034,13 +1034,9 @@ protected:
 
     /// Validate.
     /// -----------------------------------------------------------------------
-    inline code to_block_code(schema::state::value flags) const NOEXCEPT;
     inline bool is_sufficient(const context& current,
         const context& evaluated) const NOEXCEPT;
 
-    /// Called by confirmation chaser.
-    bool is_block_validated(code& ec, const header_link& link,
-        size_t height, size_t checkpoint) const NOEXCEPT;
 
     /// Pool.
     /// -----------------------------------------------------------------------

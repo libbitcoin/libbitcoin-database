@@ -24,20 +24,78 @@
 namespace libbitcoin {
 namespace database {
 
+/// Block state flags.
 enum block_state : uint8_t
 {
-    /// Not validated.
+    /// No state.
     no_state = 0,
 
+    /// Transactions are archived.
+    associated = system::bit_right<uint8_t>(0),
+
     /// Satisfies validation rules (prevouts unverified).
-    valid = system::bit_right<uint8_t>(0),
+    valid = system::bit_right<uint8_t>(1),
 
     /// Satisfies confirmation rules (final).
-    confirmable = system::bit_right<uint8_t>(1),
+    confirmable = system::bit_right<uint8_t>(2),
 
     /// Does not satisfy validation or confirmation rules (final).
-    unconfirmable = system::bit_right<uint8_t>(2)
+    unconfirmable = system::bit_right<uint8_t>(3),
+
+    /// At or below the milestone (bypassed).
+    milestoned = system::bit_right<uint8_t>(4),
+
+    /// At or below the top checkpoint (bypassed).
+    checkpointed = system::bit_right<uint8_t>(5)
 };
+
+/// Validation flags, cleared by reset.
+constexpr uint8_t validation_states = valid | confirmable | unconfirmable;
+
+/// Bypass flags.
+constexpr uint8_t bypass_states = milestoned | checkpointed;
+
+/// True if any of the flags are set.
+constexpr bool is_any(block_state state, uint8_t flags) NOEXCEPT
+{
+    return is_nonzero(system::bit_and<uint8_t>(state, flags));
+}
+
+/// Transactions are archived.
+constexpr bool is_associated(block_state state) NOEXCEPT
+{
+    return is_any(state, associated);
+}
+
+/// Does not satisfy validation or confirmation rules.
+constexpr bool is_unconfirmable(block_state state) NOEXCEPT
+{
+    return is_any(state, unconfirmable);
+}
+
+/// Satisfies confirmation rules.
+constexpr bool is_confirmable(block_state state) NOEXCEPT
+{
+    return is_any(state, confirmable) && !is_unconfirmable(state);
+}
+
+/// Satisfies validation or confirmation rules.
+constexpr bool is_validated(block_state state) NOEXCEPT
+{
+    return is_any(state, valid | confirmable) && !is_unconfirmable(state);
+}
+
+/// At or below the milestone.
+constexpr bool is_milestone(block_state state) NOEXCEPT
+{
+    return is_any(state, milestoned);
+}
+
+/// At or below the milestone or top checkpoint.
+constexpr bool is_bypass(block_state state) NOEXCEPT
+{
+    return is_any(state, bypass_states);
+}
 
 } // namespace database
 } // namespace libbitcoin
