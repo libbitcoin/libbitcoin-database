@@ -366,6 +366,10 @@ bool CLASS::set(size_t index, const Element& element) NOEXCEPT
     static_assert(!is_slab);
     static_assert(aligned, "set requires an aligned cell");
 
+    // Avoid setting at/above terminal sentinel into a bucket position.
+    if (index >= Link::terminal)
+        return false;
+
     // Allocate as necessary and fill allocations.
     const auto position = link_to_position(index);
     const auto ptr = file_.get_filled(position, bucket_size, fill);

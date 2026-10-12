@@ -27,33 +27,49 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// state is a record arraymap of block state, indexed by header.fk.
+/// state is a head-only array of block state flags, indexed by header.fk.
 struct state
-  : public array_map<schema::state>
+  : public value_map<schema::state>
 {
-    using coding = linkage<schema::code>;
-    using array_map<schema::state>::arraymap;
+    using value_map<schema::state>::headmap;
 
-    struct record
+    /// Merge flags into the current state.
+    struct merge
       : public schema::state
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            code = source.read_little_endian<coding::integer, coding::size>();
-            BC_ASSERT(!source || source.get_read_position() == count() * minrow);
+            current = source.read_byte();
             return source;
         }
 
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            sink.write_little_endian<coding::integer, coding::size>(code);
-            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            sink.write_byte(system::bit_or<value>(current, flags));
             return sink;
         }
 
-        inline bool operator==(const record&) const NOEXCEPT = default;
+        value flags{};
+        value current{};
+    };
 
-        coding::integer code{};
+    /// Replace the current state.
+    struct replace
+      : public schema::state
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_byte();
+            return source;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_byte(flags);
+            return sink;
+        }
+
+        value flags{};
     };
 };
 

@@ -22,71 +22,51 @@
 BOOST_AUTO_TEST_SUITE(state_tests)
 
 using namespace system;
-const table::state::record record1{ {}, 0x42 };
-const table::state::record record2{ {}, 0xab };
-const auto expected_head = base16_chunk
-(
-    "000000"
-    "000000"
-    "010000"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-);
-const auto closed_head = base16_chunk
-(
-    "020000"
-    "000000"
-    "010000"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-    "ffffff"
-);
-const auto expected_body = base16_chunk
-(
-    "42"                 // code1
-    "ab"                 // code2
-);
 
-BOOST_AUTO_TEST_CASE(state__put__two__expected)
+BOOST_AUTO_TEST_CASE(state__at__unset__no_state)
 {
-    test::chunk_storage head_store{};
-    test::chunk_storage body_store{};
-    table::state instance{ head_store, body_store, 8 };
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    table::state instance{ head_store };
     BOOST_REQUIRE(instance.create());
-
-    BOOST_REQUIRE(instance.put(0, record1));
-    BOOST_REQUIRE_EQUAL(instance.at(0), 0u);
-    BOOST_REQUIRE(instance.put(1, record2));
-    BOOST_REQUIRE_EQUAL(instance.at(1), 1u);
-
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
-    BOOST_REQUIRE(instance.close());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), closed_head);
+    BOOST_REQUIRE_EQUAL(instance.at(0), block_state::no_state);
 }
 
-BOOST_AUTO_TEST_CASE(state__get__two__expected)
+BOOST_AUTO_TEST_CASE(state__set__merge__merged)
 {
-    auto head = expected_head;
-    auto body = expected_body;
-    test::chunk_storage head_store{ head };
-    test::chunk_storage body_store{ body };
-    table::state instance{ head_store, body_store, 3 };
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    table::state instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.set(1, table::state::merge{ {}, block_state::valid }));
+    BOOST_REQUIRE(instance.set(1, table::state::merge{ {}, block_state::confirmable }));
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("0003"));
+    BOOST_REQUIRE_EQUAL(instance.at(0), block_state::no_state);
+    BOOST_REQUIRE_EQUAL(instance.at(1), block_state::valid | block_state::confirmable);
+}
 
-    table::state::record out{};
-    BOOST_REQUIRE(instance.get(0, out));
-    BOOST_REQUIRE(out == record1);
-    BOOST_REQUIRE(instance.get(1, out));
-    BOOST_REQUIRE(out == record2);
+BOOST_AUTO_TEST_CASE(state__set__merge_after_unconfirmable__retained)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    table::state instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.set(0, table::state::merge{ {}, block_state::unconfirmable }));
+    BOOST_REQUIRE(instance.set(0, table::state::merge{ {}, block_state::valid }));
+    BOOST_REQUIRE_EQUAL(instance.at(0), block_state::unconfirmable | block_state::valid);
+}
+
+BOOST_AUTO_TEST_CASE(state__set__replace__replaced)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    table::state instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.set(0, table::state::merge{ {}, block_state::confirmable }));
+    BOOST_REQUIRE(instance.set(0, table::state::replace{ {}, block_state::no_state }));
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("00"));
+    BOOST_REQUIRE_EQUAL(instance.at(0), block_state::no_state);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

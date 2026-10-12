@@ -107,7 +107,6 @@ enum class table_t
     prevout_body,
     state_table,
     state_head,
-    state_body,
     pool_table,
     pool_head,
     pool_body,

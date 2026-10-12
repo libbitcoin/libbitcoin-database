@@ -393,6 +393,17 @@ BOOST_AUTO_TEST_CASE(headmap__set__byte_beyond_count__filled_empty)
     BOOST_REQUIRE(!instance.get(4u, out));
 }
 
+BOOST_AUTO_TEST_CASE(headmap__set__terminal__false)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    value_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(!instance.set(value_link::terminal, byte_put{ 0x2a }));
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE(head_file.empty());
+}
+
 BOOST_AUTO_TEST_CASE(headmap__set__byte_overwrite__expected)
 {
     data_chunk head_file{};

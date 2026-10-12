@@ -263,7 +263,6 @@ protected:
 
     // record hashmap
     Storage<one> state_head_;
-    Storage<one> state_body_;
 
     // record multimap
     Storage<one> pool_head_;

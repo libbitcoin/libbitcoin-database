@@ -108,7 +108,6 @@ const CLASS::table_map CLASS::tables
     { table_t::prevout_body, "prevout_body" },
     { table_t::state_table, "state_table" },
     { table_t::state_head, "state_head" },
-    { table_t::state_body, "state_body" },
     { table_t::pool_table, "pool_table" },
     { table_t::pool_head, "pool_head" },
     { table_t::pool_body, "pool_body" },

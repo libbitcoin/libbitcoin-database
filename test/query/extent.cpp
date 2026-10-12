@@ -100,7 +100,6 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.prevout_buckets(), 128);
     BOOST_REQUIRE_EQUAL(query.pool_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.wtxid_buckets(), 128u);
-    BOOST_REQUIRE_EQUAL(query.state_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.filter_tx_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.filter_bk_buckets(), 128u);
 }

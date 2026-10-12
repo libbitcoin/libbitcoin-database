@@ -116,8 +116,7 @@ CLASS::store(const settings& config) NOEXCEPT
     prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout), head_settings(config.prevout), random),
     prevout_body_(body(config.path, schema::caches::prevout), config.prevout, sequential, staged),
 
-    state_head_(head(config.path / schema::dir::heads, schema::indexes::state), head_settings(config.state), random),
-    state_body_(body(config.path, schema::indexes::state), config.state, sequential, staged),
+    state_head_(head(config.path / schema::dir::heads, schema::indexes::state), head_settings<schema::state::cell>(config.state), random),
 
     pool_head_(head(config.path / schema::dir::heads, schema::caches::pool), head_settings(config.pool), random),
     pool_body_(body(config.path, schema::caches::pool), config.pool, sequential, staged),
@@ -171,7 +170,7 @@ CLASS::store(const settings& config) NOEXCEPT
     prevalid0(prevalid0_head_, prevalid0_body_),
     prevalid1(prevalid1_head_, prevalid1_body_),
     prevout(prevout_head_, prevout_body_, config.prevout.buckets),
-    state(state_head_, state_body_, config.state.buckets),
+    state(state_head_),
     pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected),
     spends(spends_head_, spends_body_),
     wtxid(wtxid_head_, wtxid_body_, config.pool.buckets, config.pool.expected),

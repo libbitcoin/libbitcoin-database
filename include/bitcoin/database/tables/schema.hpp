@@ -51,12 +51,13 @@ namespace schema {
 /// 4.0.6.0 Silent payment batch banks and scan table.
 /// 4.0.7.0 Pool witness hash index (wtxid), state and duplicate as indexes.
 /// 4.0.8.0 Batch and scan tables as columns, with output prefix tables.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 8, 0 };
+/// 4.0.9.0 Block state as a headmap of flags.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 9, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
 constexpr size_t bit = 1;       // single bit flag.
-constexpr size_t code = 1;      // validation state.
+constexpr size_t code = 1;      // block state flags.
 constexpr size_t size = 3;      // tx/block size/weight.
 constexpr size_t height_ = 3;   // height record.
 constexpr size_t count_ = 2;    // txs/block count, inputs/block count.
@@ -417,20 +418,21 @@ struct prevout
     static_assert(link::size == 5u);
 };
 
-// record arraymap
+// headmap (values)
 struct state
 {
-    static constexpr size_t align = false;
     static constexpr size_t pk = schema::block;
     using link = linkage<pk, to_bits(pk)>;
+    using value = uint8_t;
     static constexpr size_t minsize =
         schema::code;
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = minsize;
-    static constexpr link count() NOEXCEPT { return 1; }
+    static constexpr size_t cell = minsize;
     static_assert(minsize == 1u);
     static_assert(minrow == 1u);
     static_assert(link::size == 3u);
+    static_assert(cell == 1u);
     bool operator==(const state&) const NOEXCEPT = default;
 };
 

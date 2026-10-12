@@ -184,11 +184,6 @@ public:
         return state_head_.file();
     }
 
-    inline const path& state_body_file() const NOEXCEPT
-    {
-        return state_body_.file();
-    }
-
     inline const path& wtxid_head_file() const NOEXCEPT
     {
         return wtxid_head_.file();

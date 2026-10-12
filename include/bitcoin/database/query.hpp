@@ -238,7 +238,6 @@ public:
     size_t strong_tx_buckets() const NOEXCEPT;
     size_t duplicate_buckets() const NOEXCEPT;
     size_t prevout_buckets() const NOEXCEPT;
-    size_t state_buckets() const NOEXCEPT;
     size_t pool_buckets() const NOEXCEPT;
     size_t wtxid_buckets() const NOEXCEPT;
     size_t filter_bk_buckets() const NOEXCEPT;
@@ -1001,7 +1000,7 @@ protected:
 
     /// Validate.
     /// -----------------------------------------------------------------------
-    inline code to_block_code(linkage<schema::code>::integer value) const NOEXCEPT;
+    inline code to_block_code(schema::state::value flags) const NOEXCEPT;
     inline bool is_sufficient(const context& current,
         const context& evaluated) const NOEXCEPT;
 
@@ -1024,7 +1023,7 @@ protected:
     /// Setters.
     /// -----------------------------------------------------------------------
     bool set_block_state(const header_link& link,
-        block_state value) NOEXCEPT;
+        block_state flags) NOEXCEPT;
 
     /// Confirm.
     /// -----------------------------------------------------------------------
