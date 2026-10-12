@@ -72,7 +72,8 @@ bool CLASS::scan_silent(const stopper& cancel,
 
     // False return only implies canceled.
     // Callbacks invoked on caller thread if turbo is false.
-    system::scan::batch::scan(cancel, batch, keys, callback, store_.turbo());
+    const auto minimum = store_.gpu_scan_minimum();
+    scan::batch::scan(cancel, batch, keys, minimum, callback, store_.turbo());
     return !cancel;
 }
 
