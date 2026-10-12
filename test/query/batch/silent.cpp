@@ -563,4 +563,52 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_frontier__written__count)
     BOOST_REQUIRE_EQUAL(query.get_silent_frontier(1), 2u);
 }
 
+// get_scan_start/set_scan_start
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_start__no_taproot__terminal)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(!query.set_scan_start(0, 42));
+    BOOST_REQUIRE(query.get_scan_start(0).is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_start__taproot__mapped)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    settings.envelope.bip9_bit2_active_checkpoint = { test::block1.hash(), 1 };
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, database::context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(!query.set_scan_start(0, 42));
+    BOOST_REQUIRE(query.set_scan_start(2, 42));
+    BOOST_REQUIRE(query.get_scan_start(0).is_terminal());
+    BOOST_REQUIRE(query.get_scan_start(1).is_terminal());
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(2), 42u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_start__pooling__false)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    settings.envelope.bip9_bit2_active_checkpoint = { test::genesis.hash(), 0 };
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_scan_start(0, 42));
+    store.set_pooling();
+    BOOST_REQUIRE(!query.set_scan_start(0, 7));
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(0), 42u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

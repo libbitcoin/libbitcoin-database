@@ -77,6 +77,7 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, strong_tx, table_t::strong_tx_table);
     verify(ec, scan, table_t::scan_table);
     verify(ec, scan_prefix, table_t::scan_prefix_table);
+    verify(ec, scan_start, table_t::scan_start_table);
 
     verify(ec, ecdsa0, table_t::ecdsa0_table);
     verify(ec, ecdsa1, table_t::ecdsa1_table);

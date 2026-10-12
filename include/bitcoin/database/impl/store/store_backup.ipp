@@ -55,6 +55,7 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
     backup(ec, strong_tx, table_t::strong_tx_table);
     backup(ec, scan, table_t::scan_table);
     backup(ec, scan_prefix, table_t::scan_prefix_table);
+    backup(ec, scan_start, table_t::scan_start_table);
 
     backup(ec, ecdsa0, table_t::ecdsa0_table);
     backup(ec, ecdsa1, table_t::ecdsa1_table);

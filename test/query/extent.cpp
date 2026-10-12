@@ -254,6 +254,7 @@ BOOST_AUTO_TEST_CASE(query_extent__store_head_size__genesis__archive_plus_indexe
         + query.strong_tx_head_size()
         + query.scan_head_size()
         + query.scan_prefix_head_size()
+        + query.scan_start_head_size()
         + query.ecdsa0_head_size()
         + query.ecdsa1_head_size()
         + query.schnorr0_head_size()

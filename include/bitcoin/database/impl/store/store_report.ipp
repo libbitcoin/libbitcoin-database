@@ -97,6 +97,7 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = scan_body_.get_fault())) return ec;
     if ((ec = scan_prefix_head_.get_fault())) return ec;
     if ((ec = scan_prefix_body_.get_fault())) return ec;
+    if ((ec = scan_start_head_.get_fault())) return ec;
     if ((ec = ecdsa0_head_.get_fault())) return ec;
     if ((ec = ecdsa0_body_.get_fault())) return ec;
     if ((ec = ecdsa1_head_.get_fault())) return ec;
@@ -168,6 +169,7 @@ size_t CLASS::get_space() const NOEXCEPT
     space(scan_body_);
     space(scan_prefix_head_);
     space(scan_prefix_body_);
+    space(scan_start_head_);
     space(ecdsa0_head_);
     space(ecdsa0_body_);
     space(ecdsa1_head_);
