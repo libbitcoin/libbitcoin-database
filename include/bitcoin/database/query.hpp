@@ -744,7 +744,7 @@ public:
     bool set_silent(const header_link& link, const block_view& block) NOEXCEPT;
 
     /// Commit a block's silent payment batch rows and presilent link, with
-    /// rows the number committed.
+    /// rows the number committed (a block with no rows is set scanned).
     bool set_silents(size_t& rows, const header_link& link,
         const block& block, bool bank) NOEXCEPT;
     bool set_silents(size_t& rows, const header_link& link,

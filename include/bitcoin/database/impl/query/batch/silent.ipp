@@ -560,7 +560,7 @@ bool CLASS::set_silents_(size_t& rows, const header_link& link,
     rows = zero;
     const auto count = txs.size();
     if (is_one(count))
-        return set_presilent(link, bank);
+        return set_block_scanned(link);
 
     const auto links = to_transactions(link);
     if (links.size() != count)
@@ -593,7 +593,7 @@ bool CLASS::set_silents_(size_t& rows, const header_link& link,
     }
 
     if (is_zero(rows))
-        return set_presilent(link, bank);
+        return set_block_scanned(link);
 
     using correlate_t = table::silent_correlate::record;
     using sum_t = table::silent_sum::put_ref;

@@ -252,6 +252,8 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__coinbase_only__no_rows)
     BOOST_REQUIRE(query.set_silents(rows, 0, test::genesis, false));
     BOOST_REQUIRE_EQUAL(rows, 0u);
     BOOST_REQUIRE_EQUAL(query.silent_records(false), 0u);
+    BOOST_REQUIRE_EQUAL(query.presilent_records(false), 0u);
+    BOOST_REQUIRE(is_scanned(query.get_block_state(0)));
 }
 
 // Archive the block's spend before its coinbase, as a pooled tx is archived.
@@ -545,7 +547,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__presilent_banked_row__
     BOOST_REQUIRE(is_scanned(query.get_block_state(link)));
 }
 
-BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__presilent_no_rows__scanned)
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__no_rows__scanned)
 {
     database::settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -562,11 +564,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__presilent_no_rows__sca
     size_t rows{};
     BOOST_REQUIRE(query.set_silents(rows, link, test::block1, false));
     BOOST_REQUIRE_EQUAL(rows, 0u);
-    BOOST_REQUIRE_EQUAL(query.presilent_records(false), 1u);
-
-    const stopper cancel{};
-    bool device{};
-    BOOST_REQUIRE_EQUAL(query.compute_silents(cancel, device, false), database::error::success);
+    BOOST_REQUIRE_EQUAL(query.presilent_records(false), 0u);
     BOOST_REQUIRE(is_scanned(query.get_block_state(link)));
 }
 
