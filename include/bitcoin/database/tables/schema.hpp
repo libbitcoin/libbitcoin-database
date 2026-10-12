@@ -26,6 +26,7 @@
 #define TABLE_COLUMN(group, table, bytes) \
 struct table \
 { \
+    static constexpr size_t align = false; \
     static constexpr size_t pk = schema::outs::pk; \
     using link = schema::outs::link; \
     static constexpr size_t minsize = bytes; \

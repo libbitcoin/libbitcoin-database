@@ -239,8 +239,9 @@ void CLASS::set_dirty() NOEXCEPT
 TEMPLATE
 size_t CLASS::get_scan_frontier() const NOEXCEPT
 {
-    return envelope_.scan_frontier;
+    return scan_frontier_.load(std::memory_order_relaxed);
 }
+
 
 TEMPLATE
 bool CLASS::is_pooling() const NOEXCEPT
@@ -254,9 +255,10 @@ void CLASS::set_pooling() NOEXCEPT
     if (is_pooling())
         return;
 
-    pooling_.store(true, std::memory_order_relaxed);
     envelope_.pooling = true;
     envelope_.scan_frontier = scan.count().value;
+    scan_frontier_.store(envelope_.scan_frontier, std::memory_order_relaxed);
+    pooling_.store(true, std::memory_order_relaxed);
 
     code ec{};
     store_envelope(ec);

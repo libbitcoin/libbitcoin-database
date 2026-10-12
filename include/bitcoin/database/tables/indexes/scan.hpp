@@ -207,7 +207,7 @@ public:
 using scan_table = arraymaps
 <
     scan_correlate::link,
-    false,
+    schema::scan_correlate::align,
     scan_correlate,
     scan_point,
     scan_outputs

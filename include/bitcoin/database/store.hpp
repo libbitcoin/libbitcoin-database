@@ -111,6 +111,7 @@ public:
     /// Scan table row count when pooling was latched.
     size_t get_scan_frontier() const NOEXCEPT;
 
+
     /// Get first fault code or error::success.
     code get_fault() const NOEXCEPT;
 
@@ -302,6 +303,7 @@ protected:
     // This is thread safe.
     stopper dirty_{ true };
     stopper pooling_{ false };
+    std::atomic<uint32_t> scan_frontier_{};
 
 private:
     static constexpr bool random = true;
