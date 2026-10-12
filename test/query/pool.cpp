@@ -144,6 +144,41 @@ BOOST_AUTO_TEST_CASE(query_pool__get_pooled__without_bip113__unvalidated)
     BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ 0, 8, 9 }), error::unvalidated);
 }
 
+// get_pooled_time
+
+BOOST_AUTO_TEST_CASE(query_pool__get_pooled_time__pooled__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto tx = to_spend(genesis_coinbase(), 1u);
+    BOOST_REQUIRE(query.set(tx));
+
+    const auto link = query.to_tx(tx.hash(false));
+    BOOST_REQUIRE(query.set_pooled(link, tx, context{ bip113, 8, 9 }, 0x01020304));
+
+    uint32_t time{};
+    BOOST_REQUIRE(query.get_pooled_time(time, link));
+    BOOST_REQUIRE_EQUAL(time, 0x01020304u);
+}
+
+BOOST_AUTO_TEST_CASE(query_pool__get_pooled_time__not_pooled__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    uint32_t time{};
+    BOOST_REQUIRE(!query.get_pooled_time(time, 0));
+}
+
 // set_pooled
 
 BOOST_AUTO_TEST_CASE(query_pool__set_pooled__disabled__no_record)
@@ -596,6 +631,72 @@ BOOST_AUTO_TEST_CASE(query_pool__get_block_conflict_fees__confirmed_pooled__empt
     fee_rates rates{};
     BOOST_REQUIRE(query.get_block_conflict_fees(rates, link));
     BOOST_REQUIRE(rates.empty());
+}
+
+// to_confirmable_parents
+
+BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_parents__pooled_parent__parent)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(archive_pool(query, child));
+
+    const auto parent_link = query.to_tx(parent.hash(false));
+    const auto child_link = query.to_tx(child.hash(false));
+    BOOST_REQUIRE(query.to_confirmable_parents(parent_link).empty());
+    BOOST_REQUIRE_EQUAL(query.to_confirmable_parents(child_link), tx_links{ parent_link.value });
+}
+
+// to_confirmable_children
+
+BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_children__pooled_child__child)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(archive_pool(query, child));
+
+    const auto parent_link = query.to_tx(parent.hash(false));
+    const auto child_link = query.to_tx(child.hash(false));
+    BOOST_REQUIRE_EQUAL(query.to_confirmable_children(parent_link), tx_links{ child_link.value });
+    BOOST_REQUIRE(query.to_confirmable_children(child_link).empty());
+}
+
+BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_children__conflicted_child__empty)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(archive_pool(query, child));
+    BOOST_REQUIRE(!archive_confirm(query, to_spend(genesis_coinbase(), 3u)).is_terminal());
+
+    const auto parent_link = query.to_tx(parent.hash(false));
+    BOOST_REQUIRE(query.to_confirmable_children(parent_link).empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

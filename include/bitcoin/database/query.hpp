@@ -684,6 +684,7 @@ public:
     bool is_pooled(const tx_link& link) const NOEXCEPT;
     code get_pooled(pooled_tx& out, const tx_link& link,
         const context& ctx) const NOEXCEPT;
+    bool get_pooled_time(uint32_t& out, const tx_link& link) const NOEXCEPT;
 
     /// Unconfirmed, and not conflicted by a confirmed tx (or via ancestry).
     bool is_confirmable_tx(const tx_link& link) const NOEXCEPT;
@@ -694,6 +695,10 @@ public:
 
     /// Confirmable tx links.
     code get_confirmable_txs(tx_links& out) const NOEXCEPT;
+
+    /// Confirmable txs spent by, and spending, the tx (direct only).
+    tx_links to_confirmable_parents(const tx_link& link) const NOEXCEPT;
+    tx_links to_confirmable_children(const tx_link& link) const NOEXCEPT;
 
     /// Fee rate tuples of the confirmable txs.
     bool get_confirmable_fees(fee_rates& out) const NOEXCEPT;
