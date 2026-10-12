@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__invalid_parent__expected)
         "64636261" // nonce
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
         "00000000000000000000000000000000" // work
-        "00"); // header flags (milestone false)
+        "00"); // header flags
 
     settings settings{};
     settings.header.buckets = 16;
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__default__expected)
         "64636261" // nonce
         "119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f" // merkle_root
         "00000000000000000000000000000000" // work
-        "01"); // header flags (milestone)
+        "00"); // header flags
 
     settings settings{};
     settings.header.buckets = 16;

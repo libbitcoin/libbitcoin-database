@@ -53,23 +53,25 @@ struct state
         value current{};
     };
 
-    /// Replace the current state.
-    struct replace
+    /// Clear flags from the current state.
+    struct clear
       : public schema::state
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_byte();
+            current = source.read_byte();
             return source;
         }
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            sink.write_byte(flags);
+            using namespace system;
+            sink.write_byte(bit_and<value>(current, bit_not<value>(flags)));
             return sink;
         }
 
         value flags{};
+        value current{};
     };
 };
 

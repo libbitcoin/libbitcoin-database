@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_work__genesis__proof_of_bits)
     BOOST_REQUIRE(query.initialize(test::genesis));
     uint32_t bits{};
     BOOST_REQUIRE(query.get_bits(bits, 0));
-    const header_states states{ { 0, code{} } };
+    const header_states states{ { 0, block_state::no_state } };
     uint256_t work{};
     BOOST_REQUIRE(query.get_work(work, states));
     BOOST_REQUIRE_EQUAL(work, system::chain::header::proof(bits));
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_work__terminal_link__false)
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     uint256_t work{};
-    const header_states states{ { header_link::terminal, code{} } };
+    const header_states states{ { header_link::terminal, block_state::no_state } };
     BOOST_REQUIRE(!query.get_work(work, states));
 }
 

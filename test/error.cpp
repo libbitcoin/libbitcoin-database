@@ -32,15 +32,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__success__false_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "success");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__unknown_state__true_expected_message)
-{
-    constexpr auto value = error::unknown_state;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "unknown state");
-}
-
 // integrity
 
 BOOST_AUTO_TEST_CASE(error_t__code__integrity__true_expected_message)
@@ -477,24 +468,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__verify_table__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "failed to verify table");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__block_valid__true_expected_message)
-{
-    constexpr auto value = error::block_valid;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "block valid");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__block_confirmable__true_expected_message)
-{
-    constexpr auto value = error::block_confirmable;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "block confirmable");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__block_unconfirmable__true_expected_message)
 {
     constexpr auto value = error::block_unconfirmable;
@@ -504,15 +477,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__block_unconfirmable__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "block unconfirmable");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__unassociated__true_expected_message)
-{
-    constexpr auto value = error::unassociated;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "unassociated");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__unvalidated__true_expected_message)
 {
     constexpr auto value = error::unvalidated;
@@ -520,15 +484,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__unvalidated__true_expected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "unvalidated");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__bypassed__true_expected_message)
-{
-    constexpr auto value = error::bypassed;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "bypassed");
 }
 
 // tx archive
@@ -670,6 +625,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__header_put__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "header_put");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__header_state_put__true_expected_message)
+{
+    constexpr auto value = error::header_state_put;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "header_state_put");
+}
+
 // txs archive
 
 BOOST_AUTO_TEST_CASE(error_t__code__txs_header__true_expected_message)
@@ -715,6 +679,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__txs_txs_put__true_expected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "txs_txs_put");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__txs_state_put__true_expected_message)
+{
+    constexpr auto value = error::txs_state_put;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "txs_state_put");
 }
 
 // services

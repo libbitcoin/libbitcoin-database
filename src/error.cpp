@@ -28,7 +28,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 {
     // general
     { success, "success" },
-    { unknown_state, "unknown state" },
 
     // integrity (internal fault)
     { integrity, "store corrupted" },
@@ -94,12 +93,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { verify_table, "failed to verify table" },
 
     // states
-    { block_valid, "block valid" },
-    { block_confirmable, "block confirmable" },
     { block_unconfirmable, "block unconfirmable" },
-    { unassociated, "unassociated" },
     { unvalidated, "unvalidated" },
-    { bypassed, "bypassed" },
 
     // tx archive
     { tx_empty, "tx_empty" },
@@ -120,6 +115,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     // header archive
     { header_put, "header_put" },
     { header_work, "header_work" },
+    { header_state_put, "header_state_put" },
 
     // txs archive
     { txs_header, "txs_header" },
@@ -127,6 +123,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { txs_height, "txs_height" },
     { txs_confirm, "txs_confirm" },
     { txs_txs_put, "txs_txs_put" },
+    { txs_state_put, "txs_state_put" },
 
     // prevouts cache
     { prevouts_put, "prevouts_put" },

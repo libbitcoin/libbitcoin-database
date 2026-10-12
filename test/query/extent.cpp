@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), zero);
     BOOST_REQUIRE_EQUAL(query.duplicate_records(), zero);
     BOOST_REQUIRE_EQUAL(query.prevalid0_records(), zero);
-    BOOST_REQUIRE_EQUAL(query.state_records(), zero);
+    BOOST_REQUIRE_EQUAL(query.state_records(), one);
     BOOST_REQUIRE_EQUAL(query.pool_records(), zero);
     BOOST_REQUIRE_EQUAL(query.spends_records(), zero);
     BOOST_REQUIRE_EQUAL(query.wtxid_records(), zero);

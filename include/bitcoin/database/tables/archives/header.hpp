@@ -34,8 +34,7 @@ struct header
   : public hash_map<schema::header>
 {
     using hash_map<schema::header>::hashmap;
-    static constexpr size_t milestone_bit = 0;
-    static constexpr size_t compact_bit = 1;
+    static constexpr size_t compact_bit = 0;
 
     static constexpr size_t skip_to_height =
         context::flag_t::size;
@@ -70,16 +69,9 @@ struct header
         skip_to_work +
         schema::work;
 
-    static constexpr uint8_t to_flags(bool milestone, bool compact) NOEXCEPT
+    static constexpr uint8_t to_flags(bool compact) NOEXCEPT
     {
-        using namespace system;
-        return set_right(set_right(uint8_t{}, milestone_bit, milestone),
-            compact_bit, compact);
-    }
-
-    static constexpr bool is_milestone(uint8_t flags) NOEXCEPT
-    {
-        return system::get_right(flags, milestone_bit);
+        return system::set_right(uint8_t{}, compact_bit, compact);
     }
 
     static constexpr bool is_compact(uint8_t flags) NOEXCEPT
@@ -120,9 +112,7 @@ struct header
             nonce       = source.read_little_endian<uint32_t>();
             merkle_root = source.read_hash();
             work        = read_work(source);
-            const auto flags = source.read_byte();
-            milestone   = is_milestone(flags);
-            compact     = is_compact(flags);
+            compact     = is_compact(source.read_byte());
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
@@ -137,7 +127,7 @@ struct header
             sink.write_little_endian<uint32_t>(nonce);
             sink.write_bytes(merkle_root);
             write_work(sink, work);
-            sink.write_byte(to_flags(milestone, compact));
+            sink.write_byte(to_flags(compact));
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
@@ -145,7 +135,6 @@ struct header
         inline bool operator==(const record&) const NOEXCEPT = default;
 
         context ctx{};
-        bool milestone{};
         bool compact{};
         link::integer parent_fk{};
         uint32_t version{};
@@ -171,13 +160,12 @@ struct header
             sink.write_little_endian<uint32_t>(header.nonce());
             sink.write_bytes(header.merkle_root());
             write_work(sink, work);
-            sink.write_byte(to_flags(milestone, compact));
+            sink.write_byte(to_flags(compact));
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
         const context& ctx{};
-        const bool milestone{};
         const bool compact{};
         const link::integer parent_fk{};
         const system::chain::header& header;
@@ -345,19 +333,6 @@ struct header
         }
 
         uint256_t work{};
-    };
-
-    struct get_milestone
-      : public schema::header
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.skip_bytes(skip_to_flags);
-            milestone = is_milestone(source.read_byte());
-            return source;
-        }
-
-        bool milestone{};
     };
 
     struct get_compact
