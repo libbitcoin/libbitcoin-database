@@ -692,6 +692,9 @@ public:
     code get_confirmable_txs(pool_link& cursor, tx_links& out,
         const pool_link& end, size_t limit) const NOEXCEPT;
 
+    /// Confirmable tx links.
+    code get_confirmable_txs(tx_links& out) const NOEXCEPT;
+
     /// Fee rate tuples of the confirmable txs.
     bool get_confirmable_fees(fee_rates& out) const NOEXCEPT;
 

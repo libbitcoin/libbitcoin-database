@@ -356,6 +356,28 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__confirmed__skipped)
     BOOST_REQUIRE_EQUAL(cursor, 2u);
 }
 
+BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__all__confirmed_skipped)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+
+    const auto& in = *test::tx_spend_one_hash.inputs_ptr()->front();
+    in.prevout = system::to_shared<output>(0x30, script{});
+    in.metadata.parent_tx = 42;
+    BOOST_REQUIRE(query.set_pooled(0, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
+    BOOST_REQUIRE(query.set_pooled(1, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
+
+    tx_links out{};
+    BOOST_REQUIRE_EQUAL(query.get_confirmable_txs(out), error::success);
+    BOOST_REQUIRE_EQUAL(out.size(), one);
+    BOOST_REQUIRE_EQUAL(out.front(), 1u);
+}
+
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__duplicate_record__first_only)
 {
     settings settings{};

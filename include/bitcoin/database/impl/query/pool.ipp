@@ -109,15 +109,22 @@ code CLASS::get_confirmable_txs(pool_link& cursor, tx_links& out,
 }
 
 TEMPLATE
-bool CLASS::get_confirmable_fees(fee_rates& out) const NOEXCEPT
+code CLASS::get_confirmable_txs(tx_links& out) const NOEXCEPT
 {
     out.clear();
     if (!store_.pool.enabled())
-        return true;
+        return error::success;
 
-    tx_links links{};
     pool_link cursor{};
-    if (get_confirmable_txs(cursor, links, store_.pool.count(), max_size_t))
+    return get_confirmable_txs(cursor, out, store_.pool.count(), max_size_t);
+}
+
+TEMPLATE
+bool CLASS::get_confirmable_fees(fee_rates& out) const NOEXCEPT
+{
+    out.clear();
+    tx_links links{};
+    if (get_confirmable_txs(links))
         return false;
 
     out.resize(links.size());
