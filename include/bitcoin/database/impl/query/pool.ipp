@@ -173,6 +173,20 @@ tx_links CLASS::to_confirmable_children(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::get_ancestor_totals(fee_totals& out,
+    const tx_link& link) const NOEXCEPT
+{
+    return get_confirmable_totals(out, link, true);
+}
+
+TEMPLATE
+bool CLASS::get_descendant_totals(fee_totals& out,
+    const tx_link& link) const NOEXCEPT
+{
+    return get_confirmable_totals(out, link, false);
+}
+
+TEMPLATE
 bool CLASS::get_confirmable_fees(fee_rates& out) const NOEXCEPT
 {
     out.clear();
@@ -340,6 +354,38 @@ bool CLASS::is_confirmable_tx(confirmables& memo,
 
     for (const auto tx: visited)
         memo.emplace(tx, true);
+
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_confirmable_totals(fee_totals& out, const tx_link& link,
+    bool ancestors) const NOEXCEPT
+{
+    using namespace system;
+    out = {};
+    std::vector<tx_link::integer> pending{ link.value };
+    std::unordered_set<tx_link::integer> visited{ link.value };
+    while (!pending.empty())
+    {
+        const tx_link next{ pending.back() };
+        pending.pop_back();
+
+        fee_rate rate{};
+        if (!get_tx_fees(rate, next))
+            return false;
+
+        ++out.count;
+        out.bytes = ceilinged_add(out.bytes, rate.bytes);
+        out.fee = ceilinged_add(out.fee, rate.fee);
+
+        const auto links = ancestors ? to_confirmable_parents(next) :
+            to_confirmable_children(next);
+
+        for (const auto fk: links)
+            if (visited.insert(fk).second)
+                pending.push_back(fk);
+    }
 
     return true;
 }

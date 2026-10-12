@@ -699,4 +699,62 @@ BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_children__conflicted_child__empt
     BOOST_REQUIRE(query.to_confirmable_children(parent_link).empty());
 }
 
+// get_ancestor_totals
+
+BOOST_AUTO_TEST_CASE(query_pool__get_ancestor_totals__pooled_parent__both)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(archive_pool(query, child));
+
+    fee_totals out{};
+    const auto parent_link = query.to_tx(parent.hash(false));
+    const auto child_link = query.to_tx(child.hash(false));
+    BOOST_REQUIRE(query.get_ancestor_totals(out, parent_link));
+    BOOST_REQUIRE_EQUAL(out.count, one);
+    BOOST_REQUIRE_EQUAL(out.bytes, parent.virtual_size());
+
+    BOOST_REQUIRE(query.get_ancestor_totals(out, child_link));
+    BOOST_REQUIRE_EQUAL(out.count, two);
+    BOOST_REQUIRE_EQUAL(out.bytes, parent.virtual_size() + child.virtual_size());
+}
+
+// get_descendant_totals
+
+BOOST_AUTO_TEST_CASE(query_pool__get_descendant_totals__pooled_child__both)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(archive_pool(query, child));
+
+    fee_totals out{};
+    const auto parent_link = query.to_tx(parent.hash(false));
+    const auto child_link = query.to_tx(child.hash(false));
+    BOOST_REQUIRE(query.get_descendant_totals(out, parent_link));
+    BOOST_REQUIRE_EQUAL(out.count, two);
+    BOOST_REQUIRE_EQUAL(out.bytes, parent.virtual_size() + child.virtual_size());
+
+    BOOST_REQUIRE(query.get_descendant_totals(out, child_link));
+    BOOST_REQUIRE_EQUAL(out.count, one);
+    BOOST_REQUIRE_EQUAL(out.bytes, child.virtual_size());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

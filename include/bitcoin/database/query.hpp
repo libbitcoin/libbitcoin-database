@@ -700,6 +700,12 @@ public:
     tx_links to_confirmable_parents(const tx_link& link) const NOEXCEPT;
     tx_links to_confirmable_children(const tx_link& link) const NOEXCEPT;
 
+    /// Totals of the tx with its confirmable ancestors, or descendants.
+    bool get_ancestor_totals(fee_totals& out,
+        const tx_link& link) const NOEXCEPT;
+    bool get_descendant_totals(fee_totals& out,
+        const tx_link& link) const NOEXCEPT;
+
     /// Fee rate tuples of the confirmable txs.
     bool get_confirmable_fees(fee_rates& out) const NOEXCEPT;
 
@@ -1027,6 +1033,10 @@ protected:
     /// Confirmability memoized across the txs of a scan.
     bool is_confirmable_tx(confirmables& memo,
         const tx_link& link) const NOEXCEPT;
+
+    /// Totals of the tx with its confirmable ancestors or descendants.
+    bool get_confirmable_totals(fee_totals& out, const tx_link& link,
+        bool ancestors) const NOEXCEPT;
 
     /// Setters.
     /// -----------------------------------------------------------------------
