@@ -55,7 +55,6 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
     backup(ec, strong_tx, table_t::strong_tx_table);
     backup(ec, scan, table_t::scan_table);
     backup(ec, scan_prefix, table_t::scan_prefix_table);
-    backup(ec, scan_start, table_t::scan_start_table);
 
     backup(ec, ecdsa0, table_t::ecdsa0_table);
     backup(ec, ecdsa1, table_t::ecdsa1_table);
@@ -69,6 +68,8 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
     backup(ec, duplicate, table_t::duplicate_table);
     backup(ec, prevalid0, table_t::prevalid0_table, prune);
     backup(ec, prevalid1, table_t::prevalid1_table, prune);
+    backup(ec, presilent0, table_t::presilent0_table, prune);
+    backup(ec, presilent1, table_t::presilent1_table, prune);
     backup(ec, prevout, table_t::prevout_table, prune);
     backup(ec, state, table_t::state_table);
     backup(ec, pool, table_t::pool_table, prune);

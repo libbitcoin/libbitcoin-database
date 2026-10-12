@@ -122,6 +122,18 @@ void CLASS::set_pooling() NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::get_scan_frontier() const NOEXCEPT
+{
+    return store_.get_scan_frontier();
+}
+
+TEMPLATE
+size_t CLASS::get_latch_tx() const NOEXCEPT
+{
+    return store_.get_latch_tx();
+}
+
+TEMPLATE
 size_t CLASS::get_space() const NOEXCEPT
 {
     return store_.get_space();

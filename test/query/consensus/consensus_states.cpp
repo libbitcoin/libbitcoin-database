@@ -24,7 +24,7 @@ BOOST_FIXTURE_TEST_SUITE(query_consensus_tests, test::directory_setup_fixture)
 
 // get_block_state
 
-BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__genesis__associated_checkpointed)
+BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__genesis__expected)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__genesis__associated_check
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.get_block_state(0), block_state::associated | block_state::checkpointed);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(0), block_state::associated | block_state::checkpointed | block_state::scanned | block_state::filtered);
 }
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__invalid_link__no_state)
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__invalid_link__no_state)
     BOOST_REQUIRE(!query.is_associated(1));
 }
 
-BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__unassociated_link__no_state)
+BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__unassociated_link__scanned)
 {
     settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__unassociated_link__no_sta
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1.header(), context{ 0, 1, 0 }, {}, false));
     BOOST_REQUIRE(query.set(*test::block1.transactions_ptr()->front()));
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::no_state);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::scanned);
     BOOST_REQUIRE(!query.is_associated(1));
 }
 
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__associated_link__associat
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::scanned);
     BOOST_REQUIRE(query.is_associated(1));
 }
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__milestone__associated_mil
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, true, false));
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::milestoned);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::milestoned | block_state::scanned);
     BOOST_REQUIRE(query.is_milestone(1));
     BOOST_REQUIRE(query.is_bypass(1));
 }
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__checkpoint__associated_ch
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{}, {}, false, false));
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::checkpointed);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::checkpointed | block_state::scanned);
     BOOST_REQUIRE(!query.is_milestone(1));
     BOOST_REQUIRE(query.is_bypass(1));
 }
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__confirmable__associated_c
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_block_confirmable(1));
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::confirmable);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::confirmable | block_state::scanned);
     BOOST_REQUIRE(query.is_confirmable(1));
     BOOST_REQUIRE(query.is_validated(1));
 }
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__valid__associated_valid)
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_block_valid(1));
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::valid);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::valid | block_state::scanned);
     BOOST_REQUIRE(!query.is_confirmable(1));
     BOOST_REQUIRE(query.is_validated(1));
 }
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__unconfirmable__associated
     BOOST_REQUIRE(query.initialize(test::genesis));
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_block_unconfirmable(1));
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::unconfirmable);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::unconfirmable | block_state::scanned);
     BOOST_REQUIRE(query.is_unconfirmable(1));
 }
 
@@ -188,7 +188,34 @@ BOOST_AUTO_TEST_CASE(query_consensus__set_block_unknown__valid__associated)
     BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
     BOOST_REQUIRE(query.set_block_valid(1));
     BOOST_REQUIRE(query.set_block_unknown(1));
-    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated);
+    BOOST_REQUIRE_EQUAL(query.get_block_state(1), block_state::associated | block_state::scanned);
+}
+
+BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__filters_disabled__filtered)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    settings.filter_tx.buckets = 0;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(is_filtered(query.get_block_state(1)));
+}
+
+BOOST_AUTO_TEST_CASE(query_consensus__set_filter_body__filters_enabled__filtered)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(!is_filtered(query.get_block_state(1)));
+    BOOST_REQUIRE(query.set_filter_body(1, test::block1));
+    BOOST_REQUIRE(is_filtered(query.get_block_state(1)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

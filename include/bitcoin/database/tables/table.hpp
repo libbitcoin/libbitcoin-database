@@ -65,8 +65,6 @@ enum class table_t
     scan_prefix_table,
     scan_prefix_head,
     scan_prefix_body,
-    scan_start_table,
-    scan_start_head,
 
     /// Caches.
     ecdsa0_table,
@@ -104,6 +102,12 @@ enum class table_t
     prevalid1_table,
     prevalid1_head,
     prevalid1_body,
+    presilent0_table,
+    presilent0_head,
+    presilent0_body,
+    presilent1_table,
+    presilent1_head,
+    presilent1_body,
     prevout_table,
     prevout_head,
     prevout_body,

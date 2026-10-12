@@ -92,7 +92,6 @@ size_t CLASS::store_body_size() const NOEXCEPT
         + strong_tx_body_size()
         + scan_body_size()
         + scan_prefix_body_size()
-        + scan_start_body_size()
         + ecdsa0_body_size()
         + ecdsa1_body_size()
         + schnorr0_body_size()
@@ -104,6 +103,8 @@ size_t CLASS::store_body_size() const NOEXCEPT
         + duplicate_body_size()
         + prevalid0_body_size()
         + prevalid1_body_size()
+        + presilent0_body_size()
+        + presilent1_body_size()
         + prevout_body_size()
         + state_body_size()
         + pool_body_size()
@@ -134,7 +135,6 @@ size_t CLASS::store_head_size() const NOEXCEPT
         + strong_tx_head_size()
         + scan_head_size()
         + scan_prefix_head_size()
-        + scan_start_head_size()
         + ecdsa0_head_size()
         + ecdsa1_head_size()
         + schnorr0_head_size()
@@ -146,6 +146,8 @@ size_t CLASS::store_head_size() const NOEXCEPT
         + duplicate_head_size()
         + prevalid0_head_size()
         + prevalid1_head_size()
+        + presilent0_head_size()
+        + presilent1_head_size()
         + prevout_head_size()
         + state_head_size()
         + pool_head_size()
@@ -171,7 +173,6 @@ DEFINE_SIZES(confirmed)
 DEFINE_SIZES(strong_tx)
 DEFINE_SIZES(scan)
 DEFINE_SIZES(scan_prefix)
-DEFINE_SIZES(scan_start)
 DEFINE_SIZES(ecdsa0)
 DEFINE_SIZES(ecdsa1)
 DEFINE_SIZES(schnorr0)
@@ -183,6 +184,8 @@ DEFINE_SIZES(silent1_prefix)
 DEFINE_SIZES(duplicate)
 DEFINE_SIZES(prevalid0)
 DEFINE_SIZES(prevalid1)
+DEFINE_SIZES(presilent0)
+DEFINE_SIZES(presilent1)
 DEFINE_SIZES(prevout)
 DEFINE_SIZES(state)
 DEFINE_SIZES(pool)
@@ -201,6 +204,7 @@ DEFINE_BUCKETS(txs)
 DEFINE_BUCKETS(tx)
 
 DEFINE_BUCKETS(strong_tx)
+DEFINE_BUCKETS(scan)
 DEFINE_BUCKETS(duplicate)
 DEFINE_BUCKETS(prevout)
 DEFINE_BUCKETS(pool)
@@ -221,7 +225,6 @@ DEFINE_RECORDS(confirmed)
 DEFINE_RECORDS(strong_tx)
 DEFINE_RECORDS(scan)
 DEFINE_RECORDS(scan_prefix)
-DEFINE_RECORDS(scan_start)
 DEFINE_RECORDS(ecdsa0)
 DEFINE_RECORDS(ecdsa1)
 DEFINE_RECORDS(schnorr0)
@@ -233,6 +236,8 @@ DEFINE_RECORDS(silent1_prefix)
 DEFINE_RECORDS(duplicate)
 DEFINE_RECORDS(prevalid0)
 DEFINE_RECORDS(prevalid1)
+DEFINE_RECORDS(presilent0)
+DEFINE_RECORDS(presilent1)
 DEFINE_RECORDS(state)
 DEFINE_RECORDS(pool)
 DEFINE_RECORDS(spends)
@@ -324,11 +329,18 @@ size_t CLASS::silent_start_height() const NOEXCEPT
 
 // A block is indexed from the start height once taproot is active.
 TEMPLATE
+bool CLASS::is_silent(const context& ctx) const NOEXCEPT
+{
+    return ctx.height >= silent_start_height() &&
+        ctx.is_enabled(system::chain::flags::bip341_rule);
+}
+
+TEMPLATE
 bool CLASS::is_silent(const header_link& link, size_t height) const NOEXCEPT
 {
     context ctx{};
     return height >= silent_start_height() && get_context(ctx, link) &&
-        ctx.is_enabled(system::chain::flags::bip341_rule);
+        is_silent(ctx);
 }
 
 } // namespace database

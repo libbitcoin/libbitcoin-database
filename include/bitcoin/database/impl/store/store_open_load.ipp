@@ -86,7 +86,6 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, scan_body_, table_t::scan_body);
     open(ec, scan_prefix_head_, table_t::scan_prefix_head);
     open(ec, scan_prefix_body_, table_t::scan_prefix_body);
-    open(ec, scan_start_head_, table_t::scan_start_head);
 
     open(ec, ecdsa0_head_, table_t::ecdsa0_head);
     open(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -110,6 +109,10 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, prevalid0_body_, table_t::prevalid0_body);
     open(ec, prevalid1_head_, table_t::prevalid1_head);
     open(ec, prevalid1_body_, table_t::prevalid1_body);
+    open(ec, presilent0_head_, table_t::presilent0_head);
+    open(ec, presilent0_body_, table_t::presilent0_body);
+    open(ec, presilent1_head_, table_t::presilent1_head);
+    open(ec, presilent1_body_, table_t::presilent1_body);
     open(ec, prevout_head_, table_t::prevout_head);
     open(ec, prevout_body_, table_t::prevout_body);
     open(ec, state_head_, table_t::state_head);
@@ -148,7 +151,6 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, scan_body_, table_t::scan_body);
     load(ec, scan_prefix_head_, table_t::scan_prefix_head);
     load(ec, scan_prefix_body_, table_t::scan_prefix_body);
-    load(ec, scan_start_head_, table_t::scan_start_head);
 
     load(ec, ecdsa0_head_, table_t::ecdsa0_head);
     load(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -172,6 +174,10 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, prevalid0_body_, table_t::prevalid0_body);
     load(ec, prevalid1_head_, table_t::prevalid1_head);
     load(ec, prevalid1_body_, table_t::prevalid1_body);
+    load(ec, presilent0_head_, table_t::presilent0_head);
+    load(ec, presilent0_body_, table_t::presilent0_body);
+    load(ec, presilent1_head_, table_t::presilent1_head);
+    load(ec, presilent1_body_, table_t::presilent1_body);
     load(ec, prevout_head_, table_t::prevout_head);
     load(ec, prevout_body_, table_t::prevout_body);
     load(ec, state_head_, table_t::state_head);

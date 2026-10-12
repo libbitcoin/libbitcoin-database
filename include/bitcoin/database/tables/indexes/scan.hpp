@@ -204,9 +204,10 @@ public:
 /// Aggregate (table)
 /// ---------------------------------------------------------------------------
 
-using scan_table = nomaps
+using scan_table = arraymaps
 <
     scan_correlate::link,
+    schema::scan_correlate::align,
     scan_correlate,
     scan_point,
     scan_outputs
@@ -217,8 +218,9 @@ class scan
   : public scan_table
 {
 public:
-    scan(database::storage& head, scan_storage<Storage>& body) NOEXCEPT
-      : scan_table(head, body),
+    scan(database::storage& head, scan_storage<Storage>& body,
+        const scan_correlate::link& buckets) NOEXCEPT
+      : scan_table(head, body, buckets),
         correlate(*this),
         point(*this),
         outputs(*this)

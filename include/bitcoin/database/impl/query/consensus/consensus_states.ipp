@@ -89,6 +89,12 @@ bool CLASS::set_block_confirmable(const header_link& link) NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::set_block_scanned(const header_link& link) NOEXCEPT
+{
+    return set_block_state(link, block_state::scanned);
+}
+
+TEMPLATE
 bool CLASS::set_block_unconfirmable(const header_link& link) NOEXCEPT
 {
     return !store_.mark_unconfirmable() ||

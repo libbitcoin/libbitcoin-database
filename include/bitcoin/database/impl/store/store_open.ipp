@@ -77,7 +77,6 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, strong_tx, table_t::strong_tx_table);
     verify(ec, scan, table_t::scan_table);
     verify(ec, scan_prefix, table_t::scan_prefix_table);
-    verify(ec, scan_start, table_t::scan_start_table);
 
     verify(ec, ecdsa0, table_t::ecdsa0_table);
     verify(ec, ecdsa1, table_t::ecdsa1_table);
@@ -91,6 +90,8 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, duplicate, table_t::duplicate_table);
     verify(ec, prevalid0, table_t::prevalid0_table);
     verify(ec, prevalid1, table_t::prevalid1_table);
+    verify(ec, presilent0, table_t::presilent0_table);
+    verify(ec, presilent1, table_t::presilent1_table);
     verify(ec, prevout, table_t::prevout_table);
     verify(ec, state, table_t::state_table);
     verify(ec, pool, table_t::pool_table);
@@ -199,6 +200,8 @@ code CLASS::load_envelope() NOEXCEPT
     }
 
     // The stored latch governs, it is one-way and survives the session.
+    scan_frontier_.store(envelope_.scan_frontier, std::memory_order_relaxed);
+    latch_tx_.store(envelope_.latch_tx, std::memory_order_relaxed);
     if (envelope_.pooling)
         pooling_.store(true, std::memory_order_relaxed);
 

@@ -63,7 +63,6 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, scan_body_, table_t::scan_body);
     unload(ec, scan_prefix_head_, table_t::scan_prefix_head);
     unload(ec, scan_prefix_body_, table_t::scan_prefix_body);
-    unload(ec, scan_start_head_, table_t::scan_start_head);
 
     unload(ec, ecdsa0_head_, table_t::ecdsa0_head);
     unload(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -88,6 +87,10 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, prevalid0_body_, table_t::prevalid0_body);
     unload(ec, prevalid1_head_, table_t::prevalid1_head);
     unload(ec, prevalid1_body_, table_t::prevalid1_body);
+    unload(ec, presilent0_head_, table_t::presilent0_head);
+    unload(ec, presilent0_body_, table_t::presilent0_body);
+    unload(ec, presilent1_head_, table_t::presilent1_head);
+    unload(ec, presilent1_body_, table_t::presilent1_body);
     unload(ec, prevout_head_, table_t::prevout_head);
     unload(ec, prevout_body_, table_t::prevout_body);
     unload(ec, state_head_, table_t::state_head);
@@ -135,7 +138,6 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, scan_body_, table_t::scan_body);
     close(ec, scan_prefix_head_, table_t::scan_prefix_head);
     close(ec, scan_prefix_body_, table_t::scan_prefix_body);
-    close(ec, scan_start_head_, table_t::scan_start_head);
 
     close(ec, ecdsa0_head_, table_t::ecdsa0_head);
     close(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -160,6 +162,10 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, prevalid0_body_, table_t::prevalid0_body);
     close(ec, prevalid1_head_, table_t::prevalid1_head);
     close(ec, prevalid1_body_, table_t::prevalid1_body);
+    close(ec, presilent0_head_, table_t::presilent0_head);
+    close(ec, presilent0_body_, table_t::presilent0_body);
+    close(ec, presilent1_head_, table_t::presilent1_head);
+    close(ec, presilent1_body_, table_t::presilent1_body);
     close(ec, prevout_head_, table_t::prevout_head);
     close(ec, prevout_body_, table_t::prevout_body);
     close(ec, state_head_, table_t::state_head);

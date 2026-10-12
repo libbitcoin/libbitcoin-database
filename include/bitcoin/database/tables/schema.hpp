@@ -26,6 +26,7 @@
 #define TABLE_COLUMN(group, table, bytes) \
 struct table \
 { \
+    static constexpr size_t align = false; \
     static constexpr size_t pk = schema::outs::pk; \
     using link = schema::outs::link; \
     static constexpr size_t minsize = bytes; \
@@ -55,7 +56,9 @@ namespace schema {
 /// 4.0.10.0 Pool arrival time.
 /// 4.0.11.0 Scan start index by taproot header.
 /// 4.0.12.0 Association, milestone and checkpoint as block state flags.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 12, 0 };
+/// 4.0.13.0 Scanned and filtered block state flags, presilent batch tables.
+/// 4.0.14.0 Scan table head of scan starts, scan and tx counts at the latch.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 14, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
@@ -357,22 +360,6 @@ struct scan_prefix
 TABLE_COLUMN(indexes, scan_correlate, schema::transaction::pk);
 TABLE_COLUMN(indexes, scan_point, system::ec_compressed_size);
 TABLE_COLUMN(indexes, scan_outputs, scan_prefix::pk + schema::index);
-
-// headmap (scan fks by taproot header)
-struct scan_start
-{
-    static constexpr size_t pk = schema::outs_;
-    using link = linkage<pk, to_bits(pk)>;
-    static constexpr size_t minsize = pk;
-    static constexpr size_t minrow = minsize;
-    static constexpr size_t size = minsize;
-    static constexpr size_t cell = minsize;
-    static_assert(minsize == 4u);
-    static_assert(minrow == 4u);
-    static_assert(link::size == 4u);
-    static_assert(cell == 4u);
-    bool operator==(const scan_start&) const NOEXCEPT = default;
-};
 
 // array (same as scan_prefix)
 using silent_prefix = scan_prefix;

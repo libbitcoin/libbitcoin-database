@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 357_size;
+constexpr auto default_size = 365_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(envelope__serialized_size__default__expected)
 BOOST_AUTO_TEST_CASE(envelope__to_data__default__expected_version)
 {
     const envelope instance{};
-    BOOST_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 12, 0));
+    BOOST_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 14, 0));
     BOOST_REQUIRE_EQUAL(to_chunk(instance).front(), schema::version.front());
 }
 

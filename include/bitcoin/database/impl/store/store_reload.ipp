@@ -76,7 +76,6 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, scan_body_, table_t::scan_body);
     reload(ec, scan_prefix_head_, table_t::scan_prefix_head);
     reload(ec, scan_prefix_body_, table_t::scan_prefix_body);
-    reload(ec, scan_start_head_, table_t::scan_start_head);
 
     reload(ec, ecdsa0_head_, table_t::ecdsa0_head);
     reload(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -101,6 +100,10 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, prevalid0_body_, table_t::prevalid0_body);
     reload(ec, prevalid1_head_, table_t::prevalid1_head);
     reload(ec, prevalid1_body_, table_t::prevalid1_body);
+    reload(ec, presilent0_head_, table_t::presilent0_head);
+    reload(ec, presilent0_body_, table_t::presilent0_body);
+    reload(ec, presilent1_head_, table_t::presilent1_head);
+    reload(ec, presilent1_body_, table_t::presilent1_body);
     reload(ec, prevout_head_, table_t::prevout_head);
     reload(ec, prevout_body_, table_t::prevout_body);
     reload(ec, state_head_, table_t::state_head);

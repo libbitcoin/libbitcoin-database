@@ -108,6 +108,10 @@ public:
     bool is_pooling() const NOEXCEPT;
     void set_pooling() NOEXCEPT;
 
+    /// Scan table row count and tx table count when pooling was latched.
+    size_t get_scan_frontier() const NOEXCEPT;
+    size_t get_latch_tx() const NOEXCEPT;
+
     /// Get first fault code or error::success.
     code get_fault() const NOEXCEPT;
 
@@ -123,6 +127,7 @@ public:
     table::silent<Storage>& silent_bank(bool bank) NOEXCEPT;
     table::silent_prefix& silent_prefix_bank(bool bank) NOEXCEPT;
     table::prevalid& prevalid_bank(bool bank) NOEXCEPT;
+    table::presilent& presilent_bank(bool bank) NOEXCEPT;
 
     /// Reevaluate currency (called by chain writes).
     void evaluate_currency() NOEXCEPT;
@@ -218,7 +223,6 @@ protected:
     table::scan_storage<Storage> scan_body_;
     Storage<one> scan_prefix_head_;
     Storage<one> scan_prefix_body_;
-    Storage<one> scan_start_head_;
 
     /// Caches.
     /// -----------------------------------------------------------------------
@@ -257,6 +261,10 @@ protected:
     Storage<one> prevalid0_body_;
     Storage<one> prevalid1_head_;
     Storage<one> prevalid1_body_;
+    Storage<one> presilent0_head_;
+    Storage<one> presilent0_body_;
+    Storage<one> presilent1_head_;
+    Storage<one> presilent1_body_;
 
     // blob arraymap
     Storage<one> prevout_head_;
@@ -295,6 +303,8 @@ protected:
     // This is thread safe.
     stopper dirty_{ true };
     stopper pooling_{ false };
+    std::atomic<uint32_t> scan_frontier_{};
+    std::atomic<uint32_t> latch_tx_{};
 
 private:
     static constexpr bool random = true;
@@ -360,7 +370,6 @@ public:
     table::strong_tx strong_tx;
     table::scan<Storage> scan;
     table::scan_prefix scan_prefix;
-    table::scan_start scan_start;
 
     /// Caches.
     table::ecdsa<Storage> ecdsa0;
@@ -375,6 +384,8 @@ public:
     table::duplicate duplicate;
     table::prevalid prevalid0;
     table::prevalid prevalid1;
+    table::presilent presilent0;
+    table::presilent presilent1;
     table::prevout prevout;
     table::state state;
     table::pool pool;

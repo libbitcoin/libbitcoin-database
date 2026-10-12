@@ -193,6 +193,8 @@ bool envelope::from_data(reader& source) NOEXCEPT
     silent_start_height = source.read_little_endian<uint32_t>();
 
     pooling = to_bool(source.read_byte());
+    scan_frontier = source.read_little_endian<uint32_t>();
+    latch_tx = source.read_little_endian<uint32_t>();
     return source;
 }
 
@@ -285,6 +287,8 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_little_endian<uint32_t>(silent_start_height);
 
     sink.write_byte(to_int<uint8_t>(pooling));
+    sink.write_little_endian<uint32_t>(scan_frontier);
+    sink.write_little_endian<uint32_t>(latch_tx);
     return sink;
 }
 
@@ -293,7 +297,7 @@ size_t envelope::serialized_size() const NOEXCEPT
     constexpr auto forks_size = 24_size;
     constexpr auto fixed = (4 * sizeof(uint32_t)) + sizeof(uint16_t) +
         (7 * sizeof(uint32_t)) + (10 * sizeof(uint8_t)) + forks_size +
-        sizeof(uint64_t) + (16 * sizeof(uint32_t));
+        sizeof(uint64_t) + (18 * sizeof(uint32_t));
 
     const auto checkpoint_size = [](const chain::checkpoint& in) NOEXCEPT
     {

@@ -66,8 +66,6 @@ const CLASS::table_map CLASS::tables
     { table_t::scan_prefix_table, "scan_prefix_table" },
     { table_t::scan_prefix_head, "scan_prefix_head" },
     { table_t::scan_prefix_body, "scan_prefix_body" },
-    { table_t::scan_start_table, "scan_start_table" },
-    { table_t::scan_start_head, "scan_start_head" },
 
     // Caches.
     { table_t::ecdsa0_table, "ecdsa0_table" },
@@ -105,6 +103,12 @@ const CLASS::table_map CLASS::tables
     { table_t::prevalid1_table, "prevalid1_table" },
     { table_t::prevalid1_head, "prevalid1_head" },
     { table_t::prevalid1_body, "prevalid1_body" },
+    { table_t::presilent0_table, "presilent0_table" },
+    { table_t::presilent0_head, "presilent0_head" },
+    { table_t::presilent0_body, "presilent0_body" },
+    { table_t::presilent1_table, "presilent1_table" },
+    { table_t::presilent1_head, "presilent1_head" },
+    { table_t::presilent1_body, "presilent1_body" },
     { table_t::prevout_table, "prevout_table" },
     { table_t::prevout_head, "prevout_head" },
     { table_t::prevout_body, "prevout_body" },

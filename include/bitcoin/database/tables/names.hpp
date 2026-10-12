@@ -62,7 +62,6 @@ namespace indexes
     constexpr auto confirmed = "index_confirmed";
     constexpr auto duplicate = "index_duplicate";
     constexpr auto state = "index_state";
-    constexpr auto scan_start = "index_scan_start";
     constexpr auto strong_tx = "index_strong";
     constexpr auto wtxid = "index_wtxid";
 }
@@ -100,6 +99,8 @@ namespace caches
     constexpr auto envelope = "envelope";
     constexpr auto prevalid0 = "batch_prevalid0";
     constexpr auto prevalid1 = "batch_prevalid1";
+    constexpr auto presilent0 = "batch_presilent0";
+    constexpr auto presilent1 = "batch_presilent1";
     constexpr auto prevout = "cache_prevout";
     constexpr auto pool = "cache_pool";
     constexpr auto pool_id0 = "id0"_t;

@@ -46,7 +46,13 @@ enum block_state : uint8_t
     milestoned = system::bit_right<uint8_t>(4),
 
     /// At or below the top checkpoint (bypassed).
-    checkpointed = system::bit_right<uint8_t>(5)
+    checkpointed = system::bit_right<uint8_t>(5),
+
+    /// Silent payment records are set or not required.
+    scanned = system::bit_right<uint8_t>(6),
+
+    /// Client filter is set or not required.
+    filtered = system::bit_right<uint8_t>(7)
 };
 
 /// Validation flags, cleared by reset.
@@ -95,6 +101,18 @@ constexpr bool is_milestone(block_state state) NOEXCEPT
 constexpr bool is_bypass(block_state state) NOEXCEPT
 {
     return is_any(state, bypass_states);
+}
+
+/// Silent payment records are set or not required.
+constexpr bool is_scanned(block_state state) NOEXCEPT
+{
+    return is_any(state, scanned);
+}
+
+/// Client filter is set or not required.
+constexpr bool is_filtered(block_state state) NOEXCEPT
+{
+    return is_any(state, filtered);
 }
 
 } // namespace database

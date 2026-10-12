@@ -34,16 +34,11 @@ constexpr size_t CLASS::to_state(const header_link& link) const NOEXCEPT
     return link.is_terminal() ? table::state::link::terminal : link.value;
 }
 
-// Headers linked below the taproot activation header are not mapped.
 TEMPLATE
-size_t CLASS::to_scan_start(const header_link& link) const NOEXCEPT
+constexpr size_t CLASS::to_scan_start(const header_link& link) const NOEXCEPT
 {
-    const auto& taproot = store_.get_envelope().bip9_bit2_active_checkpoint;
-    const auto first = to_header(taproot.hash());
-    if (link.is_terminal() || first.is_terminal() || link.value < first.value)
-        return table::scan_start::link::terminal;
-
-    return link.value - first.value;
+    static_assert(header_link::terminal <= scan_link::terminal);
+    return link.is_terminal() ? scan_link::terminal : link.value;
 }
 
 TEMPLATE

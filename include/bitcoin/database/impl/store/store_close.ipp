@@ -59,7 +59,6 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     close(ec, strong_tx, table_t::strong_tx_table);
     close(ec, scan, table_t::scan_table);
     close(ec, scan_prefix, table_t::scan_prefix_table);
-    close(ec, scan_start, table_t::scan_start_table);
 
     close(ec, ecdsa0, table_t::ecdsa0_table);
     close(ec, ecdsa1, table_t::ecdsa1_table);
@@ -73,6 +72,8 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     close(ec, duplicate, table_t::duplicate_table);
     close(ec, prevalid0, table_t::prevalid0_table);
     close(ec, prevalid1, table_t::prevalid1_table);
+    close(ec, presilent0, table_t::presilent0_table);
+    close(ec, presilent1, table_t::presilent1_table);
     close(ec, prevout, table_t::prevout_table);
     close(ec, state, table_t::state_table);
     close(ec, pool, table_t::pool_table);

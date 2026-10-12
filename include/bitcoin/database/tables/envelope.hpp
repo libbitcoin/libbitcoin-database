@@ -106,6 +106,8 @@ struct BCD_API envelope
 
     /// Node state.
     bool pooling{};
+    uint32_t scan_frontier{};
+    uint32_t latch_tx{};
 };
 
 } // namespace database
