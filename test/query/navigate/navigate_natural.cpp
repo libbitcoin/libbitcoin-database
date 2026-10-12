@@ -186,6 +186,60 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_tx__transactions__expected)
 }
 
 // to_filter
-// to_output
+// get_header_key
+
+BOOST_AUTO_TEST_CASE(query_navigate__get_header_key__always__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK_EQUAL(query.get_header_key(0), test::genesis.hash());
+    BOOST_CHECK_EQUAL(query.get_header_key(1), system::null_hash);
+}
+
+// get_point_key
+
+BOOST_AUTO_TEST_CASE(query_navigate__get_point_key__always__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK_EQUAL(query.get_point_hash(0), system::null_hash);
+
+    // tx4/5 prevouts are all block1a.tx1.
+    BOOST_CHECK(query.set(test::tx4));
+    BOOST_CHECK(query.set(test::tx5));
+    BOOST_CHECK_EQUAL(query.get_point_hash(1), test::block1a.transactions_ptr()->front()->hash(false));
+    BOOST_CHECK_EQUAL(query.get_point_hash(2), test::block1a.transactions_ptr()->front()->hash(false));
+
+    // block1a adds three prevouts of two txs.
+    BOOST_CHECK(query.set(test::block1a, context{}, {}, false, false));
+    BOOST_CHECK_EQUAL(query.get_point_hash(4), system::one_hash);
+}
+
+// get_tx_key
+
+BOOST_AUTO_TEST_CASE(query_navigate__get_tx_key__always__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK_EQUAL(query.get_tx_key(0), test::genesis.transactions_ptr()->front()->hash(false));
+    BOOST_CHECK_EQUAL(query.get_tx_key(1), system::null_hash);
+    BOOST_CHECK(query.set(test::tx4));
+    BOOST_CHECK(query.set(test::tx5));
+    BOOST_CHECK_EQUAL(query.get_tx_key(1), test::tx4.hash(false));
+    BOOST_CHECK_EQUAL(query.get_tx_key(2), test::tx5.hash(false));
+    BOOST_CHECK_EQUAL(query.get_tx_key(3), system::null_hash);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -140,4 +140,88 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__milestone_filter_pendi
     BOOST_REQUIRE(fork.empty());
 }
 
+// get_confirmed_height
+
+BOOST_AUTO_TEST_CASE(query_consensus__get_confirmed_height__push_pop_confirmed__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(!query.get_confirmed_height(0).is_terminal());
+    BOOST_REQUIRE(query.get_confirmed_height(1).is_terminal());
+    BOOST_REQUIRE(query.get_confirmed_height(2).is_terminal());
+
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(!query.get_confirmed_height(1).is_terminal());
+
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BOOST_REQUIRE(!query.get_confirmed_height(2).is_terminal());
+
+    BOOST_REQUIRE(query.pop_confirmed());
+    BOOST_REQUIRE(!query.get_confirmed_height(0).is_terminal());
+    BOOST_REQUIRE(!query.get_confirmed_height(1).is_terminal());
+    BOOST_REQUIRE(query.get_confirmed_height(2).is_terminal());
+
+    BOOST_REQUIRE(!!query.pop_confirmed());
+    BOOST_REQUIRE(!query.get_confirmed_height(0).is_terminal());
+    BOOST_REQUIRE(query.get_confirmed_height(1).is_terminal());
+    BOOST_REQUIRE(query.get_confirmed_height(2).is_terminal());
+}
+
+// get_fork
+
+BOOST_AUTO_TEST_CASE(query_consensus__get_fork__initialized__0)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
+    BOOST_REQUIRE_EQUAL(query.get_fork(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_consensus__get_fork__candidate_ahead__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block1.hash()), false));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block2.hash())));
+    BOOST_REQUIRE_EQUAL(query.get_fork(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(query_consensus__get_fork__confirmed_ahead__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.set(test::genesis, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::genesis.hash())));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::genesis.hash()), false));
+    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block1.hash()), false));
+    BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block2.hash()), false));
+    BOOST_REQUIRE_EQUAL(query.get_fork(), 1u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
