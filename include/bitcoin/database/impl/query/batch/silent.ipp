@@ -123,48 +123,14 @@ bool CLASS::set_scan_start(const header_link& link,
 TEMPLATE
 bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
 {
-    const auto& txs = block.transactions_ptr();
-    const auto count = txs->size();
-    if (is_one(count))
-        return true;
-
-    const auto links = to_transactions(link);
-    if (links.size() != count)
-        return false;
-
-    const auto first = links.front();
-    for (auto index = one; index < count; ++index)
-    {
-        const auto& fk = links.at(index);
-        if (is_silent_selected(fk, first) && !set_silent(fk, *txs->at(index)))
-            return false;
-    }
-
-    return true;
+    return set_silent_(link, *block.transactions_ptr());
 }
 
 TEMPLATE
 bool CLASS::set_silent(const header_link& link,
     const block_view& block) NOEXCEPT
 {
-    const auto& txs = block.views();
-    const auto count = txs.size();
-    if (is_one(count))
-        return true;
-
-    const auto links = to_transactions(link);
-    if (links.size() != count)
-        return false;
-
-    const auto first = links.front();
-    for (auto index = one; index < count; ++index)
-    {
-        const auto& fk = links.at(index);
-        if (is_silent_selected(fk, first) && !set_silent(fk, txs.at(index)))
-            return false;
-    }
-
-    return true;
+    return set_silent_(link, block.views());
 }
 
 // Ineligible txs have no records.
@@ -198,6 +164,60 @@ TEMPLATE
 size_t CLASS::silent_records(bool bank) const NOEXCEPT
 {
     return store_.silent_bank(bank).count();
+}
+
+TEMPLATE
+size_t CLASS::presilent_records(bool bank) const NOEXCEPT
+{
+    return store_.presilent_bank(bank).count();
+}
+
+TEMPLATE
+header_links CLASS::get_presilents(bool bank) const NOEXCEPT
+{
+    // Get all records, starting at the first position.
+    const auto all = presilent_records(bank);
+    const table::presilent::link first{ 0 };
+
+    header_links links(all);
+    table::presilent::get_refs out{ {}, links };
+    if (store_.presilent_bank(bank).get(first, out))
+        return links;
+
+    // Empty return in case of fault is an efficiency loss, table is dropped.
+    return {};
+}
+
+TEMPLATE
+bool CLASS::purge_presilents(bool bank) NOEXCEPT
+{
+    // ========================================================================
+    const auto scope = get_transactor();
+    return store_.presilent_bank(bank).truncate(0);
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::set_presilent(const header_link& link, bool bank) NOEXCEPT
+{
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    return store_.presilent_bank(bank).put(table::presilent::record{ {}, link });
+    // ========================================================================
+}
+
+TEMPLATE
+bool CLASS::set_presilents(const header_links& links, bool bank) NOEXCEPT
+{
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    return store_.presilent_bank(bank).put(
+        table::presilent::put_refs{ {}, links });
+    // ========================================================================
 }
 
 TEMPLATE
@@ -290,7 +310,12 @@ code CLASS::compute_silents(const stopper& cancel, bool& device,
     auto& bank_prefix = store_.silent_prefix_bank(bank);
     const auto txs = possible_narrow_cast<size_t>(bank_table.count().value);
     if (is_zero(txs))
-        return error::success;
+    {
+        // ====================================================================
+        const auto scope = get_transactor();
+        return set_scanned_(bank) ? error::success : error::integrity;
+        // ====================================================================
+    }
 
     using prefix_t = const scan::batch::prefix;
     using span_t = table::scan_prefix::put_span;
@@ -404,12 +429,119 @@ code CLASS::compute_silents(const stopper& cancel, bool& device,
     }
 
     store_.scan.complete(fk, possible_narrow_cast<scan_int>(txs));
-    return error::success;
+    return set_scanned_(bank) ? error::success : error::integrity;
     // ========================================================================
 }
 
 // protected
 // ----------------------------------------------------------------------------
+
+// Ineligible txs have no records. The block's records and its scanned state
+// are written in one transactor scope, and once both allocations succeed the
+// writes cannot fail.
+TEMPLATE
+template <typename Transactions>
+bool CLASS::set_silent_(const header_link& link,
+    const Transactions& txs) NOEXCEPT
+{
+    struct capture
+    {
+        tx_link link{};
+        ec_compressed point{};
+        std::vector<silent_prefix> prefixes{};
+    };
+
+    const auto count = txs.size();
+    const auto links = to_transactions(link);
+    if (links.size() != count)
+        return false;
+
+    // Object txs are held by pointer, views by value.
+    const auto to_tx = [](const auto& tx) NOEXCEPT -> decltype(auto)
+    {
+        using type = std::decay_t<decltype(tx)>;
+        if constexpr (is_same_type<type, transaction_view>)
+            return (tx);
+        else
+            return (*tx);
+    };
+
+    using namespace system::wallet;
+    size_t rows{};
+    std::vector<capture> captures{};
+    const auto first = links.front();
+    for (auto index = one; index < count; ++index)
+    {
+        capture item{ links.at(index) };
+        const auto& tx = to_tx(txs.at(index));
+        if (is_silent_selected(item.link, first) &&
+            get_prefixes(item.prefixes, tx) &&
+            silent_payment::summarize(item.point, tx))
+        {
+            rows += item.prefixes.size();
+            captures.push_back(std::move(item));
+        }
+    }
+
+    using namespace system;
+    using word_t = table::scan_correlate::tx::integer;
+    using point_t = table::scan_point::put_ref;
+    using prefix_t = table::scan_prefix::put_refs;
+    const table::state::merge scanned{ {}, block_state::scanned };
+
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    if (is_zero(rows))
+        return store_.state.set(to_state(link), scanned);
+
+    // Allocate the block's outputs, then its txs across all columns. Outputs
+    // are reached only through txs, so failure strands no unwritten tx.
+    const auto pk = store_.scan_prefix.allocate(
+        possible_narrow_cast<prefix_link::integer>(rows));
+    if (pk.is_terminal())
+        return false;
+
+    const auto fk = store_.scan.allocate(
+        possible_narrow_cast<scan_link::integer>(captures.size()));
+    if (fk.is_terminal())
+        return false;
+
+    // Guard against remap (required for nomaps::put(fk)).
+    const auto guard = store_.scan.guard();
+    const auto words = pointer_cast<word_t>(guard.data());
+
+    auto tx = fk;
+    auto out = pk;
+    for (const auto& item: captures)
+    {
+        const auto outputs = item.prefixes.size();
+        if (!store_.scan_prefix.put(out, prefix_t{ {}, item.prefixes }) ||
+            !store_.scan.point.put(tx, point_t{ {}, item.point }) ||
+            !put_silent_(tx, item.link, out, outputs, words))
+            return false;
+
+        tx += one;
+        out += outputs;
+    }
+
+    store_.scan.complete(fk,
+        possible_narrow_cast<scan_link::integer>(captures.size()));
+    return store_.state.set(to_state(link), scanned);
+    // ========================================================================
+}
+
+// Caller holds the transactor.
+TEMPLATE
+bool CLASS::set_scanned_(bool bank) NOEXCEPT
+{
+    for (const auto& link: get_presilents(bank))
+        if (!store_.state.set(to_state(link),
+            table::state::merge{ {}, block_state::scanned }))
+            return false;
+
+    return true;
+}
 
 // Pooled txs linked below the coinbase were indexed (see set_silent).
 TEMPLATE
@@ -428,7 +560,7 @@ bool CLASS::set_silents_(size_t& rows, const header_link& link,
     rows = zero;
     const auto count = txs.size();
     if (is_one(count))
-        return true;
+        return set_presilent(link, bank);
 
     const auto links = to_transactions(link);
     if (links.size() != count)
@@ -461,7 +593,7 @@ bool CLASS::set_silents_(size_t& rows, const header_link& link,
     }
 
     if (is_zero(rows))
-        return true;
+        return set_presilent(link, bank);
 
     using correlate_t = table::silent_correlate::record;
     using sum_t = table::silent_sum::put_ref;
@@ -474,13 +606,21 @@ bool CLASS::set_silents_(size_t& rows, const header_link& link,
     auto& bank_table = store_.silent_bank(bank);
     auto& bank_prefix = store_.silent_prefix_bank(bank);
 
-    // Allocate all of the block's txs across all columns, and their outputs.
+    // The link precedes the rows, so that rows are never banked without it.
+    if (!store_.presilent_bank(bank).put(table::presilent::record{ {}, link }))
+        return false;
+
+    // Allocate the block's outputs, then its txs across all columns. Outputs
+    // are reached only through txs, so failure strands no unwritten tx.
     using namespace system;
-    const auto fk = bank_table.allocate(
-        possible_narrow_cast<silent_link::integer>(captures.size()));
     const auto pk = bank_prefix.allocate(
         possible_narrow_cast<prefix_link::integer>(rows));
-    if (fk.is_terminal() || pk.is_terminal())
+    if (pk.is_terminal())
+        return false;
+
+    const auto fk = bank_table.allocate(
+        possible_narrow_cast<silent_link::integer>(captures.size()));
+    if (fk.is_terminal())
         return false;
 
     // Guard against remap (required for nomaps::put(fk)).

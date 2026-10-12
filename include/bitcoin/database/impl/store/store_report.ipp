@@ -62,6 +62,8 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(duplicate_body_, table_t::duplicate_body);
     report(prevalid0_body_, table_t::prevalid0_body);
     report(prevalid1_body_, table_t::prevalid1_body);
+    report(presilent0_body_, table_t::presilent0_body);
+    report(presilent1_body_, table_t::presilent1_body);
     report(prevout_body_, table_t::prevout_body);
     report(pool_body_, table_t::pool_body);
     report(spends_body_, table_t::spends_body);
@@ -121,6 +123,10 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = prevalid0_body_.get_fault())) return ec;
     if ((ec = prevalid1_head_.get_fault())) return ec;
     if ((ec = prevalid1_body_.get_fault())) return ec;
+    if ((ec = presilent0_head_.get_fault())) return ec;
+    if ((ec = presilent0_body_.get_fault())) return ec;
+    if ((ec = presilent1_head_.get_fault())) return ec;
+    if ((ec = presilent1_body_.get_fault())) return ec;
     if ((ec = prevout_head_.get_fault())) return ec;
     if ((ec = prevout_body_.get_fault())) return ec;
     if ((ec = state_head_.get_fault())) return ec;
@@ -193,6 +199,10 @@ size_t CLASS::get_space() const NOEXCEPT
     space(prevalid0_body_);
     space(prevalid1_head_);
     space(prevalid1_body_);
+    space(presilent0_head_);
+    space(presilent0_body_);
+    space(presilent1_head_);
+    space(presilent1_body_);
     space(prevout_head_);
     space(prevout_body_);
     space(state_head_);

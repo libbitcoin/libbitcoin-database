@@ -91,6 +91,8 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, duplicate, table_t::duplicate_table);
     verify(ec, prevalid0, table_t::prevalid0_table);
     verify(ec, prevalid1, table_t::prevalid1_table);
+    verify(ec, presilent0, table_t::presilent0_table);
+    verify(ec, presilent1, table_t::presilent1_table);
     verify(ec, prevout, table_t::prevout_table);
     verify(ec, state, table_t::state_table);
     verify(ec, pool, table_t::pool_table);

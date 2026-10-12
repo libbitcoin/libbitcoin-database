@@ -142,7 +142,7 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, scan_prefix, table_t::scan_prefix_table);
         restore(ec, scan_start, table_t::scan_start_table);
 
-        // ecdsa, schnorr, and prevalid are dropped.
+        // ecdsa, schnorr, silent, prevalid, and presilent are dropped.
         //---------------------------------------------------------------------
         // Signatures could be retained and verified, but this just becomes
         // redundant work unless prevalid is retained. That would require flush
@@ -155,14 +155,16 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         dropped(ec, ecdsa1, table_t::ecdsa1_table);
         dropped(ec, schnorr0, table_t::schnorr0_table);
         dropped(ec, schnorr1, table_t::schnorr1_table);
-        restore(ec, silent0, table_t::silent0_table);
-        restore(ec, silent1, table_t::silent1_table);
-        restore(ec, silent0_prefix, table_t::silent0_prefix_table);
-        restore(ec, silent1_prefix, table_t::silent1_prefix_table);
+        dropped(ec, silent0, table_t::silent0_table);
+        dropped(ec, silent1, table_t::silent1_table);
+        dropped(ec, silent0_prefix, table_t::silent0_prefix_table);
+        dropped(ec, silent1_prefix, table_t::silent1_prefix_table);
         restore(ec, envelope, table_t::envelope_table);
         restore(ec, duplicate, table_t::duplicate_table);
         dropped(ec, prevalid0, table_t::prevalid0_table);
         dropped(ec, prevalid1, table_t::prevalid1_table);
+        dropped(ec, presilent0, table_t::presilent0_table);
+        dropped(ec, presilent1, table_t::presilent1_table);
         restore(ec, prevout, table_t::prevout_table);
         restore(ec, state, table_t::state_table);
         restore(ec, pool, table_t::pool_table);

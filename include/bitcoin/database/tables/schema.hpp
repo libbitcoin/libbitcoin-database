@@ -55,7 +55,8 @@ namespace schema {
 /// 4.0.10.0 Pool arrival time.
 /// 4.0.11.0 Scan start index by taproot header.
 /// 4.0.12.0 Association, milestone and checkpoint as block state flags.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 12, 0 };
+/// 4.0.13.0 Scanned and filtered block state flags, presilent batch tables.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 13, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------

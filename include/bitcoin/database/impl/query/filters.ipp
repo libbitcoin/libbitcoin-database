@@ -180,10 +180,18 @@ bool CLASS::set_filter_body(const header_link& link,
     const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.filter_tx.put(to_filter_tx(link), table::filter_tx::put_ref
+    if (!store_.filter_tx.put(to_filter_tx(link), table::filter_tx::put_ref
     {
         {},
         filter
+    }))
+        return false;
+
+    // Clean single allocation failure (e.g. disk full).
+    return store_.state.set(to_state(link), table::state::merge
+    {
+        {},
+        block_state::filtered
     });
     // ========================================================================
 }

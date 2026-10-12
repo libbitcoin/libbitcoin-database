@@ -318,9 +318,15 @@ code CLASS::set_code(header_link& out_fk, const header& header,
     using namespace system;
     const auto checkpoint = ctx.height <=
         store_.get_envelope().top_checkpoint.height();
-    const auto bypass = bit_or<uint8_t>(
-        milestone ? block_state::milestoned : block_state::no_state,
-        checkpoint ? block_state::checkpointed : block_state::no_state);
+    const auto silent = ctx.height >= silent_start_height() &&
+        ctx.is_enabled(chain::flags::bip341_rule);
+    const auto flags = bit_or<uint8_t>(
+        bit_or<uint8_t>(
+            milestone ? block_state::milestoned : block_state::no_state,
+            checkpoint ? block_state::checkpointed : block_state::no_state),
+        bit_or<uint8_t>(
+            silent ? block_state::no_state : block_state::scanned,
+            filter_enabled() ? block_state::no_state : block_state::filtered));
 
     // ========================================================================
     const auto scope = get_transactor();
@@ -340,8 +346,8 @@ code CLASS::set_code(header_link& out_fk, const header& header,
         return error::header_put;
 
     // Clean single allocation failure (e.g. disk full).
-    if (is_nonzero(bypass) && !store_.state.set(to_state(out_fk),
-        table::state::merge{ {}, bypass }))
+    if (is_nonzero(flags) && !store_.state.set(to_state(out_fk),
+        table::state::merge{ {}, flags }))
         return error::header_state_put;
 
     return error::success;

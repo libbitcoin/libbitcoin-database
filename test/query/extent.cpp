@@ -55,6 +55,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.schnorr0_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.duplicate_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.prevalid0_body_size(), zero);
+    BOOST_REQUIRE_EQUAL(query.presilent0_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.prevout_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.state_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.pool_body_size(), zero);
@@ -126,6 +127,7 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), zero);
     BOOST_REQUIRE_EQUAL(query.duplicate_records(), zero);
     BOOST_REQUIRE_EQUAL(query.prevalid0_records(), zero);
+    BOOST_REQUIRE_EQUAL(query.presilent0_records(), zero);
     BOOST_REQUIRE_EQUAL(query.state_records(), one);
     BOOST_REQUIRE_EQUAL(query.pool_records(), zero);
     BOOST_REQUIRE_EQUAL(query.spends_records(), zero);
@@ -266,6 +268,8 @@ BOOST_AUTO_TEST_CASE(query_extent__store_head_size__genesis__archive_plus_indexe
         + query.duplicate_head_size()
         + query.prevalid0_head_size()
         + query.prevalid1_head_size()
+        + query.presilent0_head_size()
+        + query.presilent1_head_size()
         + query.prevout_head_size()
         + query.state_head_size()
         + query.pool_head_size()
@@ -300,6 +304,8 @@ BOOST_AUTO_TEST_CASE(query_extent__store_body_size__genesis__archive_plus_indexe
         + query.duplicate_body_size()
         + query.prevalid0_body_size()
         + query.prevalid1_body_size()
+        + query.presilent0_body_size()
+        + query.presilent1_body_size()
         + query.prevout_body_size()
         + query.state_body_size()
         + query.pool_body_size()

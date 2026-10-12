@@ -112,6 +112,9 @@ struct prevalid
     };
 };
 
+/// presilent is an array of header fk records (same as prevalid).
+using presilent = prevalid;
+
 } // namespace table
 } // namespace database
 } // namespace libbitcoin

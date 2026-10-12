@@ -110,6 +110,10 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, prevalid0_body_, table_t::prevalid0_body);
     open(ec, prevalid1_head_, table_t::prevalid1_head);
     open(ec, prevalid1_body_, table_t::prevalid1_body);
+    open(ec, presilent0_head_, table_t::presilent0_head);
+    open(ec, presilent0_body_, table_t::presilent0_body);
+    open(ec, presilent1_head_, table_t::presilent1_head);
+    open(ec, presilent1_body_, table_t::presilent1_body);
     open(ec, prevout_head_, table_t::prevout_head);
     open(ec, prevout_body_, table_t::prevout_body);
     open(ec, state_head_, table_t::state_head);
@@ -172,6 +176,10 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, prevalid0_body_, table_t::prevalid0_body);
     load(ec, prevalid1_head_, table_t::prevalid1_head);
     load(ec, prevalid1_body_, table_t::prevalid1_body);
+    load(ec, presilent0_head_, table_t::presilent0_head);
+    load(ec, presilent0_body_, table_t::presilent0_body);
+    load(ec, presilent1_head_, table_t::presilent1_head);
+    load(ec, presilent1_body_, table_t::presilent1_body);
     load(ec, prevout_head_, table_t::prevout_head);
     load(ec, prevout_body_, table_t::prevout_body);
     load(ec, state_head_, table_t::state_head);

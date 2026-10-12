@@ -113,6 +113,10 @@ CLASS::store(const settings& config) NOEXCEPT
     prevalid0_body_(body(config.path, schema::caches::prevalid0), config.prevalid, sequential, staged),
     prevalid1_head_(head(config.path / schema::dir::heads, schema::caches::prevalid1), head_settings(config.prevalid), sequential),
     prevalid1_body_(body(config.path, schema::caches::prevalid1), config.prevalid, sequential, staged),
+    presilent0_head_(head(config.path / schema::dir::heads, schema::caches::presilent0), head_settings(config.presilent), sequential),
+    presilent0_body_(body(config.path, schema::caches::presilent0), config.presilent, sequential, staged),
+    presilent1_head_(head(config.path / schema::dir::heads, schema::caches::presilent1), head_settings(config.presilent), sequential),
+    presilent1_body_(body(config.path, schema::caches::presilent1), config.presilent, sequential, staged),
 
     prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout), head_settings(config.prevout), random),
     prevout_body_(body(config.path, schema::caches::prevout), config.prevout, sequential, staged),
@@ -171,6 +175,8 @@ CLASS::store(const settings& config) NOEXCEPT
     duplicate(duplicate_head_, duplicate_body_, config.duplicate.buckets, config.duplicate.expected),
     prevalid0(prevalid0_head_, prevalid0_body_),
     prevalid1(prevalid1_head_, prevalid1_body_),
+    presilent0(presilent0_head_, presilent0_body_),
+    presilent1(presilent1_head_, presilent1_body_),
     prevout(prevout_head_, prevout_body_, config.prevout.buckets),
     state(state_head_),
     pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected),
@@ -288,6 +294,12 @@ table::prevalid& CLASS::prevalid_bank(bool bank) NOEXCEPT
     return bank ? prevalid1 : prevalid0;
 }
 
+TEMPLATE
+table::presilent& CLASS::presilent_bank(bool bank) NOEXCEPT
+{
+    return bank ? presilent1 : presilent0;
+}
+
 // Current is coalesced (confirmed at candidate top) with a recent top header.
 TEMPLATE
 bool CLASS::is_current() const NOEXCEPT
@@ -338,6 +350,8 @@ void CLASS::set_current(bool current) NOEXCEPT
     duplicate_head_.current(current);
     prevalid0_head_.current(current);
     prevalid1_head_.current(current);
+    presilent0_head_.current(current);
+    presilent1_head_.current(current);
     prevout_head_.current(current);
     state_head_.current(current);
     pool_head_.current(current);

@@ -113,6 +113,7 @@ struct BCD_API settings
     simple_table silent{};
     hash_table duplicate{};
     simple_table prevalid{};
+    simple_table presilent{};
     bucket_table prevout{};
     bucket_table state{};
     hash_table pool{};

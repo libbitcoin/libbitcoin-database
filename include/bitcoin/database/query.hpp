@@ -155,6 +155,8 @@ public:
     size_t duplicate_head_size() const NOEXCEPT;
     size_t prevalid0_head_size() const NOEXCEPT;
     size_t prevalid1_head_size() const NOEXCEPT;
+    size_t presilent0_head_size() const NOEXCEPT;
+    size_t presilent1_head_size() const NOEXCEPT;
     size_t prevout_head_size() const NOEXCEPT;
     size_t state_head_size() const NOEXCEPT;
     size_t pool_head_size() const NOEXCEPT;
@@ -189,6 +191,8 @@ public:
     size_t duplicate_body_size() const NOEXCEPT;
     size_t prevalid0_body_size() const NOEXCEPT;
     size_t prevalid1_body_size() const NOEXCEPT;
+    size_t presilent0_body_size() const NOEXCEPT;
+    size_t presilent1_body_size() const NOEXCEPT;
     size_t prevout_body_size() const NOEXCEPT;
     size_t state_body_size() const NOEXCEPT;
     size_t pool_body_size() const NOEXCEPT;
@@ -223,6 +227,8 @@ public:
     size_t duplicate_size() const NOEXCEPT;
     size_t prevalid0_size() const NOEXCEPT;
     size_t prevalid1_size() const NOEXCEPT;
+    size_t presilent0_size() const NOEXCEPT;
+    size_t presilent1_size() const NOEXCEPT;
     size_t prevout_size() const NOEXCEPT;
     size_t state_size() const NOEXCEPT;
     size_t pool_size() const NOEXCEPT;
@@ -269,6 +275,8 @@ public:
     size_t duplicate_records() const NOEXCEPT;
     size_t prevalid0_records() const NOEXCEPT;
     size_t prevalid1_records() const NOEXCEPT;
+    size_t presilent0_records() const NOEXCEPT;
+    size_t presilent1_records() const NOEXCEPT;
     size_t state_records() const NOEXCEPT;
     size_t pool_records() const NOEXCEPT;
     size_t spends_records() const NOEXCEPT;
@@ -680,6 +688,7 @@ public:
 
     /// Setters.
     bool set_block_valid(const header_link& link) NOEXCEPT;
+    bool set_block_scanned(const header_link& link) NOEXCEPT;
     bool set_block_unconfirmable(const header_link& link) NOEXCEPT;
     bool set_block_confirmable(const header_link& link) NOEXCEPT;
     bool set_block_unknown(const header_link& link) NOEXCEPT;
@@ -734,8 +743,8 @@ public:
     bool set_silent(const header_link& link, const block& block) NOEXCEPT;
     bool set_silent(const header_link& link, const block_view& block) NOEXCEPT;
 
-    /// Commit a block's silent payment batch rows, with rows the number
-    /// committed.
+    /// Commit a block's silent payment batch rows and presilent link, with
+    /// rows the number committed.
     bool set_silents(size_t& rows, const header_link& link,
         const block& block, bool bank) NOEXCEPT;
     bool set_silents(size_t& rows, const header_link& link,
@@ -789,17 +798,24 @@ public:
     bool purge_ecdsa_signatures(bool bank) NOEXCEPT;
     bool purge_schnorr_signatures(bool bank) NOEXCEPT;
     bool purge_silents(bool bank) NOEXCEPT;
+    bool purge_presilents(bool bank) NOEXCEPT;
 
     /// Cache all prevalids.
     header_links get_prevalids(bool bank) const NOEXCEPT;
     bool set_prevalid(const header_link& link, bool bank) NOEXCEPT;
     bool set_prevalids(const header_links& links, bool bank) NOEXCEPT;
 
+    /// Cache all presilents.
+    header_links get_presilents(bool bank) const NOEXCEPT;
+    bool set_presilent(const header_link& link, bool bank) NOEXCEPT;
+    bool set_presilents(const header_links& links, bool bank) NOEXCEPT;
+
     /// Records of a batch table bank.
     size_t ecdsa_records(bool bank) const NOEXCEPT;
     size_t schnorr_records(bool bank) const NOEXCEPT;
     size_t silent_records(bool bank) const NOEXCEPT;
     size_t prevalid_records(bool bank) const NOEXCEPT;
+    size_t presilent_records(bool bank) const NOEXCEPT;
 
     /// Confirmation.
     /// -----------------------------------------------------------------------
@@ -864,8 +880,7 @@ public:
     height_link get_confirmed_height(const header_link& link) const NOEXCEPT;
     header_links get_confirmed_fork(const header_link& fork) const NOEXCEPT;
     header_links get_candidate_fork(size_t& fork_point) const NOEXCEPT;
-    header_states get_validated_fork(size_t& fork_point,
-        size_t silent_limit=max_size_t) const NOEXCEPT;
+    header_states get_validated_fork(size_t& fork_point) const NOEXCEPT;
 
     bool initialize(const block& genesis) NOEXCEPT;
     bool push_candidate(const header_link& link) NOEXCEPT;
@@ -1174,6 +1189,11 @@ protected:
     bool set_silent_(const tx_link& link, const ec_compressed& point,
         const std::vector<silent_prefix>& prefixes) NOEXCEPT;
 
+    /// Set silent payment records of a block's txs and its scanned state.
+    template <typename Transactions>
+    bool set_silent_(const header_link& link,
+        const Transactions& txs) NOEXCEPT;
+
     /// Write a scan tx's outputs and publish it, caller must hold transactor.
     bool put_silent_(const scan_link& fk, const tx_link& link,
         const prefix_link& first, size_t outputs,
@@ -1182,6 +1202,9 @@ protected:
     /// A block's tx is indexed unless linked below its coinbase and pooled.
     bool is_silent_selected(const tx_link& link,
         const tx_link& coinbase) const NOEXCEPT;
+
+    /// Mark the blocks of a bank's presilent table scanned.
+    bool set_scanned_(bool bank) NOEXCEPT;
 
     /// Commit the silent payment batch rows of a block's txs.
     template <typename Transactions>
