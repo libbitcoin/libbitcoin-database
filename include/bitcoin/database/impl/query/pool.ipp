@@ -34,6 +34,24 @@ bool CLASS::is_pooled(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::get_pooled_time(uint32_t& out, const tx_link& link) const NOEXCEPT
+{
+    if (!store_.pool.enabled())
+        return false;
+
+    const auto fk = store_.pool.first(link);
+    if (fk.is_terminal())
+        return false;
+
+    table::pool::get_time pooled{};
+    if (!store_.pool.get(fk, pooled))
+        return false;
+
+    out = pooled.time;
+    return true;
+}
+
+TEMPLATE
 bool CLASS::is_confirmable_tx(const tx_link& link) const NOEXCEPT
 {
     confirmables memo{};
@@ -117,6 +135,55 @@ code CLASS::get_confirmable_txs(tx_links& out) const NOEXCEPT
 
     pool_link cursor{};
     return get_confirmable_txs(cursor, out, store_.pool.count(), max_size_t);
+}
+
+// An unconfirmed parent of a confirmable tx is itself confirmable.
+TEMPLATE
+tx_links CLASS::to_confirmable_parents(const tx_link& link) const NOEXCEPT
+{
+    tx_links out{};
+    for (const auto& point: to_points(link))
+    {
+        const auto parent = to_tx(get_point_key(point).hash());
+        if (!parent.is_terminal() && !is_confirmed_tx(parent) &&
+            is_pooled(parent) && !system::contains(out, parent.value))
+            out.push_back(parent.value);
+    }
+
+    return out;
+}
+
+TEMPLATE
+tx_links CLASS::to_confirmable_children(const tx_link& link) const NOEXCEPT
+{
+    tx_links out{};
+    for (const auto& output: to_outputs(link))
+    {
+        for (const auto& in: to_spenders(output))
+        {
+            const auto child = to_input_tx(in);
+            if (!child.is_terminal() && is_pooled(child) &&
+                is_confirmable_tx(child) &&
+                !system::contains(out, child.value))
+                out.push_back(child.value);
+        }
+    }
+
+    return out;
+}
+
+TEMPLATE
+bool CLASS::get_ancestor_totals(fee_totals& out,
+    const tx_link& link) const NOEXCEPT
+{
+    return get_confirmable_totals(out, link, true);
+}
+
+TEMPLATE
+bool CLASS::get_descendant_totals(fee_totals& out,
+    const tx_link& link) const NOEXCEPT
+{
+    return get_confirmable_totals(out, link, false);
 }
 
 TEMPLATE
@@ -287,6 +354,38 @@ bool CLASS::is_confirmable_tx(confirmables& memo,
 
     for (const auto tx: visited)
         memo.emplace(tx, true);
+
+    return true;
+}
+
+TEMPLATE
+bool CLASS::get_confirmable_totals(fee_totals& out, const tx_link& link,
+    bool ancestors) const NOEXCEPT
+{
+    using namespace system;
+    out = {};
+    std::vector<tx_link::integer> pending{ link.value };
+    std::unordered_set<tx_link::integer> visited{ link.value };
+    while (!pending.empty())
+    {
+        const tx_link next{ pending.back() };
+        pending.pop_back();
+
+        fee_rate rate{};
+        if (!get_tx_fees(rate, next))
+            return false;
+
+        ++out.count;
+        out.bytes = ceilinged_add(out.bytes, rate.bytes);
+        out.fee = ceilinged_add(out.fee, rate.fee);
+
+        const auto links = ancestors ? to_confirmable_parents(next) :
+            to_confirmable_children(next);
+
+        for (const auto fk: links)
+            if (visited.insert(fk).second)
+                pending.push_back(fk);
+    }
 
     return true;
 }

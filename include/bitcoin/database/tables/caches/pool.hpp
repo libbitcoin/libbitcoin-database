@@ -153,6 +153,19 @@ struct pool
         uint64_t fee{};
     };
 
+    struct get_time
+      : public schema::pool
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(minsize - sizeof(uint32_t));
+            time = source.read_little_endian<uint32_t>();
+            return source;
+        }
+
+        uint32_t time{};
+    };
+
     /// The identifier word columns (rows aligned with the spine).
     column<base, 1> id0{ *this };
     column<base, 2> id1{ *this };
