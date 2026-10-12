@@ -873,6 +873,13 @@ public:
     /// Ascending height of lowest tx link for block at or above each height.
     bool get_thresholds(thresholds& out, const header_link& top) const NOEXCEPT;
 
+    /// Lowest tx link for block at or above start (height, or median time
+    /// past at or above locktime threshold), terminal if above thresholds.
+    tx_link get_threshold(const thresholds& table, size_t start) const NOEXCEPT;
+
+    /// Lowest confirmed height with median time past at or above time.
+    bool get_mtp_height(size_t& out, size_t time) const NOEXCEPT;
+
     /// Address.
     /// -----------------------------------------------------------------------
 
