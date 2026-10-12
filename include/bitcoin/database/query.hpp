@@ -397,7 +397,7 @@ public:
 
     /// header to arraymap tables (guard domain transitions)
     constexpr size_t to_state(const header_link& link) const NOEXCEPT;
-    size_t to_scan_start(const header_link& link) const NOEXCEPT;
+    constexpr size_t to_scan_start(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_bk(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_tx(const header_link& link) const NOEXCEPT;
     constexpr size_t to_prevout(const header_link& link) const NOEXCEPT;
