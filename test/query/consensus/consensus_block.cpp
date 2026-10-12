@@ -369,7 +369,7 @@ static bool pool_tx(test::query_accessor& query, const transaction& tx,
     for (const auto& in: *tx.inputs_ptr())
         in->prevout = system::to_shared<output>(prevout, script{});
 
-    return query.set_pooled(link, tx, ctx);
+    return query.set_pooled(link, tx, ctx, 0);
 }
 
 BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__pooled__success_with_prevouts)

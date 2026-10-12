@@ -52,7 +52,8 @@ namespace schema {
 /// 4.0.7.0 Pool witness hash index (wtxid), state and duplicate as indexes.
 /// 4.0.8.0 Batch and scan tables as columns, with output prefix tables.
 /// 4.0.9.0 Block state as a headmap of flags.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 9, 0 };
+/// 4.0.10.0 Pool arrival time.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 10, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
@@ -451,13 +452,14 @@ struct pool
         sizeof(uint32_t) +      // context.mtp
         sizeof(uint64_t) +      // fee (could narrow to 3, skipping larger)
         schema::sigops +        // sigops (could narrow to 2, skipping larger)
-        schema::spends_;        // spends->spends (first of tx inputs)
+        schema::spends_ +       // spends->spends (first of tx inputs)
+        sizeof(uint32_t);       // time
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = link::size;
     static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 26u);
-    static_assert(minrow == 34u);
+    static_assert(minsize == 30u);
+    static_assert(minrow == 38u);
     static_assert(link::size == 4u);
     static_assert(cell == 4u);
     static_assert(witness_lanes * sizeof(witness_lane) == schema::hash);

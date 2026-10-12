@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_witness_tx__segregated_pooled__expected)
 
     const auto link = query.to_tx(tx.hash(false));
     BOOST_REQUIRE(query.to_witness_tx(tx.hash(true)).is_terminal());
-    BOOST_REQUIRE(query.set_pooled(link, tx, database::context{ 0, 1, 0 }));
+    BOOST_REQUIRE(query.set_pooled(link, tx, database::context{ 0, 1, 0 }, 0));
     BOOST_REQUIRE(query.is_pooled(link));
     BOOST_REQUIRE_EQUAL(query.to_witness_tx(tx.hash(true)), link);
     BOOST_REQUIRE(query.to_witness_tx(tx.hash(false)).is_terminal());
