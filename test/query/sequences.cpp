@@ -128,6 +128,94 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_thresholds__disordered__lowest_above)
     BOOST_REQUIRE_EQUAL(out.back().second, query.to_coinbase(3));
 }
 
+// get_threshold
+
+BOOST_AUTO_TEST_CASE(query_sequences__get_threshold__empty__terminal)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.get_threshold({}, 0).is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(query_sequences__get_threshold__heights__lowest_at_or_above)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1.header(), database::context{ 0, 1, 0 }, {}, false));
+    BOOST_REQUIRE(query.set(test::block2.header(), database::context{ 0, 2, 0 }, {}, false));
+    BOOST_REQUIRE(query.set(test::block3.header(), database::context{ 0, 3, 0 }, {}, false));
+    BOOST_REQUIRE(query.set(test::block3, false, false));
+    BOOST_REQUIRE(query.set(test::block1, false, false));
+    BOOST_REQUIRE(query.set(test::block2, false, false));
+
+    thresholds table{};
+    BOOST_REQUIRE(query.get_thresholds(table, 3));
+    BOOST_REQUIRE_EQUAL(query.get_threshold(table, 0), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_threshold(table, 1), query.to_coinbase(3));
+    BOOST_REQUIRE_EQUAL(query.get_threshold(table, 3), query.to_coinbase(3));
+    BOOST_REQUIRE(query.get_threshold(table, 4).is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(query_sequences__get_threshold__times__lowest_at_or_above)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 500'000'010 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, database::context{ 0, 2, 500'000'020 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, database::context{ 0, 3, 500'000'030 }, {}, false, false));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BOOST_REQUIRE(query.push_confirmed(3, false));
+
+    thresholds table{};
+    BOOST_REQUIRE(query.get_thresholds(table, 3));
+    BOOST_REQUIRE_EQUAL(query.get_threshold(table, 500'000'000), query.to_coinbase(1));
+    BOOST_REQUIRE_EQUAL(query.get_threshold(table, 500'000'020), query.to_coinbase(2));
+    BOOST_REQUIRE_EQUAL(query.get_threshold(table, 500'000'021), query.to_coinbase(3));
+    BOOST_REQUIRE(query.get_threshold(table, 500'000'031).is_terminal());
+}
+
+// get_mtp_height
+
+BOOST_AUTO_TEST_CASE(query_sequences__get_mtp_height__confirmed__lowest_at_or_above)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 10 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, database::context{ 0, 2, 20 }, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block3, database::context{ 0, 3, 20 }, {}, false, false));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BOOST_REQUIRE(query.push_confirmed(3, false));
+
+    size_t height{};
+    BOOST_REQUIRE(query.get_mtp_height(height, 0));
+    BOOST_REQUIRE_EQUAL(height, 0u);
+    BOOST_REQUIRE(query.get_mtp_height(height, 10));
+    BOOST_REQUIRE_EQUAL(height, 1u);
+    BOOST_REQUIRE(query.get_mtp_height(height, 11));
+    BOOST_REQUIRE_EQUAL(height, 2u);
+    BOOST_REQUIRE(query.get_mtp_height(height, 20));
+    BOOST_REQUIRE_EQUAL(height, 2u);
+    BOOST_REQUIRE(!query.get_mtp_height(height, 21));
+}
+
 // get_candidate_hashes
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_candidate_hashes__initialized__one)

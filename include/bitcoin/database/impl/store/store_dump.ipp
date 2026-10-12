@@ -55,6 +55,7 @@ code CLASS::dump(const path& folder,
     dump(ec, strong_tx_head_, schema::indexes::strong_tx, table_t::strong_tx_head);
     dump(ec, scan_head_, schema::indexes::scan, table_t::scan_head);
     dump(ec, scan_prefix_head_, schema::indexes::scan_prefix, table_t::scan_prefix_head);
+    dump(ec, scan_start_head_, schema::indexes::scan_start, table_t::scan_start_head);
 
     dump(ec, ecdsa0_head_, schema::caches::ecdsa0, table_t::ecdsa0_head);
     dump(ec, ecdsa1_head_, schema::caches::ecdsa1, table_t::ecdsa1_head);

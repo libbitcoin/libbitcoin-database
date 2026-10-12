@@ -189,6 +189,49 @@ bool CLASS::get_thresholds(thresholds& out,
     return true;
 }
 
+TEMPLATE
+tx_link CLASS::get_threshold(const thresholds& table,
+    size_t start) const NOEXCEPT
+{
+    using namespace system;
+    auto height = start;
+    if (start >= chain::locktime_threshold && !get_mtp_height(height, start))
+        return {};
+
+    const auto it = std::lower_bound(table.cbegin(), table.cend(), height,
+        [](const threshold& record, size_t value) NOEXCEPT
+        {
+            return record.first < value;
+        });
+
+    return it == table.cend() ? tx_link{} : tx_link{ it->second };
+}
+
+// Median time past is nondecreasing with height.
+TEMPLATE
+bool CLASS::get_mtp_height(size_t& out, size_t time) const NOEXCEPT
+{
+    const auto top = get_top_confirmed();
+    auto high = add1(top);
+    auto low = zero;
+
+    while (low < high)
+    {
+        context ctx{};
+        const auto middle = low + to_half(high - low);
+        if (!get_context(ctx, to_confirmed(middle)))
+            return false;
+
+        if (ctx.mtp < time)
+            low = add1(middle);
+        else
+            high = middle;
+    }
+
+    out = low;
+    return low <= top;
+}
+
 } // namespace database
 } // namespace libbitcoin
 

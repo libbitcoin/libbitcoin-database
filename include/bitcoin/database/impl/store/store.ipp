@@ -79,6 +79,7 @@ CLASS::store(const settings& config) NOEXCEPT
     scan_body_(body(config.path, schema::indexes::scan), config.scan, sequential, staged),
     scan_prefix_head_(head(config.path / schema::dir::heads, schema::indexes::scan_prefix), head_settings(config.scan), sequential),
     scan_prefix_body_(body(config.path, schema::indexes::scan_prefix), config.scan, sequential, staged),
+    scan_start_head_(head(config.path / schema::dir::heads, schema::indexes::scan_start), head_settings<schema::scan_start::cell>(config.scan_start), random),
 
     // Caches.
     // ------------------------------------------------------------------------
@@ -156,6 +157,7 @@ CLASS::store(const settings& config) NOEXCEPT
     strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx.buckets, config.strong_tx.expected),
     scan(scan_head_, scan_body_),
     scan_prefix(scan_prefix_head_, scan_prefix_body_),
+    scan_start(scan_start_head_),
 
     ecdsa0(ecdsa0_head_, ecdsa0_body_),
     ecdsa1(ecdsa1_head_, ecdsa1_body_),
@@ -323,6 +325,7 @@ void CLASS::set_current(bool current) NOEXCEPT
     strong_tx_head_.current(current);
     scan_head_.current(current);
     scan_prefix_head_.current(current);
+    scan_start_head_.current(current);
     ecdsa0_head_.current(current);
     ecdsa1_head_.current(current);
     schnorr0_head_.current(current);

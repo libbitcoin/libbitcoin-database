@@ -96,6 +96,23 @@ size_t CLASS::get_silent_frontier(size_t first) const NOEXCEPT
     return count;
 }
 
+TEMPLATE
+scan_link CLASS::get_scan_start(const header_link& link) const NOEXCEPT
+{
+    return store_.scan_start.at(to_scan_start(link));
+}
+
+TEMPLATE
+bool CLASS::set_scan_start(const header_link& link,
+    const scan_link& start) NOEXCEPT
+{
+    if (store_.is_pooling())
+        return false;
+
+    const table::scan_start::record record{ {}, start.value };
+    return store_.scan_start.set(to_scan_start(link), record);
+}
+
 // setters
 // ----------------------------------------------------------------------------
 // Caller (node) controls which txs are indexed (e.g. by confirmed height).

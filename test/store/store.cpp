@@ -162,6 +162,7 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
     BOOST_REQUIRE_EQUAL(instance.duplicate_head_file(), "bitcoin/heads/index_duplicate.head");
     BOOST_REQUIRE_EQUAL(instance.duplicate_body_file(), "bitcoin/index_duplicate.data");
     BOOST_REQUIRE_EQUAL(instance.state_head_file(), "bitcoin/heads/index_state.head");
+    BOOST_REQUIRE_EQUAL(instance.scan_start_head_file(), "bitcoin/heads/index_scan_start.head");
     BOOST_REQUIRE_EQUAL(instance.wtxid_head_file(), "bitcoin/heads/index_wtxid.head");
     BOOST_REQUIRE_EQUAL(instance.wtxid_body_file(), "bitcoin/index_wtxid.data");
 

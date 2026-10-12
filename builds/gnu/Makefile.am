@@ -327,6 +327,7 @@ include_bitcoin_database_tables_indexes_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/duplicate.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/height.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/scan.hpp \
+    ${srcdir}/../../include/bitcoin/database/tables/indexes/scan_start.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/state.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/strong_tx.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/wtxid.hpp
@@ -500,6 +501,7 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/tables/indexes/duplicate.cpp \
     ${srcdir}/../../test/tables/indexes/height.cpp \
     ${srcdir}/../../test/tables/indexes/scan.cpp \
+    ${srcdir}/../../test/tables/indexes/scan_start.cpp \
     ${srcdir}/../../test/tables/indexes/state.cpp \
     ${srcdir}/../../test/tables/indexes/strong_tx.cpp \
     ${srcdir}/../../test/tables/indexes/wtxid.cpp \

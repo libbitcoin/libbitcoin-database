@@ -143,6 +143,7 @@ public:
     size_t strong_tx_head_size() const NOEXCEPT;
     size_t scan_head_size() const NOEXCEPT;
     size_t scan_prefix_head_size() const NOEXCEPT;
+    size_t scan_start_head_size() const NOEXCEPT;
     size_t ecdsa0_head_size() const NOEXCEPT;
     size_t ecdsa1_head_size() const NOEXCEPT;
     size_t schnorr0_head_size() const NOEXCEPT;
@@ -176,6 +177,7 @@ public:
     size_t strong_tx_body_size() const NOEXCEPT;
     size_t scan_body_size() const NOEXCEPT;
     size_t scan_prefix_body_size() const NOEXCEPT;
+    size_t scan_start_body_size() const NOEXCEPT;
     size_t ecdsa0_body_size() const NOEXCEPT;
     size_t ecdsa1_body_size() const NOEXCEPT;
     size_t schnorr0_body_size() const NOEXCEPT;
@@ -209,6 +211,7 @@ public:
     size_t strong_tx_size() const NOEXCEPT;
     size_t scan_size() const NOEXCEPT;
     size_t scan_prefix_size() const NOEXCEPT;
+    size_t scan_start_size() const NOEXCEPT;
     size_t ecdsa0_size() const NOEXCEPT;
     size_t ecdsa1_size() const NOEXCEPT;
     size_t schnorr0_size() const NOEXCEPT;
@@ -254,6 +257,7 @@ public:
     size_t strong_tx_records() const NOEXCEPT;
     size_t scan_records() const NOEXCEPT;
     size_t scan_prefix_records() const NOEXCEPT;
+    size_t scan_start_records() const NOEXCEPT;
     size_t ecdsa0_records() const NOEXCEPT;
     size_t ecdsa1_records() const NOEXCEPT;
     size_t schnorr0_records() const NOEXCEPT;
@@ -384,6 +388,7 @@ public:
 
     /// header to arraymap tables (guard domain transitions)
     constexpr size_t to_state(const header_link& link) const NOEXCEPT;
+    size_t to_scan_start(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_bk(const header_link& link) const NOEXCEPT;
     constexpr size_t to_filter_tx(const header_link& link) const NOEXCEPT;
     constexpr size_t to_prevout(const header_link& link) const NOEXCEPT;
@@ -763,6 +768,14 @@ public:
     /// The first silent row at or above first that is not fully written.
     size_t get_silent_frontier(size_t first) const NOEXCEPT;
 
+    /// The scan fk that starts the header's scan range, terminal if unmapped.
+    scan_link get_scan_start(const header_link& link) const NOEXCEPT;
+
+    /// Map the header to the scan fk that starts its scan range, false if
+    /// unmapped or pooling (the map is closed at the pooling latch).
+    bool set_scan_start(const header_link& link,
+        const scan_link& start) NOEXCEPT;
+
     /// Verify all signatures in table, false implies cancel, device set if
     /// verified on the device.
     bool verify_ecdsa_signatures(const stopper& cancel, header_links&,
@@ -872,6 +885,13 @@ public:
 
     /// Ascending height of lowest tx link for block at or above each height.
     bool get_thresholds(thresholds& out, const header_link& top) const NOEXCEPT;
+
+    /// Lowest tx link for block at or above start (height, or median time
+    /// past at or above locktime threshold), terminal if above thresholds.
+    tx_link get_threshold(const thresholds& table, size_t start) const NOEXCEPT;
+
+    /// Lowest confirmed height with median time past at or above time.
+    bool get_mtp_height(size_t& out, size_t time) const NOEXCEPT;
 
     /// Address.
     /// -----------------------------------------------------------------------
