@@ -245,11 +245,6 @@ public:
         return state_head_.buffer();
     }
 
-    system::data_chunk& state_body() NOEXCEPT
-    {
-        return state_body_.buffer();
-    }
-
     system::data_chunk& pool_head() NOEXCEPT
     {
         return pool_head_.buffer();

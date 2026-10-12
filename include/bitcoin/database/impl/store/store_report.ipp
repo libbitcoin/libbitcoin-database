@@ -63,7 +63,6 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(prevalid0_body_, table_t::prevalid0_body);
     report(prevalid1_body_, table_t::prevalid1_body);
     report(prevout_body_, table_t::prevout_body);
-    report(state_body_, table_t::state_body);
     report(pool_body_, table_t::pool_body);
     report(spends_body_, table_t::spends_body);
     report(wtxid_body_, table_t::wtxid_body);
@@ -124,7 +123,6 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = prevout_head_.get_fault())) return ec;
     if ((ec = prevout_body_.get_fault())) return ec;
     if ((ec = state_head_.get_fault())) return ec;
-    if ((ec = state_body_.get_fault())) return ec;
     if ((ec = pool_head_.get_fault())) return ec;
     if ((ec = pool_body_.get_fault())) return ec;
     if ((ec = spends_head_.get_fault())) return ec;
@@ -196,7 +194,6 @@ size_t CLASS::get_space() const NOEXCEPT
     space(prevout_head_);
     space(prevout_body_);
     space(state_head_);
-    space(state_body_);
     space(pool_head_);
     space(pool_body_);
     space(spends_head_);

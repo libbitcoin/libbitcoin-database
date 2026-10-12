@@ -26,17 +26,17 @@ namespace database {
 
 enum block_state : uint8_t
 {
-    /// final
-    confirmable = 0,
+    /// Not validated.
+    no_state = 0,
 
-    /// transitional
-    valid = 1,
+    /// Satisfies validation rules (prevouts unverified).
+    valid = system::bit_right<uint8_t>(0),
 
-    /// final
-    unconfirmable = 2,
+    /// Satisfies confirmation rules (final).
+    confirmable = system::bit_right<uint8_t>(1),
 
-    /// transitional (debug)
-    block_unknown = 42
+    /// Does not satisfy validation or confirmation rules (final).
+    unconfirmable = system::bit_right<uint8_t>(2)
 };
 
 } // namespace database

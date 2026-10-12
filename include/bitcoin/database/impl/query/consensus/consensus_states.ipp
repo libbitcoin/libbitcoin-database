@@ -48,29 +48,20 @@ bool CLASS::is_validateable(size_t height) const NOEXCEPT
 
 // protected
 TEMPLATE
-inline code CLASS::to_block_code(
-    linkage<schema::code>::integer value) const NOEXCEPT
+inline code CLASS::to_block_code(schema::state::value flags) const NOEXCEPT
 {
-    switch (value)
-    {
-        // Transitional: Satisfies validation rules (prevouts unverified).
-        case block_state::valid:
-            return error::block_valid;
+    using namespace system;
+    using value = schema::state::value;
+    if (is_nonzero(bit_and<value>(flags, block_state::unconfirmable)))
+        return error::block_unconfirmable;
 
-        // Final: Satisfies confirmation rules (prevouts confirmable).
-        case block_state::confirmable:
-            return error::block_confirmable;
+    if (is_nonzero(bit_and<value>(flags, block_state::confirmable)))
+        return error::block_confirmable;
 
-        // Final: Does not satisfy either validation or confirmation rules.
-        case block_state::unconfirmable:
-            return error::block_unconfirmable;
+    if (is_nonzero(bit_and<value>(flags, block_state::valid)))
+        return error::block_valid;
 
-        // Fault: Has no state, should not happen when read from store.
-        // block_unknown also used to reset a state (debugging).
-        case block_state::block_unknown:
-        default:
-            return error::unknown_state;
-    }
+    return error::unvalidated;
 }
 
 // protected
@@ -99,11 +90,7 @@ bool CLASS::is_unconfirmable(const header_link& link) const NOEXCEPT
 TEMPLATE
 code CLASS::get_header_state(const header_link& link) const NOEXCEPT
 {
-    table::state::record valid{};
-    if (!store_.state.at(to_state(link), valid))
-        return error::unvalidated;
-
-    return to_block_code(valid.code);
+    return to_block_code(store_.state.at(to_state(link)));
 }
 
 // unassociated
@@ -114,11 +101,11 @@ code CLASS::get_header_state(const header_link& link) const NOEXCEPT
 TEMPLATE
 code CLASS::get_block_state(const header_link& link) const NOEXCEPT
 {
-    table::state::record valid{};
-    if (!store_.state.at(to_state(link), valid))
+    const auto flags = store_.state.at(to_state(link));
+    if (flags == block_state::no_state)
         return is_associated(link) ? error::unvalidated : error::unassociated;
 
-    return to_block_code(valid.code);
+    return to_block_code(flags);
 }
 
 TEMPLATE
@@ -176,22 +163,26 @@ bool CLASS::set_block_unconfirmable(const header_link& link) NOEXCEPT
 TEMPLATE
 bool CLASS::set_block_unknown(const header_link& link) NOEXCEPT
 {
-    return set_block_state(link, block_state::block_unknown);
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    return store_.state.set(to_state(link),
+        table::state::replace{ {}, block_state::no_state });
+    // ========================================================================
 }
 
 // private
 TEMPLATE
 bool CLASS::set_block_state(const header_link& link,
-    block_state value) NOEXCEPT
+    block_state flags) NOEXCEPT
 {
-    const auto record = to_state(link);
-
     // ========================================================================
     const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.state.put(record,
-        table::state::record{ {}, value });
+    return store_.state.set(to_state(link),
+        table::state::merge{ {}, flags });
     // ========================================================================
 }
 

@@ -129,7 +129,6 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, prevout_head_, table_t::prevout_head);
     create(ec, prevout_body_, table_t::prevout_body);
     create(ec, state_head_, table_t::state_head);
-    create(ec, state_body_, table_t::state_body);
     create(ec, pool_head_, table_t::pool_head);
     create(ec, pool_body_, table_t::pool_body);
     create(ec, spends_head_, table_t::spends_head);
