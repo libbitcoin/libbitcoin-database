@@ -46,6 +46,7 @@
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/primitives/arrayhead.hpp>
 #include <bitcoin/database/primitives/arraymap.hpp>
+#include <bitcoin/database/primitives/arraymaps.hpp>
 #include <bitcoin/database/primitives/body.hpp>
 #include <bitcoin/database/primitives/column.hpp>
 #include <bitcoin/database/primitives/hashhead.hpp>
@@ -84,7 +85,6 @@
 #include <bitcoin/database/tables/indexes/duplicate.hpp>
 #include <bitcoin/database/tables/indexes/height.hpp>
 #include <bitcoin/database/tables/indexes/scan.hpp>
-#include <bitcoin/database/tables/indexes/scan_start.hpp>
 #include <bitcoin/database/tables/indexes/state.hpp>
 #include <bitcoin/database/tables/indexes/strong_tx.hpp>
 #include <bitcoin/database/tables/indexes/wtxid.hpp>

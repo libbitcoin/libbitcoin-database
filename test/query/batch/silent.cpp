@@ -711,19 +711,23 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_start__taproot__mapped)
     BOOST_REQUIRE_EQUAL(query.get_scan_start(2), 42u);
 }
 
-BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_start__pooling__false)
+// get_scan_frontier
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_frontier__latched__rows_at_latch)
 {
     database::settings settings{};
     settings.path = TEST_DIRECTORY;
-    settings.envelope.bip9_bit2_active_checkpoint = { test::genesis.hash(), 0 };
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set_scan_start(0, 42));
-    store.set_pooling();
-    BOOST_REQUIRE(!query.set_scan_start(0, 7));
-    BOOST_REQUIRE_EQUAL(query.get_scan_start(0), 42u);
+    BOOST_REQUIRE(query.set_silent(42, simple_send()));
+    BOOST_REQUIRE(query.set_silent(43, simple_send()));
+    BOOST_REQUIRE_EQUAL(query.get_scan_frontier(), 0u);
+    query.set_pooling();
+    BOOST_REQUIRE(query.set_silent(44, simple_send()));
+    BOOST_REQUIRE_EQUAL(query.get_scan_frontier(), 2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

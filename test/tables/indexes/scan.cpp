@@ -32,20 +32,51 @@ using scan_storage = default_storage<table::scan_storage<chunk_storages>>;
 
 BOOST_AUTO_TEST_CASE(scan__create_verify_close__aggregate__expected)
 {
-    scan_storage head{ "head" };
+    data_chunk head_file{};
+    test::chunk_storage head{ head_file };
     scan_storage body{ "body" };
-    scan_table instance{ head, body };
+    scan_table instance{ head, body, 1 };
 
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
     BOOST_REQUIRE(instance.close());
 }
 
+BOOST_AUTO_TEST_CASE(scan__at__unset__terminal)
+{
+    data_chunk head_file{};
+    test::chunk_storage head{ head_file };
+    scan_storage body{ "body" };
+    scan_table instance{ head, body, 1 };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.at(0).is_terminal());
+    BOOST_REQUIRE(instance.at(1).is_terminal());
+    BOOST_REQUIRE(instance.close());
+}
+
+BOOST_AUTO_TEST_CASE(scan__push__beyond_buckets__expanded)
+{
+    data_chunk head_file{};
+    test::chunk_storage head{ head_file };
+    scan_storage body{ "body" };
+    scan_table instance{ head, body, 1 };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.push(7, 2));
+    BOOST_REQUIRE(instance.at(0).is_terminal());
+    BOOST_REQUIRE(instance.at(1).is_terminal());
+    BOOST_REQUIRE_EQUAL(instance.at(2), 7u);
+    BOOST_REQUIRE(instance.push(9, 2));
+    BOOST_REQUIRE_EQUAL(instance.at(2), 9u);
+    BOOST_REQUIRE(instance.verify());
+    BOOST_REQUIRE(instance.close());
+}
+
 BOOST_AUTO_TEST_CASE(scan__put_columns__two_rows__expected)
 {
-    scan_storage head{ "head" };
+    data_chunk head_file{};
+    test::chunk_storage head{ head_file };
     scan_storage body{ "body" };
-    scan_table instance{ head, body };
+    scan_table instance{ head, body, 1 };
     BOOST_REQUIRE(instance.create());
 
     constexpr auto compressed = base16_array

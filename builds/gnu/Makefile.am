@@ -112,6 +112,7 @@ include_bitcoin_database_impl_primitivesdir = \
 include_bitcoin_database_impl_primitives_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/arrayhead.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/arraymap.ipp \
+    ${srcdir}/../../include/bitcoin/database/impl/primitives/arraymaps.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/body.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/hashhead.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/primitives/hashmap.ipp \
@@ -269,6 +270,7 @@ include_bitcoin_database_primitivesdir = \
 include_bitcoin_database_primitives_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/primitives/arrayhead.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/arraymap.hpp \
+    ${srcdir}/../../include/bitcoin/database/primitives/arraymaps.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/body.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/column.hpp \
     ${srcdir}/../../include/bitcoin/database/primitives/hashhead.hpp \
@@ -327,7 +329,6 @@ include_bitcoin_database_tables_indexes_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/duplicate.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/height.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/scan.hpp \
-    ${srcdir}/../../include/bitcoin/database/tables/indexes/scan_start.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/state.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/strong_tx.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/wtxid.hpp
@@ -501,7 +502,6 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/tables/indexes/duplicate.cpp \
     ${srcdir}/../../test/tables/indexes/height.cpp \
     ${srcdir}/../../test/tables/indexes/scan.cpp \
-    ${srcdir}/../../test/tables/indexes/scan_start.cpp \
     ${srcdir}/../../test/tables/indexes/state.cpp \
     ${srcdir}/../../test/tables/indexes/strong_tx.cpp \
     ${srcdir}/../../test/tables/indexes/wtxid.cpp \

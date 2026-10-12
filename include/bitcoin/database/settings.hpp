@@ -102,8 +102,7 @@ struct BCD_API settings
     bucket_table candidate{};
     bucket_table confirmed{};
     hash_table strong_tx{};
-    simple_table scan{};
-    bucket_table scan_start{};
+    bucket_table scan{};
 
     /// Caches.
     /// -----------------------------------------------------------------------

@@ -76,7 +76,6 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, scan_body_, table_t::scan_body);
     reload(ec, scan_prefix_head_, table_t::scan_prefix_head);
     reload(ec, scan_prefix_body_, table_t::scan_prefix_body);
-    reload(ec, scan_start_head_, table_t::scan_start_head);
 
     reload(ec, ecdsa0_head_, table_t::ecdsa0_head);
     reload(ec, ecdsa0_body_, table_t::ecdsa0_body);

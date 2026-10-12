@@ -35,6 +35,7 @@
 
 // tables
 #include <bitcoin/database/primitives/arraymap.hpp>
+#include <bitcoin/database/primitives/arraymaps.hpp>
 #include <bitcoin/database/primitives/hashmap.hpp>
 #include <bitcoin/database/primitives/hashmaps.hpp>
 #include <bitcoin/database/primitives/headmap.hpp>

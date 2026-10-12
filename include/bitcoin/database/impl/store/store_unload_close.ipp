@@ -63,7 +63,6 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, scan_body_, table_t::scan_body);
     unload(ec, scan_prefix_head_, table_t::scan_prefix_head);
     unload(ec, scan_prefix_body_, table_t::scan_prefix_body);
-    unload(ec, scan_start_head_, table_t::scan_start_head);
 
     unload(ec, ecdsa0_head_, table_t::ecdsa0_head);
     unload(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -139,7 +138,6 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, scan_body_, table_t::scan_body);
     close(ec, scan_prefix_head_, table_t::scan_prefix_head);
     close(ec, scan_prefix_body_, table_t::scan_prefix_body);
-    close(ec, scan_start_head_, table_t::scan_start_head);
 
     close(ec, ecdsa0_head_, table_t::ecdsa0_head);
     close(ec, ecdsa0_body_, table_t::ecdsa0_body);

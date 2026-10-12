@@ -108,6 +108,9 @@ public:
     bool is_pooling() const NOEXCEPT;
     void set_pooling() NOEXCEPT;
 
+    /// Scan table row count when pooling was latched.
+    size_t get_scan_frontier() const NOEXCEPT;
+
     /// Get first fault code or error::success.
     code get_fault() const NOEXCEPT;
 
@@ -219,7 +222,6 @@ protected:
     table::scan_storage<Storage> scan_body_;
     Storage<one> scan_prefix_head_;
     Storage<one> scan_prefix_body_;
-    Storage<one> scan_start_head_;
 
     /// Caches.
     /// -----------------------------------------------------------------------
@@ -365,7 +367,6 @@ public:
     table::strong_tx strong_tx;
     table::scan<Storage> scan;
     table::scan_prefix scan_prefix;
-    table::scan_start scan_start;
 
     /// Caches.
     table::ecdsa<Storage> ecdsa0;

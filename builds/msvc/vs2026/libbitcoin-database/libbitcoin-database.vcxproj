@@ -157,6 +157,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arrayhead.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arraymap.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\arraymaps.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\column.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\primitives\hashhead.hpp" />
@@ -194,7 +195,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\duplicate.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\scan.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\scan_start.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\wtxid.hpp" />
@@ -247,6 +247,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap_storage.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\arrayhead.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\arraymap.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\arraymaps.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\body.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashhead.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\primitives\hashmap.ipp" />

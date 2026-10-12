@@ -41,7 +41,7 @@ size_t CLASS::to_scan_start(const header_link& link) const NOEXCEPT
     const auto& taproot = store_.get_envelope().bip9_bit2_active_checkpoint;
     const auto first = to_header(taproot.hash());
     if (link.is_terminal() || first.is_terminal() || link.value < first.value)
-        return table::scan_start::link::terminal;
+        return scan_link::terminal;
 
     return link.value - first.value;
 }

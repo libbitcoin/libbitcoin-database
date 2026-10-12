@@ -99,18 +99,17 @@ size_t CLASS::get_silent_frontier(size_t first) const NOEXCEPT
 TEMPLATE
 scan_link CLASS::get_scan_start(const header_link& link) const NOEXCEPT
 {
-    return store_.scan_start.at(to_scan_start(link));
+    return store_.scan.at(to_scan_start(link));
 }
 
 TEMPLATE
 bool CLASS::set_scan_start(const header_link& link,
     const scan_link& start) NOEXCEPT
 {
-    if (store_.is_pooling())
-        return false;
-
-    const table::scan_start::record record{ {}, start.value };
-    return store_.scan_start.set(to_scan_start(link), record);
+    // ========================================================================
+    const auto scope = get_transactor();
+    return store_.scan.push(start, to_scan_start(link));
+    // ========================================================================
 }
 
 // setters

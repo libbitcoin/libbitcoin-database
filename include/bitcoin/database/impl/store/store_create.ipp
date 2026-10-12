@@ -102,7 +102,6 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, scan_body_, table_t::scan_body);
     create(ec, scan_prefix_head_, table_t::scan_prefix_head);
     create(ec, scan_prefix_body_, table_t::scan_prefix_body);
-    create(ec, scan_start_head_, table_t::scan_start_head);
 
     create(ec, ecdsa0_head_, table_t::ecdsa0_head);
     create(ec, ecdsa0_body_, table_t::ecdsa0_body);
@@ -173,7 +172,6 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, strong_tx, table_t::strong_tx_table);
     populate(ec, scan, table_t::scan_table);
     populate(ec, scan_prefix, table_t::scan_prefix_table);
-    populate(ec, scan_start, table_t::scan_start_table);
 
     populate(ec, ecdsa0, table_t::ecdsa0_table);
     populate(ec, ecdsa1, table_t::ecdsa1_table);

@@ -95,6 +95,9 @@ public:
     bool is_pooling() const NOEXCEPT;
     void set_pooling() NOEXCEPT;
 
+    /// Scan table row count when pooling was latched.
+    size_t get_scan_frontier() const NOEXCEPT;
+
     /// Get the space required to clear the disk full condition.
     size_t get_space() const NOEXCEPT;
 
@@ -143,7 +146,6 @@ public:
     size_t strong_tx_head_size() const NOEXCEPT;
     size_t scan_head_size() const NOEXCEPT;
     size_t scan_prefix_head_size() const NOEXCEPT;
-    size_t scan_start_head_size() const NOEXCEPT;
     size_t ecdsa0_head_size() const NOEXCEPT;
     size_t ecdsa1_head_size() const NOEXCEPT;
     size_t schnorr0_head_size() const NOEXCEPT;
@@ -179,7 +181,6 @@ public:
     size_t strong_tx_body_size() const NOEXCEPT;
     size_t scan_body_size() const NOEXCEPT;
     size_t scan_prefix_body_size() const NOEXCEPT;
-    size_t scan_start_body_size() const NOEXCEPT;
     size_t ecdsa0_body_size() const NOEXCEPT;
     size_t ecdsa1_body_size() const NOEXCEPT;
     size_t schnorr0_body_size() const NOEXCEPT;
@@ -215,7 +216,6 @@ public:
     size_t strong_tx_size() const NOEXCEPT;
     size_t scan_size() const NOEXCEPT;
     size_t scan_prefix_size() const NOEXCEPT;
-    size_t scan_start_size() const NOEXCEPT;
     size_t ecdsa0_size() const NOEXCEPT;
     size_t ecdsa1_size() const NOEXCEPT;
     size_t schnorr0_size() const NOEXCEPT;
@@ -245,6 +245,7 @@ public:
     size_t tx_buckets() const NOEXCEPT;
 
     size_t strong_tx_buckets() const NOEXCEPT;
+    size_t scan_buckets() const NOEXCEPT;
     size_t duplicate_buckets() const NOEXCEPT;
     size_t prevout_buckets() const NOEXCEPT;
     size_t pool_buckets() const NOEXCEPT;
@@ -263,7 +264,6 @@ public:
     size_t strong_tx_records() const NOEXCEPT;
     size_t scan_records() const NOEXCEPT;
     size_t scan_prefix_records() const NOEXCEPT;
-    size_t scan_start_records() const NOEXCEPT;
     size_t ecdsa0_records() const NOEXCEPT;
     size_t ecdsa1_records() const NOEXCEPT;
     size_t schnorr0_records() const NOEXCEPT;
@@ -782,8 +782,7 @@ public:
     /// The scan fk that starts the header's scan range, terminal if unmapped.
     scan_link get_scan_start(const header_link& link) const NOEXCEPT;
 
-    /// Map the header to the scan fk that starts its scan range, false if
-    /// unmapped or pooling (the map is closed at the pooling latch).
+    /// Map the header to the scan fk that starts its scan range.
     bool set_scan_start(const header_link& link,
         const scan_link& start) NOEXCEPT;
 

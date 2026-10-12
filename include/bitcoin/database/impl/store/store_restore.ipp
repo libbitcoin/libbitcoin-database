@@ -140,7 +140,6 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, strong_tx, table_t::strong_tx_table);
         restore(ec, scan, table_t::scan_table);
         restore(ec, scan_prefix, table_t::scan_prefix_table);
-        restore(ec, scan_start, table_t::scan_start_table);
 
         // ecdsa, schnorr, silent, prevalid, and presilent are dropped.
         //---------------------------------------------------------------------

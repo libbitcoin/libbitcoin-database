@@ -75,11 +75,10 @@ CLASS::store(const settings& config) NOEXCEPT
 
     strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx), head_settings(config.strong_tx), random),
     strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx, sequential, staged),
-    scan_head_(head(config.path / schema::dir::heads, schema::indexes::scan), head_settings(config.scan), sequential),
+    scan_head_(head(config.path / schema::dir::heads, schema::indexes::scan), head_settings(config.scan), random),
     scan_body_(body(config.path, schema::indexes::scan), config.scan, sequential, staged),
     scan_prefix_head_(head(config.path / schema::dir::heads, schema::indexes::scan_prefix), head_settings(config.scan), sequential),
     scan_prefix_body_(body(config.path, schema::indexes::scan_prefix), config.scan, sequential, staged),
-    scan_start_head_(head(config.path / schema::dir::heads, schema::indexes::scan_start), head_settings<schema::scan_start::cell>(config.scan_start), random),
 
     // Caches.
     // ------------------------------------------------------------------------
@@ -159,9 +158,8 @@ CLASS::store(const settings& config) NOEXCEPT
     candidate(candidate_head_),
     confirmed(confirmed_head_),
     strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx.buckets, config.strong_tx.expected),
-    scan(scan_head_, scan_body_),
+    scan(scan_head_, scan_body_, config.scan.buckets),
     scan_prefix(scan_prefix_head_, scan_prefix_body_),
-    scan_start(scan_start_head_),
 
     ecdsa0(ecdsa0_head_, ecdsa0_body_),
     ecdsa1(ecdsa1_head_, ecdsa1_body_),
@@ -239,6 +237,12 @@ void CLASS::set_dirty() NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::get_scan_frontier() const NOEXCEPT
+{
+    return envelope_.scan_frontier;
+}
+
+TEMPLATE
 bool CLASS::is_pooling() const NOEXCEPT
 {
     return pooling_.load(std::memory_order_relaxed);
@@ -252,6 +256,7 @@ void CLASS::set_pooling() NOEXCEPT
 
     pooling_.store(true, std::memory_order_relaxed);
     envelope_.pooling = true;
+    envelope_.scan_frontier = scan.count().value;
 
     code ec{};
     store_envelope(ec);
@@ -337,7 +342,6 @@ void CLASS::set_current(bool current) NOEXCEPT
     strong_tx_head_.current(current);
     scan_head_.current(current);
     scan_prefix_head_.current(current);
-    scan_start_head_.current(current);
     ecdsa0_head_.current(current);
     ecdsa1_head_.current(current);
     schnorr0_head_.current(current);

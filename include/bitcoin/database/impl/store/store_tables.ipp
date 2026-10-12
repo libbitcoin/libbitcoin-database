@@ -66,8 +66,6 @@ const CLASS::table_map CLASS::tables
     { table_t::scan_prefix_table, "scan_prefix_table" },
     { table_t::scan_prefix_head, "scan_prefix_head" },
     { table_t::scan_prefix_body, "scan_prefix_body" },
-    { table_t::scan_start_table, "scan_start_table" },
-    { table_t::scan_start_head, "scan_start_head" },
 
     // Caches.
     { table_t::ecdsa0_table, "ecdsa0_table" },
