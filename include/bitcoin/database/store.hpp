@@ -108,9 +108,9 @@ public:
     bool is_pooling() const NOEXCEPT;
     void set_pooling() NOEXCEPT;
 
-    /// Scan table row count when pooling was latched.
+    /// Scan table row count and tx table count when pooling was latched.
     size_t get_scan_frontier() const NOEXCEPT;
-
+    size_t get_latch_tx() const NOEXCEPT;
 
     /// Get first fault code or error::success.
     code get_fault() const NOEXCEPT;
@@ -304,6 +304,7 @@ protected:
     stopper dirty_{ true };
     stopper pooling_{ false };
     std::atomic<uint32_t> scan_frontier_{};
+    std::atomic<uint32_t> latch_tx_{};
 
 private:
     static constexpr bool random = true;

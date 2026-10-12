@@ -201,6 +201,7 @@ code CLASS::load_envelope() NOEXCEPT
 
     // The stored latch governs, it is one-way and survives the session.
     scan_frontier_.store(envelope_.scan_frontier, std::memory_order_relaxed);
+    latch_tx_.store(envelope_.latch_tx, std::memory_order_relaxed);
     if (envelope_.pooling)
         pooling_.store(true, std::memory_order_relaxed);
 

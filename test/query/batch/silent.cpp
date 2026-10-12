@@ -709,6 +709,180 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_start__gapped__mapped)
     BOOST_REQUIRE(query.get_scan_start(3).is_terminal());
 }
 
+// set_scan_starts/get_scan_floor
+// ----------------------------------------------------------------------------
+
+// Blocks 1-3 archived in order (coinbase links 1-3), rows linked 1, 3, 2, 4.
+static bool setup_scan_starts(test::query_accessor& query) NOEXCEPT
+{
+    return query.initialize(test::genesis)
+        && query.set(test::block1, database::context{ 0, 1, 0 }, {}, false, false)
+        && query.set(test::block2, database::context{ 0, 2, 0 }, {}, false, false)
+        && query.set(test::block3, database::context{ 0, 3, 0 }, {}, false, false)
+        && query.push_confirmed(1, false)
+        && query.push_confirmed(2, false)
+        && query.push_confirmed(3, false)
+        && query.set_silent(1, simple_send())
+        && query.set_silent(3, simple_send())
+        && query.set_silent(2, simple_send())
+        && query.set_silent(4, simple_send());
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__unarchived__false)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1.header(), database::context{ 0, 1, 0 }, {}, false));
+
+    const stopper cancel{ false };
+    BOOST_REQUIRE(!query.set_scan_starts(cancel, 1, max_size_t, true));
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__canceled__false)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(setup_scan_starts(query));
+
+    const stopper cancel{ true };
+    BOOST_REQUIRE(!query.set_scan_starts(cancel, 3, max_size_t, true));
+    BOOST_REQUIRE(query.get_scan_start(3).is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__unbounded__first_rows_above_floors)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(setup_scan_starts(query));
+
+    const stopper cancel{ false };
+    BOOST_REQUIRE(query.set_scan_starts(cancel, 3, max_size_t, true));
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(0), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(1), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(2), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(3), 3u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__bounded__clamped)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(setup_scan_starts(query));
+
+    const stopper cancel{ false };
+    BOOST_REQUIRE(query.set_scan_starts(cancel, 3, 2, true));
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(0), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(1), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(2), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(3), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__extended__after_ancestor_start)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(setup_scan_starts(query));
+
+    const stopper cancel{ false };
+    BOOST_REQUIRE(query.set_scan_starts(cancel, 3, max_size_t, true));
+    BOOST_REQUIRE(query.set(test::block4, database::context{ 0, 4, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set_silent(5, simple_send()));
+    BOOST_REQUIRE(query.set_scan_starts(cancel, 4, max_size_t, false));
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(3), 3u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(4), 4u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__mapped_top__unchanged)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(setup_scan_starts(query));
+    BOOST_REQUIRE(query.set_scan_start(3, 42));
+
+    const stopper cancel{ false };
+    BOOST_REQUIRE(query.set_scan_starts(cancel, 3, max_size_t, false));
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(3), 42u);
+    BOOST_REQUIRE(query.get_scan_start(2).is_terminal());
+}
+
+// Blocks archived 3, 1, 2 (coinbase links 1, 2, 3), rows linked 1, 3, 2, 4.
+BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__archived_before_ancestor__from_first_row)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1.header(), database::context{ 0, 1, 0 }, {}, false));
+    BOOST_REQUIRE(query.set(test::block2.header(), database::context{ 0, 2, 0 }, {}, false));
+    BOOST_REQUIRE(query.set(test::block3.header(), database::context{ 0, 3, 0 }, {}, false));
+    BOOST_REQUIRE(query.set(test::block3, false, false));
+    BOOST_REQUIRE(query.set(test::block1, false, false));
+    BOOST_REQUIRE(query.set(test::block2, false, false));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BOOST_REQUIRE(query.set_silent(1, simple_send()));
+    BOOST_REQUIRE(query.set_silent(3, simple_send()));
+    BOOST_REQUIRE(query.set_silent(2, simple_send()));
+    BOOST_REQUIRE(query.set_silent(4, simple_send()));
+    BOOST_REQUIRE(query.set_scan_start(2, 42));
+    BOOST_REQUIRE_LT(query.to_coinbase(3), query.to_coinbase(2));
+
+    const stopper cancel{ false };
+    BOOST_REQUIRE(query.set_scan_starts(cancel, 3, max_size_t, false));
+    BOOST_REQUIRE_EQUAL(query.get_scan_start(3), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_floor__unmapped__zero)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(setup_scan_starts(query));
+    BOOST_REQUIRE_EQUAL(query.get_scan_floor(0), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_floor(3), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_floor(42), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_floor__mapped__nearest_at_or_below)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(setup_scan_starts(query));
+    BOOST_REQUIRE(query.set_scan_start(1, 1));
+    BOOST_REQUIRE(query.set_scan_start(3, 3));
+    BOOST_REQUIRE_EQUAL(query.get_scan_floor(0), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_floor(1), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_floor(2), 1u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_floor(3), 3u);
+    BOOST_REQUIRE_EQUAL(query.get_scan_floor(42), 3u);
+}
 // get_scan_frontier
 // ----------------------------------------------------------------------------
 
@@ -723,9 +897,11 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_frontier__latched__rows_at_lat
     BOOST_REQUIRE(query.set_silent(42, simple_send()));
     BOOST_REQUIRE(query.set_silent(43, simple_send()));
     BOOST_REQUIRE_EQUAL(query.get_scan_frontier(), 0u);
+    BOOST_REQUIRE_EQUAL(query.get_latch_tx(), 0u);
     query.set_pooling();
     BOOST_REQUIRE(query.set_silent(44, simple_send()));
     BOOST_REQUIRE_EQUAL(query.get_scan_frontier(), 2u);
+    BOOST_REQUIRE_EQUAL(query.get_latch_tx(), 1u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

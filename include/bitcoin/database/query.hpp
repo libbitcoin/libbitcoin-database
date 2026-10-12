@@ -95,8 +95,9 @@ public:
     bool is_pooling() const NOEXCEPT;
     void set_pooling() NOEXCEPT;
 
-    /// Scan table row count when pooling was latched.
+    /// Scan table row count and tx table count when pooling was latched.
     size_t get_scan_frontier() const NOEXCEPT;
+    size_t get_latch_tx() const NOEXCEPT;
 
     /// Get the space required to clear the disk full condition.
     size_t get_space() const NOEXCEPT;
@@ -786,6 +787,15 @@ public:
     bool set_scan_start(const header_link& link,
         const scan_link& start) NOEXCEPT;
 
+    /// Map headers from top down to the first mapped ancestor, or to genesis
+    /// if remap, over rows below bound, false if canceled or unarchived.
+    bool set_scan_starts(const stopper& cancel, const header_link& top,
+        size_t bound, bool remap) NOEXCEPT;
+
+    /// The scan fk that starts the confirmed header at or below height (zero
+    /// if none mapped), a scan from it covers all blocks at or above height.
+    scan_link get_scan_floor(size_t height) const NOEXCEPT;
+
     /// Verify all signatures in table, false implies cancel, device set if
     /// verified on the device.
     bool verify_ecdsa_signatures(const stopper& cancel, header_links&,
@@ -1188,6 +1198,11 @@ protected:
     /// Set silent payment records of a non-coinbase tx.
     bool set_silent_(const tx_link& link, const ec_compressed& point,
         const std::vector<silent_prefix>& prefixes) NOEXCEPT;
+
+    /// Advance row to the first row linked above floor, an unpublished row
+    /// lowering last to itself (the row at or past which rows are unknown).
+    void seek_scan_start(size_t& row, size_t& last,
+        tx_link::integer floor) const NOEXCEPT;
 
     /// Set silent payment records of a block's txs and its scanned state.
     template <typename Transactions>

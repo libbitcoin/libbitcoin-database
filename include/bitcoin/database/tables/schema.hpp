@@ -57,7 +57,7 @@ namespace schema {
 /// 4.0.11.0 Scan start index by taproot header.
 /// 4.0.12.0 Association, milestone and checkpoint as block state flags.
 /// 4.0.13.0 Scanned and filtered block state flags, presilent batch tables.
-/// 4.0.14.0 Scan table head of scan starts, scan frontier at pooling latch.
+/// 4.0.14.0 Scan table head of scan starts, scan and tx counts at the latch.
 constexpr std::array<uint32_t, 4> version{ 4, 0, 14, 0 };
 
 /// Values.

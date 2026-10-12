@@ -112,6 +112,71 @@ bool CLASS::set_scan_start(const header_link& link,
     // ========================================================================
 }
 
+// A block's rows link above its coinbase, so the first row linked above the
+// lowest coinbase at or above a height starts the rows of blocks at or above
+// it. Rows of blocks archived after a mapped ancestor link above its coinbase
+// and so follow its start, otherwise the seek is from the first row. Headers
+// are written top down, so genesis is mapped only by a complete map.
+TEMPLATE
+bool CLASS::set_scan_starts(const stopper& cancel, const header_link& top,
+    size_t bound, bool remap) NOEXCEPT
+{
+    using namespace system;
+    auto link = top;
+    auto floor = tx_link::terminal;
+    auto lowest = tx_link::terminal;
+    std::vector<std::pair<header_link, tx_link::integer>> floors{};
+    while (!link.is_terminal() && (remap || get_scan_start(link).is_terminal()))
+    {
+        const auto coinbase = to_coinbase(link);
+        if (coinbase.is_terminal())
+            return false;
+
+        lowest = std::min(lowest, coinbase.value);
+        floor = std::min(floor, coinbase.value);
+        floors.emplace_back(link, floor);
+        link = to_parent(link);
+    }
+
+    size_t row{};
+    if (!link.is_terminal() && lowest > to_coinbase(link).value)
+        row = get_scan_start(link).value;
+
+    auto last = std::min(bound, size_t{ store_.scan.count().value });
+    std::vector<scan_link::integer> starts(floors.size());
+    auto start = starts.rbegin();
+    for (auto it = floors.crbegin(); it != floors.crend(); ++it, ++start)
+    {
+        if (cancel)
+            return false;
+
+        seek_scan_start(row, last, it->second);
+        *start = possible_narrow_cast<scan_link::integer>(row);
+    }
+
+    for (size_t index{}; index < floors.size(); ++index)
+        if (cancel || !set_scan_start(floors.at(index).first, starts.at(index)))
+            return false;
+
+    return true;
+}
+TEMPLATE
+scan_link CLASS::get_scan_floor(size_t height) const NOEXCEPT
+{
+    auto index = std::min(height, get_top_confirmed());
+    while (true)
+    {
+        const auto start = get_scan_start(to_confirmed(index));
+        if (!start.is_terminal())
+            return start;
+
+        if (is_zero(index))
+            return scan_link{ 0 };
+
+        --index;
+    }
+}
+
 // setters
 // ----------------------------------------------------------------------------
 // Caller (node) controls which txs are indexed (e.g. by confirmed height).
@@ -730,6 +795,36 @@ bool CLASS::put_silent_(const scan_link& fk, const tx_link& link,
     return true;
 }
 
+// Rows are read in chunks so the guard is not held across a long seek.
+TEMPLATE
+void CLASS::seek_scan_start(size_t& row, size_t& last,
+    tx_link::integer floor) const NOEXCEPT
+{
+    using namespace system;
+    using word_t = table::scan_correlate::tx::integer;
+    constexpr size_t chunk = 1 << 20;
+
+    while (row < last)
+    {
+        const auto guard = store_.scan.correlate.get_memory();
+        const auto words = pointer_cast<word_t>(guard.data());
+        const auto end = std::min(last, row + chunk);
+        for (; row < end; ++row)
+        {
+            std::atomic_ref<word_t> word{ *std::next(words, row) };
+            const auto link = native_from_little_end(word.load(
+                std::memory_order_acquire));
+            if (is_zero(link))
+            {
+                last = row;
+                return;
+            }
+
+            if (link > floor)
+                return;
+        }
+    }
+}
 } // namespace database
 } // namespace libbitcoin
 

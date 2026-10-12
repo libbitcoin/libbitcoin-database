@@ -242,6 +242,11 @@ size_t CLASS::get_scan_frontier() const NOEXCEPT
     return scan_frontier_.load(std::memory_order_relaxed);
 }
 
+TEMPLATE
+size_t CLASS::get_latch_tx() const NOEXCEPT
+{
+    return latch_tx_.load(std::memory_order_relaxed);
+}
 
 TEMPLATE
 bool CLASS::is_pooling() const NOEXCEPT
@@ -257,7 +262,9 @@ void CLASS::set_pooling() NOEXCEPT
 
     envelope_.pooling = true;
     envelope_.scan_frontier = scan.count().value;
+    envelope_.latch_tx = tx.count().value;
     scan_frontier_.store(envelope_.scan_frontier, std::memory_order_relaxed);
+    latch_tx_.store(envelope_.latch_tx, std::memory_order_relaxed);
     pooling_.store(true, std::memory_order_relaxed);
 
     code ec{};
