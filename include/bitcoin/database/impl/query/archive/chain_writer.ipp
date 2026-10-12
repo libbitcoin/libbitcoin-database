@@ -315,18 +315,17 @@ code CLASS::set_code(header_link& out_fk, const header& header,
     if (parent_fk.is_terminal() != (previous == system::null_hash))
         return system::error::orphan_block;
 
+    // Bypass states, and completion states that are not required.
     using namespace system;
-    const auto checkpoint = ctx.height <=
-        store_.get_envelope().top_checkpoint.height();
-    const auto silent = ctx.height >= silent_start_height() &&
-        ctx.is_enabled(chain::flags::bip341_rule);
-    const auto flags = bit_or<uint8_t>(
-        bit_or<uint8_t>(
-            milestone ? block_state::milestoned : block_state::no_state,
-            checkpoint ? block_state::checkpointed : block_state::no_state),
-        bit_or<uint8_t>(
-            silent ? block_state::no_state : block_state::scanned,
-            filter_enabled() ? block_state::no_state : block_state::filtered));
+    uint8_t flags{};
+    if (milestone)
+        flags = bit_or<uint8_t>(flags, block_state::milestoned);
+    if (ctx.height <= store_.get_envelope().top_checkpoint.height())
+        flags = bit_or<uint8_t>(flags, block_state::checkpointed);
+    if (!is_silent(ctx))
+        flags = bit_or<uint8_t>(flags, block_state::scanned);
+    if (!filter_enabled())
+        flags = bit_or<uint8_t>(flags, block_state::filtered);
 
     // ========================================================================
     const auto scope = get_transactor();

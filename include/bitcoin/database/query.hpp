@@ -296,6 +296,7 @@ public:
     bool filter_enabled() const NOEXCEPT;
     bool silent_enabled() const NOEXCEPT;
     size_t silent_start_height() const NOEXCEPT;
+    bool is_silent(const context& ctx) const NOEXCEPT;
     bool is_silent(const header_link& link, size_t height) const NOEXCEPT;
     size_t interval_span() const NOEXCEPT;
 

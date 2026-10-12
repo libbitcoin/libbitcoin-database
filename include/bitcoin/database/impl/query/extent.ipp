@@ -332,11 +332,18 @@ size_t CLASS::silent_start_height() const NOEXCEPT
 
 // A block is indexed from the start height once taproot is active.
 TEMPLATE
+bool CLASS::is_silent(const context& ctx) const NOEXCEPT
+{
+    return ctx.height >= silent_start_height() &&
+        ctx.is_enabled(system::chain::flags::bip341_rule);
+}
+
+TEMPLATE
 bool CLASS::is_silent(const header_link& link, size_t height) const NOEXCEPT
 {
     context ctx{};
     return height >= silent_start_height() && get_context(ctx, link) &&
-        ctx.is_enabled(system::chain::flags::bip341_rule);
+        is_silent(ctx);
 }
 
 } // namespace database
