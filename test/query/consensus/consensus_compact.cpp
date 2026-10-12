@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__pooled__expected)
     tx_link link5{};
     BOOST_REQUIRE(!query.set_code(link4, tx4));
     BOOST_REQUIRE(!query.set_code(link5, tx5));
-    BOOST_REQUIRE(query.set_pooled(link4, tx4, context{ bip113, 8, 9 }));
-    BOOST_REQUIRE(query.set_pooled(link5, tx5, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(link4, tx4, context{ bip113, 8, 9 }, 0));
+    BOOST_REQUIRE(query.set_pooled(link5, tx5, context{ bip113, 8, 9 }, 0));
 
     tx_links out{};
     const std::vector<uint64_t> ids{ to_short_id(tx5), 0x0000424242424242_u64, to_short_id(tx4) };
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__duplicate_short_id__ter
 
     tx_link link5{};
     BOOST_REQUIRE(!query.set_code(link5, tx5));
-    BOOST_REQUIRE(query.set_pooled(link5, tx5, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(link5, tx5, context{ bip113, 8, 9 }, 0));
 
     tx_links out{};
     const std::vector<uint64_t> ids{ to_short_id(tx5), to_short_id(tx5) };
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__ambiguous_pool__termina
     tx5.inputs_ptr()->at(0)->metadata.parent_tx = 42;
 
     // The same wtxid pooled under two distinct links.
-    BOOST_REQUIRE(query.set_pooled(1, tx5, context{ bip113, 8, 9 }));
-    BOOST_REQUIRE(query.set_pooled(2, tx5, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(1, tx5, context{ bip113, 8, 9 }, 0));
+    BOOST_REQUIRE(query.set_pooled(2, tx5, context{ bip113, 8, 9 }, 0));
 
     tx_links out{};
     const std::vector<uint64_t> ids{ to_short_id(tx5) };
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__allocated_record__poole
 
     tx_link link5{};
     BOOST_REQUIRE(!query.set_code(link5, tx5));
-    BOOST_REQUIRE(query.set_pooled(link5, tx5, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(link5, tx5, context{ bip113, 8, 9 }, 0));
 
     // A spine record allocated ahead of its columns (a concurrent pool write).
     BOOST_REQUIRE(!store.pool.allocate(1).is_terminal());

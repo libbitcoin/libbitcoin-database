@@ -701,9 +701,9 @@ public:
 
     /// Setters.
     bool set_pooled(const tx_link& link, const transaction& tx,
-        const context& ctx) NOEXCEPT;
+        const context& ctx, uint32_t time) NOEXCEPT;
     bool set_pooled(const tx_link& link, const transaction& tx,
-        const chain_context& ctx) NOEXCEPT;
+        const chain_context& ctx, uint32_t time) NOEXCEPT;
 
     /// Batching.
     /// -----------------------------------------------------------------------

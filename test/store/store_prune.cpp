@@ -81,14 +81,14 @@ BOOST_AUTO_TEST_CASE(store__prune__pool__cleared)
     BOOST_REQUIRE(query_.set(test::tx_spend_one_hash));
 
     const auto link = query_.to_tx(test::tx_spend_one_hash.hash(false));
-    BOOST_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context));
+    BOOST_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context, 0));
     BOOST_REQUIRE(!instance.prune(test::events));
     BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
 
     pooled_tx pooled{};
     pooled.prevouts.resize(one);
     BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, link, validated_context), error::unvalidated);
-    BOOST_REQUIRE(query_.set_pooled(2, test::tx_spend_one_hash, validated_context));
+    BOOST_REQUIRE(query_.set_pooled(2, test::tx_spend_one_hash, validated_context, 0));
     BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, 2, validated_context), error::success);
     BOOST_REQUIRE(!instance.close(test::events));
 }
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__pool_cleared)
     BOOST_REQUIRE(query_.set(test::tx_spend_one_hash));
 
     const auto link = query_.to_tx(test::tx_spend_one_hash.hash(false));
-    BOOST_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context));
+    BOOST_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context, 0));
     BOOST_REQUIRE(!instance.prune(test::events));
     BOOST_REQUIRE(!instance.close(test::events));
 
@@ -179,7 +179,9 @@ static const system::hash_digest& genesis_coinbase() NOEXCEPT
 // Archive the tx and pool it under the validated context.
 static bool pool(query<store<database::mmap>>& query_, const spend_t& tx) NOEXCEPT
 {
-    return query_.set(tx) && query_.set_pooled(query_.to_tx(tx.hash(false)), tx, validated_context);
+    const auto stored = query_.set(tx);
+    const auto link = query_.to_tx(tx.hash(false));
+    return stored && query_.set_pooled(link, tx, validated_context, 0);
 }
 
 // Confirm a block of a coinbase and the tx above genesis (a pooled tx is
@@ -192,7 +194,10 @@ static bool confirm(query<store<database::mmap>>& query_, const spend_t& tx) NOE
     const spend_t coinbase{ 1u, system::chain::inputs{ input }, system::chain::outputs{ output }, 0u };
     const system::chain::header header{ 1u, test::genesis.hash(), system::null_hash, 1u, 2u, 3u };
     const system::chain::block block{ header, { coinbase, tx } };
-    return query_.set(block, context{ 0, 1, 0 }, {}, false, true) && query_.push_candidate(query_.to_header(block.hash())) && query_.push_confirmed(query_.to_header(block.hash()), true);
+    const auto stored = query_.set(block, context{ 0, 1, 0 }, {}, false, true);
+    const auto link = query_.to_header(block.hash());
+    const auto candidate = stored && query_.push_candidate(link);
+    return candidate && query_.push_confirmed(link, true);
 }
 
 static code pooled(query<store<database::mmap>>& query_, const spend_t& tx) NOEXCEPT
@@ -352,7 +357,7 @@ BOOST_AUTO_TEST_CASE(store__prune__child_pooled_before_parent__retained)
     const auto child = spend(parent.hash(false), 1u);
     BOOST_REQUIRE(query_.set(parent));
     BOOST_REQUIRE(pool(query_, child));
-    BOOST_REQUIRE(query_.set_pooled(query_.to_tx(parent.hash(false)), parent, validated_context));
+    BOOST_REQUIRE(query_.set_pooled(query_.to_tx(parent.hash(false)), parent, validated_context, 0));
     BOOST_REQUIRE(!instance.prune(test::events));
     BOOST_REQUIRE_EQUAL(pooled(query_, parent), error::success);
     BOOST_REQUIRE_EQUAL(pooled(query_, child), error::success);

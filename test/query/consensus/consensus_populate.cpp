@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__populate_pooled__sufficient__external_meta
     source_in.prevout = system::to_shared<output>(0x30, script{});
     source_in.metadata.parent_tx = 42;
     source_in.metadata.coinbase = true;
-    BOOST_REQUIRE(query.set_pooled(1, source, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(1, source, context{ bip113, 8, 9 }, 0));
 
     const transaction tx{ test::tx_spend_one_hash.to_data(true), true };
     const auto& in = *tx.inputs_ptr()->front();
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__populate_pooled__internal_spend__terminal_
     source_in.prevout = system::to_shared<output>(0x30, script{});
     source_in.metadata.parent_tx = 42;
     source_in.metadata.coinbase = true;
-    BOOST_REQUIRE(query.set_pooled(1, source, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(1, source, context{ bip113, 8, 9 }, 0));
 
     const transaction tx{ test::tx_spend_one_hash.to_data(true), true };
     const auto& in = *tx.inputs_ptr()->front();
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__populate_pooled__insufficient__unvalidated
     const auto& source_in = *source.inputs_ptr()->front();
     source_in.prevout = system::to_shared<output>(0x30, script{});
     source_in.metadata.parent_tx = 42;
-    BOOST_REQUIRE(query.set_pooled(1, source, context{ bip113, 8, 9 }));
+    BOOST_REQUIRE(query.set_pooled(1, source, context{ bip113, 8, 9 }, 0));
 
     const transaction tx{ test::tx_spend_one_hash.to_data(true), true };
     const auto& in = *tx.inputs_ptr()->front();

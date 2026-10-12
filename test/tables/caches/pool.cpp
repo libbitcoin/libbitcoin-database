@@ -44,7 +44,8 @@ const table::pool::record in1
     },
     0x1122334455667788, // fee
     0x00345678,         // sigops
-    0x01020304          // spends_fk
+    0x01020304,         // spends_fk
+    0x5f6e7d8c          // time
 };
 const table::pool::record in2
 {
@@ -56,7 +57,8 @@ const table::pool::record in2
     },
     0x0000000000000042, // fee
     0x00000055,         // sigops
-    0x0a0b0c0d          // spends_fk
+    0x0a0b0c0d,         // spends_fk
+    0x00000042          // time
 };
 
 BOOST_AUTO_TEST_CASE(pool__put__two__found)
@@ -101,6 +103,7 @@ BOOST_AUTO_TEST_CASE(pool__put__spine__expected_row)
         "8877665544332211" // fee
         "785634"           // sigops
         "04030201"         // spends_fk
+        "8c7d6e5f"         // time
     );
     BOOST_REQUIRE_EQUAL(body_store.buffers_.at(0), expected_row);
 }

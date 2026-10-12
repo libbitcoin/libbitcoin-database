@@ -204,7 +204,8 @@ static bool set_pooled(test::query_accessor& query, const chain::block& block) N
     for (const auto& in: *spend.inputs_ptr())
         in->metadata.parent_tx = 0;
 
-    return query.set_pooled(query.to_tx(spend.hash(false)), spend, database::context{ 0, 1, 0 });
+    const auto link = query.to_tx(spend.hash(false));
+    return query.set_pooled(link, spend, database::context{ 0, 1, 0 }, 0);
 }
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__unpooled_below_coinbase__one_record)

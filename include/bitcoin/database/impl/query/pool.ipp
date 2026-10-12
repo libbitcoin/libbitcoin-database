@@ -289,14 +289,14 @@ bool CLASS::is_confirmable_tx(confirmables& memo,
 
 TEMPLATE
 bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
-    const chain_context& ctx) NOEXCEPT
+    const chain_context& ctx, uint32_t time) NOEXCEPT
 {
-    return set_pooled(link, tx, context::from(ctx));
+    return set_pooled(link, tx, context::from(ctx), time);
 }
 
 TEMPLATE
 bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
-    const context& ctx) NOEXCEPT
+    const context& ctx, uint32_t time) NOEXCEPT
 {
     if (!store_.pool.enabled())
         return true;
@@ -366,7 +366,8 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
         ctx,
         tx.fee(),
         possible_narrow_cast<sigs::integer>(sigops),
-        first
+        first,
+        time
     });
     // ========================================================================
 }

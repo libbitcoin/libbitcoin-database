@@ -111,6 +111,7 @@ struct pool
             fee = source.read_little_endian<uint64_t>();
             sigops = source.read_little_endian<sigop::integer, sigop::size>();
             spends_fk = source.read_little_endian<spend::integer, spend::size>();
+            time = source.read_little_endian<uint32_t>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
         }
@@ -121,6 +122,7 @@ struct pool
             sink.write_little_endian<uint64_t>(fee);
             sink.write_little_endian<sigop::integer, sigop::size>(sigops);
             sink.write_little_endian<spend::integer, spend::size>(spends_fk);
+            sink.write_little_endian<uint32_t>(time);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
@@ -131,6 +133,7 @@ struct pool
         uint64_t fee{};
         sigop::integer sigops{};
         spend::integer spends_fk{};
+        uint32_t time{};
     };
 
     struct get_fee
