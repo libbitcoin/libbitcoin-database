@@ -119,6 +119,26 @@ inline ins_key CLASS::get_point_key(const ins_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+inline hash_digest CLASS::get_outs_key(const outs_link& link) const NOEXCEPT
+{
+    table::outs::get_output put{};
+    if (!store_.outs.puts.get_raw(link, put))
+        return {};
+
+    table::output::get_script_hash output{};
+    if (!store_.output.raw(store_.output.get_memory(), put.out_fk, output))
+        return {};
+
+    return output.hash;
+}
+
+TEMPLATE
+inline hash_digest CLASS::get_wtxid_key(const pool_link& link) const NOEXCEPT
+{
+    return get_pooled_wtxid(link);
+}
+
+TEMPLATE
 inline hash_digest CLASS::get_point_hash(const ins_link& link) const NOEXCEPT
 {
     table::ins_point::record point{};

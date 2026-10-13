@@ -454,6 +454,8 @@ public:
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
     hash_digest get_wtxid(const tx_link& link) const NOEXCEPT;
     inline ins_key get_point_key(const ins_link& link) const NOEXCEPT;
+    inline hash_digest get_outs_key(const outs_link& link) const NOEXCEPT;
+    inline hash_digest get_wtxid_key(const pool_link& link) const NOEXCEPT;
     inline hash_digest get_point_hash(const ins_link& link) const NOEXCEPT;
 
     /// False position implies not confirmed (or fault).
