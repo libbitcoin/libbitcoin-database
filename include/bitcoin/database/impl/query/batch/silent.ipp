@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_BATCH_SILENT_IPP
 #define LIBBITCOIN_DATABASE_QUERY_BATCH_SILENT_IPP
 
-#include <future>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/tables/tables.hpp>
 #include <bitcoin/database/types/types.hpp>
@@ -188,38 +187,28 @@ scan_link CLASS::get_scan_floor(size_t height) const NOEXCEPT
 TEMPLATE
 bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
 {
-    return set_silent_(link, *block.transactions_ptr());
+    return set_silent_(link, block, block.transactions());
 }
 
 TEMPLATE
 bool CLASS::set_silent(const header_link& link,
     const block_view& block) NOEXCEPT
 {
-    return set_silent_(link, block.views());
+    return set_silent_(link, block, block.views().size());
 }
 
 // Ineligible txs have no records.
 TEMPLATE
 bool CLASS::set_silent(const tx_link& link, const transaction& tx) NOEXCEPT
 {
-    using namespace system::wallet;
-    ec_compressed point{};
-    std::vector<silent_prefix> prefixes{};
-    return !get_prefixes(prefixes, tx)
-        || !silent_payment::summarize(point, tx)
-        || set_silent_(link, point, prefixes);
+    return set_silent_(link, tx);
 }
 
 TEMPLATE
 bool CLASS::set_silent(const tx_link& link,
     const transaction_view& tx) NOEXCEPT
 {
-    using namespace system::wallet;
-    ec_compressed point{};
-    std::vector<silent_prefix> prefixes{};
-    return !get_prefixes(prefixes, tx)
-        || !silent_payment::summarize(point, tx)
-        || set_silent_(link, point, prefixes);
+    return set_silent_(link, tx);
 }
 
 // batch
@@ -299,14 +288,14 @@ TEMPLATE
 bool CLASS::set_silents(size_t& rows, const header_link& link,
     const block& block, bool bank) NOEXCEPT
 {
-    return set_silents_(rows, link, *block.transactions_ptr(), bank);
+    return set_silents_(rows, link, block, block.transactions(), bank);
 }
 
 TEMPLATE
 bool CLASS::set_silents(size_t& rows, const header_link& link,
     const block_view& block, bool bank) NOEXCEPT
 {
-    return set_silents_(rows, link, block.views(), bank);
+    return set_silents_(rows, link, block, block.views().size(), bank);
 }
 
 // Pooled txs linked below the coinbase are not selected (see set_silent).
@@ -325,12 +314,12 @@ bool CLASS::get_silent_prevouts(data_chunk& prevouts,
     stream::out::data ostream(prevouts);
     write::bytes::ostream sink(ostream);
 
+    using namespace system::wallet;
     const auto first = links.front();
-    std::vector<silent_prefix> prefixes{};
     for (auto index = one; index < txs.size(); ++index)
     {
         if (!is_silent_selected(links.at(index), first) ||
-            !get_prefixes(prefixes, txs.at(index)))
+            !silent_payment::has_outputs(txs.at(index)))
             continue;
 
         table::transaction::get_puts record{};
@@ -363,12 +352,12 @@ bool CLASS::get_silent_prevouts(data_chunk& prevouts,
 // The bank is quiescent (drain claimed, no writers), so it is read across the
 // scan write, which is sourced directly from its columns. Scan rows are
 // allocated for every bank tx and prefix, so the prefixes and outputs are
-// written in parallel while the points compute on the device (or after they
-// compute on the processor), and each tx is then published by its correlate
+// written in parallel while points compute on gpu (or after they compute on
+// cpu), and each tx is then published by its correlate
 // (an invalid tx with no outputs).
 TEMPLATE
-code CLASS::compute_silents(const stopper& cancel, bool& device, bool bank,
-    bool gpu) NOEXCEPT
+code CLASS::compute_silents(const stopper& cancel, bool& use_gpu,
+    bool bank) NOEXCEPT
 {
     using namespace system;
     auto& bank_table = store_.silent_bank(bank);
@@ -422,22 +411,6 @@ code CLASS::compute_silents(const stopper& cancel, bool& device, bool bank,
         std::next(pointer_cast<ec_compressed>(point_ptr.data()), fk.value), txs
     };
 
-    data_chunk valid(txs);
-    const silent::batch rows{ { sums, txs }, { hashes, txs } };
-    const auto compute = [&]() NOEXCEPT
-    {
-        return silent::batch::compute(points, valid, device, cancel, rows, gpu);
-    };
-
-    // The device computes concurrently with the write, the processor before.
-    bool success{};
-    std::future<bool> computed{};
-    const auto accelerated = gpu && batched::accelerated();
-    if (accelerated)
-        computed = std::async(std::launch::async, compute);
-    else
-        success = compute();
-
     using scan_int = scan_link::integer;
     using prefix_int = prefix_link::integer;
     using outputs_record = table::scan_outputs::record;
@@ -447,26 +420,31 @@ code CLASS::compute_silents(const stopper& cancel, bool& device, bool bank,
     std::atomic_bool failed{};
     std_vector<size_t> indexes(txs);
     std::iota(indexes.begin(), indexes.end(), zero);
-    std::for_each(poolstl::execution::par, indexes.cbegin(), indexes.cend(),
-        [&](size_t tx) NOEXCEPT
-        {
-            const auto& output = *std::next(outputs, tx);
-            const auto first = from_little_endian<uint64_t>(output.first);
-            const auto count = from_little_endian<uint32_t>(output.count);
-            const auto link = possible_narrow_cast<scan_int>(fk.value + tx);
-            const auto row = possible_narrow_cast<prefix_int>(pk.value + first);
-            const span_t span{ {}, { std::next(prefixes, first), count } };
-            const outputs_record record{ {}, row, count };
+    const auto put = [&](size_t tx) NOEXCEPT
+    {
+        const auto& output = *std::next(outputs, tx);
+        const auto first = from_little_endian<uint64_t>(output.first);
+        const auto count = from_little_endian<uint32_t>(output.count);
+        const auto link = possible_narrow_cast<scan_int>(fk.value + tx);
+        const auto row = possible_narrow_cast<prefix_int>(pk.value + first);
+        const span_t span{ {}, { std::next(prefixes, first), count } };
+        const outputs_record record{ {}, row, count };
 
-            if (!store_.scan_prefix.put(scan_prefix_ptr, row, span) ||
-                !store_.scan.outputs.put(link, record))
-                failed.store(true);
-        });
+        if (!store_.scan_prefix.put(scan_prefix_ptr, row, span) ||
+            !store_.scan.outputs.put(link, record))
+            failed.store(true);
+    };
 
-    if (accelerated)
-        success = computed.get();
+    const auto write = [&]() NOEXCEPT
+    {
+        constexpr auto policy = poolstl::execution::par;
+        std::for_each(policy, indexes.cbegin(), indexes.cend(), put);
+    };
 
-    if (!success)
+    // Write is concurrent with gpu, after cpu.
+    data_chunk valid(txs);
+    const silent::batch in{ { sums, txs }, { hashes, txs } };
+    if (!silent::batch::compute(cancel, use_gpu, points, valid, in, write))
         return error::query_canceled;
 
     if (failed.load())
@@ -501,99 +479,104 @@ code CLASS::compute_silents(const stopper& cancel, bool& device, bool bank,
 // protected
 // ----------------------------------------------------------------------------
 
-// Ineligible txs have no records. The block's records and its scanned state
-// are written in one transactor scope, and once both allocations succeed the
-// writes cannot fail.
+// Pooled txs linked below the coinbase were indexed (see set_silent).
 TEMPLATE
-template <typename Transactions>
-bool CLASS::set_silent_(const header_link& link,
-    const Transactions& txs) NOEXCEPT
+template <typename Block>
+bool CLASS::set_silent_(const header_link& link, const Block& block,
+    size_t count) NOEXCEPT
 {
-    struct capture
-    {
-        tx_link link{};
-        ec_compressed point{};
-        std::vector<silent_prefix> prefixes{};
-    };
-
-    const auto count = txs.size();
+    using namespace system::wallet;
     const auto links = to_transactions(link);
     if (links.size() != count)
         return false;
 
-    // Object txs are held by pointer, views by value.
-    const auto to_tx = [](const auto& tx) NOEXCEPT -> decltype(auto)
+    auto& rows = silent_payment::rows::local();
+    silent_payment::collect(rows, block, [&](size_t position) NOEXCEPT
     {
-        using type = std::decay_t<decltype(tx)>;
-        if constexpr (is_same_type<type, transaction_view>)
-            return (tx);
-        else
-            return (*tx);
-    };
-
-    using namespace system::wallet;
-    size_t rows{};
-    std::vector<capture> captures{};
-    const auto first = links.front();
-    for (auto index = one; index < count; ++index)
-    {
-        capture item{ links.at(index) };
-        const auto& tx = to_tx(txs.at(index));
-        if (is_silent_selected(item.link, first) &&
-            get_prefixes(item.prefixes, tx) &&
-            silent_payment::summarize(item.point, tx))
-        {
-            rows += item.prefixes.size();
-            captures.push_back(std::move(item));
-        }
-    }
-
-    using namespace system;
-    using word_t = table::scan_correlate::tx::integer;
-    using point_t = table::scan_point::put_ref;
-    using prefix_t = table::scan_prefix::put_refs;
-    const table::state::merge scanned{ {}, block_state::scanned };
+        return is_silent_selected(links.at(position), links.front());
+    }, true);
 
     // ========================================================================
     const auto scope = get_transactor();
 
-    if (is_zero(rows))
-        return store_.state.set(to_state(link), scanned);
+    // Clean single allocation failure (e.g. disk full).
+    return put_scan_(rows, links) && store_.state.set(to_state(link),
+        table::state::merge{ {}, block_state::scanned });
+    // ========================================================================
+}
 
-    // Allocate the block's outputs, then its txs across all columns. Outputs
-    // are reached only through txs, so failure strands no unwritten tx.
+// Ineligible txs have no records.
+TEMPLATE
+template <typename Transaction>
+bool CLASS::set_silent_(const tx_link& link, const Transaction& tx) NOEXCEPT
+{
+    using namespace system::wallet;
+    if (link.is_terminal())
+        return false;
+
+    auto& rows = silent_payment::rows::local();
+    if (!silent_payment::collect(rows, tx, true))
+        return true;
+
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    // Clean single allocation failure (e.g. disk full).
+    return put_scan_(rows, { &link.value, one });
+    // ========================================================================
+}
+
+// Caller holds the transactor. Prefixes are allocated before txs, as they are
+// reached only through txs, and the correlate publishes each tx last.
+TEMPLATE
+bool CLASS::put_scan_(const system::wallet::silent_payment::rows& rows,
+    const std::span<const tx_link::integer>& links) NOEXCEPT
+{
+    using namespace system;
+    if (rows.empty())
+        return true;
+
+    const auto txs = rows.positions.size();
     const auto pk = store_.scan_prefix.allocate(
-        possible_narrow_cast<prefix_link::integer>(rows));
+        possible_narrow_cast<prefix_link::integer>(rows.prefixes.size()));
     if (pk.is_terminal())
         return false;
 
     const auto fk = store_.scan.allocate(
-        possible_narrow_cast<scan_link::integer>(captures.size()));
+        possible_narrow_cast<scan_link::integer>(txs));
     if (fk.is_terminal())
         return false;
 
     // Guard against remap (required for nomaps::put(fk)).
+    using word_t = table::scan_correlate::tx::integer;
     const auto guard = store_.scan.guard();
     const auto words = pointer_cast<word_t>(guard.data());
+    if (!store_.scan_prefix.put(pk, table::scan_prefix::put_span
+        {
+            {}, rows.prefixes
+        }) ||
+        !store_.scan.point.put(fk, table::scan_point::put_span
+        {
+            {}, rows.points
+        }) ||
+        !store_.scan.outputs.put(fk, table::scan_outputs::put_counts
+        {
+            {}, rows.outputs, pk.value
+        }))
+        return false;
 
-    auto tx = fk;
-    auto out = pk;
-    for (const auto& item: captures)
+    // The guard is the correlate column, published last (get_silent_frontier).
+    static_assert(schema::scan_correlate::minrow == sizeof(word_t));
+    for (size_t tx{}; tx < txs; ++tx)
     {
-        const auto outputs = item.prefixes.size();
-        if (!store_.scan_prefix.put(out, prefix_t{ {}, item.prefixes }) ||
-            !store_.scan.point.put(tx, point_t{ {}, item.point }) ||
-            !put_silent_(tx, item.link, out, outputs, words))
-            return false;
-
-        tx += one;
-        out += outputs;
+        const auto position = rows.positions.at(tx);
+        std::atomic_ref<word_t> word{ *std::next(words, fk.value + tx) };
+        word.store(native_to_little_end(*std::next(links.begin(), position)),
+            std::memory_order_release);
     }
 
-    store_.scan.complete(fk,
-        possible_narrow_cast<scan_link::integer>(captures.size()));
-    return store_.state.set(to_state(link), scanned);
-    // ========================================================================
+    store_.scan.complete(fk, possible_narrow_cast<scan_link::integer>(txs));
+    return true;
 }
 
 // Caller holds the transactor.
@@ -610,61 +593,27 @@ bool CLASS::set_scanned_(bool bank) NOEXCEPT
 
 // Pooled txs linked below the coinbase were indexed (see set_silent).
 TEMPLATE
-template <typename Transactions>
-bool CLASS::set_silents_(size_t& rows, const header_link& link,
-    const Transactions& txs, bool bank) NOEXCEPT
+template <typename Block>
+bool CLASS::set_silents_(size_t& count, const header_link& link,
+    const Block& block, size_t txs, bool bank) NOEXCEPT
 {
-    struct capture
-    {
-        tx_link link{};
-        ec_compressed sum{};
-        ec_secret hash{};
-        std::vector<silent_prefix> prefixes{};
-    };
-
-    rows = zero;
-    const auto count = txs.size();
-    if (is_one(count))
-        return set_block_scanned(link);
-
+    using namespace system;
+    using namespace system::wallet;
+    count = zero;
     const auto links = to_transactions(link);
-    if (links.size() != count)
+    if (links.size() != txs)
         return false;
 
-    // Object txs are held by pointer, views by value.
-    const auto to_tx = [](const auto& tx) NOEXCEPT -> decltype(auto)
+    auto& rows = silent_payment::rows::local();
+    silent_payment::collect(rows, block, [&](size_t position) NOEXCEPT
     {
-        using type = std::decay_t<decltype(tx)>;
-        if constexpr (is_same_type<type, transaction_view>)
-            return (tx);
-        else
-            return (*tx);
-    };
+        return is_silent_selected(links.at(position), links.front());
+    }, false);
 
-    using namespace system::wallet;
-    std::vector<capture> captures{};
-    const auto first = links.front();
-    for (auto index = one; index < count; ++index)
-    {
-        capture item{ links.at(index) };
-        const auto& tx = to_tx(txs.at(index));
-        if (is_silent_selected(item.link, first) &&
-            get_prefixes(item.prefixes, tx) &&
-            silent_payment::prepare(item.sum, item.hash, tx))
-        {
-            rows += item.prefixes.size();
-            captures.push_back(std::move(item));
-        }
-    }
-
-    if (is_zero(rows))
+    if (rows.empty())
         return set_block_scanned(link);
 
-    using correlate_t = table::silent_correlate::record;
-    using sum_t = table::silent_sum::put_ref;
-    using hash_t = table::silent_hash::put_ref;
-    using outputs_t = table::silent_outputs::record;
-    using prefix_t = table::silent_prefix::put_refs;
+    count = rows.prefixes.size();
 
     // ========================================================================
     const auto scope = get_transactor();
@@ -677,38 +626,40 @@ bool CLASS::set_silents_(size_t& rows, const header_link& link,
 
     // Allocate the block's outputs, then its txs across all columns. Outputs
     // are reached only through txs, so failure strands no unwritten tx.
-    using namespace system;
     const auto pk = bank_prefix.allocate(
-        possible_narrow_cast<prefix_link::integer>(rows));
+        possible_narrow_cast<prefix_link::integer>(count));
     if (pk.is_terminal())
         return false;
 
     const auto fk = bank_table.allocate(
-        possible_narrow_cast<silent_link::integer>(captures.size()));
+        possible_narrow_cast<silent_link::integer>(rows.positions.size()));
     if (fk.is_terminal())
         return false;
 
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = bank_table.guard();
 
-    auto tx = fk;
-    auto out = pk;
-    for (const auto& item: captures)
-    {
-        const auto outputs = item.prefixes.size();
-        if (!bank_table.correlate.put(tx, correlate_t{ {}, item.link.value }) ||
-            !bank_table.sum.put(tx, sum_t{ {}, item.sum }) ||
-            !bank_table.hash.put(tx, hash_t{ {}, item.hash }) ||
-            !bank_table.outputs.put(tx, outputs_t{ {}, out.value,
-                possible_narrow_cast<uint32_t>(outputs) }) ||
-            !bank_prefix.put(out, prefix_t{ {}, item.prefixes }))
-            return false;
-
-        tx += one;
-        out += outputs;
-    }
-
-    return true;
+    return
+        bank_table.correlate.put(fk, table::silent_correlate::put_rows
+        {
+            {}, rows.positions, links
+        }) &&
+        bank_table.sum.put(fk, table::silent_sum::put_span
+        {
+            {}, rows.points
+        }) &&
+        bank_table.hash.put(fk, table::silent_hash::put_span
+        {
+            {}, rows.hashes
+        }) &&
+        bank_table.outputs.put(fk, table::silent_outputs::put_counts
+        {
+            {}, rows.outputs, pk.value
+        }) &&
+        bank_prefix.put(pk, table::silent_prefix::put_span
+        {
+            {}, rows.prefixes
+        });
     // ========================================================================
 }
 
@@ -717,83 +668,6 @@ bool CLASS::is_silent_selected(const tx_link& link,
     const tx_link& coinbase) const NOEXCEPT
 {
     return link >= coinbase || !is_pooled(link);
-}
-
-// The prefix is ec_xonly[0..7] read as little-endian.
-TEMPLATE
-template <typename Transaction>
-bool CLASS::get_prefixes(std::vector<silent_prefix>& out,
-    const Transaction& tx) NOEXCEPT
-{
-    using namespace system;
-    using namespace system::wallet;
-    silent_payment::scan_outputs outputs{};
-    if (!silent_payment::get_outputs(outputs, tx))
-        return false;
-
-    out.resize(outputs.size());
-    std::transform(outputs.cbegin(), outputs.cend(), out.begin(),
-        [](const auto& output) NOEXCEPT
-        {
-            return unsafe_from_little_endian<silent_prefix>(output.key.data());
-        });
-
-    return true;
-}
-
-TEMPLATE
-bool CLASS::set_silent_(const tx_link& link, const ec_compressed& point,
-    const std::vector<silent_prefix>& prefixes) NOEXCEPT
-{
-    if (link.is_terminal())
-        return false;
-
-    using namespace system;
-    using word_t = table::scan_correlate::tx::integer;
-    using point_t = table::scan_point::put_ref;
-    using prefix_t = table::scan_prefix::put_refs;
-    const auto outputs = prefixes.size();
-
-    // ========================================================================
-    const auto scope = get_transactor();
-
-    // Allocate the tx across all columns, and its outputs.
-    const auto fk = store_.scan.allocate(one);
-    const auto pk = store_.scan_prefix.allocate(
-        possible_narrow_cast<prefix_link::integer>(outputs));
-    if (fk.is_terminal() || pk.is_terminal())
-        return false;
-
-    // Guard against remap (required for nomaps::put(fk)).
-    const auto guard = store_.scan.guard();
-    const auto words = pointer_cast<word_t>(guard.data());
-    if (!store_.scan_prefix.put(pk, prefix_t{ {}, prefixes }) ||
-        !store_.scan.point.put(fk, point_t{ {}, point }) ||
-        !put_silent_(fk, link, pk, outputs, words))
-        return false;
-
-    store_.scan.complete(fk, one);
-    return true;
-    // ========================================================================
-}
-
-TEMPLATE
-bool CLASS::put_silent_(const scan_link& fk, const tx_link& link,
-    const prefix_link& first, size_t outputs,
-    table::scan_correlate::tx::integer* words) NOEXCEPT
-{
-    using namespace system;
-    using outputs_t = table::scan_outputs::record;
-    if (!store_.scan.outputs.put(fk, outputs_t{ {}, first.value,
-        possible_narrow_cast<uint32_t>(outputs) }))
-        return false;
-
-    // The guard is the correlate column, published last (get_silent_frontier).
-    using word_t = table::scan_correlate::tx::integer;
-    static_assert(schema::scan_correlate::minrow == sizeof(word_t));
-    std::atomic_ref<word_t> word{ *std::next(words, fk.value) };
-    word.store(native_to_little_end(link.value), std::memory_order_release);
-    return true;
 }
 
 // Rows are read in chunks so the guard is not held across a long seek.

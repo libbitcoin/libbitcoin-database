@@ -85,6 +85,27 @@ struct scan_point
 
         const system::ec_compressed& point;
     };
+
+    struct put_span
+      : public schema::scan_point
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(points.size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto& point: points)
+                sink.write_bytes(point);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const std::span<const system::ec_compressed> points;
+    };
 };
 
 /// scan_outputs is an array of silent payment transaction prefix spans.
@@ -120,6 +141,34 @@ struct scan_outputs
 
         prefix::integer first{};
         uint32_t outputs{};
+    };
+
+    /// The prefix span of each row, prefixes contiguous from first.
+    struct put_counts
+      : public schema::scan_outputs
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(outputs.size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            auto next = first;
+            for (const auto output: outputs)
+            {
+                sink.write_little_endian<prefix::integer, prefix::size>(next);
+                sink.write_little_endian<uint32_t, schema::index>(output);
+                next += output;
+            }
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const std::span<const uint32_t> outputs;
+        const prefix::integer first;
     };
 };
 

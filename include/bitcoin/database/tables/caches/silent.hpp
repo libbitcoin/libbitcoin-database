@@ -60,6 +60,30 @@ struct silent_correlate
 
         tx::integer tx_fk{};
     };
+
+    /// The tx fk of each row, by its block position.
+    struct put_rows
+      : public schema::silent_correlate
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(positions.size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto position: positions)
+                sink.write_little_endian<tx::integer, tx::size>(
+                    *std::next(links.begin(), position));
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const std::span<const uint32_t> positions;
+        const std::span<const tx::integer> links;
+    };
 };
 
 /// silent_sum is an array of silent payment batch input key sums.
@@ -85,6 +109,27 @@ struct silent_sum
 
         const system::ec_compressed& sum;
     };
+
+    struct put_span
+      : public schema::silent_sum
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(sums.size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto& sum: sums)
+                sink.write_bytes(sum);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const std::span<const system::ec_compressed> sums;
+    };
 };
 
 /// silent_hash is an array of silent payment batch input hashes.
@@ -109,6 +154,27 @@ struct silent_hash
         }
 
         const system::ec_secret& hash;
+    };
+
+    struct put_span
+      : public schema::silent_hash
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(hashes.size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto& hash: hashes)
+                sink.write_bytes(hash);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const std::span<const system::ec_secret> hashes;
     };
 };
 
@@ -146,6 +212,34 @@ struct silent_outputs
         prefix::integer first{};
         uint32_t outputs{};
     };
+
+    /// The prefix span of each row, prefixes contiguous from first.
+    struct put_counts
+      : public schema::silent_outputs
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(outputs.size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            auto next = first;
+            for (const auto output: outputs)
+            {
+                sink.write_little_endian<prefix::integer, prefix::size>(next);
+                sink.write_little_endian<uint32_t, schema::index>(output);
+                next += output;
+            }
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const std::span<const uint32_t> outputs;
+        const prefix::integer first;
+    };
 };
 
 /// silent_prefix is an array of silent payment batch output key prefixes.
@@ -175,6 +269,27 @@ struct silent_prefix
         }
 
         const std::vector<integral>& prefixes;
+    };
+
+    struct put_span
+      : public schema::silent_prefix
+    {
+        inline link count() const NOEXCEPT
+        {
+            using namespace system;
+            return possible_narrow_cast<link::integer>(prefixes.size());
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            for (const auto& prefix: prefixes)
+                sink.write_bytes(prefix);
+
+            BC_ASSERT(!sink || sink.get_write_position() == count() * minrow);
+            return sink;
+        }
+
+        const std::span<const bytes> prefixes;
     };
 };
 
