@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__empty__empty)
     header_links links{};
     bool device{};
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 0u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false));
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false, true));
     BOOST_REQUIRE(links.empty());
 }
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_valid__em
     header_links links{};
     bool device{};
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 1u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false));
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false, true));
     BOOST_REQUIRE(links.empty());
 }
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_invalid__
     header_links links{};
     bool device{};
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 1u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false));
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false, true));
     BOOST_REQUIRE_EQUAL(links.size(), 1u);
     BOOST_REQUIRE_EQUAL(links.front(), expected);
 }
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__various__expe
     header_links links{};
     bool device{};
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 8u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false));
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false, true));
     BOOST_REQUIRE_EQUAL(links.size(), 2u);
 
     const auto back = links.back();

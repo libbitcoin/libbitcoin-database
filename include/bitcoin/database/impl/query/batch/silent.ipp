@@ -367,8 +367,8 @@ bool CLASS::get_silent_prevouts(data_chunk& prevouts,
 // compute on the processor), and each tx is then published by its correlate
 // (an invalid tx with no outputs).
 TEMPLATE
-code CLASS::compute_silents(const stopper& cancel, bool& device,
-    bool bank) NOEXCEPT
+code CLASS::compute_silents(const stopper& cancel, bool& device, bool bank,
+    bool gpu) NOEXCEPT
 {
     using namespace system;
     auto& bank_table = store_.silent_bank(bank);
@@ -423,16 +423,16 @@ code CLASS::compute_silents(const stopper& cancel, bool& device,
     };
 
     data_chunk valid(txs);
-    const silent::batch batch{ { sums, txs }, { hashes, txs } };
+    const silent::batch rows{ { sums, txs }, { hashes, txs } };
     const auto compute = [&]() NOEXCEPT
     {
-        return silent::batch::compute(points, valid, device, cancel, batch);
+        return silent::batch::compute(points, valid, device, cancel, rows, gpu);
     };
 
     // The device computes concurrently with the write, the processor before.
     bool success{};
     std::future<bool> computed{};
-    const auto accelerated = batched::accelerated();
+    const auto accelerated = gpu && batched::accelerated();
     if (accelerated)
         computed = std::async(std::launch::async, compute);
     else
