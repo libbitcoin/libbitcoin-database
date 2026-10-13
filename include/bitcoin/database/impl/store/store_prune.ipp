@@ -237,9 +237,7 @@ bool CLASS::retain_pool(retentions& out) NOEXCEPT
 }
 
 // protected
-// A tx is retained if it is confirmable and every unconfirmed ancestor is
-// pooled. Ancestors are found by key, so link order is not assumed, and an
-// ancestor already retained (kept is in row order) ends its walk.
+// A tx is retained if it is confirmable and every unconfirmed ancestor is pooled.
 TEMPLATE
 bool CLASS::is_retained(bool& out, const tx_link& link,
     const retentions& kept) NOEXCEPT

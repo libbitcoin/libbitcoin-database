@@ -370,10 +370,8 @@ scan_link CLASS::get_scan_floor(size_t height) const NOEXCEPT
 
 // setters
 // ----------------------------------------------------------------------------
-// Caller (node) controls which txs are indexed (e.g. by confirmed height).
-// The coinbase is the first tx archived for a block, so txs linked below it
-// were archived before it, as pooled (and indexed) or by another block (and
-// indexed only if that block was), so a tx below it is indexed if not pooled.
+// A tx linked below the coinbase was archived before it, so is indexed unless
+// pooled.
 
 TEMPLATE
 bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
@@ -641,7 +639,6 @@ code CLASS::compute_silents(const stopper& cancel, bool& used_gpu,
         std::for_each(policy, indexes.cbegin(), indexes.cend(), put);
     };
 
-    // Write is concurrent with gpu, after cpu.
     data_chunk valid(txs);
     const silent::batch in{ { sums, txs }, { hashes, txs } };
     if (!silent::batch::compute(cancel, used_gpu, points, valid, in, write))

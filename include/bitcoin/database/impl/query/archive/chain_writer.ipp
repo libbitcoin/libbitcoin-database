@@ -178,8 +178,7 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
     if (outs_fk.is_terminal())
         return error::tx_outs_put;
 
-    // Outs put is unguarded, the accessor guards its rows against remap
-    // (the puts column accessor, as the spine is unbacked when disabled).
+    // Outs put is unguarded, the accessor guards its rows against remap.
     auto outsert = store_.outs.template get_memory<one>();
     if (!outsert || !store_.outs.puts.put(outs_fk,
         table::outs::put_ref{ {}, out_fk, tx }))
