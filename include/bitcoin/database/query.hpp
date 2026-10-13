@@ -763,8 +763,8 @@ public:
         const header_link& link, const block_view& block) const NOEXCEPT;
 
     /// Compute a bank's silent payment batch, then set its scan records.
-    code compute_silents(const stopper& cancel, bool& device, bool bank,
-        bool gpu) NOEXCEPT;
+    code compute_silents(const stopper& cancel, bool& use_gpu,
+        bool bank) NOEXCEPT;
 
     /// Commit a block's captured ecdsa signature groups (band-expanded).
     bool set_signatures(const system::chain::ecdsa_signatures& sigs,
@@ -801,12 +801,11 @@ public:
     /// if none mapped), a scan from it covers all blocks at or above height.
     scan_link get_scan_floor(size_t height) const NOEXCEPT;
 
-    /// Verify all signatures in table, false implies cancel, device set if
-    /// verified on the device.
-    bool verify_ecdsa_signatures(const stopper& cancel, header_links&,
-        bool& device, bool bank, bool gpu) NOEXCEPT;
-    bool verify_schnorr_signatures(const stopper& cancel, header_links&,
-        bool& device, bool bank, bool gpu) NOEXCEPT;
+    /// Verify all signatures in table, false implies cancel.
+    bool verify_ecdsa_signatures(const stopper& cancel, bool& use_gpu,
+        header_links& links, bool bank) NOEXCEPT;
+    bool verify_schnorr_signatures(const stopper& cancel, bool& use_gpu,
+        header_links& links, bool bank) NOEXCEPT;
 
     /// Purge all entries in table.
     bool purge_prevalids(bool bank) NOEXCEPT;
@@ -1195,29 +1194,23 @@ protected:
     code set_txs(const header_link& key, tx_links&& links, size_t light,
         size_t heavy, hash_option&& interval, bool strong) NOEXCEPT;
 
-    /// Silent payment prefixes of a transaction's outputs, false if none.
-    template <typename Transaction>
-    static bool get_prefixes(std::vector<silent_prefix>& out,
-        const Transaction& tx) NOEXCEPT;
-
-    /// Set silent payment records of a non-coinbase tx.
-    bool set_silent_(const tx_link& link, const ec_compressed& point,
-        const std::vector<silent_prefix>& prefixes) NOEXCEPT;
-
     /// Advance row to the first row linked above floor, an unpublished row
     /// lowering last to itself (the row at or past which rows are unknown).
     void seek_scan_start(size_t& row, size_t& last,
         tx_link::integer floor) const NOEXCEPT;
 
-    /// Set silent payment records of a block's txs and its scanned state.
-    template <typename Transactions>
-    bool set_silent_(const header_link& link,
-        const Transactions& txs) NOEXCEPT;
+    /// Set silent payment records of a block's selected txs and its scanned
+    /// state, or of a tx.
+    template <typename Block>
+    bool set_silent_(const header_link& link, const Block& block,
+        size_t count) NOEXCEPT;
+    template <typename Transaction>
+    bool set_silent_(const tx_link& link, const Transaction& tx) NOEXCEPT;
 
-    /// Write a scan tx's outputs and publish it, caller must hold transactor.
-    bool put_silent_(const scan_link& fk, const tx_link& link,
-        const prefix_link& first, size_t outputs,
-        table::scan_correlate::tx::integer* words) NOEXCEPT;
+    /// Write scan records, the tx fk of each by its position in links, caller
+    /// must hold transactor.
+    bool put_scan_(const system::wallet::silent_payment::rows& rows,
+        const std::span<const tx_link::integer>& links) NOEXCEPT;
 
     /// A block's tx is indexed unless linked below its coinbase and pooled.
     bool is_silent_selected(const tx_link& link,
@@ -1226,10 +1219,10 @@ protected:
     /// Mark the blocks of a bank's presilent table scanned.
     bool set_scanned_(bool bank) NOEXCEPT;
 
-    /// Commit the silent payment batch rows of a block's txs.
-    template <typename Transactions>
-    bool set_silents_(size_t& rows, const header_link& link,
-        const Transactions& txs, bool bank) NOEXCEPT;
+    /// Commit the silent payment batch rows of a block's selected txs.
+    template <typename Block>
+    bool set_silents_(size_t& count, const header_link& link,
+        const Block& block, size_t txs, bool bank) NOEXCEPT;
 
     /// Pooling.
     /// -----------------------------------------------------------------------

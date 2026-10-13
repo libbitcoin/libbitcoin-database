@@ -73,7 +73,7 @@ struct BCD_API settings
     /// Enable concurrency in individual client-server queries.
     bool turbo{ false };
 
-    /// Minimum transactions for a silent payment scan on the device.
+    /// Minimum transactions for a silent payment scan on gpu.
     uint32_t gpu_scan_minimum{ 65'536 };
 
     /// Mark blocks as unconfirmable (disorganize vs. stall).

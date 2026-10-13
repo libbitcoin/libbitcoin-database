@@ -59,9 +59,9 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__empty__empty)
     test::query_accessor query{ store };
 
     header_links links{};
-    bool device{};
+    bool use_gpu{ true };
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 0u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false, true));
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, use_gpu, links, false));
     BOOST_REQUIRE(links.empty());
 }
 
@@ -73,9 +73,9 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_valid__em
     BOOST_REQUIRE(set_one(query, schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
 
     header_links links{};
-    bool device{};
+    bool use_gpu{ true };
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 1u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false, true));
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, use_gpu, links, false));
     BOOST_REQUIRE(links.empty());
 }
 
@@ -87,11 +87,11 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_valid_wit
     BOOST_REQUIRE(set_one(query, schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
 
     header_links links{};
-    bool device{};
+    bool use_gpu{ false };
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 1u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false, false));
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, use_gpu, links, false));
     BOOST_REQUIRE(links.empty());
-    BOOST_REQUIRE(!device);
+    BOOST_REQUIRE(!use_gpu);
 }
 
 BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_invalid__expected_link)
@@ -103,9 +103,9 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_invalid__
     BOOST_REQUIRE(set_one(query, sighash_bad, schnorr_xonly, schnorr_signature, expected));
 
     header_links links{};
-    bool device{};
+    bool use_gpu{ true };
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 1u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false, true));
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, use_gpu, links, false));
     BOOST_REQUIRE_EQUAL(links.size(), 1u);
     BOOST_REQUIRE_EQUAL(links.front(), expected);
 }
@@ -128,9 +128,9 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__various__expe
     BOOST_REQUIRE(set_one(query, schnorr_sighash, schnorr_xonly, schnorr_signature, 6));
 
     header_links links{};
-    bool device{};
+    bool use_gpu{ true };
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 8u);
-    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false, true));
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, use_gpu, links, false));
     BOOST_REQUIRE_EQUAL(links.size(), 2u);
 
     const auto back = links.back();
