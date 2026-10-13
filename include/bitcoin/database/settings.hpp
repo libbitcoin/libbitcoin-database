@@ -106,6 +106,7 @@ struct BCD_API settings
     bucket_table confirmed{};
     hash_table strong{};
     bucket_table scan{};
+    hash_table wtxid{};
 
     /// Caches.
     /// -----------------------------------------------------------------------

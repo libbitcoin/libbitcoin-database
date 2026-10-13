@@ -50,6 +50,7 @@ void envelope::set(const settings& database) NOEXCEPT
     strong_buckets = database.strong.buckets;
     duplicate_buckets = database.duplicate.buckets;
     pool_buckets = database.pool.buckets;
+    wtxid_buckets = database.wtxid.buckets;
     provide_filters = to_bool(database.filter_bk.buckets) &&
         to_bool(database.filter_tx.buckets);
 }
@@ -179,6 +180,7 @@ bool envelope::from_data(reader& source) NOEXCEPT
     strong_buckets = source.read_little_endian<uint32_t>();
     duplicate_buckets = source.read_little_endian<uint32_t>();
     pool_buckets = source.read_little_endian<uint32_t>();
+    wtxid_buckets = source.read_little_endian<uint32_t>();
     header_k = source.read_byte();
     ins_k = source.read_byte();
     outs_k = source.read_byte();
@@ -186,6 +188,7 @@ bool envelope::from_data(reader& source) NOEXCEPT
     strong_k = source.read_byte();
     duplicate_k = source.read_byte();
     pool_k = source.read_byte();
+    wtxid_k = source.read_byte();
 
     limited_blocks = to_bool(source.read_byte());
     provide_filters = to_bool(source.read_byte());
@@ -273,6 +276,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_little_endian<uint32_t>(strong_buckets);
     sink.write_little_endian<uint32_t>(duplicate_buckets);
     sink.write_little_endian<uint32_t>(pool_buckets);
+    sink.write_little_endian<uint32_t>(wtxid_buckets);
     sink.write_byte(header_k);
     sink.write_byte(ins_k);
     sink.write_byte(outs_k);
@@ -280,6 +284,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_byte(strong_k);
     sink.write_byte(duplicate_k);
     sink.write_byte(pool_k);
+    sink.write_byte(wtxid_k);
 
     sink.write_byte(to_int<uint8_t>(limited_blocks));
     sink.write_byte(to_int<uint8_t>(provide_filters));
@@ -296,7 +301,7 @@ size_t envelope::serialized_size() const NOEXCEPT
 {
     constexpr auto forks_size = 24_size;
     constexpr auto fixed = (4 * sizeof(uint32_t)) + sizeof(uint16_t) +
-        (7 * sizeof(uint32_t)) + (10 * sizeof(uint8_t)) + forks_size +
+        (8 * sizeof(uint32_t)) + (11 * sizeof(uint8_t)) + forks_size +
         sizeof(uint64_t) + (18 * sizeof(uint32_t));
 
     const auto checkpoint_size = [](const chain::checkpoint& in) NOEXCEPT

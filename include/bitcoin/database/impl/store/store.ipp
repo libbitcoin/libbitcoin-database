@@ -126,8 +126,8 @@ CLASS::store(const settings& config) NOEXCEPT
     pool_body_(body(config.path, schema::caches::pool), config.pool, sequential, staged),
     spends_head_(head(config.path / schema::dir::heads, schema::caches::spends), head_settings(config.spends), sequential),
     spends_body_(body(config.path, schema::caches::spends), config.spends, sequential, staged),
-    wtxid_head_(head(config.path / schema::dir::heads, schema::indexes::wtxid), head_settings(config.pool), random),
-    wtxid_body_(body(config.path, schema::indexes::wtxid), config.pool, sequential, staged),
+    wtxid_head_(head(config.path / schema::dir::heads, schema::indexes::wtxid), head_settings(config.wtxid), random),
+    wtxid_body_(body(config.path, schema::indexes::wtxid), config.wtxid, sequential, staged),
 
     // Optionals.
     // ------------------------------------------------------------------------
@@ -179,7 +179,7 @@ CLASS::store(const settings& config) NOEXCEPT
     state(state_head_),
     pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected),
     spends(spends_head_, spends_body_),
-    wtxid(wtxid_head_, wtxid_body_, config.pool.buckets, config.pool.expected),
+    wtxid(wtxid_head_, wtxid_body_, config.wtxid.buckets, config.wtxid.expected),
 
     filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk.buckets),
     filter_tx(filter_tx_head_, filter_tx_body_, config.filter_tx.buckets)
@@ -196,6 +196,7 @@ CLASS::store(const settings& config) NOEXCEPT
     envelope_.strong_k = possible_narrow_cast<uint8_t>(strong.filter_k());
     envelope_.duplicate_k = possible_narrow_cast<uint8_t>(duplicate.filter_k());
     envelope_.pool_k = possible_narrow_cast<uint8_t>(pool.filter_k());
+    envelope_.wtxid_k = possible_narrow_cast<uint8_t>(wtxid.filter_k());
 }
 
 TEMPLATE
