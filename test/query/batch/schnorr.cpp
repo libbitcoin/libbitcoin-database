@@ -79,6 +79,21 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_valid__em
     BOOST_REQUIRE(links.empty());
 }
 
+BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_valid_without_gpu__empty)
+{
+    const database::settings configuration{};
+    test::chunk_store store{ configuration };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(set_one(query, schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
+
+    header_links links{};
+    bool device{};
+    BOOST_REQUIRE_EQUAL(query.schnorr0_records(), 1u);
+    BOOST_REQUIRE(query.verify_schnorr_signatures({}, links, device, false, false));
+    BOOST_REQUIRE(links.empty());
+    BOOST_REQUIRE(!device);
+}
+
 BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_invalid__expected_link)
 {
     const database::settings configuration{};
