@@ -708,6 +708,9 @@ public:
     /// Unconfirmed, and not conflicted by a confirmed tx (or via ancestry).
     bool is_confirmable_tx(const tx_link& link) const NOEXCEPT;
 
+    /// Spent by a pooled and confirmable tx.
+    bool is_confirmable_spent(const output_link& link) const NOEXCEPT;
+
     /// Confirmable tx links, from cursor toward end, at most limit.
     code get_confirmable_txs(pool_link& cursor, tx_links& out,
         const pool_link& end, size_t limit) const NOEXCEPT;

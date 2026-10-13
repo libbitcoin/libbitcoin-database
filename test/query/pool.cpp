@@ -144,6 +144,46 @@ BOOST_AUTO_TEST_CASE(query_pool__get_pooled__without_bip113__unvalidated)
     BOOST_REQUIRE_EQUAL(query.get_pooled(pooled, 1, context{ 0, 8, 9 }), error::unvalidated);
 }
 
+// is_confirmable_spent
+
+BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_spent__pooled_spender__true)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(!query.is_confirmable_spent(query.to_output(parent.hash(false), 0)));
+
+    BOOST_REQUIRE(archive_pool(query, child));
+    BOOST_REQUIRE(query.is_confirmable_spent(query.to_output(parent.hash(false), 0)));
+    BOOST_REQUIRE(!query.is_confirmable_spent(query.to_output(child.hash(false), 0)));
+}
+
+BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_spent__conflicted_spender__false)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(archive_pool(query, child));
+    BOOST_REQUIRE(!archive_confirm(query, to_spend(genesis_coinbase(), 3u)).is_terminal());
+    BOOST_REQUIRE(!query.is_confirmable_spent(query.to_output(parent.hash(false), 0)));
+}
+
 // get_pooled_time
 
 BOOST_AUTO_TEST_CASE(query_pool__get_pooled_time__pooled__expected)
