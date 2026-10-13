@@ -46,6 +46,13 @@ size_t CLASS::name##_buckets() const NOEXCEPT \
     return store_.name.buckets(); \
 }
 
+#define DEFINE_HEADMAP_BUCKETS(name) \
+TEMPLATE \
+size_t CLASS::name##_buckets() const NOEXCEPT \
+{ \
+    return store_.name.count(); \
+}
+
 #define DEFINE_RECORDS(name) \
 TEMPLATE \
 size_t CLASS::name##_records() const NOEXCEPT \
@@ -194,7 +201,7 @@ DEFINE_SIZES(wtxid)
 DEFINE_SIZES(filter_bk)
 DEFINE_SIZES(filter_tx)
 
-// Buckets (hashmap + arraymap).
+// Buckets (hashmap + arraymap + headmap).
 // ----------------------------------------------------------------------------
 
 DEFINE_BUCKETS(header)
@@ -203,8 +210,11 @@ DEFINE_BUCKETS(outs)
 DEFINE_BUCKETS(txs)
 DEFINE_BUCKETS(tx)
 
+DEFINE_HEADMAP_BUCKETS(candidate)
+DEFINE_HEADMAP_BUCKETS(confirmed)
 DEFINE_BUCKETS(strong)
 DEFINE_BUCKETS(scan)
+DEFINE_HEADMAP_BUCKETS(state)
 DEFINE_BUCKETS(duplicate)
 DEFINE_BUCKETS(prevout)
 DEFINE_BUCKETS(pool)
@@ -220,8 +230,6 @@ DEFINE_RECORDS(ins)
 DEFINE_RECORDS(outs)
 DEFINE_RECORDS(tx)
 
-DEFINE_RECORDS(candidate)
-DEFINE_RECORDS(confirmed)
 DEFINE_RECORDS(strong)
 DEFINE_RECORDS(scan)
 DEFINE_RECORDS(scan_prefix)
@@ -238,7 +246,6 @@ DEFINE_RECORDS(prevalid0)
 DEFINE_RECORDS(prevalid1)
 DEFINE_RECORDS(presilent0)
 DEFINE_RECORDS(presilent1)
-DEFINE_RECORDS(state)
 DEFINE_RECORDS(pool)
 DEFINE_RECORDS(spends)
 DEFINE_RECORDS(wtxid)

@@ -96,7 +96,10 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.txs_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.tx_buckets(), 128u);
 
+    BOOST_REQUIRE_EQUAL(query.candidate_buckets(), one);
+    BOOST_REQUIRE_EQUAL(query.confirmed_buckets(), one);
     BOOST_REQUIRE_EQUAL(query.strong_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.state_buckets(), one);
     BOOST_REQUIRE_EQUAL(query.duplicate_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.prevout_buckets(), 128);
     BOOST_REQUIRE_EQUAL(query.pool_buckets(), 128u);
@@ -119,8 +122,6 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.outs_records(), one);
     BOOST_REQUIRE_EQUAL(query.tx_records(), one);
 
-    BOOST_REQUIRE_EQUAL(query.candidate_records(), one);
-    BOOST_REQUIRE_EQUAL(query.confirmed_records(), one);
     BOOST_REQUIRE_EQUAL(query.strong_records(), one);
     BOOST_REQUIRE_EQUAL(query.scan_records(), zero);
     BOOST_REQUIRE_EQUAL(query.ecdsa0_records(), zero);
@@ -128,7 +129,6 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.duplicate_records(), zero);
     BOOST_REQUIRE_EQUAL(query.prevalid0_records(), zero);
     BOOST_REQUIRE_EQUAL(query.presilent0_records(), zero);
-    BOOST_REQUIRE_EQUAL(query.state_records(), one);
     BOOST_REQUIRE_EQUAL(query.pool_records(), zero);
     BOOST_REQUIRE_EQUAL(query.spends_records(), zero);
     BOOST_REQUIRE_EQUAL(query.wtxid_records(), zero);
