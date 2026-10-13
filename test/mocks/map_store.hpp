@@ -159,14 +159,14 @@ public:
         return confirmed_head_.file();
     }
 
-    inline const path& strong_tx_head_file() const NOEXCEPT
+    inline const path& strong_head_file() const NOEXCEPT
     {
-        return strong_tx_head_.file();
+        return strong_head_.file();
     }
 
-    inline const path& strong_tx_body_file() const NOEXCEPT
+    inline const path& strong_body_file() const NOEXCEPT
     {
-        return strong_tx_body_.file();
+        return strong_body_.file();
     }
 
     inline const path& duplicate_head_file() const NOEXCEPT

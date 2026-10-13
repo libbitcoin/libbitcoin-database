@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_STRONG_TX_HPP
-#define LIBBITCOIN_DATABASE_TABLES_INDEXES_STRONG_TX_HPP
+#ifndef LIBBITCOIN_DATABASE_TABLES_INDEXES_STRONG_HPP
+#define LIBBITCOIN_DATABASE_TABLES_INDEXES_STRONG_HPP
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
@@ -27,12 +27,12 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// strong_tx is a record hashmap of tx confirmation state.
-struct strong_tx
-  : public hash_map<schema::strong_tx>
+/// strong is a record hashmap of tx confirmation state.
+struct strong
+  : public hash_map<schema::strong>
 {
     using header = schema::header::link;
-    using hash_map<schema::strong_tx>::hashmap;
+    using hash_map<schema::strong>::hashmap;
     static constexpr auto offset = header::bits;
     static_assert(offset < to_bits(header::size));
 
@@ -45,7 +45,7 @@ struct strong_tx
     }
 
     struct record
-      : public schema::strong_tx
+      : public schema::strong
     {
         inline bool positive() const NOEXCEPT
         {

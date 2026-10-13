@@ -330,7 +330,7 @@ include_bitcoin_database_tables_indexes_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/height.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/scan.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/state.hpp \
-    ${srcdir}/../../include/bitcoin/database/tables/indexes/strong_tx.hpp \
+    ${srcdir}/../../include/bitcoin/database/tables/indexes/strong.hpp \
     ${srcdir}/../../include/bitcoin/database/tables/indexes/wtxid.hpp
 
 include_bitcoin_database_tables_optionalsdir = \
@@ -503,7 +503,7 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/tables/indexes/height.cpp \
     ${srcdir}/../../test/tables/indexes/scan.cpp \
     ${srcdir}/../../test/tables/indexes/state.cpp \
-    ${srcdir}/../../test/tables/indexes/strong_tx.cpp \
+    ${srcdir}/../../test/tables/indexes/strong.cpp \
     ${srcdir}/../../test/tables/indexes/wtxid.cpp \
     ${srcdir}/../../test/tables/optional/address.cpp \
     ${srcdir}/../../test/tables/optional/filter_bk.cpp \

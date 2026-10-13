@@ -48,7 +48,7 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
     report(*outs_body_, table_t::outs_body);
     report(tx_body_, table_t::tx_body);
     report(txs_body_, table_t::txs_body);
-    report(strong_tx_body_, table_t::strong_tx_body);
+    report(strong_body_, table_t::strong_body);
     report(scan_body_, table_t::scan_body);
     report(scan_prefix_body_, table_t::scan_prefix_body);
     report(ecdsa0_body_, table_t::ecdsa0_body);
@@ -93,8 +93,8 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = txs_body_.get_fault())) return ec;
     if ((ec = candidate_head_.get_fault())) return ec;
     if ((ec = confirmed_head_.get_fault())) return ec;
-    if ((ec = strong_tx_head_.get_fault())) return ec;
-    if ((ec = strong_tx_body_.get_fault())) return ec;
+    if ((ec = strong_head_.get_fault())) return ec;
+    if ((ec = strong_body_.get_fault())) return ec;
     if ((ec = scan_head_.get_fault())) return ec;
     if ((ec = scan_body_.get_fault())) return ec;
     if ((ec = scan_prefix_head_.get_fault())) return ec;
@@ -168,8 +168,8 @@ size_t CLASS::get_space() const NOEXCEPT
     space(txs_body_);
     space(candidate_head_);
     space(confirmed_head_);
-    space(strong_tx_head_);
-    space(strong_tx_body_);
+    space(strong_head_);
+    space(strong_body_);
     space(scan_head_);
     space(scan_body_);
     space(scan_prefix_head_);

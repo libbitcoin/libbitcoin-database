@@ -196,7 +196,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\height.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\scan.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\state.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong_tx.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\strong.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\indexes\wtxid.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\names.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\tables\optionals\address.hpp" />

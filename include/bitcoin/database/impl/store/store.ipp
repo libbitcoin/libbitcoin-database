@@ -73,8 +73,8 @@ CLASS::store(const settings& config) NOEXCEPT
     candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate), head_settings<schema::height::cell>(config.candidate), sequential),
     confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed), head_settings<schema::height::cell>(config.confirmed), sequential),
 
-    strong_tx_head_(head(config.path / schema::dir::heads, schema::indexes::strong_tx), head_settings(config.strong_tx), random),
-    strong_tx_body_(body(config.path, schema::indexes::strong_tx), config.strong_tx, sequential, staged),
+    strong_head_(head(config.path / schema::dir::heads, schema::indexes::strong), head_settings(config.strong), random),
+    strong_body_(body(config.path, schema::indexes::strong), config.strong, sequential, staged),
     scan_head_(head(config.path / schema::dir::heads, schema::indexes::scan), head_settings(config.scan), random),
     scan_body_(body(config.path, schema::indexes::scan), config.scan, sequential, staged),
     scan_prefix_head_(head(config.path / schema::dir::heads, schema::indexes::scan_prefix), head_settings(config.scan), sequential),
@@ -157,7 +157,7 @@ CLASS::store(const settings& config) NOEXCEPT
 
     candidate(candidate_head_),
     confirmed(confirmed_head_),
-    strong_tx(strong_tx_head_, strong_tx_body_, config.strong_tx.buckets, config.strong_tx.expected),
+    strong(strong_head_, strong_body_, config.strong.buckets, config.strong.expected),
     scan(scan_head_, scan_body_, config.scan.buckets),
     scan_prefix(scan_prefix_head_, scan_prefix_body_),
 
@@ -193,7 +193,7 @@ CLASS::store(const settings& config) NOEXCEPT
     envelope_.ins_k = possible_narrow_cast<uint8_t>(ins.filter_k());
     envelope_.outs_k = possible_narrow_cast<uint8_t>(outs.filter_k());
     envelope_.tx_k = possible_narrow_cast<uint8_t>(tx.filter_k());
-    envelope_.strong_tx_k = possible_narrow_cast<uint8_t>(strong_tx.filter_k());
+    envelope_.strong_k = possible_narrow_cast<uint8_t>(strong.filter_k());
     envelope_.duplicate_k = possible_narrow_cast<uint8_t>(duplicate.filter_k());
     envelope_.pool_k = possible_narrow_cast<uint8_t>(pool.filter_k());
 }
@@ -354,7 +354,7 @@ void CLASS::set_current(bool current) NOEXCEPT
     txs_head_.current(current);
     candidate_head_.current(current);
     confirmed_head_.current(current);
-    strong_tx_head_.current(current);
+    strong_head_.current(current);
     scan_head_.current(current);
     scan_prefix_head_.current(current);
     ecdsa0_head_.current(current);

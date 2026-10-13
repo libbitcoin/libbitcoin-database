@@ -62,7 +62,7 @@ namespace indexes
     constexpr auto confirmed = "index_confirmed";
     constexpr auto duplicate = "index_duplicate";
     constexpr auto state = "index_state";
-    constexpr auto strong_tx = "index_strong";
+    constexpr auto strong = "index_strong";
     constexpr auto wtxid = "index_wtxid";
 }
 

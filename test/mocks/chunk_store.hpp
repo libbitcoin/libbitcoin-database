@@ -128,14 +128,14 @@ public:
         return confirmed_head_.buffer();
     }
 
-    system::data_chunk& strong_tx_head() NOEXCEPT
+    system::data_chunk& strong_head() NOEXCEPT
     {
-        return strong_tx_head_.buffer();
+        return strong_head_.buffer();
     }
 
-    system::data_chunk& strong_tx_body() NOEXCEPT
+    system::data_chunk& strong_body() NOEXCEPT
     {
-        return strong_tx_body_.buffer();
+        return strong_body_.buffer();
     }
 
     // Caches.

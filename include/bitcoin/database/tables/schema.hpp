@@ -101,7 +101,7 @@ struct header
 {
     static constexpr size_t sk = schema::hash;
     static constexpr size_t pk = schema::block;
-    using link = linkage<pk, sub1(to_bits(pk))>; // reduced for strong_tx merge.
+    using link = linkage<pk, sub1(to_bits(pk))>; // reduced for strong merge.
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
         schema::flags +         // context.flags
@@ -310,7 +310,7 @@ struct height
 };
 
 // record hashmap
-struct strong_tx
+struct strong
 {
     static constexpr size_t sk = schema::transaction::pk;
     static constexpr size_t pk = schema::transaction::pk;

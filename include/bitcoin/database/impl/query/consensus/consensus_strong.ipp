@@ -110,19 +110,19 @@ bool CLASS::set_strong(const header_link& link, const tx_links& fks,
     bool positive) NOEXCEPT
 {
     using namespace system;
-    using link_t = table::strong_tx::link;
-    using element_t = table::strong_tx::record;
+    using link_t = table::strong::link;
+    using element_t = table::strong::record;
 
-    // Preallocate all strong_tx records for the block and reuse memory ptr.
+    // Preallocate all strong records for the block and reuse memory ptr.
     const auto records = possible_narrow_cast<link_t::integer>(fks.size());
-    auto record = store_.strong_tx.allocate(records);
-    const auto ptr = store_.strong_tx.get_memory();
+    auto record = store_.strong.allocate(records);
+    const auto ptr = store_.strong.get_memory();
 
     for (const auto& fk: fks)
-        if (!store_.strong_tx.put(ptr, record++, tx_link{ fk }, element_t
+        if (!store_.strong.put(ptr, record++, tx_link{ fk }, element_t
             {
                 {},
-                table::strong_tx::merge(positive, link)
+                table::strong::merge(positive, link)
             })) return false;
 
     return true;
