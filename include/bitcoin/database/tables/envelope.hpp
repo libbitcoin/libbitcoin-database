@@ -86,16 +86,18 @@ struct BCD_API envelope
     uint32_t ins_buckets{};
     uint32_t outs_buckets{};
     uint32_t tx_buckets{};
-    uint32_t strong_tx_buckets{};
+    uint32_t strong_buckets{};
     uint32_t duplicate_buckets{};
     uint32_t pool_buckets{};
+    uint32_t wtxid_buckets{};
     uint8_t header_k{};
     uint8_t ins_k{};
     uint8_t outs_k{};
     uint8_t tx_k{};
-    uint8_t strong_tx_k{};
+    uint8_t strong_k{};
     uint8_t duplicate_k{};
     uint8_t pool_k{};
+    uint8_t wtxid_k{};
 
     /// Network settings.
     bool limited_blocks{};

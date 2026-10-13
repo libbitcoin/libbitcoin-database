@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
 
     BOOST_REQUIRE_EQUAL(query.candidate_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.confirmed_body_size(), zero);
-    BOOST_REQUIRE_EQUAL(query.strong_tx_body_size(), schema::strong_tx::minrow);
+    BOOST_REQUIRE_EQUAL(query.strong_body_size(), schema::strong::minrow);
     BOOST_REQUIRE_EQUAL(query.scan_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.ecdsa0_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.schnorr0_body_size(), zero);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.txs_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.tx_buckets(), 128u);
 
-    BOOST_REQUIRE_EQUAL(query.strong_tx_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.strong_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.duplicate_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.prevout_buckets(), 128);
     BOOST_REQUIRE_EQUAL(query.pool_buckets(), 128u);
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
 
     BOOST_REQUIRE_EQUAL(query.candidate_records(), one);
     BOOST_REQUIRE_EQUAL(query.confirmed_records(), one);
-    BOOST_REQUIRE_EQUAL(query.strong_tx_records(), one);
+    BOOST_REQUIRE_EQUAL(query.strong_records(), one);
     BOOST_REQUIRE_EQUAL(query.scan_records(), zero);
     BOOST_REQUIRE_EQUAL(query.ecdsa0_records(), zero);
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), zero);
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(query_extent__store_head_size__genesis__archive_plus_indexe
     BOOST_REQUIRE(query.initialize(test::genesis));
     const auto indexes = query.candidate_head_size()
         + query.confirmed_head_size()
-        + query.strong_tx_head_size()
+        + query.strong_head_size()
         + query.scan_head_size()
         + query.scan_prefix_head_size()
         + query.ecdsa0_head_size()
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(query_extent__store_body_size__genesis__archive_plus_indexe
     BOOST_REQUIRE(query.initialize(test::genesis));
     const auto indexes = query.candidate_body_size()
         + query.confirmed_body_size()
-        + query.strong_tx_body_size()
+        + query.strong_body_size()
         + query.scan_body_size()
         + query.scan_prefix_body_size()
         + query.ecdsa0_body_size()

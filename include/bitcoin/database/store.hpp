@@ -220,8 +220,8 @@ protected:
     Storage<one> confirmed_head_;
 
     // record hashmap
-    Storage<one> strong_tx_head_;
-    Storage<one> strong_tx_body_;
+    Storage<one> strong_head_;
+    Storage<one> strong_body_;
     Storage<one> scan_head_;
     table::scan_storage<Storage> scan_body_;
     Storage<one> scan_prefix_head_;
@@ -370,7 +370,7 @@ public:
     /// Indexes.
     table::height candidate;
     table::height confirmed;
-    table::strong_tx strong_tx;
+    table::strong strong;
     table::scan<Storage> scan;
     table::scan_prefix scan_prefix;
 

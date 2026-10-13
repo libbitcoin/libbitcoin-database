@@ -144,7 +144,7 @@ public:
 
     size_t candidate_head_size() const NOEXCEPT;
     size_t confirmed_head_size() const NOEXCEPT;
-    size_t strong_tx_head_size() const NOEXCEPT;
+    size_t strong_head_size() const NOEXCEPT;
     size_t scan_head_size() const NOEXCEPT;
     size_t scan_prefix_head_size() const NOEXCEPT;
     size_t ecdsa0_head_size() const NOEXCEPT;
@@ -179,7 +179,7 @@ public:
 
     size_t candidate_body_size() const NOEXCEPT;
     size_t confirmed_body_size() const NOEXCEPT;
-    size_t strong_tx_body_size() const NOEXCEPT;
+    size_t strong_body_size() const NOEXCEPT;
     size_t scan_body_size() const NOEXCEPT;
     size_t scan_prefix_body_size() const NOEXCEPT;
     size_t ecdsa0_body_size() const NOEXCEPT;
@@ -214,7 +214,7 @@ public:
 
     size_t candidate_size() const NOEXCEPT;
     size_t confirmed_size() const NOEXCEPT;
-    size_t strong_tx_size() const NOEXCEPT;
+    size_t strong_size() const NOEXCEPT;
     size_t scan_size() const NOEXCEPT;
     size_t scan_prefix_size() const NOEXCEPT;
     size_t ecdsa0_size() const NOEXCEPT;
@@ -245,7 +245,7 @@ public:
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
 
-    size_t strong_tx_buckets() const NOEXCEPT;
+    size_t strong_buckets() const NOEXCEPT;
     size_t scan_buckets() const NOEXCEPT;
     size_t duplicate_buckets() const NOEXCEPT;
     size_t prevout_buckets() const NOEXCEPT;
@@ -262,7 +262,7 @@ public:
 
     size_t candidate_records() const NOEXCEPT;
     size_t confirmed_records() const NOEXCEPT;
-    size_t strong_tx_records() const NOEXCEPT;
+    size_t strong_records() const NOEXCEPT;
     size_t scan_records() const NOEXCEPT;
     size_t scan_prefix_records() const NOEXCEPT;
     size_t ecdsa0_records() const NOEXCEPT;

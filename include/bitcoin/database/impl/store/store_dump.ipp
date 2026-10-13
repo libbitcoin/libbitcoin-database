@@ -52,7 +52,7 @@ code CLASS::dump(const path& folder,
 
     dump(ec, candidate_head_, schema::indexes::candidate, table_t::candidate_head);
     dump(ec, confirmed_head_, schema::indexes::confirmed, table_t::confirmed_head);
-    dump(ec, strong_tx_head_, schema::indexes::strong_tx, table_t::strong_tx_head);
+    dump(ec, strong_head_, schema::indexes::strong, table_t::strong_head);
     dump(ec, scan_head_, schema::indexes::scan, table_t::scan_head);
     dump(ec, scan_prefix_head_, schema::indexes::scan_prefix, table_t::scan_prefix_head);
 

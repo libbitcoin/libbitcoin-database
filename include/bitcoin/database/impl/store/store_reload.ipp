@@ -70,8 +70,8 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
 
     reload(ec, candidate_head_, table_t::candidate_head);
     reload(ec, confirmed_head_, table_t::confirmed_head);
-    reload(ec, strong_tx_head_, table_t::strong_tx_head);
-    reload(ec, strong_tx_body_, table_t::strong_tx_body);
+    reload(ec, strong_head_, table_t::strong_head);
+    reload(ec, strong_body_, table_t::strong_body);
     reload(ec, scan_head_, table_t::scan_head);
     reload(ec, scan_body_, table_t::scan_body);
     reload(ec, scan_prefix_head_, table_t::scan_prefix_head);

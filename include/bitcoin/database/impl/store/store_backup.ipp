@@ -52,7 +52,7 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
 
     backup(ec, candidate, table_t::candidate_table);
     backup(ec, confirmed, table_t::confirmed_table);
-    backup(ec, strong_tx, table_t::strong_tx_table);
+    backup(ec, strong, table_t::strong_table);
     backup(ec, scan, table_t::scan_table);
     backup(ec, scan_prefix, table_t::scan_prefix_table);
 

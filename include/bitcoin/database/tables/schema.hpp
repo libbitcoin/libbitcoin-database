@@ -58,7 +58,8 @@ namespace schema {
 /// 4.0.12.0 Association, milestone and checkpoint as block state flags.
 /// 4.0.13.0 Scanned and filtered block state flags, presilent batch tables.
 /// 4.0.14.0 Scan table head of scan starts, scan and tx counts at the latch.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 14, 0 };
+/// 4.0.15.0 Wtxid buckets and filter k in the envelope.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 15, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
@@ -101,7 +102,7 @@ struct header
 {
     static constexpr size_t sk = schema::hash;
     static constexpr size_t pk = schema::block;
-    using link = linkage<pk, sub1(to_bits(pk))>; // reduced for strong_tx merge.
+    using link = linkage<pk, sub1(to_bits(pk))>; // reduced for strong merge.
     using key = system::data_array<sk>;
     static constexpr size_t minsize =
         schema::flags +         // context.flags
@@ -310,7 +311,7 @@ struct height
 };
 
 // record hashmap
-struct strong_tx
+struct strong
 {
     static constexpr size_t sk = schema::transaction::pk;
     static constexpr size_t pk = schema::transaction::pk;

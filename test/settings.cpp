@@ -32,9 +32,10 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.envelope.ins_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.outs_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.tx_buckets, 128u);
-    BOOST_REQUIRE_EQUAL(configuration.envelope.strong_tx_buckets, 128u);
+    BOOST_REQUIRE_EQUAL(configuration.envelope.strong_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.duplicate_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.pool_buckets, 128u);
+    BOOST_REQUIRE_EQUAL(configuration.envelope.wtxid_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.provide_filters, true);
     BOOST_REQUIRE_EQUAL(configuration.path, "bitcoin");
 
@@ -68,12 +69,16 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.candidate.rate, 5u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed.buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed.rate, 5u);
-    BOOST_REQUIRE_EQUAL(configuration.strong_tx.buckets, 128u);
-    BOOST_REQUIRE_EQUAL(configuration.strong_tx.expected, 0u);
-    BOOST_REQUIRE_EQUAL(configuration.strong_tx.size, 1u);
-    BOOST_REQUIRE_EQUAL(configuration.strong_tx.rate, 5u);
+    BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 128u);
+    BOOST_REQUIRE_EQUAL(configuration.strong.expected, 0u);
+    BOOST_REQUIRE_EQUAL(configuration.strong.size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.strong.rate, 5u);
     BOOST_REQUIRE_EQUAL(configuration.scan.size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.scan.rate, 5u);
+    BOOST_REQUIRE_EQUAL(configuration.wtxid.buckets, 128u);
+    BOOST_REQUIRE_EQUAL(configuration.wtxid.expected, 0u);
+    BOOST_REQUIRE_EQUAL(configuration.wtxid.size, 1u);
+    BOOST_REQUIRE_EQUAL(configuration.wtxid.rate, 5u);
 
     // Caches.
     BOOST_REQUIRE_EQUAL(configuration.ecdsa.size, 1u);

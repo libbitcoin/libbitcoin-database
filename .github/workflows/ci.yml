@@ -19,6 +19,8 @@ on:
       - 'test/**'
       - 'tools/initchain/**'
   push:
+    branches:
+      - "**"
     tags-ignore:
       - "**"
     paths:

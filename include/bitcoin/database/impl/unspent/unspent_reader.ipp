@@ -241,16 +241,16 @@ code CLASS::read_blocks(header_links& out,
     auto block = header_link::terminal;
     out.resize(parents.size());
 
-    const auto ptr = store_.strong_tx.get_memory();
+    const auto ptr = store_.strong.get_memory();
     for (size_t at{}; at < parents.size(); ++at)
     {
         if (parents.at(at) != parent)
         {
             parent = parents.at(at);
-            const auto fk = store_.strong_tx.first(ptr, parent);
+            const auto fk = store_.strong.first(ptr, parent);
 
-            table::strong_tx::record strong{};
-            if (!store_.strong_tx.get(ptr, fk, strong) || !strong.positive())
+            table::strong::record strong{};
+            if (!store_.strong.get(ptr, fk, strong) || !strong.positive())
                 return error::branch_inactive;
 
             block = strong.header_fk();
