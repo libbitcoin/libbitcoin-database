@@ -194,6 +194,18 @@ BOOST_AUTO_TEST_CASE(hashhead__optimal_k__load_factor__banded)
     BOOST_REQUIRE_EQUAL(filtered_::optimal_k(200, 10), 1u);
 }
 
+BOOST_AUTO_TEST_CASE(hashhead__false_positive__zero_load__zero)
+{
+    BOOST_REQUIRE_EQUAL(filtered_::false_positive(4, 0.0), 0.0);
+    BOOST_REQUIRE_EQUAL(filtered_::expected_walk(4, 0.0), 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(hashhead__false_positive__load__increasing_below_walk)
+{
+    BOOST_REQUIRE_LT(filtered_::false_positive(4, 1.0), filtered_::false_positive(4, 2.0));
+    BOOST_REQUIRE_LT(filtered_::false_positive(4, 2.0), filtered_::expected_walk(4, 2.0));
+}
+
 BOOST_AUTO_TEST_CASE(hashhead__construct__expected__derived_k)
 {
     data_chunk data{};

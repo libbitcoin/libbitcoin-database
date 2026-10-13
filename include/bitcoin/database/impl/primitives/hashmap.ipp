@@ -100,6 +100,24 @@ uint32_t CLASS::derive_buckets(uint64_t expected, uint32_t low,
 }
 
 TEMPLATE
+size_t CLASS::optimal_k(size_t count, size_t buckets) NOEXCEPT
+{
+    return head::optimal_k(count, buckets);
+}
+
+TEMPLATE
+double CLASS::false_positive(size_t k, double load_factor) NOEXCEPT
+{
+    return head::false_positive(k, load_factor);
+}
+
+TEMPLATE
+double CLASS::expected_walk(size_t k, double load_factor) NOEXCEPT
+{
+    return head::expected_walk(k, load_factor);
+}
+
+TEMPLATE
 size_t CLASS::filter_k() const NOEXCEPT
 {
     return head_.filter_k();
