@@ -223,6 +223,19 @@ BOOST_AUTO_TEST_CASE(query_navigate__get_point_key__always__expected)
     BOOST_CHECK_EQUAL(query.get_point_hash(4), system::one_hash);
 }
 
+// get_outs_key
+
+BOOST_AUTO_TEST_CASE(query_navigate__get_outs_key__genesis__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK_EQUAL(query.get_outs_key(0), test::genesis.transactions_ptr()->front()->outputs_ptr()->front()->script().hash());
+}
+
 // get_tx_key
 
 BOOST_AUTO_TEST_CASE(query_navigate__get_tx_key__always__expected)

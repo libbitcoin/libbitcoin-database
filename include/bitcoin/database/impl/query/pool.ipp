@@ -59,6 +59,19 @@ bool CLASS::is_confirmable_tx(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::is_confirmable_spent(const output_link& link) const NOEXCEPT
+{
+    for (const auto& in: to_spenders(link))
+    {
+        const auto tx = to_input_tx(in);
+        if (is_pooled(tx) && is_confirmable_tx(tx))
+            return true;
+    }
+
+    return false;
+}
+
+TEMPLATE
 code CLASS::get_pooled(pooled_tx& out, const tx_link& link,
     const context& ctx) const NOEXCEPT
 {

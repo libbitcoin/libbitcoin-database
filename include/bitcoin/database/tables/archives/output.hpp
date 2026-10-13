@@ -146,6 +146,26 @@ struct output
         bool match{};
     };
 
+    /// Unstreamed, hashes the script in place.
+    struct get_script_hash
+      : public schema::output
+    {
+        inline bool from_data(memory::iterator start) NOEXCEPT
+        {
+            using namespace system;
+
+            // Skip parent fk and value, and read the script size.
+            const auto* position = std::next(start, tx::size);
+            unsafe_from_variable(position);
+            const auto script_size = unsafe_from_variable(position);
+            const auto bytes = possible_narrow_cast<size_t>(script_size);
+            hash = accumulator<sha256>::hash(bytes, position);
+            return true;
+        }
+
+        system::hash_digest hash{};
+    };
+
     /// Unstreamed, writes full output directly to the sink.
     struct write_script
       : public schema::output

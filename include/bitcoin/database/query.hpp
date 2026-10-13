@@ -238,15 +238,18 @@ public:
     size_t filter_bk_size() const NOEXCEPT;
     size_t filter_tx_size() const NOEXCEPT;
 
-    /// Buckets (hashmap + arraymap).
+    /// Buckets (hashmap + arraymap + headmap).
     size_t header_buckets() const NOEXCEPT;
     size_t ins_buckets() const NOEXCEPT;
     size_t outs_buckets() const NOEXCEPT;
     size_t txs_buckets() const NOEXCEPT;
     size_t tx_buckets() const NOEXCEPT;
 
+    size_t candidate_buckets() const NOEXCEPT;
+    size_t confirmed_buckets() const NOEXCEPT;
     size_t strong_buckets() const NOEXCEPT;
     size_t scan_buckets() const NOEXCEPT;
+    size_t state_buckets() const NOEXCEPT;
     size_t duplicate_buckets() const NOEXCEPT;
     size_t prevout_buckets() const NOEXCEPT;
     size_t pool_buckets() const NOEXCEPT;
@@ -260,8 +263,6 @@ public:
     size_t outs_records() const NOEXCEPT;
     size_t tx_records() const NOEXCEPT;
 
-    size_t candidate_records() const NOEXCEPT;
-    size_t confirmed_records() const NOEXCEPT;
     size_t strong_records() const NOEXCEPT;
     size_t scan_records() const NOEXCEPT;
     size_t scan_prefix_records() const NOEXCEPT;
@@ -278,7 +279,6 @@ public:
     size_t prevalid1_records() const NOEXCEPT;
     size_t presilent0_records() const NOEXCEPT;
     size_t presilent1_records() const NOEXCEPT;
-    size_t state_records() const NOEXCEPT;
     size_t pool_records() const NOEXCEPT;
     size_t spends_records() const NOEXCEPT;
     size_t wtxid_records() const NOEXCEPT;
@@ -454,6 +454,8 @@ public:
     inline hash_digest get_tx_key(const tx_link& link) const NOEXCEPT;
     hash_digest get_wtxid(const tx_link& link) const NOEXCEPT;
     inline ins_key get_point_key(const ins_link& link) const NOEXCEPT;
+    inline hash_digest get_outs_key(const outs_link& link) const NOEXCEPT;
+    inline hash_digest get_wtxid_key(const pool_link& link) const NOEXCEPT;
     inline hash_digest get_point_hash(const ins_link& link) const NOEXCEPT;
 
     /// False position implies not confirmed (or fault).
@@ -705,6 +707,9 @@ public:
 
     /// Unconfirmed, and not conflicted by a confirmed tx (or via ancestry).
     bool is_confirmable_tx(const tx_link& link) const NOEXCEPT;
+
+    /// Spent by a pooled and confirmable tx.
+    bool is_confirmable_spent(const output_link& link) const NOEXCEPT;
 
     /// Confirmable tx links, from cursor toward end, at most limit.
     code get_confirmable_txs(pool_link& cursor, tx_links& out,
