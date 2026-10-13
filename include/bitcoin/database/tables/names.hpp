@@ -112,7 +112,6 @@ namespace caches
 
 namespace optionals
 {
-    constexpr auto address = "option_address";
     constexpr auto filter_bk = "option_filter_bk";
     constexpr auto filter_tx = "option_filter_tx";
 }

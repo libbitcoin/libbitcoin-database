@@ -124,9 +124,6 @@ enum class table_t
     wtxid_body,
 
     /// Optionals.
-    address_table,
-    address_head,
-    address_body,
     filter_bk_table,
     filter_bk_head,
     filter_bk_body,

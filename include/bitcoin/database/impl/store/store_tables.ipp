@@ -125,9 +125,6 @@ const CLASS::table_map CLASS::tables
     { table_t::wtxid_body, "wtxid_body" },
 
     // Optionals.
-    { table_t::address_table, "address_table" },
-    { table_t::address_head, "address_head" },
-    { table_t::address_body, "address_body" },
     { table_t::filter_bk_table, "filter_bk_table" },
     { table_t::filter_bk_head, "filter_bk_head" },
     { table_t::filter_bk_body, "filter_bk_body" },
