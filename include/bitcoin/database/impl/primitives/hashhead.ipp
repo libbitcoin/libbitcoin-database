@@ -218,6 +218,23 @@ size_t CLASS::poisson_span(double load_factor) NOEXCEPT
         deviations * std::sqrt(load_factor) + minimum));
 }
 
+// False positive over poisson bucket occupancy.
+TEMPLATE
+double CLASS::false_positive(size_t k, double load_factor) NOEXCEPT
+{
+    using namespace system;
+    auto rate = 0.0;
+    auto poisson = std::exp(-load_factor);
+    const auto span = poisson_span(load_factor);
+    for (auto n = one; n <= span; ++n)
+    {
+        poisson *= load_factor / to_floating(n);
+        rate += poisson * bloom_false_positive(k, n);
+    }
+
+    return rate;
+}
+
 // False positive over poisson bucket occupancy, weighted by the occupancy.
 TEMPLATE
 double CLASS::expected_walk(size_t k, double load_factor) NOEXCEPT

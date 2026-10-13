@@ -24,6 +24,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
 {
     database::settings configuration;
     BOOST_REQUIRE_EQUAL(configuration.turbo, false);
+    BOOST_REQUIRE_EQUAL(configuration.gpu_scan_minimum, 65'536u);
     BOOST_REQUIRE_EQUAL(configuration.mark_unconfirmable, true);
     BOOST_REQUIRE_EQUAL(configuration.interval_depth, 255u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.interval_depth, 255u);

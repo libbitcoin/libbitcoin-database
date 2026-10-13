@@ -40,6 +40,13 @@ public:
 
     using bytes = typename Link::bytes;
 
+    /// Bucket filter, disabled if the cell has no bits beyond the link.
+    static constexpr size_t filter_bits = to_bits(CellSize) - Link::bits;
+    static constexpr size_t filter_k_max = (filter_bits < two) ? zero :
+        std::min(filter_bits, bits<uint64_t> /
+            system::ceilinged_log2(filter_bits));
+    using filter_t = system::bloom<filter_bits, filter_k_max>;
+
     /// A hash head is disabled if it has no buckets.
     hashhead(storage& head, size_t buckets, size_t expected=zero) NOEXCEPT;
 
@@ -58,6 +65,12 @@ public:
 
     /// Optimal filter k-value for expected load factor.
     static size_t optimal_k(size_t count, size_t buckets) NOEXCEPT;
+
+    /// Expected filter false positive rate of a new key at load factor.
+    static double false_positive(size_t k, double load_factor) NOEXCEPT;
+
+    /// Expected filter false positive walk of a new key at load factor.
+    static double expected_walk(size_t k, double load_factor) NOEXCEPT;
 
     /// Buckets for expected elements, scaled by memory between load factors.
     static uint32_t derive_buckets(uint64_t expected, uint32_t low,
@@ -101,12 +114,10 @@ protected:
     static constexpr size_t cell_size = CellSize;
     static constexpr size_t link_size = Link::size;
     static constexpr size_t link_bits = Link::bits;
-    static constexpr size_t m = to_bits(cell_size) - link_bits;
+    static constexpr size_t m = filter_bits;
     static constexpr size_t k_default = system::floored_log2(m);
-    static constexpr size_t k_max = (m < two) ? zero : std::min(m,
-        bits<uint64_t> / system::ceilinged_log2(m));
+    static constexpr size_t k_max = filter_k_max;
 
-    using filter_t = system::bloom<m, k_max>;
     using cell = unsigned_type<cell_size>;
     using filter = filter_t::type;
     using link = Link::integer;
@@ -127,7 +138,6 @@ protected:
 
     static double bloom_false_positive(size_t k, size_t n) NOEXCEPT;
     static size_t poisson_span(double load_factor) NOEXCEPT;
-    static double expected_walk(size_t k, double load_factor) NOEXCEPT;
 
     inline cell get_cell(const Link& index) const NOEXCEPT;
     inline bool set_cell(bool& collision, bytes& next, const Link& current,

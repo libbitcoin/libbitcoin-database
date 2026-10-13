@@ -72,6 +72,22 @@ public:
     static uint32_t derive_buckets(uint64_t expected, uint32_t low,
         uint32_t high) NOEXCEPT;
 
+    /// Bucket filter (hashhead::filter_t).
+    using filter_t = typename hashhead<Link, Key, CellSize>::filter_t;
+    static constexpr size_t filter_bits =
+        hashhead<Link, Key, CellSize>::filter_bits;
+    static constexpr size_t filter_k_max =
+        hashhead<Link, Key, CellSize>::filter_k_max;
+
+    /// Optimal filter k-value for expected load factor (hashhead::optimal_k).
+    static size_t optimal_k(size_t count, size_t buckets) NOEXCEPT;
+
+    /// Expected filter false positive rate (hashhead::false_positive).
+    static double false_positive(size_t k, double load_factor) NOEXCEPT;
+
+    /// Expected filter false positive walk (hashhead::expected_walk).
+    static double expected_walk(size_t k, double load_factor) NOEXCEPT;
+
     /// Filter selections, derived at construct, overridden by set_filter_k.
     size_t filter_k() const NOEXCEPT;
 

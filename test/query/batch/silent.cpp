@@ -477,8 +477,40 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row__scanned)
     const stopper cancel{};
     bool device{};
     BOOST_REQUIRE(query.set_silents(rows, link, block, false));
-    BOOST_REQUIRE_EQUAL(query.compute_silents(cancel, device, false), database::error::success);
+    BOOST_REQUIRE_EQUAL(query.compute_silents(cancel, device, false, true), database::error::success);
     BOOST_REQUIRE_EQUAL(query.scan_records(), 1u);
+
+    std::vector<tx_link_t> links{};
+    const auto handler = [&](const code&, tx_link_t link, const ec_compressed&) NOEXCEPT
+    {
+        links.push_back(link);
+    };
+
+    BOOST_REQUIRE(query.scan_silent(cancel, get_keys(), handler));
+    BOOST_REQUIRE_EQUAL(links, std::vector<tx_link_t>{ tx.value });
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row_without_gpu__scanned)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+
+    const auto block = silent_block();
+    BOOST_REQUIRE(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
+    const auto link = query.to_header(block.hash());
+    const auto tx = query.to_tx(simple_send().hash(false));
+
+    size_t rows{};
+    const stopper cancel{};
+    bool device{};
+    BOOST_REQUIRE(query.set_silents(rows, link, block, false));
+    BOOST_REQUIRE_EQUAL(query.compute_silents(cancel, device, false, false), database::error::success);
+    BOOST_REQUIRE_EQUAL(query.scan_records(), 1u);
+    BOOST_REQUIRE(!device);
 
     std::vector<tx_link_t> links{};
     const auto handler = [&](const code&, tx_link_t link, const ec_compressed&) NOEXCEPT
@@ -501,7 +533,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__empty__success)
 
     const stopper cancel{};
     bool device{};
-    BOOST_REQUIRE_EQUAL(query.compute_silents(cancel, device, false), database::error::success);
+    BOOST_REQUIRE_EQUAL(query.compute_silents(cancel, device, false, true), database::error::success);
     BOOST_REQUIRE_EQUAL(query.scan_records(), 0u);
 }
 
@@ -543,7 +575,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__presilent_banked_row__
     bool device{};
     BOOST_REQUIRE(query.set_silents(rows, link, block, false));
     BOOST_REQUIRE_EQUAL(query.presilent_records(false), 1u);
-    BOOST_REQUIRE_EQUAL(query.compute_silents(cancel, device, false), database::error::success);
+    BOOST_REQUIRE_EQUAL(query.compute_silents(cancel, device, false, true), database::error::success);
     BOOST_REQUIRE(is_scanned(query.get_block_state(link)));
 }
 

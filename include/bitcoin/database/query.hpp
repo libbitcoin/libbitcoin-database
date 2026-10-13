@@ -758,8 +758,8 @@ public:
         const header_link& link, const block_view& block) const NOEXCEPT;
 
     /// Compute a bank's silent payment batch, then set its scan records.
-    code compute_silents(const stopper& cancel, bool& device,
-        bool bank) NOEXCEPT;
+    code compute_silents(const stopper& cancel, bool& device, bool bank,
+        bool gpu) NOEXCEPT;
 
     /// Commit a block's captured ecdsa signature groups (band-expanded).
     bool set_signatures(const system::chain::ecdsa_signatures& sigs,
@@ -799,9 +799,9 @@ public:
     /// Verify all signatures in table, false implies cancel, device set if
     /// verified on the device.
     bool verify_ecdsa_signatures(const stopper& cancel, header_links&,
-        bool& device, bool bank) NOEXCEPT;
+        bool& device, bool bank, bool gpu) NOEXCEPT;
     bool verify_schnorr_signatures(const stopper& cancel, header_links&,
-        bool& device, bool bank) NOEXCEPT;
+        bool& device, bool bank, bool gpu) NOEXCEPT;
 
     /// Purge all entries in table.
     bool purge_prevalids(bool bank) NOEXCEPT;
