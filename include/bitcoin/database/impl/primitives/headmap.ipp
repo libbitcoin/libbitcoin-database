@@ -140,8 +140,6 @@ memory CLASS::get_memory() const NOEXCEPT
 TEMPLATE
 Value CLASS::at(size_t index) const NOEXCEPT
 {
-    using namespace system;
-
     // Buckets at or above the logical size are unallocated (count publishes).
     if (index >= count())
         return {};
@@ -150,24 +148,7 @@ Value CLASS::at(size_t index) const NOEXCEPT
     if (!ptr)
         return {};
 
-    const auto raw = ptr.data();
-    if constexpr (aligned)
-    {
-        // Reads full padded word (masked by to_value).
-        const auto& head = *pointer_cast<std::atomic<cell>>(raw);
-        return to_value(head.load(load_order));
-    }
-    else
-    {
-        const auto& head = cell_array(raw);
-        cell value{};
-
-        mutex_.lock_shared();
-        cell_array(value) = head;
-        mutex_.unlock_shared();
-
-        return to_value(value);
-    }
+    return load(ptr.data());
 }
 
 TEMPLATE
@@ -183,6 +164,29 @@ Value CLASS::at(const memory& ptr, size_t index) const NOEXCEPT
     if (is_null(raw))
         return {};
 
+    return load(raw);
+}
+
+TEMPLATE
+Value CLASS::top() const NOEXCEPT
+{
+    static_assert(is_link);
+
+    const auto size = count();
+    if (is_zero(size))
+        return {};
+
+    const auto ptr = file_.get(link_to_position(sub1(size)));
+    if (!ptr)
+        return {};
+
+    return load(ptr.data());
+}
+
+TEMPLATE
+Value CLASS::load(memory::iterator raw) const NOEXCEPT
+{
+    using namespace system;
     if constexpr (aligned)
     {
         // Reads full padded word (masked by to_value).

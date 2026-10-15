@@ -40,6 +40,18 @@ inline header_link CLASS::to_confirmed(size_t height) const NOEXCEPT
 }
 
 TEMPLATE
+inline header_link CLASS::to_top_candidate() const NOEXCEPT
+{
+    return store_.candidate.top();
+}
+
+TEMPLATE
+inline header_link CLASS::to_top_confirmed() const NOEXCEPT
+{
+    return store_.confirmed.top();
+}
+
+TEMPLATE
 inline header_link CLASS::to_header(const hash_digest& key) const NOEXCEPT
 {
     return store_.header.first(key);

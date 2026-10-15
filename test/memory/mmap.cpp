@@ -1129,6 +1129,44 @@ BOOST_AUTO_TEST_CASE(mmap__truncate__reallocate__zeroed)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+BOOST_AUTO_TEST_CASE(mmap__truncate__unzeroed_reallocate__retained)
+{
+    constexpr size_t initial = 12'000;
+    constexpr size_t retained = 5'000;
+    constexpr size_t appended = 4'000;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    map instance(file, { .size = 1, .rate = 50, .zeroed = false });
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+
+    const auto original = stage_vector(stage_repattern, initial, one);
+    auto memory = instance.get(instance.allocate(initial));
+    BOOST_REQUIRE(memory);
+    std::copy_n(original.begin(), original.size(), memory.begin());
+
+    memory.reset();
+    BOOST_REQUIRE(instance.truncate(retained));
+    memory = instance.get_capacity(retained);
+    BOOST_REQUIRE(memory);
+
+    const auto released = std::next(original.begin(), retained);
+    const auto released_end = std::next(released, appended);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), std::next(memory.begin(), appended), released, released_end);
+
+    memory.reset();
+    BOOST_REQUIRE_EQUAL(instance.allocate(appended), retained);
+    memory = instance.get(retained);
+    BOOST_REQUIRE(memory);
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), std::next(memory.begin(), appended), released, released_end);
+
+    memory.reset();
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_reallocate__zeroed)
 {
     constexpr size_t initial = 12'000;

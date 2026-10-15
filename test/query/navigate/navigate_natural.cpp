@@ -102,6 +102,58 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_confirmed__always__expected)
     BOOST_REQUIRE_EQUAL(query.to_candidate(4), header_link::terminal);
 }
 
+// to_top_candidate
+
+BOOST_AUTO_TEST_CASE(query_navigate__to_top_candidate__push_pop__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
+    BOOST_REQUIRE_EQUAL(query.to_top_candidate(), 0u);
+    BOOST_REQUIRE(query.push_candidate(1));
+    BOOST_REQUIRE_EQUAL(query.to_top_candidate(), 1u);
+    BOOST_REQUIRE(query.push_candidate(2));
+    BOOST_REQUIRE_EQUAL(query.to_top_candidate(), 2u);
+    BOOST_REQUIRE_EQUAL(query.to_top_confirmed(), 0u);
+    BOOST_REQUIRE(query.pop_candidate());
+    BOOST_REQUIRE_EQUAL(query.to_top_candidate(), 1u);
+    BOOST_REQUIRE(query.pop_candidate());
+    BOOST_REQUIRE_EQUAL(query.to_top_candidate(), 0u);
+    BOOST_REQUIRE(!query.pop_candidate());
+    BOOST_REQUIRE_EQUAL(query.to_top_candidate(), 0u);
+}
+
+// to_top_confirmed
+
+BOOST_AUTO_TEST_CASE(query_navigate__to_top_confirmed__push_pop__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, test::context, {}, false, false));
+    BOOST_REQUIRE(query.set(test::block2, test::context, {}, false, false));
+    BOOST_REQUIRE_EQUAL(query.to_top_confirmed(), 0u);
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE_EQUAL(query.to_top_confirmed(), 1u);
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BOOST_REQUIRE_EQUAL(query.to_top_confirmed(), 2u);
+    BOOST_REQUIRE_EQUAL(query.to_top_candidate(), 0u);
+    BOOST_REQUIRE(query.pop_confirmed());
+    BOOST_REQUIRE_EQUAL(query.to_top_confirmed(), 1u);
+    BOOST_REQUIRE(query.pop_confirmed());
+    BOOST_REQUIRE_EQUAL(query.to_top_confirmed(), 0u);
+    BOOST_REQUIRE(!query.pop_confirmed());
+    BOOST_REQUIRE_EQUAL(query.to_top_confirmed(), 0u);
+}
+
 // to_header
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_header__always__expected)
