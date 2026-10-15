@@ -764,6 +764,11 @@ public:
     bool get_silent_prevouts(data_chunk& prevouts, std::vector<bool>& selected,
         const header_link& link, const block_view& block) const NOEXCEPT;
 
+    /// The wire prevouts of the spends of all of the block's txs in block
+    /// order, with the selection of those txs (all but the coinbase).
+    bool get_block_prevouts(data_chunk& prevouts, std::vector<bool>& selected,
+        const header_link& link, const block_view& block) const NOEXCEPT;
+
     /// Compute a bank's silent payment batch, then set its scan records.
     code compute_silents(const stopper& cancel, bool& use_gpu,
         bool bank) NOEXCEPT;
@@ -1217,6 +1222,12 @@ protected:
     /// A block's tx is indexed unless linked below its coinbase and pooled.
     bool is_silent_selected(const tx_link& link,
         const tx_link& coinbase) const NOEXCEPT;
+
+    /// The wire prevouts of the spends of the block's selected txs, where
+    /// silent selects the silent payment eligible txs and otherwise all.
+    bool get_prevouts_(data_chunk& prevouts, std::vector<bool>& selected,
+        const header_link& link, const block_view& block,
+        bool silent) const NOEXCEPT;
 
     /// Mark the blocks of a bank's presilent table scanned.
     bool set_scanned_(bool bank) NOEXCEPT;
