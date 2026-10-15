@@ -329,6 +329,8 @@ public:
     /// search key (entry)
     inline header_link to_candidate(size_t height) const NOEXCEPT;
     inline header_link to_confirmed(size_t height) const NOEXCEPT;
+    inline header_link to_top_candidate() const NOEXCEPT;
+    inline header_link to_top_confirmed() const NOEXCEPT;
     inline header_link to_header(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_tx(const hash_digest& key) const NOEXCEPT;
     inline tx_link to_witness_tx(const hash_digest& key) const NOEXCEPT;

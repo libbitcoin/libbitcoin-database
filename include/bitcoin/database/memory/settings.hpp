@@ -53,6 +53,12 @@ struct storage_settings
     /// KB/t to 4.0 (one page per fault), bandwidth to ~250 MB/s, and the
     /// validation rate from 648 to 720 blk/min at the same heights.
     advice access{ advice::scattered };
+
+    /// Rows released by truncate are zeroed, so a reallocation reads zero
+    /// until written. Heads override to retain at construction: a cell once
+    /// within the count holds its last store until the next, so a reader
+    /// that took that count reads a valid (possibly just-popped) link.
+    bool zeroed{ true };
 };
 
 } // namespace database

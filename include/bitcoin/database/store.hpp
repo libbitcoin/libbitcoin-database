@@ -321,7 +321,8 @@ private:
         {
             .size = std::max<uint64_t>(one, minimum),
             .rate = table.rate,
-            .access = advice::random
+            .access = advice::random,
+            .zeroed = false
         };
     }
 

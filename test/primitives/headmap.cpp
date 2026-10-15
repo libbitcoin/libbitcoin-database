@@ -32,6 +32,23 @@ using slab_headmap = headmap<slab_link, max_size_t>;
 using value_link = linkage<3>;
 using value_headmap = headmap<value_link, one, uint8_t>;
 
+// Reports a stale size once, as a reader racing a truncate observes it.
+class stale_storage
+  : public test::chunk_storage
+{
+public:
+    using test::chunk_storage::chunk_storage;
+
+    size_t size() const NOEXCEPT override
+    {
+        const auto stale = stale_;
+        stale_ = zero;
+        return is_zero(stale) ? test::chunk_storage::size() : stale;
+    }
+
+    mutable size_t stale_{};
+};
+
 class little_slab
 {
 public:
@@ -207,6 +224,75 @@ BOOST_AUTO_TEST_CASE(headmap__truncate__push__rewrites_bucket)
     BOOST_REQUIRE(instance.push(0x5566_u16));
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
     BOOST_REQUIRE_EQUAL(instance.at(1), 0x5566_u16);
+}
+
+BOOST_AUTO_TEST_CASE(headmap__top__empty__terminal)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    test_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.top().is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(headmap__top__single_genesis__zero)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    test_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.reserve(1u));
+    BOOST_REQUIRE(instance.push(0x0000_u16));
+    BOOST_REQUIRE_EQUAL(instance.top(), 0x0000_u16);
+}
+
+BOOST_AUTO_TEST_CASE(headmap__top__many__last_pushed)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    test_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.reserve(3u));
+    BOOST_REQUIRE(instance.push(0x1122_u16));
+    BOOST_REQUIRE(instance.push(0x3344_u16));
+    BOOST_REQUIRE(instance.push(0x5566_u16));
+    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
+    BOOST_REQUIRE_EQUAL(instance.top(), 0x5566_u16);
+}
+
+BOOST_AUTO_TEST_CASE(headmap__top__truncated__expected)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    test_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.reserve(3u));
+    BOOST_REQUIRE(instance.push(0x1122_u16));
+    BOOST_REQUIRE(instance.push(0x3344_u16));
+    BOOST_REQUIRE(instance.push(0x5566_u16));
+    BOOST_REQUIRE(instance.truncate(2u));
+    BOOST_REQUIRE_EQUAL(instance.top(), 0x3344_u16);
+    BOOST_REQUIRE(instance.truncate(1u));
+    BOOST_REQUIRE_EQUAL(instance.top(), 0x1122_u16);
+    BOOST_REQUIRE(instance.truncate(0u));
+    BOOST_REQUIRE(instance.top().is_terminal());
+}
+
+BOOST_AUTO_TEST_CASE(headmap__top__truncate_race__popped_link)
+{
+    data_chunk head_file{};
+    stale_storage head_store{ head_file };
+    test_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.reserve(3u));
+    BOOST_REQUIRE(instance.push(0x1122_u16));
+    BOOST_REQUIRE(instance.push(0x3344_u16));
+    BOOST_REQUIRE(instance.push(0x5566_u16));
+    BOOST_REQUIRE(instance.truncate(2u));
+    head_store.stale_ = 6u;
+    BOOST_REQUIRE_EQUAL(instance.top(), 0x5566_u16);
+    BOOST_REQUIRE_EQUAL(instance.top(), 0x3344_u16);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(headmap__unaligned__push_at_truncate__expected)

@@ -99,6 +99,9 @@ public:
     /// Return value at index using accessor, default if not allocated.
     Value at(const memory& ptr, size_t index) const NOEXCEPT;
 
+    /// Return link at the top index, terminal if empty or unloaded.
+    Value top() const NOEXCEPT;
+
     /// Append link at count into reserved capacity (single writer).
     bool push(const Link& link) NOEXCEPT;
 
@@ -182,6 +185,8 @@ private:
         return possible_narrow_cast<typename Link::integer>(
             floored_divide(position, bucket_size));
     }
+
+    Value load(memory::iterator raw) const NOEXCEPT;
 
     // These are thread safe.
     storage& file_;

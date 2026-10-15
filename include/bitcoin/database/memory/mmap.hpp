@@ -430,6 +430,7 @@ private:
     const size_t expansion_;
     const size_t headroom_;
     const advice access_;
+    const bool zeroed_;
     const bool random_;
     const bool staged_;
     const bool managed_;

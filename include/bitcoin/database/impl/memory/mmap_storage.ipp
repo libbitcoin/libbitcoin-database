@@ -352,7 +352,7 @@ bool CLASS::truncate(size_t count) NOEXCEPT
 #endif
 
     // Released rows are zeroed, so an allocation is zero until written.
-    if (loaded_.load())
+    if (zeroed_ && loaded_.load())
         zero_all_(count, logical, fresh, sequence{});
 
     logical_.store(count);

@@ -85,7 +85,7 @@ TEMPLATE
 bool CLASS::is_candidate_extension(const header_link& link) const NOEXCEPT
 {
     return !is_associated(link) && is_candidate_header(link) &&
-        (to_confirmed(get_top_confirmed()) == to_parent(link));
+        (to_top_confirmed() == to_parent(link));
 }
 
 TEMPLATE
