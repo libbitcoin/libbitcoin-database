@@ -459,6 +459,29 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_prevouts__no_taproot_output_
     BOOST_REQUIRE(prevouts.empty());
 }
 
+BOOST_AUTO_TEST_CASE(query_batch_silent__get_block_prevouts__no_taproot_output__selected)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1, database::context{ 0, 1, 0 }, {}, false, false));
+
+    const auto block = spend_block(witness_script);
+    BOOST_REQUIRE(query.set(block, database::context{ 0, 2, 0 }, {}, false, false));
+    const auto link = query.to_header(block.hash());
+
+    data_chunk prevouts{};
+    std::vector<bool> selected{};
+    const chain::view::block view{ block.to_data(true), true };
+    const auto& parent = *test::block1.transactions_ptr()->front();
+    BOOST_REQUIRE(query.get_block_prevouts(prevouts, selected, link, view));
+    BOOST_REQUIRE(selected == (std::vector<bool>{ false, true }));
+    BOOST_REQUIRE_EQUAL(prevouts, parent.outputs_ptr()->front()->to_data());
+}
+
 BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row__scanned)
 {
     database::settings settings{};

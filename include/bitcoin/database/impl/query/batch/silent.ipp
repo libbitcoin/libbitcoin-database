@@ -298,11 +298,27 @@ bool CLASS::set_silents(size_t& rows, const header_link& link,
     return set_silents_(rows, link, block, block.views().size(), bank);
 }
 
-// Pooled txs linked below the coinbase are not selected (see set_silent).
 TEMPLATE
 bool CLASS::get_silent_prevouts(data_chunk& prevouts,
     std::vector<bool>& selected, const header_link& link,
     const block_view& block) const NOEXCEPT
+{
+    return get_prevouts_(prevouts, selected, link, block, true);
+}
+
+TEMPLATE
+bool CLASS::get_block_prevouts(data_chunk& prevouts,
+    std::vector<bool>& selected, const header_link& link,
+    const block_view& block) const NOEXCEPT
+{
+    return get_prevouts_(prevouts, selected, link, block, false);
+}
+
+// Pooled txs linked below the coinbase are not silent selected (see set_silent).
+TEMPLATE
+bool CLASS::get_prevouts_(data_chunk& prevouts, std::vector<bool>& selected,
+    const header_link& link, const block_view& block,
+    bool silent) const NOEXCEPT
 {
     using namespace system;
     const auto& txs = block.views();
@@ -318,8 +334,8 @@ bool CLASS::get_silent_prevouts(data_chunk& prevouts,
     const auto first = links.front();
     for (auto index = one; index < txs.size(); ++index)
     {
-        if (!is_silent_selected(links.at(index), first) ||
-            !silent_payment::has_outputs(txs.at(index)))
+        if (silent && (!is_silent_selected(links.at(index), first) ||
+            !silent_payment::has_outputs(txs.at(index))))
             continue;
 
         table::transaction::get_puts record{};
