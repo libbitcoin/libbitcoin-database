@@ -507,7 +507,13 @@ public:
 
     data_chunk get_wire_header(const header_link& link) const NOEXCEPT;
     data_chunk get_wire_tx(const tx_link& link, bool witness) const NOEXCEPT;
-    data_chunk get_wire_block(const header_link& link, bool witness) const NOEXCEPT;
+    data_chunk get_wire_block(const header_link& link, bool witness,
+        bool turbo=false) const NOEXCEPT;
+
+    /// Write to a target sized to the encoding, in parallel with turbo.
+    template <typename Writer = system::write::bytes::fast>
+    bool get_wire_block(const system::data_slab& out, const header_link& link,
+        bool witness, bool turbo=false) const NOEXCEPT;
 
     /// Objects.
     /// -----------------------------------------------------------------------

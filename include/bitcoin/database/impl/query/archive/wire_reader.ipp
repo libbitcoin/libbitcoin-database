@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_ARCHIVE_WIRE_READER_IPP
 #define LIBBITCOIN_DATABASE_QUERY_ARCHIVE_WIRE_READER_IPP
 
+#include <atomic>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -254,8 +255,8 @@ data_chunk CLASS::get_wire_tx(const tx_link& link, bool witness) const NOEXCEPT
 }
 
 TEMPLATE
-data_chunk CLASS::get_wire_block(const header_link& link,
-    bool witness) const NOEXCEPT
+data_chunk CLASS::get_wire_block(const header_link& link, bool witness,
+    bool turbo) const NOEXCEPT
 {
     using namespace system;
     size_t size{};
@@ -263,6 +264,9 @@ data_chunk CLASS::get_wire_block(const header_link& link,
         return {};
 
     data_chunk data(size);
+    if (turbo)
+        return get_wire_block(data, link, witness, turbo) ? data : data_chunk{};
+
     stream::flip::fast ostream(data);
     flip::bytes::fast out(ostream);
     if (!get_wire_block(out, link, witness) || !out)
@@ -271,6 +275,81 @@ data_chunk CLASS::get_wire_block(const header_link& link,
     // Resize in case tx is pruned.
     data.resize(out.get_write_position());
     return data;
+}
+
+TEMPLATE
+template <typename Writer>
+bool CLASS::get_wire_block(const system::data_slab& out,
+    const header_link& link, bool witness, bool turbo) const NOEXCEPT
+{
+    using namespace system;
+    if (!turbo)
+    {
+        stream::out::fast sink{ out };
+        Writer writer{ sink };
+        return get_wire_block(writer, link, witness) && writer;
+    }
+
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return false;
+
+    // Tx sizes, converted in place to offsets.
+    std::atomic_bool fault{};
+    std::vector<size_t> offsets(txs.size());
+    const auto policy = poolstl::execution::par;
+    std::transform(policy, txs.cbegin(), txs.cend(), offsets.begin(),
+        [&](const tx_link& tx) NOEXCEPT
+        {
+            size_t bytes{};
+            if (!get_tx_size(bytes, tx, witness))
+                fault.store(true, std::memory_order_relaxed);
+
+            return bytes;
+        });
+
+    const auto last = offsets.back();
+    const auto prefix = chain::header::serialized_size() +
+        variable_size(txs.size());
+    std::exclusive_scan(offsets.cbegin(), offsets.cend(), offsets.begin(),
+        prefix);
+
+    const auto bytes = offsets.back() + last;
+    const auto scale = out.size() / bytes;
+    if (fault.load(std::memory_order_relaxed) || is_zero(scale) ||
+        (scale * bytes != out.size()))
+        return false;
+
+    const auto region = [&](size_t offset, size_t size) NOEXCEPT
+    {
+        const auto begin = std::next(out.data(), offset * scale);
+        return data_slab{ begin, std::next(begin, size * scale) };
+    };
+
+    stream::out::fast head_sink{ region(zero, prefix) };
+    Writer head{ head_sink };
+    if (!get_wire_header(head, link))
+        return false;
+
+    head.write_variable(txs.size());
+    if (!head)
+        return false;
+
+    std::for_each(policy, offsets.cbegin(), offsets.cend(),
+        [&](const size_t& offset) NOEXCEPT
+        {
+            const auto index = to_unsigned(std::distance(
+                std::as_const(offsets).data(), &offset));
+            const auto next = add1(index);
+            const auto end = next == offsets.size() ? bytes : offsets.at(next);
+
+            stream::out::fast sink{ region(offset, end - offset) };
+            Writer writer{ sink };
+            if (!get_wire_tx(writer, txs.at(index), witness) || !writer)
+                fault.store(true, std::memory_order_relaxed);
+        });
+
+    return !fault.load(std::memory_order_relaxed);
 }
 
 } // namespace database
