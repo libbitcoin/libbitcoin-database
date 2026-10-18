@@ -22,6 +22,21 @@
 
 BOOST_FIXTURE_TEST_SUITE(query_wire_reader_reader_tests, test::directory_setup_fixture)
 
+// A block of enough txs that the turbo writer uses more than one range.
+static system::chain::block many_tx_block() NOEXCEPT
+{
+    using namespace system;
+    const auto version = test::tx4.version();
+    const auto inputs = test::tx4.inputs_ptr();
+    const auto outputs = test::tx4.outputs_ptr();
+    chain::transactions txs{};
+    txs.reserve(1100);
+    for (uint32_t locktime{}; locktime < 1100; ++locktime)
+        txs.emplace_back(version, inputs, outputs, locktime);
+
+    return { test::block1a.header(), txs };
+}
+
 // is_witness_match
 
 BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__non_segregated__true)
@@ -266,6 +281,32 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__base16_target__expected)
     std::string parallel(two * size, '\0');
     BOOST_CHECK(query.get_wire_block<write::base16::fast>(parallel, 2, true, true));
     BOOST_CHECK_EQUAL(parallel, encode_base16(test::block2a.to_data(true)));
+    BOOST_CHECK(!store.close(test::events_handler));
+}
+
+BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_ranges__expected)
+{
+    using namespace system;
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::store_t store{ settings };
+    test::query_t query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+
+    const auto block = many_tx_block();
+    BOOST_CHECK(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
+    const auto link = query.to_header(block.hash());
+
+    BOOST_CHECK_EQUAL(query.get_wire_block(link, true, true), block.to_data(true));
+    BOOST_CHECK_EQUAL(query.get_wire_block(link, false, true), block.to_data(false));
+
+    size_t size{};
+    BOOST_CHECK(query.get_block_size(size, link, true));
+
+    std::string hex(two * size, '\0');
+    BOOST_CHECK(query.get_wire_block<write::base16::fast>(hex, link, true, true));
+    BOOST_CHECK_EQUAL(hex, encode_base16(block.to_data(true)));
     BOOST_CHECK(!store.close(test::events_handler));
 }
 

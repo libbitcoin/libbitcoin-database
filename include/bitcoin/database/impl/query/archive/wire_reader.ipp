@@ -348,19 +348,16 @@ bool CLASS::get_wire_block(const system::data_slab& out,
 
     // Tx sizes, converted in place to offsets. Tasks read through the held
     // accessors, as a task taking a held lock could wait behind a remap.
-    std::atomic_bool fault{};
-    std::vector<size_t> offsets(txs.size());
     const auto ptrs = get_wire_accessors();
-    const auto policy = poolstl::execution::par;
-    std::transform(policy, txs.cbegin(), txs.cend(), offsets.begin(),
-        [&](const tx_link& tx) NOEXCEPT
-        {
-            table::transaction::get_sizes sizes{};
-            if (!store_.tx.get(ptrs.tx, tx, sizes))
-                fault.store(true, std::memory_order_relaxed);
+    std::vector<size_t> offsets(txs.size());
+    for (size_t index{}; index < txs.size(); ++index)
+    {
+        table::transaction::get_sizes sizes{};
+        if (!store_.tx.get(ptrs.tx, txs.at(index), sizes))
+            return false;
 
-            return witness ? sizes.heavy : sizes.light;
-        });
+        offsets.at(index) = witness ? sizes.heavy : sizes.light;
+    }
 
     const auto last = offsets.back();
     const auto prefix = chain::header::serialized_size() +
@@ -370,9 +367,19 @@ bool CLASS::get_wire_block(const system::data_slab& out,
 
     const auto bytes = offsets.back() + last;
     const auto scale = out.size() / bytes;
-    if (fault.load(std::memory_order_relaxed) || is_zero(scale) ||
-        (scale * bytes != out.size()))
+    if (is_zero(scale) || (scale * bytes != out.size()))
         return false;
+
+    // Txs are written in ranges, one task each, as each task costs a wakeup,
+    // and a block of two ranges or fewer is written without tasks.
+    constexpr size_t range_txs = 256;
+    const auto ranges = ceilinged_divide(txs.size(), range_txs);
+    if (ranges <= two)
+    {
+        stream::out::fast sink{ out };
+        Writer writer{ sink };
+        return get_wire_block(writer, link, witness) && writer;
+    }
 
     const auto region = [&](size_t offset, size_t size) NOEXCEPT
     {
@@ -389,18 +396,30 @@ bool CLASS::get_wire_block(const system::data_slab& out,
     if (!head)
         return false;
 
-    std::for_each(policy, offsets.cbegin(), offsets.cend(),
-        [&](const size_t& offset) NOEXCEPT
+    std::atomic_bool fault{};
+    std::vector<size_t> starts(ranges);
+    std::iota(starts.begin(), starts.end(), zero);
+    std::for_each(poolstl::execution::par, starts.cbegin(), starts.cend(),
+        [&](size_t range) NOEXCEPT
         {
-            const auto index = to_unsigned(std::distance(
-                std::as_const(offsets).data(), &offset));
-            const auto next = add1(index);
-            const auto end = next == offsets.size() ? bytes : offsets.at(next);
+            const auto first = range * range_txs;
+            const auto stop = std::min(txs.size(), first + range_txs);
+            for (auto index = first; index < stop; ++index)
+            {
+                const auto offset = offsets.at(index);
+                const auto next = add1(index);
+                const auto end = next == offsets.size() ? bytes :
+                    offsets.at(next);
 
-            stream::out::fast sink{ region(offset, end - offset) };
-            Writer writer{ sink };
-            if (!get_wire_tx(writer, ptrs, txs.at(index), witness) || !writer)
-                fault.store(true, std::memory_order_relaxed);
+                stream::out::fast sink{ region(offset, end - offset) };
+                Writer writer{ sink };
+                if (!get_wire_tx(writer, ptrs, txs.at(index), witness) ||
+                    !writer)
+                {
+                    fault.store(true, std::memory_order_relaxed);
+                    return;
+                }
+            }
         });
 
     return !fault.load(std::memory_order_relaxed);
