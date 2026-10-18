@@ -76,9 +76,10 @@ bool CLASS::scan_silent(const stopper& cancel,
     return !cancel;
 }
 
-// Rows are in validation order, so the rows of confirmed blocks are selected
-// by tx link from the range and only the selected rows are scanned. A block's
-// txs are a few runs of consecutive links, so membership is a search of runs.
+// Rows are in validation order, so the rows of confirmed blocks in the cut are
+// selected by tx link from the range, along with all unconfirmed rows, and only
+// the selected rows are scanned. A block's txs are a few runs of consecutive
+// links, so membership is a search of runs.
 TEMPLATE
 bool CLASS::scan_silent(const stopper& cancel,
     const system::scan::batch::receiver& keys, size_t first, size_t last,
@@ -114,19 +115,18 @@ bool CLASS::scan_silent(const stopper& cancel,
             merged.emplace_back(low, high);
     }
 
-    const auto latch = is_pooling() ? get_latch_tx() : max_size_t;
     const auto selected = [&](link_t link) NOEXCEPT
     {
-        if (link >= latch)
-            return true;
-
         const auto it = std::upper_bound(merged.cbegin(), merged.cend(), link,
             [](link_t value, const run_t& run) NOEXCEPT
             {
                 return value < run.first;
             });
 
-        return it != merged.cbegin() && link <= std::prev(it)->second;
+        if (it != merged.cbegin() && link <= std::prev(it)->second)
+            return true;
+
+        return to_block(tx_link{ link }).is_terminal();
     };
 
     const auto correlate_ptr = store_.scan.correlate.get_memory();
