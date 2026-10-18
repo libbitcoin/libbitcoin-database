@@ -263,7 +263,6 @@ public:
     size_t outs_records() const NOEXCEPT;
     size_t tx_records() const NOEXCEPT;
 
-    size_t strong_records() const NOEXCEPT;
     size_t scan_records() const NOEXCEPT;
     size_t scan_prefix_records() const NOEXCEPT;
     size_t ecdsa0_records() const NOEXCEPT;

@@ -310,24 +310,23 @@ struct height
     bool operator==(const height&) const NOEXCEPT = default;
 };
 
-// record hashmap
+// headmap (signed header fk by tx fk)
 struct strong
 {
-    static constexpr size_t sk = schema::transaction::pk;
     static constexpr size_t pk = schema::transaction::pk;
-    using link = linkage<pk, to_bits(pk)>;
-    using key = system::data_array<sk>;
+    using link = schema::transaction::link;
+    using value = schema::header::link::integer;
     static constexpr size_t minsize =
         ////schema::bit +     // positive (merged bit into header::pk)
         schema::header::pk;
-    static constexpr size_t minrow = pk + sk + minsize;
-    static constexpr size_t size = minsize;
-    static constexpr size_t cell = link::size;
-    static constexpr link count() NOEXCEPT { return 1; }
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = sizeof(value);
+    static constexpr size_t cell = sizeof(value);
     static_assert(minsize == 3u);
-    static_assert(minrow == 11u);
+    static_assert(minrow == 3u);
     static_assert(link::size == 4u);
     static_assert(cell == 4u);
+    bool operator==(const strong&) const NOEXCEPT = default;
 };
 
 /// Cache tables.

@@ -32,7 +32,6 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.envelope.ins_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.outs_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.tx_buckets, 128u);
-    BOOST_REQUIRE_EQUAL(configuration.envelope.strong_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.duplicate_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.pool_buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.envelope.wtxid_buckets, 128u);
@@ -70,7 +69,6 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(configuration.confirmed.buckets, 128u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed.rate, 5u);
     BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 128u);
-    BOOST_REQUIRE_EQUAL(configuration.strong.expected, 0u);
     BOOST_REQUIRE_EQUAL(configuration.strong.size, 1u);
     BOOST_REQUIRE_EQUAL(configuration.strong.rate, 5u);
     BOOST_REQUIRE_EQUAL(configuration.scan.size, 1u);

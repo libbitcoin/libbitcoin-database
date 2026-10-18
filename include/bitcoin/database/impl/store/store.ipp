@@ -73,8 +73,7 @@ CLASS::store(const settings& config) NOEXCEPT
     candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate), head_settings<schema::height::cell>(config.candidate), sequential),
     confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed), head_settings<schema::height::cell>(config.confirmed), sequential),
 
-    strong_head_(head(config.path / schema::dir::heads, schema::indexes::strong), head_settings(config.strong), random),
-    strong_body_(body(config.path, schema::indexes::strong), config.strong, sequential, staged),
+    strong_head_(head(config.path / schema::dir::heads, schema::indexes::strong), head_settings<schema::strong::cell>(config.strong), random),
     scan_head_(head(config.path / schema::dir::heads, schema::indexes::scan), head_settings(config.scan), random),
     scan_body_(body(config.path, schema::indexes::scan), config.scan, sequential, staged),
     scan_prefix_head_(head(config.path / schema::dir::heads, schema::indexes::scan_prefix), head_settings(config.scan), sequential),
@@ -157,7 +156,7 @@ CLASS::store(const settings& config) NOEXCEPT
 
     candidate(candidate_head_),
     confirmed(confirmed_head_),
-    strong(strong_head_, strong_body_, config.strong.buckets, config.strong.expected),
+    strong(strong_head_),
     scan(scan_head_, scan_body_, config.scan.buckets),
     scan_prefix(scan_prefix_head_, scan_prefix_body_),
 
@@ -193,7 +192,6 @@ CLASS::store(const settings& config) NOEXCEPT
     envelope_.ins_k = possible_narrow_cast<uint8_t>(ins.filter_k());
     envelope_.outs_k = possible_narrow_cast<uint8_t>(outs.filter_k());
     envelope_.tx_k = possible_narrow_cast<uint8_t>(tx.filter_k());
-    envelope_.strong_k = possible_narrow_cast<uint8_t>(strong.filter_k());
     envelope_.duplicate_k = possible_narrow_cast<uint8_t>(duplicate.filter_k());
     envelope_.pool_k = possible_narrow_cast<uint8_t>(pool.filter_k());
     envelope_.wtxid_k = possible_narrow_cast<uint8_t>(wtxid.filter_k());

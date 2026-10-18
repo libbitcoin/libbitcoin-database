@@ -221,7 +221,6 @@ protected:
 
     // record hashmap
     Storage<one> strong_head_;
-    Storage<one> strong_body_;
     Storage<one> scan_head_;
     table::scan_storage<Storage> scan_body_;
     Storage<one> scan_prefix_head_;

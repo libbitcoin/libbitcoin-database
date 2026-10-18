@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 370_size;
+constexpr auto default_size = 365_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {
@@ -108,7 +108,6 @@ BOOST_AUTO_TEST_CASE(envelope__set__default_settings__expected)
     BOOST_REQUIRE_EQUAL(instance.ins_buckets, configuration.ins.buckets);
     BOOST_REQUIRE_EQUAL(instance.outs_buckets, configuration.outs.buckets);
     BOOST_REQUIRE_EQUAL(instance.tx_buckets, configuration.tx.buckets);
-    BOOST_REQUIRE_EQUAL(instance.strong_buckets, configuration.strong.buckets);
     BOOST_REQUIRE_EQUAL(instance.duplicate_buckets, configuration.duplicate.buckets);
     BOOST_REQUIRE_EQUAL(instance.pool_buckets, configuration.pool.buckets);
     BOOST_REQUIRE_EQUAL(instance.wtxid_buckets, configuration.wtxid.buckets);
@@ -163,7 +162,6 @@ BOOST_AUTO_TEST_CASE(envelope__construct__mainnet__unset_filter_k)
     BOOST_REQUIRE_EQUAL(instance.ins_k, 0u);
     BOOST_REQUIRE_EQUAL(instance.outs_k, 0u);
     BOOST_REQUIRE_EQUAL(instance.tx_k, 0u);
-    BOOST_REQUIRE_EQUAL(instance.strong_k, 0u);
     BOOST_REQUIRE_EQUAL(instance.duplicate_k, 0u);
     BOOST_REQUIRE_EQUAL(instance.pool_k, 0u);
     BOOST_REQUIRE_EQUAL(instance.wtxid_k, 0u);

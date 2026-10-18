@@ -97,7 +97,6 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, candidate_head_, table_t::candidate_head);
     create(ec, confirmed_head_, table_t::confirmed_head);
     create(ec, strong_head_, table_t::strong_head);
-    create(ec, strong_body_, table_t::strong_body);
     create(ec, scan_head_, table_t::scan_head);
     create(ec, scan_body_, table_t::scan_body);
     create(ec, scan_prefix_head_, table_t::scan_prefix_head);

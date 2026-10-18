@@ -247,13 +247,11 @@ code CLASS::read_blocks(header_links& out,
         if (parents.at(at) != parent)
         {
             parent = parents.at(at);
-            const auto fk = store_.strong.first(ptr, parent);
-
-            table::strong::record strong{};
-            if (!store_.strong.get(ptr, fk, strong) || !strong.positive())
+            const auto strong = store_.strong.at(ptr, parent);
+            if (!table::strong::positive(strong))
                 return error::branch_inactive;
 
-            block = strong.header_fk();
+            block = table::strong::header_fk(strong);
         }
 
         out.at(at) = block;

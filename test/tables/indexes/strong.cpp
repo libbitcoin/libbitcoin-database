@@ -22,96 +22,58 @@
 BOOST_AUTO_TEST_SUITE(strong_tests)
 
 using namespace system;
-const table::strong::key key1{ 0x01, 0x02, 0x03, 0x04 };
-const table::strong::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
-const table::strong::record strong1
-{
-    {},
-    table::strong::merge(true, 0x0078f87f)
-};
-
-const table::strong::record strong2
-{
-    {},
-    table::strong::merge(false, 0x0078f87f)
-};
-
+const table::strong::replace strong1{ {}, table::strong::merge(true, 0x0078f87f) };
+const table::strong::replace strong2{ {}, table::strong::merge(false, 0x0078f87f) };
 const auto expected_head = base16_chunk
 (
-    "00000000"
-    "ffffffff"
-    "01000000"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-);
-const auto closed_head = base16_chunk
-(
-    "02000000"
-    "ffffffff"
-    "01000000"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-    "ffffffff"
-);
-const auto expected_body = base16_chunk
-(
-    "ffffffff" // next->end
-    "01020304" // key1
-    "7ff8f8"   // 0x0078f87f | 0x00800000
-
-    "00000000" // next->
-    "a1a2a3a4" // key2
-    "7ff878"   // 0x0078f87f | 0x00000000
+    "00000000" // bucket[0] (fill)
+    "7ff8f800" // bucket[1] 0x0078f87f | 0x00800000
+    "7ff87800" // bucket[2] 0x0078f87f | 0x00000000
 );
 
-BOOST_AUTO_TEST_CASE(strong__put__two__expected)
+BOOST_AUTO_TEST_CASE(strong__set__two__expected)
 {
-    test::chunk_storage head_store{};
-    test::chunk_storage body_store{};
-    table::strong instance{ head_store, body_store, 8 };
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    table::strong instance{ head_store };
     BOOST_REQUIRE(instance.create());
-
-    table::strong::link link1{};
-    BOOST_REQUIRE(instance.put_link(link1, key1, strong1));
-    BOOST_REQUIRE_EQUAL(link1, 0u);
-
-    table::strong::link link2{};
-    BOOST_REQUIRE(instance.put_link(link2, key2, strong2));
-    BOOST_REQUIRE_EQUAL(link2, 1u);
-
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
+    BOOST_REQUIRE(instance.set(1u, strong1));
+    BOOST_REQUIRE(instance.set(2u, strong2));
+    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
+    BOOST_REQUIRE_EQUAL(head_file, expected_head);
     BOOST_REQUIRE(instance.close());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), closed_head);
+    BOOST_REQUIRE_EQUAL(head_file, expected_head);
 }
 
-BOOST_AUTO_TEST_CASE(strong__get__two__expected)
+BOOST_AUTO_TEST_CASE(strong__at__two__expected)
 {
-    auto head = expected_head;
-    auto body = expected_body;
-    test::chunk_storage head_store{ head };
-    test::chunk_storage body_store{ body };
-    table::strong instance{ head_store, body_store, 32 };
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
+    auto head_file = expected_head;
+    test::chunk_storage head_store{ head_file };
+    table::strong instance{ head_store };
+    BOOST_REQUIRE(instance.verify());
+    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
+    BOOST_REQUIRE(!table::strong::positive(instance.at(0)));
+    BOOST_REQUIRE_EQUAL(table::strong::header_fk(instance.at(0)), 0u);
+    BOOST_REQUIRE(table::strong::positive(instance.at(1)));
+    BOOST_REQUIRE_EQUAL(table::strong::header_fk(instance.at(1)), 0x0078f87fu);
+    BOOST_REQUIRE(!table::strong::positive(instance.at(2)));
+    BOOST_REQUIRE_EQUAL(table::strong::header_fk(instance.at(2)), 0x0078f87fu);
+    BOOST_REQUIRE(!table::strong::positive(instance.at(3)));
+    BOOST_REQUIRE_EQUAL(table::strong::header_fk(instance.at(3)), 0u);
+}
 
-    table::strong::record out{};
-    BOOST_REQUIRE(instance.get(0u, out));
-    BOOST_REQUIRE_EQUAL(out.header_fk(), strong1.header_fk());
-    BOOST_REQUIRE_EQUAL(out.positive(), strong1.positive());
-    BOOST_REQUIRE_EQUAL(out.signed_block_fk, bit_or(0x0078f87fu, 0x00800000u));
-
-    BOOST_REQUIRE(instance.get(1u, out));
-    BOOST_REQUIRE_EQUAL(out.header_fk(), strong2.header_fk());
-    BOOST_REQUIRE_EQUAL(out.positive(), strong2.positive());
-    BOOST_REQUIRE_EQUAL(out.signed_block_fk, bit_or(0x0078f87fu, 0x00000000u));
+BOOST_AUTO_TEST_CASE(strong__set__same_index__last_wins)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    table::strong instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.set(1u, strong1));
+    BOOST_REQUIRE(table::strong::positive(instance.at(1)));
+    BOOST_REQUIRE(instance.set(1u, strong2));
+    BOOST_REQUIRE(!table::strong::positive(instance.at(1)));
+    BOOST_REQUIRE_EQUAL(table::strong::header_fk(instance.at(1)), 0x0078f87fu);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
