@@ -507,7 +507,13 @@ public:
 
     data_chunk get_wire_header(const header_link& link) const NOEXCEPT;
     data_chunk get_wire_tx(const tx_link& link, bool witness) const NOEXCEPT;
-    data_chunk get_wire_block(const header_link& link, bool witness) const NOEXCEPT;
+    data_chunk get_wire_block(const header_link& link, bool witness,
+        bool turbo=false) const NOEXCEPT;
+
+    /// Write to a target sized to the encoding, in parallel with turbo.
+    template <typename Writer = system::write::bytes::fast>
+    bool get_wire_block(const system::data_slab& out, const header_link& link,
+        bool witness, bool turbo=false) const NOEXCEPT;
 
     /// Objects.
     /// -----------------------------------------------------------------------
@@ -788,6 +794,26 @@ public:
     bool scan_silent(const stopper& cancel,
         const system::scan::batch::receiver& keys, size_t first,
         size_t last, const silent_handler& callback) NOEXCEPT;
+
+    /// Invoke callback for each matched tx of rows [first, last) that is
+    /// confirmed at heights [start, stop] or linked at or above the pool
+    /// latch, false implies cancel.
+    bool scan_silent(const stopper& cancel,
+        const system::scan::batch::receiver& keys, size_t first,
+        size_t last, size_t start, size_t stop,
+        const silent_handler& callback) NOEXCEPT;
+
+    /// Matches (height, tx hash, tweak) of rows [first, last) confirmed at
+    /// heights (or mtps if time) [start, stop], ordered by height, then
+    /// unconfirmed (zero height), false implies cancel. A short height cut
+    /// scanned from its floor scans only the rows of its confirmed blocks.
+    bool get_silent_matches(silent_matches& out, const stopper& cancel,
+        const system::scan::batch::receiver& keys, size_t first,
+        size_t last, size_t start, size_t stop, bool time) NOEXCEPT;
+
+    /// The scan fk from which a scan covers all blocks at or above start
+    /// (height, or mtp if time).
+    size_t get_silent_floor(size_t start, bool time) const NOEXCEPT;
 
     /// The first silent row at or above first that is not fully written.
     size_t get_silent_frontier(size_t first) const NOEXCEPT;
@@ -1223,6 +1249,11 @@ protected:
     bool is_silent_selected(const tx_link& link,
         const tx_link& coinbase) const NOEXCEPT;
 
+    /// The tx confirmed at height is outside heights (or mtps if time)
+    /// [start, stop].
+    bool is_silent_cut(const tx_link& link, size_t height, size_t start,
+        size_t stop, bool time) const NOEXCEPT;
+
     /// The wire prevouts of the spends of the block's selected txs, where
     /// silent selects the silent payment eligible txs and otherwise all.
     bool get_prevouts_(data_chunk& prevouts, std::vector<bool>& selected,
@@ -1271,6 +1302,31 @@ protected:
     code set_code(std::vector<point>& twins, const accessors& ptrs,
         const allocation& fks,const transaction_view& tx, bool bypass,
         bool prune) NOEXCEPT;
+
+    /// Wire reading (all accessors held across the txs read).
+    /// -----------------------------------------------------------------------
+
+    /// Per-table accessors, each holds a shared lock on its storage remap.
+    struct wire_accessors
+    {
+        memory tx;
+        memory puts;
+        memory ins;
+        memory sequence;
+        memory input;
+        memory output;
+    };
+
+    wire_accessors get_wire_accessors() const NOEXCEPT;
+    bool get_wire_input(bytewriter& sink, const memory& ins,
+        const memory& sequence, const memory& input,
+        const ins_link& link) const NOEXCEPT;
+    bool get_wire_output(bytewriter& sink, const memory& output,
+        const output_link& link) const NOEXCEPT;
+    bool get_wire_witness(bytewriter& sink, const memory& sequence,
+        const memory& input, const ins_link& link) const NOEXCEPT;
+    bool get_wire_tx(bytewriter& sink, const wire_accessors& ptrs,
+        const tx_link& link, bool witness) const NOEXCEPT;
 
     /// History.
     /// -----------------------------------------------------------------------

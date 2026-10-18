@@ -92,6 +92,8 @@ using threshold = std::pair<size_t, tx_link::integer>;
 using thresholds = std::vector<threshold>;
 using confirmables = std::unordered_map<tx_link::integer, bool>;
 using compact_matches = std::vector<std::pair<size_t, pool_link::integer>>;
+using silent_match = std::tuple<size_t, hash_digest, system::ec_compressed>;
+using silent_matches = std::vector<silent_match>;
 
 } // namespace database
 } // namespace libbitcoin

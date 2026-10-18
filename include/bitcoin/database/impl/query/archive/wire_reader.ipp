@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_ARCHIVE_WIRE_READER_IPP
 #define LIBBITCOIN_DATABASE_QUERY_ARCHIVE_WIRE_READER_IPP
 
+#include <atomic>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -117,52 +118,97 @@ TEMPLATE
 bool CLASS::get_wire_input(bytewriter& sink,
     const ins_link& link) const NOEXCEPT
 {
-    table::ins_point::wire_point point{ {}, sink };
-    if (!store_.ins.get(link, point))
-        return false;
-
-    table::ins_sequence::get_input ins{};
-    table::input::wire_script script{ {}, sink };
-    if (!store_.ins.sequence.get(link, ins) ||
-        !store_.input.get(ins.input_fk, script))
-        return false;
-
-    sink.write_4_bytes_little_endian(ins.sequence);
-    return true;
+    return get_wire_input(sink, store_.ins.get_memory(),
+        store_.ins.sequence.get_memory(), store_.input.get_memory(), link);
 }
 
 TEMPLATE
 bool CLASS::get_wire_output(bytewriter& sink,
     const output_link& link) const NOEXCEPT
 {
-    table::output::wire_script out{ {}, sink };
-    return store_.output.get(link, out);
+    return get_wire_output(sink, store_.output.get_memory(), link);
 }
 
 TEMPLATE
 bool CLASS::get_wire_witness(bytewriter& sink,
     const ins_link& link) const NOEXCEPT
 {
-    table::ins_sequence::get_input ins{};
-    table::input::wire_witness wire{ {}, sink };
-    return store_.ins.sequence.get(link, ins)
-        && store_.input.get(ins.input_fk, wire);
+    return get_wire_witness(sink, store_.ins.sequence.get_memory(),
+        store_.input.get_memory(), link);
 }
 
 TEMPLATE
 bool CLASS::get_wire_tx(bytewriter& sink, const tx_link& link,
     bool witness) const NOEXCEPT
 {
+    return get_wire_tx(sink, get_wire_accessors(), link, witness);
+}
+
+// protected
+TEMPLATE
+CLASS::wire_accessors CLASS::get_wire_accessors() const NOEXCEPT
+{
+    return
+    {
+        store_.tx.get_memory(),
+        store_.outs.puts.get_memory(),
+        store_.ins.get_memory(),
+        store_.ins.sequence.get_memory(),
+        store_.input.get_memory(),
+        store_.output.get_memory()
+    };
+}
+
+// protected
+TEMPLATE
+bool CLASS::get_wire_input(bytewriter& sink, const memory& ins,
+    const memory& sequence, const memory& input,
+    const ins_link& link) const NOEXCEPT
+{
+    table::ins_point::wire_point point{ {}, sink };
+    if (!store_.ins.get(ins, link, point))
+        return false;
+
+    table::ins_sequence::get_input in{};
+    table::input::wire_script script{ {}, sink };
+    if (!store_.ins.sequence.get(sequence, link, in) ||
+        !store_.input.get(input, in.input_fk, script))
+        return false;
+
+    sink.write_4_bytes_little_endian(in.sequence);
+    return true;
+}
+
+// protected
+TEMPLATE
+bool CLASS::get_wire_output(bytewriter& sink, const memory& output,
+    const output_link& link) const NOEXCEPT
+{
+    table::output::wire_script out{ {}, sink };
+    return store_.output.get(output, link, out);
+}
+
+// protected
+TEMPLATE
+bool CLASS::get_wire_witness(bytewriter& sink, const memory& sequence,
+    const memory& input, const ins_link& link) const NOEXCEPT
+{
+    table::ins_sequence::get_input in{};
+    table::input::wire_witness wire{ {}, sink };
+    return store_.ins.sequence.get(sequence, link, in)
+        && store_.input.get(input, in.input_fk, wire);
+}
+
+// protected
+TEMPLATE
+bool CLASS::get_wire_tx(bytewriter& sink, const wire_accessors& ptrs,
+    const tx_link& link, bool witness) const NOEXCEPT
+{
     table::transaction::record tx{};
-    if (!store_.tx.get(link, tx))
+    if (!store_.tx.get(ptrs.tx, link, tx))
         return false;
 
-    table::outs::record outs{};
-    outs.out_fks.resize(tx.outs_count);
-    if (!store_.outs.puts.get(tx.outs_fk, outs))
-        return false;
-
-    // Point links are contiguous (computed).
+    // Point and put links are contiguous (computed).
     const auto ins_begin = tx.point_fk;
     const auto ins_count = tx.ins_count;
     const auto ins_final = ins_begin + ins_count;
@@ -178,18 +224,24 @@ bool CLASS::get_wire_tx(bytewriter& sink, const tx_link& link,
 
     sink.write_variable(ins_count);
     for (auto fk = ins_begin; fk < ins_final; ++fk)
-        if (!get_wire_input(sink, fk))
+        if (!get_wire_input(sink, ptrs.ins, ptrs.sequence, ptrs.input, fk))
             return false;
 
-    sink.write_variable(outs.out_fks.size());
-    for (const auto& fk: outs.out_fks)
-        if (!get_wire_output(sink, fk))
+    const auto outs_begin = tx.outs_fk;
+    const auto outs_final = outs_begin + tx.outs_count;
+    sink.write_variable(tx.outs_count);
+    for (auto fk = outs_begin; fk < outs_final; ++fk)
+    {
+        table::outs::get_output put{};
+        if (!store_.outs.puts.get(ptrs.puts, fk, put) ||
+            !get_wire_output(sink, ptrs.output, put.out_fk))
             return false;
+    }
 
     if (witnessed)
     {
         for (auto fk = ins_begin; fk < ins_final; ++fk)
-            if (!get_wire_witness(sink, fk))
+            if (!get_wire_witness(sink, ptrs.sequence, ptrs.input, fk))
                 return false;
     }
 
@@ -209,8 +261,9 @@ bool CLASS::get_wire_block(bytewriter& sink, const header_link& link,
         return false;
 
     sink.write_variable(txs.size());
+    const auto ptrs = get_wire_accessors();
     for (const auto& tx_link: txs)
-        if (!get_wire_tx(sink, tx_link, witness))
+        if (!get_wire_tx(sink, ptrs, tx_link, witness))
             return false;
 
     return true;
@@ -254,8 +307,8 @@ data_chunk CLASS::get_wire_tx(const tx_link& link, bool witness) const NOEXCEPT
 }
 
 TEMPLATE
-data_chunk CLASS::get_wire_block(const header_link& link,
-    bool witness) const NOEXCEPT
+data_chunk CLASS::get_wire_block(const header_link& link, bool witness,
+    bool turbo) const NOEXCEPT
 {
     using namespace system;
     size_t size{};
@@ -263,6 +316,9 @@ data_chunk CLASS::get_wire_block(const header_link& link,
         return {};
 
     data_chunk data(size);
+    if (turbo)
+        return get_wire_block(data, link, witness, turbo) ? data : data_chunk{};
+
     stream::flip::fast ostream(data);
     flip::bytes::fast out(ostream);
     if (!get_wire_block(out, link, witness) || !out)
@@ -271,6 +327,102 @@ data_chunk CLASS::get_wire_block(const header_link& link,
     // Resize in case tx is pruned.
     data.resize(out.get_write_position());
     return data;
+}
+
+TEMPLATE
+template <typename Writer>
+bool CLASS::get_wire_block(const system::data_slab& out,
+    const header_link& link, bool witness, bool turbo) const NOEXCEPT
+{
+    using namespace system;
+    if (!turbo)
+    {
+        stream::out::fast sink{ out };
+        Writer writer{ sink };
+        return get_wire_block(writer, link, witness) && writer;
+    }
+
+    const auto txs = to_transactions(link);
+    if (txs.empty())
+        return false;
+
+    // Tx sizes, converted in place to offsets. Tasks read through the held
+    // accessors, as a task taking a held lock could wait behind a remap.
+    const auto ptrs = get_wire_accessors();
+    std::vector<size_t> offsets(txs.size());
+    for (size_t index{}; index < txs.size(); ++index)
+    {
+        table::transaction::get_sizes sizes{};
+        if (!store_.tx.get(ptrs.tx, txs.at(index), sizes))
+            return false;
+
+        offsets.at(index) = witness ? sizes.heavy : sizes.light;
+    }
+
+    const auto last = offsets.back();
+    const auto prefix = chain::header::serialized_size() +
+        variable_size(txs.size());
+    std::exclusive_scan(offsets.cbegin(), offsets.cend(), offsets.begin(),
+        prefix);
+
+    const auto bytes = offsets.back() + last;
+    const auto scale = out.size() / bytes;
+    if (is_zero(scale) || (scale * bytes != out.size()))
+        return false;
+
+    // Txs are written in ranges, one task each, as each task costs a wakeup,
+    // and a block of two ranges or fewer is written without tasks.
+    constexpr size_t range_txs = 256;
+    const auto ranges = ceilinged_divide(txs.size(), range_txs);
+    if (ranges <= two)
+    {
+        stream::out::fast sink{ out };
+        Writer writer{ sink };
+        return get_wire_block(writer, link, witness) && writer;
+    }
+
+    const auto region = [&](size_t offset, size_t size) NOEXCEPT
+    {
+        const auto begin = std::next(out.data(), offset * scale);
+        return data_slab{ begin, std::next(begin, size * scale) };
+    };
+
+    stream::out::fast head_sink{ region(zero, prefix) };
+    Writer head{ head_sink };
+    if (!get_wire_header(head, link))
+        return false;
+
+    head.write_variable(txs.size());
+    if (!head)
+        return false;
+
+    std::atomic_bool fault{};
+    std::vector<size_t> starts(ranges);
+    std::iota(starts.begin(), starts.end(), zero);
+    std::for_each(poolstl::execution::par, starts.cbegin(), starts.cend(),
+        [&](size_t range) NOEXCEPT
+        {
+            const auto first = range * range_txs;
+            const auto stop = std::min(txs.size(), first + range_txs);
+            for (auto index = first; index < stop; ++index)
+            {
+                const auto offset = offsets.at(index);
+                const auto next = add1(index);
+                const auto end = next == offsets.size() ? bytes :
+                    offsets.at(next);
+
+                stream::out::fast sink{ region(offset, end - offset) };
+                Writer writer{ sink };
+                if (!get_wire_tx(writer, ptrs, txs.at(index), witness) ||
+                    !writer)
+                {
+                    fault.store(true, std::memory_order_relaxed);
+                    return;
+                }
+            }
+        });
+
+    return !fault.load(std::memory_order_relaxed);
 }
 
 } // namespace database

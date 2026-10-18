@@ -76,6 +76,198 @@ bool CLASS::scan_silent(const stopper& cancel,
     return !cancel;
 }
 
+// Rows are in validation order, so the rows of confirmed blocks are selected
+// by tx link from the range and only the selected rows are scanned. A block's
+// txs are a few runs of consecutive links, so membership is a search of runs.
+TEMPLATE
+bool CLASS::scan_silent(const stopper& cancel,
+    const system::scan::batch::receiver& keys, size_t first, size_t last,
+    size_t start, size_t stop, const silent_handler& callback) NOEXCEPT
+{
+    using namespace system;
+    using link_t = tx_link::integer;
+    using run_t = std::pair<link_t, link_t>;
+
+    std_vector<run_t> runs{};
+    const auto top = std::min(stop, get_top_confirmed());
+    for (auto height = start; height <= top; ++height)
+    {
+        if (cancel)
+            return false;
+
+        for (const auto tx: to_transactions(to_confirmed(height)))
+        {
+            if (!runs.empty() && add1(runs.back().second) == tx)
+                runs.back().second = tx;
+            else
+                runs.emplace_back(tx, tx);
+        }
+    }
+
+    std::sort(runs.begin(), runs.end());
+    std_vector<run_t> merged{};
+    for (const auto& [low, high]: runs)
+    {
+        if (!merged.empty() && low <= add1(merged.back().second))
+            merged.back().second = std::max(merged.back().second, high);
+        else
+            merged.emplace_back(low, high);
+    }
+
+    const auto latch = is_pooling() ? get_latch_tx() : max_size_t;
+    const auto selected = [&](link_t link) NOEXCEPT
+    {
+        if (link >= latch)
+            return true;
+
+        const auto it = std::upper_bound(merged.cbegin(), merged.cend(), link,
+            [](link_t value, const run_t& run) NOEXCEPT
+            {
+                return value < run.first;
+            });
+
+        return it != merged.cbegin() && link <= std::prev(it)->second;
+    };
+
+    const auto correlate_ptr = store_.scan.correlate.get_memory();
+    const auto point_ptr = store_.scan.point.get_memory();
+    const auto outputs_ptr = store_.scan.outputs.get_memory();
+    const auto prefix_ptr = store_.scan_prefix.get_memory();
+
+    using correlate_t = table::scan_correlate::span;
+    using point_t = table::scan_point::span;
+    using outputs_t = system::scan::batch::outputs_t;
+    using prefix_t = const system::scan::batch::prefix;
+
+    const auto correlate = pointer_cast<const correlate_t>(
+        correlate_ptr.data());
+    const auto point = pointer_cast<const point_t>(point_ptr.data());
+    const auto outputs = pointer_cast<const outputs_t>(outputs_ptr.data());
+    const auto prefix = pointer_cast<prefix_t>(prefix_ptr.data());
+
+    BC_ASSERT(first <= last && last <= store_.scan.count());
+    constexpr size_t chunk = power2(16_size);
+    const auto policy = poolstl::execution::par_if(store_.turbo());
+    std_vector<std_vector<size_t>> rows(ceilinged_divide(last - first, chunk));
+    std_vector<size_t> chunks(rows.size());
+    std::iota(chunks.begin(), chunks.end(), zero);
+    std::for_each(policy, chunks.cbegin(), chunks.cend(),
+        [&](size_t index) NOEXCEPT
+        {
+            const auto begin = first + index * chunk;
+            const auto end = std::min(last, begin + chunk);
+            for (auto row = begin; row < end && !cancel; ++row)
+                if (selected(from_little_endian<link_t>(*std::next(correlate,
+                    row))))
+                    rows.at(index).push_back(row);
+        });
+
+    if (cancel)
+        return false;
+
+    size_t count{};
+    std_vector<size_t> offsets(rows.size());
+    for (size_t index{}; index < rows.size(); ++index)
+    {
+        offsets.at(index) = count;
+        count += rows.at(index).size();
+    }
+
+    std_vector<correlate_t> correlates(count);
+    std_vector<point_t> points(count);
+    std_vector<outputs_t> outs(count);
+    std::for_each(policy, chunks.cbegin(), chunks.cend(),
+        [&](size_t index) NOEXCEPT
+        {
+            auto at = offsets.at(index);
+            for (const auto row: rows.at(index))
+            {
+                correlates.at(at) = *std::next(correlate, row);
+                points.at(at) = *std::next(point, row);
+                outs.at(at) = *std::next(outputs, row);
+                ++at;
+            }
+        });
+
+    const auto prefixes = possible_narrow_cast<size_t>(
+        store_.scan_prefix.count().value);
+
+    const system::scan::batch batch
+    {
+        .correlates = { correlates.data(), count },
+        .points = { points.data(), count },
+        .outputs = { outs.data(), count },
+        .prefixes = { prefix, prefixes }
+    };
+
+    // False return only implies canceled.
+    // Callbacks invoked on caller thread if turbo is false.
+    const auto minimum = store_.gpu_scan_minimum();
+    scan::batch::scan(cancel, batch, keys, minimum, callback, store_.turbo());
+    return !cancel;
+}
+
+// Confirmation is strong association, otherwise height is zero (unconfirmed).
+// A tx archived only on a stale branch reports as unconfirmed, and one also
+// archived there before the store began pooling may report twice (benign).
+TEMPLATE
+bool CLASS::get_silent_matches(silent_matches& out, const stopper& cancel,
+    const system::scan::batch::receiver& keys, size_t first, size_t last,
+    size_t start, size_t stop, bool time) NOEXCEPT
+{
+    using namespace system;
+    using link_t = scan::batch::tx_link_t;
+    constexpr size_t selection_blocks = 10'000;
+
+    std::mutex mutex{};
+    std::map<link_t, ec_compressed> found{};
+    const auto handler = [&](const code&, link_t link,
+        const ec_compressed& tweak) NOEXCEPT
+    {
+        std::unique_lock lock{ mutex };
+        found.emplace(link, tweak);
+    };
+
+    const auto top = get_top_confirmed();
+    const auto select = !time && (start > top ||
+        std::min(stop, top) - start < selection_blocks) &&
+        first == get_silent_floor(start, false);
+
+    if (!(select ?
+        scan_silent(cancel, keys, first, last, start, stop, handler) :
+        scan_silent(cancel, keys, first, last, handler)))
+        return false;
+
+    out.clear();
+    out.reserve(found.size());
+    for (const auto& [link, tweak]: found)
+    {
+        size_t height{};
+        if (!get_tx_height(height, link))
+            out.emplace_back(zero, get_tx_key(link), tweak);
+        else if (!is_silent_cut(link, height, start, stop, time))
+            out.emplace_back(height, get_tx_key(link), tweak);
+    }
+
+    std::sort(out.begin(), out.end(),
+        [](const silent_match& left, const silent_match& right) NOEXCEPT
+        {
+            return sub1(std::get<0>(left)) < sub1(std::get<0>(right));
+        });
+
+    return true;
+}
+
+TEMPLATE
+size_t CLASS::get_silent_floor(size_t start, bool time) const NOEXCEPT
+{
+    auto height = start;
+    if (time && !get_mtp_height(height, start))
+        height = max_size_t;
+
+    return get_scan_floor(height).value;
+}
+
 // Rows are allocated zero-filled and a nonzero correlate publishes the row.
 TEMPLATE
 size_t CLASS::get_silent_frontier(size_t first) const NOEXCEPT
@@ -684,6 +876,18 @@ bool CLASS::is_silent_selected(const tx_link& link,
     const tx_link& coinbase) const NOEXCEPT
 {
     return link >= coinbase || !is_pooled(link);
+}
+
+TEMPLATE
+bool CLASS::is_silent_cut(const tx_link& link, size_t height, size_t start,
+    size_t stop, bool time) const NOEXCEPT
+{
+    if (!time)
+        return height < start || height > stop;
+
+    context ctx{};
+    return !get_context(ctx, find_strong(link)) || ctx.mtp < start ||
+        ctx.mtp > stop;
 }
 
 // Rows are read in chunks so the guard is not held across a long seek.
