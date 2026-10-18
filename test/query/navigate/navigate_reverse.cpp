@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs3__parents__expected)
     BOOST_REQUIRE_EQUAL(parents.at(5), 1u);
 
     tx_links out{};
-    BOOST_REQUIRE(!query.to_touched_txs(cancel, out, links, parents));
+    BOOST_REQUIRE(!query.to_touched_txs(cancel, out, links, parents, true));
     BOOST_REQUIRE_EQUAL(out.size(), 10u);
     BOOST_REQUIRE_EQUAL(out.at(0), 1u);
     BOOST_REQUIRE_EQUAL(out.at(1), 2u);

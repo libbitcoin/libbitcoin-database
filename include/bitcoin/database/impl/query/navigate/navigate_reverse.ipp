@@ -93,37 +93,55 @@ code CLASS::to_touched_txs(const stopper& cancel, tx_links& out,
             parents.push_back(tx);
     }
 
-    return to_touched_txs(cancel, out, outputs, parents);
+    return to_touched_txs(cancel, out, outputs, parents, false);
 }
 
 TEMPLATE
 code CLASS::to_touched_txs(const stopper& cancel, tx_links& out,
-    const output_links& outputs, const tx_links& parents) const NOEXCEPT
+    const output_links& outputs, const tx_links& parents,
+    bool turbo) const NOEXCEPT
 {
     BC_ASSERT(outputs.size() == parents.size());
+    const auto policy = poolstl::execution::par_if(turbo);
+    stopper fail{};
 
-    // Reserve one for each output tx and one for spending input tx (estimate).
-    out.clear();
-    out.reserve(two * outputs.size());
+    // Each output resolves to its parent tx followed by its spending txs.
+    std::vector<tx_links> touched(outputs.size());
+    std::transform(policy, outputs.cbegin(), outputs.cend(), parents.cbegin(),
+        touched.begin(), [this, &cancel, &fail](const output_link& output,
+            const tx_link& parent) NOEXCEPT
+        {
+            tx_links txs{};
+            if (cancel || fail)
+                return txs;
+
+            txs.push_back(parent);
+            for (const auto& input: std::views::reverse(to_spenders(parent, output)))
+            {
+                const auto tx = to_input_tx(input);
+                if (tx.is_terminal())
+                {
+                    fail = true;
+                    return txs;
+                }
+
+                txs.push_back(tx);
+            }
+
+            return txs;
+        });
+
+    if (fail)
+        return error::integrity;
+
+    if (cancel)
+        return error::query_canceled;
 
     // Orders are reversed due to expected tx_links reversal, for faster sort.
-    for (auto index = outputs.size(); !is_zero(index); --index)
-    {
-        if (cancel)
-            return error::query_canceled;
-
-        const output_link output{ outputs.at(sub1(index)) };
-        const tx_link parent{ parents.at(sub1(index)) };
-        out.push_back(parent);
-
-        for (const auto& input: std::views::reverse(to_spenders(parent, output)))
-        {
-            if (const auto tx = to_input_tx(input); tx.is_terminal())
-                return error::integrity;
-            else
-                out.push_back(tx);
-        }
-    }
+    out.clear();
+    out.reserve(two * outputs.size());
+    for (const auto& txs: std::views::reverse(touched))
+        out.insert(out.end(), txs.begin(), txs.end());
 
     return error::success;
 }

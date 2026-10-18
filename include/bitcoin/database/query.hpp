@@ -419,7 +419,8 @@ public:
     code to_touched_txs(const stopper& cancel, tx_links& out,
         const output_links& outputs) const NOEXCEPT;
     code to_touched_txs(const stopper& cancel, tx_links& out,
-        const output_links& outputs, const tx_links& parents) const NOEXCEPT;
+        const output_links& outputs, const tx_links& parents,
+        bool turbo) const NOEXCEPT;
 
     code to_address_outputs(output_links& out,
         const hash_digest& key) const NOEXCEPT;
@@ -1345,7 +1346,7 @@ protected:
     history get_tx_unconfirmed_history(hash_digest&& key,
         const tx_link& link) const NOEXCEPT;
     code get_address_txs(const stopper& cancel, tx_links& out,
-        const hash_digest& key, size_t limit) const NOEXCEPT;
+        const hash_digest& key, size_t limit, bool turbo) const NOEXCEPT;
 
 private:
     // This value should never be read, but may be useful in debugging.

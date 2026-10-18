@@ -39,7 +39,7 @@ code CLASS::get_unconfirmed_history(const stopper& cancel, histories& out,
     const hash_digest& key, size_t limit, bool turbo) const NOEXCEPT
 {
     tx_links txs{};
-    if (const auto ec = get_address_txs(cancel, txs, key, limit))
+    if (const auto ec = get_address_txs(cancel, txs, key, limit, turbo))
         return ec;
 
     // There is no cursor for unconfirmed, since it's height-based.
@@ -62,7 +62,7 @@ code CLASS::get_confirmed_history(const stopper& cancel, height_link& cursor,
     bool turbo) const NOEXCEPT
 {
     tx_links txs{};
-    if (const auto ec = get_address_txs(cancel, txs, key, limit))
+    if (const auto ec = get_address_txs(cancel, txs, key, limit, turbo))
         return ec;
 
     // Cursor is still advanced in the case of (integrity) failure.
@@ -90,7 +90,7 @@ code CLASS::get_history(const stopper& cancel, height_link& cursor,
     bool turbo) const NOEXCEPT
 {
     tx_links txs{};
-    if (const auto ec = get_address_txs(cancel, txs, key, limit))
+    if (const auto ec = get_address_txs(cancel, txs, key, limit, turbo))
         return ec;
 
     // Cursor is still advanced in the case of (integrity) failure.
@@ -250,7 +250,7 @@ histories CLASS::get_spenders_history(const hash_digest& key,
 
 TEMPLATE
 code CLASS::get_address_txs(const stopper& cancel, tx_links& out,
-    const hash_digest& key, size_t limit) const NOEXCEPT
+    const hash_digest& key, size_t limit, bool turbo) const NOEXCEPT
 {
     output_links links{};
     tx_links parents{};
@@ -258,7 +258,7 @@ code CLASS::get_address_txs(const stopper& cancel, tx_links& out,
     if (const auto ec = to_address_outputs(cancel, cursor, links, parents, key, limit))
         return ec;
 
-    return to_touched_txs(cancel, out, links, parents);
+    return to_touched_txs(cancel, out, links, parents, turbo);
 }
 
 // private/static
