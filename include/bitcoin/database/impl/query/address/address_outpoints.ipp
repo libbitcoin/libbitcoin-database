@@ -151,7 +151,7 @@ template <typename Functor>
 code CLASS::parallel_outpoint_transform(const stopper& cancel, bool turbo,
     outpoints& out, const output_links& links, Functor&& functor) NOEXCEPT
 {
-    const auto policy = poolstl::execution::par_if(turbo);
+    const auto policy = poolstl::execution::par_if(turbo, parallel_floor);
     stopper fail{};
 
     out.clear();

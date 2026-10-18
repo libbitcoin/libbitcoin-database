@@ -102,7 +102,7 @@ code CLASS::to_touched_txs(const stopper& cancel, tx_links& out,
     bool turbo) const NOEXCEPT
 {
     BC_ASSERT(outputs.size() == parents.size());
-    const auto policy = poolstl::execution::par_if(turbo);
+    const auto policy = poolstl::execution::par_if(turbo, parallel_floor);
     stopper fail{};
 
     // Each output resolves to its parent tx followed by its spending txs.

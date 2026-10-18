@@ -267,7 +267,7 @@ template <typename Functor>
 code CLASS::parallel_history_transform(const stopper& cancel, bool turbo,
     histories& out, const tx_links& txs, Functor&& functor) NOEXCEPT
 {
-    const auto policy = poolstl::execution::par_if(turbo);
+    const auto policy = poolstl::execution::par_if(turbo, parallel_floor);
     stopper fail{};
 
     out.clear();

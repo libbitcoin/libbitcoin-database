@@ -1352,6 +1352,9 @@ private:
     // This value should never be read, but may be useful in debugging.
     static constexpr uint32_t unspecified_timestamp = max_uint32;
 
+    // Minimum elements per parallel task for single-read transforms.
+    static constexpr size_t parallel_floor = 32;
+
     // Fewest pool records hashed by one task of the compact short id scan.
     static constexpr size_t short_id_minimum_records = system::power2(10u);
 
