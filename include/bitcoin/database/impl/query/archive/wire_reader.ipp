@@ -118,49 +118,99 @@ TEMPLATE
 bool CLASS::get_wire_input(bytewriter& sink,
     const ins_link& link) const NOEXCEPT
 {
-    table::ins_point::wire_point point{ {}, sink };
-    if (!store_.ins.get(link, point))
-        return false;
-
-    table::ins_sequence::get_input ins{};
-    table::input::wire_script script{ {}, sink };
-    if (!store_.ins.sequence.get(link, ins) ||
-        !store_.input.get(ins.input_fk, script))
-        return false;
-
-    sink.write_4_bytes_little_endian(ins.sequence);
-    return true;
+    return get_wire_input(sink, store_.ins.get_memory(),
+        store_.ins.sequence.get_memory(), store_.input.get_memory(), link);
 }
 
 TEMPLATE
 bool CLASS::get_wire_output(bytewriter& sink,
     const output_link& link) const NOEXCEPT
 {
-    table::output::wire_script out{ {}, sink };
-    return store_.output.get(link, out);
+    return get_wire_output(sink, store_.output.get_memory(), link);
 }
 
 TEMPLATE
 bool CLASS::get_wire_witness(bytewriter& sink,
     const ins_link& link) const NOEXCEPT
 {
-    table::ins_sequence::get_input ins{};
-    table::input::wire_witness wire{ {}, sink };
-    return store_.ins.sequence.get(link, ins)
-        && store_.input.get(ins.input_fk, wire);
+    return get_wire_witness(sink, store_.ins.sequence.get_memory(),
+        store_.input.get_memory(), link);
 }
 
 TEMPLATE
 bool CLASS::get_wire_tx(bytewriter& sink, const tx_link& link,
     bool witness) const NOEXCEPT
 {
+    return get_wire_tx(sink, get_wire_accessors(), link, witness);
+}
+
+// protected
+TEMPLATE
+CLASS::wire_accessors CLASS::get_wire_accessors() const NOEXCEPT
+{
+    return
+    {
+        store_.tx.get_memory(),
+        store_.outs.puts.get_memory(),
+        store_.ins.get_memory(),
+        store_.ins.sequence.get_memory(),
+        store_.input.get_memory(),
+        store_.output.get_memory()
+    };
+}
+
+// protected
+TEMPLATE
+bool CLASS::get_wire_input(bytewriter& sink, const memory& ins,
+    const memory& sequence, const memory& input,
+    const ins_link& link) const NOEXCEPT
+{
+    table::ins_point::wire_point point{ {}, sink };
+    if (!store_.ins.get(ins, link, point))
+        return false;
+
+    table::ins_sequence::get_input in{};
+    table::input::wire_script script{ {}, sink };
+    if (!store_.ins.sequence.get(sequence, link, in) ||
+        !store_.input.get(input, in.input_fk, script))
+        return false;
+
+    sink.write_4_bytes_little_endian(in.sequence);
+    return true;
+}
+
+// protected
+TEMPLATE
+bool CLASS::get_wire_output(bytewriter& sink, const memory& output,
+    const output_link& link) const NOEXCEPT
+{
+    table::output::wire_script out{ {}, sink };
+    return store_.output.get(output, link, out);
+}
+
+// protected
+TEMPLATE
+bool CLASS::get_wire_witness(bytewriter& sink, const memory& sequence,
+    const memory& input, const ins_link& link) const NOEXCEPT
+{
+    table::ins_sequence::get_input in{};
+    table::input::wire_witness wire{ {}, sink };
+    return store_.ins.sequence.get(sequence, link, in)
+        && store_.input.get(input, in.input_fk, wire);
+}
+
+// protected
+TEMPLATE
+bool CLASS::get_wire_tx(bytewriter& sink, const wire_accessors& ptrs,
+    const tx_link& link, bool witness) const NOEXCEPT
+{
     table::transaction::record tx{};
-    if (!store_.tx.get(link, tx))
+    if (!store_.tx.get(ptrs.tx, link, tx))
         return false;
 
     table::outs::record outs{};
     outs.out_fks.resize(tx.outs_count);
-    if (!store_.outs.puts.get(tx.outs_fk, outs))
+    if (!store_.outs.puts.get(ptrs.puts, tx.outs_fk, outs))
         return false;
 
     // Point links are contiguous (computed).
@@ -179,18 +229,18 @@ bool CLASS::get_wire_tx(bytewriter& sink, const tx_link& link,
 
     sink.write_variable(ins_count);
     for (auto fk = ins_begin; fk < ins_final; ++fk)
-        if (!get_wire_input(sink, fk))
+        if (!get_wire_input(sink, ptrs.ins, ptrs.sequence, ptrs.input, fk))
             return false;
 
     sink.write_variable(outs.out_fks.size());
     for (const auto& fk: outs.out_fks)
-        if (!get_wire_output(sink, fk))
+        if (!get_wire_output(sink, ptrs.output, fk))
             return false;
 
     if (witnessed)
     {
         for (auto fk = ins_begin; fk < ins_final; ++fk)
-            if (!get_wire_witness(sink, fk))
+            if (!get_wire_witness(sink, ptrs.sequence, ptrs.input, fk))
                 return false;
     }
 
@@ -210,8 +260,9 @@ bool CLASS::get_wire_block(bytewriter& sink, const header_link& link,
         return false;
 
     sink.write_variable(txs.size());
+    const auto ptrs = get_wire_accessors();
     for (const auto& tx_link: txs)
-        if (!get_wire_tx(sink, tx_link, witness))
+        if (!get_wire_tx(sink, ptrs, tx_link, witness))
             return false;
 
     return true;
@@ -294,18 +345,20 @@ bool CLASS::get_wire_block(const system::data_slab& out,
     if (txs.empty())
         return false;
 
-    // Tx sizes, converted in place to offsets.
+    // Tx sizes, converted in place to offsets. Tasks read through the held
+    // accessors, as a task taking a held lock could wait behind a remap.
     std::atomic_bool fault{};
     std::vector<size_t> offsets(txs.size());
+    const auto ptrs = get_wire_accessors();
     const auto policy = poolstl::execution::par;
     std::transform(policy, txs.cbegin(), txs.cend(), offsets.begin(),
         [&](const tx_link& tx) NOEXCEPT
         {
-            size_t bytes{};
-            if (!get_tx_size(bytes, tx, witness))
+            table::transaction::get_sizes sizes{};
+            if (!store_.tx.get(ptrs.tx, tx, sizes))
                 fault.store(true, std::memory_order_relaxed);
 
-            return bytes;
+            return witness ? sizes.heavy : sizes.light;
         });
 
     const auto last = offsets.back();
@@ -345,7 +398,7 @@ bool CLASS::get_wire_block(const system::data_slab& out,
 
             stream::out::fast sink{ region(offset, end - offset) };
             Writer writer{ sink };
-            if (!get_wire_tx(writer, txs.at(index), witness) || !writer)
+            if (!get_wire_tx(writer, ptrs, txs.at(index), witness) || !writer)
                 fault.store(true, std::memory_order_relaxed);
         });
 
