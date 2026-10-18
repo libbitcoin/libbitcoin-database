@@ -80,12 +80,9 @@ TEMPLATE
 code CLASS::to_touched_txs(const stopper& cancel, tx_links& out,
     const output_links& outputs) const NOEXCEPT
 {
-    // Reserve one for each output tx and one for spending input tx (estimate).
-    out.clear();
-    out.reserve(two * outputs.size());
-
-    // Orders are reversed due to expected tx_links reversal, for faster sort.
-    for (const auto& output: std::views::reverse(outputs))
+    tx_links parents{};
+    parents.reserve(outputs.size());
+    for (const auto& output: outputs)
     {
         if (cancel)
             return error::query_canceled;
@@ -93,16 +90,58 @@ code CLASS::to_touched_txs(const stopper& cancel, tx_links& out,
         if (const auto tx = to_output_tx(output); tx.is_terminal())
             return error::integrity;
         else
-            out.push_back(tx);
-        
-        for (const auto& input: std::views::reverse(to_spenders(output)))
-        {
-            if (const auto tx = to_input_tx(input); tx.is_terminal())
-                return error::integrity;
-            else
-                out.push_back(tx);
-        }
+            parents.push_back(tx);
     }
+
+    return to_touched_txs(cancel, out, outputs, parents, false);
+}
+
+TEMPLATE
+code CLASS::to_touched_txs(const stopper& cancel, tx_links& out,
+    const output_links& outputs, const tx_links& parents,
+    bool turbo) const NOEXCEPT
+{
+    BC_ASSERT(outputs.size() == parents.size());
+    const auto policy = poolstl::execution::par_if(turbo, parallel_floor);
+    stopper fail{};
+
+    // Each output resolves to its parent tx followed by its spending txs.
+    std::vector<tx_links> touched(outputs.size());
+    std::transform(policy, outputs.cbegin(), outputs.cend(), parents.cbegin(),
+        touched.begin(), [this, &cancel, &fail](const output_link& output,
+            const tx_link& parent) NOEXCEPT
+        {
+            tx_links txs{};
+            if (cancel || fail)
+                return txs;
+
+            txs.push_back(parent);
+            for (const auto& input: std::views::reverse(to_spenders(parent, output)))
+            {
+                const auto tx = to_input_tx(input);
+                if (tx.is_terminal())
+                {
+                    fail = true;
+                    return txs;
+                }
+
+                txs.push_back(tx);
+            }
+
+            return txs;
+        });
+
+    if (fail)
+        return error::integrity;
+
+    if (cancel)
+        return error::query_canceled;
+
+    // Orders are reversed due to expected tx_links reversal, for faster sort.
+    out.clear();
+    out.reserve(two * outputs.size());
+    for (const auto& txs: std::views::reverse(touched))
+        out.insert(out.end(), txs.begin(), txs.end());
 
     return error::success;
 }
@@ -127,7 +166,17 @@ TEMPLATE
 code CLASS::to_address_outputs(const stopper& cancel, outs_link& cursor,
     output_links& out, const hash_digest& key, size_t limit) const NOEXCEPT
 {
+    tx_links parents{};
+    return to_address_outputs(cancel, cursor, out, parents, key, limit);
+}
+
+TEMPLATE
+code CLASS::to_address_outputs(const stopper& cancel, outs_link& cursor,
+    output_links& out, tx_links& parents, const hash_digest& key,
+    size_t limit) const NOEXCEPT
+{
     out.clear();
+    parents.clear();
 
     // Limit bounds candidates, verified following iterator disposal.
     // The iterator guards the aggregate, so puts is read unguarded.
@@ -179,7 +228,10 @@ code CLASS::to_address_outputs(const stopper& cancel, outs_link& cursor,
             return error::integrity;
 
         if (output.match)
+        {
             out.push_back(candidate);
+            parents.push_back(output.parent_fk);
+        }
     }
 
     return deferred;
@@ -236,6 +288,13 @@ ins_links CLASS::to_spenders(const tx_link& output_tx,
     uint32_t output_index) const NOEXCEPT
 {
     return to_spenders(get_tx_key(output_tx), output_index);
+}
+
+TEMPLATE
+ins_links CLASS::to_spenders(const tx_link& output_tx,
+    const output_link& link) const NOEXCEPT
+{
+    return to_spenders(output_tx, to_output_index(output_tx, link));
 }
 
 TEMPLATE

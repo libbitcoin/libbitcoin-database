@@ -196,7 +196,7 @@ template <typename Functor>
 code CLASS::parallel_unspent_transform(const stopper& cancel, bool turbo,
     unspent_outputs& out, const output_links& outs, Functor&& functor) NOEXCEPT
 {
-    const auto policy = poolstl::execution::par_if(turbo);
+    const auto policy = poolstl::execution::par_if(turbo, parallel_floor);
     stopper fail{};
 
     out.clear();

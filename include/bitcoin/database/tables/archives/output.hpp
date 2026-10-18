@@ -133,7 +133,8 @@ struct output
         {
             using namespace system;
 
-            // Skip parent fk and value, and read the script size.
+            // Read parent fk, skip value, and read the script size.
+            parent_fk = unsafe_from_little_endian<tx::integer>(start);
             const auto* position = std::next(start, tx::size);
             unsafe_from_variable(position);
             const auto scrypt_size = unsafe_from_variable(position);
@@ -143,6 +144,7 @@ struct output
         }
 
         const system::hash_digest& key;
+        tx::integer parent_fk{};
         bool match{};
     };
 

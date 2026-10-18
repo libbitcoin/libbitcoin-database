@@ -375,6 +375,8 @@ public:
         uint32_t output_index) const NOEXCEPT;
     ins_links to_spenders(const tx_link& output_tx,
         uint32_t output_index) const NOEXCEPT;
+    ins_links to_spenders(const tx_link& output_tx,
+        const output_link& link) const NOEXCEPT;
 
     /// tx to puts (forward navigation)
     ins_links to_points(const tx_link& link) const NOEXCEPT;
@@ -416,6 +418,9 @@ public:
         const output_links& outputs) const NOEXCEPT;
     code to_touched_txs(const stopper& cancel, tx_links& out,
         const output_links& outputs) const NOEXCEPT;
+    code to_touched_txs(const stopper& cancel, tx_links& out,
+        const output_links& outputs, const tx_links& parents,
+        bool turbo) const NOEXCEPT;
 
     code to_address_outputs(output_links& out,
         const hash_digest& key) const NOEXCEPT;
@@ -424,6 +429,9 @@ public:
 
     code to_address_outputs(const stopper& cancel, outs_link& cursor,
         output_links& out, const hash_digest& key,
+        size_t limit) const NOEXCEPT;
+    code to_address_outputs(const stopper& cancel, outs_link& cursor,
+        output_links& out, tx_links& parents, const hash_digest& key,
         size_t limit) const NOEXCEPT;
 
     /// Archive reads.
@@ -1338,11 +1346,14 @@ protected:
     history get_tx_unconfirmed_history(hash_digest&& key,
         const tx_link& link) const NOEXCEPT;
     code get_address_txs(const stopper& cancel, tx_links& out,
-        const hash_digest& key, size_t limit) const NOEXCEPT;
+        const hash_digest& key, size_t limit, bool turbo) const NOEXCEPT;
 
 private:
     // This value should never be read, but may be useful in debugging.
     static constexpr uint32_t unspecified_timestamp = max_uint32;
+
+    // Minimum elements per parallel task for single-read transforms.
+    static constexpr size_t parallel_floor = 32;
 
     // Fewest pool records hashed by one task of the compact short id scan.
     static constexpr size_t short_id_minimum_records = system::power2(10u);
