@@ -374,12 +374,12 @@ struct header
             const auto time_bits_nonce_size = 3u * sizeof(uint32_t);
             const auto version_size = sizeof(uint32_t);
             source.skip_bytes(skip_to_version);
-            sink.write_bytes(source.read_bytes(version_size));
+            sink.write_bytes(source, version_size);
             sink.write_bytes(parent_hash);
             source.skip_bytes(time_bits_nonce_size);
             sink.write_bytes(source.read_hash());
             source.rewind_bytes(time_bits_nonce_size + schema::hash);
-            sink.write_bytes(source.read_bytes(time_bits_nonce_size));
+            sink.write_bytes(source, time_bits_nonce_size);
             return source;
         }
 

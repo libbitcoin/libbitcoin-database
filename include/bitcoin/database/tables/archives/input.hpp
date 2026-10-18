@@ -264,7 +264,7 @@ struct input
             // script (prefixed)
             const auto length = source.read_size();
             sink.write_variable(length);
-            sink.write_bytes(source.read_bytes(length));
+            sink.write_bytes(source, length);
             return source;
         }
 
@@ -288,7 +288,7 @@ struct input
             {
                 const auto length = source.read_size();
                 sink.write_variable(length);
-                sink.write_bytes(source.read_bytes(length));
+                sink.write_bytes(source, length);
             }
 
             return source;

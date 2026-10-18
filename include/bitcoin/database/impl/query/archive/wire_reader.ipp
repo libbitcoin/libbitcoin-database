@@ -208,12 +208,7 @@ bool CLASS::get_wire_tx(bytewriter& sink, const wire_accessors& ptrs,
     if (!store_.tx.get(ptrs.tx, link, tx))
         return false;
 
-    table::outs::record outs{};
-    outs.out_fks.resize(tx.outs_count);
-    if (!store_.outs.puts.get(ptrs.puts, tx.outs_fk, outs))
-        return false;
-
-    // Point links are contiguous (computed).
+    // Point and put links are contiguous (computed).
     const auto ins_begin = tx.point_fk;
     const auto ins_count = tx.ins_count;
     const auto ins_final = ins_begin + ins_count;
@@ -232,10 +227,16 @@ bool CLASS::get_wire_tx(bytewriter& sink, const wire_accessors& ptrs,
         if (!get_wire_input(sink, ptrs.ins, ptrs.sequence, ptrs.input, fk))
             return false;
 
-    sink.write_variable(outs.out_fks.size());
-    for (const auto& fk: outs.out_fks)
-        if (!get_wire_output(sink, ptrs.output, fk))
+    const auto outs_begin = tx.outs_fk;
+    const auto outs_final = outs_begin + tx.outs_count;
+    sink.write_variable(tx.outs_count);
+    for (auto fk = outs_begin; fk < outs_final; ++fk)
+    {
+        table::outs::get_output put{};
+        if (!store_.outs.puts.get(ptrs.puts, fk, put) ||
+            !get_wire_output(sink, ptrs.output, put.out_fk))
             return false;
+    }
 
     if (witnessed)
     {
