@@ -110,6 +110,46 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs2__always__expected)
     BOOST_REQUIRE_EQUAL(out.at(9), 6u); // block3a (tx6)    [duplicate]
 }
 
+// to_touched_txs3
+
+BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs3__parents__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(setup_three_block_unconfirmed_address_store(query));
+
+    output_links links{};
+    tx_links parents{};
+    outs_link cursor{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.to_address_outputs(cancel, cursor, links, parents, address0, max_size_t));
+    BOOST_REQUIRE_EQUAL(links.size(), 6u);
+    BOOST_REQUIRE_EQUAL(parents.size(), 6u);
+    BOOST_REQUIRE_EQUAL(parents.at(0), 6u);
+    BOOST_REQUIRE_EQUAL(parents.at(1), 5u);
+    BOOST_REQUIRE_EQUAL(parents.at(2), 4u);
+    BOOST_REQUIRE_EQUAL(parents.at(3), 3u);
+    BOOST_REQUIRE_EQUAL(parents.at(4), 2u);
+    BOOST_REQUIRE_EQUAL(parents.at(5), 1u);
+
+    tx_links out{};
+    BOOST_REQUIRE(!query.to_touched_txs(cancel, out, links, parents));
+    BOOST_REQUIRE_EQUAL(out.size(), 10u);
+    BOOST_REQUIRE_EQUAL(out.at(0), 1u);
+    BOOST_REQUIRE_EQUAL(out.at(1), 2u);
+    BOOST_REQUIRE_EQUAL(out.at(2), 4u);
+    BOOST_REQUIRE_EQUAL(out.at(3), 5u);
+    BOOST_REQUIRE_EQUAL(out.at(4), 6u);
+    BOOST_REQUIRE_EQUAL(out.at(5), 2u);
+    BOOST_REQUIRE_EQUAL(out.at(6), 3u);
+    BOOST_REQUIRE_EQUAL(out.at(7), 4u);
+    BOOST_REQUIRE_EQUAL(out.at(8), 5u);
+    BOOST_REQUIRE_EQUAL(out.at(9), 6u);
+}
+
 // to_address_outputs1
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs1__always__expected)

@@ -375,6 +375,8 @@ public:
         uint32_t output_index) const NOEXCEPT;
     ins_links to_spenders(const tx_link& output_tx,
         uint32_t output_index) const NOEXCEPT;
+    ins_links to_spenders(const tx_link& output_tx,
+        const output_link& link) const NOEXCEPT;
 
     /// tx to puts (forward navigation)
     ins_links to_points(const tx_link& link) const NOEXCEPT;
@@ -416,6 +418,8 @@ public:
         const output_links& outputs) const NOEXCEPT;
     code to_touched_txs(const stopper& cancel, tx_links& out,
         const output_links& outputs) const NOEXCEPT;
+    code to_touched_txs(const stopper& cancel, tx_links& out,
+        const output_links& outputs, const tx_links& parents) const NOEXCEPT;
 
     code to_address_outputs(output_links& out,
         const hash_digest& key) const NOEXCEPT;
@@ -424,6 +428,9 @@ public:
 
     code to_address_outputs(const stopper& cancel, outs_link& cursor,
         output_links& out, const hash_digest& key,
+        size_t limit) const NOEXCEPT;
+    code to_address_outputs(const stopper& cancel, outs_link& cursor,
+        output_links& out, tx_links& parents, const hash_digest& key,
         size_t limit) const NOEXCEPT;
 
     /// Archive reads.

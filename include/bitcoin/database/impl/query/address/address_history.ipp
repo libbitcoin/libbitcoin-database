@@ -253,11 +253,12 @@ code CLASS::get_address_txs(const stopper& cancel, tx_links& out,
     const hash_digest& key, size_t limit) const NOEXCEPT
 {
     output_links links{};
+    tx_links parents{};
     outs_link cursor{};
-    if (const auto ec = to_address_outputs(cancel, cursor, links, key, limit))
+    if (const auto ec = to_address_outputs(cancel, cursor, links, parents, key, limit))
         return ec;
 
-    return to_touched_txs(cancel, out, links);
+    return to_touched_txs(cancel, out, links, parents);
 }
 
 // private/static
