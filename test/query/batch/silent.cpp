@@ -705,6 +705,72 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__range__expected)
     BOOST_REQUIRE_EQUAL(links, std::vector<tx_link_t>{ 43 });
 }
 
+BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__confirmed_heights__selected)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_silent(42, simple_send()));
+    BOOST_REQUIRE(query.set_silent(0, simple_send()));
+
+    std::vector<tx_link_t> links{};
+    const auto handler = [&](const code&, tx_link_t tx, const ec_compressed&) NOEXCEPT
+    {
+        links.push_back(tx);
+    };
+
+    const stopper cancel{};
+    BOOST_REQUIRE(query.scan_silent(cancel, get_keys(), 0, 2, 0, 0, handler));
+    BOOST_REQUIRE_EQUAL(links, std::vector<tx_link_t>{ 0 });
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__heights_above_top__none)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_silent(0, simple_send()));
+
+    size_t calls{};
+    const auto handler = [&](const code&, tx_link_t, const ec_compressed&) NOEXCEPT
+    {
+        ++calls;
+    };
+
+    const stopper cancel{};
+    BOOST_REQUIRE(query.scan_silent(cancel, get_keys(), 0, 1, 1, 9, handler));
+    BOOST_REQUIRE_EQUAL(calls, 0u);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__pooling__latched_selected)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    query.set_pooling();
+    BOOST_REQUIRE(query.set_silent(0, simple_send()));
+    BOOST_REQUIRE(query.set_silent(42, simple_send()));
+
+    std::vector<tx_link_t> links{};
+    const auto handler = [&](const code&, tx_link_t tx, const ec_compressed&) NOEXCEPT
+    {
+        links.push_back(tx);
+    };
+
+    const stopper cancel{};
+    BOOST_REQUIRE(query.scan_silent(cancel, get_keys(), 0, 2, 1, 1, handler));
+    BOOST_REQUIRE_EQUAL(links, std::vector<tx_link_t>{ 42 });
+}
+
 // get_silent_frontier
 // ----------------------------------------------------------------------------
 

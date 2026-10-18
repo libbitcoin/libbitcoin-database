@@ -795,6 +795,14 @@ public:
         const system::scan::batch::receiver& keys, size_t first,
         size_t last, const silent_handler& callback) NOEXCEPT;
 
+    /// Invoke callback for each matched tx of rows [first, last) that is
+    /// confirmed at heights [start, stop] or linked at or above the pool
+    /// latch, false implies cancel.
+    bool scan_silent(const stopper& cancel,
+        const system::scan::batch::receiver& keys, size_t first,
+        size_t last, size_t start, size_t stop,
+        const silent_handler& callback) NOEXCEPT;
+
     /// The first silent row at or above first that is not fully written.
     size_t get_silent_frontier(size_t first) const NOEXCEPT;
 
