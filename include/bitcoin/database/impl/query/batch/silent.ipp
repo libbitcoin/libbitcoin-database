@@ -126,7 +126,7 @@ bool CLASS::scan_silent(const stopper& cancel,
         if (it != merged.cbegin() && link <= std::prev(it)->second)
             return true;
 
-        return to_block(tx_link{ link }).is_terminal();
+        return to_block(link).is_terminal();
     };
 
     const auto correlate_ptr = store_.scan.correlate.get_memory();
@@ -265,7 +265,7 @@ size_t CLASS::get_silent_floor(size_t start, bool time) const NOEXCEPT
     if (time && !get_mtp_height(height, start))
         height = max_size_t;
 
-    return get_scan_floor(height).value;
+    return get_scan_floor(height);
 }
 
 // Rows are allocated zero-filled and a nonzero correlate publishes the row.
