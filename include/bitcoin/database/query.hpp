@@ -803,6 +803,18 @@ public:
         size_t last, size_t start, size_t stop,
         const silent_handler& callback) NOEXCEPT;
 
+    /// Matches (height, tx hash, tweak) of rows [first, last) confirmed at
+    /// heights (or mtps if time) [start, stop], ordered by height, then
+    /// unconfirmed (zero height), false implies cancel. A short height cut
+    /// scanned from its floor scans only the rows of its confirmed blocks.
+    bool get_silent_matches(silent_matches& out, const stopper& cancel,
+        const system::scan::batch::receiver& keys, size_t first,
+        size_t last, size_t start, size_t stop, bool time) NOEXCEPT;
+
+    /// The scan fk from which a scan covers all blocks at or above start
+    /// (height, or mtp if time).
+    size_t get_silent_floor(size_t start, bool time) const NOEXCEPT;
+
     /// The first silent row at or above first that is not fully written.
     size_t get_silent_frontier(size_t first) const NOEXCEPT;
 
@@ -1236,6 +1248,11 @@ protected:
     /// A block's tx is indexed unless linked below its coinbase and pooled.
     bool is_silent_selected(const tx_link& link,
         const tx_link& coinbase) const NOEXCEPT;
+
+    /// The tx confirmed at height is outside heights (or mtps if time)
+    /// [start, stop].
+    bool is_silent_cut(const tx_link& link, size_t height, size_t start,
+        size_t stop, bool time) const NOEXCEPT;
 
     /// The wire prevouts of the spends of the block's selected txs, where
     /// silent selects the silent payment eligible txs and otherwise all.

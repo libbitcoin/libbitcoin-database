@@ -207,6 +207,67 @@ bool CLASS::scan_silent(const stopper& cancel,
     return !cancel;
 }
 
+// Confirmation is strong association, otherwise height is zero (unconfirmed).
+// A tx archived only on a stale branch reports as unconfirmed, and one also
+// archived there before the store began pooling may report twice (benign).
+TEMPLATE
+bool CLASS::get_silent_matches(silent_matches& out, const stopper& cancel,
+    const system::scan::batch::receiver& keys, size_t first, size_t last,
+    size_t start, size_t stop, bool time) NOEXCEPT
+{
+    using namespace system;
+    using link_t = scan::batch::tx_link_t;
+    constexpr size_t selection_blocks = 10'000;
+
+    std::mutex mutex{};
+    std::map<link_t, ec_compressed> found{};
+    const auto handler = [&](const code&, link_t link,
+        const ec_compressed& tweak) NOEXCEPT
+    {
+        std::unique_lock lock{ mutex };
+        found.emplace(link, tweak);
+    };
+
+    const auto top = get_top_confirmed();
+    const auto select = !time && (start > top ||
+        std::min(stop, top) - start < selection_blocks) &&
+        first == get_silent_floor(start, false);
+
+    if (!(select ?
+        scan_silent(cancel, keys, first, last, start, stop, handler) :
+        scan_silent(cancel, keys, first, last, handler)))
+        return false;
+
+    out.clear();
+    out.reserve(found.size());
+    for (const auto& [link, tweak]: found)
+    {
+        size_t height{};
+        if (!get_tx_height(height, link))
+            out.emplace_back(zero, get_tx_key(link), tweak);
+        else if (!is_silent_cut(link, height, start, stop, time))
+            out.emplace_back(height, get_tx_key(link), tweak);
+    }
+
+    std::sort(out.begin(), out.end(),
+        [](const silent_match& left, const silent_match& right) NOEXCEPT
+        {
+            return sub1(std::get<0>(left)) < sub1(std::get<0>(right));
+        });
+
+    return true;
+}
+
+TEMPLATE
+size_t CLASS::get_silent_floor(size_t start, bool time) const NOEXCEPT
+{
+    auto height = start;
+    if (time && !get_mtp_height(height, start))
+        height = max_size_t;
+
+    return get_scan_floor(height).value;
+}
+
 // Rows are allocated zero-filled and a nonzero correlate publishes the row.
 TEMPLATE
 size_t CLASS::get_silent_frontier(size_t first) const NOEXCEPT
@@ -815,6 +876,18 @@ bool CLASS::is_silent_selected(const tx_link& link,
     const tx_link& coinbase) const NOEXCEPT
 {
     return link >= coinbase || !is_pooled(link);
+}
+
+TEMPLATE
+bool CLASS::is_silent_cut(const tx_link& link, size_t height, size_t start,
+    size_t stop, bool time) const NOEXCEPT
+{
+    if (!time)
+        return height < start || height > stop;
+
+    context ctx{};
+    return !get_context(ctx, find_strong(link)) || ctx.mtp < start ||
+        ctx.mtp > stop;
 }
 
 // Rows are read in chunks so the guard is not held across a long seek.
