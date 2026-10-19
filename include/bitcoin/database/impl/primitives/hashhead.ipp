@@ -139,11 +139,7 @@ uint32_t CLASS::derive_buckets(uint64_t expected, uint32_t low,
     constexpr auto gigabyte = power2<uint64_t>(30u);
     constexpr auto megabyte = power2<uint64_t>(20u);
     constexpr auto uncontested = power2<uint64_t>(35u);
-#if defined(HAVE_APPLE)
-    constexpr auto contested = 10u * gigabyte;
-#else
     constexpr auto contested = 8u * gigabyte;
-#endif
 
     if (is_zero(expected) || is_zero(low) || is_zero(high))
         return {};
