@@ -424,13 +424,6 @@ private:
     const bool zeroed_;
     const bool random_;
     const bool staged_;
-
-    // Map the head writable-shared from its file (the native windows model)
-    // instead of anonymously with a dirty-page writer. Head reclaim is then
-    // kernel writeback of a bounded rewrite-in-place mapping (clean pages
-    // drop) rather than swap, which anonymous pages alone require. Excludes
-    // head_release (nothing to release) and the dirty bitmap (nothing to
-    // transfer).
     const bool head_shared_;
     const bool managed_;
 
