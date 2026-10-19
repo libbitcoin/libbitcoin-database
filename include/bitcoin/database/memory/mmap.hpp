@@ -76,7 +76,7 @@ public:
 
     /// Scalar construction (columns == 1).
     mmap(const path& filename, const storage_settings& settings={},
-        bool random=true, bool staged=false) NOEXCEPT
+        bool random=true, bool staged=false, bool shared=false) NOEXCEPT
         requires (is_one(columns));
 
     /// Aggregate construction (columns > 1): one file per column, shared guards.
@@ -294,15 +294,6 @@ private:
     static constexpr bool head_release = false;
 #endif
 
-    // Map heads writable-shared from their files (the native windows model)
-    // instead of anonymously with a dirty-page writer. Head reclaim is then
-    // kernel writeback of a bounded rewrite-in-place mapping (clean pages
-    // drop) rather than swap, which anonymous pages alone require. Bodies
-    // remain staged, so the unbounded append writeback that motivates dirty
-    // ratio tuning does not return with it. Excludes head_release (nothing
-    // to release) and the dirty bitmap (nothing to transfer).
-    static constexpr bool head_shared = false;
-
     // column dispatch, not thread safe.
     template <size_t... Index>
     bool flush_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
@@ -433,6 +424,7 @@ private:
     const bool zeroed_;
     const bool random_;
     const bool staged_;
+    const bool head_shared_;
     const bool managed_;
 
     // These are thread safe (atomic).

@@ -36,7 +36,7 @@ namespace database {
 // Unstaged aggregates transfer in full, and shared heads map their files.
 TEMPLATE
 CLASS::mmap(const path& filename, const storage_settings& settings,
-    bool random, bool staged) NOEXCEPT
+    bool random, bool staged, bool shared) NOEXCEPT
     requires (is_one(columns))
   : filenames_{ filename },
     minimum_(std::max(one, to_rows(settings.size))),
@@ -46,7 +46,8 @@ CLASS::mmap(const path& filename, const storage_settings& settings,
     zeroed_(settings.zeroed),
     random_(random),
     staged_(staged),
-    managed_(!staged && !head_shared),
+    head_shared_(!staged && shared),
+    managed_(!staged && !shared),
     opened_{ file::invalid }
 {
 }
@@ -63,6 +64,7 @@ CLASS::mmap(const paths& filenames, const storage_settings& settings,
     zeroed_(settings.zeroed),
     random_(random),
     staged_(staged),
+    head_shared_(false),
     managed_(false),
     opened_{}
 {

@@ -314,28 +314,34 @@ private:
 
     // Heads share the table growth rate.
     static constexpr storage_settings head_settings(
-        const settings::simple_table& table, uint64_t minimum=one) NOEXCEPT
+        const settings::simple_table& table, uint64_t minimum=one,
+        advice access=advice::random) NOEXCEPT
     {
         return
         {
             .size = std::max<uint64_t>(one, minimum),
             .rate = table.rate,
-            .access = advice::random,
+            .access = access,
             .zeroed = false
         };
     }
 
     template <size_t Cell>
     static constexpr storage_settings head_settings(
-        const settings::bucket_table& table) NOEXCEPT
+        const settings::bucket_table& table,
+        advice access=advice::random) NOEXCEPT
     {
         return head_settings(table,
-            system::ceilinged_multiply<uint64_t>(table.buckets, Cell));
+            system::ceilinged_multiply<uint64_t>(table.buckets, Cell), access);
     }
 
     // Bodies are append-only, so stage writes in anonymous memory where the
     // staging backend is built (heads update in place and remain resident).
     static constexpr bool staged = true;
+
+    // A head appended in link order goes cold behind its frontier, so it
+    // maps its file (droppable pages) rather than holding its content in RAM.
+    static constexpr bool shared = true;
 
     static inline path head(const path& folder, const std::string& name) NOEXCEPT
     {

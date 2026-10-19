@@ -58,8 +58,9 @@ bool CLASS::persist_(size_t to) NOEXCEPT
     const auto from = to_width<Column>(settled_.load());
     return staged_ ? ((from >= to) || pwrite_all(opened_[Column],
         std::next(memory_map_[Column], from), to - from, from)) :
-        (head_shared || shared_.load()) ?
-            (::msync(memory_map_[Column], to, MS_SYNC) != fail) :
+        (head_shared_ || shared_.load()) ?
+            (is_zero(to) ||
+                (::msync(memory_map_[Column], to, MS_SYNC) != fail)) :
             transfer_<Column>(to);
 }
 
@@ -194,7 +195,7 @@ bool CLASS::stage_() NOEXCEPT
 
     // A shared head maps its file in place of commitment (content is the
     // mapping, so there is nothing to populate).
-    if (!staged_ && head_shared)
+    if (head_shared_)
     {
         if (mmap_share(memory_map_[Column], target, opened_[Column],
             zero) == fail)
@@ -281,7 +282,7 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
     {
         // A shared head extends its file mapping over the growth (the file is
         // provisioned to capacity, so the extension is already allocated).
-        if (!staged_ && (head_shared || shared_.load()))
+        if (head_shared_ || (!staged_ && shared_.load()))
         {
             const auto grown = page_floor(to_width<Column>(capacity_.load()));
 
@@ -340,7 +341,7 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
 
     // A shared head remaps its file onto the replacement (the file is the
     // content, so migration copies nothing).
-    if (!staged_ && (head_shared || shared_.load()))
+    if (head_shared_ || (!staged_ && shared_.load()))
     {
         if (mmap_share(replace, target, opened_[Column], zero) == fail)
         {

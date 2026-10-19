@@ -1313,6 +1313,57 @@ BOOST_AUTO_TEST_CASE(mmap__unstaged__rewrite_below_flush__expected)
     BOOST_REQUIRE(!reopened.get_fault());
 }
 
+BOOST_AUTO_TEST_CASE(mmap__shared__rewrite_below_flush__expected)
+{
+    constexpr size_t size = 10'000;
+    constexpr size_t rewrite = 100;
+    const std::string file = TEST_PATH;
+    BOOST_REQUIRE(test::create(file));
+
+    // Shared head writes through its file mapping (no mark or transfer).
+    map instance(file, { 1, 50 }, true, false, true);
+    BOOST_REQUIRE(!instance.open());
+    BOOST_REQUIRE(!instance.load());
+
+    const auto original = stage_vector(stage_pattern, size);
+    const auto replaced = stage_vector(stage_repattern, rewrite);
+
+    auto expected = stage_vector(stage_repattern, rewrite);
+    const auto retained = stage_vector(stage_pattern, size - rewrite, rewrite);
+    expected.insert(expected.end(), retained.begin(), retained.end());
+
+    auto memory = instance.get(instance.allocate(size));
+    BOOST_REQUIRE(memory);
+    std::copy_n(original.begin(), original.size(), memory.begin());
+    memory.reset();
+    BOOST_REQUIRE(!instance.flush());
+
+    memory = instance.get();
+    BOOST_REQUIRE(memory);
+    std::copy_n(replaced.begin(), replaced.size(), memory.begin());
+    memory.reset();
+    BOOST_REQUIRE(!instance.flush());
+    BOOST_REQUIRE(!instance.unload());
+    BOOST_REQUIRE(!instance.close());
+    BOOST_REQUIRE(!instance.get_fault());
+
+    map reopened(file, { 1, 50 }, true, false, true);
+    BOOST_REQUIRE(!reopened.open());
+    BOOST_REQUIRE(!reopened.load());
+    BOOST_REQUIRE_EQUAL(reopened.size(), size);
+
+    memory = reopened.get();
+    BOOST_REQUIRE(memory);
+
+    const auto end = std::next(memory.begin(), expected.size());
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, expected.begin(), expected.end());
+
+    memory.reset();
+    BOOST_REQUIRE(!reopened.unload());
+    BOOST_REQUIRE(!reopened.close());
+    BOOST_REQUIRE(!reopened.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(mmap__unload__shared__unload_locked)
 {
     const std::string file = TEST_PATH;

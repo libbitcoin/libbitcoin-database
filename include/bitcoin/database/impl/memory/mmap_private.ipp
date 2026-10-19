@@ -295,7 +295,7 @@ void CLASS::worker_start_() NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
     // A shared head has no lazy writer (the kernel writes its mapping back).
-    if (!staged_ && head_shared)
+    if (head_shared_)
         return;
 
     limit_ = system_memory() / throttle_factor;
