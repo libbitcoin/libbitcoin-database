@@ -72,7 +72,7 @@ public:
 
     chunk_storages(const path& filename,
         const database::storage_settings& ={}, bool=true,
-        bool=false) NOEXCEPT requires (is_one(columns))
+        bool=false, bool=false) NOEXCEPT requires (is_one(columns))
       : alias_{}, paths_{ filename }, logical_{}
     {
     }
