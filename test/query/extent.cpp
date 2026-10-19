@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
 
     BOOST_REQUIRE_EQUAL(query.candidate_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.confirmed_body_size(), zero);
-    BOOST_REQUIRE_EQUAL(query.strong_body_size(), schema::strong::minrow);
+    BOOST_REQUIRE_EQUAL(query.strong_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.scan_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.ecdsa0_body_size(), zero);
     BOOST_REQUIRE_EQUAL(query.schnorr0_body_size(), zero);
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
 
     BOOST_REQUIRE_EQUAL(query.candidate_buckets(), one);
     BOOST_REQUIRE_EQUAL(query.confirmed_buckets(), one);
-    BOOST_REQUIRE_EQUAL(query.strong_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.strong_buckets(), one);
     BOOST_REQUIRE_EQUAL(query.state_buckets(), one);
     BOOST_REQUIRE_EQUAL(query.duplicate_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.prevout_buckets(), 128);
@@ -122,7 +122,6 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
     BOOST_REQUIRE_EQUAL(query.outs_records(), one);
     BOOST_REQUIRE_EQUAL(query.tx_records(), one);
 
-    BOOST_REQUIRE_EQUAL(query.strong_records(), one);
     BOOST_REQUIRE_EQUAL(query.scan_records(), zero);
     BOOST_REQUIRE_EQUAL(query.ecdsa0_records(), zero);
     BOOST_REQUIRE_EQUAL(query.schnorr0_records(), zero);

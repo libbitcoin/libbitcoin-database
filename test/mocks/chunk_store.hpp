@@ -133,11 +133,6 @@ public:
         return strong_head_.buffer();
     }
 
-    system::data_chunk& strong_body() NOEXCEPT
-    {
-        return strong_body_.buffer();
-    }
-
     // Caches.
 
     system::data_chunk& ecdsa0_head() NOEXCEPT

@@ -343,11 +343,11 @@ tx_links CLASS::to_duplicates(const hash_digest& tx_hash) const NOEXCEPT
 TEMPLATE
 header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
 {
-    table::strong::record strong{};
-    if (!store_.strong.find(link, strong) || !strong.positive())
+    const auto strong = store_.strong.at(link);
+    if (!table::strong::positive(strong))
         return {};
 
-    return strong.header_fk();
+    return table::strong::header_fk(strong);
 }
 
 // utilities

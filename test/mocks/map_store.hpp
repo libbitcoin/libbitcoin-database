@@ -164,11 +164,6 @@ public:
         return strong_head_.file();
     }
 
-    inline const path& strong_body_file() const NOEXCEPT
-    {
-        return strong_body_.file();
-    }
-
     inline const path& duplicate_head_file() const NOEXCEPT
     {
         return duplicate_head_.file();

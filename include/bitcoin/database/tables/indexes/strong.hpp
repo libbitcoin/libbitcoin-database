@@ -27,16 +27,18 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// strong is a record hashmap of tx confirmation state.
+/// strong is a head-only array of signed header fks indexed by tx.fk.
+/// A zero value (the fill) is a negative association to header zero.
 struct strong
-  : public hash_map<schema::strong>
+  : public value_map<schema::strong>
 {
     using header = schema::header::link;
-    using hash_map<schema::strong>::hashmap;
+    using value = schema::strong::value;
+    using value_map<schema::strong>::headmap;
     static constexpr auto offset = header::bits;
     static_assert(offset < to_bits(header::size));
 
-    static constexpr header::integer merge(bool positive,
+    static constexpr value merge(bool positive,
         header::integer header_fk) NOEXCEPT
     {
         using namespace system;
@@ -44,40 +46,33 @@ struct strong
         return set_right(header_fk, offset, positive);
     }
 
-    struct record
+    static constexpr bool positive(value signed_block_fk) NOEXCEPT
+    {
+        return system::get_right(signed_block_fk, offset);
+    }
+
+    static constexpr header::integer header_fk(value signed_block_fk) NOEXCEPT
+    {
+        return system::set_right(signed_block_fk, offset, false);
+    }
+
+    /// Replace the association.
+    struct replace
       : public schema::strong
     {
-        inline bool positive() const NOEXCEPT
-        {
-            return system::get_right(signed_block_fk, offset);
-        }
-
-        inline header::integer header_fk() const NOEXCEPT
-        {
-            return system::set_right(signed_block_fk, offset, false);
-        }
-
         inline bool from_data(reader& source) NOEXCEPT
         {
-            signed_block_fk = source.read_little_endian<header::integer, header::size>();
-            BC_ASSERT(!source || source.get_read_position() == minrow);
+            source.skip_bytes(cell);
             return source;
         }
 
-        inline bool to_data(finalizer& sink) const NOEXCEPT
+        inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            sink.write_little_endian<header::integer, header::size>(signed_block_fk);
-            BC_ASSERT(!sink || sink.get_write_position() == minrow);
+            sink.write_little_endian<value, cell>(signed_block_fk);
             return sink;
         }
 
-        inline bool operator==(const record& other) const NOEXCEPT
-        {
-            return positive() == other.positive()
-                && header_fk() == other.header_fk();
-        }
-
-        header::integer signed_block_fk{};
+        value signed_block_fk{};
     };
 };
 

@@ -713,7 +713,6 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__confirmed_heights__selecte
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set_silent(42, simple_send()));
     BOOST_REQUIRE(query.set_silent(0, simple_send()));
 
     std::vector<tx_link_t> links{};
@@ -723,7 +722,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__confirmed_heights__selecte
     };
 
     const stopper cancel{};
-    BOOST_REQUIRE(query.scan_silent(cancel, get_keys(), 0, 2, 0, 0, handler));
+    BOOST_REQUIRE(query.scan_silent(cancel, get_keys(), 0, 1, 0, 0, handler));
     BOOST_REQUIRE_EQUAL(links, std::vector<tx_link_t>{ 0 });
 }
 
@@ -748,7 +747,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__heights_above_top__none)
     BOOST_REQUIRE_EQUAL(calls, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__pooling__latched_selected)
+BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__unconfirmed__selected)
 {
     database::settings settings{};
     settings.path = TEST_DIRECTORY;
@@ -756,7 +755,6 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__pooling__latched_selected)
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    query.set_pooling();
     BOOST_REQUIRE(query.set_silent(0, simple_send()));
     BOOST_REQUIRE(query.set_silent(42, simple_send()));
 
@@ -781,15 +779,31 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_matches__short_cut_from_floo
     test::query_accessor query{ store };
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set_silent(42, simple_send()));
     BOOST_REQUIRE(query.set_silent(0, simple_send()));
 
     silent_matches out{};
     const stopper cancel{};
     const auto genesis = test::genesis.transactions_ptr()->front()->hash(false);
-    BOOST_REQUIRE(query.get_silent_matches(out, cancel, get_keys(), 0, 2, 0, 0, false));
+    BOOST_REQUIRE(query.get_silent_matches(out, cancel, get_keys(), 0, 1, 0, 0, false));
     BOOST_REQUIRE_EQUAL(out.size(), 1u);
     BOOST_REQUIRE_EQUAL(std::get<1>(out.front()), genesis);
+}
+
+BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_matches__short_cut_from_floor__unconfirmed_selected)
+{
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set_silent(42, simple_send()));
+
+    silent_matches out{};
+    const stopper cancel{};
+    BOOST_REQUIRE(query.get_silent_matches(out, cancel, get_keys(), 0, 1, 0, 0, false));
+    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE_EQUAL(std::get<0>(out.front()), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_matches__above_floor__unconfirmed)

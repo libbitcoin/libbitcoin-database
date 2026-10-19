@@ -58,7 +58,6 @@ enum class table_t
     confirmed_head,
     strong_table,
     strong_head,
-    strong_body,
     scan_table,
     scan_head,
     scan_body,

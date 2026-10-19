@@ -81,7 +81,6 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     open(ec, candidate_head_, table_t::candidate_head);
     open(ec, confirmed_head_, table_t::confirmed_head);
     open(ec, strong_head_, table_t::strong_head);
-    open(ec, strong_body_, table_t::strong_body);
     open(ec, scan_head_, table_t::scan_head);
     open(ec, scan_body_, table_t::scan_body);
     open(ec, scan_prefix_head_, table_t::scan_prefix_head);
@@ -146,7 +145,6 @@ code CLASS::open_load(const event_handler& handler) NOEXCEPT
     load(ec, candidate_head_, table_t::candidate_head);
     load(ec, confirmed_head_, table_t::confirmed_head);
     load(ec, strong_head_, table_t::strong_head);
-    load(ec, strong_body_, table_t::strong_body);
     load(ec, scan_head_, table_t::scan_head);
     load(ec, scan_body_, table_t::scan_body);
     load(ec, scan_prefix_head_, table_t::scan_prefix_head);

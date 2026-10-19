@@ -59,7 +59,6 @@ const CLASS::table_map CLASS::tables
     { table_t::confirmed_head, "confirmed_head" },
     { table_t::strong_table, "strong_table" },
     { table_t::strong_head, "strong_head" },
-    { table_t::strong_body, "strong_body" },
     { table_t::scan_table, "scan_table" },
     { table_t::scan_head, "scan_head" },
     { table_t::scan_body, "scan_body" },
