@@ -184,6 +184,48 @@ BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_spent__conflicted_spender__false
     BOOST_REQUIRE(!query.is_confirmable_spent(query.to_output(parent.hash(false), 0)));
 }
 
+// find_confirmable_spender
+
+BOOST_AUTO_TEST_CASE(query_pool__find_confirmable_spender__pooled_spender__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    const point prevout{ parent.hash(false), 0 };
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(query.find_confirmable_spender(prevout).is_terminal());
+
+    BOOST_REQUIRE(archive_pool(query, child));
+    const auto spender = query.find_confirmable_spender(prevout);
+    BOOST_REQUIRE(query.to_input_tx(spender) == query.to_tx(child.hash(false)));
+}
+
+BOOST_AUTO_TEST_CASE(query_pool__find_confirmable_spender__conflicted_spender__terminal)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    const point prevout{ parent.hash(false), 0 };
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(archive_pool(query, child));
+    BOOST_REQUIRE(!archive_confirm(query, to_spend(genesis_coinbase(), 3u)).is_terminal());
+    BOOST_REQUIRE(query.find_confirmable_spender(prevout).is_terminal());
+}
+
 // get_pooled_time
 
 BOOST_AUTO_TEST_CASE(query_pool__get_pooled_time__pooled__expected)
@@ -737,6 +779,66 @@ BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_children__conflicted_child__empt
 
     const auto parent_link = query.to_tx(parent.hash(false));
     BOOST_REQUIRE(query.to_confirmable_children(parent_link).empty());
+}
+
+// to_confirmable_ancestors
+
+BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_ancestors__pooled_chain__ancestors)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    const auto grandchild = to_spend(child.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(archive_pool(query, child));
+    BOOST_REQUIRE(archive_pool(query, grandchild));
+
+    const auto parent_link = query.to_tx(parent.hash(false));
+    const auto child_link = query.to_tx(child.hash(false));
+    const auto grandchild_link = query.to_tx(grandchild.hash(false));
+    BOOST_REQUIRE(query.to_confirmable_ancestors(parent_link).empty());
+
+    const auto ancestors = query.to_confirmable_ancestors(grandchild_link);
+    BOOST_REQUIRE_EQUAL(ancestors.size(), two);
+    BOOST_REQUIRE(system::contains(ancestors, parent_link.value));
+    BOOST_REQUIRE(system::contains(ancestors, child_link.value));
+}
+
+// to_confirmable_descendants
+
+BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_descendants__pooled_chain__descendants)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    store.set_pooling();
+
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    const auto grandchild = to_spend(child.hash(false), 1u);
+    BOOST_REQUIRE(archive_pool(query, parent));
+    BOOST_REQUIRE(archive_pool(query, child));
+    BOOST_REQUIRE(archive_pool(query, grandchild));
+
+    const auto parent_link = query.to_tx(parent.hash(false));
+    const auto child_link = query.to_tx(child.hash(false));
+    const auto grandchild_link = query.to_tx(grandchild.hash(false));
+    BOOST_REQUIRE(query.to_confirmable_descendants(grandchild_link).empty());
+
+    const auto descendants = query.to_confirmable_descendants(parent_link);
+    BOOST_REQUIRE_EQUAL(descendants.size(), two);
+    BOOST_REQUIRE(system::contains(descendants, child_link.value));
+    BOOST_REQUIRE(system::contains(descendants, grandchild_link.value));
 }
 
 // get_ancestor_totals

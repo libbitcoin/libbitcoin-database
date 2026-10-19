@@ -72,6 +72,19 @@ bool CLASS::is_confirmable_spent(const output_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+ins_link CLASS::find_confirmable_spender(const point& prevout) const NOEXCEPT
+{
+    for (const auto& in: to_spenders(prevout))
+    {
+        const auto tx = to_input_tx(in);
+        if (is_pooled(tx) && is_confirmable_tx(tx))
+            return in;
+    }
+
+    return {};
+}
+
+TEMPLATE
 code CLASS::get_pooled(pooled_tx& out, const tx_link& link,
     const context& ctx) const NOEXCEPT
 {
@@ -183,6 +196,18 @@ tx_links CLASS::to_confirmable_children(const tx_link& link) const NOEXCEPT
     }
 
     return out;
+}
+
+TEMPLATE
+tx_links CLASS::to_confirmable_ancestors(const tx_link& link) const NOEXCEPT
+{
+    return to_confirmable_relatives(link, true);
+}
+
+TEMPLATE
+tx_links CLASS::to_confirmable_descendants(const tx_link& link) const NOEXCEPT
+{
+    return to_confirmable_relatives(link, false);
 }
 
 TEMPLATE
@@ -376,7 +401,29 @@ bool CLASS::get_confirmable_totals(fee_totals& out, const tx_link& link,
     bool ancestors) const NOEXCEPT
 {
     using namespace system;
+    auto links = to_confirmable_relatives(link, ancestors);
+    links.push_back(link.value);
+
     out = {};
+    for (const auto fk: links)
+    {
+        fee_rate rate{};
+        if (!get_tx_fees(rate, fk))
+            return false;
+
+        ++out.count;
+        out.bytes = ceilinged_add(out.bytes, rate.bytes);
+        out.fee = ceilinged_add(out.fee, rate.fee);
+    }
+
+    return true;
+}
+
+TEMPLATE
+tx_links CLASS::to_confirmable_relatives(const tx_link& link,
+    bool ancestors) const NOEXCEPT
+{
+    tx_links out{};
     std::vector<tx_link::integer> pending{ link.value };
     std::unordered_set<tx_link::integer> visited{ link.value };
     while (!pending.empty())
@@ -384,23 +431,20 @@ bool CLASS::get_confirmable_totals(fee_totals& out, const tx_link& link,
         const tx_link next{ pending.back() };
         pending.pop_back();
 
-        fee_rate rate{};
-        if (!get_tx_fees(rate, next))
-            return false;
-
-        ++out.count;
-        out.bytes = ceilinged_add(out.bytes, rate.bytes);
-        out.fee = ceilinged_add(out.fee, rate.fee);
-
         const auto links = ancestors ? to_confirmable_parents(next) :
             to_confirmable_children(next);
 
         for (const auto fk: links)
+        {
             if (visited.insert(fk).second)
+            {
+                out.push_back(fk);
                 pending.push_back(fk);
+            }
+        }
     }
 
-    return true;
+    return out;
 }
 
 // writers

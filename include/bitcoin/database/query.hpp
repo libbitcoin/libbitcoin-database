@@ -726,6 +726,9 @@ public:
     /// Spent by a pooled and confirmable tx.
     bool is_confirmable_spent(const output_link& link) const NOEXCEPT;
 
+    /// Spender of prevout in a pooled and confirmable tx, terminal if none.
+    ins_link find_confirmable_spender(const point& prevout) const NOEXCEPT;
+
     /// Confirmable tx links, from cursor toward end, at most limit.
     code get_confirmable_txs(pool_link& cursor, tx_links& out,
         const pool_link& end, size_t limit) const NOEXCEPT;
@@ -736,6 +739,10 @@ public:
     /// Confirmable txs spent by, and spending, the tx (direct only).
     tx_links to_confirmable_parents(const tx_link& link) const NOEXCEPT;
     tx_links to_confirmable_children(const tx_link& link) const NOEXCEPT;
+
+    /// Confirmable ancestors, or descendants, of the tx (excluding the tx).
+    tx_links to_confirmable_ancestors(const tx_link& link) const NOEXCEPT;
+    tx_links to_confirmable_descendants(const tx_link& link) const NOEXCEPT;
 
     /// Totals of the tx with its confirmable ancestors, or descendants.
     bool get_ancestor_totals(fee_totals& out,
@@ -1118,6 +1125,10 @@ protected:
     /// Confirmability memoized across the txs of a scan.
     bool is_confirmable_tx(confirmables& memo,
         const tx_link& link) const NOEXCEPT;
+
+    /// Confirmable ancestors or descendants of the tx (excluding the tx).
+    tx_links to_confirmable_relatives(const tx_link& link,
+        bool ancestors) const NOEXCEPT;
 
     /// Totals of the tx with its confirmable ancestors or descendants.
     bool get_confirmable_totals(fee_totals& out, const tx_link& link,
