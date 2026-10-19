@@ -337,6 +337,10 @@ private:
     // staging backend is built (heads update in place and remain resident).
     static constexpr bool staged = true;
 
+    // A head appended in link order goes cold behind its frontier, so it
+    // maps its file (droppable pages) rather than holding its content in RAM.
+    static constexpr bool shared = true;
+
     static inline path head(const path& folder, const std::string& name) NOEXCEPT
     {
         return folder / (name + schema::ext::head);
