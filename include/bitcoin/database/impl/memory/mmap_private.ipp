@@ -300,8 +300,9 @@ void CLASS::worker_start_() NOEXCEPT
 
     limit_ = system_memory() / throttle_factor;
 #else
-    // Only heads steer residency; bodies are the cache manager's to place.
-    if (staged_)
+    // Only managed heads steer residency; bodies and a shared head are the
+    // cache manager's to place.
+    if (staged_ || head_shared_)
         return;
 #endif
 
