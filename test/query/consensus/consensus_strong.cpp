@@ -211,4 +211,69 @@ BOOST_AUTO_TEST_CASE(query_consensus__set_strong__set_unstrong__expected)
     BOOST_REQUIRE(!query.is_confirmed_output(query.to_output(2, 0)));
 }
 
+// duplicate instances (one tx archived twice, only one instance associated)
+
+BOOST_AUTO_TEST_CASE(query_consensus__duplicate_instances__navigation__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+
+    class accessor
+      : public test::query_accessor
+    {
+    public:
+        using test::query_accessor::query_accessor;
+        using test::query_accessor::to_block;
+    };
+
+    accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(!store.is_pooling());
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+
+    BOOST_REQUIRE(query.set(test::tx4));
+    const auto loose = query.to_tx(test::tx4.hash(false));
+    BOOST_REQUIRE(!loose.is_terminal());
+
+    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set_strong(2));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+
+    const auto block = query.to_header(test::block_spend_1a.hash());
+    const auto stored = query.get_position_tx(block, 0);
+    BOOST_REQUIRE(!stored.is_terminal());
+    BOOST_REQUIRE(stored != loose);
+    BOOST_REQUIRE_EQUAL(query.get_tx_key(stored), test::tx4.hash(false));
+    BOOST_REQUIRE_EQUAL(query.to_duplicates(test::tx4.hash(false)).size(), 2u);
+
+    // The association is instance-exact.
+    BOOST_REQUIRE(query.to_block(loose).is_terminal());
+    BOOST_REQUIRE_EQUAL(query.to_block(stored), block);
+
+    // Strong resolution is by identity, from any instance.
+    BOOST_REQUIRE_EQUAL(query.find_strong(loose), block);
+    BOOST_REQUIRE_EQUAL(query.find_strong(stored), block);
+    BOOST_REQUIRE_EQUAL(query.find_strong_tx(loose), stored);
+    BOOST_REQUIRE_EQUAL(query.find_strong_tx(stored), stored);
+    BOOST_REQUIRE(query.is_confirmed_tx(loose));
+    BOOST_REQUIRE(query.is_confirmed_tx(stored));
+
+    // Confirmed properties are of the identity, from any instance.
+    size_t height{};
+    BOOST_REQUIRE(query.get_tx_height(height, loose));
+    BOOST_REQUIRE_EQUAL(height, 2u);
+    BOOST_REQUIRE(query.get_tx_height(height, stored));
+    BOOST_REQUIRE_EQUAL(height, 2u);
+
+    size_t position{};
+    BOOST_REQUIRE(query.get_tx_position(position, stored));
+    BOOST_REQUIRE_EQUAL(position, 0u);
+    BOOST_REQUIRE(query.get_tx_position(position, loose));
+    BOOST_REQUIRE_EQUAL(position, 0u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

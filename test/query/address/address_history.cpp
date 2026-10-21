@@ -569,4 +569,82 @@ BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__confirmed__expected)
     BOOST_CHECK_EQUAL(histories.at(3).tx.hash(), test::tx4.hash(false));
 }
 
+// duplicate instances (one tx archived twice, only one instance associated)
+
+BOOST_AUTO_TEST_CASE(query_address__get_tx_history__duplicate_instances__same_entry)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(!store.is_pooling());
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.set(test::tx4));
+    const auto loose = query.to_tx(test::tx4.hash(false));
+    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set_strong(2));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    const auto stored = query.get_position_tx(query.to_header(test::block_spend_1a.hash()), 0);
+    BOOST_REQUIRE(stored != loose);
+
+    const auto expected = query.get_tx_history(stored);
+    BOOST_REQUIRE(expected.valid());
+    BOOST_REQUIRE(expected.confirmed());
+    BOOST_REQUIRE_EQUAL(expected.tx.height(), 2u);
+    BOOST_REQUIRE_EQUAL(expected.position, 0u);
+
+    const auto duplicate = query.get_tx_history(loose);
+    BOOST_REQUIRE(!duplicate.fault());
+    BOOST_REQUIRE(duplicate.valid());
+    BOOST_REQUIRE(duplicate == expected);
+    BOOST_REQUIRE_EQUAL(duplicate.tx.height(), 2u);
+    BOOST_REQUIRE_EQUAL(duplicate.position, 0u);
+
+    const auto confirmed = query.get_tx_confirmed_history(loose);
+    BOOST_REQUIRE(!confirmed.fault());
+    BOOST_REQUIRE(confirmed == expected);
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_history__duplicate_instances__deduplicated)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(!store.is_pooling());
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.set(test::tx4));
+    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set_strong(2));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BOOST_REQUIRE_EQUAL(query.to_duplicates(test::tx4.hash(false)).size(), 2u);
+
+    histories out{};
+    height_link cursor{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE_EQUAL(query.get_history(cancel, cursor, out, test::block1a_address0, max_size_t, true), error::success);
+
+    // block1a coinbase (funds address0) and tx4 (spends it, pays address0), once each.
+    BOOST_REQUIRE_EQUAL(out.size(), 2u);
+    BOOST_REQUIRE_EQUAL(out.at(0).tx.hash(), test::block1a.transactions_ptr()->at(0)->hash(false));
+    BOOST_REQUIRE_EQUAL(out.at(0).tx.height(), 1u);
+    BOOST_REQUIRE_EQUAL(out.at(1).tx.hash(), test::tx4.hash(false));
+    BOOST_REQUIRE_EQUAL(out.at(1).tx.height(), 2u);
+    BOOST_REQUIRE_EQUAL(out.at(1).position, 0u);
+
+    histories confirmed{};
+    height_link confirmed_cursor{};
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_history(cancel, confirmed_cursor, confirmed, test::block1a_address0, max_size_t, true), error::success);
+    BOOST_REQUIRE_EQUAL(confirmed.size(), 2u);
+    BOOST_REQUIRE_EQUAL(confirmed.at(1).tx.hash(), test::tx4.hash(false));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

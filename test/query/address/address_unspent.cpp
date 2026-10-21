@@ -171,4 +171,45 @@ BOOST_AUTO_TEST_CASE(query_address__get_unspent__turbo_genesis__expected)
     BOOST_CHECK_EQUAL(out.at(5).out.point().hash(), test::block2b.transactions_ptr()->at(0)->hash(false));
 }
 
+// duplicate instances (one tx archived twice, only one instance associated)
+
+BOOST_AUTO_TEST_CASE(query_address__get_unspent__duplicate_instances__deduplicated)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(!store.is_pooling());
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.set(test::tx4));
+    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set_strong(2));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BOOST_REQUIRE_EQUAL(query.to_duplicates(test::tx4.hash(false)).size(), 2u);
+
+    // block1a output 0 is spent by tx4, whose 0x08 output to the address is unspent.
+    unspent_outputs out{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE_EQUAL(query.get_unspent(cancel, out, test::block1a_address0, true), error::success);
+    BOOST_REQUIRE_EQUAL(out.size(), 1u);
+    BOOST_REQUIRE_EQUAL(out.at(0).out.point().hash(), test::tx4.hash(false));
+    BOOST_REQUIRE_EQUAL(out.at(0).out.point().index(), 0u);
+    BOOST_REQUIRE_EQUAL(out.at(0).out.value(), 0x08u);
+    BOOST_REQUIRE_EQUAL(out.at(0).height, 2u);
+    BOOST_REQUIRE_EQUAL(out.at(0).position, 0u);
+
+    unspent_outputs confirmed{};
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_unspent(cancel, confirmed, test::block1a_address0, true), error::success);
+    BOOST_REQUIRE_EQUAL(confirmed.size(), 1u);
+    BOOST_REQUIRE_EQUAL(confirmed.at(0).out.point().hash(), test::tx4.hash(false));
+
+    unspent_outputs unconfirmed{};
+    BOOST_REQUIRE_EQUAL(query.get_unconfirmed_unspent(cancel, unconfirmed, test::block1a_address0, true), error::success);
+    BOOST_REQUIRE(unconfirmed.empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
