@@ -134,7 +134,8 @@ struct transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            source.skip_bytes(skip_to_locktime);
+            light      = to_light(source.read_little_endian<bytes::integer, bytes::size>());
+            heavy      = source.read_little_endian<bytes::integer, bytes::size>();
             locktime   = source.read_little_endian<uint32_t>();
             version    = source.read_little_endian<uint32_t>();
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
@@ -145,6 +146,8 @@ struct transaction
             return source;
         }
 
+        bytes::integer light{};
+        bytes::integer heavy{};
         uint32_t locktime{};
         uint32_t version{};
         ix::integer ins_count{};

@@ -187,7 +187,67 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__witness_false__expected)
     BOOST_CHECK(!store.close(test::events_handler));
 }
 
+BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__pruned__empty)
+{
+    using namespace system;
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::store_t store{ settings };
+    test::query_t query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::block1.header(), database::context{ 0, 1, 0 }, {}, false));
+    BOOST_CHECK(query.set(test::block1, false, false, true));
+    BOOST_CHECK(!query.to_tx(test::block1.transactions_ptr()->front()->hash(false)).is_terminal());
+    BOOST_CHECK(query.get_wire_tx(1, true).empty());
+    BOOST_CHECK(query.get_wire_tx(1, false).empty());
+    BOOST_CHECK(!store.close(test::events_handler));
+}
+
+BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__empty_input_script__expected)
+{
+    using namespace system;
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::store_t store{ settings };
+    test::query_t query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+
+    const chain::point point{ test::genesis.transactions_ptr()->front()->hash(false), 0 };
+    const chain::inputs inputs{ { point, chain::script{}, max_uint32 } };
+    const chain::outputs outputs{ { 42, chain::script{} } };
+    const chain::transaction tx{ 1, inputs, outputs, 0 };
+    BOOST_CHECK(query.set(tx));
+    BOOST_CHECK_EQUAL(query.get_wire_tx(1, true), tx.to_data(true));
+    BOOST_CHECK_EQUAL(query.get_wire_tx(1, false), tx.to_data(false));
+    BOOST_CHECK(!store.close(test::events_handler));
+}
+
 // get_wire_block
+
+BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__pruned__empty)
+{
+    using namespace system;
+    database::settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::store_t store{ settings };
+    test::query_t query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::block1.header(), database::context{ 0, 1, 0 }, {}, false));
+    BOOST_CHECK(query.set(test::block1, false, false, true));
+    BOOST_CHECK(query.get_wire_block(1, true).empty());
+    BOOST_CHECK(query.get_wire_block(1, false).empty());
+    BOOST_CHECK(query.get_wire_block(1, true, true).empty());
+
+    size_t size{};
+    BOOST_CHECK(query.get_block_size(size, 1, true));
+
+    std::string hex(two * size, '\0');
+    BOOST_CHECK(!query.get_wire_block<write::base16::fast>(hex, 1, true, false));
+    BOOST_CHECK(!store.close(test::events_handler));
+}
 
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__genesis_and_not__expected)
 {

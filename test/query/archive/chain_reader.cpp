@@ -327,6 +327,44 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_transactions__found__expected)
     BOOST_CHECK_EQUAL(query.get_transactions(2, false)->size(), 2u);
 }
 
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_transaction__pruned__nullptr)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+    BOOST_CHECK(query.set(test::block1.header(), test::context, {}, false));
+    BOOST_CHECK(query.set(test::block1, false, false, true));
+    BOOST_CHECK(!query.to_tx(test::block1.transactions_ptr()->front()->hash(false)).is_terminal());
+    BOOST_CHECK(!query.get_transaction(1, true));
+    BOOST_CHECK(!query.get_transaction(1, false));
+    BOOST_CHECK(!query.get_transactions(1, false));
+    BOOST_CHECK(!query.get_block(1, false));
+    BOOST_CHECK(query.get_header(1));
+}
+
+BOOST_AUTO_TEST_CASE(query_chain_reader__get_transaction__empty_input_script__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_CHECK(!store.create(test::events_handler));
+    BOOST_CHECK(query.initialize(test::genesis));
+
+    const system::chain::point point{ test::genesis.transactions_ptr()->front()->hash(false), 0 };
+    const system::chain::inputs inputs{ { point, system::chain::script{}, max_uint32 } };
+    const system::chain::outputs outputs{ { 42, system::chain::script{} } };
+    const system::chain::transaction tx{ 1, inputs, outputs, 0 };
+    BOOST_CHECK(query.set(tx));
+
+    const auto stored = query.get_transaction(1, true);
+    BOOST_REQUIRE(stored);
+    BOOST_CHECK(*stored == tx);
+}
+
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_spenders__unspent_or_not_found__expected)
 {
     settings settings{};
