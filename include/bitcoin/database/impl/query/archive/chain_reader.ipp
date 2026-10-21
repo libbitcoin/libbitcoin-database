@@ -183,6 +183,10 @@ typename CLASS::transaction::cptr CLASS::get_transaction(const tx_link& link,
         tx.locktime
     );
 
+    // A pruned tx (emptied input scripts) is short of its archived size.
+    if (ptr->serialized_size(witness) != (witness ? tx.heavy : tx.light))
+        return {};
+
     // TODO: store caches sizes so these could be forwarded.
     // Witness hash is not retained by the store.
     ptr->set_nominal_hash(std::move(tx.key));

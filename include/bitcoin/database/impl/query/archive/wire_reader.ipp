@@ -214,7 +214,10 @@ bool CLASS::get_wire_tx(bytewriter& sink, const wire_accessors& ptrs,
     const auto ins_final = ins_begin + ins_count;
     const auto witnessed = witness && (tx.heavy != tx.light);
 
+    // Writers may encode, so the version write gives positions per byte.
+    const auto start = sink.get_write_position();
     sink.write_4_bytes_little_endian(tx.version);
+    const auto scale = (sink.get_write_position() - start) / sizeof(uint32_t);
 
     if (witnessed)
     {
@@ -246,7 +249,10 @@ bool CLASS::get_wire_tx(bytewriter& sink, const wire_accessors& ptrs,
     }
 
     sink.write_4_bytes_little_endian(tx.locktime);
-    return true;
+
+    // A pruned tx (emptied input scripts) is short of its archived size.
+    const auto size = witnessed ? tx.heavy : tx.light;
+    return sink.get_write_position() - start == scale * size;
 }
 
 TEMPLATE
@@ -301,8 +307,6 @@ data_chunk CLASS::get_wire_tx(const tx_link& link, bool witness) const NOEXCEPT
     if (!get_wire_tx(out, link, witness) || !out)
         return {};
 
-    // Resize in case tx is pruned.
-    data.resize(out.get_write_position());
     return data;
 }
 
@@ -324,8 +328,6 @@ data_chunk CLASS::get_wire_block(const header_link& link, bool witness,
     if (!get_wire_block(out, link, witness) || !out)
         return {};
 
-    // Resize in case tx is pruned.
-    data.resize(out.get_write_position());
     return data;
 }
 
