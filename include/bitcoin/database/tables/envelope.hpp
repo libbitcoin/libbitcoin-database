@@ -40,6 +40,12 @@ struct BCD_API envelope
 
     void set(const settings& database) NOEXCEPT;
 
+    /// Assign the stored values to configuration, returning the names of those
+    /// that differed. A differing top checkpoint, or provided filters, cannot
+    /// be assigned to configuration and are only returned.
+    system::string_list apply(system::settings& bitcoin, settings& database,
+        bool& limited, uint32_t& silent) const NOEXCEPT;
+
     bool from_data(reader& source) NOEXCEPT;
     bool to_data(flipper& sink) const NOEXCEPT;
     size_t serialized_size() const NOEXCEPT;

@@ -54,6 +54,80 @@ void envelope::set(const settings& database) NOEXCEPT
         to_bool(database.filter_tx.buckets);
 }
 
+string_list envelope::apply(system::settings& bitcoin, settings& database,
+    bool& limited, uint32_t& silent) const NOEXCEPT
+{
+    string_list changed{};
+    const auto assign = [&](auto& configured, const auto& stored,
+        const std::string& name) NOEXCEPT
+    {
+        if (configured == stored)
+            return;
+
+        configured = stored;
+        changed.push_back(name);
+    };
+
+    assign(bitcoin.forks, forks, "forks");
+    assign(bitcoin.initial_subsidy_bitcoin, initial_subsidy_bitcoin, "initial_subsidy_bitcoin");
+    assign(bitcoin.subsidy_interval_blocks, subsidy_interval_blocks, "subsidy_interval_blocks");
+    assign(bitcoin.timestamp_limit_seconds, timestamp_limit_seconds, "timestamp_limit_seconds");
+    assign(bitcoin.retargeting_factor, retargeting_factor, "retargeting_factor");
+    assign(bitcoin.retargeting_interval_seconds, retargeting_interval_seconds, "retargeting_interval_seconds");
+    assign(bitcoin.block_spacing_seconds, block_spacing_seconds, "block_spacing_seconds");
+    assign(bitcoin.proof_of_work_limit, proof_of_work_limit, "proof_of_work_limit");
+    assign(bitcoin.first_version, first_version, "first_version");
+    assign(bitcoin.bip34_version, bip34_version, "bip34_version");
+    assign(bitcoin.bip66_version, bip66_version, "bip66_version");
+    assign(bitcoin.bip65_version, bip65_version, "bip65_version");
+    assign(bitcoin.bip9_version_bit0, bip9_version_bit0, "bip9_version_bit0");
+    assign(bitcoin.bip9_version_bit1, bip9_version_bit1, "bip9_version_bit1");
+    assign(bitcoin.bip9_version_bit2, bip9_version_bit2, "bip9_version_bit2");
+    assign(bitcoin.bip9_version_base, bip9_version_base, "bip9_version_base");
+    assign(bitcoin.bip16_activation_time, bip16_activation_time, "bip16_activation_time");
+    assign(bitcoin.bip34_activation_threshold, bip34_activation_threshold, "bip34_activation_threshold");
+    assign(bitcoin.bip34_enforcement_threshold, bip34_enforcement_threshold, "bip34_enforcement_threshold");
+    assign(bitcoin.bip34_activation_sample, bip34_activation_sample, "bip34_activation_sample");
+    assign(bitcoin.bip90_bip34_height, bip90_bip34_height, "bip90_bip34_height");
+    assign(bitcoin.bip90_bip65_height, bip90_bip65_height, "bip90_bip65_height");
+    assign(bitcoin.bip90_bip66_height, bip90_bip66_height, "bip90_bip66_height");
+    assign(bitcoin.bip30_reactivate_height, bip30_reactivate_height, "bip30_reactivate_height");
+    assign(bitcoin.bip30_deactivate_checkpoint, bip30_deactivate_checkpoint, "bip30_deactivate_checkpoint");
+    assign(bitcoin.bip9_bit0_active_checkpoint, bip9_bit0_active_checkpoint, "bip9_bit0_active_checkpoint");
+    assign(bitcoin.bip9_bit1_active_checkpoint, bip9_bit1_active_checkpoint, "bip9_bit1_active_checkpoint");
+    assign(bitcoin.bip9_bit2_active_checkpoint, bip9_bit2_active_checkpoint, "bip9_bit2_active_checkpoint");
+    assign(bitcoin.milestone, milestone, "milestone");
+
+    if (bitcoin.top_checkpoint() != top_checkpoint)
+        changed.push_back("top_checkpoint");
+
+    assign(database.interval_depth, interval_depth, "interval_depth");
+    assign(database.header.buckets, header_buckets, "header_buckets");
+    assign(database.ins.buckets, ins_buckets, "ins_buckets");
+    assign(database.outs.buckets, outs_buckets, "outs_buckets");
+    assign(database.tx.buckets, tx_buckets, "tx_buckets");
+    assign(database.duplicate.buckets, duplicate_buckets, "duplicate_buckets");
+    assign(database.pool.buckets, pool_buckets, "pool_buckets");
+    assign(database.wtxid.buckets, wtxid_buckets, "wtxid_buckets");
+
+    const auto filters = to_bool(database.filter_bk.buckets) &&
+        to_bool(database.filter_tx.buckets);
+
+    if (filters != provide_filters)
+    {
+        changed.push_back("provide_filters");
+        if (!provide_filters)
+        {
+            database.filter_bk.buckets = 0;
+            database.filter_tx.buckets = 0;
+        }
+    }
+
+    assign(limited, limited_blocks, "limited_blocks");
+    assign(silent, silent_start_height, "silent_start_height");
+    return changed;
+}
+
 envelope::envelope(const system::settings& bitcoin, const settings& database,
     bool limited, uint32_t silent) NOEXCEPT
   : schema(compiled),

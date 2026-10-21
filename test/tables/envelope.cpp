@@ -205,4 +205,51 @@ BOOST_AUTO_TEST_CASE(envelope__initialize__mainnet__expected)
     BOOST_REQUIRE_EQUAL(configuration.envelope.bip9_bit1_active_checkpoint.height(), 481824u);
 }
 
+BOOST_AUTO_TEST_CASE(envelope__apply__matching__unchanged)
+{
+    system::settings bitcoin{ chain::selection::mainnet };
+    database::settings configuration{ chain::selection::mainnet };
+    const envelope instance{ bitcoin, configuration, true, 42 };
+
+    auto limited = true;
+    auto silent = 42_u32;
+    BOOST_REQUIRE(instance.apply(bitcoin, configuration, limited, silent).empty());
+    BOOST_REQUIRE(limited);
+    BOOST_REQUIRE_EQUAL(silent, 42u);
+}
+
+BOOST_AUTO_TEST_CASE(envelope__apply__differing__assigned)
+{
+    system::settings bitcoin{ chain::selection::mainnet };
+    database::settings configuration{ chain::selection::mainnet };
+    const envelope instance{ bitcoin, configuration, true, 42 };
+
+    bitcoin.subsidy_interval_blocks = 1;
+    configuration.tx.buckets = 1;
+    auto limited = false;
+    auto silent = 7_u32;
+    const string_list expected{ "subsidy_interval_blocks", "tx_buckets", "limited_blocks", "silent_start_height" };
+    BOOST_REQUIRE(instance.apply(bitcoin, configuration, limited, silent) == expected);
+    BOOST_REQUIRE_EQUAL(bitcoin.subsidy_interval_blocks, instance.subsidy_interval_blocks);
+    BOOST_REQUIRE_EQUAL(configuration.tx.buckets, instance.tx_buckets);
+    BOOST_REQUIRE(limited);
+    BOOST_REQUIRE_EQUAL(silent, 42u);
+}
+
+BOOST_AUTO_TEST_CASE(envelope__apply__unprovided_filters__unbucketed)
+{
+    system::settings bitcoin{ chain::selection::mainnet };
+    database::settings configuration{ chain::selection::mainnet };
+    configuration.filter_bk.buckets = 0;
+    const envelope instance{ bitcoin, configuration, false, 42 };
+
+    configuration.filter_bk.buckets = 1;
+    auto limited = false;
+    auto silent = 42_u32;
+    const string_list expected{ "provide_filters" };
+    BOOST_REQUIRE(instance.apply(bitcoin, configuration, limited, silent) == expected);
+    BOOST_REQUIRE_EQUAL(configuration.filter_bk.buckets, 0u);
+    BOOST_REQUIRE_EQUAL(configuration.filter_tx.buckets, 0u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
