@@ -72,7 +72,9 @@ bool CLASS::get_tx_height(size_t& out, const tx_link& link) const NOEXCEPT
 TEMPLATE
 bool CLASS::get_tx_position(size_t& out, const tx_link& link) const NOEXCEPT
 {
-    return get_tx_position(out, link, find_strong(link));
+    tx_link strong{};
+    const auto block = find_strong(strong, link);
+    return get_tx_position(out, strong, block);
 }
 
 TEMPLATE

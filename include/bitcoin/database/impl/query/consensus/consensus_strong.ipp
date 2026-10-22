@@ -83,20 +83,43 @@ height_link CLASS::find_strong_spender_height(
 TEMPLATE
 header_link CLASS::find_strong(const tx_link& link) const NOEXCEPT
 {
+    tx_link unused{};
+    return find_strong(unused, link);
+}
+
+TEMPLATE
+header_link CLASS::find_strong(tx_link& out, const tx_link& link) const NOEXCEPT
+{
     // Shortcuircuit hash-based search by testing self.
     if (const auto fk = to_block(link); !fk.is_terminal())
+    {
+        out = link;
         return fk;
+    }
 
-    return find_strong(get_tx_key(link));
+    return find_strong(out, get_tx_key(link));
 }
 
 TEMPLATE
 header_link CLASS::find_strong(const hash_digest& tx_hash) const NOEXCEPT
 {
-    // Find the first strong tx of the set and return its block.
+    tx_link unused{};
+    return find_strong(unused, tx_hash);
+}
+
+TEMPLATE
+header_link CLASS::find_strong(tx_link& out,
+    const hash_digest& tx_hash) const NOEXCEPT
+{
+    // Find the first strong tx of the set and return it with its block.
     for (const auto& tx: to_duplicates(tx_hash))
+    {
         if (const auto block = to_block(tx); !block.is_terminal())
+        {
+            out = tx;
             return block;
+        }
+    }
 
     return {};
 }

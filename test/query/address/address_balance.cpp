@@ -112,4 +112,37 @@ BOOST_AUTO_TEST_CASE(query_address__get_balance__block1a_address1_confirmed_bloc
     BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
 }
 
+// duplicate instances (one tx archived twice, only one instance associated)
+
+BOOST_AUTO_TEST_CASE(query_address__get_balance__duplicate_instances__counted_once)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(!store.is_pooling());
+    BOOST_REQUIRE(query.initialize(test::genesis));
+    BOOST_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set_strong(1));
+    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BOOST_REQUIRE(query.set(test::tx4));
+    BOOST_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, {}, false, false));
+    BOOST_REQUIRE(query.set_strong(2));
+    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BOOST_REQUIRE_EQUAL(query.to_duplicates(test::tx4.hash(false)).size(), 2u);
+
+    // block1a output 0 is spent by tx4, whose 0x08 output to the address is unspent.
+    uint64_t confirmed{};
+    uint64_t unconfirmed{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE_EQUAL(query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, true), error::success);
+    BOOST_REQUIRE_EQUAL(confirmed, 0x08u);
+    BOOST_REQUIRE_EQUAL(unconfirmed, 0u);
+
+    uint64_t balance{};
+    BOOST_REQUIRE_EQUAL(query.get_confirmed_balance(cancel, balance, test::block1a_address0, true), error::success);
+    BOOST_REQUIRE_EQUAL(balance, 0x08u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -126,12 +126,13 @@ unspent_output CLASS::get_tx_unspent(const output_link& link) const NOEXCEPT
     auto height = unspent_output::unused_height;
     auto position = unspent_output::unconfirmed_position;
 
-    const auto block = find_strong(tx);
+    tx_link strong{};
+    const auto block = find_strong(strong, tx);
     const auto at = get_confirmed_height(block);
     if (!at.is_terminal())
     {
         height = at.value;
-        if (!get_tx_position(position, tx, block))
+        if (!get_tx_position(position, strong, block))
             return {};
     }
 
@@ -147,7 +148,8 @@ unspent_output CLASS::get_tx_confirmed_unspent(const output_link& link) const NO
         return {};
 
     const auto tx = out.parent_fk;
-    const auto block = find_strong(tx);
+    tx_link strong{};
+    const auto block = find_strong(strong, tx);
     const auto at = get_confirmed_height(block);
 
     // Invalid with unconfirmed_position signals no fault.
@@ -158,7 +160,7 @@ unspent_output CLASS::get_tx_confirmed_unspent(const output_link& link) const NO
     auto hash = get_tx_key(tx);
     const auto index = to_output_index(tx, link);
     if ((index == point::null_index) || (hash == system::null_hash) ||
-        !get_tx_position(position, tx, block))
+        !get_tx_position(position, strong, block))
         return {};
 
     return { { { std::move(hash), index }, out.value }, at.value, position };
