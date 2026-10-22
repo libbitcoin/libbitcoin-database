@@ -1014,6 +1014,10 @@ public:
         uint64_t& unconfirmed, const hash_digest& key,
         bool turbo=false) const NOEXCEPT;
 
+    /// Confirmed and unconfirmed totals (an unconfirmed spend is unconfirmed).
+    code get_address_totals(const stopper& cancel, address_totals& confirmed,
+        address_totals& unconfirmed, const hash_digest& key) const NOEXCEPT;
+
     /// History queries.
     history get_tx_history(const tx_link& link, size_t start=zero,
         size_t end=max_size_t) const NOEXCEPT;

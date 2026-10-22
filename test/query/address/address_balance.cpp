@@ -145,4 +145,65 @@ BOOST_AUTO_TEST_CASE(query_address__get_balance__duplicate_instances__counted_on
     BOOST_REQUIRE_EQUAL(balance, 0x08u);
 }
 
+// get_address_totals
+
+BOOST_AUTO_TEST_CASE(query_address__get_address_totals__confirmed_blocks__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    address_totals confirmed{};
+    address_totals unconfirmed{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0));
+    BOOST_REQUIRE_EQUAL(confirmed.funded_count, 4u);
+    BOOST_REQUIRE_EQUAL(confirmed.funded_value, 0x18u + 0x81u + 0x81u + 0x83u);
+    BOOST_REQUIRE_EQUAL(confirmed.spent_count, 1u);
+    BOOST_REQUIRE_EQUAL(confirmed.spent_value, 0x18u);
+    BOOST_REQUIRE_EQUAL(unconfirmed.funded_count, 5u);
+    BOOST_REQUIRE_EQUAL(unconfirmed.funded_value, 0x08u + 0x85u + 0xb1u + 0xb1u + 0xb2u);
+    BOOST_REQUIRE_EQUAL(unconfirmed.spent_count, 2u);
+    BOOST_REQUIRE_EQUAL(unconfirmed.spent_value, 0xb1u + 0xb1u);
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_address_totals__unconfirmed_blocks__expected)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_unconfirmed_address_store(query));
+
+    address_totals confirmed{};
+    address_totals unconfirmed{};
+    const std::atomic_bool cancel{};
+    BOOST_REQUIRE(!query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0));
+    BOOST_REQUIRE_EQUAL(confirmed.funded_count, 0u);
+    BOOST_REQUIRE_EQUAL(confirmed.spent_count, 0u);
+    BOOST_REQUIRE_EQUAL(unconfirmed.funded_count, 6u);
+    BOOST_REQUIRE_EQUAL(unconfirmed.funded_value, 0x18u + 0x81u + 0x81u + 0x83u + 0x08u + 0x85u);
+    BOOST_REQUIRE_EQUAL(unconfirmed.spent_count, 1u);
+    BOOST_REQUIRE_EQUAL(unconfirmed.spent_value, 0x18u);
+}
+
+BOOST_AUTO_TEST_CASE(query_address__get_address_totals__canceled__query_canceled)
+{
+    settings settings{};
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BOOST_REQUIRE(!store.create(test::events_handler));
+    BOOST_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    address_totals confirmed{};
+    address_totals unconfirmed{};
+    const std::atomic_bool cancel{ true };
+    BOOST_REQUIRE_EQUAL(query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0), error::query_canceled);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -77,6 +77,59 @@ code CLASS::get_balance(const stopper& cancel, uint64_t& confirmed,
     return ec;
 }
 
+// server/esplora
+TEMPLATE
+code CLASS::get_address_totals(const stopper& cancel,
+    address_totals& confirmed, address_totals& unconfirmed,
+    const hash_digest& key) const NOEXCEPT
+{
+    using namespace system;
+    confirmed = {};
+    unconfirmed = {};
+    output_links outs{};
+    if (const auto ec = to_address_outputs(cancel, outs, key))
+        return ec;
+
+    const auto fund = [](address_totals& totals, uint64_t value) NOEXCEPT
+    {
+        ++totals.funded_count;
+        totals.funded_value = ceilinged_add(totals.funded_value, value);
+    };
+
+    const auto spend = [](address_totals& totals, uint64_t value) NOEXCEPT
+    {
+        ++totals.spent_count;
+        totals.spent_value = ceilinged_add(totals.spent_value, value);
+    };
+
+    for (const auto& out: outs)
+    {
+        if (cancel)
+            return error::query_canceled;
+
+        uint64_t value{};
+        if (!get_value(value, out))
+            return error::integrity;
+
+        if (is_confirmed_output(out))
+        {
+            fund(confirmed, value);
+            if (is_confirmed_spent(out))
+                spend(confirmed, value);
+            else if (is_spent(out))
+                spend(unconfirmed, value);
+        }
+        else
+        {
+            fund(unconfirmed, value);
+            if (is_spent(out))
+                spend(unconfirmed, value);
+        }
+    }
+
+    return error::success;
+}
+
 } // namespace database
 } // namespace libbitcoin
 
