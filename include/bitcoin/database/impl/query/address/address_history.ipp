@@ -135,7 +135,8 @@ history CLASS::get_tx_history(hash_digest&& key, const tx_link& link,
     auto height = history::unrooted_height;
     auto position = history::unconfirmed_position;
 
-    const auto block = find_strong(link);
+    tx_link strong{};
+    const auto block = find_strong(strong, link);
     const auto at = get_confirmed_height(block);
     if (at.is_terminal())
     {
@@ -153,7 +154,7 @@ history CLASS::get_tx_history(hash_digest&& key, const tx_link& link,
     else
     {
         height = at.value;
-        if (!get_tx_position(position, link, block))
+        if (!get_tx_position(position, strong, block))
             return {};
     }
 
@@ -176,7 +177,8 @@ history CLASS::get_tx_confirmed_history(hash_digest&& key, const tx_link& link,
     if (link.is_terminal())
         return {};
 
-    const auto block = find_strong(link);
+    tx_link strong{};
+    const auto block = find_strong(strong, link);
     const auto at = get_confirmed_height(block);
 
     // Invalid with unconfirmed_position signals no fault.
@@ -184,7 +186,7 @@ history CLASS::get_tx_confirmed_history(hash_digest&& key, const tx_link& link,
         return { .position = history::unconfirmed_position };
 
     size_t position{};
-    if (!get_tx_position(position, link, block))
+    if (!get_tx_position(position, strong, block))
         return {};
 
     // Electrum uses fees only on unconfirmed (expensive).

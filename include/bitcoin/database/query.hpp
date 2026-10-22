@@ -355,6 +355,9 @@ public:
     tx_link find_strong_tx(const hash_digest& tx_hash) const NOEXCEPT;
     header_link find_strong(const tx_link& link) const NOEXCEPT;
     header_link find_strong(const hash_digest& tx_hash) const NOEXCEPT;
+    header_link find_strong(tx_link& out, const tx_link& link) const NOEXCEPT;
+    header_link find_strong(tx_link& out,
+        const hash_digest& tx_hash) const NOEXCEPT;
     height_link find_strong_spender_height(const point& point) const NOEXCEPT;
 
     header_link to_parent(const header_link& link) const NOEXCEPT;
