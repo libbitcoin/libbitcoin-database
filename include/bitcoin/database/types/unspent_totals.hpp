@@ -49,6 +49,15 @@ struct BCD_API unspent_totals
     uint64_t bip30{};
 };
 
+/// Funded and spent output counts and values of an address.
+struct BCD_API address_totals
+{
+    size_t funded_count{};
+    uint64_t funded_value{};
+    size_t spent_count{};
+    uint64_t spent_value{};
+};
+
 } // namespace database
 } // namespace libbitcoin
 
