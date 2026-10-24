@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 365_size;
+constexpr auto default_size = 367_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(envelope__serialized_size__default__expected)
 BOOST_AUTO_TEST_CASE(envelope__to_data__default__expected_version)
 {
     const envelope instance{};
-    BOOST_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 16, 0));
+    BOOST_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 17, 0));
     BOOST_REQUIRE_EQUAL(to_chunk(instance).front(), schema::version.front());
 }
 
@@ -185,6 +185,22 @@ BOOST_AUTO_TEST_CASE(envelope__from_data__regtest__round_trip)
     const system::settings bitcoin{ chain::selection::regtest };
     const database::settings configuration{ chain::selection::regtest };
     const envelope instance{ bitcoin, configuration, false, 42 };
+    auto data = to_chunk(instance);
+    BOOST_REQUIRE_EQUAL(data.size(), instance.serialized_size());
+
+    envelope out{};
+    BOOST_REQUIRE(from_chunk(out, data));
+    BOOST_REQUIRE(out == instance);
+}
+
+BOOST_AUTO_TEST_CASE(envelope__from_data__signet__round_trip)
+{
+    const system::settings bitcoin{ chain::selection::signet };
+    const database::settings configuration{ chain::selection::signet };
+    const envelope instance{ bitcoin, configuration, false, 42 };
+    BOOST_REQUIRE(instance.forks.signet);
+    BOOST_REQUIRE(instance.signet_challenge == bitcoin.signet_challenge);
+
     auto data = to_chunk(instance);
     BOOST_REQUIRE_EQUAL(data.size(), instance.serialized_size());
 
