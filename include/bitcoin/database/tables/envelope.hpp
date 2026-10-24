@@ -85,6 +85,7 @@ struct BCD_API envelope
     system::chain::checkpoint bip9_bit2_active_checkpoint{};
     system::chain::checkpoint top_checkpoint{};
     system::chain::checkpoint milestone{};
+    system::chain::script signet_challenge{};
 
     /// Database settings.
     uint16_t interval_depth{};

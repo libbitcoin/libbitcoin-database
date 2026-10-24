@@ -97,6 +97,7 @@ string_list envelope::apply(system::settings& bitcoin, settings& database,
     assign(bitcoin.bip9_bit1_active_checkpoint, bip9_bit1_active_checkpoint, "bip9_bit1_active_checkpoint");
     assign(bitcoin.bip9_bit2_active_checkpoint, bip9_bit2_active_checkpoint, "bip9_bit2_active_checkpoint");
     assign(bitcoin.milestone, milestone, "milestone");
+    assign(bitcoin.signet_challenge, signet_challenge, "signet_challenge");
 
     if (bitcoin.top_checkpoint() != top_checkpoint)
         changed.push_back("top_checkpoint");
@@ -161,6 +162,7 @@ envelope::envelope(const system::settings& bitcoin, const settings& database,
     bip9_bit2_active_checkpoint(bitcoin.bip9_bit2_active_checkpoint),
     top_checkpoint(bitcoin.top_checkpoint()),
     milestone(bitcoin.milestone),
+    signet_challenge(bitcoin.signet_challenge),
     limited_blocks(limited),
     silent_start_height(silent)
 {
@@ -204,6 +206,7 @@ bool envelope::from_data(reader& source) NOEXCEPT
     forks.difficult = to_bool(source.read_byte());
     forks.time_warp_patch = to_bool(source.read_byte());
     forks.block_storm_patch = to_bool(source.read_byte());
+    forks.signet = to_bool(source.read_byte());
     forks.ltc_time_warp_patch = to_bool(source.read_byte());
     forks.ltc_retarget_overflow_patch = to_bool(source.read_byte());
     forks.ltc_scrypt_proof_of_work = to_bool(source.read_byte());
@@ -244,6 +247,7 @@ bool envelope::from_data(reader& source) NOEXCEPT
     bip9_bit2_active_checkpoint = read_checkpoint();
     top_checkpoint = read_checkpoint();
     milestone = read_checkpoint();
+    signet_challenge = chain::script{ source, true };
 
     interval_depth = source.read_little_endian<uint16_t>();
     header_buckets = source.read_little_endian<uint32_t>();
@@ -298,6 +302,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_byte(to_int<uint8_t>(forks.difficult));
     sink.write_byte(to_int<uint8_t>(forks.time_warp_patch));
     sink.write_byte(to_int<uint8_t>(forks.block_storm_patch));
+    sink.write_byte(to_int<uint8_t>(forks.signet));
     sink.write_byte(to_int<uint8_t>(forks.ltc_time_warp_patch));
     sink.write_byte(to_int<uint8_t>(forks.ltc_retarget_overflow_patch));
     sink.write_byte(to_int<uint8_t>(forks.ltc_scrypt_proof_of_work));
@@ -338,6 +343,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     write_checkpoint(bip9_bit2_active_checkpoint);
     write_checkpoint(top_checkpoint);
     write_checkpoint(milestone);
+    signet_challenge.to_data(sink, true);
 
     sink.write_little_endian<uint16_t>(interval_depth);
     sink.write_little_endian<uint32_t>(header_buckets);
@@ -368,7 +374,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
 
 size_t envelope::serialized_size() const NOEXCEPT
 {
-    constexpr auto forks_size = 24_size;
+    constexpr auto forks_size = 25_size;
     constexpr auto fixed = (4 * sizeof(uint32_t)) + sizeof(uint16_t) +
         (7 * sizeof(uint32_t)) + (10 * sizeof(uint8_t)) + forks_size +
         sizeof(uint64_t) + (18 * sizeof(uint32_t));
@@ -391,7 +397,8 @@ size_t envelope::serialized_size() const NOEXCEPT
         checkpoint_size(bip9_bit1_active_checkpoint) +
         checkpoint_size(bip9_bit2_active_checkpoint) +
         checkpoint_size(top_checkpoint) +
-        checkpoint_size(milestone);
+        checkpoint_size(milestone) +
+        signet_challenge.serialized_size(true);
 }
 
 } // namespace database
