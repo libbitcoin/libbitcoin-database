@@ -156,7 +156,7 @@ CLASS::store(const settings& config) NOEXCEPT
 
     candidate(candidate_head_),
     confirmed(confirmed_head_),
-    strong(strong_head_),
+    strong(strong_head_, config.strong.buckets),
     scan(scan_head_, scan_body_, config.scan.buckets),
     scan_prefix(scan_prefix_head_, scan_prefix_body_),
 
@@ -175,7 +175,7 @@ CLASS::store(const settings& config) NOEXCEPT
     presilent0(presilent0_head_, presilent0_body_),
     presilent1(presilent1_head_, presilent1_body_),
     prevout(prevout_head_, prevout_body_, config.prevout.buckets),
-    state(state_head_),
+    state(state_head_, config.state.buckets),
     pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected),
     spends(spends_head_, spends_body_),
     wtxid(wtxid_head_, wtxid_body_, config.wtxid.buckets, config.wtxid.expected),

@@ -179,6 +179,23 @@ BOOST_AUTO_TEST_CASE(headmap__create__empty__expected)
     BOOST_REQUIRE(instance.at(0).is_terminal());
 }
 
+BOOST_AUTO_TEST_CASE(headmap__create__buckets__filled_terminal)
+{
+    constexpr auto buckets = 3_size;
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
+    test_headmap instance{ head_store, buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(instance.verify());
+    BOOST_REQUIRE_EQUAL(instance.head_size(), buckets * sizeof(uint16_t));
+    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
+    BOOST_REQUIRE(instance.at(0).is_terminal());
+    BOOST_REQUIRE(instance.at(1).is_terminal());
+    BOOST_REQUIRE(instance.at(2).is_terminal());
+    BOOST_REQUIRE(instance.at(3).is_terminal());
+    BOOST_REQUIRE(!instance.create());
+}
+
 BOOST_AUTO_TEST_CASE(headmap__push__reserved__expected_at)
 {
     data_chunk head_file{};

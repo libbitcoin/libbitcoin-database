@@ -45,7 +45,8 @@ public:
 
     using link = Link;
 
-    headmap(storage& head) NOEXCEPT;
+    /// Buckets are filled at create, a push head has none.
+    headmap(storage& head, size_t buckets=zero) NOEXCEPT;
 
     /// Setup, not thread safe.
     /// -----------------------------------------------------------------------
@@ -189,6 +190,7 @@ private:
 
     // These are thread safe.
     storage& file_;
+    const size_t initial_buckets_;
     mutable shared_mutex mutex_{};
 };
 

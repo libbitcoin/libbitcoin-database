@@ -98,8 +98,8 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
 
     BOOST_REQUIRE_EQUAL(query.candidate_buckets(), one);
     BOOST_REQUIRE_EQUAL(query.confirmed_buckets(), one);
-    BOOST_REQUIRE_EQUAL(query.strong_buckets(), one);
-    BOOST_REQUIRE_EQUAL(query.state_buckets(), one);
+    BOOST_REQUIRE_EQUAL(query.strong_buckets(), 128u);
+    BOOST_REQUIRE_EQUAL(query.state_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.duplicate_buckets(), 128u);
     BOOST_REQUIRE_EQUAL(query.prevout_buckets(), 128);
     BOOST_REQUIRE_EQUAL(query.pool_buckets(), 128u);
