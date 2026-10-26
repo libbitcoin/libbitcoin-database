@@ -80,7 +80,7 @@ const data_chunk expected_file
 
 BOOST_AUTO_TEST_CASE(transaction__put__get__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(transaction__put__get__expected)
 
 BOOST_AUTO_TEST_CASE(transaction__put__get_key__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(transaction__put__get_key__expected)
 
 BOOST_AUTO_TEST_CASE(transaction__put__get_puts__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(transaction__put__get_puts__expected)
 
 BOOST_AUTO_TEST_CASE(transaction__it__pk__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::transaction instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());

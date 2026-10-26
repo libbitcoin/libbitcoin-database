@@ -312,27 +312,29 @@ private:
     static constexpr bool random = true;
     static constexpr bool sequential = false;
 
-    // Heads share the table growth rate.
+    // Heads share the table growth rate and are filled (terminal for links).
     static constexpr storage_settings head_settings(
         const settings::simple_table& table, uint64_t minimum=one,
-        advice access=advice::random) NOEXCEPT
+        advice access=advice::random,
+        uint8_t fill=system::bit_all<uint8_t>) NOEXCEPT
     {
         return
         {
             .size = std::max<uint64_t>(one, minimum),
             .rate = table.rate,
             .access = access,
-            .zeroed = false
+            .zeroed = false,
+            .fill = fill
         };
     }
 
     template <size_t Cell>
     static constexpr storage_settings head_settings(
-        const settings::bucket_table& table,
-        advice access=advice::random) NOEXCEPT
+        const settings::bucket_table& table, advice access=advice::random,
+        uint8_t fill=system::bit_all<uint8_t>) NOEXCEPT
     {
-        return head_settings(table,
-            system::ceilinged_multiply<uint64_t>(table.buckets, Cell), access);
+        return head_settings(table, system::ceilinged_multiply<uint64_t>(
+            table.buckets, Cell), access, fill);
     }
 
     // Bodies are append-only, so stage writes in anonymous memory where the

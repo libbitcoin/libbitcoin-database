@@ -52,7 +52,7 @@ const data_chunk expected_puts_body
 
 BOOST_AUTO_TEST_CASE(address__commit__two__expected_bodies)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::outs instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(address__commit__two__expected_bodies)
 
 BOOST_AUTO_TEST_CASE(address__it__co_bucket__all_candidates)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::outs instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(address__it__co_bucket__all_candidates)
 
 BOOST_AUTO_TEST_CASE(address__enabled__no_buckets__false)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::outs instance{ head_store, body_store, 0 };
     BOOST_REQUIRE(instance.create());

@@ -75,6 +75,7 @@ bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
     // The file is provisioned in full; capacity publishes committed rows only.
     file_.store(to_provision());
     capacity_.store(to_commitment());
+    backfill_all_(logical_.load(), capacity_.load(), sequence{});
     check_invariants_();
     return true;
 }
@@ -141,6 +142,9 @@ bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>,
 
     // Growth beyond the provisioned file extends it (resize_ is a no-op
     // within), so the extent tracks the high water of provisioning.
+    // Migration copies only to logical, so fill from logical (writers are
+    // excluded by the remap lock, claims publish only below logical).
+    backfill_all_(logical_.load(), capacity, sequence{});
     file_.store(std::max(file_.load(), capacity));
     capacity_.store(capacity);
     check_invariants_();
@@ -211,6 +215,34 @@ void CLASS::zero_(size_t from, size_t to, size_t STAGING_ONLY(fresh)) NOEXCEPT
         const auto size = end - begin;
         prepare(begin, size);
         std::fill_n(std::next(memory_map_[Column], begin), size, uint8_t{});
+        mark(begin, size);
+    }
+}
+
+TEMPLATE
+template <size_t... Index>
+void CLASS::backfill_all_(size_t from, size_t to,
+    std::index_sequence<Index...>) NOEXCEPT
+{
+    if (fill_.has_value())
+        (backfill_<Index>(from, to), ...);
+}
+
+// Fill column bytes of rows [from, to).
+TEMPLATE
+template <size_t Column>
+void CLASS::backfill_(size_t from, size_t to) NOEXCEPT
+{
+    if constexpr (!is_zero(widths.at(Column)))
+    {
+        const auto begin = to_width<Column>(from);
+        const auto end = to_width<Column>(to);
+        if (begin >= end)
+            return;
+
+        const auto size = end - begin;
+        prepare(begin, size);
+        std::fill_n(std::next(memory_map_[Column], begin), size, fill_.value());
         mark(begin, size);
     }
 }

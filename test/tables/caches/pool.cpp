@@ -63,7 +63,7 @@ const table::pool::record in2
 
 BOOST_AUTO_TEST_CASE(pool__put__two__found)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::pool instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(pool__put__two__found)
 
 BOOST_AUTO_TEST_CASE(pool__put__spine__expected_row)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::pool instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(pool__put__spine__expected_row)
 
 BOOST_AUTO_TEST_CASE(pool__put__columns_then_commit__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::pool instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());

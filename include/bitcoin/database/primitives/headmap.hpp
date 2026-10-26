@@ -144,7 +144,6 @@ private:
     static constexpr auto is_link = is_linkage<Value>;
     static constexpr auto cell_size = system::possible_narrow_sign_cast<
         ptrdiff_t>(bucket_size);
-    static constexpr auto fill = is_link ? system::bit_all<uint8_t> : uint8_t{};
     static constexpr auto load_order = is_link ? std::memory_order_relaxed :
         std::memory_order_acquire;
     static constexpr auto store_order = is_link ? std::memory_order_relaxed :

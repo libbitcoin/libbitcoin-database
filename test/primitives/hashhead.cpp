@@ -57,7 +57,7 @@ public:
 BOOST_AUTO_TEST_CASE(hashhead__create__size__expected)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     hashhead_ head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE_EQUAL(data.size(), head_size);
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(hashhead__create__size__expected)
 BOOST_AUTO_TEST_CASE(hashhead__verify__uncreated__false)
 {
     data_chunk data{};;
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     hashhead_ head{ store, buckets };
     ////BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(!head.verify());
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(hashhead__verify__uncreated__false)
 BOOST_AUTO_TEST_CASE(hashhead__verify__created__false)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     hashhead_ head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.verify());
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(hashhead__verify__created__false)
 BOOST_AUTO_TEST_CASE(hashhead__get_body_count__created__zero)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     hashhead_ head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(hashhead__get_body_count__created__zero)
 BOOST_AUTO_TEST_CASE(hashhead__set_body_count__get__expected)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     hashhead_ head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(hashhead__unique_hash__null_key__expected)
     const auto expected = system::unique_hash(null_key) % buckets;
     BOOST_REQUIRE_EQUAL(expected, 0u);
 
-    test::chunk_storage store;
+    test::chunk_storage store{ test::terminal_fill };
     hashhead_ head{ store, buckets };
     BOOST_REQUIRE_EQUAL(head.index(null_key), expected);
 }
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(hashhead__key_hash__null_point__zero)
 
 BOOST_AUTO_TEST_CASE(hashhead__top__link__terminal)
 {
-    test::chunk_storage store;
+    test::chunk_storage store{ test::terminal_fill };
     hashhead_ head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.top(9).is_terminal());
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(hashhead__top__link__terminal)
 
 BOOST_AUTO_TEST_CASE(hashhead__top__nullptr__terminal)
 {
-    nullptr_storage store;
+    nullptr_storage store{ test::terminal_fill };
     hashhead_ head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.top(9).is_terminal());
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(hashhead__top__key__terminal)
 {
     constexpr key null_key{};
 
-    test::chunk_storage store;
+    test::chunk_storage store{ test::terminal_fill };
     hashhead_ head{ store, buckets };
 
     // create() allocates and fills buckets with terminal.
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(hashhead__top__key__terminal)
 
 BOOST_AUTO_TEST_CASE(hashhead__push__key__terminal)
 {
-    test::chunk_storage store;
+    test::chunk_storage store{ test::terminal_fill };
     hashhead_ head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(hashhead__false_positive__load__increasing_below_walk)
 BOOST_AUTO_TEST_CASE(hashhead__construct__expected__derived_k)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     filtered_ head{ store, filtered_buckets, 40 };
     BOOST_REQUIRE_EQUAL(head.filter_k(), 4u);
 }
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(hashhead__construct__expected__derived_k)
 BOOST_AUTO_TEST_CASE(hashhead__construct__no_expected__legacy_k)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     filtered_ head{ store, filtered_buckets };
     BOOST_REQUIRE_EQUAL(head.filter_k(), 5u);
 }
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(hashhead__construct__no_expected__legacy_k)
 BOOST_AUTO_TEST_CASE(hashhead__set_filter_k__valid__set)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     filtered_ head{ store, filtered_buckets };
     BOOST_REQUIRE(head.set_filter_k(2));
     BOOST_REQUIRE_EQUAL(head.filter_k(), 2u);
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(hashhead__set_filter_k__valid__set)
 BOOST_AUTO_TEST_CASE(hashhead__set_filter_k__invalid__false)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     filtered_ head{ store, filtered_buckets };
     BOOST_REQUIRE(!head.set_filter_k(0));
     BOOST_REQUIRE(!head.set_filter_k(13));
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(hashhead__set_filter_k__invalid__false)
 BOOST_AUTO_TEST_CASE(hashhead__set_buckets__valid__set)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     filtered_ head{ store, filtered_buckets };
     BOOST_REQUIRE(head.set_buckets(42));
     BOOST_REQUIRE_EQUAL(head.buckets(), 42u);
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(hashhead__set_buckets__valid__set)
 BOOST_AUTO_TEST_CASE(hashhead__set_buckets__over_terminal__false)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     filtered_ head{ store, filtered_buckets };
     BOOST_REQUIRE(!head.set_buckets(add1<size_t>(link4::terminal)));
     BOOST_REQUIRE_EQUAL(head.buckets(), filtered_buckets);
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(hashhead__set_buckets__over_terminal__false)
 BOOST_AUTO_TEST_CASE(hashhead__set_filter_k__disabled__zero_only)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     hashhead_ head{ store, buckets };
     BOOST_REQUIRE(head.set_filter_k(0));
     BOOST_REQUIRE(!head.set_filter_k(1));

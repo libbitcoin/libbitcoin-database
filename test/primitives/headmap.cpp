@@ -168,7 +168,7 @@ public:
 BOOST_AUTO_TEST_CASE(headmap__create__empty__expected)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     test_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(headmap__create__empty__expected)
 BOOST_AUTO_TEST_CASE(headmap__push__reserved__expected_at)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     test_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.push(link::terminal));
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(headmap__push__reserved__expected_at)
 BOOST_AUTO_TEST_CASE(headmap__push__unreserved__false)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     test_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(!instance.push(0x1122_u16));
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(headmap__push__unreserved__false)
 BOOST_AUTO_TEST_CASE(headmap__truncate__push__rewrites_bucket)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     test_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.reserve(2u));
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(headmap__truncate__push__rewrites_bucket)
 BOOST_AUTO_TEST_CASE(headmap__top__empty__terminal)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     test_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.top().is_terminal());
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(headmap__top__empty__terminal)
 BOOST_AUTO_TEST_CASE(headmap__top__single_genesis__zero)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     test_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.reserve(1u));
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(headmap__top__single_genesis__zero)
 BOOST_AUTO_TEST_CASE(headmap__top__many__last_pushed)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     test_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.reserve(3u));
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(headmap__top__many__last_pushed)
 BOOST_AUTO_TEST_CASE(headmap__top__truncated__expected)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     test_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.reserve(3u));
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(headmap__top__truncate_race__popped_link)
 BOOST_AUTO_TEST_CASE(headmap__unaligned__push_at_truncate__expected)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     unaligned_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.reserve(2u));
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(headmap__unaligned__push_at_truncate__expected)
 BOOST_AUTO_TEST_CASE(headmap__setup__lifecycle__expected)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     test_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.reserve(1u));
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(headmap__setup__lifecycle__expected)
 BOOST_AUTO_TEST_CASE(headmap__slab_create__empty__expected)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     slab_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(headmap__slab_create__empty__expected)
 BOOST_AUTO_TEST_CASE(headmap__slab_put__allocated__expected_get)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     slab_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
 
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(headmap__slab_put__allocated__expected_get)
 BOOST_AUTO_TEST_CASE(headmap__slab_put__second_element__expected_get)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     slab_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
 
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(headmap__slab_put__second_element__expected_get)
 BOOST_AUTO_TEST_CASE(headmap__slab_put__rewrite__expected_get)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     slab_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
 
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(headmap__slab_put__rewrite__expected_get)
 BOOST_AUTO_TEST_CASE(headmap__slab_get__terminal__false)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     slab_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
 
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(headmap__slab_get__terminal__false)
 BOOST_AUTO_TEST_CASE(headmap__slab_get__unallocated__false)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     slab_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
 
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(headmap__slab_get__unallocated__false)
 BOOST_AUTO_TEST_CASE(headmap__slab_setup__lifecycle__expected)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     slab_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
 
@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE(headmap__set__concurrent_flags__all_merged)
 BOOST_AUTO_TEST_CASE(headmap__set__link_beyond_count__filled_terminal)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     test_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.set(2u, link_put{ 0x1122 }));
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE(headmap__set__link_beyond_count__filled_terminal)
 BOOST_AUTO_TEST_CASE(headmap__get__unaligned_link__expected)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     unaligned_headmap instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.reserve(1u));

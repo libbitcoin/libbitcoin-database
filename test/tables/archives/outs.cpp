@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(outs_test)
 BOOST_AUTO_TEST_CASE(outs__allocate__address_disabled__spine_unbacked)
 {
     using chunks = test::chunk_storages<0, 5>;
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     chunks body_store{ chunks::paths{ "address", "puts" } };
     table::outs instance{ head_store, body_store, 0 };
     BOOST_REQUIRE(instance.create());

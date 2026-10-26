@@ -351,9 +351,15 @@ bool CLASS::truncate(size_t count) NOEXCEPT
     trim_(count);
 #endif
 
-    // Released rows are zeroed, so an allocation is zero until written.
+    // Released rows are filled (or zeroed), so an allocation reads the fill
+    // until written.
     if (zeroed_ && loaded_.load())
-        zero_all_(count, logical, fresh, sequence{});
+    {
+        if (fill_.has_value())
+            backfill_all_(count, logical, sequence{});
+        else
+            zero_all_(count, logical, fresh, sequence{});
+    }
 
     logical_.store(count);
     check_invariants_();
@@ -497,32 +503,18 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
     }
 }
 
-// Backfilled allocation (head creation). A managed head writes the fill to
-// its file and maps it released, so the fill is never memory-resident; a
-// native mapping fills through memory (file-backed, kernel writeback).
+// Filled allocation (head creation). A managed head writes the fill to its
+// file and maps it released, so the fill is never memory-resident; otherwise
+// capacity is filled as it is committed.
 TEMPLATE
-size_t CLASS::allocate(size_t count, uint8_t backfill) NOEXCEPT
+size_t CLASS::allocate_filled(size_t count) NOEXCEPT
 {
 #if defined(MANAGE_STAGING)
-    if (managed_ && !shared_.load())
-        return allocate_filled_(count, backfill);
+    if (managed_ && !shared_.load() && fill_.has_value())
+        return allocate_filled_(count);
 #endif
 
-    const auto start = allocate(count);
-    if (start == storage::eof)
-        return start;
-
-    // Growth provisions above the allocation, so fill through capacity.
-    const auto offset = to_width<zero>(start);
-    const auto ptr = get_capacity(offset);
-    if (!ptr)
-        return storage::eof;
-
-    const auto size = system::possible_narrow_sign_cast<size_t>(ptr.size());
-    prepare(offset, size);
-    std::fill_n(ptr.data(), size, backfill);
-    mark(offset, size);
-    return start;
+    return allocate(count);
 }
 
 } // namespace database

@@ -66,7 +66,7 @@ bool CLASS::create() NOEXCEPT
 
     // The fill is file content: a managed head writes it to the file and
     // maps it released, so creation contributes no memory residency.
-    if (file_.allocate(size(), system::bit_all<uint8_t>) == storage::eof)
+    if (file_.allocate_filled(size()) == storage::eof)
         return false;
 
     BC_ASSERT_MSG(verify(), "unexpected head size");

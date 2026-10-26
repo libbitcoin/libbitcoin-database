@@ -167,9 +167,9 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     size_t allocate(size_t count) NOEXCEPT override;
 
-    /// Allocate backfilled rows/bytes; managed heads write the fill to the
-    /// file and map it released (no memory residency of the fill).
-    size_t allocate(size_t count, uint8_t backfill) NOEXCEPT override;
+    /// Allocate filled rows/bytes; managed heads write the fill to the file
+    /// and map it released (no memory residency of the fill).
+    size_t allocate_filled(size_t count) NOEXCEPT override;
 
     /// Report element write completion of count rows/bytes at offset.
     void complete(size_t offset, size_t count) NOEXCEPT override;
@@ -178,8 +178,7 @@ public:
     size_t frontier() const NOEXCEPT override;
 
     /// Remap-protected r/w access to offset (or null) allocated to size.
-    memory get_filled(size_t offset, size_t size,
-        uint8_t backfill) NOEXCEPT override;
+    memory get_filled(size_t offset, size_t size) NOEXCEPT override;
 
     /// Remap-protected r/w access to start/offset (or null), within capacity.
     memory get_capacity(size_t offset=zero) const NOEXCEPT override;
@@ -311,6 +310,11 @@ private:
         std::index_sequence<Index...>) NOEXCEPT;
     template <size_t Column>
     void zero_(size_t from, size_t to, size_t fresh) NOEXCEPT;
+    template <size_t... Index>
+    void backfill_all_(size_t from, size_t to,
+        std::index_sequence<Index...>) NOEXCEPT;
+    template <size_t Column>
+    void backfill_(size_t from, size_t to) NOEXCEPT;
 
     // backend wrappers (native or staged by build), not thread safe.
     template <size_t Column>
@@ -393,7 +397,7 @@ private:
     bool evict_next_(size_t chunk, size_t& cursor) NOEXCEPT;
 
     // managed head (lazy install, dirty transfer, release, share).
-    size_t allocate_filled_(size_t count, uint8_t backfill) NOEXCEPT;
+    size_t allocate_filled_(size_t count) NOEXCEPT;
     bool lazy_install_() NOEXCEPT;
     template <size_t Column>
     bool transfer_(size_t bytes) NOEXCEPT;
@@ -426,6 +430,7 @@ private:
     const bool staged_;
     const bool head_shared_;
     const bool managed_;
+    const std::optional<uint8_t> fill_;
 
     // These are thread safe (atomic).
     std::atomic<error::error_t> error_{ error::success };

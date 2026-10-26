@@ -25,7 +25,7 @@ using namespace system;
 
 BOOST_AUTO_TEST_CASE(wtxid__put__next_record__found)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::wtxid instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(wtxid__put__next_record__found)
 
 BOOST_AUTO_TEST_CASE(wtxid__put__skipped_records__padded_unlinked)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::wtxid instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(wtxid__put__skipped_records__padded_unlinked)
 
 BOOST_AUTO_TEST_CASE(wtxid__put__allocated_record__false)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::wtxid instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());

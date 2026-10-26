@@ -90,7 +90,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(hashmaps__construct__empty__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     const table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(body_store.buffer().empty());
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(hashmaps__construct__empty__expected)
 
 BOOST_AUTO_TEST_CASE(hashmaps__create__empty__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(hashmaps__create__empty__expected)
 
 BOOST_AUTO_TEST_CASE(hashmaps__allocate__multiple__shared_row_count)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(hashmaps__allocate__multiple__shared_row_count)
 
 BOOST_AUTO_TEST_CASE(hashmaps__spine_put__multiple__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(hashmaps__spine_put__multiple__expected)
 
 BOOST_AUTO_TEST_CASE(hashmaps__spine_put__duplicate_key__detected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(hashmaps__spine_put__duplicate_key__detected)
 
 BOOST_AUTO_TEST_CASE(hashmaps__spine_it__duplicate_key__iterated)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(hashmaps__spine_it__duplicate_key__iterated)
 
 BOOST_AUTO_TEST_CASE(hashmaps__satellite_get__terminal__false)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(hashmaps__satellite_get__terminal__false)
 
 BOOST_AUTO_TEST_CASE(hashmaps__satellite_put__spine_allocated__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(hashmaps__satellite_put__spine_allocated__expected)
 
 BOOST_AUTO_TEST_CASE(hashmaps__close__populated__verifies)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(hashmaps__close__populated__verifies)
 
 BOOST_AUTO_TEST_CASE(hashmaps__clear__populated__not_found)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(hashmaps__clear__populated__not_found)
 
 BOOST_AUTO_TEST_CASE(hashmaps__backup__prune__zero_count)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table instance{ head_store, body_store, buckets };
     BOOST_REQUIRE(instance.create());

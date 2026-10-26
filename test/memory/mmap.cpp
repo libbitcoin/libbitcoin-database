@@ -608,7 +608,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__unloaded__false)
     BOOST_REQUIRE(test::create(file));
     map instance(file);
     BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.get_filled(42, 24, 0xff));
+    BOOST_REQUIRE(!instance.get_filled(42, 24));
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
 }
@@ -619,7 +619,6 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_capacity)
     constexpr auto minimum = 42_size;
     constexpr auto size = 100_size;
     constexpr auto offset = 42_size;
-    constexpr auto fill = 0b01010101;
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
@@ -628,7 +627,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_capacity)
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
 
-    auto memory = instance.get_filled(offset, size, fill);
+    auto memory = instance.get_filled(offset, size);
     BOOST_REQUIRE(memory);
 
     const auto expected = std::next(instance.get().data(), offset);
@@ -652,8 +651,8 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__add_overflow__eof)
     map instance(file);
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.get_filled(100, 24, 0xff));
-    BOOST_REQUIRE(!instance.get_filled(max_size_t, 24, 0xff));
+    BOOST_REQUIRE(instance.get_filled(100, 24));
+    BOOST_REQUIRE(!instance.get_filled(max_size_t, 24));
     BOOST_REQUIRE(!instance.unload());
     BOOST_REQUIRE(!instance.close());
     BOOST_REQUIRE(!instance.get_fault());
@@ -665,14 +664,13 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__minimum_no_expansion__expected_capacity)
     constexpr auto minimum = 42_size;
     constexpr auto size = 100_size;
     constexpr auto offset = 42_size;
-    constexpr auto fill = 0b01010101;
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.get_filled(offset, size, fill));
+    BOOST_REQUIRE(instance.get_filled(offset, size));
 
     constexpr auto capacity = std::max(minimum, offset + size);
     BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
@@ -688,14 +686,13 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__no_minimum_expansion__expected_capacity)
     constexpr auto minimum = 1_size;
     constexpr auto size = 51_size;
     constexpr auto offset = 49_size;
-    constexpr auto fill = 0b01010101;
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.get_filled(offset, size, fill));
+    BOOST_REQUIRE(instance.get_filled(offset, size));
 
     // These add only because offset + size is 100.
     constexpr auto capacity = offset + size + rate;
@@ -713,15 +710,15 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
     constexpr auto minimum = 1_size;
     constexpr auto size1 = 3_size;
     constexpr auto offset1 = 5_size;
-    constexpr auto fill1 = 0b0101'0101;
+    constexpr auto fill1 = 0b0101'0101_u8;
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, { minimum, half_rate });
+    map instance(file, { .size = minimum, .rate = half_rate, .fill = fill1 });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
 
-    auto memory = instance.get_filled(offset1, size1, fill1);
+    auto memory = instance.get_filled(offset1, size1);
     BOOST_REQUIRE(memory);
 
     constexpr auto capacity = offset1 + size1 + to_half(offset1 + size1);
@@ -729,11 +726,11 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
     BOOST_REQUIRE_EQUAL(capacity, 12u);
 
     auto data = instance.get().data();
-    ////BOOST_REQUIRE_EQUAL(data[ 0], 0x00_u8); // cannot assume mmap default fill
-    ////BOOST_REQUIRE_EQUAL(data[ 1], 0x00_u8); // cannot assume mmap default fill
-    ////BOOST_REQUIRE_EQUAL(data[ 2], 0x00_u8); // cannot assume mmap default fill
-    ////BOOST_REQUIRE_EQUAL(data[ 3], 0x00_u8); // cannot assume mmap default fill
-    ////BOOST_REQUIRE_EQUAL(data[ 4], 0x00_u8); // cannot assume mmap default fill
+    BOOST_REQUIRE_EQUAL(data[ 0], fill1);   // load and expansion
+    BOOST_REQUIRE_EQUAL(data[ 1], fill1);   // load and expansion
+    BOOST_REQUIRE_EQUAL(data[ 2], fill1);   // load and expansion
+    BOOST_REQUIRE_EQUAL(data[ 3], fill1);   // load and expansion
+    BOOST_REQUIRE_EQUAL(data[ 4], fill1);   // load and expansion
 
     BOOST_REQUIRE_EQUAL(data[ 5], fill1);   // offset + 0
     BOOST_REQUIRE_EQUAL(data[ 6], fill1);   // offset + 1
@@ -749,9 +746,8 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
 
     constexpr auto size2 = 5_size;
     constexpr auto offset2 = 15_size;
-    constexpr auto fill2 = 0b1111'0000;
     memory.reset();
-    memory = instance.get_filled(offset2, size2, fill2);
+    memory = instance.get_filled(offset2, size2);
     BOOST_REQUIRE(memory);
 
     constexpr auto capacity2 = offset2 + size2 + to_half(offset2 + size2);
@@ -775,28 +771,28 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
     BOOST_REQUIRE_EQUAL(data[ 5], 'a');     // offset + 0
     BOOST_REQUIRE_EQUAL(data[ 6], 'b');     // offset + 1
     BOOST_REQUIRE_EQUAL(data[ 7], 'c');     // offset + 2
-    BOOST_REQUIRE_EQUAL(data[ 8], fill2);   // expansion, resize_ (macos) trims on remap...
-    BOOST_REQUIRE_EQUAL(data[ 9], fill2);   // expansion, so it goes to zero if not refilled.
-    BOOST_REQUIRE_EQUAL(data[10], fill2);   // expansion
-    BOOST_REQUIRE_EQUAL(data[11], fill2);   // sub1(offset + size + to_half(offset + size))
-    BOOST_REQUIRE_EQUAL(data[12], fill2);   // cannot assume mmap default fill
-    BOOST_REQUIRE_EQUAL(data[13], fill2);   // cannot assume mmap default fill
-    BOOST_REQUIRE_EQUAL(data[14], fill2);   // cannot assume mmap default fill
+    BOOST_REQUIRE_EQUAL(data[ 8], fill1);   // expansion, resize_ (macos) trims on remap...
+    BOOST_REQUIRE_EQUAL(data[ 9], fill1);   // expansion, so it goes to zero if not refilled.
+    BOOST_REQUIRE_EQUAL(data[10], fill1);   // expansion
+    BOOST_REQUIRE_EQUAL(data[11], fill1);   // sub1(offset + size + to_half(offset + size))
+    BOOST_REQUIRE_EQUAL(data[12], fill1);   // cannot assume mmap default fill
+    BOOST_REQUIRE_EQUAL(data[13], fill1);   // cannot assume mmap default fill
+    BOOST_REQUIRE_EQUAL(data[14], fill1);   // cannot assume mmap default fill
     BOOST_REQUIRE_EQUAL(data[15], 'd');     // offset2 + 0
     BOOST_REQUIRE_EQUAL(data[16], 'e');     // offset2 + 1
     BOOST_REQUIRE_EQUAL(data[17], 'f');     // offset2 + 2
     BOOST_REQUIRE_EQUAL(data[18], 'g');     // offset2 + 3
     BOOST_REQUIRE_EQUAL(data[19], 'h');     // offset2 + 4
-    BOOST_REQUIRE_EQUAL(data[20], fill2);   // expansion
-    BOOST_REQUIRE_EQUAL(data[21], fill2);   // expansion
-    BOOST_REQUIRE_EQUAL(data[22], fill2);   // expansion
-    BOOST_REQUIRE_EQUAL(data[23], fill2);   // expansion
-    BOOST_REQUIRE_EQUAL(data[24], fill2);   // expansion
-    BOOST_REQUIRE_EQUAL(data[25], fill2);   // expansion
-    BOOST_REQUIRE_EQUAL(data[26], fill2);   // expansion
-    BOOST_REQUIRE_EQUAL(data[27], fill2);   // expansion
-    BOOST_REQUIRE_EQUAL(data[28], fill2);   // expansion
-    BOOST_REQUIRE_EQUAL(data[29], fill2);   // expansion
+    BOOST_REQUIRE_EQUAL(data[20], fill1);   // expansion
+    BOOST_REQUIRE_EQUAL(data[21], fill1);   // expansion
+    BOOST_REQUIRE_EQUAL(data[22], fill1);   // expansion
+    BOOST_REQUIRE_EQUAL(data[23], fill1);   // expansion
+    BOOST_REQUIRE_EQUAL(data[24], fill1);   // expansion
+    BOOST_REQUIRE_EQUAL(data[25], fill1);   // expansion
+    BOOST_REQUIRE_EQUAL(data[26], fill1);   // expansion
+    BOOST_REQUIRE_EQUAL(data[27], fill1);   // expansion
+    BOOST_REQUIRE_EQUAL(data[28], fill1);   // expansion
+    BOOST_REQUIRE_EQUAL(data[29], fill1);   // expansion
 
     memory.reset();
     BOOST_REQUIRE(!instance.unload());
@@ -1750,16 +1746,16 @@ BOOST_AUTO_TEST_CASE(mmap__share__filled_tail_above_logical__survives_share)
     const std::string file = TEST_PATH;
     BOOST_REQUIRE(test::create(file));
 
-    map instance(file, { 1, 50 });
+    map instance(file, { .size = 1, .rate = 50, .fill = system::bit_all<uint8_t> });
     BOOST_REQUIRE(!instance.open());
     BOOST_REQUIRE(!instance.load());
     BOOST_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
-    BOOST_REQUIRE(instance.get_filled(cells * cell_width, cell_width, system::bit_all<uint8_t>));
+    BOOST_REQUIRE(instance.get_filled(cells * cell_width, cell_width));
     BOOST_REQUIRE_GT(instance.capacity(), add1(tail) * cell_width);
 
     instance.current(true);
     BOOST_REQUIRE(shared_within(instance, true, share_wait));
-    BOOST_REQUIRE(instance.get_filled(tail * cell_width, cell_width, system::bit_all<uint8_t>));
+    BOOST_REQUIRE(instance.get_filled(tail * cell_width, cell_width));
     BOOST_REQUIRE_EQUAL(read_cells(instance, add1(tail)).back(), fill);
 
     BOOST_REQUIRE(!instance.unload());

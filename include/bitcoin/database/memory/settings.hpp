@@ -59,6 +59,11 @@ struct storage_settings
     /// within the count holds its last store until the next, so a reader
     /// that took that count reads a valid (possibly just-popped) link.
     bool zeroed{ true };
+
+    /// Byte written over capacity above the logical size, at load, on growth
+    /// and in place of zeroing on truncate. Unset for dense tables, whose rows
+    /// are written before they are read.
+    std::optional<uint8_t> fill{};
 };
 
 } // namespace database

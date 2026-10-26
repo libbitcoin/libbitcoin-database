@@ -134,9 +134,9 @@ void CLASS::current(bool STAGING_ONLY(state)) NOEXCEPT
 // creation contributes no memory residency (an in-memory backfill of the
 // head set is the store's largest allocation transient).
 TEMPLATE
-size_t CLASS::allocate_filled_(size_t count, uint8_t backfill) NOEXCEPT
+size_t CLASS::allocate_filled_(size_t count) NOEXCEPT
 {
-    BC_ASSERT(managed_ && !shared_.load());
+    BC_ASSERT(managed_ && !shared_.load() && fill_.has_value());
     std::unique_lock field_lock(field_mutex_);
     std::unique_lock map_lock(remap_mutex_);
 
@@ -153,7 +153,8 @@ size_t CLASS::allocate_filled_(size_t count, uint8_t backfill) NOEXCEPT
     // Write the fill.
     const auto from = to_width<zero>(start);
     const auto to = to_width<zero>(end);
-    std::vector<uint8_t> chunk(std::min(to - from, release_chunk), backfill);
+    std::vector<uint8_t> chunk(std::min(to - from, release_chunk),
+        fill_.value());
     for (auto at = from; at < to; )
     {
         const auto size = std::min(to - at, chunk.size());

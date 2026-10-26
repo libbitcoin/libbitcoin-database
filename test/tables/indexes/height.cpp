@@ -33,7 +33,7 @@ const auto expected_head = base16_chunk
 BOOST_AUTO_TEST_CASE(height__create__empty__expected)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     table::height instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.verify());
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(height__create__empty__expected)
 BOOST_AUTO_TEST_CASE(height__push__two__expected)
 {
     data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     table::height instance{ head_store };
     BOOST_REQUIRE(instance.create());
     BOOST_REQUIRE(instance.reserve(1u));
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(height__push__two__expected)
 BOOST_AUTO_TEST_CASE(height__at__two__expected)
 {
     auto head_file = expected_head;
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     table::height instance{ head_store };
     BOOST_REQUIRE(instance.verify());
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(height__at__two__expected)
 BOOST_AUTO_TEST_CASE(height__truncate__push__rewrites_bucket)
 {
     auto head_file = expected_head;
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     table::height instance{ head_store };
     BOOST_REQUIRE(!instance.truncate(3u));
     BOOST_REQUIRE(instance.truncate(1u));
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(height__truncate__push__rewrites_bucket)
 BOOST_AUTO_TEST_CASE(height__restore__expected__idempotent)
 {
     auto head_file = expected_head;
-    test::chunk_storage head_store{ head_file };
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
     table::height instance{ head_store };
     BOOST_REQUIRE(instance.backup());
     BOOST_REQUIRE(instance.restore());

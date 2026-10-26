@@ -42,7 +42,7 @@ const auto expected_body = base16_chunk
 
 BOOST_AUTO_TEST_CASE(prevalid__put__two__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::prevalid instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(prevalid__get__two__expected)
 {
     auto head = expected_head;
     auto body = expected_body;
-    test::chunk_storage head_store{ head };
+    test::chunk_storage head_store{ head, test::terminal_fill };
     test::chunk_storage body_store{ body };
     table::prevalid instance{ head_store, body_store };
     BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(prevalid__put_refs__two__expected)
 {
     using keys = table::prevalid::put_refs::keys;
 
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::prevalid instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(prevalid__get_refs__two__expected)
 
     auto head = closed_head;
     auto body = expected_body;
-    test::chunk_storage head_store{ head };
+    test::chunk_storage head_store{ head, test::terminal_fill };
     test::chunk_storage body_store{ body };
     table::prevalid instance{ head_store, body_store };
 
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(prevalid__put_refs_get_refs__round_trip__expected)
     using put_keys = table::prevalid::put_refs::keys;
     using get_keys = table::prevalid::get_refs::keys;
 
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::prevalid instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());

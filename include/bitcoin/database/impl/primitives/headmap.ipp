@@ -374,9 +374,9 @@ bool CLASS::set(size_t index, const Element& element) NOEXCEPT
     if (index >= Link::terminal)
         return false;
 
-    // Allocate as necessary and fill allocations.
+    // Allocate as necessary (allocations are filled).
     const auto position = link_to_position(index);
-    const auto ptr = file_.get_filled(position, bucket_size, fill);
+    const auto ptr = file_.get_filled(position, bucket_size);
     if (!ptr)
         return false;
 

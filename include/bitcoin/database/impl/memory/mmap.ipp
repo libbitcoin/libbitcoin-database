@@ -48,6 +48,7 @@ CLASS::mmap(const path& filename, const storage_settings& settings,
     staged_(staged),
     head_shared_(!staged && shared),
     managed_(!staged && !shared),
+    fill_(settings.fill),
     opened_{ file::invalid }
 {
 }
@@ -66,6 +67,7 @@ CLASS::mmap(const paths& filenames, const storage_settings& settings,
     staged_(staged),
     head_shared_(false),
     managed_(false),
+    fill_(settings.fill),
     opened_{}
 {
     opened_.fill(file::invalid);
