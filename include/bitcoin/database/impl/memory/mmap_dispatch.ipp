@@ -34,14 +34,15 @@ TEMPLATE
 memory CLASS::get_filled(size_t offset, size_t size) NOEXCEPT
 {
     // This is basically allocate(...), at an offset for use with a table head.
+    if (fault_.load() || !loaded_.load() ||
+        system::is_add_overflow(offset, size))
+        return {};
+
+    // Capacity is filled, so only growth beyond it requires the locks.
+    const auto end = offset + size;
+    if (end > capacity_.load())
     {
         std::unique_lock field_lock(field_mutex_);
-
-        if (fault_.load() || !loaded_.load() ||
-            system::is_add_overflow(offset, size))
-            return {};
-
-        const auto end = std::max(logical_.load(), offset + size);
         if (end > capacity_.load())
         {
             // TODO: Could loop over a try lock here and log deadlock warning.
@@ -51,12 +52,12 @@ memory CLASS::get_filled(size_t offset, size_t size) NOEXCEPT
             if (!grow_(end))
                 return {};
         }
-
-        // Raise to at least end (concurrent claims may already exceed it).
-        for (auto current = logical_.load(); current < end;)
-            if (logical_.compare_exchange_weak(current, end))
-                break;
     }
+
+    // Raise to at least end (concurrent claims may already exceed it).
+    for (auto current = logical_.load(); current < end;)
+        if (logical_.compare_exchange_weak(current, end))
+            break;
 
     return get(offset);
 }
