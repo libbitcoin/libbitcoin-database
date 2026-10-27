@@ -295,10 +295,10 @@ inline Link CLASS::find_link(const Key& key, Element& element) const NOEXCEPT
     // This override avoids duplicated memory construct in get(first()).
     const auto ptr = get_memory();
     const auto link = first(ptr, head_.top(key), key);
-    if (link.is_terminal())
+    if (link.is_terminal() || !read(ptr, link, element))
         return {};
 
-    return read(ptr, link, element);
+    return link;
 }
 
 TEMPLATE
