@@ -227,6 +227,57 @@ BOOST_AUTO_TEST_CASE(hashmap__record_get__populated__valid)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+// serialization fails
+class record_unwritable
+{
+public:
+    static constexpr size_t size = sizeof(uint32_t);
+    static constexpr link5 count() NOEXCEPT { return 1; }
+    bool from_data(database::reader&) NOEXCEPT { return false; }
+    bool to_data(database::finalizer&) const NOEXCEPT { return false; }
+};
+
+BOOST_AUTO_TEST_CASE(hashmap__record_put_link__unwritable__terminal_completed)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    test::chunk_storage body_store{};
+    hashmap_<link5, key1, record_unwritable::size> instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr key1 key{ 0x41 };
+    BOOST_REQUIRE(instance.put_link(key, record_unwritable{}).is_terminal());
+    BOOST_REQUIRE_EQUAL(body_store.completed(), link5::size + array_count<key1> + record_unwritable::size);
+    BOOST_REQUIRE(!instance.exists(key));
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__record_set_link__unwritable__terminal_completed)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    test::chunk_storage body_store{};
+    hashmap_<link5, key1, record_unwritable::size> instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr key1 key{ 0x41 };
+    BOOST_REQUIRE(instance.set_link(key, record_unwritable{}).is_terminal());
+    BOOST_REQUIRE_EQUAL(body_store.completed(), link5::size + array_count<key1> + record_unwritable::size);
+    BOOST_REQUIRE(!instance.exists(key));
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__record_commit__terminal__false_uncompleted)
+{
+    test::chunk_storage head_store{};
+    test::chunk_storage body_store{};
+    hashmap_<link5, key1, record_unwritable::size> instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr key1 key{ 0x41 };
+    BOOST_REQUIRE(!instance.commit(link5::terminal, key));
+    BOOST_REQUIRE_EQUAL(body_store.completed(), 0u);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
 {
     test::chunk_storage head_store{ test::terminal_fill };
@@ -245,6 +296,7 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
     link = instance.put_link(key1_little, little_record{ 0xa1b2c3d4_u32 });
     BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 1u);
+    BOOST_REQUIRE_EQUAL(body_store.completed(), two * (link5::size + array_count<key1> + big_record::size));
 
     big_record record1{};
     BOOST_REQUIRE(instance.get(0, record1));

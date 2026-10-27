@@ -134,6 +134,53 @@ BOOST_AUTO_TEST_CASE(hashmaps__allocate__multiple__shared_row_count)
 // spine
 // ----------------------------------------------------------------------------
 
+// serialization fails
+class record_unwritable
+{
+public:
+    static constexpr size_t size = spine_size;
+    static constexpr link5 count() NOEXCEPT { return 1; }
+    bool from_data(database::reader&) NOEXCEPT { return false; }
+    bool to_data(database::finalizer&) const NOEXCEPT { return false; }
+};
+
+class satellite_unwritable
+{
+public:
+    static constexpr size_t size = satellite_size;
+    static constexpr link5 count() NOEXCEPT { return 1; }
+    bool from_data(database::reader&) NOEXCEPT { return false; }
+    bool to_data(database::flipper&) const NOEXCEPT { return false; }
+};
+
+BOOST_AUTO_TEST_CASE(hashmaps__spine_put_link__unwritable__terminal_completed)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    body_storages body_store{ body_paths };
+    table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr key1 key{ 0x41 };
+    BOOST_REQUIRE(instance.put_link(key, record_unwritable{}).is_terminal());
+    BOOST_REQUIRE_EQUAL(body_store.completed(), 1u);
+    BOOST_REQUIRE(!instance.exists(key));
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(hashmaps__satellite_put__unwritable__false_completed)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    body_storages body_store{ body_paths };
+    table instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    const auto link = instance.allocate(1);
+    BOOST_REQUIRE(!link.is_terminal());
+    BOOST_REQUIRE(!instance.put<1>(link, satellite_unwritable{}));
+    BOOST_REQUIRE_EQUAL(body_store.completed(), 1u);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(hashmaps__spine_put__multiple__expected)
 {
     test::chunk_storage head_store{ test::terminal_fill };

@@ -115,23 +115,20 @@ BOOST_AUTO_TEST_CASE(store__is_dirty__open_add_header__false)
     BOOST_REQUIRE(!instance.close(test::events));
 }
 
-////BOOST_AUTO_TEST_CASE(store__is_dirty__open_with_two_headers__true)
-////{
-////    settings configuration{};
-////    configuration.path = TEST_DIRECTORY;
-////
-////    store<database::mmap> instance1{ configuration };
-////    query<store<database::mmap>> query1_{ instance1 };
-////    BOOST_REQUIRE(!instance1.create(test::events));
-////    BOOST_REQUIRE(query1_.initialize(test::genesis));
-////    BOOST_REQUIRE(query1_.set(system::chain::header{}, context{}, {}, false));
-////    BOOST_REQUIRE(!instance1.close(test::events));
-////
-////    store<database::mmap> instance2{ configuration };
-////    BOOST_REQUIRE(!instance1.open(test::events));
-////    BOOST_REQUIRE(instance2.is_dirty());
-////    BOOST_REQUIRE(!instance1.close(test::events));
-////}
+BOOST_AUTO_TEST_CASE(store__is_dirty__open_with_two_headers__true)
+{
+    settings configuration{};
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BOOST_REQUIRE(!instance.create(test::events));
+    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BOOST_REQUIRE(query_.set(system::chain::header{}, context{}, {}, false));
+    BOOST_REQUIRE(!instance.close(test::events));
+    BOOST_REQUIRE(!instance.open(test::events));
+    BOOST_REQUIRE(instance.is_dirty());
+    BOOST_REQUIRE(!instance.close(test::events));
+}
 
 BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
 {

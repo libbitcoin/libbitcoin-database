@@ -171,6 +171,28 @@ public:
     uint32_t value{ 0 };
 };
 
+// serialization fails
+class record_unwritable
+{
+public:
+    static constexpr size_t size = sizeof(uint32_t);
+    static constexpr link3 count() NOEXCEPT { return 1; }
+    bool from_data(database::reader&) NOEXCEPT { return false; }
+    bool to_data(database::finalizer&) const NOEXCEPT { return false; }
+};
+
+BOOST_AUTO_TEST_CASE(arraymap__record_put__unwritable__false_completed)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    test::chunk_storage body_store{};
+    arraymap_<link3, record_unwritable::size> instance{ head_store, body_store, initial_buckets };
+    BOOST_REQUIRE(instance.create());
+    BOOST_REQUIRE(!instance.put(0, record_unwritable{}));
+    BOOST_REQUIRE_EQUAL(body_store.completed(), record_unwritable::size);
+    BOOST_REQUIRE(!instance.exists(0));
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 BOOST_AUTO_TEST_CASE(arraymap__record_get__terminal__invalid)
 {
     test::chunk_storage head_store{ test::terminal_fill };

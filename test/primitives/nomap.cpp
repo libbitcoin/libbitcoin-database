@@ -178,6 +178,7 @@ BOOST_AUTO_TEST_CASE(nomap__record_put_link__multiple__expected)
     link = instance.put_link(little_record{ 0xa1b2c3d4_u32 });
     BOOST_REQUIRE(!link.is_terminal());
     BOOST_REQUIRE_EQUAL(link, 1u);
+    BOOST_REQUIRE_EQUAL(body_store.completed(), two * big_record::size);
 
     big_record record1{};
     BOOST_REQUIRE(instance.get(0, record1));
@@ -354,6 +355,54 @@ BOOST_AUTO_TEST_CASE(nomap__record_put_link__excess__false)
     test::chunk_storage body_store{ body_file };
     nomap<link5, record_excess::size> instance{ head_store, body_store };
     BOOST_REQUIRE(instance.put_link(record_excess{ 0xa1b2c3d4_u32 }).is_terminal());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+// serialization fails
+class record_unwritable
+{
+public:
+    static constexpr size_t size = sizeof(uint32_t);
+    static constexpr link5 count() NOEXCEPT { return 1; }
+    bool from_data(database::reader&) NOEXCEPT { return false; }
+    bool to_data(database::flipper&) const NOEXCEPT { return false; }
+};
+
+BOOST_AUTO_TEST_CASE(nomap__record_put_link__unwritable__terminal_completed)
+{
+    data_chunk head_file{};
+    data_chunk body_file{};
+    test::chunk_storage head_store{ head_file };
+    test::chunk_storage body_store{ body_file };
+    nomap<link5, record_unwritable::size> instance{ head_store, body_store };
+    BOOST_REQUIRE(instance.put_link(record_unwritable{}).is_terminal());
+    BOOST_REQUIRE_EQUAL(body_store.completed(), record_unwritable::size);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(nomap__record_put__unwritable_at_link__false_completed)
+{
+    data_chunk head_file{};
+    data_chunk body_file{};
+    test::chunk_storage head_store{ head_file };
+    test::chunk_storage body_store{ body_file };
+    nomap<link5, record_unwritable::size> instance{ head_store, body_store };
+    const auto link = instance.allocate(1);
+    BOOST_REQUIRE(!link.is_terminal());
+    BOOST_REQUIRE(!instance.put(link, record_unwritable{}));
+    BOOST_REQUIRE_EQUAL(body_store.completed(), record_unwritable::size);
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(nomap__record_put__terminal__false_uncompleted)
+{
+    data_chunk head_file{};
+    data_chunk body_file{};
+    test::chunk_storage head_store{ head_file };
+    test::chunk_storage body_store{ body_file };
+    nomap<link5, record_unwritable::size> instance{ head_store, body_store };
+    BOOST_REQUIRE(!instance.put(link5::terminal, record_unwritable{}));
+    BOOST_REQUIRE_EQUAL(body_store.completed(), 0u);
     BOOST_REQUIRE(!instance.get_fault());
 }
 

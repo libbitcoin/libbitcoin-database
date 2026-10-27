@@ -546,7 +546,7 @@ private:
     mutable std::mutex transfer_mutex_{};
 
     // This is protected by extent_mutex_.
-    std::array<extent, extents> ring_{};
+    std::unique_ptr<extent[]> ring_{};
     mutable std::mutex extent_mutex_{};
 
     // This is protected by throttle_mutex_.

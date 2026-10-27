@@ -96,6 +96,13 @@ public:
         return at(zero);
     }
 
+    /// test side door (sum of completed counts).
+    size_t completed() const NOEXCEPT
+    {
+        std::shared_lock field_lock(field_mutex_);
+        return completed_;
+    }
+
     // storage interface (no-op lifecycle).
     // ------------------------------------------------------------------------
 
@@ -289,8 +296,10 @@ public:
         return link;
     }
 
-    void complete(size_t, size_t) NOEXCEPT override
+    void complete(size_t, size_t count) NOEXCEPT override
     {
+        std::unique_lock field_lock(field_mutex_);
+        completed_ += count;
     }
 
     size_t frontier() const NOEXCEPT override
@@ -382,6 +391,7 @@ private:
     // These are protected by mutex.
     system::data_chunk* const alias_;
     size_t logical_{};
+    size_t completed_{};
 
     // These are thread safe.
     const paths paths_;

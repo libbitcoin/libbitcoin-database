@@ -398,7 +398,14 @@ inline bool CLASS::set_link(Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
     link = allocate(element.count());
-    return set(link, key, element);
+    if (link.is_terminal())
+        return false;
+
+    const auto written = set(link, key, element);
+    if (!written)
+        body_.complete(link, element.count());
+
+    return written;
 }
 
 TEMPLATE
@@ -434,7 +441,7 @@ inline bool CLASS::put(const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
     // This override is the normal form.
-    return write(get_memory(), link, key, element);
+    return put(get_memory(), link, key, element);
 }
 
 TEMPLATE
@@ -442,7 +449,13 @@ ELEMENT_CONSTRAINT
 inline bool CLASS::put(const memory& ptr, const Link& link, const Key& key,
     const Element& element) NOEXCEPT
 {
-    return write(ptr, link, key, element);
+    if (link.is_terminal())
+        return false;
+
+    // Completes the allocation, written or abandoned.
+    const auto written = write(ptr, link, key, element);
+    body_.complete(link, element.count());
+    return written;
 }
 
 TEMPLATE
@@ -450,8 +463,14 @@ ELEMENT_CONSTRAINT
 inline bool CLASS::put(bool& duplicate, const memory& ptr,
     const Link& link, const Key& key, const Element& element) NOEXCEPT
 {
+    if (link.is_terminal())
+        return false;
+
+    // Completes the allocation, written or abandoned.
     Link previous{};
-    if (!write(previous, ptr, link, key, element))
+    const auto written = write(previous, ptr, link, key, element);
+    body_.complete(link, element.count());
+    if (!written)
         return false;
 
     if (previous.is_terminal())
@@ -488,23 +507,14 @@ TEMPLATE
 bool CLASS::commit(const memory& ptr, const Link& link,
     const Key& key) NOEXCEPT
 {
-    using namespace system;
-    if (!ptr)
-        return false;
-
-    // get element offset (fault)
-    const auto offset = ptr.offset(body::link_to_position(link));
-    if (is_null(offset))
-        return false;
-
-    // Commit element to search index (terminal is a valid bucket index).
-    auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
-    if (!head_.push(link, next, key))
+    if (link.is_terminal())
         return false;
 
     // set/commit is limited to record tables, one row at a time.
+    // Completes the allocation, pushed or abandoned.
+    const auto pushed = push(ptr, link, key);
     body_.complete(link, one);
-    return true;
+    return pushed;
 }
 
 // satellites (nonzero Column)
@@ -559,12 +569,14 @@ TEMPLATE
 template <size_t Column, typename Element>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
-    const auto ptr = body_.template get_raw<Column>(link);
-    if (!put<Column>(ptr, element))
+    if (link.is_terminal())
         return false;
 
+    // Completes the allocation, written or abandoned.
+    const auto it = body_.template get_raw<Column>(link);
+    const auto written = put<Column>(it, element);
     body_.complete(link, element.count());
-    return true;
+    return written;
 }
 
 // protected (unguarded memory access)
@@ -717,10 +729,25 @@ bool CLASS::write(Link& previous, const memory& ptr, const Link& link,
 
     // If collision set previous stack head for conflict resolution search.
     previous = search ? Link{ next } : Link{};
-
-    // Report element write completion (count matches its allocation).
-    body_.complete(link, element.count());
     return true;
+}
+
+TEMPLATE
+bool CLASS::push(const memory& ptr, const Link& link,
+    const Key& key) NOEXCEPT
+{
+    using namespace system;
+    if (!ptr)
+        return false;
+
+    // get element offset (fault)
+    const auto offset = ptr.offset(body::link_to_position(link));
+    if (is_null(offset))
+        return false;
+
+    // Commit element to search index (terminal is a valid bucket index).
+    auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
+    return head_.push(link, next, key);
 }
 
 } // namespace database

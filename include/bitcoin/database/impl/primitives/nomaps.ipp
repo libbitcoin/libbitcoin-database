@@ -191,12 +191,14 @@ TEMPLATE
 template <size_t Column, typename Element>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
-    const auto ptr = body_.template get_raw<Column>(link);
-    if (!put<Column>(ptr, element))
+    if (link.is_terminal())
         return false;
 
+    // Completes the allocation, written or abandoned.
+    const auto it = body_.template get_raw<Column>(link);
+    const auto written = put<Column>(it, element);
     body_.complete(link, element.count());
-    return true;
+    return written;
 }
 
 TEMPLATE
