@@ -133,11 +133,7 @@ bool CLASS::set_strong(const header_link& link, const tx_links& fks,
     bool positive) NOEXCEPT
 {
     const table::strong::replace element{ {}, table::strong::merge(positive, link) };
-    for (const auto& fk: fks)
-        if (!store_.strong.set(fk, element))
-            return false;
-
-    return true;
+    return store_.strong.set(fks, element);
 }
 
 TEMPLATE

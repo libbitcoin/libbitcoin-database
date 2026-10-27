@@ -507,6 +507,45 @@ BOOST_AUTO_TEST_CASE(headmap__set__terminal__false)
     BOOST_REQUIRE(head_file.empty());
 }
 
+BOOST_AUTO_TEST_CASE(headmap__set_indexes__beyond_count__filled_empty)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    value_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+
+    const std::vector<value_link::integer> indexes{ 3u, 1u };
+    BOOST_REQUIRE(instance.set(indexes, byte_put{ 0x2a }));
+    BOOST_REQUIRE_EQUAL(instance.count(), 4u);
+    BOOST_REQUIRE_EQUAL(head_file, base16_chunk("002a002a"));
+}
+
+BOOST_AUTO_TEST_CASE(headmap__set_indexes__empty__true)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    value_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+
+    const std::vector<value_link::integer> indexes{};
+    BOOST_REQUIRE(instance.set(indexes, byte_put{ 0x2a }));
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE(head_file.empty());
+}
+
+BOOST_AUTO_TEST_CASE(headmap__set_indexes__terminal__false)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    value_headmap instance{ head_store };
+    BOOST_REQUIRE(instance.create());
+
+    const std::vector<value_link::integer> indexes{ 1u, value_link::terminal };
+    BOOST_REQUIRE(!instance.set(indexes, byte_put{ 0x2a }));
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE(head_file.empty());
+}
+
 BOOST_AUTO_TEST_CASE(headmap__set__byte_overwrite__expected)
 {
     data_chunk head_file{};

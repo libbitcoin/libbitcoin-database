@@ -387,8 +387,52 @@ bool CLASS::set(size_t index, const Element& element) NOEXCEPT
     if (!ptr)
         return false;
 
+    return exchange(ptr.data(), position, element);
+}
+
+TEMPLATE
+template <typename Element, if_equal<Element::size, Cell>,
+    if_not_equal<Element::size, max_size_t>>
+bool CLASS::set(const std::vector<typename Link::integer>& indexes,
+    const Element& element) NOEXCEPT
+{
+    using namespace system;
+    static_assert(!is_slab);
+    static_assert(aligned, "set requires an aligned cell");
+
+    if (indexes.empty())
+        return true;
+
+    // Avoid setting at/above terminal sentinel into a bucket position.
+    const auto last = std::ranges::max(indexes);
+    if (last >= Link::terminal)
+        return false;
+
+    // Allocate as necessary (allocations are filled), guard across the set.
+    const auto guard = file_.get_filled(link_to_position(last), bucket_size);
+    if (!guard)
+        return false;
+
+    for (const auto index: indexes)
+    {
+        const auto position = link_to_position(index);
+        const auto raw = file_.get_raw(position);
+        if (is_null(raw) || !exchange(raw, position, element))
+            return false;
+    }
+
+    return true;
+}
+
+// private
+TEMPLATE
+template <typename Element>
+bool CLASS::exchange(memory::iterator raw, size_t position,
+    const Element& element) NOEXCEPT
+{
+    using namespace system;
     file_.prepare(position, bucket_size);
-    auto& top = *pointer_cast<std::atomic<cell>>(ptr.data());
+    auto& top = *pointer_cast<std::atomic<cell>>(raw);
     auto head = top.load(std::memory_order_acquire);
     auto written = true;
     cell update{};
