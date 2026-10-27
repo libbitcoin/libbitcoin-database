@@ -51,29 +51,23 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
         return error::success;
 
     // One point set per tx.
+    size_t count{};
     point_sets sets(txs.size());
-    std::atomic<size_t> count{};
-    stopper fault{};
 
     // Get points for each tx and the total count.
-    std::transform(parallel, txs.cbegin(), txs.cend(), sets.begin(), 
-        [this, &count, &fault](const tx_link& tx) NOEXCEPT
-        {
-            point_set set{};
-            table::transaction::get_set_ref get{ {}, set.version, set.points };
-            if (!store_.tx.get(tx, get))
-                fault.store(true, relaxed);
+    for (size_t index{}; index < txs.size(); ++index)
+    {
+        auto& set = sets.at(index);
+        table::transaction::get_set_ref get{ {}, set.version, set.points };
+        if (!store_.tx.get(txs.at(index), get))
+            return error::integrity_block_confirmable2;
 
-            count.fetch_add(set.points.size(), relaxed);
-            return set;
-        });
-
-    if (fault.load(relaxed))
-        return error::integrity_block_confirmable2;
+        count += set.points.size();
+    }
 
     // Returns database (integrity) or system (consensus) code.
     // Checks double spends strength, populates prevout parent tx/cb/sq links.
-    if (const auto ec = get_prevouts(sets, count.load(relaxed), link))
+    if (const auto ec = get_prevouts(sets, count, link))
         return ec;
 
     // Code non-integral (no atomic), so codes must be system::error.
