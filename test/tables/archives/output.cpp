@@ -47,7 +47,7 @@ const data_chunk expected_file
 
 BOOST_AUTO_TEST_CASE(output__put__get__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::output instance{ head_store, body_store };
     BOOST_REQUIRE(!instance.put_link(table::output::slab{}).is_terminal());

@@ -73,7 +73,7 @@ CLASS::store(const settings& config) NOEXCEPT
     candidate_head_(head(config.path / schema::dir::heads, schema::indexes::candidate), head_settings<schema::height::cell>(config.candidate), sequential),
     confirmed_head_(head(config.path / schema::dir::heads, schema::indexes::confirmed), head_settings<schema::height::cell>(config.confirmed), sequential),
 
-    strong_head_(head(config.path / schema::dir::heads, schema::indexes::strong), head_settings<schema::strong::cell>(config.strong, advice::sequential), sequential, !staged, shared),
+    strong_head_(head(config.path / schema::dir::heads, schema::indexes::strong), head_settings<schema::strong::cell>(config.strong, advice::sequential, zero), sequential, !staged, shared),
     scan_head_(head(config.path / schema::dir::heads, schema::indexes::scan), head_settings(config.scan), random),
     scan_body_(body(config.path, schema::indexes::scan), config.scan, sequential, staged),
     scan_prefix_head_(head(config.path / schema::dir::heads, schema::indexes::scan_prefix), head_settings(config.scan), sequential),
@@ -119,7 +119,7 @@ CLASS::store(const settings& config) NOEXCEPT
     prevout_head_(head(config.path / schema::dir::heads, schema::caches::prevout), head_settings(config.prevout), random),
     prevout_body_(body(config.path, schema::caches::prevout), config.prevout, sequential, staged),
 
-    state_head_(head(config.path / schema::dir::heads, schema::indexes::state), head_settings<schema::state::cell>(config.state), random),
+    state_head_(head(config.path / schema::dir::heads, schema::indexes::state), head_settings<schema::state::cell>(config.state, advice::random, zero), random),
 
     pool_head_(head(config.path / schema::dir::heads, schema::caches::pool), head_settings(config.pool), random),
     pool_body_(body(config.path, schema::caches::pool), config.pool, sequential, staged),
@@ -156,7 +156,7 @@ CLASS::store(const settings& config) NOEXCEPT
 
     candidate(candidate_head_),
     confirmed(confirmed_head_),
-    strong(strong_head_),
+    strong(strong_head_, config.strong.buckets),
     scan(scan_head_, scan_body_, config.scan.buckets),
     scan_prefix(scan_prefix_head_, scan_prefix_body_),
 
@@ -175,7 +175,7 @@ CLASS::store(const settings& config) NOEXCEPT
     presilent0(presilent0_head_, presilent0_body_),
     presilent1(presilent1_head_, presilent1_body_),
     prevout(prevout_head_, prevout_body_, config.prevout.buckets),
-    state(state_head_),
+    state(state_head_, config.state.buckets),
     pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected),
     spends(spends_head_, spends_body_),
     wtxid(wtxid_head_, wtxid_body_, config.wtxid.buckets, config.wtxid.expected),

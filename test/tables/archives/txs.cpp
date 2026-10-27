@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(txs__put__get__expected)
 {
     constexpr size_t key = 3;
     table::txs::slab slab{};
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::txs instance{ head_store, body_store, 20 };
     BOOST_CHECK(instance.create());

@@ -83,8 +83,8 @@ bool CLASS::create() NOEXCEPT
         return false;
 
     // Guards addition overflow in body_.get (start must be valid).
-    if (file_.allocate(link_to_position(initial_buckets_),
-        system::bit_all<uint8_t>) == storage::eof)
+    if (file_.allocate_filled(link_to_position(initial_buckets_)) ==
+        storage::eof)
         return false;
 
     BC_ASSERT_MSG(verify(), "unexpected head size");
@@ -180,11 +180,10 @@ TEMPLATE
 bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
 {
     using namespace system;
-    constexpr auto fill = bit_all<uint8_t>;
 
-    // Allocate as necessary and fill allocations.
+    // Allocate as necessary (allocations are filled).
     const auto position = link_to_position(index);
-    const auto ptr = file_.get_filled(position, bucket_size, fill);
+    const auto ptr = file_.get_filled(position, bucket_size);
     if (!ptr)
         return false;
 

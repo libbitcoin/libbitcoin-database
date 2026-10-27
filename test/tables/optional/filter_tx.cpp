@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(filter_tx__put__ordered__expected)
     const table::filter_tx::put_ref put3{ {}, three_data };
     const table::filter_tx::put_ref put4{ {}, four_data };
 
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::filter_tx instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(filter_tx__put__disordered__expected)
     const table::filter_tx::put_ref put3{ {}, three_data };
     const table::filter_tx::put_ref put4{ {}, four_data };
 
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::filter_tx instance{ head_store, body_store, 8 };
     BOOST_REQUIRE(instance.create());

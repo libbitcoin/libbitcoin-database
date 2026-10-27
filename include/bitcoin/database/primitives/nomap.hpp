@@ -135,6 +135,13 @@ public:
     template <typename Element, if_equal<Element::size, Size> = true>
     Link put_link(const Element& element) NOEXCEPT;
 
+protected:
+    /// memory parameter must be from start (i.e. from get_memory()).
+    /// Set allocated element at link, without completion.
+    template <typename Element, if_equal<Element::size, Size> = true>
+    static bool write(const memory& ptr, const Link& link,
+        const Element& element) NOEXCEPT;
+
 private:
     static constexpr auto is_slab = (Size == max_size_t);
     using body = database::body<Link, system::data_array<zero>, Size>;

@@ -105,9 +105,9 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     virtual size_t allocate(size_t count) NOEXCEPT = 0;
 
-    /// Allocate backfilled rows/bytes, avoiding memory residency of the fill
+    /// Allocate filled rows/bytes, avoiding memory residency of the fill
     /// where the backend supports it (head creation path).
-    virtual size_t allocate(size_t count, uint8_t backfill) NOEXCEPT = 0;
+    virtual size_t allocate_filled(size_t count) NOEXCEPT = 0;
 
     /// Report element write completion of count rows/bytes at offset.
     virtual void complete(size_t offset, size_t count) NOEXCEPT = 0;
@@ -116,8 +116,7 @@ public:
     virtual size_t frontier() const NOEXCEPT = 0;
 
     /// Get remap-protected r/w access to offset (or null) allocated to size.
-    virtual memory get_filled(size_t offset, size_t size,
-        uint8_t backfill) NOEXCEPT = 0;
+    virtual memory get_filled(size_t offset, size_t size) NOEXCEPT = 0;
 
     /// Get remap-protected r/w access to start/offset of memory map (or null).
     /// Pointer is constrained to starting write within full capacity.

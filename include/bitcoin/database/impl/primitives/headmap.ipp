@@ -25,8 +25,8 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
-CLASS::headmap(storage& head) NOEXCEPT
-  : file_(head)
+CLASS::headmap(storage& head, size_t buckets) NOEXCEPT
+  : file_(head), initial_buckets_(buckets)
 {
 }
 
@@ -36,8 +36,15 @@ CLASS::headmap(storage& head) NOEXCEPT
 TEMPLATE
 bool CLASS::create() NOEXCEPT
 {
+    if (is_nonzero(head_size()))
+        return false;
+
     // An empty head is a zero count.
-    return is_zero(head_size());
+    if (is_zero(initial_buckets_))
+        return true;
+
+    return file_.allocate_filled(link_to_position(initial_buckets_)) !=
+        storage::eof;
 }
 
 TEMPLATE
@@ -374,9 +381,9 @@ bool CLASS::set(size_t index, const Element& element) NOEXCEPT
     if (index >= Link::terminal)
         return false;
 
-    // Allocate as necessary and fill allocations.
+    // Allocate as necessary (allocations are filled).
     const auto position = link_to_position(index);
-    const auto ptr = file_.get_filled(position, bucket_size, fill);
+    const auto ptr = file_.get_filled(position, bucket_size);
     if (!ptr)
         return false;
 

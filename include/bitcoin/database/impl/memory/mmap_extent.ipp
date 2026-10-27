@@ -54,7 +54,7 @@ void CLASS::complete(size_t STAGING_ONLY(offset),
         for (size_t low{}; low < high;)
         {
             const auto middle = to_half(low + high);
-            auto& record = ring_.at((head + middle) % extents);
+            auto& record = ring_[(head + middle) % extents];
             const auto start = record.start.load(relaxed);
 
             if (offset < start)
@@ -80,7 +80,7 @@ void CLASS::complete(size_t STAGING_ONLY(offset),
         // and recording are not one atomic step), transiently breaking search
         // order. Contiguity guarantees a unique cover: scan linearly.
         for (size_t index{}; index < size; ++index)
-            if (claim_(ring_.at((head + index) % extents), offset, count))
+            if (claim_(ring_[(head + index) % extents], offset, count))
                 return;
     }
 #endif
@@ -170,10 +170,10 @@ size_t CLASS::record_(size_t count) NOEXCEPT
     using namespace system;
     auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
 
-    // A full ring waits on completions (extents are allocation-coarse, so
-    // saturation implies extreme concurrency). Completions are lock-free, so
-    // waiting needs only this thread's own maintenance; fault or disk full
-    // releases the wait unclaimed (the write then fails fast).
+    // A full ring waits on its oldest incomplete extent (head-of-line).
+    // Completions are lock-free, so waiting needs only this thread's own
+    // maintenance; fault or disk full releases the wait unclaimed (the write
+    // then fails fast).
     while (size == extents)
     {
         if (fault_.load() || !is_zero(space_.load()))
@@ -189,7 +189,7 @@ size_t CLASS::record_(size_t count) NOEXCEPT
         ((start + count) > capacity_.load()))
         return storage::eof;
 
-    auto& record = ring_.at((head + size) % extents);
+    auto& record = ring_[(head + size) % extents];
     const auto generation = bit_and<uint64_t>(add1(shift_right<uint64_t>(
         record.state.load(relaxed), generation_shift)), generation_mask);
     BC_ASSERT((count * columns) <= outstanding_mask);
@@ -219,7 +219,7 @@ void CLASS::maintain_() NOEXCEPT
     using namespace system;
     auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
     while (!is_zero(size) && is_zero(bit_and<uint64_t>(
-        ring_.at(head).state.load(relaxed), outstanding_mask)))
+        ring_[head].state.load(relaxed), outstanding_mask)))
     {
         head = add1(head) % extents;
         --size;
@@ -227,7 +227,7 @@ void CLASS::maintain_() NOEXCEPT
 
     window_.store(pack_word<uint64_t>(head, size), release);
     frontier_.store(is_zero(size) ? logical_.load() :
-        ring_.at(head).start.load(relaxed));
+        ring_[head].start.load(relaxed));
     check_invariants_();
 }
 
@@ -260,7 +260,7 @@ void CLASS::trim_(size_t count) NOEXCEPT
     auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
     while (!is_zero(size))
     {
-        auto& tail = ring_.at((head + sub1(size)) % extents);
+        auto& tail = ring_[(head + sub1(size)) % extents];
         const auto start = tail.start.load(relaxed);
         if (start >= count)
         {
@@ -287,7 +287,7 @@ void CLASS::trim_(size_t count) NOEXCEPT
 
     window_.store(pack_word<uint64_t>(head, size), release);
     frontier_.store(is_zero(size) ? count :
-        ring_.at(head).start.load(relaxed));
+        ring_[head].start.load(relaxed));
 }
 
 #endif // MANAGE_STAGING

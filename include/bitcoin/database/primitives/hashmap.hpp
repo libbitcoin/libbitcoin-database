@@ -250,13 +250,17 @@ protected:
         Element& element) NOEXCEPT;
 
     /// memory parameter must be from start (i.e. from get_memory()).
-    /// Set and commit previously allocated element at link to key.
+    /// Set and push allocated element at link to key, without completion.
     template <typename Element, if_equal<Element::size, RowSize> = true>
     bool write(const memory& ptr, const Link& link, const Key& key,
         const Element& element) NOEXCEPT;
     template <typename Element, if_equal<Element::size, RowSize> = true>
     bool write(Link& previous, const memory& ptr, const Link& link,
         const Key& key, const Element& element) NOEXCEPT;
+
+    /// memory parameter must be from start (i.e. from get_memory()).
+    /// Push previously set element at link to key, without completion.
+    bool push(const memory& ptr, const Link& link, const Key& key) NOEXCEPT;
 
 private:
     static constexpr auto is_slab = (RowSize == max_size_t);

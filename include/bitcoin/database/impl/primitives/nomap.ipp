@@ -232,13 +232,13 @@ TEMPLATE
 template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
 {
-    using namespace system;
-    const auto ptr = body_.get(link);
-    if (!put(ptr, element))
+    if (link.is_terminal())
         return false;
 
+    // Completes the allocation, written or abandoned.
+    const auto written = put(body_.get(link), element);
     body_.complete(link, element.count());
-    return true;
+    return written;
 }
 
 TEMPLATE
@@ -265,8 +265,23 @@ template <typename Element, if_equal<Element::size, Size>>
 bool CLASS::put(const memory& ptr, const Link& link,
     const Element& element) NOEXCEPT
 {
+    if (link.is_terminal())
+        return false;
+
+    // Completes the allocation, written or abandoned.
+    const auto written = write(ptr, link, element);
+    body_.complete(link, element.count());
+    return written;
+}
+
+// static
+TEMPLATE
+template <typename Element, if_equal<Element::size, Size>>
+bool CLASS::write(const memory& ptr, const Link& link,
+    const Element& element) NOEXCEPT
+{
     using namespace system;
-    if (!ptr || link.is_terminal())
+    if (!ptr)
         return false;
 
     const auto start = body::link_to_position(link);
@@ -290,11 +305,7 @@ bool CLASS::put(const memory& ptr, const Link& link,
         BC_DEBUG_ONLY(sink.set_limit(Size * element.count());)
     }
 
-    if (!element.to_data(sink))
-        return false;
-
-    body_.complete(link, element.count());
-    return true;
+    return element.to_data(sink);
 }
 
 TEMPLATE

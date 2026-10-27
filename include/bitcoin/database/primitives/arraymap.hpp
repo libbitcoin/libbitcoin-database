@@ -112,6 +112,11 @@ public:
     template <typename Element, if_equal<Element::size, RowSize> = true>
     bool put(size_t key, const Element& element) NOEXCEPT;
 
+protected:
+    /// Set allocated element at link and push to key, without completion.
+    template <typename Element, if_equal<Element::size, RowSize> = true>
+    bool write(const Link& link, size_t key, const Element& element) NOEXCEPT;
+
 private:
     static constexpr auto is_slab = (RowSize == max_size_t);
     using head = database::arrayhead<Link, Align>;

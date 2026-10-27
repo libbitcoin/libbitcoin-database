@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(prevout__put__at1__expected)
 {
     const table::prevout::slab_put_ref slab1{ {}, conflicts1, test::bogus_block };
     const table::prevout::slab_put_ref slab2{ {}, conflicts2, test::bogus_block };
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
     BOOST_REQUIRE(instance.create());
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(prevout__put__at2__expected)
     const table::prevout::slab_put_ref slab1{ {}, conflicts1, test::bogus_block };
     const table::prevout::slab_put_ref slab2{ {}, conflicts2, test::bogus_block };
     table::prevout::slab_get element{};
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
     BOOST_REQUIRE(instance.create());
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(prevout__put__exists__expected)
 {
     const table::prevout::slab_put_ref slab1{ {}, conflicts1, test::bogus_block };
     const table::prevout::slab_put_ref slab2{ {}, conflicts2, test::bogus_block };
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
     BOOST_REQUIRE(instance.create());
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(prevout__put__get__expected)
     const table::prevout::slab_put_ref slab1{ {}, conflicts1, test::bogus_block };
     const table::prevout::slab_put_ref slab2{ {}, conflicts2, test::bogus_block };
     table::prevout::slab_get element{};
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
     BOOST_REQUIRE(instance.create());

@@ -58,30 +58,33 @@ public:
     using paths = std::array<path, columns>;
 
     /// Scalar construction (is_one(columns)): single backing.
-    chunk_storages() NOEXCEPT requires (is_one(columns))
-      : alias_{}, paths_{ path{ "test" } }, logical_{}
+    chunk_storages(std::optional<uint8_t> fill={}) NOEXCEPT
+        requires (is_one(columns))
+      : alias_{}, paths_{ path{ "test" } }, logical_{}, fill_{ fill }
     {
     }
 
-    chunk_storages(system::data_chunk& reference) NOEXCEPT
-        requires (is_one(columns))
+    chunk_storages(system::data_chunk& reference,
+        std::optional<uint8_t> fill={}) NOEXCEPT requires (is_one(columns))
       : alias_{ &reference }, paths_{ path{ "test" } },
-        logical_{ reference.size() }
+        logical_{ reference.size() }, fill_{ fill }
     {
     }
 
     chunk_storages(const path& filename,
-        const database::storage_settings& ={}, bool=true,
+        const database::storage_settings& settings={}, bool=true,
         bool=false, bool=false) NOEXCEPT requires (is_one(columns))
-      : alias_{}, paths_{ filename }, logical_{}
+      : alias_{}, paths_{ filename }, logical_{}, fill_{ settings.fill },
+        zeroed_{ settings.zeroed }
     {
     }
 
     /// Aggregate construction (columns > 1): one backing per column.
     chunk_storages(const paths& filenames,
-        const database::storage_settings& ={}, bool=true,
+        const database::storage_settings& settings={}, bool=true,
         bool=false) NOEXCEPT requires (columns > one)
-      : alias_{}, paths_{ filenames }, logical_{}
+      : alias_{}, paths_{ filenames }, logical_{}, fill_{ settings.fill },
+        zeroed_{ settings.zeroed }
     {
     }
 
@@ -91,6 +94,13 @@ public:
     system::data_chunk& buffer() NOEXCEPT
     {
         return at(zero);
+    }
+
+    /// test side door (sum of completed counts).
+    size_t completed() const NOEXCEPT
+    {
+        std::shared_lock field_lock(field_mutex_);
+        return completed_;
     }
 
     // storage interface (no-op lifecycle).
@@ -194,6 +204,13 @@ public:
         if (count > logical_)
             return false;
 
+        // Released rows are filled, as an allocation reads the fill.
+        if (zeroed_ && fill_.has_value())
+            for (size_t column{}; column < columns; ++column)
+                std::fill(std::next(at(column).begin(),
+                    to_capacity(count, column)), std::next(at(column).begin(),
+                    to_capacity(logical_, column)), fill_.value());
+
         logical_ = count;
         return true;
     }
@@ -212,7 +229,7 @@ public:
         logical_ = count;
         for (size_t column{}; column < columns; ++column)
             if (to_capacity(logical_, column) > at(column).size())
-                at(column).resize(to_capacity(logical_, column));
+                at(column).resize(to_capacity(logical_, column), backfill());
 
         return true;
     }
@@ -230,7 +247,7 @@ public:
 
         for (size_t column{}; column < columns; ++column)
             if (to_capacity(end, column) > at(column).size())
-                at(column).resize(to_capacity(end, column));
+                at(column).resize(to_capacity(end, column), backfill());
 
         return true;
     }
@@ -252,12 +269,12 @@ public:
         logical_ = end;
         for (size_t column{}; column < columns; ++column)
             if (to_capacity(logical_, column) > at(column).size())
-                at(column).resize(to_capacity(logical_, column));
+                at(column).resize(to_capacity(logical_, column), backfill());
 
         return link;
     }
 
-    size_t allocate(size_t count, uint8_t backfill) NOEXCEPT override
+    size_t allocate_filled(size_t count) NOEXCEPT override
     {
         std::unique_lock field_lock(field_mutex_);
         if (system::is_add_overflow<size_t>(logical_, count))
@@ -274,13 +291,15 @@ public:
         logical_ = end;
         for (size_t column{}; column < columns; ++column)
             if (to_capacity(logical_, column) > at(column).size())
-                at(column).resize(to_capacity(logical_, column), backfill);
+                at(column).resize(to_capacity(logical_, column), backfill());
 
         return link;
     }
 
-    void complete(size_t, size_t) NOEXCEPT override
+    void complete(size_t, size_t count) NOEXCEPT override
     {
+        std::unique_lock field_lock(field_mutex_);
+        completed_ += count;
     }
 
     size_t frontier() const NOEXCEPT override
@@ -291,8 +310,7 @@ public:
     // access
     // ------------------------------------------------------------------------
 
-    memory get_filled(size_t offset, size_t size,
-        uint8_t backfill) NOEXCEPT override
+    memory get_filled(size_t offset, size_t size) NOEXCEPT override
     {
         {
             std::unique_lock field_lock(field_mutex_);
@@ -303,7 +321,7 @@ public:
             auto& buffer = at(zero);
             const auto minimum = offset + size;
             if (minimum > buffer.size())
-                buffer.resize(minimum, backfill);
+                buffer.resize(minimum, backfill());
 
             // Reflect byte growth of column 0 into the shared row count.
             if (!is_zero(widths[0]) && (minimum / widths[0]) > logical_)
@@ -365,12 +383,20 @@ private:
             buffers_.at(column);
     }
 
+    uint8_t backfill() const NOEXCEPT
+    {
+        return fill_.value_or(uint8_t{});
+    }
+
     // These are protected by mutex.
     system::data_chunk* const alias_;
     size_t logical_{};
+    size_t completed_{};
 
     // These are thread safe.
     const paths paths_;
+    const std::optional<uint8_t> fill_{};
+    const bool zeroed_{ true };
     mutable shared_mutex field_mutex_{};
     mutable shared_mutex map_mutex_{};
 };
@@ -378,6 +404,9 @@ private:
 BC_POP_WARNING()
 
 using chunk_storage = chunk_storages<one>;
+
+/// The head fill for links (store heads set it through head settings).
+constexpr std::optional<uint8_t> terminal_fill{ system::bit_all<uint8_t> };
 
 } // namespace test
 

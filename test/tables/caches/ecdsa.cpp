@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_correlate__put_ref__single__expected)
 {
     using putter = table::ecdsa_correlate::put_ref;
 
-    chunk_storage head_store{};
+    chunk_storage head_store{ test::terminal_fill };
     chunk_storage body_store{};
     table::ecdsa_correlate instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_correlate__put_refs__one_of_three__expected)
 {
     using putter = table::ecdsa_correlate::put_refs;
 
-    chunk_storage head_store{};
+    chunk_storage head_store{ test::terminal_fill };
     chunk_storage body_store{};
     table::ecdsa_correlate instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_correlate__get__using_record__expected)
         "efcdab" "10" "3412"   // header_fk, pair 1|1, group
     );
 
-    chunk_storage head_store{ head };
+    chunk_storage head_store{ head, test::terminal_fill };
     chunk_storage body_store{ body };
     table::ecdsa_correlate instance{ head_store, body_store };
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_digest__put_ref__single__expected)
 {
     using putter = table::ecdsa_digest::put_ref;
 
-    chunk_storage head_store{};
+    chunk_storage head_store{ test::terminal_fill };
     chunk_storage body_store{};
     table::ecdsa_digest instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_digest__put_refs__repeated__expected)
 {
     using putter = table::ecdsa_digest::put_refs;
 
-    chunk_storage head_store{};
+    chunk_storage head_store{ test::terminal_fill };
     chunk_storage body_store{};
     table::ecdsa_digest instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_compressed__put_ref__single__expected)
 {
     using putter = table::ecdsa_compressed::put_ref;
 
-    chunk_storage head_store{};
+    chunk_storage head_store{ test::terminal_fill };
     chunk_storage body_store{};
     table::ecdsa_compressed instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_compressed__put_refs__matrix__expected)
 {
     using putter = table::ecdsa_compressed::put_refs;
 
-    chunk_storage head_store{};
+    chunk_storage head_store{ test::terminal_fill };
     chunk_storage body_store{};
     table::ecdsa_compressed instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_signature__put_ref__single__expected)
 {
     using putter = table::ecdsa_signature::put_ref;
 
-    chunk_storage head_store{};
+    chunk_storage head_store{ test::terminal_fill };
     chunk_storage body_store{};
     table::ecdsa_signature instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(ecdsa_signature__put_refs__repeated__expected)
 {
     using putter = table::ecdsa_signature::put_refs;
 
-    chunk_storage head_store{};
+    chunk_storage head_store{ test::terminal_fill };
     chunk_storage body_store{};
     table::ecdsa_signature instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());

@@ -108,7 +108,7 @@ const data_chunk expected_file
 
 BOOST_AUTO_TEST_CASE(header__put__get__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
 
 ////BOOST_AUTO_TEST_CASE(header__put_ptr__get__expected)
 ////{
-////    test::chunk_storage head_store{};
+////    test::chunk_storage head_store{ test::terminal_fill };
 ////    test::chunk_storage body_store{};
 ////    table::header instance{ head_store, body_store, 20 };
 ////    BOOST_REQUIRE(instance.create());
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(header__put__get__expected)
 
 BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(header__put_ref__get__expected)
 
 BOOST_AUTO_TEST_CASE(header__put__get_with_sk__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(header__put__get_with_sk__expected)
 
 BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(point__put__get_sk__expected)
 
 BOOST_AUTO_TEST_CASE(header__put__get_context__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(header__put__get_context__expected)
 
 BOOST_AUTO_TEST_CASE(header__it__pk__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(header__it__pk__expected)
 
 BOOST_AUTO_TEST_CASE(header__put__compact__round_trip)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::header instance{ head_store, body_store, 20 };
     BOOST_REQUIRE(instance.create());

@@ -57,7 +57,7 @@ const data_chunk expected_point_file
 
 BOOST_AUTO_TEST_CASE(ins__point_put__get__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::ins instance{ head_store, body_store, 5 };
     BOOST_REQUIRE(instance.create());
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ins__point_put__get__expected)
 
 BOOST_AUTO_TEST_CASE(ins__sequence_put__get__expected)
 {
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::ins instance{ head_store, body_store, 5 };
     BOOST_REQUIRE(instance.create());

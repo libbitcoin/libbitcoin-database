@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(input__put__empty_twice_get__expected)
         0x00  // witness
     };
 
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::input instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(input__put__non_empty_get__expected)
         0x02, 0x01, 0x42, 0x03, 0x01, 0x02, 0x03 // witness
     };
 
-    test::chunk_storage head_store{};
+    test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::input instance{ head_store, body_store };
     BOOST_REQUIRE(instance.create());

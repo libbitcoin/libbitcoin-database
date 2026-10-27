@@ -195,6 +195,20 @@ bool CLASS::put(size_t key, const Element& element) NOEXCEPT
         return false;
 
     const auto link = body_.allocate(element.count());
+    if (link.is_terminal())
+        return false;
+
+    // Completes the allocation, written or abandoned.
+    const auto written = write(link, key, element);
+    body_.complete(link, element.count());
+    return written;
+}
+
+TEMPLATE
+ELEMENT_CONSTRAINT
+bool CLASS::write(const Link& link, size_t key,
+    const Element& element) NOEXCEPT
+{
     const auto ptr = body_.get(link);
     if (!ptr)
         return false;
@@ -205,11 +219,7 @@ bool CLASS::put(size_t key, const Element& element) NOEXCEPT
     finalizer sink{ stream };
 
     if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
-    if (!element.to_data(sink) || !head_.push(link, head_.index(key)))
-        return false;
-
-    body_.complete(link, element.count());
-    return true;
+    return element.to_data(sink) && head_.push(link, head_.index(key));
 }
 
 } // namespace database

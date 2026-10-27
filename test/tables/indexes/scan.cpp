@@ -33,7 +33,7 @@ using scan_storage = default_storage<table::scan_storage<chunk_storages>>;
 BOOST_AUTO_TEST_CASE(scan__create_verify_close__aggregate__expected)
 {
     data_chunk head_file{};
-    test::chunk_storage head{ head_file };
+    test::chunk_storage head{ head_file, test::terminal_fill };
     scan_storage body{ "body" };
     scan_table instance{ head, body, 1 };
 
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(scan__create_verify_close__aggregate__expected)
 BOOST_AUTO_TEST_CASE(scan__at__unset__terminal)
 {
     data_chunk head_file{};
-    test::chunk_storage head{ head_file };
+    test::chunk_storage head{ head_file, test::terminal_fill };
     scan_storage body{ "body" };
     scan_table instance{ head, body, 1 };
     BOOST_REQUIRE(instance.create());
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(scan__at__unset__terminal)
 BOOST_AUTO_TEST_CASE(scan__push__beyond_buckets__expanded)
 {
     data_chunk head_file{};
-    test::chunk_storage head{ head_file };
+    test::chunk_storage head{ head_file, test::terminal_fill };
     scan_storage body{ "body" };
     scan_table instance{ head, body, 1 };
     BOOST_REQUIRE(instance.create());
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(scan__push__beyond_buckets__expanded)
 BOOST_AUTO_TEST_CASE(scan__put_columns__two_rows__expected)
 {
     data_chunk head_file{};
-    test::chunk_storage head{ head_file };
+    test::chunk_storage head{ head_file, test::terminal_fill };
     scan_storage body{ "body" };
     scan_table instance{ head, body, 1 };
     BOOST_REQUIRE(instance.create());
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(scan__put_columns__two_rows__expected)
 
 BOOST_AUTO_TEST_CASE(scan_prefix__put_refs__three__expected)
 {
-    test::chunk_storage head{};
+    test::chunk_storage head{ test::terminal_fill };
     test::chunk_storage body{};
     table::scan_prefix instance{ head, body };
     BOOST_REQUIRE(instance.create());
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(scan_prefix__put_refs__three__expected)
 
 BOOST_AUTO_TEST_CASE(scan_prefix__put_span__two__expected)
 {
-    test::chunk_storage head{};
+    test::chunk_storage head{ test::terminal_fill };
     test::chunk_storage body{};
     table::scan_prefix instance{ head, body };
     BOOST_REQUIRE(instance.create());

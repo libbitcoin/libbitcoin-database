@@ -53,7 +53,7 @@ using test_header = arrayhead<link, false>;
 BOOST_AUTO_TEST_CASE(arrayhead__create__size__expected)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     test_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE_EQUAL(data.size(), head_size);
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__create__size__expected)
 BOOST_AUTO_TEST_CASE(arrayhead__verify__uncreated__false)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     test_header head{ store, buckets };
     ////BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(!head.verify());
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__verify__uncreated__false)
 BOOST_AUTO_TEST_CASE(arrayhead__verify__created__false)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     test_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
     BOOST_REQUIRE(head.verify());
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__verify__created__false)
 BOOST_AUTO_TEST_CASE(arrayhead__get_body_count__created__zero)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     test_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__get_body_count__created__zero)
 BOOST_AUTO_TEST_CASE(arrayhead__set_body_count__get_body_count__expected)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     test_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__set_body_count__get_body_count__expected)
 BOOST_AUTO_TEST_CASE(arrayhead__clear__get_body_count__zero)
 {
     data_chunk data{};
-    test::chunk_storage store{ data };
+    test::chunk_storage store{ data, test::terminal_fill };
     test_header head{ store, buckets };
     BOOST_REQUIRE(head.create());
 
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__clear__get_body_count__zero)
 
 BOOST_AUTO_TEST_CASE(arrayhead__at__not_past_end__terminal)
 {
-    test::chunk_storage store;
+    test::chunk_storage store{ test::terminal_fill };
     test_header head{ store, buckets };
 
     // create() allocates and fills buckets with terminal.
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(arrayhead__at__not_past_end__terminal)
 
 BOOST_AUTO_TEST_CASE(arrayhead__at__past_end__terminal)
 {
-    test::chunk_storage store;
+    test::chunk_storage store{ test::terminal_fill };
     test_header head{ store, buckets };
 
     // create() allocates and fills buckets with terminal.

@@ -31,18 +31,18 @@ namespace database {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-memory CLASS::get_filled(size_t offset, size_t size,
-    uint8_t backfill) NOEXCEPT
+memory CLASS::get_filled(size_t offset, size_t size) NOEXCEPT
 {
-    // This is basically allocate(...), backfilled for use with a table head.
+    // This is basically allocate(...), at an offset for use with a table head.
+    if (fault_.load() || !loaded_.load() ||
+        system::is_add_overflow(offset, size))
+        return {};
+
+    // Capacity is filled, so only growth beyond it requires the locks.
+    const auto end = offset + size;
+    if (end > capacity_.load())
     {
         std::unique_lock field_lock(field_mutex_);
-
-        if (fault_.load() || !loaded_.load() ||
-            system::is_add_overflow(offset, size))
-            return {};
-
-        const auto end = std::max(logical_.load(), offset + size);
         if (end > capacity_.load())
         {
             // TODO: Could loop over a try lock here and log deadlock warning.
@@ -51,22 +51,13 @@ memory CLASS::get_filled(size_t offset, size_t size,
             // Disk full condition leaves store in valid state despite null.
             if (!grow_(end))
                 return {};
-
-            // Fill new capacity as offset may not be at end due to expansion.
-            auto data = memory_map_.front();
-            const auto logical = to_width<zero>(logical_.load());
-            const auto capacity = to_width<zero>(capacity_.load());
-            const auto start = std::next(data, logical);
-            prepare(logical, capacity - logical);
-            std::fill_n(start, capacity - logical, backfill);
-            mark(logical, capacity - logical);
         }
-
-        // Raise to at least end (concurrent claims may already exceed it).
-        for (auto current = logical_.load(); current < end;)
-            if (logical_.compare_exchange_weak(current, end))
-                break;
     }
+
+    // Raise to at least end (concurrent claims may already exceed it).
+    for (auto current = logical_.load(); current < end;)
+        if (logical_.compare_exchange_weak(current, end))
+            break;
 
     return get(offset);
 }
