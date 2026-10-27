@@ -73,16 +73,30 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
     // Code non-integral (no atomic), so codes must be system::error.
     std::atomic<system::error::transaction_error_t> consensus{};
 
+    // One chunk of sets per task, each read under one strong accessor.
+    using chunk = std::span<const point_set>;
+    const auto edges = poolstl::execution::bounds(parallel, sets.cbegin(),
+        sets.cend());
+    std::vector<chunk> chunks{};
+    chunks.reserve(sub1(edges.size()));
+    for (auto edge = edges.cbegin(); edge != std::prev(edges.cend()); ++edge)
+        chunks.emplace_back(*edge, *std::next(edge));
+
     // Checks all spends for spendability (strong, unlocked and mature).
-    if (std::all_of(parallel, sets.cbegin(), sets.cend(),
-        [this, &ctx, &consensus](const point_set& set) NOEXCEPT
+    if (std::all_of(parallel, chunks.cbegin(), chunks.cend(),
+        [this, &ctx, &consensus](const chunk& part) NOEXCEPT
         {
-            for (const auto& point: set.points)
+            const auto strong = store_.strong.get_memory();
+            for (const auto& set: part)
             {
-                if (const auto ec = spendable(point, set.version, ctx))
+                for (const auto& point: set.points)
                 {
-                    consensus.store(ec, relaxed);
-                    return false;
+                    if (const auto ec = spendable(strong, point, set.version,
+                        ctx))
+                    {
+                        consensus.store(ec, relaxed);
+                        return false;
+                    }
                 }
             }
 
@@ -288,7 +302,7 @@ code CLASS::accept_pooled_block(const pooled_block& block,
 // All return codes must be system::error::transaction_error_t (see atomic).
 
 TEMPLATE
-system::error::transaction_error_t CLASS::spendable(
+system::error::transaction_error_t CLASS::spendable(const memory& strong,
     const point_set::point& point, uint32_t version,
     const context& ctx) const NOEXCEPT
 {
@@ -308,7 +322,7 @@ system::error::transaction_error_t CLASS::spendable(
         return system::error::transaction_success;
     }
 
-    const auto link = find_strong(point.tx);
+    const auto link = find_strong(strong, point.tx);
     if (link.is_terminal())
         return system::error::unconfirmed_spend;
 

@@ -1104,6 +1104,10 @@ protected:
     /// Translate.
     /// -----------------------------------------------------------------------
     header_link to_block(const tx_link& link) const NOEXCEPT;
+    header_link to_block(const memory& strong,
+        const tx_link& link) const NOEXCEPT;
+    header_link find_strong(const memory& strong,
+        const tx_link& link) const NOEXCEPT;
     uint32_t to_input_index(const tx_link& parent_fk,
         const ins_link& point_fk) const NOEXCEPT;
     uint32_t to_output_index(const tx_link& parent_fk,
@@ -1155,8 +1159,9 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Called by block_confirmable (populate and check double spends).
-    system::error::transaction_error_t spendable(const point_set::point& point,
-        uint32_t version, const context& ctx) const NOEXCEPT;
+    system::error::transaction_error_t spendable(const memory& strong,
+        const point_set::point& point, uint32_t version,
+        const context& ctx) const NOEXCEPT;
 
     /// Called by block_confirmable (populate and check double spends).
     code get_prevouts(point_sets& sets, size_t points,
