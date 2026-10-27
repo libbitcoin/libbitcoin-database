@@ -265,6 +265,16 @@ inline memory CLASS::get_memory() const NOEXCEPT
 }
 
 TEMPLATE
+template <size_t Column>
+inline memory::iterator CLASS::get_raw() const NOEXCEPT
+{
+    if (is_zero(count().value))
+        return {};
+
+    return body_.template get_raw<Column>(Link{ 0 });
+}
+
+TEMPLATE
 Key CLASS::get_key(const Link& link) NOEXCEPT
 {
     using namespace system;

@@ -80,6 +80,10 @@ public:
     template <size_t Column>
     memory get_memory() const NOEXCEPT;
 
+    /// Column base iterator, null if empty (guard required).
+    template <size_t Column>
+    memory::iterator get_raw() const NOEXCEPT;
+
     /// Get element from column at link using column base ptr (deserialize).
     template <size_t Column, typename Element>
     static bool get(const memory& ptr, const Link& link,

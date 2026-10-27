@@ -165,6 +165,10 @@ public:
     template <size_t Column = zero>
     inline memory get_memory() const NOEXCEPT;
 
+    /// Column base iterator, null if empty (guard required).
+    template <size_t Column>
+    inline memory::iterator get_raw() const NOEXCEPT;
+
     /// Return the associated search key (terminal link returns default).
     Key get_key(const Link& link) NOEXCEPT;
 

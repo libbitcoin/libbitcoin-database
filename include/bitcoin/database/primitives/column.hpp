@@ -42,6 +42,11 @@ public:
         return table_.template get_memory<Column>();
     }
 
+    INLINE memory::iterator get_raw() const NOEXCEPT
+    {
+        return table_.template get_raw<Column>();
+    }
+
     template <typename Element>
     INLINE bool get(const link& record, Element& element) const NOEXCEPT
     {

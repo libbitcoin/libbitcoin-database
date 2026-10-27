@@ -89,16 +89,16 @@ bool CLASS::get_compact_matches(compact_matches& out,
     using link_t = table::pool::link::integer;
     static_assert(is_same_type<siphash_columns::value_type,
         std::span<const lane_t>>);
-    const auto ptr0 = store_.pool.id0.get_memory();
-    const auto ptr1 = store_.pool.id1.get_memory();
-    const auto ptr2 = store_.pool.id2.get_memory();
-    const auto ptr3 = store_.pool.id3.get_memory();
-    if (!ptr0 || !ptr1 || !ptr2 || !ptr3)
+    const auto guard = store_.pool.get_memory();
+    if (!guard)
         return false;
 
     // Records are allocated to the spine before their columns are written.
-    const auto count = std::min({ ptr0.size(), ptr1.size(), ptr2.size(),
-        ptr3.size() }) / sizeof(lane_t);
+    const auto count = possible_narrow_cast<size_t>(store_.pool.count().value);
+    const auto ptr0 = store_.pool.id0.get_raw();
+    const auto ptr1 = store_.pool.id1.get_raw();
+    const auto ptr2 = store_.pool.id2.get_raw();
+    const auto ptr3 = store_.pool.id3.get_raw();
 
     const auto chunk_size = std::max(short_id_minimum_records,
         ceilinged_divide(count, two * cores()));
@@ -113,9 +113,9 @@ bool CLASS::get_compact_matches(compact_matches& out,
             const auto first = chunk * chunk_size;
             std::vector<short_id> ids(std::min(chunk_size, count - first));
 
-            const auto column = [&](const memory& ptr) NOEXCEPT
+            const auto column = [&](memory::iterator ptr) NOEXCEPT
             {
-                const auto data = pointer_cast<const lane_t>(ptr.data());
+                const auto data = pointer_cast<const lane_t>(ptr);
                 return std::span<const lane_t>
                 {
                     std::next(data, first), ids.size()

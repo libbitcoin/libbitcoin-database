@@ -119,7 +119,7 @@ bool CLASS::get_wire_input(bytewriter& sink,
     const ins_link& link) const NOEXCEPT
 {
     return get_wire_input(sink, store_.ins.get_memory(),
-        store_.ins.sequence.get_memory(), store_.input.get_memory(), link);
+        store_.input.get_memory(), link);
 }
 
 TEMPLATE
@@ -133,8 +133,8 @@ TEMPLATE
 bool CLASS::get_wire_witness(bytewriter& sink,
     const ins_link& link) const NOEXCEPT
 {
-    return get_wire_witness(sink, store_.ins.sequence.get_memory(),
-        store_.input.get_memory(), link);
+    const auto guard = store_.ins.get_memory();
+    return get_wire_witness(sink, store_.input.get_memory(), link);
 }
 
 TEMPLATE
@@ -153,7 +153,6 @@ CLASS::wire_accessors CLASS::get_wire_accessors() const NOEXCEPT
         store_.tx.get_memory(),
         store_.outs.puts.get_memory(),
         store_.ins.get_memory(),
-        store_.ins.sequence.get_memory(),
         store_.input.get_memory(),
         store_.output.get_memory()
     };
@@ -162,16 +161,16 @@ CLASS::wire_accessors CLASS::get_wire_accessors() const NOEXCEPT
 // protected
 TEMPLATE
 bool CLASS::get_wire_input(bytewriter& sink, const memory& ins,
-    const memory& sequence, const memory& input,
-    const ins_link& link) const NOEXCEPT
+    const memory& input, const ins_link& link) const NOEXCEPT
 {
     table::ins_point::wire_point point{ {}, sink };
     if (!store_.ins.get(ins, link, point))
         return false;
 
+    // The ins accessor guards its sequence column.
     table::ins_sequence::get_input in{};
     table::input::wire_script script{ {}, sink };
-    if (!store_.ins.sequence.get(sequence, link, in) ||
+    if (!store_.ins.sequence.get_raw(link, in) ||
         !store_.input.get(input, in.input_fk, script))
         return false;
 
@@ -190,12 +189,13 @@ bool CLASS::get_wire_output(bytewriter& sink, const memory& output,
 
 // protected
 TEMPLATE
-bool CLASS::get_wire_witness(bytewriter& sink, const memory& sequence,
-    const memory& input, const ins_link& link) const NOEXCEPT
+bool CLASS::get_wire_witness(bytewriter& sink, const memory& input,
+    const ins_link& link) const NOEXCEPT
 {
+    // Caller holds an ins accessor, guarding its sequence column.
     table::ins_sequence::get_input in{};
     table::input::wire_witness wire{ {}, sink };
-    return store_.ins.sequence.get(sequence, link, in)
+    return store_.ins.sequence.get_raw(link, in)
         && store_.input.get(input, in.input_fk, wire);
 }
 
@@ -227,7 +227,7 @@ bool CLASS::get_wire_tx(bytewriter& sink, const wire_accessors& ptrs,
 
     sink.write_variable(ins_count);
     for (auto fk = ins_begin; fk < ins_final; ++fk)
-        if (!get_wire_input(sink, ptrs.ins, ptrs.sequence, ptrs.input, fk))
+        if (!get_wire_input(sink, ptrs.ins, ptrs.input, fk))
             return false;
 
     const auto outs_begin = tx.outs_fk;
@@ -244,7 +244,7 @@ bool CLASS::get_wire_tx(bytewriter& sink, const wire_accessors& ptrs,
     if (witnessed)
     {
         for (auto fk = ins_begin; fk < ins_final; ++fk)
-            if (!get_wire_witness(sink, ptrs.sequence, ptrs.input, fk))
+            if (!get_wire_witness(sink, ptrs.input, fk))
                 return false;
     }
 
