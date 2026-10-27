@@ -596,8 +596,8 @@ code CLASS::compute_silents(const stopper& cancel, bool& use_gpu,
 
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = store_.scan.guard();
-    const auto prefix_ptr = bank_prefix.get_memory();
     const auto bank_guard = bank_table.guard();
+    const auto prefix_ptr = bank_prefix.get_memory();
 
     const auto scan_prefix_ptr = store_.scan_prefix.get_memory();
     const auto prefixes = pointer_cast<prefix_t>(prefix_ptr.data());

@@ -48,12 +48,13 @@ bool CLASS::is_witness_match(const tx_link& link,
     // Point links are contiguous (computed).
     auto fk = record.point_fk;
     table::input::match_stack match{};
+    const auto guard = store_.ins.get_memory();
     const auto ptr = store_.input.get_memory();
     for (const auto& in: *tx.inputs_ptr())
     {
         table::ins_sequence::get_input ins{};
         match.expected = &in->witness().stack();
-        if (!store_.ins.sequence.get(fk++, ins) ||
+        if (!store_.ins.sequence.get_raw(fk++, ins) ||
             !store_.input.raw(ptr, ins.input_fk, match) || !match.match)
             return false;
     }
@@ -80,11 +81,12 @@ bool CLASS::is_witness_match(const tx_link& link,
     // Point links are contiguous (computed).
     const auto ins_begin = record.point_fk;
     const auto ins_final = ins_begin + record.ins_count;
+    const auto guard = store_.ins.get_memory();
     const auto ptr = store_.input.get_memory();
     for (auto fk = ins_begin; fk < ins_final; ++fk)
     {
         table::ins_sequence::get_input ins{};
-        if (!store_.ins.sequence.get(fk, ins) ||
+        if (!store_.ins.sequence.get_raw(fk, ins) ||
             !store_.input.raw(ptr, ins.input_fk, match) || !match.match)
             return false;
     }
@@ -118,8 +120,8 @@ TEMPLATE
 bool CLASS::get_wire_input(bytewriter& sink,
     const ins_link& link) const NOEXCEPT
 {
-    return get_wire_input(sink, store_.ins.get_memory(),
-        store_.input.get_memory(), link);
+    const auto ins = store_.ins.get_memory();
+    return get_wire_input(sink, ins, store_.input.get_memory(), link);
 }
 
 TEMPLATE
@@ -151,8 +153,8 @@ CLASS::wire_accessors CLASS::get_wire_accessors() const NOEXCEPT
     return
     {
         store_.tx.get_memory(),
-        store_.outs.puts.get_memory(),
         store_.ins.get_memory(),
+        store_.outs.puts.get_memory(),
         store_.input.get_memory(),
         store_.output.get_memory()
     };

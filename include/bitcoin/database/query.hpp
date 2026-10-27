@@ -1335,8 +1335,8 @@ protected:
     struct wire_accessors
     {
         memory tx;
-        memory puts;
         memory ins;
+        memory puts;
         memory input;
         memory output;
     };
