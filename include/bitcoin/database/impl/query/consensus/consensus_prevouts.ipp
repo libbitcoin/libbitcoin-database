@@ -155,12 +155,13 @@ bool CLASS::get_block_prevouts(data_chunk& prevouts, prevout_spends& spends,
             // Any instance of the parent hash yields the same output.
             const auto it = internal.find(point.hash());
             const auto found = (it != internal.end());
-            const auto parent = found ? it->second : to_tx(point.hash());
+            table::transaction::get_output parent_tx{ {}, point.index() };
+            const auto parent = found ? it->second :
+                store_.tx.find_link(point.hash(), parent_tx);
             if (parent.is_terminal())
                 return false;
 
-            table::transaction::get_output parent_tx{ {}, point.index() };
-            if (!store_.tx.get(parent, parent_tx) ||
+            if ((found && !store_.tx.get(parent, parent_tx)) ||
                 parent_tx.outs_fk == table::transaction::outs::terminal)
                 return false;
 
