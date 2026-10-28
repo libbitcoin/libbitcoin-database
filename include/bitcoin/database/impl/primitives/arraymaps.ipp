@@ -180,6 +180,16 @@ memory CLASS::get_memory() const NOEXCEPT
     return body_.template get<Column>();
 }
 
+TEMPLATE
+template <size_t Column>
+memory::iterator CLASS::get_raw() const NOEXCEPT
+{
+    if (is_zero(count().value))
+        return {};
+
+    return body_.template get_raw<Column>(Link{ 0 });
+}
+
 // static
 TEMPLATE
 template <size_t Column, typename Element>

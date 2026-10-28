@@ -37,10 +37,7 @@ bool CLASS::verify_ecdsa_signatures(const stopper& cancel, bool& use_gpu,
     header_links& links, bool bank) NOEXCEPT
 {
     auto& bank_table = store_.ecdsa_bank(bank);
-    const auto correlate_ptr = bank_table.correlate.get_memory();
-    const auto digest_ptr = bank_table.digest.get_memory();
-    const auto compressed_ptr = bank_table.compressed.get_memory();
-    const auto signature_ptr = bank_table.signature.get_memory();
+    const auto guard = bank_table.guard();
 
     using correlate_t = const system::ecdsa::batch::correlate_t;
     using digest_t = const table::ecdsa_digest::span;
@@ -48,10 +45,12 @@ bool CLASS::verify_ecdsa_signatures(const stopper& cancel, bool& use_gpu,
     using signature_t = const table::ecdsa_signature::span;
 
     using namespace system;
-    const auto correlate = pointer_cast<correlate_t>(correlate_ptr.data());
-    const auto digest = pointer_cast<digest_t>(digest_ptr.data());
-    const auto compressed = pointer_cast<compressed_t>(compressed_ptr.data());
-    const auto signature = pointer_cast<signature_t>(signature_ptr.data());
+    const auto correlate = pointer_cast<correlate_t>(guard.data());
+    const auto digest = pointer_cast<digest_t>(bank_table.digest.get_raw());
+    const auto compressed = pointer_cast<compressed_t>(
+        bank_table.compressed.get_raw());
+    const auto signature = pointer_cast<signature_t>(
+        bank_table.signature.get_raw());
 
     // Shortest column.
     const auto count = bank_table.count();

@@ -1335,21 +1335,19 @@ protected:
     struct wire_accessors
     {
         memory tx;
-        memory puts;
         memory ins;
-        memory sequence;
+        memory puts;
         memory input;
         memory output;
     };
 
     wire_accessors get_wire_accessors() const NOEXCEPT;
     bool get_wire_input(bytewriter& sink, const memory& ins,
-        const memory& sequence, const memory& input,
-        const ins_link& link) const NOEXCEPT;
+        const memory& input, const ins_link& link) const NOEXCEPT;
     bool get_wire_output(bytewriter& sink, const memory& output,
         const output_link& link) const NOEXCEPT;
-    bool get_wire_witness(bytewriter& sink, const memory& sequence,
-        const memory& input, const ins_link& link) const NOEXCEPT;
+    bool get_wire_witness(bytewriter& sink, const memory& input,
+        const ins_link& link) const NOEXCEPT;
     bool get_wire_tx(bytewriter& sink, const wire_accessors& ptrs,
         const tx_link& link, bool witness) const NOEXCEPT;
 

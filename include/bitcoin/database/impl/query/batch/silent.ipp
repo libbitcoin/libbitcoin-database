@@ -40,9 +40,7 @@ bool CLASS::scan_silent(const stopper& cancel,
     const system::scan::batch::receiver& keys, size_t first, size_t last,
     const silent_handler& callback) NOEXCEPT
 {
-    const auto correlate_ptr = store_.scan.correlate.get_memory();
-    const auto point_ptr = store_.scan.point.get_memory();
-    const auto outputs_ptr = store_.scan.outputs.get_memory();
+    const auto guard = store_.scan.guard();
     const auto prefix_ptr = store_.scan_prefix.get_memory();
 
     using correlate_t = const table::scan_correlate::span;
@@ -51,9 +49,10 @@ bool CLASS::scan_silent(const stopper& cancel,
     using prefix_t = const system::scan::batch::prefix;
 
     using namespace system;
-    const auto correlate = pointer_cast<correlate_t>(correlate_ptr.data());
-    const auto point = pointer_cast<point_t>(point_ptr.data());
-    const auto outputs = pointer_cast<outputs_t>(outputs_ptr.data());
+    const auto correlate = pointer_cast<correlate_t>(guard.data());
+    const auto point = pointer_cast<point_t>(store_.scan.point.get_raw());
+    const auto outputs = pointer_cast<outputs_t>(
+        store_.scan.outputs.get_raw());
     const auto prefix = pointer_cast<prefix_t>(prefix_ptr.data());
 
     BC_ASSERT(first <= last && last <= store_.scan.count());
@@ -129,9 +128,7 @@ bool CLASS::scan_silent(const stopper& cancel,
         return to_block(link).is_terminal();
     };
 
-    const auto correlate_ptr = store_.scan.correlate.get_memory();
-    const auto point_ptr = store_.scan.point.get_memory();
-    const auto outputs_ptr = store_.scan.outputs.get_memory();
+    const auto guard = store_.scan.guard();
     const auto prefix_ptr = store_.scan_prefix.get_memory();
 
     using correlate_t = table::scan_correlate::span;
@@ -139,10 +136,11 @@ bool CLASS::scan_silent(const stopper& cancel,
     using outputs_t = system::scan::batch::outputs_t;
     using prefix_t = const system::scan::batch::prefix;
 
-    const auto correlate = pointer_cast<const correlate_t>(
-        correlate_ptr.data());
-    const auto point = pointer_cast<const point_t>(point_ptr.data());
-    const auto outputs = pointer_cast<const outputs_t>(outputs_ptr.data());
+    const auto correlate = pointer_cast<const correlate_t>(guard.data());
+    const auto point = pointer_cast<const point_t>(
+        store_.scan.point.get_raw());
+    const auto outputs = pointer_cast<const outputs_t>(
+        store_.scan.outputs.get_raw());
     const auto prefix = pointer_cast<prefix_t>(prefix_ptr.data());
 
     BC_ASSERT(first <= last && last <= store_.scan.count());
@@ -598,25 +596,22 @@ code CLASS::compute_silents(const stopper& cancel, bool& use_gpu,
 
     // Guard against remap (required for nomaps::put(fk)).
     const auto guard = store_.scan.guard();
-    const auto point_ptr = store_.scan.point.get_memory();
+    const auto bank_guard = bank_table.guard();
     const auto prefix_ptr = bank_prefix.get_memory();
-    const auto sum_ptr = bank_table.sum.get_memory();
-    const auto hash_ptr = bank_table.hash.get_memory();
-    const auto outputs_ptr = bank_table.outputs.get_memory();
-    const auto correlate_ptr = bank_table.correlate.get_memory();
 
     const auto scan_prefix_ptr = store_.scan_prefix.get_memory();
     const auto prefixes = pointer_cast<prefix_t>(prefix_ptr.data());
     const auto words = pointer_cast<word_t>(guard.data());
-    const auto sums = pointer_cast<sum_t>(sum_ptr.data());
-    const auto hashes = pointer_cast<hash_t>(hash_ptr.data());
-    const auto outputs = pointer_cast<outputs_t>(outputs_ptr.data());
-    const auto correlates = pointer_cast<correlate_t>(correlate_ptr.data());
+    const auto sums = pointer_cast<sum_t>(bank_table.sum.get_raw());
+    const auto hashes = pointer_cast<hash_t>(bank_table.hash.get_raw());
+    const auto outputs = pointer_cast<outputs_t>(bank_table.outputs.get_raw());
+    const auto correlates = pointer_cast<correlate_t>(bank_guard.data());
 
     // Points are computed directly into the allocated scan rows.
     const std::span<ec_compressed> points
     {
-        std::next(pointer_cast<ec_compressed>(point_ptr.data()), fk.value), txs
+        std::next(pointer_cast<ec_compressed>(store_.scan.point.get_raw()),
+            fk.value), txs
     };
 
     using scan_int = scan_link::integer;
