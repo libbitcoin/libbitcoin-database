@@ -112,7 +112,7 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
 TEMPLATE
 code CLASS::validate_pooled(const header_link& link, const chain_context& ctx,
-    uint64_t subsidy_interval, uint64_t initial_subsidy) NOEXCEPT
+    size_t subsidy_interval, uint64_t initial_subsidy) NOEXCEPT
 {
     using prevout = table::prevout;
     if (!store_.pool.enabled())
@@ -231,7 +231,7 @@ code CLASS::check_pooled_block(pooled_block& block) const NOEXCEPT
 // Block check (context) and accept: weight, coinbase, hash limit, claim, sigops.
 TEMPLATE
 code CLASS::accept_pooled_block(const pooled_block& block,
-    const chain_context& ctx, uint64_t subsidy_interval,
+    const chain_context& ctx, size_t subsidy_interval,
     uint64_t initial_subsidy) const NOEXCEPT
 {
     using namespace system;
