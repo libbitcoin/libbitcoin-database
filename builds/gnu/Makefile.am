@@ -517,30 +517,3 @@ test_libbitcoin_database_test_SOURCES = \
 TESTS = test_runner.sh
 
 endif WITH_TESTS
-
-# Binaries.
-#==============================================================================
-# Target binary 'tools/initchain/initchain'
-#------------------------------------------------------------------------------
-if WITH_TOOLS
-
-noinst_PROGRAMS = tools/initchain/initchain
-
-tools_initchain_initchain_CPPFLAGS = \
-    ${src_libbitcoin_database_la_CPPFLAGS}
-
-tools_initchain_initchain_LDFLAGS = \
-    ${src_libbitcoin_database_la_LDFLAGS}
-
-tools_initchain_initchain_LDADD = \
-    ${src_libbitcoin_database_la_LIBS} \
-    ${src_libbitcoin_database_la_LIBADD}
-
-tools_initchain_initchain_SOURCES = \
-    ${srcdir}/../../tools/initchain/initchain.cpp
-
-target_tools = tools/initchain/initchain
-
-tools: ${target_tools}
-
-endif WITH_TOOLS

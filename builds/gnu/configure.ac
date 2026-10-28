@@ -155,15 +155,6 @@ AC_ARG_WITH([tests],
 AC_MSG_RESULT([$with_tests])
 AM_CONDITIONAL([WITH_TESTS], [test "x${with_tests}" != "xno"])
 
-AC_MSG_CHECKING([--with-tools option])
-AC_ARG_WITH([tools],
-    AS_HELP_STRING([--with-tools],
-        [Compile with tools. @<:@default=yes@:>@]),
-    [with_tools=$withval],
-    [with_tools=yes])
-AC_MSG_RESULT([$with_tools])
-AM_CONDITIONAL([WITH_TOOLS], [test "x${with_tools}" != "xno"])
-
 # Set flags.
 #==============================================================================
 AX_CHECK_COMPILE_FLAG([-Wall],
@@ -219,13 +210,11 @@ AX_CHECK_COMPILE_FLAG([-fstack-protector-all],
 AX_CHECK_COMPILE_FLAG([-Wno-ignored-attributes],
   [
     libbitcoin_database_test_CXXFLAGS="${libbitcoin_database_test_CXXFLAGS} -Wno-ignored-attributes";
-    libbitcoin_database_tools_CXXFLAGS="${libbitcoin_database_tools_CXXFLAGS} -Wno-ignored-attributes";
   ])
 
 AX_CHECK_COMPILE_FLAG([-Wno-long-long],
   [
     libbitcoin_database_test_CXXFLAGS="${libbitcoin_database_test_CXXFLAGS} -Wno-long-long";
-    libbitcoin_database_tools_CXXFLAGS="${libbitcoin_database_tools_CXXFLAGS} -Wno-long-long";
   ])
 
 AS_CASE([${CC}], [*gnu*],
@@ -233,7 +222,6 @@ AS_CASE([${CC}], [*gnu*],
     AX_CHECK_COMPILE_FLAG([-fno-var-tracking-assignments],
       [
         libbitcoin_database_test_CXXFLAGS="${libbitcoin_database_test_CXXFLAGS} -fno-var-tracking-assignments";
-        libbitcoin_database_tools_CXXFLAGS="${libbitcoin_database_tools_CXXFLAGS} -fno-var-tracking-assignments";
       ])
   ])
 

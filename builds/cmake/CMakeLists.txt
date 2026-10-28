@@ -80,7 +80,6 @@ endif()
 # Project options.
 #------------------------------------------------------------------------------
 option( with-tests "Compile with unit tests." ON )
-option( with-tools "Compile with tools." ON )
 
 #------------------------------------------------------------------------------
 # Dependencies.
@@ -310,56 +309,6 @@ if ( with-tests )
     PROPERTIES
       VERSION ${PROJECT_VERSION}
       SOVERSION ${PROJECT_VERSION_MAJOR}
-  )
-endif()
-
-#------------------------------------------------------------------------------
-# libbitcoin-database-tools executable
-#------------------------------------------------------------------------------
-if ( with-tools )
-  add_executable( libbitcoin-database-tools )
-
-  target_compile_features( libbitcoin-database-tools
-    PUBLIC
-      cxx_std_20
-  )
-
-  target_compile_options( libbitcoin-database-tools
-    PRIVATE
-      -Wall
-      -Wextra
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-field-initializers>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-braces>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-comment>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-copy>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-ignored-attributes>
-      $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-long-long>
-      $<$<CXX_COMPILER_ID:GNU>:-fno-var-tracking-assignments>
-      $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
-  )
-
-  file( GLOB_RECURSE libbitcoin_database_tools_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../tools/initchain/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../tools/initchain/*.cpp"
-  )
-
-  target_sources( libbitcoin-database-tools
-    PRIVATE
-      ${libbitcoin_database_tools_SOURCES}
-  )
-
-  target_link_libraries( libbitcoin-database-tools
-    PRIVATE
-      bitcoin::database
-  )
-
-  set_target_properties( libbitcoin-database-tools
-    PROPERTIES
-      VERSION ${PROJECT_VERSION}
-      SOVERSION ${PROJECT_VERSION_MAJOR}
-      OUTPUT_NAME initchain
   )
 endif()
 

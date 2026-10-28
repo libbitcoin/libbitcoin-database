@@ -149,7 +149,6 @@ if "!libbitcoin_database_TAG!" == "" (
     )
 
     set "REMAPPED_PARAMS=!REMAPPED_PARAMS! !libbitcoin-system_PARAMS!"
-    set "REMAPPED_PARAMS=!REMAPPED_PARAMS! !libbitcoin-system-examples_PARAMS!"
     set "REMAPPED_PARAMS=!REMAPPED_PARAMS! !libbitcoin-system-test_PARAMS!"
     set "REMAPPED_PARAMS=!REMAPPED_PARAMS! !libbitcoin-database_PARAMS!"
 
@@ -183,10 +182,6 @@ if "!libbitcoin_database_TAG!" == "" (
         exit /b %ERRORLEVEL%
     )
     call :build_msbuild "libbitcoin-database" "builds\msvc\%proj_version%" "libbitcoin-database" "!REMAPPED_PARAMS!"
-    if %ERRORLEVEL% neq 0 (
-        exit /b %ERRORLEVEL%
-    )
-    call :build_msbuild "libbitcoin-database" "builds\msvc\%proj_version%" "libbitcoin-database-tools" "!REMAPPED_PARAMS!"
     if %ERRORLEVEL% neq 0 (
         exit /b %ERRORLEVEL%
     )
