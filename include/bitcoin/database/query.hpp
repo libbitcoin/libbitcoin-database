@@ -689,7 +689,7 @@ public:
     /// the block, writing its prevouts. Unvalidated implies a tx is not
     /// sufficiently pooled (block requires full validation).
     code validate_pooled(const header_link& link, const chain_context& ctx,
-        uint64_t subsidy_interval, uint64_t initial_subsidy) NOEXCEPT;
+        size_t subsidy_interval, uint64_t initial_subsidy) NOEXCEPT;
 
     /// Pooled tx links by compact block short id (masked siphash of wtxid),
     /// terminal where not pooled or ambiguous.
@@ -1167,7 +1167,7 @@ protected:
         const context& ctx) const NOEXCEPT;
     code check_pooled_block(pooled_block& block) const NOEXCEPT;
     code accept_pooled_block(const pooled_block& block,
-        const chain_context& ctx, uint64_t subsidy_interval,
+        const chain_context& ctx, size_t subsidy_interval,
         uint64_t initial_subsidy) const NOEXCEPT;
 
     /// Called by get_compact_links.

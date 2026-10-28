@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__unconfirmed_double_spen
 
 using namespace system::chain;
 constexpr auto pooled_flags = flags::bip113_rule;
-constexpr uint64_t pooled_interval = 210'000;
+constexpr size_t pooled_interval = 210'000;
 constexpr uint64_t pooled_subsidy = 5'000'000'000;
 const database::context pooled_context{ pooled_flags, 8, 9 };
 const system::chain::context block_context{ pooled_flags, 0, 9, 8, 0, 0, 0 };
