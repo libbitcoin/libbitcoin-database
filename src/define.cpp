@@ -18,17 +18,28 @@
  */
 #include <bitcoin/database/define.hpp>
 
+// define.hpp is the common include for /database.
+// All non-database headers include define.hpp.
+// Database inclusions are chained as follows.
+
 // version        : <generated>
 // boost          : version <bitcoin/system>
 // error          : boost
 // define         : error
-// settings       : define
+
+// Other directory common includes are not internally chained.
+// Each header includes only its required common headers.
+
 // /locks         : define
 // /file          : define
-// /memory        : /file settings
+// /memory        : /file /locks
 // /primitives    : /memory
-// /tables        : /primitives
+// /tables        : /primitives                    [forward: settings]
 // /types         : /tables
-// /unspent       : /types
-// store          : /types settings /locks
+// /unspent       : /types                         [forward: query]
+// settings       : /types
 // query          : /unspent settings
+// store          : settings
+
+// When a symbol is unexplainably undefined, its defining include is probably
+// creating the circularity.
