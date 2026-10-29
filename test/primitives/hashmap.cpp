@@ -321,6 +321,42 @@ BOOST_AUTO_TEST_CASE(hashmap__record_put__multiple__expected)
     BOOST_REQUIRE(!instance.get_fault());
 }
 
+BOOST_AUTO_TEST_CASE(hashmap__find_link__multiple__expected)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    test::chunk_storage body_store{};
+    hashmap_<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr key1 key1_big{ 0x41 };
+    constexpr key1 key1_little{ 0x42 };
+    constexpr key1 key1_missing{ 0x43 };
+    BOOST_REQUIRE_EQUAL(instance.put_link(key1_big, big_record{ 0xa1b2c3d4_u32 }), 0u);
+    BOOST_REQUIRE_EQUAL(instance.put_link(key1_little, little_record{ 0xa1b2c3d4_u32 }), 1u);
+
+    little_record record{};
+    BOOST_REQUIRE_EQUAL(instance.find_link(key1_little, record), 1u);
+    BOOST_REQUIRE_EQUAL(record.value, 0xa1b2c3d4_u32);
+    BOOST_REQUIRE(instance.find_link(key1_missing, record).is_terminal());
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
+BOOST_AUTO_TEST_CASE(hashmap__find_link__unreadable__terminal)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    test::chunk_storage body_store{};
+    hashmap_<link5, key1, big_record::size> instance{ head_store, body_store, buckets };
+    BOOST_REQUIRE(instance.create());
+
+    constexpr key1 key{ 0x41 };
+    BOOST_REQUIRE_EQUAL(instance.put_link(key, big_record{ 0xa1b2c3d4_u32 }), 0u);
+
+    record_unwritable record{};
+    BOOST_REQUIRE(instance.find_link(key, record).is_terminal());
+    BOOST_REQUIRE(!instance.find(key, record));
+    BOOST_REQUIRE(!instance.get_fault());
+}
+
 class little_slab
 {
 public:

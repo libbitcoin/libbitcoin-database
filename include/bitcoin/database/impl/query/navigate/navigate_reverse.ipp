@@ -350,6 +350,17 @@ header_link CLASS::to_block(const tx_link& link) const NOEXCEPT
     return table::strong::header_fk(strong);
 }
 
+TEMPLATE
+header_link CLASS::to_block(const memory& strong,
+    const tx_link& link) const NOEXCEPT
+{
+    const auto value = store_.strong.at(strong, link);
+    if (!table::strong::positive(value))
+        return {};
+
+    return table::strong::header_fk(value);
+}
+
 // utilities
 // ----------------------------------------------------------------------------
 // protected (presumed to not be externally useful)

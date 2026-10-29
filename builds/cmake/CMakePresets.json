@@ -123,8 +123,7 @@
             "hidden": true,
             "targets": [
                 "libbitcoin-database",
-                "libbitcoin-database-test",
-                "libbitcoin-database-tools"
+                "libbitcoin-database-test"
             ]
         },
         {

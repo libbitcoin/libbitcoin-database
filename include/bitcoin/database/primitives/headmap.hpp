@@ -118,6 +118,12 @@ public:
         if_not_equal<Element::size, max_size_t> = true>
     bool set(size_t index, const Element& element) NOEXCEPT;
 
+    /// Set element at each index under one accessor, as set(index, element).
+    template <typename Element, if_equal<Element::size, Cell> = true,
+        if_not_equal<Element::size, max_size_t> = true>
+    bool set(const std::vector<typename Link::integer>& indexes,
+        const Element& element) NOEXCEPT;
+
     /// Slab.
     /// -----------------------------------------------------------------------
 
@@ -187,6 +193,10 @@ private:
     }
 
     Value load(memory::iterator raw) const NOEXCEPT;
+
+    template <typename Element>
+    bool exchange(memory::iterator raw, size_t position,
+        const Element& element) NOEXCEPT;
 
     // These are thread safe.
     storage& file_;

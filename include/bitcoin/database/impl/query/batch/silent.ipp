@@ -538,10 +538,9 @@ bool CLASS::get_prevouts_(data_chunk& prevouts, std::vector<bool>& selected,
         {
             // Any instance of the parent hash yields the same output.
             const auto point = get_point_key(fk);
-            const auto parent = to_tx(point.hash());
             table::transaction::get_output parent_tx{ {}, point.index() };
             table::outs::get_output outs{};
-            if (parent.is_terminal() || !store_.tx.get(parent, parent_tx) ||
+            if (store_.tx.find_link(point.hash(), parent_tx).is_terminal() ||
                 parent_tx.outs_fk == table::transaction::outs::terminal ||
                 !store_.outs.puts.get(parent_tx.outs_fk, outs) ||
                 !get_wire_output(sink, outs.out_fk))

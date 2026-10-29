@@ -124,6 +124,23 @@ header_link CLASS::find_strong(tx_link& out,
     return {};
 }
 
+// protected
+TEMPLATE
+header_link CLASS::find_strong(const memory& strong,
+    const tx_link& link) const NOEXCEPT
+{
+    // Shortcuircuit hash-based search by testing self.
+    if (const auto fk = to_block(strong, link); !fk.is_terminal())
+        return fk;
+
+    // Find the first strong tx of the set and return its block.
+    for (const auto& tx: to_duplicates(get_tx_key(link)))
+        if (const auto block = to_block(strong, tx); !block.is_terminal())
+            return block;
+
+    return {};
+}
+
 // set_strong (all tx_links associated to block)
 // ----------------------------------------------------------------------------
 
@@ -133,11 +150,7 @@ bool CLASS::set_strong(const header_link& link, const tx_links& fks,
     bool positive) NOEXCEPT
 {
     const table::strong::replace element{ {}, table::strong::merge(positive, link) };
-    for (const auto& fk: fks)
-        if (!store_.strong.set(fk, element))
-            return false;
-
-    return true;
+    return store_.strong.set(fks, element);
 }
 
 TEMPLATE

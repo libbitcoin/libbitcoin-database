@@ -17,7 +17,6 @@ on:
       - 'include/**'
       - 'src/**'
       - 'test/**'
-      - 'tools/initchain/**'
   push:
     branches:
       - '**'
@@ -30,7 +29,6 @@ on:
       - 'include/**'
       - 'src/**'
       - 'test/**'
-      - 'tools/initchain/**'
   workflow_dispatch:
 
 concurrency:
