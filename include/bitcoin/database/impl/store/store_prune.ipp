@@ -136,8 +136,9 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
         handler(event_t::prune_table, table_t::pool_body);
         handler(event_t::prune_table, table_t::spends_body);
         handler(event_t::prune_table, table_t::wtxid_body);
-        return pool_body_.truncate(0) && spends_body_.truncate(0) &&
-            wtxid_body_.truncate(0);
+        return pool_body_.truncate(0)
+            && spends_body_.truncate(0)
+            && wtxid_body_.truncate(0);
     };
 
     const auto restart = [&]() NOEXCEPT -> code
@@ -161,21 +162,45 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
         return restart();
     }
 
-    Storage<one> pool_head{ head(folder, schema::caches::pool),
-        head_settings(configuration_.pool), random };
-    table::pool_storage<Storage> pool_body{ body(folder, schema::caches::pool),
-        configuration_.pool, sequential, staged };
-    Storage<one> spends_head{ head(folder, schema::caches::spends),
-        head_settings(configuration_.spends), sequential };
-    Storage<one> spends_body{ body(folder, schema::caches::spends),
-        configuration_.spends, sequential, staged };
+    Storage<one> pool_head
+    {
+        head(folder, schema::caches::pool),
+        head_settings(configuration_.pool),
+        random
+    };
 
-    using namespace system;
+    table::pool_storage<Storage> pool_body
+    {
+        body(folder, schema::caches::pool),
+        configuration_.pool,
+        sequential,
+        staged
+    };
+
+    Storage<one> spends_head
+    {
+        head(folder, schema::caches::spends),
+        head_settings(configuration_.spends),
+        sequential
+    };
+
+    Storage<one> spends_body
+    {
+        body(folder, schema::caches::spends),
+        configuration_.spends,
+        sequential,
+        staged
+    };
+
     using bucket = table::pool::link::integer;
-    table::pool temp_pool{ pool_head, pool_body,
-        possible_narrow_cast<bucket>(pool.buckets()),
-        configuration_.pool.expected };
-    table::spends temp_spends{ spends_head, spends_body };
+    table::spends empty_spends{ spends_head, spends_body };
+    table::pool empty_pool
+    {
+        pool_head,
+        pool_body,
+        system::possible_narrow_cast<bucket>(pool.buckets()),
+        configuration_.pool.expected_()
+    };
 
     code ec{ error::success };
     const auto create = [&](auto& storage, table_t table) NOEXCEPT
@@ -222,14 +247,15 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
     {
         handler(event_t::create_table, table_t::pool_table);
         handler(event_t::create_table, table_t::spends_table);
-        if (!temp_pool.set_filter_k(pool.filter_k()) ||
-            !temp_pool.create() || !temp_spends.create())
+        if (!empty_pool.set_filter_k(pool.filter_k()) ||
+            !empty_pool.create() ||
+            !empty_spends.create())
             ec = error::create_table;
     }
 
     const auto retained = [&](bool& out, const tx_link& link) NOEXCEPT
     {
-        return is_retained(out, link, temp_pool);
+        return is_retained(out, link, empty_pool);
     };
 
     const auto unindexed = [](const table::pool::link&,
@@ -251,15 +277,15 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
     };
 
     // A failure before the reset leaves the live tables unchanged.
-    if (!ec && !copy_pool(temp_pool, temp_spends, pool, spends, retained,
-        unindexed))
+    if (!ec &&
+        !copy_pool(empty_pool, empty_spends, pool, spends, retained, unindexed))
         ec = error::prune_table;
 
     if (!ec)
         ec = reset();
 
-    if (!ec && (!empty() || !copy_pool(pool, spends, temp_pool, temp_spends,
-        all, indexed)))
+    if (!ec && (!empty() ||
+        !copy_pool(pool, spends, empty_pool, empty_spends, all, indexed)))
         ec = error::prune_table;
 
     const auto close = [&](auto& storage, table_t table) NOEXCEPT

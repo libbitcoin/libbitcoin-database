@@ -208,7 +208,7 @@ void CLASS::scan_run_() NOEXCEPT
         return;
 
     // Idempotent across instances (process-wide, same values each call).
-    const auto memory = system_memory();
+    const auto memory = limit<size_t>(system_memory());
     /* int */ ::working_floor((memory / 4) * 3, memory);
 
     size_t touched{};

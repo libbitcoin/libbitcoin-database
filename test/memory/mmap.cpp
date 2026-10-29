@@ -839,7 +839,7 @@ BOOST_AUTO_TEST_CASE(mmap__get__size__expected)
 
     constexpr auto expected = 42u;
     auto ptr = instance.get(instance.allocate(expected));
-    BOOST_CHECK_EQUAL(ptr.size(), expected);
+    BOOST_CHECK_EQUAL(ptr.size(), system::to_signed(expected));
     BOOST_CHECK_EQUAL(*ptr.begin(), 0x00u);
     BOOST_REQUIRE(instance.unload());
 
@@ -861,7 +861,7 @@ BOOST_AUTO_TEST_CASE(mmap__get_capacity__size__expected)
 
     constexpr auto expected = 42u;
     auto ptr = instance.get_capacity(instance.allocate(expected));
-    BOOST_REQUIRE_EQUAL(ptr.size(), expected);
+    BOOST_REQUIRE_EQUAL(ptr.size(), system::to_signed(expected));
     BOOST_REQUIRE_EQUAL(*ptr.begin(), 0x00u);
     BOOST_REQUIRE(instance.unload());
 

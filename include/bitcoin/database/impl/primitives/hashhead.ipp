@@ -49,7 +49,7 @@ inline size_t CLASS::size() const NOEXCEPT
 TEMPLATE
 inline size_t CLASS::buckets() const NOEXCEPT
 {
-    return buckets_;
+    return system::possible_narrow_cast<size_t>(buckets_.value);
 }
 
 TEMPLATE

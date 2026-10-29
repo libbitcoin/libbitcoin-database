@@ -167,7 +167,7 @@ struct prevout
         inline bool from_data(reader& source) NOEXCEPT
         {
             auto& cons = conflicts;
-            cons.resize(source.read_variable());
+            cons.resize(source.read_size());
             std::ranges::for_each(cons, [&](auto& value) NOEXCEPT
             {
                 value = source.read_little_endian<tx::integer, tx::size>();

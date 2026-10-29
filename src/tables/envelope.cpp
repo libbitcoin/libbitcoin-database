@@ -227,18 +227,18 @@ bool envelope::from_data(reader& source) NOEXCEPT
     bip9_version_bit2 = source.read_little_endian<uint32_t>();
     bip9_version_base = source.read_little_endian<uint32_t>();
     bip16_activation_time = source.read_little_endian<uint32_t>();
-    bip34_activation_threshold = source.read_variable();
-    bip34_enforcement_threshold = source.read_variable();
-    bip34_activation_sample = source.read_variable();
-    bip90_bip34_height = source.read_variable();
-    bip90_bip65_height = source.read_variable();
-    bip90_bip66_height = source.read_variable();
-    bip30_reactivate_height = source.read_variable();
+    bip34_activation_threshold = source.read_size();
+    bip34_enforcement_threshold = source.read_size();
+    bip34_activation_sample = source.read_size();
+    bip90_bip34_height = source.read_size();
+    bip90_bip65_height = source.read_size();
+    bip90_bip66_height = source.read_size();
+    bip30_reactivate_height = source.read_size();
 
     const auto read_checkpoint = [&]() NOEXCEPT
     {
         const auto hash = source.read_hash();
-        return chain::checkpoint{ hash, source.read_variable() };
+        return chain::checkpoint{ hash, source.read_size() };
     };
 
     bip30_deactivate_checkpoint = read_checkpoint();

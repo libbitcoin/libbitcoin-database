@@ -44,30 +44,30 @@ BOOST_AUTO_TEST_CASE(keys__hash__points__expected)
 {
     const chain::point instance0{ hash0, 0x01234567_u32 };
     const auto hash0 = keys::hash(instance0);
-    BOOST_CHECK_EQUAL(hash0, static_cast<size_t>(0x4db66b1ccc7e7fbb_u64));
+    BOOST_CHECK_EQUAL(hash0, 0x4db66b1ccc7e7fbb_u64);
 
     const chain::point instance1{ hash1, 0x12345678_u32 };
     const auto hash1 = keys::hash(instance1);
-    BOOST_CHECK_EQUAL(hash1, static_cast<size_t>(0xfb3b0de4ffca48e6_u64));
+    BOOST_CHECK_EQUAL(hash1, 0xfb3b0de4ffca48e6_u64);
 
     const chain::point instance2{ hash2, 0x23456789_u32 };
     const auto hash2 = keys::hash(instance2);
-    BOOST_CHECK_EQUAL(hash2, static_cast<size_t>(0x19938ff97badf2d2_u64));
+    BOOST_CHECK_EQUAL(hash2, 0x19938ff97badf2d2_u64);
 }
 
 BOOST_AUTO_TEST_CASE(keys__thumb__points__expected)
 {
     const chain::point instance0{ hash0, 0x01234567_u32 };
     const auto hash0 = keys::thumb(instance0);
-    BOOST_CHECK_EQUAL(hash0, static_cast<size_t>(0x19342973a11237b1_u64));
+    BOOST_CHECK_EQUAL(hash0, 0x19342973a11237b1_u64);
 
     const chain::point instance1{ hash1, 0x12345678_u32 };
     const auto hash1 = keys::thumb(instance1);
-    BOOST_CHECK_EQUAL(hash1, static_cast<size_t>(0x928d5349dee8c4af_u64));
+    BOOST_CHECK_EQUAL(hash1, 0x928d5349dee8c4af_u64);
 
     const chain::point instance2{ hash2, 0x23456789_u32 };
     const auto hash2 = keys::thumb(instance2);
-    BOOST_CHECK_EQUAL(hash2, static_cast<size_t>(0xea7ab71c076d99ea_u64));
+    BOOST_CHECK_EQUAL(hash2, 0xea7ab71c076d99ea_u64);
 }
 
 BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)

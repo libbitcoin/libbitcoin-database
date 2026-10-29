@@ -224,7 +224,8 @@ Link CLASS::allocate(const Link& bytes) NOEXCEPT
     if (bytes.is_terminal())
         return Link::terminal;
 
-    const auto link = file_.allocate(bytes.value);
+    const auto size = system::possible_narrow_cast<size_t>(bytes.value);
+    const auto link = file_.allocate(size);
     if (link == storage::eof)
         return Link::terminal;
 
@@ -250,7 +251,8 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
     if (position >= size)
         return false;
 
-    const auto offset = ptr.offset(link.value);
+    const auto start = possible_narrow_cast<size_t>(link.value);
+    const auto offset = ptr.offset(start);
     if (is_null(offset))
         return false;
 
@@ -270,18 +272,19 @@ bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
     if (link.is_terminal())
         return false;
 
-    const auto ptr = file_.get(link.value);
+    const auto start = possible_narrow_cast<size_t>(link.value);
+    const auto ptr = file_.get(start);
     const auto bytes = possible_narrow_cast<size_t>(element.count().value);
     const auto size = possible_narrow_sign_cast<ptrdiff_t>(bytes);
     if (!ptr || (ptr.size() < size))
         return false;
 
-    file_.prepare(link.value, bytes);
+    file_.prepare(start, bytes);
 
     iostream stream{ ptr.data(), size };
     flipper sink{ stream };
     const auto written = element.to_data(sink);
-    file_.mark(link.value, bytes);
+    file_.mark(start, bytes);
     return written;
 }
 

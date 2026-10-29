@@ -65,6 +65,12 @@ struct BCD_API settings
     {
         /// Expected element count, derives filter k at create (zero=legacy).
         uint64_t expected{ 0 };
+
+        /// Clamp fixed width to size_t.
+        size_t expected_() const NOEXCEPT
+        {
+            return system::limit<size_t>(expected);
+        }
     };
 
     /// Properties.

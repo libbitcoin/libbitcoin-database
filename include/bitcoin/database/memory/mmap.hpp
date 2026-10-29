@@ -217,10 +217,11 @@ protected:
         return bytes / widths.at(backed());
     }
 
-    static constexpr size_t to_rows(size_t bytes) NOEXCEPT
+    static constexpr size_t to_rows(uint64_t bytes) NOEXCEPT
     {
-        // Convert constructor's byte minimum to row denomination.
-        return system::ceilinged_divide(bytes, stride);
+        using namespace system;
+        const auto value = ceilinged_divide(std::max(1_u64, bytes), stride);
+        return possible_narrow_cast<size_t>(value);
     }
 
     static size_t to_chunk() NOEXCEPT;

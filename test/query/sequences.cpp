@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_hashes2__three__ascending_or
     BOOST_REQUIRE(query.push_confirmed(query.to_header(test::block3_hash), false));
 
     const auto hashes = query.get_confirmed_hashes(0, 3);
-    BOOST_REQUIRE_EQUAL(hashes.size(), 3);
+    BOOST_REQUIRE_EQUAL(hashes.size(), 3u);
     BOOST_REQUIRE_EQUAL(hashes[0], test::block0_hash);
     BOOST_REQUIRE_EQUAL(hashes[1], test::block1_hash);
     BOOST_REQUIRE_EQUAL(hashes[2], test::block2_hash);
