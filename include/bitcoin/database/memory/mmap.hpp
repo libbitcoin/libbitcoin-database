@@ -221,7 +221,7 @@ protected:
     {
         using namespace system;
         const auto value = ceilinged_divide(std::max(1_u64, bytes), stride);
-        return possible_narrow_cast<size_t>(value);
+        return limit<size_t>(value);
     }
 
     static size_t to_chunk() NOEXCEPT;
