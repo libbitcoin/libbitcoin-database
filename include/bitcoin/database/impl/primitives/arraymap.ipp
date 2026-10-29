@@ -190,8 +190,8 @@ TEMPLATE
 ELEMENT_CONSTRAINT
 bool CLASS::put(size_t key, const Element& element) NOEXCEPT
 {
-    // Avoid setting at/above terminal sentinel into a bucket position.
-    if (key >= Link::terminal)
+    // Avoid setting the terminal sentinel into a bucket position.
+    if (key == Link::terminal)
         return false;
 
     const auto link = body_.allocate(element.count());

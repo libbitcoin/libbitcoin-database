@@ -157,8 +157,8 @@ Link CLASS::at(size_t key) const NOEXCEPT
 TEMPLATE
 bool CLASS::push(const Link& link, size_t key) NOEXCEPT
 {
-    // Avoid setting at/above terminal sentinel into a bucket position.
-    if (key >= Link::terminal)
+    // Avoid setting the terminal sentinel into a bucket position.
+    if (key == Link::terminal)
         return false;
 
     return head_.push(link, head_.index(key));

@@ -380,8 +380,8 @@ bool CLASS::set(size_t index, const Element& element) NOEXCEPT
     static_assert(!is_slab);
     static_assert(aligned, "set requires an aligned cell");
 
-    // Avoid setting at/above terminal sentinel into a bucket position.
-    if (index >= Link::terminal)
+    // Avoid setting the terminal sentinel into a bucket position.
+    if (index == Link::terminal)
         return false;
 
     // Allocate as necessary (allocations are filled).
@@ -406,9 +406,9 @@ bool CLASS::set(const std::vector<typename Link::integer>& indexes,
     if (indexes.empty())
         return true;
 
-    // Avoid setting at/above terminal sentinel into a bucket position.
+    // Avoid setting the terminal sentinel into a bucket position.
     const auto last = std::ranges::max(indexes);
-    if (last >= Link::terminal)
+    if (last == Link::terminal)
         return false;
 
     // Allocate as necessary (allocations are filled), guard across the set.
