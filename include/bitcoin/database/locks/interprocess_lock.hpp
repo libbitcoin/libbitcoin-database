@@ -47,7 +47,13 @@ public:
     bool try_unlock() NOEXCEPT;
 
 private:
-    file_handle_t handle_;
+#if defined(HAVE_WINDOWS)
+    using handle_t = void*;
+#else
+    using handle_t = int;
+#endif
+
+    handle_t handle_;
 };
 
 } // namespace database
