@@ -495,8 +495,10 @@ bool solid_state(const std::filesystem::path& path) NOEXCEPT
 
     DWORD size{};
     DEVICE_SEEK_PENALTY_DESCRIPTOR penalty{};
-    STORAGE_PROPERTY_QUERY query{ StorageDeviceSeekPenaltyProperty,
-        PropertyStandardQuery, {} };
+    STORAGE_PROPERTY_QUERY query
+    {
+        StorageDeviceSeekPenaltyProperty, PropertyStandardQuery, {}
+    };
 
     const auto result = ::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY,
         &query, sizeof(query), &penalty, sizeof(penalty), &size, nullptr);
@@ -529,8 +531,10 @@ bool internal_storage(const std::filesystem::path& path) NOEXCEPT
 
     DWORD size{};
     std_array<uint8_t, 512> buffer{};
-    STORAGE_PROPERTY_QUERY query{ StorageDeviceProperty, PropertyStandardQuery,
-        {} };
+    STORAGE_PROPERTY_QUERY query
+    {
+        StorageDeviceProperty, PropertyStandardQuery, {}
+    };
 
     const auto result = ::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY,
         &query, sizeof(query), buffer.data(), possible_narrow_cast<DWORD>(
