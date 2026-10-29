@@ -428,6 +428,50 @@ BOOST_AUTO_TEST_CASE(query_initialize__associations__erase__removed_from_both_in
     BOOST_REQUIRE(map.insert(item).second);
 }
 
+BOOST_AUTO_TEST_CASE(query_initialize__associations__extract__lowest_moved)
+{
+    associations map{};
+    BOOST_REQUIRE(map.insert(make_association(3, 0x03)).second);
+    BOOST_REQUIRE(map.insert(make_association(1, 0x01)).second);
+    BOOST_REQUIRE(map.insert(make_association(2, 0x02)).second);
+
+    const auto lowest = map.extract(2);
+    BOOST_REQUIRE_EQUAL(lowest.size(), 2u);
+    BOOST_REQUIRE(lowest.exists(1));
+    BOOST_REQUIRE(lowest.exists(2));
+    BOOST_REQUIRE_EQUAL(map.size(), 1u);
+    BOOST_REQUIRE(map.exists(3));
+    BOOST_REQUIRE(!map.exists(make_association(1, 0x01).hash));
+}
+
+BOOST_AUTO_TEST_CASE(query_initialize__associations__merge__conflicts_retained)
+{
+    associations map{};
+    associations other{};
+    BOOST_REQUIRE(map.insert(make_association(1, 0x01)).second);
+    BOOST_REQUIRE(other.insert(make_association(1, 0x02)).second);
+    BOOST_REQUIRE(other.insert(make_association(2, 0x03)).second);
+
+    map.merge(other);
+    BOOST_REQUIRE_EQUAL(map.size(), 2u);
+    BOOST_REQUIRE(map.exists(2));
+    BOOST_REQUIRE_EQUAL(other.size(), 1u);
+    BOOST_REQUIRE(other.exists(1));
+}
+
+BOOST_AUTO_TEST_CASE(query_initialize__associations__copy__indexes_preserved)
+{
+    associations map{};
+    const auto item = make_association(1, 0x01);
+    BOOST_REQUIRE(map.insert(item).second);
+
+    const auto copy = map;
+    map.clear();
+    BOOST_REQUIRE(copy.exists(item.hash));
+    BOOST_REQUIRE(copy.find(item.hash) != copy.end());
+    BOOST_REQUIRE_EQUAL(copy.find(item.hash)->context.height, 1u);
+}
+
 // get_unassociated_count_above/get_unassociated_count
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_count_above__gapped_candidate__expected)

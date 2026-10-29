@@ -31,26 +31,6 @@ struct association
     schema::height::link::integer link;
     system::hash_digest hash;
     system::chain::context context;
-
-    struct key{};
-    struct pos{};
-
-    struct name_extractor
-    {
-        using result_type = size_t;
-
-        inline const result_type& operator()(
-            const association& item) const NOEXCEPT
-        {
-            return item.context.height;
-        }
-
-        inline result_type& operator()(association* item) const NOEXCEPT
-        {
-            BC_ASSERT_MSG(item, "null pointer");
-            return item->context.height;
-        }
-    };
 };
 
 } // namespace database
