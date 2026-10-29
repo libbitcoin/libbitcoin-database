@@ -91,8 +91,8 @@ BCD_API bool size(size_t& out, const path& filename) NOEXCEPT;
 BCD_API code size_ex(size_t& out, const path& filename) NOEXCEPT;
 
 /// Volume space from path.
-BCD_API bool space(size_t& out, const path& filename) NOEXCEPT;
-BCD_API code space_ex(size_t& out, const path& filename) NOEXCEPT;
+BCD_API bool space(uint64_t& out, const path& filename) NOEXCEPT;
+BCD_API code space_ex(uint64_t& out, const path& filename) NOEXCEPT;
 
 } // namespace file
 } // namespace database

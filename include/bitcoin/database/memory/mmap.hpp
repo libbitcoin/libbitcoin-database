@@ -424,7 +424,8 @@ private:
     const paths filenames_;
     const size_t minimum_;
     const size_t expansion_;
-    const size_t headroom_;
+    const size_t commit_headroom_;
+    const uint64_t disk_headroom_;
     const advice access_;
     const bool zeroed_;
     const bool random_;

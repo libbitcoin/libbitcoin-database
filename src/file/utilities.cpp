@@ -319,22 +319,19 @@ code size_ex(size_t& out, const path& filename) NOEXCEPT
     return ec;
 }
 
-bool space(size_t& out, const path& filename) NOEXCEPT
+bool space(uint64_t& out, const path& filename) NOEXCEPT
 {
     return !space_ex(out, filename);
 }
 
-code space_ex(size_t& out, const path& filename) NOEXCEPT
+code space_ex(uint64_t& out, const path& filename) NOEXCEPT
 {
     code ec{ errorno_t::no_error };
     const auto space_ = space( system::extended_path(filename), ec);
     if (ec)
         return ec;
 
-    if (is_limited<size_t>(space_.available))
-        return errorno_t::value_too_large;
-
-    out = possible_narrow_cast<size_t>(space_.available);
+    out = space_.available;
     return ec;
 }
 
