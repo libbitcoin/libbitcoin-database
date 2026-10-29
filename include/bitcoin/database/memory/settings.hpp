@@ -70,6 +70,12 @@ struct storage_settings
     {
         return system::limit<size_t>(size);
     }
+
+    /// Clamp fixed width to size_t.
+    size_t headroom_() const NOEXCEPT
+    {
+        return system::limit<size_t>(headroom);
+    }
 };
 
 } // namespace database
