@@ -109,7 +109,7 @@ INLINE uint64_t hash(const Key& key) NOEXCEPT
 
         uint64_t hash{};
         std::copy_n(key.cbegin(), bytes, byte_cast(hash).begin());
-        return hash;
+        return native_from_little_end(hash);
     }
 }
 
@@ -143,7 +143,7 @@ INLINE uint64_t thumb(const Key& key) NOEXCEPT
         uint64_t hash{};
         const auto start = std::next(key.cbegin(), offset);
         std::copy_n(start, bytes, byte_cast(hash).begin());
-        return hash;
+        return native_from_little_end(hash);
     }
 }
 

@@ -164,7 +164,8 @@ Link CLASS::at(size_t key) const NOEXCEPT
         const auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
 
         // Aligned values must be masked to match terminal.
-        return bit_and(Link::terminal, head.load(std::memory_order_relaxed));
+        return bit_and(Link::terminal,
+            native_from_little_end(head.load(std::memory_order_relaxed)));
     }
     else
     {
@@ -193,7 +194,8 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
         // Writes full padded word (0x00 fill).
         const auto raw = ptr.data();
         auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
-        head.store(link, std::memory_order_relaxed);
+        head.store(native_to_little_end<CLASS::link>(link),
+            std::memory_order_relaxed);
     }
     else
     {
