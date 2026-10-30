@@ -55,6 +55,7 @@ struct BCD_API envelope
     system::config::version schema{};
 
     /// System settings.
+    system::chain::selection network{};
     system::forks forks{};
     uint64_t initial_subsidy_bitcoin{};
     uint32_t subsidy_interval_blocks{};

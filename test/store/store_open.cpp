@@ -108,42 +108,44 @@ BOOST_AUTO_TEST_CASE(store__open__schema_mismatch__schema_version)
     BOOST_REQUIRE_EQUAL(instance.open(test::events), error::schema_version);
 }
 
-// read_schema
+// read_envelope
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__read_schema__uncreated__failure)
+BOOST_AUTO_TEST_CASE(store__read_envelope__uncreated__failure)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
-    system::config::version schema{};
+    database::envelope stored{};
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(instance.read_schema(schema));
+    BOOST_REQUIRE(instance.read_envelope(stored));
 }
 
-BOOST_AUTO_TEST_CASE(store__read_schema__created__compiled)
+BOOST_AUTO_TEST_CASE(store__read_envelope__created__stored)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
-    system::config::version schema{};
+    configuration.envelope.network = system::chain::selection::testnet4;
+    database::envelope stored{};
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(!instance.close(test::events));
-    BOOST_REQUIRE(!instance.read_schema(schema));
-    BOOST_REQUIRE(schema == envelope::compiled);
+    BOOST_REQUIRE(!instance.read_envelope(stored));
+    BOOST_REQUIRE(stored.schema == envelope::compiled);
+    BOOST_REQUIRE(stored.network == system::chain::selection::testnet4);
 }
 
-BOOST_AUTO_TEST_CASE(store__read_schema__schema_mismatch__stored)
+BOOST_AUTO_TEST_CASE(store__read_envelope__schema_mismatch__schema_version)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
-    system::config::version schema{};
+    database::envelope stored{};
     const system::config::version expected{ 0x01010101, 0x01010101, 0x01010101, 0x01010101 };
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
     BOOST_REQUIRE(!instance.close(test::events));
-    BOOST_REQUIRE(test::create(instance.envelope_head_file(), std::string(16, '')));
-    BOOST_REQUIRE(!instance.read_schema(schema));
-    BOOST_REQUIRE(schema == expected);
+    BOOST_REQUIRE(test::create(instance.envelope_head_file(), std::string(16, '\x01')));
+    BOOST_REQUIRE_EQUAL(instance.read_envelope(stored), error::schema_version);
+    BOOST_REQUIRE(stored.schema == expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

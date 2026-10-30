@@ -138,15 +138,28 @@ void CLASS::store_envelope(code& ec) NOEXCEPT
 }
 
 // public
+// The schema is deserialized before it is validated, so the record holds it
+// when envelope deserialization fails.
 TEMPLATE
-code CLASS::read_schema(system::config::version& schema) NOEXCEPT
+code CLASS::read_envelope(database::envelope& stored) NOEXCEPT
 {
     if (!transactor_mutex_.try_lock())
         return error::transactor_lock;
 
     auto ec = envelope_head_.open();
     if (!ec) ec = envelope_head_.load();
-    if (!ec && !get_schema(schema)) ec = error::verify_table;
+    if (!ec)
+    {
+        table::envelope::record record{};
+        const auto valid = !is_zero(envelope.head_size()) &&
+            envelope.get(zero, record);
+
+        stored = record.envelope;
+        if (stored.schema != database::envelope::compiled)
+            ec = error::schema_version;
+        else if (!valid)
+            ec = error::verify_table;
+    }
 
     // unload and close errors override ec.
     if (const auto unloaded = envelope_head_.unload()) ec = unloaded;
