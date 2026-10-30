@@ -194,8 +194,7 @@ bool CLASS::push(const Link& link, const Link& index) NOEXCEPT
         // Writes full padded word (0x00 fill).
         const auto raw = ptr.data();
         auto& head = *pointer_cast<std::atomic<CLASS::link>>(raw);
-        head.store(native_to_little_end<CLASS::link>(link),
-            std::memory_order_relaxed);
+        head.store(native_to_little_end(link.value), std::memory_order_relaxed);
     }
     else
     {
