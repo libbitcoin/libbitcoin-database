@@ -24,7 +24,7 @@ BOOST_FIXTURE_TEST_SUITE(query_extent_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query__is_full__chunk_store__false)
 {
-    const settings configuration{};
+    const settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
     BOOST_REQUIRE(!query.is_full());
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(query__is_full__chunk_store__false)
 
 BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(query_extent__body_sizes__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_extent__outs_body_size__address_disabled__puts_only)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.outs.buckets = 0;
     test::chunk_store store{ settings };
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(query_extent__outs_body_size__address_disabled__puts_only)
 
 BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(query_extent__buckets__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(query_extent__records__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_extent__input_output_count__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(query_extent__input_output_count__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_extent__optionals_enabled__default__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(query_extent__optionals_enabled__default__true)
 
 BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.outs.buckets = 0;
     test::chunk_store store{ settings };
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(query_extent__address_enabled__disabled__false)
 
 BOOST_AUTO_TEST_CASE(query_extent__filter_enabled__disabled__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.filter_tx.buckets = 0;
     test::chunk_store store{ settings };
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(query_extent__filter_enabled__disabled__false)
 
 BOOST_AUTO_TEST_CASE(query_extent__archive_head_size__genesis__sum_of_tables)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(query_extent__archive_head_size__genesis__sum_of_tables)
 
 BOOST_AUTO_TEST_CASE(query_extent__archive_body_size__genesis__sum_of_tables)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(query_extent__archive_body_size__genesis__sum_of_tables)
 
 BOOST_AUTO_TEST_CASE(query_extent__archive_size__genesis__head_plus_body)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(query_extent__archive_size__genesis__head_plus_body)
 
 BOOST_AUTO_TEST_CASE(query_extent__store_head_size__genesis__archive_plus_indexes)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(query_extent__store_head_size__genesis__archive_plus_indexe
 
 BOOST_AUTO_TEST_CASE(query_extent__store_body_size__genesis__archive_plus_indexes)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(query_extent__store_body_size__genesis__archive_plus_indexe
 
 BOOST_AUTO_TEST_CASE(query_extent__store_size__genesis__head_plus_body)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(query_extent__store_size__genesis__head_plus_body)
 
 BOOST_AUTO_TEST_CASE(query_extent__store_size__archived_block__increases)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

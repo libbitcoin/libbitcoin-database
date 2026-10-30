@@ -42,7 +42,7 @@ static uint64_t to_short_id(const transaction& tx) NOEXCEPT
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__pooled__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__pooled__expected)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__duplicate_short_id__terminal)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__duplicate_short_id__ter
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__ambiguous_pool__terminal)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__ambiguous_pool__termina
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__allocated_record__pooled_matched)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__allocated_record__poole
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__uncommitted_record__terminal)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__uncommitted_record__ter
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_compact_links__disabled__terminal)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.pool.buckets = 0;
     test::chunk_store store{ settings };

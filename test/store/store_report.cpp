@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(store__report__created__reports_all_tables_without_fault)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(store__report__created__reports_all_tables_without_fault)
 
 BOOST_AUTO_TEST_CASE(store__get_fault__created__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(store__get_fault__created__success)
 
 BOOST_AUTO_TEST_CASE(store__get_space__created__zero)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));

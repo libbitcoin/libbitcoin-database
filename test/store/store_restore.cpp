@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(store__restore__transactor_locked__transactor_lock)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     instance.transactor_mutex().lock();
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(store__restore__transactor_locked__transactor_lock)
 #if defined(HAVE_WINDOWS)
 BOOST_AUTO_TEST_CASE(store__restore__process_locked__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     interprocess_lock lock{ instance.process_lock_file() };
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(store__restore__process_locked__success)
 
 BOOST_AUTO_TEST_CASE(store__restore__no_flush_lock__flush_lock)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.restore(test::events), error::flush_lock);
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(store__restore__no_flush_lock__flush_lock)
 
 BOOST_AUTO_TEST_CASE(store__restore__missing_snapshot__recreate_success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::create(instance.process_lock_file()));
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(store__restore__missing_snapshot__recreate_success)
 
 BOOST_AUTO_TEST_CASE(store__restore__no_backups__recreate_success_locks)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(store__restore__no_backups__recreate_success_locks)
 #if defined(HAVE_WINDOWS)
 BOOST_AUTO_TEST_CASE(store__restore__primary_open__clear_directory)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_open__clear_directory)
 
 BOOST_AUTO_TEST_CASE(store__restore__primary_closed__open_failure)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
 
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_closed__open_failure)
 
 BOOST_AUTO_TEST_CASE(store__restore__secondary_closed__open_failure)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
 
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(store__restore__secondary_closed__open_failure)
 
 BOOST_AUTO_TEST_CASE(store__restore__primary_secondary_loaded__open_failure)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
 
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(store__restore__primary_secondary_loaded__open_failure)
 
 BOOST_AUTO_TEST_CASE(store__restore__snapshot__success_unlocks)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
 
     test::map_store instance{ configuration };
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(store__restore__snapshot__success_unlocks)
 
 BOOST_AUTO_TEST_CASE(store__restore__secondary_remnant__deleted)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     const auto primary = configuration.path / schema::dir::primary;
     const auto secondary = configuration.path / schema::dir::secondary;
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(store__restore__secondary_remnant__deleted)
 
 BOOST_AUTO_TEST_CASE(store__restore__secondary_only__promoted_success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     const auto primary = configuration.path / schema::dir::primary;
     const auto secondary = configuration.path / schema::dir::secondary;

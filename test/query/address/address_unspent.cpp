@@ -28,7 +28,7 @@ BOOST_FIXTURE_TEST_SUITE(query_address_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_address__get_unspent__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_unspent__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_address__get_unspent__turbo_genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_unspent__turbo_genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_address__get_unspent__duplicate_instances__deduplicated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

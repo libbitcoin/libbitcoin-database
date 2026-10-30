@@ -30,7 +30,7 @@ constexpr auto bip113 = flags::bip113_rule;
 
 BOOST_AUTO_TEST_CASE(query_consensus__populate_pooled__sufficient__external_metadata)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__populate_pooled__sufficient__external_meta
 
 BOOST_AUTO_TEST_CASE(query_consensus__populate_pooled__internal_spend__terminal_metadata)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__populate_pooled__internal_spend__terminal_
 
 BOOST_AUTO_TEST_CASE(query_consensus__populate_pooled__insufficient__unvalidated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -126,7 +126,7 @@ const auto& clean_(const auto& block_or_tx) NOEXCEPT
 // First four blocks have only coinbase txs.
 BOOST_AUTO_TEST_CASE(query_consensus__populate_with_metadata__null_prevouts__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__populate_with_metadata__null_prevouts__tru
 
 BOOST_AUTO_TEST_CASE(query_consensus__populate_with_metadata__partial_prevouts__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__populate_with_metadata__partial_prevouts__
 
 BOOST_AUTO_TEST_CASE(query_consensus__populate_with_metadata__metadata__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__populate_with_metadata__metadata__expected
 // A free tx conflicts with any spender, but only a confirmed one has height.
 BOOST_AUTO_TEST_CASE(query_consensus__populate_with_metadata__pool_spender__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__populate_with_metadata__pool_spender__expe
 // First four blocks have only coinbase txs.
 BOOST_AUTO_TEST_CASE(query_consensus__populate_without_metadata__null_prevouts__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__populate_without_metadata__null_prevouts__
 
 BOOST_AUTO_TEST_CASE(query_consensus__populate_without_metadata__partial_prevouts__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

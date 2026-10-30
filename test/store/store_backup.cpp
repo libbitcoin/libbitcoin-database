@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(store__backup__unloaded__backup_table)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.backup_(), error::backup_table);
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(store__backup__unloaded__backup_table)
 
 BOOST_AUTO_TEST_CASE(store__backup__loaded__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(store__backup__loaded__success)
 
 BOOST_AUTO_TEST_CASE(store__backup__primary_loaded__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(store__backup__primary_loaded__success)
 
 BOOST_AUTO_TEST_CASE(store__backup__primary_secondary_loaded__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));

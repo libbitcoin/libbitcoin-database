@@ -24,7 +24,7 @@ BOOST_FIXTURE_TEST_SUITE(query_properties_block_tests, test::directory_setup_fix
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_top_timestamp__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_top_timestamp__always__expected
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_timestamp__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_timestamp__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_version__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_version__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_bits__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_bits__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_context__genesis__default)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_context__genesis__default)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_context__invalid__default)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_context__invalid__default)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_context__block1__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_context__block1__expected)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__is_witness_committed__genesis__header_merkle_root)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__is_witness_committed__genesis__head
 BOOST_AUTO_TEST_CASE(query_properties_block__is_witness_committed__committed__expected)
 {
     using namespace system::chain;
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__is_witness_committed__committed__ex
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_wtxids__genesis__coinbase_witness_hash)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_wtxids__genesis__coinbase_witne
 
 BOOST_AUTO_TEST_CASE(query_properties_block__is_block_segregated__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__is_block_segregated__always__expect
 
 BOOST_AUTO_TEST_CASE(query_properties_block__is_milestone__genesis__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__is_milestone__genesis__false)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__is_milestone__set__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__is_milestone__set__expected)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__is_compact__set__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__is_compact__set__expected)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_tx_keys__not_found__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_tx_keys__not_found__empty)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_height1__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_height1__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_height2__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_height2__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_position_tx__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(query_properties_block__get_position_tx__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_properties_block__get_tx_count__coinbase__1)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

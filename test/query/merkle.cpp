@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(block__merkle_branch__maximum_non_overflow__expected)
 
 BOOST_AUTO_TEST_CASE(query_merkle__interval_span__uninitialized__max_size_t)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__interval_span__uninitialized__max_size_t)
 
 BOOST_AUTO_TEST_CASE(query_merkle__interval_span__11__2048)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 11;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__interval_span__11__2048)
 
 BOOST_AUTO_TEST_CASE(query_merkle__interval_span__0__1)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__interval_span__0__1)
 
 BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_0__block_hash)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_0__block_hash)
 
 BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_1__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 1;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_1__expected)
 
 BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_2__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_2__expected)
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__not_multiple__no_value)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 3;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__not_multiple__no_valu
 // Interval is set by create_interval(), integral to set(block).
 BOOST_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__multiple__expected_value)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -440,7 +440,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__six_leaves_target_five__expecte
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__no_confirmed_blocks__error_merkle_proof)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__no_confirmed_blocks__error_
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__target_in_first_interval__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__target_in_first_interval__e
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__multiple_intervals__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 1;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__multiple_intervals__expecte
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__waypoint_zero__genesis)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__waypoint_zero__genesis)
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__one_full_interval__expected_root)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -550,7 +550,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__one_full_interval__expec
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__full_and_partial_interval__expected_two_roots)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__full_and_partial_interva
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_equals_waypoint__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -610,7 +610,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_equals_wayp
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_less_than_waypoint__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -657,7 +657,7 @@ bool setup_eight_block_store(merkle_accessor& query)
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_0__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -693,7 +693,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_1__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 1;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_2__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -755,7 +755,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_3__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 3;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -784,7 +784,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_4__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 4;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -812,7 +812,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_11__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 11;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -841,7 +841,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_
 // This tests a potentially sparse path (avoids compression).
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_8_depth_0__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -877,7 +877,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_8_depth_0__
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__partial_interval_with_elevation_depth__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -911,7 +911,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__partial_interval_w
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_greater_than_waypoint__error_invalid_argument)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -927,7 +927,7 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_greater_tha
 
 BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__waypoint_beyond_top__error_not_found)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };

@@ -63,7 +63,7 @@ static header_link archive_confirm(test::query_accessor& query, const transactio
 
 BOOST_AUTO_TEST_CASE(query_pool__get_pooled__no_record__unvalidated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_pooled__no_record__unvalidated)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_pooled__sufficient__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_pooled__sufficient__success)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_pooled__insufficient__unvalidated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_pooled__insufficient__unvalidated)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_pooled__without_bip113__unvalidated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_pooled__without_bip113__unvalidated)
 
 BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_spent__pooled_spender__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_spent__pooled_spender__true)
 
 BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_spent__conflicted_spender__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_spent__conflicted_spender__false
 
 BOOST_AUTO_TEST_CASE(query_pool__find_confirmable_spender__pooled_spender__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(query_pool__find_confirmable_spender__pooled_spender__expec
 
 BOOST_AUTO_TEST_CASE(query_pool__find_confirmable_spender__conflicted_spender__terminal)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(query_pool__find_confirmable_spender__conflicted_spender__t
 
 BOOST_AUTO_TEST_CASE(query_pool__get_pooled_time__pooled__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_pooled_time__pooled__expected)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_pooled_time__not_pooled__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_pooled_time__not_pooled__false)
 
 BOOST_AUTO_TEST_CASE(query_pool__set_pooled__disabled__no_record)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.pool.buckets = 0;
     test::chunk_store store{ settings };
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(query_pool__set_pooled__disabled__no_record)
 
 BOOST_AUTO_TEST_CASE(query_pool__set_pooled__time__stored)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(query_pool__set_pooled__time__stored)
 
 BOOST_AUTO_TEST_CASE(query_pool__set_pooled__unlinked_parent__resolved)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(query_pool__set_pooled__unlinked_parent__resolved)
 
 BOOST_AUTO_TEST_CASE(query_pool__set_pooled__missing_parent__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE(query_pool__set_pooled__missing_parent__false)
 
 BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_tx__unconflicted_chain__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_tx__unconflicted_chain__true)
 
 BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_tx__confirmed__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_tx__confirmed__false)
 
 BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_tx__conflicted_and_child__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(query_pool__is_confirmable_tx__conflicted_and_child__false)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__empty__end)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__empty__end)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__disabled__end)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.pool.buckets = 0;
     test::chunk_store store{ settings };
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__disabled__end)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__cursor_beyond_end__invalid_cursor)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__cursor_beyond_end__invalid
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__confirmed__skipped)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__confirmed__skipped)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__all__confirmed_skipped)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__all__confirmed_skipped)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__duplicate_record__first_only)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__duplicate_record__first_on
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__limit__resumed)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__limit__resumed)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__end__bounded)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -580,7 +580,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__end__bounded)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__conflicted_and_child__skipped)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_txs__conflicted_and_child__skip
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_fees__empty__true_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -618,7 +618,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_fees__empty__true_empty)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_fees__unconfirmed_and_confirmed__unconfirmed_only)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_fees__unconfirmed_and_confirmed
 
 BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_fees__conflicted_and_child__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_confirmable_fees__conflicted_and_child__emp
 
 BOOST_AUTO_TEST_CASE(query_pool__get_block_conflict_fees__conflicted_and_child__both)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -696,7 +696,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_block_conflict_fees__conflicted_and_child__
 
 BOOST_AUTO_TEST_CASE(query_pool__get_block_conflict_fees__confirmed_pooled__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_block_conflict_fees__confirmed_pooled__empt
 
 BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_parents__pooled_parent__parent)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -742,7 +742,7 @@ BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_parents__pooled_parent__parent)
 
 BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_children__pooled_child__child)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -763,7 +763,7 @@ BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_children__pooled_child__child)
 
 BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_children__conflicted_child__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -785,7 +785,7 @@ BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_children__conflicted_child__empt
 
 BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_ancestors__pooled_chain__ancestors)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -815,7 +815,7 @@ BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_ancestors__pooled_chain__ancesto
 
 BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_descendants__pooled_chain__descendants)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -845,7 +845,7 @@ BOOST_AUTO_TEST_CASE(query_pool__to_confirmable_descendants__pooled_chain__desce
 
 BOOST_AUTO_TEST_CASE(query_pool__get_ancestor_totals__pooled_parent__both)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -874,7 +874,7 @@ BOOST_AUTO_TEST_CASE(query_pool__get_ancestor_totals__pooled_parent__both)
 
 BOOST_AUTO_TEST_CASE(query_pool__get_descendant_totals__pooled_child__both)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

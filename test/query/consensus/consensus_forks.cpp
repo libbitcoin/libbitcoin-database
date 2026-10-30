@@ -24,7 +24,7 @@ BOOST_FIXTURE_TEST_SUITE(query_consensus_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__bypassed_filters_pending__stops_at_first_missing)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__bypassed_filters_pendi
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__filters_disabled__bypass_unchanged)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.filter_tx.buckets = 0;
     test::chunk_store store{ settings };
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__filters_disabled__bypa
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__bypassed_unscanned__stops_at_unscanned)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.filter_tx.buckets = 0;
     settings.initialize(system::settings{ system::chain::selection::regtest }, false, 2);
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__bypassed_unscanned__st
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__milestone_filter_pending__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_validated_fork__milestone_filter_pendi
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_confirmed_height__push_pop_confirmed__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_confirmed_height__push_pop_confirmed__
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_fork__initialized__0)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_fork__initialized__0)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_fork__candidate_ahead__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_fork__candidate_ahead__expected)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_fork__confirmed_ahead__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

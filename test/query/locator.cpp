@@ -39,7 +39,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(query_locator__get_headers__empty_locator__returns_confirmed_headers)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__empty_locator__returns_confirme
 
 BOOST_AUTO_TEST_CASE(query_locator__get_headers__genesis_locator__returns_all_confirmed)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__genesis_locator__returns_all_co
 
 BOOST_AUTO_TEST_CASE(query_locator__get_headers__mid_chain_locator__starts_after_fork)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__mid_chain_locator__starts_after
 
 BOOST_AUTO_TEST_CASE(query_locator__get_headers__highest_first_locator__correct)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__highest_first_locator__correct)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_headers__stop_hash__includes_stop_excludes_later)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__stop_hash__includes_stop_exclud
 
 BOOST_AUTO_TEST_CASE(query_locator__get_headers__genesis_locator_stop_next__stop_header)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__genesis_locator_stop_next__stop
 
 BOOST_AUTO_TEST_CASE(query_locator__get_headers__limit__respects_limit)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__limit__respects_limit)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_headers__no_confirmed_blocks__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__no_confirmed_blocks__empty)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_headers__reorg_terminal__returns_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_headers__reorg_terminal__returns_empty)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_blocks__empty_locator__confirmed_headers)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__empty_locator__confirmed_headers
 
 BOOST_AUTO_TEST_CASE(query_locator__get_blocks__genesis_locator__all_confirmed)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__genesis_locator__all_confirmed)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_blocks__mid_chain_locator__starts_after_fork)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__mid_chain_locator__starts_after_
 
 BOOST_AUTO_TEST_CASE(query_locator__get_blocks__highest_first_locator__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__highest_first_locator__expected)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_blocks__stop_hash__excludes_stop_and_after)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__stop_hash__excludes_stop_and_aft
 
 BOOST_AUTO_TEST_CASE(query_locator__get_blocks__limit__respects_limit)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__limit__respects_limit)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_blocks__no_confirmed_blocks__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__no_confirmed_blocks__empty)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_blocks__reorg_terminal__returns_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_blocks__reorg_terminal__returns_empty)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__empty_locator__starts_after_genesis)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__empty_locator__starts_afte
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__genesis_locator__starts_after_genesis)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__genesis_locator__starts_af
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__mid_chain_locator__starts_after_fork)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -453,7 +453,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__mid_chain_locator__starts_
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_hash__limits_to_stop_exclusive)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_hash__limits_to_stop_
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_hash_inclusive__limits_to_stop_inclusive)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_hash_inclusive__limit
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_at_fork_inclusive__empty_span)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -513,7 +513,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_at_fork_inclusive__em
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__limit_smaller_than_range__respects_limit)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__limit_smaller_than_range__
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__no_confirmed_blocks__empty_span)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -552,7 +552,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__no_confirmed_blocks__empty
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_before_start__empty_span)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_before_start__empty_s
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__large_limit__capped_by_top_confirmed)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -590,7 +590,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__large_limit__capped_by_top
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__empty__zero)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__empty__zero)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__genesis__zero)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -612,7 +612,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__genesis__zero)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__unconfirmed__zero)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -626,7 +626,7 @@ BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__unconfirmed__zero)
 
 BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__confirmed__first_match)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };

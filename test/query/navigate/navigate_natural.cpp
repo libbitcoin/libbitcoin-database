@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(query_navigate_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_candidate__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_candidate__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_confirmed__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_confirmed__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_top_candidate__push_pop__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_top_candidate__push_pop__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_top_confirmed__push_pop__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_top_confirmed__push_pop__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_header__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_header__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_witness_tx__unsegregated__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_witness_tx__unsegregated__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_witness_tx__segregated_pooled__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_witness_tx__segregated_pooled__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_tx__transactions__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_tx__transactions__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__get_header_key__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__get_header_key__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__get_point_key__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__get_point_key__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__get_outs_key__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__get_outs_key__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__get_tx_key__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

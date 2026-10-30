@@ -88,7 +88,7 @@ static receiver get_keys() NOEXCEPT
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_presilents__empty__empty)
 {
-    const database::settings configuration{};
+    const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
 
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_presilents__empty__empty)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_presilents__two__round_trips)
 {
-    const database::settings configuration{};
+    const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
 
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_presilents__two__round_trips)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__purge_presilents__after_set__empty)
 {
-    const database::settings configuration{};
+    const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
 
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__purge_presilents__after_set__empty)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_presilent__banks__independent)
 {
-    const database::settings configuration{};
+    const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_presilent__banks__independent)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__eligible_header__scanned)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.initialize(system::settings{ system::chain::selection::regtest }, false, 1);
     test::chunk_store store{ settings };
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__eligible_header__scanned)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__coinbase_only__true)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__coinbase_only__true)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__unarchived_block__false)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__unarchived_block__false)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__no_taproot_output__no_records)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__no_taproot_output__no_recor
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__eligible__one_record)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__eligible__one_record)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__eligible__rows_complete)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::map_store store{ settings };
     database::query<test::map_store> instance{ store };
@@ -241,7 +241,7 @@ static data_chunk to_prevouts(const chain::block& block) NOEXCEPT
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__coinbase_only__no_rows)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -280,7 +280,7 @@ static bool set_pooled(test::query_accessor& query, const chain::block& block) N
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__unpooled_below_coinbase__one_record)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__unpooled_below_coinbase__on
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__pooled_below_coinbase__no_records)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silent__pooled_below_coinbase__no_r
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__unpooled_below_coinbase__banked_row)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__unpooled_below_coinbase__b
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__pooled_below_coinbase__no_rows)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__pooled_below_coinbase__no_
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__eligible__banked_row)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__eligible__banked_row)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__eligible_view__banked_row)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -416,7 +416,7 @@ static chain::block spend_block(const chain::script& script) NOEXCEPT
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_prevouts__taproot_spend__selected)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_prevouts__taproot_spend__sel
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_prevouts__no_taproot_output__unselected)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_prevouts__no_taproot_output_
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_block_prevouts__no_taproot_output__selected)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_block_prevouts__no_taproot_output__
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row__scanned)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row__scanned)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row_without_gpu__scanned)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -547,7 +547,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row_without_gpu
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__empty__success)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__empty__success)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__purge_silents__banked_row__empty)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -580,7 +580,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__purge_silents__banked_row__empty)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__presilent_banked_row__scanned)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.initialize(system::settings{ system::chain::selection::regtest }, false, 1);
     test::chunk_store store{ settings };
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__compute_silents__presilent_banked_row__
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__no_rows__scanned)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.initialize(system::settings{ system::chain::selection::regtest }, false, 1);
     test::chunk_store store{ settings };
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_silents__no_rows__scanned)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__match__expected)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -658,7 +658,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__match__expected)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__no_match__none)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -685,7 +685,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__no_match__none)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__range__expected)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -707,7 +707,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__range__expected)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__confirmed_heights__selected)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -728,7 +728,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__confirmed_heights__selecte
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__heights_above_top__none)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -749,7 +749,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__heights_above_top__none)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__unconfirmed__selected)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -773,7 +773,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__scan_silent__unconfirmed__selected)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_matches__short_cut_from_floor__confirmed_selected)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -791,7 +791,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_matches__short_cut_from_floo
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_matches__short_cut_from_floor__unconfirmed_selected)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -808,7 +808,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_matches__short_cut_from_floo
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_matches__above_floor__unconfirmed)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_matches__above_floor__unconf
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_matches__time_cut__expected)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -847,7 +847,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_matches__time_cut__expected)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_floor__unmapped__zero)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -862,7 +862,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_floor__unmapped__zero)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_frontier__empty__zero)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -873,7 +873,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_frontier__empty__zero)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_frontier__written__count)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -890,7 +890,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_silent_frontier__written__count)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_start__unset__terminal)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -903,7 +903,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_start__unset__terminal)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_start__gapped__mapped)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -937,7 +937,7 @@ static bool setup_scan_starts(test::query_accessor& query) NOEXCEPT
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__unarchived__false)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -951,7 +951,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__unarchived__false)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__canceled__false)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -965,7 +965,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__canceled__false)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__unbounded__first_rows_above_floors)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -982,7 +982,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__unbounded__first_rows_
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__bounded__clamped)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -999,7 +999,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__bounded__clamped)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__extended__after_ancestor_start)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1017,7 +1017,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__extended__after_ancest
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__mapped_top__unchanged)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1034,7 +1034,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__mapped_top__unchanged)
 // Blocks archived 3, 1, 2 (coinbase links 1, 2, 3), rows linked 1, 3, 2, 4.
 BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__archived_before_ancestor__from_first_row)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1063,7 +1063,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__set_scan_starts__archived_before_ancest
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_floor__unmapped__zero)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1076,7 +1076,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_floor__unmapped__zero)
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_floor__mapped__nearest_at_or_below)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -1095,7 +1095,7 @@ BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_floor__mapped__nearest_at_or_b
 
 BOOST_AUTO_TEST_CASE(query_batch_silent__get_scan_frontier__latched__rows_at_latch)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

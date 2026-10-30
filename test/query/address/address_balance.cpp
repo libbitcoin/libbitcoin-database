@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_SUITE(query_address_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_address__get_balance__turbo_block1a_address0_confirmed_blocks__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_balance__turbo_block1a_address0_confirme
 
 BOOST_AUTO_TEST_CASE(query_address__get_balance__turbo_block1a_address0_unconfirmed_blocks__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_balance__turbo_block1a_address0_unconfir
 
 BOOST_AUTO_TEST_CASE(query_address__get_balance__block1a_address1_confirmed_blocks__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_balance__block1a_address1_confirmed_bloc
 
 BOOST_AUTO_TEST_CASE(query_address__get_balance__duplicate_instances__counted_once)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_balance__duplicate_instances__counted_on
 
 BOOST_AUTO_TEST_CASE(query_address__get_address_totals__confirmed_blocks__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_address_totals__confirmed_blocks__expect
 
 BOOST_AUTO_TEST_CASE(query_address__get_address_totals__unconfirmed_blocks__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_address_totals__unconfirmed_blocks__expe
 
 BOOST_AUTO_TEST_CASE(query_address__get_address_totals__canceled__query_canceled)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

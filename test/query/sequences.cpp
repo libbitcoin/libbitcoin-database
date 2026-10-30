@@ -36,7 +36,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_thresholds__terminal__false)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_thresholds__terminal__false)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_thresholds__unarchived__false)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_thresholds__unarchived__false)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_thresholds__genesis__one)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_thresholds__genesis__one)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_thresholds__ordered__every_height)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_thresholds__ordered__every_height)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_thresholds__disordered__lowest_above)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_thresholds__disordered__lowest_above)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_threshold__empty__terminal)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_threshold__empty__terminal)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_threshold__heights__lowest_at_or_above)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_threshold__heights__lowest_at_or_above
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_threshold__times__lowest_at_or_above)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_threshold__times__lowest_at_or_above)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_mtp_height__confirmed__lowest_at_or_above)
 {
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_mtp_height__confirmed__lowest_at_or_ab
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_candidate_hashes__initialized__one)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_candidate_hashes__initialized__one)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_candidate_hashes__gapped__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_candidate_hashes__gapped__expected)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_hashes1__initialized__one)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_hashes1__initialized__one)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_hashes1__gapped__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_hashes1__gapped__expected)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_hashes2__various__expected_sizes)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_hashes2__various__expected_s
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_hashes2__three__ascending_order)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_hashes2__three__ascending_or
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__empty__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__empty__empty)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__unconfirmeds__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__unconfirmeds__empty
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__confirmeds__expected_size)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__confirmeds__expecte
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__confirmeds__expected_headers)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__confirmeds__expecte
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__over_top__reduced_count)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__over_top__reduced_c
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__under_top__full_count)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_confirmed_headers__under_top__full_cou
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__genesis__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__genesis__empty)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__genesis__itself)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__genesis__itself)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__single_block__itself)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__single_block__itself)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__linear_chain__full_ancestry)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__linear_chain__full_ancestry)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__count_limit__truncated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -595,7 +595,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__count_limit__truncated)
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__count_exceeds_height__full_to_genesis)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
@@ -614,7 +614,7 @@ BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__count_exceeds_height__full_t
 
 BOOST_AUTO_TEST_CASE(query_sequences__get_ancestry__nonexistent_link__false_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };

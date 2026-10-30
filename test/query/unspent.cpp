@@ -24,7 +24,7 @@ BOOST_FIXTURE_TEST_SUITE(query_unspent_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_totals__empty_branch__success_zeros)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_totals__empty_branch__success_ze
 
 BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_totals__two_block_branch__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -90,7 +90,7 @@ static system::data_chunk coin_element(const system::chain::block& block,
 
 BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_muhash__two_block_branch__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_muhash__two_block_branch__expect
 
 BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_block_branch__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_block_branch__ex
 
 BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_output_coinbase__one_transaction)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_output_coinbase_
 
 BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_matches__two_block_branch__one_match)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_matches__two_block_branch__one_m
 
 BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_matches__no_keys__no_matches)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_matches__no_keys__no_matches)
 
 BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_totals__cancelled__query_canceled)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

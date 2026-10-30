@@ -28,7 +28,7 @@ constexpr auto bip68 = system::chain::flags::bip68_rule;
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__bad_link__integrity_block_confirmable1)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__bad_link__integrity_blo
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__null_points__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__null_points__success)
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__missing_prevouts__integrity)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__missing_prevouts__integ
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__spend_gensis__coinbase_maturity)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__spend_gensis__coinbase_
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__immature_prevouts__coinbase_maturity)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__immature_prevouts__coin
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__mature_prevouts__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__mature_prevouts__succes
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__spend_non_coinbase__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -178,7 +178,7 @@ static bool set_internal_spend(test::query_accessor& query,
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__internal_relative_locked__relative_time_locked)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__internal_relative_locke
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__internal_relative_disabled__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__internal_relative_disab
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__internal_relative_zero__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__internal_relative_zero_
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__spend_coinbase_and_internal_immature__coinbase_maturity)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__spend_coinbase_and_inte
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__spend_coinbase_and_internal_mature__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__spend_coinbase_and_inte
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__confirmed_double_spend__confirmed_double_spend)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__confirmed_double_spend_
 
 BOOST_AUTO_TEST_CASE(query_consensus__block_confirmable__unconfirmed_double_spend__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -374,7 +374,7 @@ static bool pool_tx(test::query_accessor& query, const transaction& tx,
 
 BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__pooled__success_with_prevouts)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__pooled__success_with_prev
 
 BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__insufficient__unvalidated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__insufficient__unvalidated
 
 BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__not_pooled__unvalidated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__not_pooled__unvalidated)
 
 BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__overclaim__coinbase_value_limit)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__overclaim__coinbase_value
 
 BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__forward_reference__forward_reference)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__forward_reference__forwar
 
 BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__internal_double_spend__block_internal_double_spend)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__internal_double_spend__bl
 
 BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__internal_coinbase_spend__coinbase_maturity)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__internal_coinbase_spend__
 
 BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__mature__block_confirmable)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__mature__block_confirmable
 
 BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__disabled__unvalidated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.pool.buckets = 0;
     test::chunk_store store{ settings };

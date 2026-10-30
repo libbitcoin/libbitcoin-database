@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(query_consensus_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_consensus__find_strong__unconfirmed_duplicate__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__find_strong__unconfirmed_duplicate__expect
 
 BOOST_AUTO_TEST_CASE(query_consensus__find_strong_spender_height__unspent__terminal)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__find_strong_spender_height__unspent__termi
 
 BOOST_AUTO_TEST_CASE(query_consensus__find_strong_spender_height__unconfirmed__terminal)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__find_strong_spender_height__unconfirmed__t
 
 BOOST_AUTO_TEST_CASE(query_consensus__find_strong_spender_height__confirmed__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__find_strong_spender_height__confirmed__exp
 // The coinbase tx is strong.
 BOOST_AUTO_TEST_CASE(query_consensus__is_strong__strong__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__is_strong__strong__true)
 
 BOOST_AUTO_TEST_CASE(query_consensus__is_strong__weak__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__is_strong__weak__false)
 
 BOOST_AUTO_TEST_CASE(query_consensus__set_strong__unassociated__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__set_strong__unassociated__false)
 
 BOOST_AUTO_TEST_CASE(query_consensus__set_strong__set_unstrong__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__set_strong__set_unstrong__expected)
 
 BOOST_AUTO_TEST_CASE(query_consensus__duplicate_instances__navigation__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
 
