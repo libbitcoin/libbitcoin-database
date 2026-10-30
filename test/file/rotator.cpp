@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(rotator__write__over_file_limit__split)
     splitter.flush();
     BOOST_REQUIRE(splitter);
     BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), one);
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), 41);
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), 41u);
 }
 
 BOOST_AUTO_TEST_CASE(rotator__construct__empty__expected)
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(rotator__write__parts__accumulated_and_rotated)
     splitter.write("mn\n", 3);
     splitter.write("pqr", 3);
     splitter.flush();
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), 6);
+    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), 6u);
     BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 0), "mn");
     BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 1), "pqr");
     BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), "ghijkl");

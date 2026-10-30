@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(body__get__terminal_record__terminal)
     test::chunk_storage file(buffer);
     const body<linkage<2>, key0, element> instance(file);
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.get(1).size(), (bodie - 1 * element));
+    BOOST_REQUIRE_EQUAL(instance.get(1).size(), to_signed(bodie - 1 * element));
     BOOST_REQUIRE(!instance.get(linkage<2>::terminal));
     BOOST_REQUIRE(!instance.get_fault());
 }

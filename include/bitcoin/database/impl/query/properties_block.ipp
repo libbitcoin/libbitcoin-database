@@ -216,7 +216,7 @@ TEMPLATE
 bool CLASS::get_height(size_t& out, const hash_digest& key) const NOEXCEPT
 {
     const auto height = get_height(key);
-    if (height >= height_link::terminal)
+    if (height.is_terminal())
         return false;
 
     out = system::possible_narrow_cast<size_t>(height.value);
@@ -227,7 +227,7 @@ TEMPLATE
 bool CLASS::get_height(size_t& out, const header_link& link) const NOEXCEPT
 {
     const auto height = get_height(link);
-    if (height >= height_link::terminal)
+    if (height.is_terminal())
         return false;
 
     out = system::possible_narrow_cast<size_t>(height.value);

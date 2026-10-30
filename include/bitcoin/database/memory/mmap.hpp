@@ -217,10 +217,11 @@ protected:
         return bytes / widths.at(backed());
     }
 
-    static constexpr size_t to_rows(size_t bytes) NOEXCEPT
+    static constexpr size_t to_rows(uint64_t bytes) NOEXCEPT
     {
-        // Convert constructor's byte minimum to row denomination.
-        return system::ceilinged_divide(bytes, stride);
+        using namespace system;
+        const auto value = ceilinged_divide(std::max(1_u64, bytes), stride);
+        return limit<size_t>(value);
     }
 
     static size_t to_chunk() NOEXCEPT;
@@ -423,7 +424,8 @@ private:
     const paths filenames_;
     const size_t minimum_;
     const size_t expansion_;
-    const size_t headroom_;
+    const size_t commit_headroom_;
+    const uint64_t disk_headroom_;
     const advice access_;
     const bool zeroed_;
     const bool random_;

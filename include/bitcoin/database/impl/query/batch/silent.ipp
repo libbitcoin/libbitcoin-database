@@ -587,8 +587,8 @@ code CLASS::compute_silents(const stopper& cancel, bool& use_gpu,
     // ========================================================================
     const auto scope = get_transactor();
 
-    const auto fk = store_.scan.allocate(
-        possible_narrow_cast<scan_link::integer>(txs));
+    const auto allocate = possible_narrow_cast<scan_link::integer>(txs);
+    const auto fk = store_.scan.allocate(allocate);
     const auto pk = store_.scan_prefix.allocate(bank_prefix.count());
     if (fk.is_terminal() || pk.is_terminal())
         return error::integrity;
@@ -597,7 +597,6 @@ code CLASS::compute_silents(const stopper& cancel, bool& use_gpu,
     const auto guard = store_.scan.guard();
     const auto bank_guard = bank_table.guard();
     const auto prefix_ptr = bank_prefix.get_memory();
-
     const auto scan_prefix_ptr = store_.scan_prefix.get_memory();
     const auto prefixes = pointer_cast<prefix_t>(prefix_ptr.data());
     const auto words = pointer_cast<word_t>(guard.data());
@@ -605,13 +604,8 @@ code CLASS::compute_silents(const stopper& cancel, bool& use_gpu,
     const auto hashes = pointer_cast<hash_t>(bank_table.hash.get_raw());
     const auto outputs = pointer_cast<outputs_t>(bank_table.outputs.get_raw());
     const auto correlates = pointer_cast<correlate_t>(bank_guard.data());
-
-    // Points are computed directly into the allocated scan rows.
-    const std::span<ec_compressed> points
-    {
-        std::next(pointer_cast<ec_compressed>(store_.scan.point.get_raw()),
-            fk.value), txs
-    };
+    const auto point = pointer_cast<ec_compressed>(store_.scan.point.get_raw());
+    const std::span<ec_compressed> points{ std::next(point, fk.value), txs };
 
     using scan_int = scan_link::integer;
     using prefix_int = prefix_link::integer;
@@ -629,7 +623,10 @@ code CLASS::compute_silents(const stopper& cancel, bool& use_gpu,
         const auto count = from_little_endian<uint32_t>(output.count);
         const auto link = possible_narrow_cast<scan_int>(fk.value + tx);
         const auto row = possible_narrow_cast<prefix_int>(pk.value + first);
-        const span_t span{ {}, { std::next(prefixes, first), count } };
+
+        const auto start = possible_narrow_cast<size_t>(first);
+        const span_t span{ {}, { std::next(prefixes, start), count } };
+
         const outputs_record record{ {}, row, count };
 
         if (!store_.scan_prefix.put(scan_prefix_ptr, row, span) ||

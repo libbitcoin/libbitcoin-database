@@ -221,7 +221,7 @@ bool CLASS::stage_() NOEXCEPT
     const auto settled = page_floor(to_width<Column>(settled_.load()));
 
     if ((target > settled) && (mmap_commit(std::next(memory_map_[Column],
-        settled), target - settled, headroom_) == fail))
+        settled), target - settled, commit_headroom_) == fail))
     {
         teardown_<Column>(error::mmap_failure);
         return false;
@@ -304,7 +304,7 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
         const auto from = std::max(settled, current);
 
         if ((target > from) && (mmap_commit(std::next(memory_map_[Column], from),
-            target - from, headroom_) == fail))
+            target - from, commit_headroom_) == fail))
         {
             if (final)
                 teardown_<Column>(error::mmap_failure);
@@ -372,7 +372,7 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
     // the standing reservation), and settle drainage shrinks the span, so a
     // necessity refusal pauses recoverable rather than tearing down.
     if (mmap_commit(std::next(base, settled), target - settled,
-        headroom_) == fail)
+        commit_headroom_) == fail)
     {
         ::munmap(replace, reserved);
         if (final)

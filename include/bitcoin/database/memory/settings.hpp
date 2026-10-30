@@ -64,6 +64,18 @@ struct storage_settings
     /// and in place of zeroing on truncate. Unset for dense tables, whose rows
     /// are written before they are read.
     std::optional<uint8_t> fill{};
+
+    /// Clamp fixed width to size_t.
+    size_t size_() const NOEXCEPT
+    {
+        return system::limit<size_t>(size);
+    }
+
+    /// Clamp fixed width to size_t.
+    size_t headroom_() const NOEXCEPT
+    {
+        return system::limit<size_t>(headroom);
+    }
 };
 
 } // namespace database

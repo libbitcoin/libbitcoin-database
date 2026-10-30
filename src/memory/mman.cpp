@@ -91,12 +91,13 @@ void* mmap(void* /*addr*/, size_t len, int prot, int flags, int fd,
     const auto protect = protect_page(prot);
 
     const oft__ max = off + (oft__)len;
+    const uint64_t max64 = max;
+    const uint64_t off64 = off;
 
-    // 32 bit builds: >> shift too big, undefined behavior (oft__ is size_t).
-    const auto max_lo  = large ? (DWORD)((max)       & MAXDWORD) : (DWORD)max;
-    const auto max_hi  = large ? (DWORD)((max >> 32) & MAXDWORD) : (DWORD)0;
-    const auto file_lo = large ? (DWORD)((off)       & MAXDWORD) : (DWORD)off;
-    const auto file_hi = large ? (DWORD)((off >> 32) & MAXDWORD) : (DWORD)0;
+    const auto max_lo  = large ? (DWORD)((max)         & MAXDWORD) : (DWORD)max;
+    const auto max_hi  = large ? (DWORD)((max64 >> 32) & MAXDWORD) : (DWORD)0;
+    const auto file_lo = large ? (DWORD)((off)         & MAXDWORD) : (DWORD)off;
+    const auto file_hi = large ? (DWORD)((off64 >> 32) & MAXDWORD) : (DWORD)0;
 
     // Disallow fixed, executable, and or anonymous mapping.
     if (len == 0 ||

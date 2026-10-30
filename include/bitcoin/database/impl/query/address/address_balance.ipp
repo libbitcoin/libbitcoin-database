@@ -57,8 +57,8 @@ code CLASS::get_confirmed_balance(const stopper& cancel, uint64_t& out,
     }
 
     // Use of to_confirmed_unspent_outputs() provides necessary deduplication.
-    out = std::accumulate(outs.cbegin(), outs.cend(), zero,
-        [](size_t total, const outpoint& out) NOEXCEPT
+    out = std::accumulate(outs.cbegin(), outs.cend(), 0_u64,
+        [](uint64_t total, const outpoint& out) NOEXCEPT
         {
             return system::ceilinged_add(total, out.value());
         });

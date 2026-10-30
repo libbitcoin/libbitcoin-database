@@ -52,21 +52,27 @@ TEMPLATE
 constexpr size_t CLASS::to_filter_tx(const header_link& link) const NOEXCEPT
 {
     static_assert(header_link::terminal <= table::filter_tx::link::terminal);
-    return link.is_terminal() ? table::filter_tx::link::terminal : link.value;
+    constexpr auto terminal = table::filter_tx::link::terminal;
+    const auto value = link.is_terminal() ? terminal : link.value;
+    return system::possible_narrow_cast<size_t>(value);
 }
 
 TEMPLATE
 constexpr size_t CLASS::to_prevout(const header_link& link) const NOEXCEPT
 {
     static_assert(header_link::terminal <= table::prevout::link::terminal);
-    return link.is_terminal() ? table::prevout::link::terminal : link.value;
+    constexpr auto terminal = table::prevout::link::terminal;
+    const auto value = link.is_terminal() ? terminal : link.value;
+    return system::possible_narrow_cast<size_t>(value);
 }
 
 TEMPLATE
 constexpr size_t CLASS::to_txs(const header_link& link) const NOEXCEPT
 {
     static_assert(header_link::terminal <= table::txs::link::terminal);
-    return link.is_terminal() ? table::txs::link::terminal : link.value;
+    constexpr auto terminal = table::txs::link::terminal;
+    const auto value = link.is_terminal() ? terminal : link.value;
+    return system::possible_narrow_cast<size_t>(value);
 }
 
 } // namespace database

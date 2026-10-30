@@ -173,9 +173,10 @@ private:
     INLINE static constexpr size_t link_to_position(const Link& index) NOEXCEPT
     {
         using namespace system;
-        BC_ASSERT(!is_multiply_overflow<size_t>(index, cell_size));
-        BC_ASSERT(!is_add_overflow<size_t>(cell_size, index * cell_size));
-        return possible_narrow_cast<size_t>(add1<size_t>(index) * cell_size);
+        const auto value = possible_narrow_cast<size_t>(index.value);
+        BC_ASSERT(!is_multiply_overflow<size_t>(value, cell_size));
+        BC_ASSERT(!is_add_overflow<size_t>(cell_size, value * cell_size));
+        return add1(value) * cell_size;
     }
 
     // These are thread safe.

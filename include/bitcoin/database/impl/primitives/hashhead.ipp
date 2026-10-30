@@ -49,7 +49,7 @@ inline size_t CLASS::size() const NOEXCEPT
 TEMPLATE
 inline size_t CLASS::buckets() const NOEXCEPT
 {
-    return buckets_;
+    return system::possible_narrow_cast<size_t>(buckets_.value);
 }
 
 TEMPLATE
@@ -258,7 +258,7 @@ bool CLASS::get_body_count(Link& count) const NOEXCEPT
     // Body count is written as the first value in link size, but since
     // offsetting is a multiple of sell size, a full cell is consumed for it.
     // In case of disabled there are no cells, so file is link size.
-    link_array(count.value) = link_array(ptr.data());
+    count = link_array(ptr.data());
     return true;
 }
 
@@ -272,9 +272,8 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     // Body count is written as the first value in link size, but since
     // offsetting is a multiple of sell size, a full cell is consumed for it.
     // In case of disabled there are no cells, so file is link size.
-    auto value = count.value;
     file_.prepare(zero, Link::size);
-    link_array(ptr.data()) = link_array(value);
+    link_array(ptr.data()) = count;
     file_.mark(zero, Link::size);
     return true;
 }
@@ -343,7 +342,7 @@ inline CLASS::cell CLASS::get_cell(const Link& index) const NOEXCEPT
 
         // Acquire is necessary to synchronize with set_cell release.
         // Relaxed would miss next updates, so acquire is optimal.
-        return top.load(std::memory_order_acquire);
+        return native_from_little_end(top.load(std::memory_order_acquire));
     }
     else
     {
@@ -354,7 +353,7 @@ inline CLASS::cell CLASS::get_cell(const Link& index) const NOEXCEPT
         cell_array(head) = top;
         mutex_.unlock_shared();
 
-        return head;
+        return native_from_little_end(head);
     }
 }
 
@@ -384,9 +383,10 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
             // to search before next entry is linked. Thread fence imposes order.
             // A release fence ensures that all prior writes (like next) are
             // completed before any subsequent atomic store.
-            auto masked = bit_and<cell>(Link::terminal, head);
-            next = link_array(masked);
-            update = next_cell(collision, head, current, entropy);
+            const auto value = native_from_little_end(head);
+            next = Link{ to_link(value) };
+            update = native_to_little_end(next_cell(collision, value, current,
+                entropy));
             std::atomic_thread_fence(std::memory_order_release);
         }
         while (!top.compare_exchange_weak(head, update,
@@ -399,9 +399,10 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
 
         mutex_.lock();
         cell_array(head) = top;
-        auto masked = bit_and<cell>(Link::terminal, head);
-        next = link_array(masked);
-        auto update = next_cell(collision, head, current, entropy);
+        head = native_from_little_end(head);
+        next = Link{ to_link(head) };
+        auto update = native_to_little_end(next_cell(collision, head, current,
+            entropy));
         top = cell_array(update);
         mutex_.unlock();
     }

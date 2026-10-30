@@ -228,7 +228,7 @@ bool CLASS::lazy_install_() NOEXCEPT
     const auto target = std::max(page_ceiling(to_width<zero>(
         to_commitment())), page_ceiling(logical));
     if ((target > floor) && (mmap_commit(std::next(memory_map_[zero], floor),
-        target - floor, headroom_) == fail))
+        target - floor, commit_headroom_) == fail))
     {
         set_first_code(error::mmap_failure);
         return false;

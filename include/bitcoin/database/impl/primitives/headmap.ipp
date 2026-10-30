@@ -198,7 +198,7 @@ Value CLASS::load(memory::iterator raw) const NOEXCEPT
     {
         // Reads full padded word (masked by to_value).
         const auto& head = *pointer_cast<std::atomic<cell>>(raw);
-        return to_value(head.load(load_order));
+        return to_value(native_from_little_end(head.load(load_order)));
     }
     else
     {
@@ -209,7 +209,7 @@ Value CLASS::load(memory::iterator raw) const NOEXCEPT
         cell_array(value) = head;
         mutex_.unlock_shared();
 
-        return to_value(value);
+        return to_value(native_from_little_end(value));
     }
 }
 
@@ -224,7 +224,8 @@ Link CLASS::allocate(const Link& bytes) NOEXCEPT
     if (bytes.is_terminal())
         return Link::terminal;
 
-    const auto link = file_.allocate(bytes.value);
+    const auto size = system::possible_narrow_cast<size_t>(bytes.value);
+    const auto link = file_.allocate(size);
     if (link == storage::eof)
         return Link::terminal;
 
@@ -250,7 +251,8 @@ bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
     if (position >= size)
         return false;
 
-    const auto offset = ptr.offset(link.value);
+    const auto start = possible_narrow_cast<size_t>(link.value);
+    const auto offset = ptr.offset(start);
     if (is_null(offset))
         return false;
 
@@ -270,18 +272,19 @@ bool CLASS::put(const Link& link, const Element& element) NOEXCEPT
     if (link.is_terminal())
         return false;
 
-    const auto ptr = file_.get(link.value);
+    const auto start = possible_narrow_cast<size_t>(link.value);
+    const auto ptr = file_.get(start);
     const auto bytes = possible_narrow_cast<size_t>(element.count().value);
     const auto size = possible_narrow_sign_cast<ptrdiff_t>(bytes);
     if (!ptr || (ptr.size() < size))
         return false;
 
-    file_.prepare(link.value, bytes);
+    file_.prepare(start, bytes);
 
     iostream stream{ ptr.data(), size };
     flipper sink{ stream };
     const auto written = element.to_data(sink);
-    file_.mark(link.value, bytes);
+    file_.mark(start, bytes);
     return written;
 }
 
@@ -305,7 +308,7 @@ bool CLASS::push(const Link& link) NOEXCEPT
         // Writes into unpublished capacity.
         file_.prepare(position, bucket_size);
         const auto raw = ptr.data();
-        cell value = link.value;
+        auto value = native_to_little_end<cell>(link.value);
         if constexpr (aligned)
         {
             // Writes full padded word.
@@ -377,8 +380,8 @@ bool CLASS::set(size_t index, const Element& element) NOEXCEPT
     static_assert(!is_slab);
     static_assert(aligned, "set requires an aligned cell");
 
-    // Avoid setting at/above terminal sentinel into a bucket position.
-    if (index >= Link::terminal)
+    // Avoid setting the terminal sentinel into a bucket position.
+    if (index == Link::terminal)
         return false;
 
     // Allocate as necessary (allocations are filled).
@@ -403,9 +406,9 @@ bool CLASS::set(const std::vector<typename Link::integer>& indexes,
     if (indexes.empty())
         return true;
 
-    // Avoid setting at/above terminal sentinel into a bucket position.
+    // Avoid setting the terminal sentinel into a bucket position.
     const auto last = std::ranges::max(indexes);
-    if (last >= Link::terminal)
+    if (last == Link::terminal)
         return false;
 
     // Allocate as necessary (allocations are filled), guard across the set.

@@ -146,12 +146,12 @@ CLASS::store(const settings& config) NOEXCEPT
     // Tables.
     // ------------------------------------------------------------------------
 
-    header(header_head_, header_body_, config.header.buckets, config.header.expected),
+    header(header_head_, header_body_, config.header.buckets, config.header.expected_()),
     input(input_head_, input_body_),
     output(output_head_, output_body_),
-    ins(ins_head_, ins_body_, config.ins.buckets, config.ins.expected),
-    outs(outs_head_, *outs_body_, config.outs.buckets, config.outs.expected),
-    tx(tx_head_, tx_body_, config.tx.buckets, config.tx.expected),
+    ins(ins_head_, ins_body_, config.ins.buckets, config.ins.expected_()),
+    outs(outs_head_, *outs_body_, config.outs.buckets, config.outs.expected_()),
+    tx(tx_head_, tx_body_, config.tx.buckets, config.tx.expected_()),
     txs(txs_head_, txs_body_, config.txs.buckets),
 
     candidate(candidate_head_),
@@ -169,16 +169,16 @@ CLASS::store(const settings& config) NOEXCEPT
     silent0_prefix(silent0_prefix_head_, silent0_prefix_body_),
     silent1_prefix(silent1_prefix_head_, silent1_prefix_body_),
     envelope(envelope_head_),
-    duplicate(duplicate_head_, duplicate_body_, config.duplicate.buckets, config.duplicate.expected),
+    duplicate(duplicate_head_, duplicate_body_, config.duplicate.buckets, config.duplicate.expected_()),
     prevalid0(prevalid0_head_, prevalid0_body_),
     prevalid1(prevalid1_head_, prevalid1_body_),
     presilent0(presilent0_head_, presilent0_body_),
     presilent1(presilent1_head_, presilent1_body_),
     prevout(prevout_head_, prevout_body_, config.prevout.buckets),
     state(state_head_, config.state.buckets),
-    pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected),
+    pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected_()),
     spends(spends_head_, spends_body_),
-    wtxid(wtxid_head_, wtxid_body_, config.wtxid.buckets, config.wtxid.expected),
+    wtxid(wtxid_head_, wtxid_body_, config.wtxid.buckets, config.wtxid.expected_()),
 
     filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk.buckets),
     filter_tx(filter_tx_head_, filter_tx_body_, config.filter_tx.buckets)

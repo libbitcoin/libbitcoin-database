@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(file_utilities__space__file__true)
     const std::string text = "panopticon";
     BOOST_REQUIRE(test::create(TEST_PATH, text));
 
-    size_t out{};
+    uint64_t out{};
     BOOST_REQUIRE(file::space(out, TEST_PATH));
     BOOST_WARN(is_nonzero(out));
 }
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_CASE(file_utilities__space__create_directory__true)
     const std::filesystem::path directory = TEST_PATH + "/foo";
     BOOST_REQUIRE(file::create_directory(directory));
 
-    size_t out{};
+    uint64_t out{};
     BOOST_REQUIRE(file::space(out, directory));
     BOOST_WARN(is_nonzero(out));
 }

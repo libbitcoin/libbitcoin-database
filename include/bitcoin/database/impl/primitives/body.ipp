@@ -282,10 +282,11 @@ constexpr CLASS::integer CLASS::cast_link(size_t link) NOEXCEPT
 {
     using namespace system;
     constexpr auto terminal = Link::terminal;
+    constexpr auto ceiling = limit<size_t>(terminal);
 
     // link limit is sub1(terminal), where terminal is 2^((8*Link::bytes)-1).
     // It is ok for the payload to exceed link limit (link is identity only).
-    return link >= terminal ? terminal : possible_narrow_cast<integer>(link);
+    return link == ceiling ? terminal : possible_narrow_cast<integer>(link);
 }
 
 } // namespace database

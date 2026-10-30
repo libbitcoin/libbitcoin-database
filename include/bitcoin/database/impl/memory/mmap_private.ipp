@@ -122,7 +122,8 @@ bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>,
         if (final)
         {
             using namespace system;
-            set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+            const auto headroom = limit<size_t>(disk_headroom_);
+            set_disk_space(ceilinged_add(headroom, ceilinged_multiply(
                 floored_subtract(capacity, file_.load()), stride)));
         }
 
@@ -178,7 +179,8 @@ bool CLASS::grow_(size_t end) NOEXCEPT
 
         if (extended <= end)
         {
-            set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+            const auto headroom = limit<size_t>(disk_headroom_);
+            set_disk_space(ceilinged_add(headroom, ceilinged_multiply(
                 floored_subtract(end, capacity_.load()), stride)));
             return false;
         }
@@ -255,17 +257,17 @@ TEMPLATE
 bool CLASS::probe_(size_t capacity) NOEXCEPT
 {
     using namespace system;
-    const auto bytes = ceilinged_multiply(
+    const auto bytes = ceilinged_multiply<uint64_t>(
         floored_subtract(capacity, file_.load()), stride);
 
-    if (is_zero(bytes) || is_zero(headroom_))
+    if (is_zero(bytes) || is_zero(disk_headroom_))
         return true;
 
-    size_t available{};
+    uint64_t available{};
     if (!file::space(available, filenames_.front()))
         return true;
 
-    return available >= ceilinged_add(bytes, headroom_);
+    return available >= ceilinged_add(bytes, disk_headroom_);
 }
 
 // disk_full: space is set but no code is set with false return.
@@ -303,8 +305,11 @@ bool CLASS::resize_(size_t size, bool final) NOEXCEPT
             if (errno == ENOSPC)
             {
                 if (final)
-                    set_disk_space(ceilinged_add(headroom_, ceilinged_multiply(
+                {
+                    const auto headroom = limit<size_t>(disk_headroom_);
+                    set_disk_space(ceilinged_add(headroom, ceilinged_multiply(
                         floored_subtract(size, extent), stride)));
+                }
 
                 return false;
             }

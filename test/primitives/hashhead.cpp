@@ -178,6 +178,9 @@ using link4 = linkage<4>;
 using filtered_ = hashhead<link4, key, 8>;
 constexpr auto filtered_buckets = 16_size;
 
+using link3 = linkage<3>;
+using small_ = hashhead<link3, key, 3>;
+
 BOOST_AUTO_TEST_CASE(hashhead__optimal_k__zeros__legacy)
 {
     BOOST_REQUIRE_EQUAL(filtered_::optimal_k(0, 100), 5u);
@@ -255,8 +258,8 @@ BOOST_AUTO_TEST_CASE(hashhead__set_buckets__over_terminal__false)
 {
     data_chunk data{};
     test::chunk_storage store{ data, test::terminal_fill };
-    filtered_ head{ store, filtered_buckets };
-    BOOST_REQUIRE(!head.set_buckets(add1<size_t>(link4::terminal)));
+    small_ head{ store, filtered_buckets };
+    BOOST_REQUIRE(!head.set_buckets(add1<size_t>(link3::terminal)));
     BOOST_REQUIRE_EQUAL(head.buckets(), filtered_buckets);
 }
 

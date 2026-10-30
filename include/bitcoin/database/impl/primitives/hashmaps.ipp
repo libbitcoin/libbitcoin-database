@@ -27,7 +27,9 @@ namespace database {
 TEMPLATE
 CLASS::hashmaps(storage& header, storage& body, const Link& buckets,
     size_t expected) NOEXCEPT
-  : head_(header, buckets, expected), body_(body)
+  : head_(header, system::possible_narrow_cast<size_t>(buckets.value),
+        expected),
+    body_(body)
 {
 }
 
