@@ -357,10 +357,11 @@ bool CLASS::evict_next_(size_t chunk, size_t& cursor) NOEXCEPT
     // of its length and the tail refills faster than the cursor returns.
     // A lap can hold no more than physical memory, as nothing else is
     // resident to evict.
-    const auto span = system::greater(chunk, system_memory() / stride);
+    using namespace system;
+    const auto span = greater(chunk, limit<size_t>(system_memory() / stride));
     const auto floor = (end > span) ? (end - span) : zero;
     const auto from = ((cursor > floor) && (cursor < end)) ? cursor : floor;
-    const auto target = std::min(end, system::ceilinged_add(from, chunk));
+    const auto target = std::min(end, ceilinged_add(from, chunk));
 
     if (target <= from)
         return false;
