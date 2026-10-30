@@ -52,10 +52,4 @@ BOOST_AUTO_TEST_CASE(memory_utilities__cuda_ecc_enabled__always__implies_cuda_ec
     BOOST_REQUIRE(!enabled || cuda_ecc());
 }
 
-BOOST_AUTO_TEST_CASE(memory_utilities__gpu_device__always__any_runtime_device)
-{
-    const auto any = cuda_device() || opencl_device() || metal_device();
-    BOOST_REQUIRE_EQUAL(gpu_device(), any);
-}
-
 BOOST_AUTO_TEST_SUITE_END()

@@ -25,7 +25,6 @@
     #include <unistd.h>
 #endif
 #if defined(HAVE_APPLE)
-    #include <dlfcn.h>
     #include <mach/mach.h>
     #include <sys/sysctl.h>
 #endif
@@ -39,7 +38,6 @@
     #include <dlfcn.h>
     #include <sys/vfs.h>
 #endif
-#include <charconv>
 #include <filesystem>
 #include <system_error>
 #include <bitcoin/database/define.hpp>
@@ -503,10 +501,10 @@ bool internal_storage(const std::filesystem::path&) NOEXCEPT
 
 #endif // HAVE_WINDOWS
 
-#if defined(HAVE_WINDOWS) || defined(HAVE_LINUX) || defined(HAVE_APPLE)
+#if defined(HAVE_WINDOWS) || defined(HAVE_LINUX)
 
-// Compute runtimes install with the device driver, so their device counts
-// answer for the backends that batch acceleration requires when compiled.
+// The cuda runtime installs with the device driver, so its device count
+// answers for the backend that batch acceleration requires when compiled.
 using cu_init_t = int32_t(*)(uint32_t);
 using cu_count_t = int32_t(*)(int32_t*);
 using cu_get_t = int32_t(*)(int32_t*, int32_t);
@@ -516,13 +514,7 @@ using nvml_init_t = int32_t(*)();
 using nvml_shutdown_t = int32_t(*)();
 using nvml_handle_t = int32_t(*)(const char*, void**);
 using nvml_ecc_t = int32_t(*)(void*, int32_t*, int32_t*);
-using cl_platform_t = int32_t(*)(uint32_t, void**, uint32_t*);
-using cl_device_t = int32_t(*)(void*, uint64_t, uint32_t, void**, uint32_t*);
-using cl_info_t = int32_t(*)(void*, uint32_t, size_t, void*, size_t*);
-using mtl_device_t = void*(*)();
-using objc_release_t = void(*)(void*);
 
-#if !defined(HAVE_APPLE)
 // CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR/MINOR, and the floor of the
 // compiled cuda kernels (turing).
 constexpr int32_t cu_major = 75;
@@ -538,21 +530,11 @@ constexpr int32_t nvml_unsupported = 3;
 
 // NVML_DEVICE_PCI_BUS_ID_BUFFER_SIZE.
 constexpr int32_t bus_size = 32;
-#endif
-
-// CL_DEVICE_TYPE_GPU, excludes cpu devices exposed by installable clients.
-constexpr auto gpu_type = 4_u64;
-
-// CL_DEVICE_VERSION, and the floor of the compiled opencl kernels.
-constexpr auto cl_version = 0x102f_u32;
-constexpr auto opencl_major = 1_u32;
-constexpr auto opencl_minor = 2_u32;
 
 #if defined(HAVE_WINDOWS)
 
 constexpr auto cuda_library = "nvcuda.dll";
 constexpr auto nvml_library = "nvml.dll";
-constexpr auto opencl_library = "OpenCL.dll";
 using library_t = HMODULE;
 
 static library_t load_library(const std::string& name) NOEXCEPT
@@ -576,15 +558,8 @@ static void free_library(library_t library) NOEXCEPT
 
 #else
 
-#if defined(HAVE_APPLE)
-constexpr auto opencl_library = "/System/Library/Frameworks/OpenCL.framework/OpenCL";
-constexpr auto metal_library = "/System/Library/Frameworks/Metal.framework/Metal";
-constexpr auto objc_library = "/usr/lib/libobjc.A.dylib";
-#else
 constexpr auto cuda_library = "libcuda.so.1";
 constexpr auto nvml_library = "libnvidia-ml.so.1";
-constexpr auto opencl_library = "libOpenCL.so.1";
-#endif
 using library_t = void*;
 
 static library_t load_library(const std::string& name) NOEXCEPT
@@ -603,8 +578,6 @@ static void free_library(library_t library) NOEXCEPT
 }
 
 #endif
-
-#if !defined(HAVE_APPLE)
 
 static bool find_cuda(bool& ecc, std::string& bus) NOEXCEPT
 {
@@ -700,153 +673,6 @@ static bool nvml_ecc(bool& supported, const std::string& bus) NOEXCEPT
     LCOV_EXCL_STOP()
 }
 
-#endif
-
-// Formatted as "OpenCL <major>.<minor> <vendor-specific>".
-static bool opencl_version(const char* text, uint32_t& major,
-    uint32_t& minor) NOEXCEPT
-{
-    constexpr std::string_view prefix{ "OpenCL " };
-    const std::string_view version{ text };
-    if (!version.starts_with(prefix))
-        return false;
-
-    const auto end = std::next(version.data(), version.size());
-    const auto first = std::from_chars(std::next(version.data(),
-        prefix.size()), end, major);
-    if (first.ec != std::errc{} || first.ptr == end || *first.ptr != '.')
-        return false;
-
-    return std::from_chars(std::next(first.ptr), end, minor).ec == std::errc{};
-}
-
-static bool find_opencl() NOEXCEPT
-{
-    const auto library = load_library(opencl_library);
-    if (is_null(library))
-        return false;
-
-    BC_PUSH_WARNING(NO_REINTERPRET_CAST)
-    const auto platforms = reinterpret_cast<cl_platform_t>(
-        load_symbol(library, "clGetPlatformIDs"));
-    const auto devices = reinterpret_cast<cl_device_t>(
-        load_symbol(library, "clGetDeviceIDs"));
-    BC_POP_WARNING()
-
-    auto found = false;
-    uint32_t count{};
-    if (!is_null(platforms) && !is_null(devices) &&
-        is_zero(platforms(0, nullptr, &count)) && !is_zero(count))
-    {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        std::vector<void*> identifiers(count);
-        BC_POP_WARNING()
-
-        BC_PUSH_WARNING(NO_REINTERPRET_CAST)
-        const auto information = reinterpret_cast<cl_info_t>(
-            load_symbol(library, "clGetDeviceInfo"));
-        BC_POP_WARNING()
-
-        if (!is_null(information) &&
-            is_zero(platforms(count, identifiers.data(), nullptr)))
-        {
-            for (const auto identifier: identifiers)
-            {
-                uint32_t gpus{};
-                if (!is_zero(devices(identifier, gpu_type, 0, nullptr, &gpus)) ||
-                    is_zero(gpus))
-                    continue;
-
-                BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-                std::vector<void*> handles(gpus);
-                BC_POP_WARNING()
-
-                if (!is_zero(devices(identifier, gpu_type, gpus, handles.data(),
-                    nullptr)))
-                    continue;
-
-                for (const auto handle: handles)
-                {
-                    char version[64]{};
-                    uint32_t major{}, minor{};
-                    if (is_zero(information(handle, cl_version,
-                        sizeof(version), version, nullptr)) &&
-                        opencl_version(version, major, minor) &&
-                        ((major > opencl_major) ||
-                            (major == opencl_major && minor >= opencl_minor)))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (found)
-                    break;
-            }
-        }
-    }
-
-    free_library(library);
-    return found;
-}
-
-#if defined(HAVE_APPLE)
-
-static bool find_metal() NOEXCEPT
-{
-    const auto library = load_library(metal_library);
-    if (is_null(library))
-        return false;
-
-    BC_PUSH_WARNING(NO_REINTERPRET_CAST)
-    const auto create = reinterpret_cast<mtl_device_t>(
-        load_symbol(library, "MTLCreateSystemDefaultDevice"));
-    BC_POP_WARNING()
-
-    const auto device = is_null(create) ? nullptr : create();
-    if (!is_null(device))
-    {
-        // The device is returned retained, so is released by the runtime.
-        if (const auto objc = load_library(objc_library))
-        {
-            BC_PUSH_WARNING(NO_REINTERPRET_CAST)
-            const auto release = reinterpret_cast<objc_release_t>(
-                load_symbol(objc, "objc_release"));
-            BC_POP_WARNING()
-
-            if (!is_null(release))
-                release(device);
-
-            free_library(objc);
-        }
-    }
-
-    free_library(library);
-    return !is_null(device);
-}
-
-bool cuda_device() NOEXCEPT
-{
-    return false;
-}
-
-bool cuda_ecc() NOEXCEPT
-{
-    return false;
-}
-
-bool cuda_ecc_enabled() NOEXCEPT
-{
-    return false;
-}
-
-bool metal_device() NOEXCEPT
-{
-    return find_metal();
-}
-
-#else
-
 bool cuda_device() NOEXCEPT
 {
     bool enabled{};
@@ -870,29 +696,7 @@ bool cuda_ecc_enabled() NOEXCEPT
     return find_cuda(enabled, bus) && enabled;
 }
 
-bool metal_device() NOEXCEPT
-{
-    return false;
-}
-
-#endif
-
-bool opencl_device() NOEXCEPT
-{
-    return find_opencl();
-}
-
-bool gpu_device() NOEXCEPT
-{
-    return cuda_device() || opencl_device() || metal_device();
-}
-
 #else
-
-bool gpu_device() NOEXCEPT
-{
-    return false;
-}
 
 bool cuda_device() NOEXCEPT
 {
@@ -905,16 +709,6 @@ bool cuda_ecc() NOEXCEPT
 }
 
 bool cuda_ecc_enabled() NOEXCEPT
-{
-    return false;
-}
-
-bool opencl_device() NOEXCEPT
-{
-    return false;
-}
-
-bool metal_device() NOEXCEPT
 {
     return false;
 }
