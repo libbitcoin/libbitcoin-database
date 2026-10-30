@@ -22,7 +22,7 @@
 #include <bitcoin/database/define.hpp>
 
 // The native windows mapped-file behavior is the model staging emulates.
-#if !defined(HAVE_MSC)
+#if !defined(HAVE_WINDOWS)
     #define MANAGE_STAGING
 #elif defined(MANAGE_STAGING)
     #error "MANAGE_STAGING is not supported on Windows."

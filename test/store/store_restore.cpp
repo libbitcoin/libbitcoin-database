@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(store__restore__transactor_locked__transactor_lock)
 }
 
 // The lock is process-exclusive in linux/macOS, globally in win32.
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
 BOOST_AUTO_TEST_CASE(store__restore__process_locked__success)
 {
     settings configuration{};
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(store__restore__no_backups__recreate_success_locks)
 }
 
 // The lock is process-exclusive in linux/macOS, globally in win32.
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
 BOOST_AUTO_TEST_CASE(store__restore__primary_open__clear_directory)
 {
     settings configuration{};

@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(interprocess_lock__lock__externally_locked__false)
     BOOST_REQUIRE(instance1.try_lock());
     BOOST_REQUIRE(test::exists(TEST_PATH));
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
     BOOST_REQUIRE(!instance2.try_lock());
 #else
     BOOST_REQUIRE(instance2.try_lock());
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(interprocess_lock__lock__externally_locked__false)
     BOOST_REQUIRE(instance1.try_unlock());
     BOOST_REQUIRE(!test::exists(TEST_PATH));
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
     BOOST_REQUIRE(instance2.try_lock());
     BOOST_REQUIRE(test::exists(TEST_PATH));
 #else

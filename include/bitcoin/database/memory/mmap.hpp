@@ -335,7 +335,7 @@ private:
     void worker_run_() NOEXCEPT;
     bool tick_() NOEXCEPT;
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
     template <size_t Column>
     bool release_(size_t size) NOEXCEPT;
     template <size_t Column>

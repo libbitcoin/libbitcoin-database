@@ -39,7 +39,7 @@ namespace interprocess = boost::interprocess;
 namespace ipcdetail = interprocess::ipcdetail;
 using file_handle_t = interprocess::file_handle_t;
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
 const file_handle_t invalid = interprocess::winapi::invalid_handle_value;
 #else
 const file_handle_t invalid = -1;

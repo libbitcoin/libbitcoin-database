@@ -80,7 +80,7 @@ namespace test {
 
 // Common directory for all test file creations.
 // Subdirectories and/or files must be differentiated (i.e. by TEST_NAME).
-// Total path length cannot exceed MAX_PATH in HAVE_MSC builds.
+// Total path length cannot exceed MAX_PATH in HAVE_WINDOWS builds.
 extern const std::string directory;
 
 size_t size(const std::filesystem::path& file_path) NOEXCEPT;
