@@ -24,7 +24,7 @@
 #include <bitcoin/database/memory/mman.hpp>
 #include <bitcoin/database/memory/utilities.hpp>
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
 
 namespace libbitcoin {
 namespace database {
@@ -252,6 +252,6 @@ void CLASS::scan_run_() NOEXCEPT
 } // namespace database
 } // namespace libbitcoin
 
-#endif // HAVE_MSC
+#endif // HAVE_WINDOWS
 
 #endif

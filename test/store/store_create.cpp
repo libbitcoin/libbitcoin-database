@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(store__create__transactor_locked__transactor_lock)
 }
 
 // The lock is process-exclusive in linux/macOS, globally in win32.
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
 BOOST_AUTO_TEST_CASE(store__create__process_locked__success)
 {
     settings configuration{};

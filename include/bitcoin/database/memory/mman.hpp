@@ -21,7 +21,7 @@
 
 #include <bitcoin/database/define.hpp>
 
-#if !defined(HAVE_MSC)
+#if !defined(HAVE_WINDOWS)
     #include <sys/mman.h>
     #include <sys/stat.h>
     #include <sys/types.h>
@@ -31,7 +31,7 @@
 // based on:
 // code.google.com/p/mman-win32
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
 
 typedef size_t oft__;
 
@@ -76,6 +76,6 @@ int ftruncate(int fd, oft__ size) noexcept;
 
 int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT;
 
-#endif // HAVE_MSC
+#endif // HAVE_WINDOWS
 
 #endif

@@ -18,7 +18,7 @@
  */
 #include <bitcoin/database/file/utilities.hpp>
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
     #include <io.h>
 #endif
 #include <fcntl.h>
@@ -28,7 +28,7 @@
 #include <ios>
 #include <bitcoin/database/define.hpp>
 
-#if defined(HAVE_MSC) || defined(HAVE_LINUX)
+#if defined(HAVE_WINDOWS) || defined(HAVE_LINUX)
     #define ADVISED_ONLY(name) name
 #else
     #define ADVISED_ONLY(name)
@@ -344,7 +344,7 @@ int open(const path& filename, bool,
     const auto path = system::extended_path(filename);
     int file_descriptor{};
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
     // Advice is elective (unhinted is the cache manager default) and
     // configured from the read pattern (see database::advice).
     // Order follows the advice enumeration.
@@ -399,7 +399,7 @@ int open(const path& filename, bool,
 #else
     // open sets errno on failure.
     file_descriptor = ::open(path.c_str(), O_RDWR, S_IRUSR | S_IWUSR);
-#endif // HAVE_MSC
+#endif // HAVE_WINDOWS
 
     return file_descriptor;
 }
@@ -415,7 +415,7 @@ code open_ex(int& file_descriptor, const path& filename, bool random,
 bool close(int file_descriptor) NOEXCEPT
 {
     // close and _close() set errno on failure.
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
     return is_zero(::_close(file_descriptor));
 #else
     return is_zero(::close(file_descriptor));
@@ -440,7 +440,7 @@ bool size(size_t& out, int file_descriptor) NOEXCEPT
     // _fstat64, _fstat32 and fstat set errno on failure.
     // This is required because off_t is defined as long, which is 32|64 bits
     // in msvc and 64 bits in linux/osx, and stat contains off_t.
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
 #if defined(HAVE_X64)
     struct _stat64 sbuf{};
     if (_fstat64(file_descriptor, &sbuf) == -1)

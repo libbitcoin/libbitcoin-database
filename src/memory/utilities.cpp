@@ -18,7 +18,7 @@
  */
 #include <bitcoin/database/memory/utilities.hpp>
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
     #include <windows.h>
     #include <winioctl.h>
 #else
@@ -49,7 +49,7 @@ namespace database {
 
 using namespace system;
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
 
 size_t page_size() NOEXCEPT
 {
@@ -114,7 +114,7 @@ uint64_t system_compressed() NOEXCEPT
     return zero;
 }
 
-#else // HAVE_MSC
+#else // HAVE_WINDOWS
 
 size_t page_size() NOEXCEPT
 {
@@ -294,14 +294,14 @@ uint64_t system_compressed() NOEXCEPT
     return zero;
 }
 
-#endif // HAVE_MSC
+#endif // HAVE_WINDOWS
 
 size_t cores() NOEXCEPT
 {
     return std::max(std::thread::hardware_concurrency(), 1_u32);
 }
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
 
 // Volume root of the path, empty if not determinable.
 static std::string volume_root(const std::filesystem::path& path) NOEXCEPT
@@ -501,9 +501,9 @@ bool internal_storage(const std::filesystem::path&) NOEXCEPT
     return true;
 }
 
-#endif // HAVE_MSC
+#endif // HAVE_WINDOWS
 
-#if defined(HAVE_MSC) || defined(HAVE_LINUX) || defined(HAVE_APPLE)
+#if defined(HAVE_WINDOWS) || defined(HAVE_LINUX) || defined(HAVE_APPLE)
 
 // Compute runtimes install with the device driver, so their device counts
 // answer for the backends that batch acceleration requires when compiled.
@@ -548,7 +548,7 @@ constexpr auto cl_version = 0x102f_u32;
 constexpr auto opencl_major = 1_u32;
 constexpr auto opencl_minor = 2_u32;
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
 
 constexpr auto cuda_library = "nvcuda.dll";
 constexpr auto nvml_library = "nvml.dll";

@@ -22,7 +22,7 @@
 // based on:
 // code.google.com/p/mman-win32
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
 
 #include <windows.h>
 #include <io.h>
@@ -380,5 +380,5 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
     return ::ftruncate(fd, target);
 }
 
-#endif // HAVE_MSC
+#endif // HAVE_WINDOWS
 
