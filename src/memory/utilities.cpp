@@ -501,7 +501,8 @@ bool internal_storage(const std::filesystem::path&) NOEXCEPT
 
 #endif // HAVE_WINDOWS
 
-#if defined(HAVE_WINDOWS) || defined(HAVE_LINUX)
+#if (defined(HAVE_WINDOWS) || defined(HAVE_LINUX)) && \
+    (defined(HAVE_X64) || defined(HAVE_ARM64))
 
 // The cuda runtime installs with the device driver, so its device count
 // answers for the backend that batch acceleration requires when compiled.
