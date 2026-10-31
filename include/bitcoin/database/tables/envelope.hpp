@@ -89,7 +89,7 @@ struct BCD_API envelope
     system::chain::script signet_challenge{};
 
     /// Database settings.
-    uint16_t interval_depth{};
+    uint8_t interval_depth{};
     uint32_t header_buckets{};
     uint32_t ins_buckets{};
     uint32_t outs_buckets{};
