@@ -98,6 +98,7 @@ settings::settings(chain::selection context) NOEXCEPT
   : settings()
 {
     network = context;
+    path = std::string{ system::config::selection::to_word(context) };
 
     // expected are element counts, deriving filter k at create.
     // sizes are set to 1% of measured pruned body (tiny tables 100%).

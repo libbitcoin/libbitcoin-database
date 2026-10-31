@@ -121,6 +121,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
 {
     database::settings configuration{ system::chain::selection::mainnet };
     BOOST_REQUIRE(configuration.network == system::chain::selection::mainnet);
+    BOOST_REQUIRE_EQUAL(configuration.path, "mainnet");
     BOOST_REQUIRE_EQUAL(configuration.header.expected, 962'953u);
     BOOST_REQUIRE_EQUAL(configuration.header.size, 124'220'679u);
     BOOST_REQUIRE_EQUAL(configuration.txs.buckets, 950'001u);
@@ -146,6 +147,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet3__expected)
 {
     database::settings configuration{ system::chain::selection::testnet3 };
     BOOST_REQUIRE(configuration.network == system::chain::selection::testnet3);
+    BOOST_REQUIRE_EQUAL(configuration.path, "testnet3");
     BOOST_REQUIRE_EQUAL(configuration.header.expected, 5'158'746u);
     BOOST_REQUIRE_EQUAL(configuration.header.size, 588'097'044u);
     BOOST_REQUIRE_EQUAL(configuration.txs.buckets, 5'100'001u);
@@ -171,6 +173,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet4__expected)
 {
     database::settings configuration{ system::chain::selection::testnet4 };
     BOOST_REQUIRE(configuration.network == system::chain::selection::testnet4);
+    BOOST_REQUIRE_EQUAL(configuration.path, "testnet4");
     BOOST_REQUIRE_EQUAL(configuration.header.expected, 156'456u);
     BOOST_REQUIRE_EQUAL(configuration.header.size, 17'835'984u);
     BOOST_REQUIRE_EQUAL(configuration.txs.buckets, 150'001u);
@@ -196,6 +199,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
 {
     database::settings configuration{ system::chain::selection::regtest };
     BOOST_REQUIRE(configuration.network == system::chain::selection::regtest);
+    BOOST_REQUIRE_EQUAL(configuration.path, "regtest");
     BOOST_REQUIRE_EQUAL(configuration.header.expected, 10'000u);
     BOOST_REQUIRE_EQUAL(configuration.header.size, 0u);
     BOOST_REQUIRE_EQUAL(configuration.txs.buckets, 10'001u);
@@ -221,6 +225,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__signet__expected)
 {
     database::settings configuration{ system::chain::selection::signet };
     BOOST_REQUIRE(configuration.network == system::chain::selection::signet);
+    BOOST_REQUIRE_EQUAL(configuration.path, "signet");
     BOOST_REQUIRE_EQUAL(configuration.header.expected, 330'000u);
     BOOST_REQUIRE_EQUAL(configuration.header.size, 0u);
     BOOST_REQUIRE_EQUAL(configuration.txs.buckets, 330'001u);
