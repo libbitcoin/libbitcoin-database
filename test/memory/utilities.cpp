@@ -18,38 +18,38 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(memory_utilities_tests)
+BC_AUTO_TEST_SUITE(memory_utilities_tests)
 
 // It is presumed impossible for the page size to be zero, in which case this
 // test should never fail on any platform, though an API failure returns zero.
-BOOST_AUTO_TEST_CASE(memory_utilities__page_size__always__non_zero)
+BC_AUTO_TEST_CASE(memory_utilities__page_size__always__non_zero)
 {
-    BOOST_REQUIRE(is_nonzero(page_size()));
+    BC_REQUIRE(is_nonzero(page_size()));
 }
 
 // It is not possible for the actual memory to be zero and an overflow will
 // return max_uint64, so this test should never fail on any platform, though
 // an API failure returns zero.
-BOOST_AUTO_TEST_CASE(memory_utilities__system_memory__always__nonzero)
+BC_AUTO_TEST_CASE(memory_utilities__system_memory__always__nonzero)
 {
-    BOOST_REQUIRE(is_nonzero(system_memory()));
+    BC_REQUIRE(is_nonzero(system_memory()));
 }
 
-BOOST_AUTO_TEST_CASE(memory_utilities__physical_memory__always__not_less_than_system_memory)
+BC_AUTO_TEST_CASE(memory_utilities__physical_memory__always__not_less_than_system_memory)
 {
-    BOOST_REQUIRE_GE(physical_memory(), system_memory());
+    BC_REQUIRE_GE(physical_memory(), system_memory());
 }
 
-BOOST_AUTO_TEST_CASE(memory_utilities__cuda_ecc__always__implies_cuda_device)
+BC_AUTO_TEST_CASE(memory_utilities__cuda_ecc__always__implies_cuda_device)
 {
     const auto ecc = cuda_ecc();
-    BOOST_REQUIRE(!ecc || cuda_device());
+    BC_REQUIRE(!ecc || cuda_device());
 }
 
-BOOST_AUTO_TEST_CASE(memory_utilities__cuda_ecc_enabled__always__implies_cuda_ecc)
+BC_AUTO_TEST_CASE(memory_utilities__cuda_ecc_enabled__always__implies_cuda_ecc)
 {
     const auto enabled = cuda_ecc_enabled();
-    BOOST_REQUIRE(!enabled || cuda_ecc());
+    BC_REQUIRE(!enabled || cuda_ecc());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

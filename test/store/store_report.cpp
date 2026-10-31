@@ -19,49 +19,49 @@
 #include "../test.hpp"
 #include "../mocks/map_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 // report
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__report__created__reports_all_tables_without_fault)
+BC_AUTO_TEST_CASE(store__report__created__reports_all_tables_without_fault)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.create(test::events));
     size_t calls{};
     size_t faults{};
     instance.report([&](const code& ec, auto) NOEXCEPT { ++calls; faults += static_cast<size_t>(static_cast<bool>(ec)); });
-    BOOST_REQUIRE_NE(calls, 0u);
-    BOOST_REQUIRE_EQUAL(faults, 0u);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE_NE(calls, 0u);
+    BC_REQUIRE_EQUAL(faults, 0u);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
 // get_fault
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__get_fault__created__success)
+BC_AUTO_TEST_CASE(store__get_fault__created__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.get_fault());
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.close(test::events));
 }
 
 // get_space
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__get_space__created__zero)
+BC_AUTO_TEST_CASE(store__get_space__created__zero)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE_EQUAL(instance.get_space(), 0u);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE_EQUAL(instance.get_space(), 0u);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

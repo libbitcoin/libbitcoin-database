@@ -20,6 +20,6 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_height_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(query_height_tests, test::directory_setup_fixture)
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

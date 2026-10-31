@@ -18,63 +18,63 @@
  */
 #include "../test.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(flush_lock_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(flush_lock_tests, test::directory_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(flush_lock__construct__file__expected)
+BC_AUTO_TEST_CASE(flush_lock__construct__file__expected)
 {
     flush_lock instance(TEST_PATH);
-    BOOST_REQUIRE_EQUAL(instance.file(), TEST_PATH);
+    BC_REQUIRE_EQUAL(instance.file(), TEST_PATH);
 }
 
-BOOST_AUTO_TEST_CASE(flush_lock__try_lock__not_exists__true_created)
+BC_AUTO_TEST_CASE(flush_lock__try_lock__not_exists__true_created)
 {
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 
     flush_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.try_lock());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(instance.try_lock());
+    BC_REQUIRE(test::exists(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(flush_lock__try_lock__exists__false)
+BC_AUTO_TEST_CASE(flush_lock__try_lock__exists__false)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
 
     flush_lock instance(TEST_PATH);
-    BOOST_REQUIRE(!instance.try_lock());
+    BC_REQUIRE(!instance.try_lock());
 }
 
-BOOST_AUTO_TEST_CASE(flush_lock__try_unlock__not_exists__false)
+BC_AUTO_TEST_CASE(flush_lock__try_unlock__not_exists__false)
 {
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 
     flush_lock instance(TEST_PATH);
-    BOOST_REQUIRE(!instance.try_unlock());
+    BC_REQUIRE(!instance.try_unlock());
 }
 
-BOOST_AUTO_TEST_CASE(flush_lock__try_unlock__exists__true_deleted)
+BC_AUTO_TEST_CASE(flush_lock__try_unlock__exists__true_deleted)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
 
     flush_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.try_unlock());
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(instance.try_unlock());
+    BC_REQUIRE(!test::exists(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(flush_lock__is_locked__not_exists__false)
+BC_AUTO_TEST_CASE(flush_lock__is_locked__not_exists__false)
 {
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 
     flush_lock instance(TEST_PATH);
-    BOOST_REQUIRE(!instance.is_locked());
+    BC_REQUIRE(!instance.is_locked());
 }
 
-BOOST_AUTO_TEST_CASE(flush_lock__is_locked__exists__true)
+BC_AUTO_TEST_CASE(flush_lock__is_locked__exists__true)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
 
     flush_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.is_locked());
+    BC_REQUIRE(instance.is_locked());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
 

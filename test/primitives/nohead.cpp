@@ -19,7 +19,7 @@
 #include "../test.hpp"
 #include "../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(nohead_tests)
+BC_AUTO_TEST_SUITE(nohead_tests)
 
 using namespace system;
 
@@ -50,78 +50,78 @@ using test_header = nohead<link>;
 ////    }
 ////};
 
-BOOST_AUTO_TEST_CASE(nohead__create__size__expected)
+BC_AUTO_TEST_CASE(nohead__create__size__expected)
 {
     data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
-    BOOST_REQUIRE(head.create());
-    BOOST_REQUIRE_EQUAL(data.size(), head_size);
+    BC_REQUIRE(head.create());
+    BC_REQUIRE_EQUAL(data.size(), head_size);
 }
 
 // Current and initial (configured) buckets both zero.
-BOOST_AUTO_TEST_CASE(nohead__verify__uncreated__true)
+BC_AUTO_TEST_CASE(nohead__verify__uncreated__true)
 {
     data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
-    ////BOOST_REQUIRE(head.create());
-    BOOST_REQUIRE(head.verify());
+    ////BC_REQUIRE(head.create());
+    BC_REQUIRE(head.verify());
 }
 
-BOOST_AUTO_TEST_CASE(nohead__verify__created__false)
+BC_AUTO_TEST_CASE(nohead__verify__created__false)
 {
     data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
-    BOOST_REQUIRE(head.create());
-    BOOST_REQUIRE(head.verify());
+    BC_REQUIRE(head.create());
+    BC_REQUIRE(head.verify());
 }
 
-BOOST_AUTO_TEST_CASE(nohead__get_body_count__created__zero)
+BC_AUTO_TEST_CASE(nohead__get_body_count__created__zero)
 {
     data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
-    BOOST_REQUIRE(head.create());
+    BC_REQUIRE(head.create());
 
     link count{};
-    BOOST_REQUIRE(head.get_body_count(count));
-    BOOST_REQUIRE_EQUAL(count, zero);
+    BC_REQUIRE(head.get_body_count(count));
+    BC_REQUIRE_EQUAL(count, zero);
 }
 
-BOOST_AUTO_TEST_CASE(nohead__set_body_count__get_body_count__expected)
+BC_AUTO_TEST_CASE(nohead__set_body_count__get_body_count__expected)
 {
     data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
-    BOOST_REQUIRE(head.create());
+    BC_REQUIRE(head.create());
 
     constexpr auto expected = 42u;
-    BOOST_REQUIRE(head.set_body_count(expected));
+    BC_REQUIRE(head.set_body_count(expected));
 
     link count{};
-    BOOST_REQUIRE(head.get_body_count(count));
-    BOOST_REQUIRE_EQUAL(count, expected);
+    BC_REQUIRE(head.get_body_count(count));
+    BC_REQUIRE_EQUAL(count, expected);
 }
 
-BOOST_AUTO_TEST_CASE(nohead__clear__get_body_count__zero)
+BC_AUTO_TEST_CASE(nohead__clear__get_body_count__zero)
 {
     data_chunk data{};
     test::chunk_storage store{ data };
     test_header head{ store, buckets };
-    BOOST_REQUIRE(head.create());
+    BC_REQUIRE(head.create());
 
     constexpr auto expected = 42u;
-    BOOST_REQUIRE(head.set_body_count(expected));
+    BC_REQUIRE(head.set_body_count(expected));
 
     link count{};
-    BOOST_REQUIRE(head.get_body_count(count));
-    BOOST_REQUIRE_EQUAL(count, expected);
+    BC_REQUIRE(head.get_body_count(count));
+    BC_REQUIRE_EQUAL(count, expected);
 
-    BOOST_REQUIRE(head.clear());
-    BOOST_REQUIRE(head.get_body_count(count));
-    BOOST_REQUIRE_EQUAL(count, zero);
+    BC_REQUIRE(head.clear());
+    BC_REQUIRE(head.get_body_count(count));
+    BC_REQUIRE_EQUAL(count, zero);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

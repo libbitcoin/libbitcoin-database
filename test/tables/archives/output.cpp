@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(output_tests)
+BC_AUTO_TEST_SUITE(output_tests)
 
 using namespace system;
 const table::output::slab expected
@@ -45,21 +45,21 @@ const data_chunk expected_file
     0x00
 };
 
-BOOST_AUTO_TEST_CASE(output__put__get__expected)
+BC_AUTO_TEST_CASE(output__put__get__expected)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::output instance{ head_store, body_store };
-    BOOST_REQUIRE(!instance.put_link(table::output::slab{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(expected).is_terminal());
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+    BC_REQUIRE(!instance.put_link(table::output::slab{}).is_terminal());
+    BC_REQUIRE(!instance.put_link(expected).is_terminal());
+    BC_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::output::slab element{};
-    BOOST_REQUIRE(instance.get<table::output::slab>(0, element));
-    BOOST_REQUIRE(element == table::output::slab{});
+    BC_REQUIRE(instance.get<table::output::slab>(0, element));
+    BC_REQUIRE(element == table::output::slab{});
 
-    BOOST_REQUIRE(instance.get<table::output::slab>(slab0_size, element));
-    BOOST_REQUIRE(element == expected);
+    BC_REQUIRE(instance.get<table::output::slab>(slab0_size, element));
+    BC_REQUIRE(element == expected);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

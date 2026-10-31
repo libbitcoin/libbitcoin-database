@@ -18,6 +18,6 @@
  */
 #include "../test.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

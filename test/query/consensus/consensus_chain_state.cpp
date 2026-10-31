@@ -20,9 +20,9 @@
 #include "../../mocks/blocks.hpp"
 #include "../../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_consensus_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(query_consensus_tests, test::directory_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__genesis__expected)
+BC_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__genesis__expected)
 {
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
@@ -39,22 +39,22 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__genesis__expect
     database_settings.path = TEST_DIRECTORY;
     test::chunk_store store{ database_settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
 
     const auto state = query.get_candidate_chain_state(system_settings);
-    BOOST_REQUIRE(state);
-    BOOST_REQUIRE_EQUAL(state->flags(), expected.flags);
-    BOOST_REQUIRE_EQUAL(state->height(), expected.height);
-    BOOST_REQUIRE_EQUAL(state->timestamp(), expected.timestamp);
-    BOOST_REQUIRE_EQUAL(state->work_required(), expected.work_required);
-    BOOST_REQUIRE_EQUAL(state->median_time_past(), expected.median_time_past);
-    BOOST_REQUIRE_EQUAL(state->minimum_block_version(), expected.minimum_block_version);
-    BOOST_REQUIRE_EQUAL(state->cumulative_work(), test::genesis.header().proof());
-    BOOST_REQUIRE(state->context() == expected);
+    BC_REQUIRE(state);
+    BC_REQUIRE_EQUAL(state->flags(), expected.flags);
+    BC_REQUIRE_EQUAL(state->height(), expected.height);
+    BC_REQUIRE_EQUAL(state->timestamp(), expected.timestamp);
+    BC_REQUIRE_EQUAL(state->work_required(), expected.work_required);
+    BC_REQUIRE_EQUAL(state->median_time_past(), expected.median_time_past);
+    BC_REQUIRE_EQUAL(state->minimum_block_version(), expected.minimum_block_version);
+    BC_REQUIRE_EQUAL(state->cumulative_work(), test::genesis.header().proof());
+    BC_REQUIRE(state->context() == expected);
 }
 
-BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expected)
+BC_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expected)
 {
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
@@ -80,23 +80,23 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expecte
     database_settings.path = TEST_DIRECTORY;
     test::chunk_store store{ database_settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
     const auto work = test::genesis.header().proof() + test::block1.header().proof();
-    BOOST_REQUIRE(query.set(test::block1, context, work, true, false));
-    BOOST_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
+    BC_REQUIRE(query.set(test::block1, context, work, true, false));
+    BC_REQUIRE(query.push_candidate(query.to_header(test::block1.hash())));
 
     const auto state = query.get_candidate_chain_state(system_settings);
-    BOOST_REQUIRE(state);
-    BOOST_REQUIRE_EQUAL(state->flags(), expected.flags);
-    BOOST_REQUIRE_EQUAL(state->height(), expected.height);
-    BOOST_REQUIRE_EQUAL(state->timestamp(), expected.timestamp);
-    BOOST_REQUIRE_EQUAL(state->work_required(), expected.work_required);
-    BOOST_REQUIRE_EQUAL(state->median_time_past(), expected.median_time_past);
-    BOOST_REQUIRE_EQUAL(state->minimum_block_version(), expected.minimum_block_version);
-    BOOST_REQUIRE_EQUAL(state->previous_timestamp(), expected.previous_timestamp);
-    BOOST_REQUIRE_EQUAL(state->cumulative_work(), test::genesis.header().proof() + test::block1.header().proof());
-    BOOST_REQUIRE(state->context() == expected);
+    BC_REQUIRE(state);
+    BC_REQUIRE_EQUAL(state->flags(), expected.flags);
+    BC_REQUIRE_EQUAL(state->height(), expected.height);
+    BC_REQUIRE_EQUAL(state->timestamp(), expected.timestamp);
+    BC_REQUIRE_EQUAL(state->work_required(), expected.work_required);
+    BC_REQUIRE_EQUAL(state->median_time_past(), expected.median_time_past);
+    BC_REQUIRE_EQUAL(state->minimum_block_version(), expected.minimum_block_version);
+    BC_REQUIRE_EQUAL(state->previous_timestamp(), expected.previous_timestamp);
+    BC_REQUIRE_EQUAL(state->cumulative_work(), test::genesis.header().proof() + test::block1.header().proof());
+    BC_REQUIRE(state->context() == expected);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

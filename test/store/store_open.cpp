@@ -21,131 +21,131 @@
 
 // these include the slow tests (mmap)
 
-BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 // open
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__open__transactor_locked__transactor_lock)
+BC_AUTO_TEST_CASE(store__open__transactor_locked__transactor_lock)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     instance.transactor_mutex().lock();
-    BOOST_REQUIRE_EQUAL(instance.open(test::events), error::transactor_lock);
+    BC_REQUIRE_EQUAL(instance.open(test::events), error::transactor_lock);
 }
 
 // The lock is process-exclusive in linux/macOS, globally in win32.
 #if defined(HAVE_WINDOWS)
-BOOST_AUTO_TEST_CASE(store__copen__process_locked__success)
+BC_AUTO_TEST_CASE(store__copen__process_locked__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     interprocess_lock lock{ instance.process_lock_file() };
-    BOOST_REQUIRE(lock.try_lock());
-    BOOST_REQUIRE_EQUAL(instance.open(test::events), error::process_lock);
+    BC_REQUIRE(lock.try_lock());
+    BC_REQUIRE_EQUAL(instance.open(test::events), error::process_lock);
 }
 #endif
 
-BOOST_AUTO_TEST_CASE(store__open__flush_locked__flush_lock)
+BC_AUTO_TEST_CASE(store__open__flush_locked__flush_lock)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(test::create(instance.flush_lock_file()));
-    BOOST_REQUIRE_EQUAL(instance.open(test::events), error::flush_lock);
+    BC_REQUIRE(test::create(instance.flush_lock_file()));
+    BC_REQUIRE_EQUAL(instance.open(test::events), error::flush_lock);
 }
 
-BOOST_AUTO_TEST_CASE(store__open__process_lock_file__success)
+BC_AUTO_TEST_CASE(store__open__process_lock_file__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(test::create(instance.process_lock_file()));
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(instance.process_lock_file()));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__open__default__unlocks_transactor_only)
+BC_AUTO_TEST_CASE(store__open__default__unlocks_transactor_only)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(test::exists(instance.flush_lock_file()));
-    BOOST_REQUIRE(test::exists(instance.process_lock_file()));
-    BOOST_REQUIRE(instance.transactor_mutex().try_lock());
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(test::exists(instance.flush_lock_file()));
+    BC_REQUIRE(test::exists(instance.process_lock_file()));
+    BC_REQUIRE(instance.transactor_mutex().try_lock());
     instance.transactor_mutex().unlock();
     instance.close(test::events);
 }
 
-BOOST_AUTO_TEST_CASE(store__open__uncreated__open_failure)
+BC_AUTO_TEST_CASE(store__open__uncreated__open_failure)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
-    BOOST_REQUIRE(instance.open(test::events));
+    BC_REQUIRE(instance.open(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__open__created__success)
+BC_AUTO_TEST_CASE(store__open__created__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__open__schema_mismatch__schema_version)
+BC_AUTO_TEST_CASE(store__open__schema_mismatch__schema_version)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
-    BOOST_REQUIRE(test::create(instance.envelope_head_file(), std::string(16, '')));
-    BOOST_REQUIRE_EQUAL(instance.open(test::events), error::schema_version);
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(instance.envelope_head_file(), std::string(16, '')));
+    BC_REQUIRE_EQUAL(instance.open(test::events), error::schema_version);
 }
 
 // read_envelope
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__read_envelope__uncreated__failure)
+BC_AUTO_TEST_CASE(store__read_envelope__uncreated__failure)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     database::envelope stored{};
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(instance.read_envelope(stored));
+    BC_REQUIRE(instance.read_envelope(stored));
 }
 
-BOOST_AUTO_TEST_CASE(store__read_envelope__created__stored)
+BC_AUTO_TEST_CASE(store__read_envelope__created__stored)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     configuration.envelope.network = system::chain::selection::testnet4;
     database::envelope stored{};
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
-    BOOST_REQUIRE(!instance.read_envelope(stored));
-    BOOST_REQUIRE(stored.schema == envelope::compiled);
-    BOOST_REQUIRE(stored.network == system::chain::selection::testnet4);
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.read_envelope(stored));
+    BC_REQUIRE(stored.schema == envelope::compiled);
+    BC_REQUIRE(stored.network == system::chain::selection::testnet4);
 }
 
-BOOST_AUTO_TEST_CASE(store__read_envelope__schema_mismatch__schema_version)
+BC_AUTO_TEST_CASE(store__read_envelope__schema_mismatch__schema_version)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     database::envelope stored{};
     const system::config::version expected{ 0x01010101, 0x01010101, 0x01010101, 0x01010101 };
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
-    BOOST_REQUIRE(test::create(instance.envelope_head_file(), std::string(16, '\x01')));
-    BOOST_REQUIRE_EQUAL(instance.read_envelope(stored), error::schema_version);
-    BOOST_REQUIRE(stored.schema == expected);
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(instance.envelope_head_file(), std::string(16, '\x01')));
+    BC_REQUIRE_EQUAL(instance.read_envelope(stored), error::schema_version);
+    BC_REQUIRE(stored.schema == expected);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

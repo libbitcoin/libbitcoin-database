@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(difference_set_tests)
+BC_AUTO_TEST_SUITE(difference_set_tests)
 
 using namespace system;
 
@@ -35,51 +35,51 @@ static std_vector<size_t> members(const difference_set& set) NOEXCEPT
     return out;
 }
 
-BOOST_AUTO_TEST_CASE(difference_set__size__default__zero)
+BC_AUTO_TEST_CASE(difference_set__size__default__zero)
 {
     const difference_set instance{};
-    BOOST_REQUIRE_EQUAL(instance.size(), zero);
-    BOOST_REQUIRE_EQUAL(instance.words(), zero);
+    BC_REQUIRE_EQUAL(instance.size(), zero);
+    BC_REQUIRE_EQUAL(instance.words(), zero);
 }
 
-BOOST_AUTO_TEST_CASE(difference_set__words__partial_word__ceilinged)
+BC_AUTO_TEST_CASE(difference_set__words__partial_word__ceilinged)
 {
     const difference_set instance{ 65 };
-    BOOST_REQUIRE_EQUAL(instance.size(), 65u);
-    BOOST_REQUIRE_EQUAL(instance.words(), 2u);
+    BC_REQUIRE_EQUAL(instance.size(), 65u);
+    BC_REQUIRE_EQUAL(instance.words(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(difference_set__members__unpresented__empty)
+BC_AUTO_TEST_CASE(difference_set__members__unpresented__empty)
 {
     const difference_set instance{ 256 };
-    BOOST_REQUIRE(members(instance).empty());
+    BC_REQUIRE(members(instance).empty());
 }
 
-BOOST_AUTO_TEST_CASE(difference_set__toggle__once__member)
+BC_AUTO_TEST_CASE(difference_set__toggle__once__member)
 {
     difference_set instance{ 256 };
     instance.toggle(42);
-    BOOST_REQUIRE_EQUAL(members(instance), std_vector<size_t>{ 42 });
+    BC_REQUIRE_EQUAL(members(instance), std_vector<size_t>{ 42 });
 }
 
-BOOST_AUTO_TEST_CASE(difference_set__toggle__twice__cancelled)
-{
-    difference_set instance{ 256 };
-    instance.toggle(42);
-    instance.toggle(42);
-    BOOST_REQUIRE(members(instance).empty());
-}
-
-BOOST_AUTO_TEST_CASE(difference_set__toggle__thrice__member)
+BC_AUTO_TEST_CASE(difference_set__toggle__twice__cancelled)
 {
     difference_set instance{ 256 };
     instance.toggle(42);
     instance.toggle(42);
-    instance.toggle(42);
-    BOOST_REQUIRE_EQUAL(members(instance), std_vector<size_t>{ 42 });
+    BC_REQUIRE(members(instance).empty());
 }
 
-BOOST_AUTO_TEST_CASE(difference_set__toggle__distinct__all_members)
+BC_AUTO_TEST_CASE(difference_set__toggle__thrice__member)
+{
+    difference_set instance{ 256 };
+    instance.toggle(42);
+    instance.toggle(42);
+    instance.toggle(42);
+    BC_REQUIRE_EQUAL(members(instance), std_vector<size_t>{ 42 });
+}
+
+BC_AUTO_TEST_CASE(difference_set__toggle__distinct__all_members)
 {
     difference_set instance{ 256 };
     instance.toggle(0);
@@ -87,10 +87,10 @@ BOOST_AUTO_TEST_CASE(difference_set__toggle__distinct__all_members)
     instance.toggle(64);
     instance.toggle(255);
     const std_vector<size_t> expected{ 0, 63, 64, 255 };
-    BOOST_REQUIRE_EQUAL(members(instance), expected);
+    BC_REQUIRE_EQUAL(members(instance), expected);
 }
 
-BOOST_AUTO_TEST_CASE(difference_set__toggle__paired__residue_only)
+BC_AUTO_TEST_CASE(difference_set__toggle__paired__residue_only)
 {
     difference_set instance{ 256 };
     instance.toggle(10);
@@ -98,32 +98,32 @@ BOOST_AUTO_TEST_CASE(difference_set__toggle__paired__residue_only)
     instance.toggle(30);
     instance.toggle(20);
     instance.toggle(10);
-    BOOST_REQUIRE_EQUAL(members(instance), std_vector<size_t>{ 30 });
+    BC_REQUIRE_EQUAL(members(instance), std_vector<size_t>{ 30 });
 }
 
-BOOST_AUTO_TEST_CASE(difference_set__toggle__word_boundary__independent)
+BC_AUTO_TEST_CASE(difference_set__toggle__word_boundary__independent)
 {
     difference_set instance{ 128 };
     instance.toggle(63);
     instance.toggle(64);
     instance.toggle(63);
-    BOOST_REQUIRE_EQUAL(members(instance), std_vector<size_t>{ 64 });
+    BC_REQUIRE_EQUAL(members(instance), std_vector<size_t>{ 64 });
 }
 
-BOOST_AUTO_TEST_CASE(difference_set__at__unset_word__zero)
+BC_AUTO_TEST_CASE(difference_set__at__unset_word__zero)
 {
     const difference_set instance{ 128 };
-    BOOST_REQUIRE_EQUAL(instance.at(0), 0_u64);
-    BOOST_REQUIRE_EQUAL(instance.at(1), 0_u64);
+    BC_REQUIRE_EQUAL(instance.at(0), 0_u64);
+    BC_REQUIRE_EQUAL(instance.at(1), 0_u64);
 }
 
-BOOST_AUTO_TEST_CASE(difference_set__at__set_elements__expected_word)
+BC_AUTO_TEST_CASE(difference_set__at__set_elements__expected_word)
 {
     difference_set instance{ 128 };
     instance.toggle(0);
     instance.toggle(2);
-    BOOST_REQUIRE_EQUAL(instance.at(0), 0b101_u64);
-    BOOST_REQUIRE_EQUAL(instance.at(1), 0_u64);
+    BC_REQUIRE_EQUAL(instance.at(0), 0b101_u64);
+    BC_REQUIRE_EQUAL(instance.at(1), 0_u64);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

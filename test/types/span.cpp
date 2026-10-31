@@ -18,32 +18,32 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(span_tests)
+BC_AUTO_TEST_SUITE(span_tests)
 
 using namespace system;
 
-BOOST_AUTO_TEST_CASE(span__size__default__zero)
+BC_AUTO_TEST_CASE(span__size__default__zero)
 {
     const span instance{};
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+    BC_REQUIRE_EQUAL(instance.size(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(span__size__empty_range__zero)
+BC_AUTO_TEST_CASE(span__size__empty_range__zero)
 {
     const span instance{ 5, 5 };
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+    BC_REQUIRE_EQUAL(instance.size(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(span__size__non_empty_range__expected)
+BC_AUTO_TEST_CASE(span__size__non_empty_range__expected)
 {
     const span instance{ 10, 25 };
-    BOOST_REQUIRE_EQUAL(instance.size(), 15u);
+    BC_REQUIRE_EQUAL(instance.size(), 15u);
 }
 
-BOOST_AUTO_TEST_CASE(span__size__negative_range__zero)
+BC_AUTO_TEST_CASE(span__size__negative_range__zero)
 {
     const span instance{ 100, 30 };
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+    BC_REQUIRE_EQUAL(instance.size(), 0u);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

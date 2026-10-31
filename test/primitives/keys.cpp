@@ -23,7 +23,7 @@
 using namespace system;
 using namespace database;
 
-BOOST_AUTO_TEST_SUITE(keys_tests)
+BC_AUTO_TEST_SUITE(keys_tests)
 
 constexpr auto hash0 = base16_hash
 (
@@ -40,37 +40,37 @@ constexpr auto hash2 = base16_hash
     "bf7c3f5a69a78edd81f3eff7e93a37fb2d7da394d48db4d85e7e5353b9b8e270"
 );
 
-BOOST_AUTO_TEST_CASE(keys__hash__points__expected)
+BC_AUTO_TEST_CASE(keys__hash__points__expected)
 {
     const chain::point instance0{ hash0, 0x01234567_u32 };
     const auto hash0 = keys::hash(instance0);
-    BOOST_CHECK_EQUAL(hash0, 0x4db66b1ccc7e7fbb_u64);
+    BC_CHECK_EQUAL(hash0, 0x4db66b1ccc7e7fbb_u64);
 
     const chain::point instance1{ hash1, 0x12345678_u32 };
     const auto hash1 = keys::hash(instance1);
-    BOOST_CHECK_EQUAL(hash1, 0xfb3b0de4ffca48e6_u64);
+    BC_CHECK_EQUAL(hash1, 0xfb3b0de4ffca48e6_u64);
 
     const chain::point instance2{ hash2, 0x23456789_u32 };
     const auto hash2 = keys::hash(instance2);
-    BOOST_CHECK_EQUAL(hash2, 0x19938ff97badf2d2_u64);
+    BC_CHECK_EQUAL(hash2, 0x19938ff97badf2d2_u64);
 }
 
-BOOST_AUTO_TEST_CASE(keys__thumb__points__expected)
+BC_AUTO_TEST_CASE(keys__thumb__points__expected)
 {
     const chain::point instance0{ hash0, 0x01234567_u32 };
     const auto hash0 = keys::thumb(instance0);
-    BOOST_CHECK_EQUAL(hash0, 0x19342973a11237b1_u64);
+    BC_CHECK_EQUAL(hash0, 0x19342973a11237b1_u64);
 
     const chain::point instance1{ hash1, 0x12345678_u32 };
     const auto hash1 = keys::thumb(instance1);
-    BOOST_CHECK_EQUAL(hash1, 0x928d5349dee8c4af_u64);
+    BC_CHECK_EQUAL(hash1, 0x928d5349dee8c4af_u64);
 
     const chain::point instance2{ hash2, 0x23456789_u32 };
     const auto hash2 = keys::thumb(instance2);
-    BOOST_CHECK_EQUAL(hash2, 0xea7ab71c076d99ea_u64);
+    BC_CHECK_EQUAL(hash2, 0xea7ab71c076d99ea_u64);
 }
 
-BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
+BC_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
 {
     const chain::point instance0{ hash0, 0x01234567_u32 };
     const chain::point instance1{ hash1, 0x12345678_u32 };
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
     ////std::cout << system::ones_count(xor0);
 
     // 26/64 == 41%
-    BOOST_REQUIRE_EQUAL(system::ones_count(xor0), 26u);
+    BC_REQUIRE_EQUAL(system::ones_count(xor0), 26u);
 
     ////std::cout << std::endl;
     ////std::cout << std::bitset<bits<size_t>>(keys::hash(instance1)) << std::endl;
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
     ////std::cout << system::ones_count(xor1);
 
     // 29/64 == 45%
-    BOOST_REQUIRE_EQUAL(system::ones_count(xor1), 29u);
+    BC_REQUIRE_EQUAL(system::ones_count(xor1), 29u);
 
     ////std::cout << std::endl;
     ////std::cout << std::bitset<bits<size_t>>(keys::hash(instance2)) << std::endl;
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
     ////std::cout << system::ones_count(xor2);
 
     // 34/64 == 53%
-    BOOST_REQUIRE_EQUAL(system::ones_count(xor2), 34u);
+    BC_REQUIRE_EQUAL(system::ones_count(xor2), 34u);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

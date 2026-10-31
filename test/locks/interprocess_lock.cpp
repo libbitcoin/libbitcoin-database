@@ -18,99 +18,99 @@
  */
 #include "../test.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(interprocess_lock_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(interprocess_lock_tests, test::directory_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(interprocess_lock__construct__file__expected)
+BC_AUTO_TEST_CASE(interprocess_lock__construct__file__expected)
 {
     interprocess_lock instance(TEST_PATH);
-    BOOST_REQUIRE_EQUAL(instance.file(), TEST_PATH);
+    BC_REQUIRE_EQUAL(instance.file(), TEST_PATH);
 }
 
-BOOST_AUTO_TEST_CASE(interprocess_lock__lock__not_exists__true_created)
+BC_AUTO_TEST_CASE(interprocess_lock__lock__not_exists__true_created)
 {
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 
     interprocess_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.try_lock());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(instance.try_lock());
+    BC_REQUIRE(test::exists(TEST_PATH));
 }
 
 // The file exists but no lock is held on it.
-BOOST_AUTO_TEST_CASE(interprocess_lock__lock__file_exists__true)
+BC_AUTO_TEST_CASE(interprocess_lock__lock__file_exists__true)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
 
     interprocess_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.try_lock());
+    BC_REQUIRE(instance.try_lock());
 }
 
 // The lock is process-exclusive in linux/macOS, globally in win32.
 // This is okay here, but a proper test requires an external process.
-BOOST_AUTO_TEST_CASE(interprocess_lock__lock__externally_locked__false)
+BC_AUTO_TEST_CASE(interprocess_lock__lock__externally_locked__false)
 {
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 
     interprocess_lock instance1(TEST_PATH);
     interprocess_lock instance2(TEST_PATH);
-    BOOST_REQUIRE(instance1.try_lock());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(instance1.try_lock());
+    BC_REQUIRE(test::exists(TEST_PATH));
 
 #if defined(HAVE_WINDOWS)
-    BOOST_REQUIRE(!instance2.try_lock());
+    BC_REQUIRE(!instance2.try_lock());
 #else
-    BOOST_REQUIRE(instance2.try_lock());
+    BC_REQUIRE(instance2.try_lock());
 #endif
 
-    BOOST_REQUIRE(instance1.try_unlock());
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(instance1.try_unlock());
+    BC_REQUIRE(!test::exists(TEST_PATH));
 
 #if defined(HAVE_WINDOWS)
-    BOOST_REQUIRE(instance2.try_lock());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(instance2.try_lock());
+    BC_REQUIRE(test::exists(TEST_PATH));
 #else
-    BOOST_REQUIRE(!instance2.try_lock());
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(!instance2.try_lock());
+    BC_REQUIRE(!test::exists(TEST_PATH));
 #endif
 
-    BOOST_REQUIRE(instance2.try_unlock());
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(instance2.try_unlock());
+    BC_REQUIRE(!test::exists(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(interprocess_lock__unlock__not_exists__true)
+BC_AUTO_TEST_CASE(interprocess_lock__unlock__not_exists__true)
 {
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 
     interprocess_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.try_unlock());
+    BC_REQUIRE(instance.try_unlock());
 }
 
-BOOST_AUTO_TEST_CASE(interprocess_lock__unlock__exists__true_not_deleted)
+BC_AUTO_TEST_CASE(interprocess_lock__unlock__exists__true_not_deleted)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
 
     interprocess_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.try_unlock());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(instance.try_unlock());
+    BC_REQUIRE(test::exists(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(interprocess_lock__lock_unlock__not_exists__true_deleted)
+BC_AUTO_TEST_CASE(interprocess_lock__lock_unlock__not_exists__true_deleted)
 {
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 
     interprocess_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.try_lock());
-    BOOST_REQUIRE(instance.try_unlock());
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(instance.try_lock());
+    BC_REQUIRE(instance.try_unlock());
+    BC_REQUIRE(!test::exists(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(interprocess_lock__lock_unlock__exists__true_deleted)
+BC_AUTO_TEST_CASE(interprocess_lock__lock_unlock__exists__true_deleted)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
 
     interprocess_lock instance(TEST_PATH);
-    BOOST_REQUIRE(instance.try_lock());
-    BOOST_REQUIRE(instance.try_unlock());
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(instance.try_lock());
+    BC_REQUIRE(instance.try_unlock());
+    BC_REQUIRE(!test::exists(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -19,11 +19,11 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(input_tests)
+BC_AUTO_TEST_SUITE(input_tests)
 
 using namespace system;
 
-BOOST_AUTO_TEST_CASE(input__put__empty_twice_get__expected)
+BC_AUTO_TEST_CASE(input__put__empty_twice_get__expected)
 {
     const table::input::slab expected
     {
@@ -46,20 +46,20 @@ BOOST_AUTO_TEST_CASE(input__put__empty_twice_get__expected)
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::input instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link(table::input::slab{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(expected).is_terminal());
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(!instance.put_link(table::input::slab{}).is_terminal());
+    BC_REQUIRE(!instance.put_link(expected).is_terminal());
+    BC_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::input::slab element{};
-    BOOST_REQUIRE(instance.get(0, element));
-    BOOST_REQUIRE(element == table::input::slab{});
+    BC_REQUIRE(instance.get(0, element));
+    BC_REQUIRE(element == table::input::slab{});
 
-    BOOST_REQUIRE(instance.get(2, element));
-    BOOST_REQUIRE(element == expected);
+    BC_REQUIRE(instance.get(2, element));
+    BC_REQUIRE(element == expected);
 }
 
-BOOST_AUTO_TEST_CASE(input__put__non_empty_get__expected)
+BC_AUTO_TEST_CASE(input__put__non_empty_get__expected)
 {
     const table::input::slab expected
     {
@@ -82,17 +82,17 @@ BOOST_AUTO_TEST_CASE(input__put__non_empty_get__expected)
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::input instance{ head_store, body_store };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.put_link(table::input::slab{}).is_terminal());
-    BOOST_REQUIRE(!instance.put_link(expected).is_terminal());
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_file);
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(!instance.put_link(table::input::slab{}).is_terminal());
+    BC_REQUIRE(!instance.put_link(expected).is_terminal());
+    BC_REQUIRE_EQUAL(body_store.buffer(), expected_file);
 
     table::input::slab element{};
-    BOOST_REQUIRE(instance.get(0, element));
-    BOOST_REQUIRE(element == table::input::slab{});
+    BC_REQUIRE(instance.get(0, element));
+    BC_REQUIRE(element == table::input::slab{});
 
-    BOOST_REQUIRE(instance.get(2u, element));
-    BOOST_REQUIRE(element == expected);
+    BC_REQUIRE(instance.get(2u, element));
+    BC_REQUIRE(element == expected);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

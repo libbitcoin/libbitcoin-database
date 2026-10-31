@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(schnorr_tests)
+BC_AUTO_TEST_SUITE(schnorr_tests)
 
 using namespace system;
 using namespace test;
@@ -60,22 +60,22 @@ constexpr ec_signature sig_b = base16_array
 using schnorr_table = table::schnorr<chunk_storages>;
 using schnorr_storage = default_storage<table::schnorr_storage<chunk_storages>>;
 
-BOOST_AUTO_TEST_CASE(schnorr__create_verify_close__aggregate__expected)
+BC_AUTO_TEST_CASE(schnorr__create_verify_close__aggregate__expected)
 {
     schnorr_storage head{ "head" };
     schnorr_storage body{ "body" };
     schnorr_table instance{ head, body };
 
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.verify());
-    BOOST_REQUIRE(instance.close());
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.verify());
+    BC_REQUIRE(instance.close());
 }
 
 // Round-trip signatures through the aggregate, mirroring the keyed
 // set_signature sequence: allocate rows, then commit values per row.
 // Correlate is header_fk only. Two rows pin column alignment (position i
 // in every column belongs to row i), on which batch evaluation depends.
-BOOST_AUTO_TEST_CASE(schnorr__set_signature__allocated_rows__expected)
+BC_AUTO_TEST_CASE(schnorr__set_signature__allocated_rows__expected)
 {
     using correlate = table::schnorr_correlate::put_ref;
     using digest_t = table::schnorr_digest::put_ref;
@@ -85,22 +85,22 @@ BOOST_AUTO_TEST_CASE(schnorr__set_signature__allocated_rows__expected)
     schnorr_storage head{ "head" };
     schnorr_storage body{ "body" };
     schnorr_table instance{ head, body };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
     // Allocate two rows (cursor model), write each independently.
     auto fk = instance.allocate(two);
-    BOOST_REQUIRE_EQUAL(fk, 0u);
+    BC_REQUIRE_EQUAL(fk, 0u);
 
-    BOOST_REQUIRE(instance.digest.put(fk, digest_t{ {}, digest_a }));
-    BOOST_REQUIRE(instance.xonly.put(fk, xonly_t{ {}, xonly_a }));
-    BOOST_REQUIRE(instance.signature.put(fk, signature_t{ {}, sig_a }));
-    BOOST_REQUIRE(instance.correlate.put(fk, correlate{ {}, header_fk }));
+    BC_REQUIRE(instance.digest.put(fk, digest_t{ {}, digest_a }));
+    BC_REQUIRE(instance.xonly.put(fk, xonly_t{ {}, xonly_a }));
+    BC_REQUIRE(instance.signature.put(fk, signature_t{ {}, sig_a }));
+    BC_REQUIRE(instance.correlate.put(fk, correlate{ {}, header_fk }));
 
     ++fk;
-    BOOST_REQUIRE(instance.digest.put(fk, digest_t{ {}, digest_b }));
-    BOOST_REQUIRE(instance.xonly.put(fk, xonly_t{ {}, xonly_b }));
-    BOOST_REQUIRE(instance.signature.put(fk, signature_t{ {}, sig_b }));
-    BOOST_REQUIRE(instance.correlate.put(fk, correlate{ {}, header_fk2 }));
+    BC_REQUIRE(instance.digest.put(fk, digest_t{ {}, digest_b }));
+    BC_REQUIRE(instance.xonly.put(fk, xonly_t{ {}, xonly_b }));
+    BC_REQUIRE(instance.signature.put(fk, signature_t{ {}, sig_b }));
+    BC_REQUIRE(instance.correlate.put(fk, correlate{ {}, header_fk2 }));
 
     // Correlate: header_fk(3) per row.
     const auto expected_correlate = base16_chunk
@@ -126,11 +126,11 @@ BOOST_AUTO_TEST_CASE(schnorr__set_signature__allocated_rows__expected)
         "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
     );
 
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(0), expected_correlate);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(1), expected_digest);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(2), expected_xonly);
-    BOOST_REQUIRE_EQUAL(body.buffers_.at(3), expected_signature);
-    BOOST_REQUIRE(instance.close());
+    BC_REQUIRE_EQUAL(body.buffers_.at(0), expected_correlate);
+    BC_REQUIRE_EQUAL(body.buffers_.at(1), expected_digest);
+    BC_REQUIRE_EQUAL(body.buffers_.at(2), expected_xonly);
+    BC_REQUIRE_EQUAL(body.buffers_.at(3), expected_signature);
+    BC_REQUIRE(instance.close());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

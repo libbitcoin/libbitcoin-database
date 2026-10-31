@@ -19,56 +19,56 @@
 #include "../test.hpp"
 #include "../mocks/map_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 // backup
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__backup__unloaded__backup_table)
+BC_AUTO_TEST_CASE(store__backup__unloaded__backup_table)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.backup_(), error::backup_table);
+    BC_REQUIRE_EQUAL(instance.backup_(), error::backup_table);
 }
 
-BOOST_AUTO_TEST_CASE(store__backup__loaded__success)
+BC_AUTO_TEST_CASE(store__backup__loaded__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.backup_());
-    BOOST_REQUIRE(!instance.close(test::events));
-    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.backup_());
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::folder(configuration.path / schema::dir::primary));
+    BC_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
 }
 
-BOOST_AUTO_TEST_CASE(store__backup__primary_loaded__success)
+BC_AUTO_TEST_CASE(store__backup__primary_loaded__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(test::clear(configuration.path / schema::dir::primary));
-    BOOST_REQUIRE(!instance.backup_());
-    BOOST_REQUIRE(!instance.close(test::events));
-    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(test::clear(configuration.path / schema::dir::primary));
+    BC_REQUIRE(!instance.backup_());
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::folder(configuration.path / schema::dir::primary));
+    BC_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
 }
 
-BOOST_AUTO_TEST_CASE(store__backup__primary_secondary_loaded__success)
+BC_AUTO_TEST_CASE(store__backup__primary_secondary_loaded__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(test::clear(configuration.path / schema::dir::primary));
-    BOOST_REQUIRE(test::clear(configuration.path / schema::dir::secondary));
-    BOOST_REQUIRE(!instance.backup_());
-    BOOST_REQUIRE(!instance.close(test::events));
-    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(test::clear(configuration.path / schema::dir::primary));
+    BC_REQUIRE(test::clear(configuration.path / schema::dir::secondary));
+    BC_REQUIRE(!instance.backup_());
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::folder(configuration.path / schema::dir::primary));
+    BC_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

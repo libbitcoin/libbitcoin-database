@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(txs_tests)
+BC_AUTO_TEST_SUITE(txs_tests)
 
 // Default configuration doesn't result in intervals set here.
 
@@ -127,47 +127,47 @@ const data_chunk expected3
     0x33, 0x12, 0x34, 0x56
 };
 
-BOOST_AUTO_TEST_CASE(txs__put__get__expected)
+BC_AUTO_TEST_CASE(txs__put__get__expected)
 {
     constexpr size_t key = 3;
     table::txs::slab slab{};
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::txs instance{ head_store, body_store, 20 };
-    BOOST_CHECK(instance.create());
-    BOOST_CHECK(!instance.exists(key));
+    BC_CHECK(instance.create());
+    BC_CHECK(!instance.exists(key));
 
-    BOOST_CHECK(instance.put(key, slab0));
-    BOOST_CHECK(instance.exists(key));
-    BOOST_CHECK(instance.at(key, slab));
-    BOOST_CHECK(slab == slab0);
-    BOOST_CHECK(instance.get(instance.at(key), slab));
-    BOOST_CHECK(slab == slab0);
-    BOOST_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0 }));
+    BC_CHECK(instance.put(key, slab0));
+    BC_CHECK(instance.exists(key));
+    BC_CHECK(instance.at(key, slab));
+    BC_CHECK(slab == slab0);
+    BC_CHECK(instance.get(instance.at(key), slab));
+    BC_CHECK(slab == slab0);
+    BC_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0 }));
 
-    BOOST_CHECK(instance.put(key, slab1));
-    BOOST_CHECK(instance.exists(key));
-    BOOST_CHECK(instance.at(key, slab));
-    BOOST_CHECK(slab == slab1);
-    BOOST_CHECK(instance.get(instance.at(key), slab));
-    BOOST_CHECK(slab == slab1);
-    BOOST_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1 }));
+    BC_CHECK(instance.put(key, slab1));
+    BC_CHECK(instance.exists(key));
+    BC_CHECK(instance.at(key, slab));
+    BC_CHECK(slab == slab1);
+    BC_CHECK(instance.get(instance.at(key), slab));
+    BC_CHECK(slab == slab1);
+    BC_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1 }));
 
-    BOOST_CHECK(instance.put(key, slab2));
-    BOOST_CHECK(instance.exists(key));
-    BOOST_CHECK(instance.at(key, slab));
-    BOOST_CHECK(slab == slab2);
-    BOOST_CHECK(instance.get(instance.at(key), slab));
-    BOOST_CHECK(slab == slab2);
-    BOOST_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1, expected2 }));
+    BC_CHECK(instance.put(key, slab2));
+    BC_CHECK(instance.exists(key));
+    BC_CHECK(instance.at(key, slab));
+    BC_CHECK(slab == slab2);
+    BC_CHECK(instance.get(instance.at(key), slab));
+    BC_CHECK(slab == slab2);
+    BC_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1, expected2 }));
 
-    BOOST_CHECK(instance.put(key, slab3));
-    BOOST_CHECK(instance.exists(key));
-    BOOST_CHECK(instance.at(key, slab));
-    BOOST_CHECK(slab == slab3);
-    BOOST_CHECK(instance.get(instance.at(key), slab));
-    BOOST_CHECK(slab == slab3);
-    BOOST_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1, expected2, expected3 }));
+    BC_CHECK(instance.put(key, slab3));
+    BC_CHECK(instance.exists(key));
+    BC_CHECK(instance.at(key, slab));
+    BC_CHECK(slab == slab3);
+    BC_CHECK(instance.get(instance.at(key), slab));
+    BC_CHECK(slab == slab3);
+    BC_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1, expected2, expected3 }));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

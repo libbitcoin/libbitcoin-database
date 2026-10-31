@@ -19,27 +19,27 @@
 #include "../test.hpp"
 #include "../mocks/map_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 // dump
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__dump__unloaded__unloaded_file)
+BC_AUTO_TEST_CASE(store__dump__unloaded__unloaded_file)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.dump_(TEST_DIRECTORY), error::unloaded_file);
+    BC_REQUIRE_EQUAL(instance.dump_(TEST_DIRECTORY), error::unloaded_file);
 }
 
-BOOST_AUTO_TEST_CASE(store__dump__loaded__success)
+BC_AUTO_TEST_CASE(store__dump__loaded__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.dump_(TEST_DIRECTORY));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.dump_(TEST_DIRECTORY));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

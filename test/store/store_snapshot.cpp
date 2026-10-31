@@ -22,27 +22,27 @@
 
  // these include the slow tests (mmap)
 
-BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 // snapshot
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__snapshot__uncreated__flush_unloaded)
+BC_AUTO_TEST_CASE(store__snapshot__uncreated__flush_unloaded)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
-    BOOST_REQUIRE_EQUAL(instance.snapshot(test::events), error::flush_unloaded);
+    BC_REQUIRE_EQUAL(instance.snapshot(test::events), error::flush_unloaded);
 }
 
-BOOST_AUTO_TEST_CASE(store__snapshot__opened__success)
+BC_AUTO_TEST_CASE(store__snapshot__opened__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.snapshot(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.snapshot(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

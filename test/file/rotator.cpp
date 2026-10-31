@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(rotator_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(rotator_tests, test::directory_setup_fixture)
 
 // ostream instance.
 using rotate = file::stream::out::rotator;
@@ -37,174 +37,174 @@ public:
 // test data.
 const std::string text = "panopticon";
 
-BOOST_AUTO_TEST_CASE(rotator__write__at_file_limit__single)
+BC_AUTO_TEST_CASE(rotator__write__at_file_limit__single)
 {
     const std::string expected(42, 'x');
     rotate splitter(TEST_PATH, TEST_PATH + "_", expected.size());
     splitter << expected;
-    BOOST_REQUIRE(splitter);
+    BC_REQUIRE(splitter);
 
     // File is initialized, but nothing is written because buffer not overflowed.
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
-    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
+    BC_REQUIRE(!test::exists(TEST_PATH + "_"));
 
     splitter.flush();
-    BOOST_REQUIRE(splitter);
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), expected.size());
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH), expected);
-    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+    BC_REQUIRE(splitter);
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), expected.size());
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH), expected);
+    BC_REQUIRE(!test::exists(TEST_PATH + "_"));
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__over_file_limit__split)
+BC_AUTO_TEST_CASE(rotator__write__over_file_limit__split)
 {
     const std::string text(42, 'x');
     rotate splitter(TEST_PATH, TEST_PATH + "_", sub1(text.size()));
     splitter << text;
-    BOOST_REQUIRE(splitter);
+    BC_REQUIRE(splitter);
 
     // File is initialized, but nothing is written because buffer not overflowed.
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
-    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
+    BC_REQUIRE(!test::exists(TEST_PATH + "_"));
 
     splitter.flush();
-    BOOST_REQUIRE(splitter);
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), one);
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), 41u);
+    BC_REQUIRE(splitter);
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), one);
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), 41u);
 }
 
-BOOST_AUTO_TEST_CASE(rotator__construct__empty__expected)
+BC_AUTO_TEST_CASE(rotator__construct__empty__expected)
 {
     {
-        BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
-        BOOST_REQUIRE(!test::exists(TEST_PATH));
+        BC_REQUIRE(!test::exists(TEST_PATH + "_"));
+        BC_REQUIRE(!test::exists(TEST_PATH));
         rotate splitter(TEST_PATH, TEST_PATH + "_", 42);
-        BOOST_REQUIRE(test::exists(TEST_PATH));
-        BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+        BC_REQUIRE(test::exists(TEST_PATH));
+        BC_REQUIRE(!test::exists(TEST_PATH + "_"));
     }
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
-    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
+    BC_REQUIRE(!test::exists(TEST_PATH + "_"));
 }
 
-BOOST_AUTO_TEST_CASE(rotator__construct__existing1__expected)
+BC_AUTO_TEST_CASE(rotator__construct__existing1__expected)
 {
     {
-        BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
-        BOOST_REQUIRE(test::create(TEST_PATH, text));
+        BC_REQUIRE(!test::exists(TEST_PATH + "_"));
+        BC_REQUIRE(test::create(TEST_PATH, text));
         rotate splitter(TEST_PATH, TEST_PATH + "_", 42);
-        BOOST_REQUIRE(test::exists(TEST_PATH));
-        BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+        BC_REQUIRE(test::exists(TEST_PATH));
+        BC_REQUIRE(!test::exists(TEST_PATH + "_"));
     }
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH), text);
-    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH), text);
+    BC_REQUIRE(!test::exists(TEST_PATH + "_"));
 }
 
-BOOST_AUTO_TEST_CASE(rotator__construct__existing2__expected)
+BC_AUTO_TEST_CASE(rotator__construct__existing2__expected)
 {
     {
-        BOOST_REQUIRE(test::create(TEST_PATH + "_", text));
-        BOOST_REQUIRE(!test::exists(TEST_PATH));
+        BC_REQUIRE(test::create(TEST_PATH + "_", text));
+        BC_REQUIRE(!test::exists(TEST_PATH));
         rotate splitter(TEST_PATH, TEST_PATH + "_", 42);
-        BOOST_REQUIRE(test::exists(TEST_PATH));
-        BOOST_REQUIRE(test::exists(TEST_PATH + "_"));
+        BC_REQUIRE(test::exists(TEST_PATH));
+        BC_REQUIRE(test::exists(TEST_PATH + "_"));
     }
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), text);
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), text);
 }
 
-BOOST_AUTO_TEST_CASE(rotator__construct__both_existing__expected)
+BC_AUTO_TEST_CASE(rotator__construct__both_existing__expected)
 {
     const std::string text1 = "panopticon1";
     const std::string text2 = "panopticon2";
     {
-        BOOST_REQUIRE(test::create(TEST_PATH + "_", text2));
-        BOOST_REQUIRE(test::create(TEST_PATH, text1));
+        BC_REQUIRE(test::create(TEST_PATH + "_", text2));
+        BC_REQUIRE(test::create(TEST_PATH, text1));
         rotate splitter(TEST_PATH, TEST_PATH + "_", 42);
-        BOOST_REQUIRE(test::exists(TEST_PATH));
-        BOOST_REQUIRE(test::exists(TEST_PATH + "_"));
+        BC_REQUIRE(test::exists(TEST_PATH));
+        BC_REQUIRE(test::exists(TEST_PATH + "_"));
     }
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH), text1);
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), text2);
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH), text1);
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), text2);
 }
 
-BOOST_AUTO_TEST_CASE(rotator__start__started__false)
+BC_AUTO_TEST_CASE(rotator__start__started__false)
 {
     accessor device(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(!device.start_());
+    BC_REQUIRE(!device.start_());
 }
 
-BOOST_AUTO_TEST_CASE(rotator__stop__stopped__false)
+BC_AUTO_TEST_CASE(rotator__stop__stopped__false)
 {
     accessor device(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(device.stop_());
-    BOOST_REQUIRE(!device.stop_());
+    BC_REQUIRE(device.stop_());
+    BC_REQUIRE(!device.stop_());
 }
 
-BOOST_AUTO_TEST_CASE(rotator__start_stopped__stop_started__true)
+BC_AUTO_TEST_CASE(rotator__start_stopped__stop_started__true)
 {
     accessor device(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE(device.stop_());
-    BOOST_REQUIRE(device.start_());
+    BC_REQUIRE(device.stop_());
+    BC_REQUIRE(device.start_());
 }
 
-BOOST_AUTO_TEST_CASE(rotator__rotate__existing__expected)
+BC_AUTO_TEST_CASE(rotator__rotate__existing__expected)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH, text));
+    BC_REQUIRE(test::create(TEST_PATH, text));
 
     accessor instance(TEST_PATH, TEST_PATH + "_", 42);
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
-    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
-    BOOST_REQUIRE(instance.rotate_());
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), text.size());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
+    BC_REQUIRE(!test::exists(TEST_PATH + "_"));
+    BC_REQUIRE(instance.rotate_());
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), text.size());
+    BC_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), zero);
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__below_limit__written)
+BC_AUTO_TEST_CASE(rotator__write__below_limit__written)
 {
     rotate splitter(TEST_PATH, TEST_PATH + "_", add1(text.size()));
     splitter.write(text.data(), text.size());
     splitter.flush();
-    BOOST_REQUIRE(splitter);
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
-    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+    BC_REQUIRE(splitter);
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
+    BC_REQUIRE(!test::exists(TEST_PATH + "_"));
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__at_limit__written)
+BC_AUTO_TEST_CASE(rotator__write__at_limit__written)
 {
     rotate splitter(TEST_PATH, TEST_PATH + "_", text.size());
     splitter.write(text.data(), text.size());
     splitter.flush();
-    BOOST_REQUIRE(splitter);
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
-    BOOST_REQUIRE(!test::exists(TEST_PATH + "_"));
+    BC_REQUIRE(splitter);
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
+    BC_REQUIRE(!test::exists(TEST_PATH + "_"));
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__above_limit___split)
+BC_AUTO_TEST_CASE(rotator__write__above_limit___split)
 {
     rotate splitter(TEST_PATH, TEST_PATH + "_", sub1(text.size()));
-    BOOST_REQUIRE(splitter);
+    BC_REQUIRE(splitter);
 
     splitter.write(text.data(), text.size());
-    BOOST_REQUIRE(splitter);
+    BC_REQUIRE(splitter);
 
     splitter.flush();
-    BOOST_REQUIRE(splitter);
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), one);
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), sub1(text.size()));
+    BC_REQUIRE(splitter);
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), one);
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), sub1(text.size()));
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__twice_at_limit__split)
+BC_AUTO_TEST_CASE(rotator__write__twice_at_limit__split)
 {
     rotate splitter(TEST_PATH, TEST_PATH + "_", text.size());
     splitter.write(text.data(), text.size());
     splitter.write(text.data(), text.size());
     splitter.flush();
-    BOOST_REQUIRE(splitter);
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), text.size());
+    BC_REQUIRE(splitter);
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), text.size());
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH + "_"), text.size());
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__thrice_at_limit__stacked)
+BC_AUTO_TEST_CASE(rotator__write__thrice_at_limit__stacked)
 {
     const std::string text1 = "panopticon1";
     const std::string text2 = "panopticon2";
@@ -213,12 +213,12 @@ BOOST_AUTO_TEST_CASE(rotator__write__thrice_at_limit__stacked)
     splitter.write(text2.data(), text2.size());
     splitter.write(text1.data(), text1.size());
     splitter.flush();
-    BOOST_REQUIRE(splitter);
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH), text1);
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), text2);
+    BC_REQUIRE(splitter);
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH), text1);
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), text2);
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__parts__accumulated_and_rotated)
+BC_AUTO_TEST_CASE(rotator__write__parts__accumulated_and_rotated)
 {
     // Binary mode on Windows ensures that \n nor replaced with \r\n.
     rotate splitter(TEST_PATH, TEST_PATH + "_", 6);
@@ -229,22 +229,22 @@ BOOST_AUTO_TEST_CASE(rotator__write__parts__accumulated_and_rotated)
     splitter.write("mn\n", 3);
     splitter.write("pqr", 3);
     splitter.flush();
-    BOOST_REQUIRE_EQUAL(test::size(TEST_PATH), 6u);
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 0), "mn");
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 1), "pqr");
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), "ghijkl");
+    BC_REQUIRE_EQUAL(test::size(TEST_PATH), 6u);
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH, 0), "mn");
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH, 1), "pqr");
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH + "_"), "ghijkl");
 }
 
-BOOST_AUTO_TEST_CASE(rotator__write__existing__appends)
+BC_AUTO_TEST_CASE(rotator__write__existing__appends)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH, text));
+    BC_REQUIRE(test::create(TEST_PATH, text));
 
     rotate splitter(TEST_PATH, TEST_PATH + "_", 42);
     splitter.write("\n", 1);
     splitter.write("abc", 3);
     splitter.flush();
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 0), "panopticon");
-    BOOST_REQUIRE_EQUAL(test::read_line(TEST_PATH, 1), "abc");
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH, 0), "panopticon");
+    BC_REQUIRE_EQUAL(test::read_line(TEST_PATH, 1), "abc");
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

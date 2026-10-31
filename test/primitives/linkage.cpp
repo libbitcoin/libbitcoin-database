@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(linkage_tests)
+BC_AUTO_TEST_SUITE(linkage_tests)
 
 using namespace system;
 
@@ -142,416 +142,416 @@ static_assert(value_size<uint64_t>() == 8);
 
 // assign integer
 
-BOOST_AUTO_TEST_CASE(linkage__assign_integer__1__expected)
+BC_AUTO_TEST_CASE(linkage__assign_integer__1__expected)
 {
     constexpr auto expected = max_uint8;
     linkage<1> instance{};
     instance = expected;
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_integer__2__expected)
+BC_AUTO_TEST_CASE(linkage__assign_integer__2__expected)
 {
     constexpr auto expected = max_uint16;
     linkage<2> instance{};
     instance = expected;
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_integer__3__expected)
+BC_AUTO_TEST_CASE(linkage__assign_integer__3__expected)
 {
     constexpr auto expected = sub1(system::power2(3u * 8u));
     linkage<3> instance{};
     instance = expected;
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_integer__4__expected)
+BC_AUTO_TEST_CASE(linkage__assign_integer__4__expected)
 {
     constexpr auto expected = max_uint32;
     linkage<4> instance{};
     instance = expected;
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_integer__5__expected)
+BC_AUTO_TEST_CASE(linkage__assign_integer__5__expected)
 {
     constexpr auto expected = sub1(system::power2<uint64_t>(5u * 8u));
     linkage<5> instance{};
     instance = expected;
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_integer__6__expected)
+BC_AUTO_TEST_CASE(linkage__assign_integer__6__expected)
 {
     constexpr auto expected = sub1(system::power2<uint64_t>(6u * 8u));
     linkage<6> instance{};
     instance = expected;
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_integer__7__expected)
+BC_AUTO_TEST_CASE(linkage__assign_integer__7__expected)
 {
     constexpr auto expected = sub1(system::power2<uint64_t>(7u * 8u));
     linkage<7> instance{};
     instance = expected;
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_integer__8__expected)
+BC_AUTO_TEST_CASE(linkage__assign_integer__8__expected)
 {
     constexpr auto expected = max_uint64;
     linkage<8> instance{};
     instance = expected;
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
 // assign bytes
 
-BOOST_AUTO_TEST_CASE(linkage__assign_array__0__expected)
+BC_AUTO_TEST_CASE(linkage__assign_array__0__expected)
 {
     constexpr auto expected = 0_size;
     linkage<0> instance{ 0x00 };
     instance = data_array<0>{};
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_array__1__expected)
+BC_AUTO_TEST_CASE(linkage__assign_array__1__expected)
 {
     constexpr auto expected = 0x01_u8;
     linkage<1> instance{};
     instance = data_array<1>{ 0x01 };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_array__2__expected)
+BC_AUTO_TEST_CASE(linkage__assign_array__2__expected)
 {
     constexpr auto expected = 0x0102_u16;
     linkage<2> instance{};
     instance = data_array<2>{ 0x02, 0x01 };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_array__3__expected)
+BC_AUTO_TEST_CASE(linkage__assign_array__3__expected)
 {
     constexpr auto expected = 0x00020304_u32;
     linkage<3> instance{};
     instance = data_array<3>{ 0x04, 0x03, 0x02 };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_array__4__expected)
+BC_AUTO_TEST_CASE(linkage__assign_array__4__expected)
 {
     constexpr auto expected = 0x01020304_u32;
     linkage<4> instance{};
     instance = data_array<4>{ 0x04, 0x03, 0x02, 0x01 };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_array__5__expected)
+BC_AUTO_TEST_CASE(linkage__assign_array__5__expected)
 {
     constexpr auto expected = 0x0000000405060708_u64;
     linkage<5> instance{};
     instance = data_array<5>{ 0x08, 0x07, 0x06, 0x05, 0x04 };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_array__6__expected)
+BC_AUTO_TEST_CASE(linkage__assign_array__6__expected)
 {
     constexpr auto expected = 0x0000030405060708_u64;
     linkage<6> instance{};
     instance = data_array<6>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03 };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_array__7__expected)
+BC_AUTO_TEST_CASE(linkage__assign_array__7__expected)
 {
     constexpr auto expected = 0x0002030405060708_u64;
     linkage<7> instance{};
     instance = data_array<7>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02 };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__assign_array__8__expected)
+BC_AUTO_TEST_CASE(linkage__assign_array__8__expected)
 {
     // LE
     constexpr auto expected = 0x0102030405060708_u64;
     linkage<8> instance{};
     instance = data_array<8>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
 // pre/post increment
 
-BOOST_AUTO_TEST_CASE(linkage__increment__0__expected)
+BC_AUTO_TEST_CASE(linkage__increment__0__expected)
 {
     linkage<0> instance{ 0x00 };
 
-    BOOST_REQUIRE_EQUAL(instance++, 0u);
-    BOOST_REQUIRE_EQUAL(instance, 1u);
+    BC_REQUIRE_EQUAL(instance++, 0u);
+    BC_REQUIRE_EQUAL(instance, 1u);
 
-    BOOST_REQUIRE_EQUAL(++instance, 2u);
-    BOOST_REQUIRE_EQUAL(instance, 2u);
+    BC_REQUIRE_EQUAL(++instance, 2u);
+    BC_REQUIRE_EQUAL(instance, 2u);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__increment__1__expected)
+BC_AUTO_TEST_CASE(linkage__increment__1__expected)
 {
     linkage<1> instance{ 0x42 };
 
-    BOOST_REQUIRE_EQUAL(instance++, 0x42u);
-    BOOST_REQUIRE_EQUAL(instance, 0x43u);
+    BC_REQUIRE_EQUAL(instance++, 0x42u);
+    BC_REQUIRE_EQUAL(instance, 0x43u);
 
-    BOOST_REQUIRE_EQUAL(++instance, 0x44u);
-    BOOST_REQUIRE_EQUAL(instance, 0x44u);
+    BC_REQUIRE_EQUAL(++instance, 0x44u);
+    BC_REQUIRE_EQUAL(instance, 0x44u);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__increment__2__expected)
+BC_AUTO_TEST_CASE(linkage__increment__2__expected)
 {
     linkage<2> instance{ 0x4200 };
 
-    BOOST_REQUIRE_EQUAL(instance++, 0x4200u);
-    BOOST_REQUIRE_EQUAL(instance, 0x4201u);
+    BC_REQUIRE_EQUAL(instance++, 0x4200u);
+    BC_REQUIRE_EQUAL(instance, 0x4201u);
 
-    BOOST_REQUIRE_EQUAL(++instance, 0x4202u);
-    BOOST_REQUIRE_EQUAL(instance, 0x4202u);
+    BC_REQUIRE_EQUAL(++instance, 0x4202u);
+    BC_REQUIRE_EQUAL(instance, 0x4202u);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__increment__3__expected)
+BC_AUTO_TEST_CASE(linkage__increment__3__expected)
 {
     linkage<3> instance{ 0x420100 };
 
-    BOOST_REQUIRE_EQUAL(instance++, 0x420100u);
-    BOOST_REQUIRE_EQUAL(instance, 0x420101u);
+    BC_REQUIRE_EQUAL(instance++, 0x420100u);
+    BC_REQUIRE_EQUAL(instance, 0x420101u);
 
-    BOOST_REQUIRE_EQUAL(++instance, 0x420102u);
-    BOOST_REQUIRE_EQUAL(instance, 0x420102u);
+    BC_REQUIRE_EQUAL(++instance, 0x420102u);
+    BC_REQUIRE_EQUAL(instance, 0x420102u);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__increment__4__expected)
+BC_AUTO_TEST_CASE(linkage__increment__4__expected)
 {
     linkage<4> instance{ 0x42010200 };
 
-    BOOST_REQUIRE_EQUAL(instance++, 0x42010200u);
-    BOOST_REQUIRE_EQUAL(instance, 0x42010201u);
+    BC_REQUIRE_EQUAL(instance++, 0x42010200u);
+    BC_REQUIRE_EQUAL(instance, 0x42010201u);
 
-    BOOST_REQUIRE_EQUAL(++instance, 0x42010202u);
-    BOOST_REQUIRE_EQUAL(instance, 0x42010202u);
+    BC_REQUIRE_EQUAL(++instance, 0x42010202u);
+    BC_REQUIRE_EQUAL(instance, 0x42010202u);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__increment__5__expected)
+BC_AUTO_TEST_CASE(linkage__increment__5__expected)
 {
     linkage<5> instance{ 0x4201020300 };
 
-    BOOST_REQUIRE_EQUAL(instance++, 0x4201020300u);
-    BOOST_REQUIRE_EQUAL(instance, 0x4201020301u);
+    BC_REQUIRE_EQUAL(instance++, 0x4201020300u);
+    BC_REQUIRE_EQUAL(instance, 0x4201020301u);
 
-    BOOST_REQUIRE_EQUAL(++instance, 0x4201020302u);
-    BOOST_REQUIRE_EQUAL(instance, 0x4201020302u);
+    BC_REQUIRE_EQUAL(++instance, 0x4201020302u);
+    BC_REQUIRE_EQUAL(instance, 0x4201020302u);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__increment_6__expected)
+BC_AUTO_TEST_CASE(linkage__increment_6__expected)
 {
     linkage<6> instance{ 0x420102030400 };
 
-    BOOST_REQUIRE_EQUAL(instance++, 0x420102030400u);
-    BOOST_REQUIRE_EQUAL(instance, 0x420102030401u);
+    BC_REQUIRE_EQUAL(instance++, 0x420102030400u);
+    BC_REQUIRE_EQUAL(instance, 0x420102030401u);
 
-    BOOST_REQUIRE_EQUAL(++instance, 0x420102030402u);
-    BOOST_REQUIRE_EQUAL(instance, 0x420102030402u);
+    BC_REQUIRE_EQUAL(++instance, 0x420102030402u);
+    BC_REQUIRE_EQUAL(instance, 0x420102030402u);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__increment__7__expected)
+BC_AUTO_TEST_CASE(linkage__increment__7__expected)
 {
     linkage<7> instance{ 0x42010203040500 };
 
-    BOOST_REQUIRE_EQUAL(instance++, 0x42010203040500u);
-    BOOST_REQUIRE_EQUAL(instance, 0x42010203040501u);
+    BC_REQUIRE_EQUAL(instance++, 0x42010203040500u);
+    BC_REQUIRE_EQUAL(instance, 0x42010203040501u);
 
-    BOOST_REQUIRE_EQUAL(++instance, 0x42010203040502u);
-    BOOST_REQUIRE_EQUAL(instance, 0x42010203040502u);
+    BC_REQUIRE_EQUAL(++instance, 0x42010203040502u);
+    BC_REQUIRE_EQUAL(instance, 0x42010203040502u);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__increment__8__expected)
+BC_AUTO_TEST_CASE(linkage__increment__8__expected)
 {
     linkage<8> instance{ 0x4201020304050600 };
 
-    BOOST_REQUIRE_EQUAL(instance++, 0x4201020304050600u);
-    BOOST_REQUIRE_EQUAL(instance, 0x4201020304050601u);
+    BC_REQUIRE_EQUAL(instance++, 0x4201020304050600u);
+    BC_REQUIRE_EQUAL(instance, 0x4201020304050601u);
 
-    BOOST_REQUIRE_EQUAL(++instance, 0x4201020304050602u);
-    BOOST_REQUIRE_EQUAL(instance, 0x4201020304050602u);
+    BC_REQUIRE_EQUAL(++instance, 0x4201020304050602u);
+    BC_REQUIRE_EQUAL(instance, 0x4201020304050602u);
 }
 
 // add-assign
 
-BOOST_AUTO_TEST_CASE(linkage__add_assign__4__expected)
+BC_AUTO_TEST_CASE(linkage__add_assign__4__expected)
 {
     linkage<4> instance{ 0x42010200_u32 };
     instance += 1_u32;
-    BOOST_REQUIRE_EQUAL(instance, 0x42010201_u32);
+    BC_REQUIRE_EQUAL(instance, 0x42010201_u32);
 
     instance += 0x10_u32;
-    BOOST_REQUIRE_EQUAL(instance, 0x42010211_u32);
+    BC_REQUIRE_EQUAL(instance, 0x42010211_u32);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__add_assign__2__expected)
+BC_AUTO_TEST_CASE(linkage__add_assign__2__expected)
 {
     linkage<2> instance{ 0x4200_u16 };
     instance += 2_u16;
-    BOOST_REQUIRE_EQUAL(instance, 0x4202_u16);
+    BC_REQUIRE_EQUAL(instance, 0x4202_u16);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__add_assign__5__expected)
+BC_AUTO_TEST_CASE(linkage__add_assign__5__expected)
 {
     linkage<5> instance{ 0x4201020300_u64 };
     instance += 0x100_u64;
-    BOOST_REQUIRE_EQUAL(instance, 0x4201020400_u64);
+    BC_REQUIRE_EQUAL(instance, 0x4201020400_u64);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__add_assign__8__expected)
+BC_AUTO_TEST_CASE(linkage__add_assign__8__expected)
 {
     linkage<8> instance{ 0x4201020304050600_u64 };
     instance += 0x42_u64;
-    BOOST_REQUIRE_EQUAL(instance, 0x4201020304050642_u64);
+    BC_REQUIRE_EQUAL(instance, 0x4201020304050642_u64);
 }
 
 // cast bytes
 
-BOOST_AUTO_TEST_CASE(linkage__bytes__0__expected)
+BC_AUTO_TEST_CASE(linkage__bytes__0__expected)
 {
     constexpr auto expected = data_array<0>{};
     constexpr linkage<0> instance{ 0x00_size };
-    BOOST_REQUIRE_EQUAL(static_cast<const data_array<0>&>(instance), expected);
+    BC_REQUIRE_EQUAL(static_cast<const data_array<0>&>(instance), expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__bytes__1__expected)
+BC_AUTO_TEST_CASE(linkage__bytes__1__expected)
 {
     constexpr auto expected = data_array<1>{ 0x01 };
     constexpr linkage<1> instance{ 0x01_u8 };
-    BOOST_REQUIRE_EQUAL(static_cast<const data_array<1>&>(instance), expected);
+    BC_REQUIRE_EQUAL(static_cast<const data_array<1>&>(instance), expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__bytes__2__expected)
+BC_AUTO_TEST_CASE(linkage__bytes__2__expected)
 {
     constexpr auto expected = data_array<2>{ 0x02, 0x01 };
     constexpr linkage<2> instance{ 0x0102_u16 };
-    BOOST_REQUIRE_EQUAL(static_cast<const data_array<2>&>(instance), expected);
+    BC_REQUIRE_EQUAL(static_cast<const data_array<2>&>(instance), expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__bytes__3__expected)
+BC_AUTO_TEST_CASE(linkage__bytes__3__expected)
 {
     constexpr auto expected = data_array<3>{ 0x04, 0x03, 0x02 };
     constexpr linkage<3> instance{ 0x01020304_u32 };
-    BOOST_REQUIRE_EQUAL(static_cast<const data_array<3>&>(instance), expected);
+    BC_REQUIRE_EQUAL(static_cast<const data_array<3>&>(instance), expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__bytes__4__expected)
+BC_AUTO_TEST_CASE(linkage__bytes__4__expected)
 {
     constexpr auto expected = data_array<4>{ 0x04, 0x03, 0x02, 0x01 };
     constexpr linkage<4> instance{ 0x01020304_u32 };
-    BOOST_REQUIRE_EQUAL(static_cast<const data_array<4>&>(instance), expected);
+    BC_REQUIRE_EQUAL(static_cast<const data_array<4>&>(instance), expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__bytes__5__expected)
+BC_AUTO_TEST_CASE(linkage__bytes__5__expected)
 {
     constexpr auto expected = data_array<5>{ 0x08, 0x07, 0x06, 0x05, 0x04 };
     constexpr linkage<5> instance{ 0x0102030405060708_u64 };
-    BOOST_REQUIRE_EQUAL(static_cast<const data_array<5>&>(instance), expected);
+    BC_REQUIRE_EQUAL(static_cast<const data_array<5>&>(instance), expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__bytes__6__expected)
+BC_AUTO_TEST_CASE(linkage__bytes__6__expected)
 {
     constexpr auto expected = data_array<6>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03 };
     constexpr linkage<6> instance{ 0x0102030405060708_u64 };
-    BOOST_REQUIRE_EQUAL(static_cast<const data_array<6>&>(instance), expected);
+    BC_REQUIRE_EQUAL(static_cast<const data_array<6>&>(instance), expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__bytes__7__expected)
+BC_AUTO_TEST_CASE(linkage__bytes__7__expected)
 {
     constexpr auto expected = data_array<7>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02 };
     constexpr linkage<7> instance{ 0x0102030405060708_u64 };
-    BOOST_REQUIRE_EQUAL(static_cast<const data_array<7>&>(instance), expected);
+    BC_REQUIRE_EQUAL(static_cast<const data_array<7>&>(instance), expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__bytes__8__expected)
+BC_AUTO_TEST_CASE(linkage__bytes__8__expected)
 {
     constexpr auto expected = data_array<8>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 };
     constexpr linkage<8> instance{ 0x0102030405060708_u64 };
-    BOOST_REQUIRE_EQUAL(static_cast<const data_array<8>&>(instance), expected);
+    BC_REQUIRE_EQUAL(static_cast<const data_array<8>&>(instance), expected);
 }
 
 // construct bytes
 
-BOOST_AUTO_TEST_CASE(linkage__construct_bytes__1__expected)
+BC_AUTO_TEST_CASE(linkage__construct_bytes__1__expected)
 {
     constexpr auto expected = 0x01_u8;
     const linkage<1> instance{ data_array<1>{ 0x01 } };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__construct_bytes__2__expected)
+BC_AUTO_TEST_CASE(linkage__construct_bytes__2__expected)
 {
     constexpr auto expected = 0x0102_u16;
     const linkage<2> instance{ data_array<2>{ 0x02, 0x01 } };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__construct_bytes__3__expected)
+BC_AUTO_TEST_CASE(linkage__construct_bytes__3__expected)
 {
     constexpr auto expected = 0x00020304_u32;
     const linkage<3> instance{ data_array<3>{ 0x04, 0x03, 0x02 } };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__construct_bytes__4__expected)
+BC_AUTO_TEST_CASE(linkage__construct_bytes__4__expected)
 {
     constexpr auto expected = 0x01020304_u32;
     const linkage<4> instance{ data_array<4>{ 0x04, 0x03, 0x02, 0x01 } };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__construct_bytes__5__expected)
+BC_AUTO_TEST_CASE(linkage__construct_bytes__5__expected)
 {
     constexpr auto expected = 0x0000000405060708_u64;
     const linkage<5> instance{ data_array<5>{ 0x08, 0x07, 0x06, 0x05, 0x04 } };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__construct_bytes__6__expected)
+BC_AUTO_TEST_CASE(linkage__construct_bytes__6__expected)
 {
     constexpr auto expected = 0x0000030405060708_u64;
     const linkage<6> instance{ data_array<6>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03 } };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__construct_bytes__7__expected)
+BC_AUTO_TEST_CASE(linkage__construct_bytes__7__expected)
 {
     constexpr auto expected = 0x0002030405060708_u64;
     const linkage<7> instance{ data_array<7>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02 } };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__construct_bytes__8__expected)
+BC_AUTO_TEST_CASE(linkage__construct_bytes__8__expected)
 {
     constexpr auto expected = 0x0102030405060708_u64;
     const linkage<8> instance{ data_array<8>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 } };
-    BOOST_REQUIRE_EQUAL(instance, expected);
+    BC_REQUIRE_EQUAL(instance, expected);
 }
 
-BOOST_AUTO_TEST_CASE(linkage__equality__equal__expected)
+BC_AUTO_TEST_CASE(linkage__equality__equal__expected)
 {
     const linkage<8> left{ data_array<8>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 } };
     const linkage<8> right{ data_array<8>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 } };
-    BOOST_REQUIRE(left == right);
-    BOOST_REQUIRE(!(left != right));
+    BC_REQUIRE(left == right);
+    BC_REQUIRE(!(left != right));
 }
 
-BOOST_AUTO_TEST_CASE(linkage__equality__not_equal__expected)
+BC_AUTO_TEST_CASE(linkage__equality__not_equal__expected)
 {
     const linkage<8> left{ data_array<8>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x00 } };
     const linkage<8> right{ data_array<8>{ 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01 } };
-    BOOST_REQUIRE(left != right);
-    BOOST_REQUIRE(!(left == right));
+    BC_REQUIRE(left != right);
+    BC_REQUIRE(!(left == right));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

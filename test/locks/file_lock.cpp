@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(file_lock_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(file_lock_tests, test::directory_setup_fixture)
 
 class access final
   : public file_lock
@@ -42,63 +42,63 @@ public:
     }
 };
 
-BOOST_AUTO_TEST_CASE(file_lock__construct__file__expected)
+BC_AUTO_TEST_CASE(file_lock__construct__file__expected)
 {
     access instance(TEST_PATH);
-    BOOST_REQUIRE_EQUAL(instance.file(), TEST_PATH);
+    BC_REQUIRE_EQUAL(instance.file(), TEST_PATH);
 }
 
-BOOST_AUTO_TEST_CASE(file_lock__create__not_exists__true_created)
+BC_AUTO_TEST_CASE(file_lock__create__not_exists__true_created)
 {
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 
     access instance(TEST_PATH);
-    BOOST_REQUIRE(instance.create_());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(instance.create_());
+    BC_REQUIRE(test::exists(TEST_PATH));
 }
 
 // Creation is idempotent.
-BOOST_AUTO_TEST_CASE(file_lock__create__exists__true)
+BC_AUTO_TEST_CASE(file_lock__create__exists__true)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
 
     access instance(TEST_PATH);
-    BOOST_REQUIRE(instance.create_());
+    BC_REQUIRE(instance.create_());
 }
 
-BOOST_AUTO_TEST_CASE(file_lock__exists__not_exists__false)
+BC_AUTO_TEST_CASE(file_lock__exists__not_exists__false)
 {
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 
     access instance(TEST_PATH);
-    BOOST_REQUIRE(!instance.exists_());
+    BC_REQUIRE(!instance.exists_());
 }
 
-BOOST_AUTO_TEST_CASE(file_lock__exists__exists__true)
+BC_AUTO_TEST_CASE(file_lock__exists__exists__true)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
 
     access instance(TEST_PATH);
-    BOOST_REQUIRE(instance.create_());
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(instance.create_());
+    BC_REQUIRE(test::exists(TEST_PATH));
 }
 
 // Destruction is idempotent.
-BOOST_AUTO_TEST_CASE(file_lock__destroy__not_exists__true)
+BC_AUTO_TEST_CASE(file_lock__destroy__not_exists__true)
 {
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 
     access instance(TEST_PATH);
-    BOOST_REQUIRE(instance.destroy_());
+    BC_REQUIRE(instance.destroy_());
 }
 
-BOOST_AUTO_TEST_CASE(file_lock__destroy__exists__true_deleted)
+BC_AUTO_TEST_CASE(file_lock__destroy__exists__true_deleted)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
 
     access instance(TEST_PATH);
-    BOOST_REQUIRE(instance.destroy_());
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(instance.destroy_());
+    BC_REQUIRE(!test::exists(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

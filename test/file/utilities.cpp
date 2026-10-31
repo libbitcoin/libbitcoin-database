@@ -18,413 +18,413 @@
  */
 #include "../test.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(file_utilities_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(file_utilities_tests, test::directory_setup_fixture)
 
 using namespace system;
 static_assert(file::invalid == -1);
 
 // is_directory
 
-BOOST_AUTO_TEST_CASE(file_utilities__is_directory__missing__false)
+BC_AUTO_TEST_CASE(file_utilities__is_directory__missing__false)
 {
-    BOOST_REQUIRE(!file::is_directory(TEST_PATH));
+    BC_REQUIRE(!file::is_directory(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__is_directory__exists__true)
+BC_AUTO_TEST_CASE(file_utilities__is_directory__exists__true)
 {
-    BOOST_REQUIRE(file::is_directory(TEST_DIRECTORY));
+    BC_REQUIRE(file::is_directory(TEST_DIRECTORY));
 }
 
 // clear_directory
 
-BOOST_AUTO_TEST_CASE(file_utilities__clear_directory__empty__true)
+BC_AUTO_TEST_CASE(file_utilities__clear_directory__empty__true)
 {
-    BOOST_REQUIRE(file::clear_directory(TEST_DIRECTORY));
+    BC_REQUIRE(file::clear_directory(TEST_DIRECTORY));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__clear_directory__exists__true_cleared)
+BC_AUTO_TEST_CASE(file_utilities__clear_directory__exists__true_cleared)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-    BOOST_REQUIRE(file::clear_directory(TEST_DIRECTORY));
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(file::clear_directory(TEST_DIRECTORY));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(clear_directory__missing__true)
+BC_AUTO_TEST_CASE(clear_directory__missing__true)
 {
-    BOOST_REQUIRE(file::clear_directory(TEST_PATH));
+    BC_REQUIRE(file::clear_directory(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__clear_directory__exists__true)
+BC_AUTO_TEST_CASE(file_utilities__clear_directory__exists__true)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(file::clear_directory(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(file::clear_directory(TEST_PATH));
 }
 
 // create_directory
 
-BOOST_AUTO_TEST_CASE(create_directory__missing__true)
+BC_AUTO_TEST_CASE(create_directory__missing__true)
 {
-    BOOST_REQUIRE(file::create_directory(TEST_PATH));
+    BC_REQUIRE(file::create_directory(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__create_directory__exists__false)
+BC_AUTO_TEST_CASE(file_utilities__create_directory__exists__false)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(!file::create_directory(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(!file::create_directory(TEST_PATH));
 }
 
 // is_file
 
-BOOST_AUTO_TEST_CASE(file_utilities__is_file__missing__false)
+BC_AUTO_TEST_CASE(file_utilities__is_file__missing__false)
 {
-    BOOST_REQUIRE(!file::is_file(TEST_PATH));
+    BC_REQUIRE(!file::is_file(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__is_file__exists__true)
+BC_AUTO_TEST_CASE(file_utilities__is_file__exists__true)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(file::is_file(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(file::is_file(TEST_PATH));
 }
 
 // create_file
 
-BOOST_AUTO_TEST_CASE(file_utilities__create_file__missing__true)
+BC_AUTO_TEST_CASE(file_utilities__create_file__missing__true)
 {
-    BOOST_REQUIRE(file::create_file(TEST_PATH));
+    BC_REQUIRE(file::create_file(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__create_file__exists__true)
+BC_AUTO_TEST_CASE(file_utilities__create_file__exists__true)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(file::create_file(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(file::create_file(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__create_file__empty__created)
+BC_AUTO_TEST_CASE(file_utilities__create_file__empty__created)
 {
     const data_chunk source(0);
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
-    BOOST_REQUIRE(file::create_file(TEST_PATH, source.data(), source.size()));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(file::create_file(TEST_PATH, source.data(), source.size()));
+    BC_REQUIRE(test::exists(TEST_PATH));
 
     const auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, -1);
+    BC_REQUIRE_NE(descriptor, -1);
 
     size_t out{};
-    BOOST_REQUIRE(file::size(out, descriptor));
-    BOOST_REQUIRE_EQUAL(out, source.size());
-    BOOST_REQUIRE(file::close(descriptor));
+    BC_REQUIRE(file::size(out, descriptor));
+    BC_REQUIRE_EQUAL(out, source.size());
+    BC_REQUIRE(file::close(descriptor));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__create_file__missing__expected_size)
+BC_AUTO_TEST_CASE(file_utilities__create_file__missing__expected_size)
 {
     const data_chunk source(42u);
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
-    BOOST_REQUIRE(file::create_file(TEST_PATH, source.data(), source.size()));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(file::create_file(TEST_PATH, source.data(), source.size()));
+    BC_REQUIRE(test::exists(TEST_PATH));
 
     const auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, -1);
+    BC_REQUIRE_NE(descriptor, -1);
 
     size_t out{};
-    BOOST_REQUIRE(file::size(out, descriptor));
-    BOOST_REQUIRE_EQUAL(out, source.size());
-    BOOST_REQUIRE(file::close(descriptor));
+    BC_REQUIRE(file::size(out, descriptor));
+    BC_REQUIRE_EQUAL(out, source.size());
+    BC_REQUIRE(file::close(descriptor));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__create_file__exists__replaced)
+BC_AUTO_TEST_CASE(file_utilities__create_file__exists__replaced)
 {
     const data_chunk old(100);
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
-    BOOST_REQUIRE(file::create_file(TEST_PATH, old.data(), old.size()));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(file::create_file(TEST_PATH, old.data(), old.size()));
+    BC_REQUIRE(test::exists(TEST_PATH));
 
     auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, -1);
+    BC_REQUIRE_NE(descriptor, -1);
 
     size_t out{};
-    BOOST_REQUIRE(file::size(out, descriptor));
-    BOOST_REQUIRE_EQUAL(out, old.size());
-    BOOST_REQUIRE(file::close(descriptor));
+    BC_REQUIRE(file::size(out, descriptor));
+    BC_REQUIRE_EQUAL(out, old.size());
+    BC_REQUIRE(file::close(descriptor));
 
     const data_chunk source(42);
-    BOOST_REQUIRE(test::exists(TEST_PATH));
-    BOOST_REQUIRE(file::create_file(TEST_PATH, source.data(), source.size()));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(file::create_file(TEST_PATH, source.data(), source.size()));
+    BC_REQUIRE(test::exists(TEST_PATH));
 
     descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, -1);
+    BC_REQUIRE_NE(descriptor, -1);
 
-    BOOST_REQUIRE(file::size(out, descriptor));
-    BOOST_REQUIRE_EQUAL(out, source.size());
-    BOOST_REQUIRE(file::close(descriptor));
+    BC_REQUIRE(file::size(out, descriptor));
+    BC_REQUIRE_EQUAL(out, source.size());
+    BC_REQUIRE(file::close(descriptor));
 }
 
 // remove
 
-BOOST_AUTO_TEST_CASE(file_utilities__remove__missing__true)
+BC_AUTO_TEST_CASE(file_utilities__remove__missing__true)
 {
-    BOOST_REQUIRE(file::remove(TEST_PATH));
+    BC_REQUIRE(file::remove(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__remove__exists__true_removed)
+BC_AUTO_TEST_CASE(file_utilities__remove__exists__true_removed)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(file::remove(TEST_PATH));
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(file::remove(TEST_PATH));
+    BC_REQUIRE(!test::exists(TEST_PATH));
 }
 
 // rename
 
-BOOST_AUTO_TEST_CASE(file_utilities__rename__missing__false)
+BC_AUTO_TEST_CASE(file_utilities__rename__missing__false)
 {
-    BOOST_REQUIRE(!file::rename(TEST_PATH, TEST_PATH));
+    BC_REQUIRE(!file::rename(TEST_PATH, TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__rename__exists_to_self__true)
+BC_AUTO_TEST_CASE(file_utilities__rename__exists_to_self__true)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(file::rename(TEST_PATH, TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(file::rename(TEST_PATH, TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__rename__exists__true)
+BC_AUTO_TEST_CASE(file_utilities__rename__exists__true)
 {
     const std::string target = TEST_PATH + "_";
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(file::rename(TEST_PATH, target));
-    BOOST_REQUIRE(test::exists(target));
-    BOOST_REQUIRE(!test::exists(TEST_PATH));
-    BOOST_REQUIRE(file::rename(target, TEST_PATH));
-    BOOST_REQUIRE(!test::exists(target));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(file::rename(TEST_PATH, target));
+    BC_REQUIRE(test::exists(target));
+    BC_REQUIRE(!test::exists(TEST_PATH));
+    BC_REQUIRE(file::rename(target, TEST_PATH));
+    BC_REQUIRE(!test::exists(target));
+    BC_REQUIRE(test::exists(TEST_PATH));
 }
 
 // copy
 
-BOOST_AUTO_TEST_CASE(file_utilities__copy__missing__false)
+BC_AUTO_TEST_CASE(file_utilities__copy__missing__false)
 {
-    BOOST_REQUIRE(!file::copy(TEST_PATH, TEST_PATH));
+    BC_REQUIRE(!file::copy(TEST_PATH, TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__copy__exists_to_self__false)
+BC_AUTO_TEST_CASE(file_utilities__copy__exists_to_self__false)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(!file::copy(TEST_PATH, TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(!file::copy(TEST_PATH, TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__copy__target_missing__true_both_exist)
+BC_AUTO_TEST_CASE(file_utilities__copy__target_missing__true_both_exist)
 {
     const std::string target = TEST_PATH + "_";
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(file::copy(TEST_PATH, target));
-    BOOST_REQUIRE(test::exists(target));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(file::copy(TEST_PATH, target));
+    BC_REQUIRE(test::exists(target));
+    BC_REQUIRE(test::exists(TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__copy__target_exists__false_both_exist)
+BC_AUTO_TEST_CASE(file_utilities__copy__target_exists__false_both_exist)
 {
     const std::string target = TEST_PATH + "_";
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(test::create(target));
-    BOOST_REQUIRE(!file::copy(target, TEST_PATH));
-    BOOST_REQUIRE(test::exists(target));
-    BOOST_REQUIRE(test::exists(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(target));
+    BC_REQUIRE(!file::copy(target, TEST_PATH));
+    BC_REQUIRE(test::exists(target));
+    BC_REQUIRE(test::exists(TEST_PATH));
 }
 
 // copy_directory
 
-BOOST_AUTO_TEST_CASE(file_utilities__copy_directory__missing__false)
+BC_AUTO_TEST_CASE(file_utilities__copy_directory__missing__false)
 {
-    BOOST_REQUIRE(!file::copy_directory(TEST_PATH, TEST_PATH));
+    BC_REQUIRE(!file::copy_directory(TEST_PATH, TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__copy_directory__exists_to_self__false)
+BC_AUTO_TEST_CASE(file_utilities__copy_directory__exists_to_self__false)
 {
-    BOOST_REQUIRE(file::create_directory(TEST_PATH));
-    BOOST_REQUIRE(!file::copy_directory(TEST_PATH, TEST_PATH));
+    BC_REQUIRE(file::create_directory(TEST_PATH));
+    BC_REQUIRE(!file::copy_directory(TEST_PATH, TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__copy_directory__target_exists__false)
-{
-    const std::string from_dir = TEST_PATH + "_from";
-    const std::string to_dir = TEST_PATH + "_to";
-    BOOST_REQUIRE(file::create_directory(from_dir));
-    BOOST_REQUIRE(file::create_directory(to_dir));
-    BOOST_REQUIRE(!file::copy_directory(from_dir, to_dir));
-}
-
-BOOST_AUTO_TEST_CASE(file_utilities__copy_directory__target_missing__true_copied)
+BC_AUTO_TEST_CASE(file_utilities__copy_directory__target_exists__false)
 {
     const std::string from_dir = TEST_PATH + "_from";
     const std::string to_dir = TEST_PATH + "_to";
-    BOOST_REQUIRE(file::create_directory(from_dir));
-    BOOST_REQUIRE(file::copy_directory(from_dir, to_dir));
-    BOOST_REQUIRE(file::is_directory(to_dir));
+    BC_REQUIRE(file::create_directory(from_dir));
+    BC_REQUIRE(file::create_directory(to_dir));
+    BC_REQUIRE(!file::copy_directory(from_dir, to_dir));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__copy_directory__target_missing__true_files_copied)
+BC_AUTO_TEST_CASE(file_utilities__copy_directory__target_missing__true_copied)
+{
+    const std::string from_dir = TEST_PATH + "_from";
+    const std::string to_dir = TEST_PATH + "_to";
+    BC_REQUIRE(file::create_directory(from_dir));
+    BC_REQUIRE(file::copy_directory(from_dir, to_dir));
+    BC_REQUIRE(file::is_directory(to_dir));
+}
+
+BC_AUTO_TEST_CASE(file_utilities__copy_directory__target_missing__true_files_copied)
 {
     const std::string from_dir = TEST_PATH + "_from";
     const std::string to_dir = TEST_PATH + "_to";
     const std::string from_file = from_dir + "/file";
     const std::string to_file = to_dir + "/file";
-    BOOST_REQUIRE(file::create_directory(from_dir));
-    BOOST_REQUIRE(file::create_file(from_file));
-    BOOST_REQUIRE(file::copy_directory(from_dir, to_dir));
-    BOOST_REQUIRE(file::is_directory(to_dir));
-    BOOST_REQUIRE(file::is_file(to_file));
+    BC_REQUIRE(file::create_directory(from_dir));
+    BC_REQUIRE(file::create_file(from_file));
+    BC_REQUIRE(file::copy_directory(from_dir, to_dir));
+    BC_REQUIRE(file::is_directory(to_dir));
+    BC_REQUIRE(file::is_file(to_file));
 }
 
 // open
 
-BOOST_AUTO_TEST_CASE(file_utilities__open__missing__failure)
+BC_AUTO_TEST_CASE(file_utilities__open__missing__failure)
 {
-    BOOST_REQUIRE_EQUAL(file::open(TEST_PATH), -1);
+    BC_REQUIRE_EQUAL(file::open(TEST_PATH), -1);
 }
 
 // open_ex
 
-BOOST_AUTO_TEST_CASE(file_utilities__open_ex__missing__failure)
+BC_AUTO_TEST_CASE(file_utilities__open_ex__missing__failure)
 {
     int file_descriptor{};
-    BOOST_REQUIRE(file::open_ex(file_descriptor, TEST_PATH));
-    BOOST_REQUIRE_EQUAL(file_descriptor, -1);
+    BC_REQUIRE(file::open_ex(file_descriptor, TEST_PATH));
+    BC_REQUIRE_EQUAL(file_descriptor, -1);
 }
 
 // close
 
-BOOST_AUTO_TEST_CASE(file_utilities__close__opened__true)
+BC_AUTO_TEST_CASE(file_utilities__close__opened__true)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
     const auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, file::invalid);
-    BOOST_REQUIRE(file::close(descriptor));
+    BC_REQUIRE_NE(descriptor, file::invalid);
+    BC_REQUIRE(file::close(descriptor));
 }
 
 // close_ex
 
-BOOST_AUTO_TEST_CASE(file_utilities__close_ex__opened__success)
+BC_AUTO_TEST_CASE(file_utilities__close_ex__opened__success)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
     const auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, file::invalid);
-    BOOST_REQUIRE(file::close(descriptor));
+    BC_REQUIRE_NE(descriptor, file::invalid);
+    BC_REQUIRE(file::close(descriptor));
 }
 
 // size1
 
-BOOST_AUTO_TEST_CASE(file_utilities__size1__invalid_handle__false)
+BC_AUTO_TEST_CASE(file_utilities__size1__invalid_handle__false)
 {
     size_t out{};
-    BOOST_REQUIRE(!file::size(out, -1));
+    BC_REQUIRE(!file::size(out, -1));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__size1__empty__true_zero)
+BC_AUTO_TEST_CASE(file_utilities__size1__empty__true_zero)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
     const auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, -1);
+    BC_REQUIRE_NE(descriptor, -1);
 
     size_t out{ 42 };
-    BOOST_REQUIRE(file::size(out, descriptor));
-    BOOST_REQUIRE_EQUAL(out, zero);
-    BOOST_REQUIRE(file::close(descriptor));
+    BC_REQUIRE(file::size(out, descriptor));
+    BC_REQUIRE_EQUAL(out, zero);
+    BC_REQUIRE(file::close(descriptor));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__size1__non_empty__expected)
+BC_AUTO_TEST_CASE(file_utilities__size1__non_empty__expected)
 {
     const std::string text = "panopticon";
-    BOOST_REQUIRE(test::create(TEST_PATH, text));
+    BC_REQUIRE(test::create(TEST_PATH, text));
 
     const auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, file::invalid);
+    BC_REQUIRE_NE(descriptor, file::invalid);
 
     size_t out{};
-    BOOST_REQUIRE(file::size(out, descriptor));
-    BOOST_REQUIRE_EQUAL(out, text.length());
-    BOOST_REQUIRE(file::close(descriptor));
+    BC_REQUIRE(file::size(out, descriptor));
+    BC_REQUIRE_EQUAL(out, text.length());
+    BC_REQUIRE(file::close(descriptor));
 }
 
 // size_ex1
 
-BOOST_AUTO_TEST_CASE(file_utilities__size_ex1__invalid_handle__failure)
+BC_AUTO_TEST_CASE(file_utilities__size_ex1__invalid_handle__failure)
 {
     size_t out{};
-    BOOST_REQUIRE(file::size_ex(out, -1));
+    BC_REQUIRE(file::size_ex(out, -1));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__size_ex1__empty__success_zero)
+BC_AUTO_TEST_CASE(file_utilities__size_ex1__empty__success_zero)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
     const auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, -1);
+    BC_REQUIRE_NE(descriptor, -1);
 
     size_t out{ 42 };
-    BOOST_REQUIRE(!file::size_ex(out, descriptor));
-    BOOST_REQUIRE_EQUAL(out, zero);
-    BOOST_REQUIRE(file::close(descriptor));
+    BC_REQUIRE(!file::size_ex(out, descriptor));
+    BC_REQUIRE_EQUAL(out, zero);
+    BC_REQUIRE(file::close(descriptor));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__size_ex1__non_empty__expected)
+BC_AUTO_TEST_CASE(file_utilities__size_ex1__non_empty__expected)
 {
     const std::string text = "panopticon";
-    BOOST_REQUIRE(test::create(TEST_PATH, text));
+    BC_REQUIRE(test::create(TEST_PATH, text));
 
     const auto descriptor = file::open(TEST_PATH);
-    BOOST_REQUIRE_NE(descriptor, file::invalid);
+    BC_REQUIRE_NE(descriptor, file::invalid);
 
     size_t out{};
-    BOOST_REQUIRE(!file::size_ex(out, descriptor));
-    BOOST_REQUIRE_EQUAL(out, text.length());
-    BOOST_REQUIRE(file::close(descriptor));
+    BC_REQUIRE(!file::size_ex(out, descriptor));
+    BC_REQUIRE_EQUAL(out, text.length());
+    BC_REQUIRE(file::close(descriptor));
 }
 
 // size2
 
-BOOST_AUTO_TEST_CASE(file_utilities__size2__missing__false)
+BC_AUTO_TEST_CASE(file_utilities__size2__missing__false)
 {
     size_t out{};
-    BOOST_REQUIRE(!file::size(out, TEST_PATH));
+    BC_REQUIRE(!file::size(out, TEST_PATH));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__size2__empty__true_zero)
+BC_AUTO_TEST_CASE(file_utilities__size2__empty__true_zero)
 {
     size_t out{ 42 };
-    BOOST_REQUIRE(test::create(TEST_PATH));
-    BOOST_REQUIRE(file::size(out, TEST_PATH));
-    BOOST_REQUIRE_EQUAL(out, zero);
+    BC_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(file::size(out, TEST_PATH));
+    BC_REQUIRE_EQUAL(out, zero);
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__size2__non_empty__true_expected)
+BC_AUTO_TEST_CASE(file_utilities__size2__non_empty__true_expected)
 {
     const std::string text = "panopticon";
-    BOOST_REQUIRE(test::create(TEST_PATH, text));
+    BC_REQUIRE(test::create(TEST_PATH, text));
 
     size_t out{};
-    BOOST_REQUIRE(file::size(out, TEST_PATH));
-    BOOST_REQUIRE_EQUAL(out, text.length());
+    BC_REQUIRE(file::size(out, TEST_PATH));
+    BC_REQUIRE_EQUAL(out, text.length());
 }
 
 // space
 
-BOOST_AUTO_TEST_CASE(file_utilities__space__file__true)
+BC_AUTO_TEST_CASE(file_utilities__space__file__true)
 {
     const std::string text = "panopticon";
-    BOOST_REQUIRE(test::create(TEST_PATH, text));
+    BC_REQUIRE(test::create(TEST_PATH, text));
 
     uint64_t out{};
-    BOOST_REQUIRE(file::space(out, TEST_PATH));
-    BOOST_WARN(is_nonzero(out));
+    BC_REQUIRE(file::space(out, TEST_PATH));
+    BC_WARN(is_nonzero(out));
 }
 
-BOOST_AUTO_TEST_CASE(file_utilities__space__create_directory__true)
+BC_AUTO_TEST_CASE(file_utilities__space__create_directory__true)
 {
     const std::filesystem::path directory = TEST_PATH + "/foo";
-    BOOST_REQUIRE(file::create_directory(directory));
+    BC_REQUIRE(file::create_directory(directory));
 
     uint64_t out{};
-    BOOST_REQUIRE(file::space(out, directory));
-    BOOST_WARN(is_nonzero(out));
+    BC_REQUIRE(file::space(out, directory));
+    BC_WARN(is_nonzero(out));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

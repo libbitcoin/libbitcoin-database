@@ -22,234 +22,234 @@
 
 // these include the slow tests (mmap)
 
-BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 // construct
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__construct__default_configuration__referenced)
+BC_AUTO_TEST_CASE(store__construct__default_configuration__referenced)
 {
     const settings configuration{ test::database_settings() };
     test::map_store instance{ configuration };
-    BOOST_REQUIRE_EQUAL(&instance.configuration(), &configuration);
+    BC_REQUIRE_EQUAL(&instance.configuration(), &configuration);
 }
 
-BOOST_AUTO_TEST_CASE(store__is_dirty__uninitialized__true)
+BC_AUTO_TEST_CASE(store__is_dirty__uninitialized__true)
 {
     const settings configuration{ test::database_settings() };
     store<database::mmap> instance{ configuration };
-    BOOST_REQUIRE(instance.is_dirty());
+    BC_REQUIRE(instance.is_dirty());
 }
 
-BOOST_AUTO_TEST_CASE(store__is_dirty__initialized___false)
+BC_AUTO_TEST_CASE(store__is_dirty__initialized___false)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
-    BOOST_REQUIRE(!instance.is_dirty());
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.is_dirty());
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__set_dirty__initialized__is_dirty)
+BC_AUTO_TEST_CASE(store__set_dirty__initialized__is_dirty)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
-    BOOST_REQUIRE(!instance.is_dirty());
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.is_dirty());
     instance.set_dirty();
-    BOOST_REQUIRE(instance.is_dirty());
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(instance.is_dirty());
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__is_pooling__default__false)
+BC_AUTO_TEST_CASE(store__is_pooling__default__false)
 {
     const settings configuration{ test::database_settings() };
     store<database::mmap> instance{ configuration };
-    BOOST_REQUIRE(!instance.is_pooling());
+    BC_REQUIRE(!instance.is_pooling());
 }
 
-BOOST_AUTO_TEST_CASE(store__set_pooling__initialized__is_pooling_and_dirty)
+BC_AUTO_TEST_CASE(store__set_pooling__initialized__is_pooling_and_dirty)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
-    BOOST_REQUIRE(!instance.is_pooling());
-    BOOST_REQUIRE(!instance.is_dirty());
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.is_pooling());
+    BC_REQUIRE(!instance.is_dirty());
     instance.set_pooling();
-    BOOST_REQUIRE(instance.is_pooling());
-    BOOST_REQUIRE(instance.is_dirty());
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(instance.is_pooling());
+    BC_REQUIRE(instance.is_dirty());
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__is_dirty__open__false)
+BC_AUTO_TEST_CASE(store__is_dirty__open__false)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
-    BOOST_REQUIRE(!instance.is_dirty());
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.is_dirty());
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__is_dirty__open_add_header__false)
+BC_AUTO_TEST_CASE(store__is_dirty__open_add_header__false)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
-    BOOST_REQUIRE(query_.set(system::chain::header{}, context{}, {}, false));
-    BOOST_REQUIRE(!instance.is_dirty());
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(query_.set(system::chain::header{}, context{}, {}, false));
+    BC_REQUIRE(!instance.is_dirty());
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__is_dirty__open_with_two_headers__true)
+BC_AUTO_TEST_CASE(store__is_dirty__open_with_two_headers__true)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
-    BOOST_REQUIRE(query_.set(system::chain::header{}, context{}, {}, false));
-    BOOST_REQUIRE(!instance.close(test::events));
-    BOOST_REQUIRE(!instance.open(test::events));
-    BOOST_REQUIRE(instance.is_dirty());
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(query_.set(system::chain::header{}, context{}, {}, false));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE(instance.is_dirty());
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
+BC_AUTO_TEST_CASE(store__paths__default_configuration__expected)
 {
     const settings configuration{ test::database_settings() };
     test::map_store instance{ configuration };
 
     /// Archive.
-    BOOST_REQUIRE_EQUAL(instance.header_head_file(), "bitcoin/heads/archive_header.head");
-    BOOST_REQUIRE_EQUAL(instance.header_body_file(), "bitcoin/archive_header.data");
-    BOOST_REQUIRE_EQUAL(instance.input_head_file(), "bitcoin/heads/archive_input.head");
-    BOOST_REQUIRE_EQUAL(instance.input_body_file(), "bitcoin/archive_input.data");
-    BOOST_REQUIRE_EQUAL(instance.output_head_file(), "bitcoin/heads/archive_output.head");
-    BOOST_REQUIRE_EQUAL(instance.output_body_file(), "bitcoin/archive_output.data");
-    BOOST_REQUIRE_EQUAL(instance.ins_head_file(), "bitcoin/heads/archive_ins.head");
-    BOOST_REQUIRE_EQUAL(instance.ins_body_file(), "bitcoin/archive_ins_point.data");
-    BOOST_REQUIRE_EQUAL(instance.outs_head_file(), "bitcoin/heads/archive_outs.head");
-    BOOST_REQUIRE_EQUAL(instance.outs_body_file(), "bitcoin/archive_outs_address.data");
-    BOOST_REQUIRE_EQUAL(instance.tx_head_file(), "bitcoin/heads/archive_tx.head");
-    BOOST_REQUIRE_EQUAL(instance.tx_body_file(), "bitcoin/archive_tx.data");
-    BOOST_REQUIRE_EQUAL(instance.txs_head_file(), "bitcoin/heads/archive_txs.head");
-    BOOST_REQUIRE_EQUAL(instance.txs_body_file(), "bitcoin/archive_txs.data");
+    BC_REQUIRE_EQUAL(instance.header_head_file(), "bitcoin/heads/archive_header.head");
+    BC_REQUIRE_EQUAL(instance.header_body_file(), "bitcoin/archive_header.data");
+    BC_REQUIRE_EQUAL(instance.input_head_file(), "bitcoin/heads/archive_input.head");
+    BC_REQUIRE_EQUAL(instance.input_body_file(), "bitcoin/archive_input.data");
+    BC_REQUIRE_EQUAL(instance.output_head_file(), "bitcoin/heads/archive_output.head");
+    BC_REQUIRE_EQUAL(instance.output_body_file(), "bitcoin/archive_output.data");
+    BC_REQUIRE_EQUAL(instance.ins_head_file(), "bitcoin/heads/archive_ins.head");
+    BC_REQUIRE_EQUAL(instance.ins_body_file(), "bitcoin/archive_ins_point.data");
+    BC_REQUIRE_EQUAL(instance.outs_head_file(), "bitcoin/heads/archive_outs.head");
+    BC_REQUIRE_EQUAL(instance.outs_body_file(), "bitcoin/archive_outs_address.data");
+    BC_REQUIRE_EQUAL(instance.tx_head_file(), "bitcoin/heads/archive_tx.head");
+    BC_REQUIRE_EQUAL(instance.tx_body_file(), "bitcoin/archive_tx.data");
+    BC_REQUIRE_EQUAL(instance.txs_head_file(), "bitcoin/heads/archive_txs.head");
+    BC_REQUIRE_EQUAL(instance.txs_body_file(), "bitcoin/archive_txs.data");
 
     /// Index.
-    BOOST_REQUIRE_EQUAL(instance.candidate_head_file(), "bitcoin/heads/index_candidate.head");
-    BOOST_REQUIRE_EQUAL(instance.confirmed_head_file(), "bitcoin/heads/index_confirmed.head");
-    BOOST_REQUIRE_EQUAL(instance.strong_head_file(), "bitcoin/heads/index_strong.head");
-    BOOST_REQUIRE_EQUAL(instance.duplicate_head_file(), "bitcoin/heads/index_duplicate.head");
-    BOOST_REQUIRE_EQUAL(instance.duplicate_body_file(), "bitcoin/index_duplicate.data");
-    BOOST_REQUIRE_EQUAL(instance.state_head_file(), "bitcoin/heads/index_state.head");
-    BOOST_REQUIRE_EQUAL(instance.wtxid_head_file(), "bitcoin/heads/index_wtxid.head");
-    BOOST_REQUIRE_EQUAL(instance.wtxid_body_file(), "bitcoin/index_wtxid.data");
+    BC_REQUIRE_EQUAL(instance.candidate_head_file(), "bitcoin/heads/index_candidate.head");
+    BC_REQUIRE_EQUAL(instance.confirmed_head_file(), "bitcoin/heads/index_confirmed.head");
+    BC_REQUIRE_EQUAL(instance.strong_head_file(), "bitcoin/heads/index_strong.head");
+    BC_REQUIRE_EQUAL(instance.duplicate_head_file(), "bitcoin/heads/index_duplicate.head");
+    BC_REQUIRE_EQUAL(instance.duplicate_body_file(), "bitcoin/index_duplicate.data");
+    BC_REQUIRE_EQUAL(instance.state_head_file(), "bitcoin/heads/index_state.head");
+    BC_REQUIRE_EQUAL(instance.wtxid_head_file(), "bitcoin/heads/index_wtxid.head");
+    BC_REQUIRE_EQUAL(instance.wtxid_body_file(), "bitcoin/index_wtxid.data");
 
     /// Cache.
-    BOOST_REQUIRE_EQUAL(instance.prevout_head_file(), "bitcoin/heads/cache_prevout.head");
-    BOOST_REQUIRE_EQUAL(instance.prevout_body_file(), "bitcoin/cache_prevout.data");
-    BOOST_REQUIRE_EQUAL(instance.pool_head_file(), "bitcoin/heads/cache_pool.head");
-    BOOST_REQUIRE_EQUAL(instance.pool_body_file(), "bitcoin/cache_pool_context.data");
+    BC_REQUIRE_EQUAL(instance.prevout_head_file(), "bitcoin/heads/cache_prevout.head");
+    BC_REQUIRE_EQUAL(instance.prevout_body_file(), "bitcoin/cache_prevout.data");
+    BC_REQUIRE_EQUAL(instance.pool_head_file(), "bitcoin/heads/cache_pool.head");
+    BC_REQUIRE_EQUAL(instance.pool_body_file(), "bitcoin/cache_pool_context.data");
 
     /// Option.
-    BOOST_REQUIRE_EQUAL(instance.filter_bk_head_file(), "bitcoin/heads/option_filter_bk.head");
-    BOOST_REQUIRE_EQUAL(instance.filter_bk_body_file(), "bitcoin/option_filter_bk.data");
-    BOOST_REQUIRE_EQUAL(instance.filter_tx_head_file(), "bitcoin/heads/option_filter_tx.head");
-    BOOST_REQUIRE_EQUAL(instance.filter_tx_body_file(), "bitcoin/option_filter_tx.data");
+    BC_REQUIRE_EQUAL(instance.filter_bk_head_file(), "bitcoin/heads/option_filter_bk.head");
+    BC_REQUIRE_EQUAL(instance.filter_bk_body_file(), "bitcoin/option_filter_bk.data");
+    BC_REQUIRE_EQUAL(instance.filter_tx_head_file(), "bitcoin/heads/option_filter_tx.head");
+    BC_REQUIRE_EQUAL(instance.filter_tx_body_file(), "bitcoin/option_filter_tx.data");
 
     /// Lock.
-    BOOST_REQUIRE_EQUAL(instance.flush_lock_file(), "bitcoin/flush.lock");
-    BOOST_REQUIRE_EQUAL(instance.process_lock_file(), "bitcoin/process.lock");
+    BC_REQUIRE_EQUAL(instance.flush_lock_file(), "bitcoin/flush.lock");
+    BC_REQUIRE_EQUAL(instance.process_lock_file(), "bitcoin/process.lock");
 }
 
 // get_transactor
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
+BC_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
 {
     const settings configuration{ test::database_settings() };
     test::map_store instance{ configuration };
     auto transactor = instance.get_transactor();
-    BOOST_REQUIRE(transactor);
-    BOOST_REQUIRE(!instance.transactor_mutex().try_lock());
-    BOOST_REQUIRE(instance.transactor_mutex().try_lock_shared());
+    BC_REQUIRE(transactor);
+    BC_REQUIRE(!instance.transactor_mutex().try_lock());
+    BC_REQUIRE(instance.transactor_mutex().try_lock_shared());
 }
 
 // set_pooling
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__set_pooling__created__pooling)
+BC_AUTO_TEST_CASE(store__set_pooling__created__pooling)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.is_pooling());
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.is_pooling());
     instance.set_pooling();
-    BOOST_REQUIRE(instance.is_pooling());
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(instance.is_pooling());
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__set_pooling__twice__remains_pooling)
+BC_AUTO_TEST_CASE(store__set_pooling__twice__remains_pooling)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.create(test::events));
     instance.set_pooling();
     instance.set_pooling();
-    BOOST_REQUIRE(instance.is_pooling());
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(instance.is_pooling());
+    BC_REQUIRE(!instance.close(test::events));
 }
 
 // set_current
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__set_current__created__not_current)
+BC_AUTO_TEST_CASE(store__set_current__created__not_current)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.is_current_());
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.is_current_());
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__set_current__changed__applied_to_heads)
+BC_AUTO_TEST_CASE(store__set_current__changed__applied_to_heads)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.create(test::events));
     instance.set_current_(true);
     instance.set_current_(false);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__set_current__unchanged__no_effect)
+BC_AUTO_TEST_CASE(store__set_current__unchanged__no_effect)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.create(test::events));
     instance.set_current_(false);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

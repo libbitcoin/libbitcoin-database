@@ -19,11 +19,11 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(filter_tx_tests)
+BC_AUTO_TEST_SUITE(filter_tx_tests)
 
 using namespace system;
 
-BOOST_AUTO_TEST_CASE(filter_tx__put__ordered__expected)
+BC_AUTO_TEST_CASE(filter_tx__put__ordered__expected)
 {
     const auto expected_head = base16_chunk
     (
@@ -74,18 +74,18 @@ BOOST_AUTO_TEST_CASE(filter_tx__put__ordered__expected)
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::filter_tx instance{ head_store, body_store, 8 };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
-    BOOST_REQUIRE(instance.put(0, put0));
-    BOOST_REQUIRE(instance.put(1, put1));
-    BOOST_REQUIRE(instance.put(2, put2));
-    BOOST_REQUIRE(instance.put(3, put3));
-    BOOST_REQUIRE(instance.put(4, put4));
+    BC_REQUIRE(instance.put(0, put0));
+    BC_REQUIRE(instance.put(1, put1));
+    BC_REQUIRE(instance.put(2, put2));
+    BC_REQUIRE(instance.put(3, put3));
+    BC_REQUIRE(instance.put(4, put4));
 
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
-    BOOST_REQUIRE(instance.close());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), closed_head);
+    BC_REQUIRE_EQUAL(head_store.buffer(), expected_head);
+    BC_REQUIRE_EQUAL(body_store.buffer(), expected_body);
+    BC_REQUIRE(instance.close());
+    BC_REQUIRE_EQUAL(head_store.buffer(), closed_head);
 
     // Logical order is unaffected by put order.
     table::filter_tx::get_filter get0{};
@@ -93,19 +93,19 @@ BOOST_AUTO_TEST_CASE(filter_tx__put__ordered__expected)
     table::filter_tx::get_filter get2{};
     table::filter_tx::get_filter get3{};
     table::filter_tx::get_filter get4{};
-    BOOST_REQUIRE(instance.at(0, get0));
-    BOOST_REQUIRE(instance.at(1, get));
-    BOOST_REQUIRE(instance.at(2, get2));
-    BOOST_REQUIRE(instance.at(3, get3));
-    BOOST_REQUIRE(instance.at(4, get4));
-    BOOST_REQUIRE_EQUAL(get0.filter, zero_data);
-    BOOST_REQUIRE_EQUAL(get.filter, one_data);
-    BOOST_REQUIRE_EQUAL(get2.filter, two_data);
-    BOOST_REQUIRE_EQUAL(get3.filter, three_data);
-    BOOST_REQUIRE_EQUAL(get4.filter, four_data);
+    BC_REQUIRE(instance.at(0, get0));
+    BC_REQUIRE(instance.at(1, get));
+    BC_REQUIRE(instance.at(2, get2));
+    BC_REQUIRE(instance.at(3, get3));
+    BC_REQUIRE(instance.at(4, get4));
+    BC_REQUIRE_EQUAL(get0.filter, zero_data);
+    BC_REQUIRE_EQUAL(get.filter, one_data);
+    BC_REQUIRE_EQUAL(get2.filter, two_data);
+    BC_REQUIRE_EQUAL(get3.filter, three_data);
+    BC_REQUIRE_EQUAL(get4.filter, four_data);
 }
 
-BOOST_AUTO_TEST_CASE(filter_tx__put__disordered__expected)
+BC_AUTO_TEST_CASE(filter_tx__put__disordered__expected)
 {
     const data_chunk expected_head = base16_chunk
     (
@@ -156,18 +156,18 @@ BOOST_AUTO_TEST_CASE(filter_tx__put__disordered__expected)
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::filter_tx instance{ head_store, body_store, 8 };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
-    BOOST_REQUIRE(instance.put(1, put1));
-    BOOST_REQUIRE(instance.put(0, put0));
-    BOOST_REQUIRE(instance.put(4, put4));
-    BOOST_REQUIRE(instance.put(2, put2));
-    BOOST_REQUIRE(instance.put(3, put3));
+    BC_REQUIRE(instance.put(1, put1));
+    BC_REQUIRE(instance.put(0, put0));
+    BC_REQUIRE(instance.put(4, put4));
+    BC_REQUIRE(instance.put(2, put2));
+    BC_REQUIRE(instance.put(3, put3));
 
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), expected_head);
-    BOOST_REQUIRE_EQUAL(body_store.buffer(), expected_body);
-    BOOST_REQUIRE(instance.close());
-    BOOST_REQUIRE_EQUAL(head_store.buffer(), closed_head);
+    BC_REQUIRE_EQUAL(head_store.buffer(), expected_head);
+    BC_REQUIRE_EQUAL(body_store.buffer(), expected_body);
+    BC_REQUIRE(instance.close());
+    BC_REQUIRE_EQUAL(head_store.buffer(), closed_head);
 
     // Logical order is unaffected by put order.
     table::filter_tx::get_filter get0{};
@@ -175,16 +175,16 @@ BOOST_AUTO_TEST_CASE(filter_tx__put__disordered__expected)
     table::filter_tx::get_filter get2{};
     table::filter_tx::get_filter get3{};
     table::filter_tx::get_filter get4{};
-    BOOST_REQUIRE(instance.at(0, get0));
-    BOOST_REQUIRE(instance.at(1, get));
-    BOOST_REQUIRE(instance.at(2, get2));
-    BOOST_REQUIRE(instance.at(3, get3));
-    BOOST_REQUIRE(instance.at(4, get4));
-    BOOST_REQUIRE_EQUAL(get0.filter, zero_data);
-    BOOST_REQUIRE_EQUAL(get.filter, one_data);
-    BOOST_REQUIRE_EQUAL(get2.filter, two_data);
-    BOOST_REQUIRE_EQUAL(get3.filter, three_data);
-    BOOST_REQUIRE_EQUAL(get4.filter, four_data);
+    BC_REQUIRE(instance.at(0, get0));
+    BC_REQUIRE(instance.at(1, get));
+    BC_REQUIRE(instance.at(2, get2));
+    BC_REQUIRE(instance.at(3, get3));
+    BC_REQUIRE(instance.at(4, get4));
+    BC_REQUIRE_EQUAL(get0.filter, zero_data);
+    BC_REQUIRE_EQUAL(get.filter, one_data);
+    BC_REQUIRE_EQUAL(get2.filter, two_data);
+    BC_REQUIRE_EQUAL(get3.filter, three_data);
+    BC_REQUIRE_EQUAL(get4.filter, four_data);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

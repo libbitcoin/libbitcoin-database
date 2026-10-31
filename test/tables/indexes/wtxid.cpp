@@ -19,47 +19,47 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(wtxid_tests)
+BC_AUTO_TEST_SUITE(wtxid_tests)
 
 using namespace system;
 
-BOOST_AUTO_TEST_CASE(wtxid__put__next_record__found)
+BC_AUTO_TEST_CASE(wtxid__put__next_record__found)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::wtxid instance{ head_store, body_store, 8 };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put(0, one_hash));
-    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-    BOOST_REQUIRE_EQUAL(instance.first({ one_hash }), 0u);
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.put(0, one_hash));
+    BC_REQUIRE_EQUAL(instance.count(), 1u);
+    BC_REQUIRE_EQUAL(instance.first({ one_hash }), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(wtxid__put__skipped_records__padded_unlinked)
+BC_AUTO_TEST_CASE(wtxid__put__skipped_records__padded_unlinked)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::wtxid instance{ head_store, body_store, 8 };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put(2, one_hash));
-    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
-    BOOST_REQUIRE_EQUAL(instance.first({ one_hash }), 2u);
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.put(2, one_hash));
+    BC_REQUIRE_EQUAL(instance.count(), 3u);
+    BC_REQUIRE_EQUAL(instance.first({ one_hash }), 2u);
 
     auto it = instance.it({ one_hash });
-    BOOST_REQUIRE(it);
-    BOOST_REQUIRE_EQUAL(*it, 2u);
-    BOOST_REQUIRE(!++it);
+    BC_REQUIRE(it);
+    BC_REQUIRE_EQUAL(*it, 2u);
+    BC_REQUIRE(!++it);
 }
 
-BOOST_AUTO_TEST_CASE(wtxid__put__allocated_record__false)
+BC_AUTO_TEST_CASE(wtxid__put__allocated_record__false)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::wtxid instance{ head_store, body_store, 8 };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put(1, one_hash));
-    BOOST_REQUIRE(!instance.put(0, null_hash));
-    BOOST_REQUIRE(!instance.put(1, null_hash));
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.put(1, one_hash));
+    BC_REQUIRE(!instance.put(0, null_hash));
+    BC_REQUIRE(!instance.put(1, null_hash));
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

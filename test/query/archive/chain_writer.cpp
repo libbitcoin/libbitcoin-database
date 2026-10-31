@@ -24,10 +24,10 @@
 static_assert(is_same_type<database::context::flag_t::integer,
     decltype(system::chain::context{}.flags)>);
 
-BOOST_FIXTURE_TEST_SUITE(query_chain_writer_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(query_chain_writer_tests, test::directory_setup_fixture)
 
 // slow test (mmap)
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_header__mmap_get_header__expected)
+BC_AUTO_TEST_CASE(query_chain_writer__set_header__mmap_get_header__expected)
 {
     constexpr auto milestone = false;
     constexpr auto parent = system::null_hash;
@@ -48,30 +48,30 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_header__mmap_get_header__expected)
     settings.path = TEST_DIRECTORY;
     store<database::mmap> store{ settings };
     query<database::store<database::mmap>> query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(query.set(header, test::context, {}, milestone));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.set(header, test::context, {}, milestone));
 
     table::header::record element1{};
-    BOOST_CHECK(store.header.get(query.to_header(block_hash), element1));
+    BC_CHECK(store.header.get(query.to_header(block_hash), element1));
 
     const auto pointer = query.get_header(query.to_header(block_hash));
-    BOOST_CHECK(pointer);
-    BOOST_CHECK(*pointer == header);
+    BC_CHECK(pointer);
+    BC_CHECK(*pointer == header);
 
     // must open/close mmap
-    BOOST_CHECK(!store.close(test::events_handler));
-    BOOST_CHECK_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
-    BOOST_CHECK_EQUAL(element1.ctx.flags, test::context.flags);
-    BOOST_CHECK_EQUAL(element1.ctx.mtp, test::context.mtp);
-    BOOST_CHECK_EQUAL(element1.version, header.version());
-    BOOST_CHECK_EQUAL(element1.parent_fk, schema::header::link::terminal);
-    BOOST_CHECK_EQUAL(element1.merkle_root, header.merkle_root());
-    BOOST_CHECK_EQUAL(element1.timestamp, header.timestamp());
-    BOOST_CHECK_EQUAL(element1.bits, header.bits());
-    BOOST_CHECK_EQUAL(element1.nonce, header.nonce());
+    BC_CHECK(!store.close(test::events_handler));
+    BC_CHECK_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
+    BC_CHECK_EQUAL(element1.ctx.flags, test::context.flags);
+    BC_CHECK_EQUAL(element1.ctx.mtp, test::context.mtp);
+    BC_CHECK_EQUAL(element1.version, header.version());
+    BC_CHECK_EQUAL(element1.parent_fk, schema::header::link::terminal);
+    BC_CHECK_EQUAL(element1.merkle_root, header.merkle_root());
+    BC_CHECK_EQUAL(element1.timestamp, header.timestamp());
+    BC_CHECK_EQUAL(element1.bits, header.bits());
+    BC_CHECK_EQUAL(element1.nonce, header.nonce());
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_header__is_header__expected)
+BC_AUTO_TEST_CASE(query_chain_writer__set_link_header__is_header__expected)
 {
     constexpr auto milestone = true;
     constexpr auto merkle_root = system::base16_array("119192939495969798999a9b9c9d9e9f229192939495969798999a9b9c9d9e9f");
@@ -128,34 +128,34 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_header__is_header__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
 
     // store open/close flushes record count to head.
-    BOOST_CHECK(!query.is_header(header.hash()));
-    BOOST_CHECK(!query.is_associated(0));
-    BOOST_CHECK(!query.set_code(link, header, test::context, {}, milestone));
-    BOOST_CHECK(!link.is_terminal());
-    BOOST_CHECK_EQUAL(query.is_milestone(link), milestone);
-    BOOST_CHECK(query.is_header(header.hash()));
-    BOOST_CHECK(!query.is_associated(0));
+    BC_CHECK(!query.is_header(header.hash()));
+    BC_CHECK(!query.is_associated(0));
+    BC_CHECK(!query.set_code(link, header, test::context, {}, milestone));
+    BC_CHECK(!link.is_terminal());
+    BC_CHECK_EQUAL(query.is_milestone(link), milestone);
+    BC_CHECK(query.is_header(header.hash()));
+    BC_CHECK(!query.is_associated(0));
     table::header::record element1{};
-    BOOST_CHECK(store.header.get(query.to_header(block_hash), element1));
-    BOOST_CHECK(!store.close(test::events_handler));
-    BOOST_CHECK_EQUAL(store.header_head(), expected_header_head);
-    BOOST_CHECK_EQUAL(store.header_body(), expected_header_body);
+    BC_CHECK(store.header.get(query.to_header(block_hash), element1));
+    BC_CHECK(!store.close(test::events_handler));
+    BC_CHECK_EQUAL(store.header_head(), expected_header_head);
+    BC_CHECK_EQUAL(store.header_body(), expected_header_body);
 
-    BOOST_CHECK_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
-    BOOST_CHECK_EQUAL(element1.ctx.flags, test::context.flags);
-    BOOST_CHECK_EQUAL(element1.ctx.mtp, test::context.mtp);
-    BOOST_CHECK_EQUAL(element1.version, header.version());
-    BOOST_CHECK_EQUAL(element1.parent_fk, schema::header::link::terminal);
-    BOOST_CHECK_EQUAL(element1.merkle_root, header.merkle_root());
-    BOOST_CHECK_EQUAL(element1.timestamp, header.timestamp());
-    BOOST_CHECK_EQUAL(element1.bits, header.bits());
-    BOOST_CHECK_EQUAL(element1.nonce, header.nonce());
+    BC_CHECK_EQUAL(element1.ctx.height, system::mask_left(test::context.height, byte_bits));
+    BC_CHECK_EQUAL(element1.ctx.flags, test::context.flags);
+    BC_CHECK_EQUAL(element1.ctx.mtp, test::context.mtp);
+    BC_CHECK_EQUAL(element1.version, header.version());
+    BC_CHECK_EQUAL(element1.parent_fk, schema::header::link::terminal);
+    BC_CHECK_EQUAL(element1.merkle_root, header.merkle_root());
+    BC_CHECK_EQUAL(element1.timestamp, header.timestamp());
+    BC_CHECK_EQUAL(element1.bits, header.bits());
+    BC_CHECK_EQUAL(element1.nonce, header.nonce());
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__empty__expected)
+BC_AUTO_TEST_CASE(query_chain_writer__set_tx__empty__expected)
 {
     const system::chain::transaction tx{};
     const auto expected_head5_array = system::base16_chunk("0000000000");
@@ -188,23 +188,23 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__empty__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
 
     // store open/close flushes record count to heads.
-    BOOST_CHECK(!query.set(tx));
-    BOOST_CHECK(!store.close(test::events_handler));
-    BOOST_CHECK_EQUAL(store.tx_head(), expected_head4_hash);
-    BOOST_CHECK_EQUAL(store.input_head(), expected_head5_array);
-    BOOST_CHECK_EQUAL(store.output_head(), expected_head5_array);
-    BOOST_CHECK_EQUAL(store.outs_head(), expected_outs_head);
-    BOOST_CHECK_EQUAL(store.tx_body().size(), schema::transaction::minrow);
-    BOOST_CHECK(store.ins_body().empty());
-    BOOST_CHECK(store.input_body().empty());
-    BOOST_CHECK(store.output_body().empty());
-    BOOST_CHECK(store.outs_body().empty());
+    BC_CHECK(!query.set(tx));
+    BC_CHECK(!store.close(test::events_handler));
+    BC_CHECK_EQUAL(store.tx_head(), expected_head4_hash);
+    BC_CHECK_EQUAL(store.input_head(), expected_head5_array);
+    BC_CHECK_EQUAL(store.output_head(), expected_head5_array);
+    BC_CHECK_EQUAL(store.outs_head(), expected_outs_head);
+    BC_CHECK_EQUAL(store.tx_body().size(), schema::transaction::minrow);
+    BC_CHECK(store.ins_body().empty());
+    BC_CHECK(store.input_body().empty());
+    BC_CHECK(store.output_body().empty());
+    BC_CHECK(store.outs_body().empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
+BC_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
 {
     using namespace system::chain;
     const transaction tx
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
         "00"           // script
         "00");         // witness
     constexpr auto tx_hash = system::base16_array("601f0fa54d6de8362c17dc883cc047e1f3ae0523d732598a05e3010fac591f62");
-    BOOST_CHECK_EQUAL(tx_hash, tx.hash(false));
+    BC_CHECK_EQUAL(tx_hash, tx.hash(false));
 
     // data_chunk store.
     settings settings{ test::database_settings() };
@@ -288,26 +288,26 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(!query.set_code(tx));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(!query.set_code(tx));
+    BC_CHECK(!store.close(test::events_handler));
 
-    BOOST_CHECK_EQUAL(store.tx_head(), expected_tx_head);
-    BOOST_CHECK_EQUAL(store.input_head(), expected_input_head);
-    BOOST_CHECK_EQUAL(store.output_head(), expected_output_head);
-    BOOST_CHECK_EQUAL(store.outs_head(), expected_outs_head);
-    ////BOOST_CHECK_EQUAL(store.spend_head(), expected_spend_head);
+    BC_CHECK_EQUAL(store.tx_head(), expected_tx_head);
+    BC_CHECK_EQUAL(store.input_head(), expected_input_head);
+    BC_CHECK_EQUAL(store.output_head(), expected_output_head);
+    BC_CHECK_EQUAL(store.outs_head(), expected_outs_head);
+    ////BC_CHECK_EQUAL(store.spend_head(), expected_spend_head);
 
-    BOOST_CHECK_EQUAL(store.tx_body(), expected_tx_body);
-    BOOST_CHECK_EQUAL(store.ins_body(), expected_ins_body);
-    BOOST_CHECK_EQUAL(store.input_body(), expected_input_body);
-    BOOST_CHECK_EQUAL(store.output_body(), expected_output_body);
-    BOOST_CHECK_EQUAL(store.outs_body(), expected_outs_body);
-    BOOST_CHECK_EQUAL(store.address_body(), expected_address_body);
-    ////BOOST_CHECK_EQUAL(store.spend_body(), expected_spend_body);
+    BC_CHECK_EQUAL(store.tx_body(), expected_tx_body);
+    BC_CHECK_EQUAL(store.ins_body(), expected_ins_body);
+    BC_CHECK_EQUAL(store.input_body(), expected_input_body);
+    BC_CHECK_EQUAL(store.output_body(), expected_output_body);
+    BC_CHECK_EQUAL(store.outs_body(), expected_outs_body);
+    BC_CHECK_EQUAL(store.address_body(), expected_address_body);
+    ////BC_CHECK_EQUAL(store.spend_body(), expected_spend_body);
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
+BC_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
 {
     using namespace system::chain;
     const transaction tx
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
         "0103424242"); // witness
 
     constexpr auto tx_hash = system::base16_array("d80f19b9c0f649081c0b279d9183b0fae35b41b72a34eb181001f82afe22043a");
-    BOOST_CHECK_EQUAL(tx_hash, tx.hash(false));
+    BC_CHECK_EQUAL(tx_hash, tx.hash(false));
 
     // data_chunk store.
     settings settings{ test::database_settings() };
@@ -432,33 +432,33 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(!query.is_tx(tx.hash(false)));
-    BOOST_CHECK(query.set(tx));
-    BOOST_CHECK(query.is_tx(tx.hash(false)));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(!query.is_tx(tx.hash(false)));
+    BC_CHECK(query.set(tx));
+    BC_CHECK(query.is_tx(tx.hash(false)));
 
     const auto pointer = query.get_transaction(query.to_tx(tx_hash), true);
-    BOOST_CHECK(pointer);
-    BOOST_CHECK(*pointer == tx);
-    BOOST_CHECK_EQUAL(pointer->hash(false), tx_hash);
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(pointer);
+    BC_CHECK(*pointer == tx);
+    BC_CHECK_EQUAL(pointer->hash(false), tx_hash);
+    BC_CHECK(!store.close(test::events_handler));
 
-    BOOST_CHECK_EQUAL(store.tx_head(), expected_tx_head);
-    BOOST_CHECK_EQUAL(store.input_head(), expected_input_head);
-    BOOST_CHECK_EQUAL(store.output_head(), expected_output_head);
-    BOOST_CHECK_EQUAL(store.outs_head(), expected_outs_head);
-    ////BOOST_CHECK_EQUAL(store.spend_head(), expected_spend_head);
+    BC_CHECK_EQUAL(store.tx_head(), expected_tx_head);
+    BC_CHECK_EQUAL(store.input_head(), expected_input_head);
+    BC_CHECK_EQUAL(store.output_head(), expected_output_head);
+    BC_CHECK_EQUAL(store.outs_head(), expected_outs_head);
+    ////BC_CHECK_EQUAL(store.spend_head(), expected_spend_head);
 
-    BOOST_CHECK_EQUAL(store.tx_body(), expected_tx_body);
-    BOOST_CHECK_EQUAL(store.ins_body(), expected_ins_body);
-    BOOST_CHECK_EQUAL(store.input_body(), expected_input_body);
-    BOOST_CHECK_EQUAL(store.output_body(), expected_output_body);
-    BOOST_CHECK_EQUAL(store.outs_body(), expected_outs_body);
-    BOOST_CHECK_EQUAL(store.address_body(), expected_address_body);
-    ////BOOST_CHECK_EQUAL(store.spend_body(), expected_spend_body);
+    BC_CHECK_EQUAL(store.tx_body(), expected_tx_body);
+    BC_CHECK_EQUAL(store.ins_body(), expected_ins_body);
+    BC_CHECK_EQUAL(store.input_body(), expected_input_body);
+    BC_CHECK_EQUAL(store.output_body(), expected_output_body);
+    BC_CHECK_EQUAL(store.outs_body(), expected_outs_body);
+    BC_CHECK_EQUAL(store.address_body(), expected_address_body);
+    ////BC_CHECK_EQUAL(store.spend_body(), expected_spend_body);
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
+BC_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
 {
     constexpr auto milestone = true;
     const auto genesis_header_head = system::base16_chunk(
@@ -579,43 +579,43 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
 
     // Set block (header/txs).
-    BOOST_CHECK(!query.is_block(test::genesis.hash()));
-    BOOST_CHECK(query.set(test::genesis, test::context, {}, milestone, false));
-    BOOST_CHECK(query.is_block(test::genesis.hash()));
+    BC_CHECK(!query.is_block(test::genesis.hash()));
+    BC_CHECK(query.set(test::genesis, test::context, {}, milestone, false));
+    BC_CHECK(query.is_block(test::genesis.hash()));
 
     table::header::record element1{};
-    BOOST_CHECK(store.header.get(query.to_header(test::genesis.hash()), element1));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(store.header.get(query.to_header(test::genesis.hash()), element1));
+    BC_CHECK(!store.close(test::events_handler));
 
-    BOOST_CHECK_EQUAL(store.header_head(), genesis_header_head);
-    BOOST_CHECK_EQUAL(store.tx_head(), genesis_tx_head);
-    BOOST_CHECK_EQUAL(store.input_head(), genesis_input_head);
-    BOOST_CHECK_EQUAL(store.output_head(), genesis_output_head);
-    BOOST_CHECK_EQUAL(store.outs_head(), genesis_outs_head);
-    ////BOOST_CHECK_EQUAL(store.spend_head(), genesis_spend_head);
-    BOOST_CHECK_EQUAL(store.txs_head(), genesis_txs_head);
+    BC_CHECK_EQUAL(store.header_head(), genesis_header_head);
+    BC_CHECK_EQUAL(store.tx_head(), genesis_tx_head);
+    BC_CHECK_EQUAL(store.input_head(), genesis_input_head);
+    BC_CHECK_EQUAL(store.output_head(), genesis_output_head);
+    BC_CHECK_EQUAL(store.outs_head(), genesis_outs_head);
+    ////BC_CHECK_EQUAL(store.spend_head(), genesis_spend_head);
+    BC_CHECK_EQUAL(store.txs_head(), genesis_txs_head);
 
-    BOOST_CHECK_EQUAL(store.header_body(), genesis_header_body);
-    BOOST_CHECK_EQUAL(store.tx_body(), genesis_tx_body);
-    BOOST_CHECK_EQUAL(store.ins_body(), genesis_ins_body);
-    BOOST_CHECK_EQUAL(store.input_body(), genesis_input_body);
-    BOOST_CHECK_EQUAL(store.output_body(), genesis_output_body);
-    ////BOOST_CHECK_EQUAL(store.spend_body(), genesis_spend_body);
-    BOOST_CHECK_EQUAL(store.txs_body(), genesis_txs_body);
+    BC_CHECK_EQUAL(store.header_body(), genesis_header_body);
+    BC_CHECK_EQUAL(store.tx_body(), genesis_tx_body);
+    BC_CHECK_EQUAL(store.ins_body(), genesis_ins_body);
+    BC_CHECK_EQUAL(store.input_body(), genesis_input_body);
+    BC_CHECK_EQUAL(store.output_body(), genesis_output_body);
+    ////BC_CHECK_EQUAL(store.spend_body(), genesis_spend_body);
+    BC_CHECK_EQUAL(store.txs_body(), genesis_txs_body);
 
     const auto pointer = query.get_block(query.to_header(test::genesis.hash()), false);
-    BOOST_CHECK(pointer);
-    BOOST_CHECK(*pointer == test::genesis);
+    BC_CHECK(pointer);
+    BC_CHECK(*pointer == test::genesis);
 
     const auto hashes = query.get_tx_keys(query.to_header(test::genesis.hash()));
-    BOOST_CHECK_EQUAL(hashes.size(), 1u);
-    BOOST_CHECK_EQUAL(hashes, test::genesis.transaction_hashes(false));
+    BC_CHECK_EQUAL(hashes.size(), 1u);
+    BC_CHECK_EQUAL(hashes, test::genesis.transaction_hashes(false));
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
+BC_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
 {
     constexpr auto milestone = true;
     const auto genesis_header_head = system::base16_chunk(
@@ -735,122 +735,122 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
 
     // Set header and then txs.
-    BOOST_CHECK(!query.is_block(test::genesis.hash()));
-    BOOST_CHECK(query.set(test::genesis.header(), test::context, {}, milestone));
-    BOOST_CHECK(!query.is_associated(0));
-    BOOST_CHECK(query.set(test::genesis, false, false));
-    BOOST_CHECK(query.is_block(test::genesis.hash()));
-    BOOST_CHECK(query.is_associated(0));
+    BC_CHECK(!query.is_block(test::genesis.hash()));
+    BC_CHECK(query.set(test::genesis.header(), test::context, {}, milestone));
+    BC_CHECK(!query.is_associated(0));
+    BC_CHECK(query.set(test::genesis, false, false));
+    BC_CHECK(query.is_block(test::genesis.hash()));
+    BC_CHECK(query.is_associated(0));
 
     table::header::record element1{};
-    BOOST_CHECK(store.header.get(query.to_header(test::genesis.hash()), element1));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(store.header.get(query.to_header(test::genesis.hash()), element1));
+    BC_CHECK(!store.close(test::events_handler));
 
-    BOOST_CHECK_EQUAL(store.header_head(), genesis_header_head);
-    BOOST_CHECK_EQUAL(store.tx_head(), genesis_tx_head);
-    BOOST_CHECK_EQUAL(store.input_head(), genesis_input_head);
-    BOOST_CHECK_EQUAL(store.output_head(), genesis_output_head);
-    BOOST_CHECK_EQUAL(store.outs_head(), genesis_outs_head);
-    ////BOOST_CHECK_EQUAL(store.spend_head(), genesis_spend_head);
-    BOOST_CHECK_EQUAL(store.txs_head(), genesis_txs_head);
+    BC_CHECK_EQUAL(store.header_head(), genesis_header_head);
+    BC_CHECK_EQUAL(store.tx_head(), genesis_tx_head);
+    BC_CHECK_EQUAL(store.input_head(), genesis_input_head);
+    BC_CHECK_EQUAL(store.output_head(), genesis_output_head);
+    BC_CHECK_EQUAL(store.outs_head(), genesis_outs_head);
+    ////BC_CHECK_EQUAL(store.spend_head(), genesis_spend_head);
+    BC_CHECK_EQUAL(store.txs_head(), genesis_txs_head);
 
-    BOOST_CHECK_EQUAL(store.header_body(), genesis_header_body);
-    BOOST_CHECK_EQUAL(store.tx_body(), genesis_tx_body);
-    BOOST_CHECK_EQUAL(store.ins_body(), genesis_ins_body);
-    BOOST_CHECK_EQUAL(store.input_body(), genesis_input_body);
-    BOOST_CHECK_EQUAL(store.output_body(), genesis_output_body);
-    ////BOOST_CHECK_EQUAL(store.spend_body(), genesis_spend_body);
-    BOOST_CHECK_EQUAL(store.txs_body(), genesis_txs_body);
+    BC_CHECK_EQUAL(store.header_body(), genesis_header_body);
+    BC_CHECK_EQUAL(store.tx_body(), genesis_tx_body);
+    BC_CHECK_EQUAL(store.ins_body(), genesis_ins_body);
+    BC_CHECK_EQUAL(store.input_body(), genesis_input_body);
+    BC_CHECK_EQUAL(store.output_body(), genesis_output_body);
+    ////BC_CHECK_EQUAL(store.spend_body(), genesis_spend_body);
+    BC_CHECK_EQUAL(store.txs_body(), genesis_txs_body);
 
     const auto pointer = query.get_block(query.to_header(test::genesis.hash()), false);
-    BOOST_CHECK(pointer);
-    BOOST_CHECK(*pointer == test::genesis);
+    BC_CHECK(pointer);
+    BC_CHECK(*pointer == test::genesis);
 
     const auto hashes = query.get_tx_keys(query.to_header(test::genesis.hash()));
-    BOOST_CHECK_EQUAL(hashes.size(), 1u);
-    BOOST_CHECK_EQUAL(hashes, test::genesis.transaction_hashes(false));
+    BC_CHECK_EQUAL(hashes.size(), 1u);
+    BC_CHECK_EQUAL(hashes, test::genesis.transaction_hashes(false));
 }
 
 // pooling
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__not_pooling_duplicate__written)
+BC_AUTO_TEST_CASE(query_chain_writer__set_tx__not_pooling_duplicate__written)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(!store.is_pooling());
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(!store.is_pooling());
 
     tx_link first{};
     tx_link second{};
-    BOOST_REQUIRE_EQUAL(query.set_code(first, test::tx4), error::success);
-    BOOST_REQUIRE_EQUAL(query.set_code(second, test::tx4), error::success);
-    BOOST_REQUIRE(first != second);
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
-    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 2u);
+    BC_REQUIRE_EQUAL(query.set_code(first, test::tx4), error::success);
+    BC_REQUIRE_EQUAL(query.set_code(second, test::tx4), error::success);
+    BC_REQUIRE(first != second);
+    BC_REQUIRE_EQUAL(query.tx_records(), 2u);
+    BC_REQUIRE_EQUAL(query.duplicate_records(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_duplicate__substituted)
+BC_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_duplicate__substituted)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(!store.create(test::events_handler));
     store.set_pooling();
 
     tx_link first{};
     tx_link second{};
-    BOOST_REQUIRE_EQUAL(query.set_code(first, test::tx4), error::success);
-    BOOST_REQUIRE_EQUAL(query.set_code(second, test::tx4), error::success);
-    BOOST_REQUIRE(first == second);
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 1u);
-    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 0u);
+    BC_REQUIRE_EQUAL(query.set_code(first, test::tx4), error::success);
+    BC_REQUIRE_EQUAL(query.set_code(second, test::tx4), error::success);
+    BC_REQUIRE(first == second);
+    BC_REQUIRE_EQUAL(query.tx_records(), 1u);
+    BC_REQUIRE_EQUAL(query.duplicate_records(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_duplicate__pooled)
+BC_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_duplicate__pooled)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(!store.create(test::events_handler));
     store.set_pooling();
 
     tx_link first{};
     tx_link second{};
     bool pooled{ true };
-    BOOST_REQUIRE_EQUAL(query.set_code(first, pooled, test::tx4), error::success);
-    BOOST_REQUIRE(!pooled);
-    BOOST_REQUIRE_EQUAL(query.set_code(second, pooled, test::tx4), error::success);
-    BOOST_REQUIRE(pooled);
-    BOOST_REQUIRE(first == second);
+    BC_REQUIRE_EQUAL(query.set_code(first, pooled, test::tx4), error::success);
+    BC_REQUIRE(!pooled);
+    BC_REQUIRE_EQUAL(query.set_code(second, pooled, test::tx4), error::success);
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(first == second);
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_conflict__written)
+BC_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_conflict__written)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(!store.create(test::events_handler));
     store.set_pooling();
 
     tx_link first{};
     tx_link second{};
-    BOOST_REQUIRE_EQUAL(query.set_code(first, test::tx4), error::success);
-    BOOST_REQUIRE_EQUAL(query.set_code(second, test::tx5), error::success);
-    BOOST_REQUIRE(first != second);
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
-    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 1u);
+    BC_REQUIRE_EQUAL(query.set_code(first, test::tx4), error::success);
+    BC_REQUIRE_EQUAL(query.set_code(second, test::tx5), error::success);
+    BC_REQUIRE(first != second);
+    BC_REQUIRE_EQUAL(query.tx_records(), 2u);
+    BC_REQUIRE_EQUAL(query.duplicate_records(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__not_pooling_pooled_tx__written)
+BC_AUTO_TEST_CASE(query_chain_writer__set_block__not_pooling_pooled_tx__written)
 {
     using namespace system::chain;
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf4 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx4 } };
@@ -859,19 +859,19 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__not_pooling_pooled_tx__writt
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
 
     tx_link pooled{};
-    BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
-    BOOST_REQUIRE(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 4u);
-    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 2u);
-    BOOST_REQUIRE(query.to_tx(test::tx4.hash(false)) != pooled);
+    BC_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
+    BC_REQUIRE_EQUAL(query.tx_records(), 2u);
+    BC_REQUIRE(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE_EQUAL(query.tx_records(), 4u);
+    BC_REQUIRE_EQUAL(query.duplicate_records(), 2u);
+    BC_REQUIRE(query.to_tx(test::tx4.hash(false)) != pooled);
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_pooled_tx__substituted)
+BC_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_pooled_tx__substituted)
 {
     using namespace system::chain;
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf4 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx4 } };
@@ -880,31 +880,31 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_pooled_tx__substitut
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
     store.set_pooling();
 
     tx_link pooled{};
-    BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
-    BOOST_REQUIRE(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 3u);
-    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 0u);
-    BOOST_REQUIRE(query.to_tx(test::tx4.hash(false)) == pooled);
+    BC_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
+    BC_REQUIRE_EQUAL(query.tx_records(), 2u);
+    BC_REQUIRE(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE_EQUAL(query.tx_records(), 3u);
+    BC_REQUIRE_EQUAL(query.duplicate_records(), 0u);
+    BC_REQUIRE(query.to_tx(test::tx4.hash(false)) == pooled);
 
     const auto link = query.to_header(block.hash());
     const auto pointer = query.get_block(link, true);
-    BOOST_REQUIRE(pointer);
-    BOOST_REQUIRE_EQUAL(pointer->transactions(), 2u);
-    BOOST_REQUIRE_EQUAL(pointer->transactions_ptr()->back()->hash(false), test::tx4.hash(false));
-    BOOST_REQUIRE(!query.is_strong_tx(pooled));
-    BOOST_REQUIRE(query.set_strong(link));
-    BOOST_REQUIRE(query.is_strong_tx(pooled));
-    BOOST_REQUIRE(query.set_unstrong(link));
-    BOOST_REQUIRE(!query.is_strong_tx(pooled));
+    BC_REQUIRE(pointer);
+    BC_REQUIRE_EQUAL(pointer->transactions(), 2u);
+    BC_REQUIRE_EQUAL(pointer->transactions_ptr()->back()->hash(false), test::tx4.hash(false));
+    BC_REQUIRE(!query.is_strong_tx(pooled));
+    BC_REQUIRE(query.set_strong(link));
+    BC_REQUIRE(query.is_strong_tx(pooled));
+    BC_REQUIRE(query.set_unstrong(link));
+    BC_REQUIRE(!query.is_strong_tx(pooled));
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_malleated_tx__written)
+BC_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_malleated_tx__written)
 {
     using namespace system::chain;
     auto data = test::tx4.to_data(true);
@@ -916,90 +916,90 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_malleated_tx__writte
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
     store.set_pooling();
 
     tx_link pooled{};
-    BOOST_REQUIRE_EQUAL(malleated.hash(false), test::tx4.hash(false));
-    BOOST_REQUIRE_NE(malleated.hash(true), test::tx4.hash(true));
-    BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
-    BOOST_REQUIRE(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 4u);
+    BC_REQUIRE_EQUAL(malleated.hash(false), test::tx4.hash(false));
+    BC_REQUIRE_NE(malleated.hash(true), test::tx4.hash(true));
+    BC_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
+    BC_REQUIRE(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE_EQUAL(query.tx_records(), 4u);
 
     const auto link = query.to_header(block.hash());
     const auto pointer = query.get_block(link, true);
-    BOOST_REQUIRE(pointer);
-    BOOST_REQUIRE(query.to_transactions(link).back() != pooled);
-    BOOST_REQUIRE_EQUAL(pointer->transactions_ptr()->back()->hash(true), malleated.hash(true));
+    BC_REQUIRE(pointer);
+    BC_REQUIRE(query.to_transactions(link).back() != pooled);
+    BC_REQUIRE_EQUAL(pointer->transactions_ptr()->back()->hash(true), malleated.hash(true));
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_header__unstorable_work__header_work)
+BC_AUTO_TEST_CASE(query_chain_writer__set_header__unstorable_work__header_work)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
 
     header_link link{};
     const uint256_t work = uint256_t{ 1 } << to_bits(schema::work);
-    BOOST_REQUIRE_EQUAL(query.set_code(link, test::block1.header(), context{}, work, false), error::header_work);
-    BOOST_REQUIRE(link.is_terminal());
-    BOOST_REQUIRE_EQUAL(query.header_records(), 1u);
-    BOOST_REQUIRE_EQUAL(query.set_code(link, test::block1.header(), context{}, sub1(work), false), error::success);
-    BOOST_REQUIRE(!link.is_terminal());
+    BC_REQUIRE_EQUAL(query.set_code(link, test::block1.header(), context{}, work, false), error::header_work);
+    BC_REQUIRE(link.is_terminal());
+    BC_REQUIRE_EQUAL(query.header_records(), 1u);
+    BC_REQUIRE_EQUAL(query.set_code(link, test::block1.header(), context{}, sub1(work), false), error::success);
+    BC_REQUIRE(!link.is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_links__archived_txs__associated)
+BC_AUTO_TEST_CASE(query_chain_writer__set_links__archived_txs__associated)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
 
     const auto& block = test::block1a;
     const auto& txs = *block.transactions_ptr();
     header_link key{};
-    BOOST_REQUIRE(!query.set_code(key, block.header(), context{ 0, 1, 0 }, {}, false));
+    BC_REQUIRE(!query.set_code(key, block.header(), context{ 0, 1, 0 }, {}, false));
 
     tx_links links{};
     for (const auto& tx: txs)
     {
         tx_link link{};
-        BOOST_REQUIRE(!query.set_code(link, *tx));
+        BC_REQUIRE(!query.set_code(link, *tx));
         links.push_back(link);
     }
 
-    BOOST_REQUIRE(!query.is_associated(key));
-    BOOST_REQUIRE_EQUAL(query.set_code(key, links, false), error::success);
-    BOOST_REQUIRE(query.is_associated(key));
-    BOOST_REQUIRE_EQUAL(query.to_transactions(key), links);
+    BC_REQUIRE(!query.is_associated(key));
+    BC_REQUIRE_EQUAL(query.set_code(key, links, false), error::success);
+    BC_REQUIRE(query.is_associated(key));
+    BC_REQUIRE_EQUAL(query.to_transactions(key), links);
 
     size_t light{}, heavy{};
-    BOOST_REQUIRE(query.get_block_sizes(light, heavy, key));
-    BOOST_REQUIRE_EQUAL(light, block.serialized_size(false));
-    BOOST_REQUIRE_EQUAL(heavy, block.serialized_size(true));
+    BC_REQUIRE(query.get_block_sizes(light, heavy, key));
+    BC_REQUIRE_EQUAL(light, block.serialized_size(false));
+    BC_REQUIRE_EQUAL(heavy, block.serialized_size(true));
 
     const auto pointer = query.get_block(key, true);
-    BOOST_REQUIRE(pointer);
-    BOOST_REQUIRE(*pointer == block);
+    BC_REQUIRE(pointer);
+    BC_REQUIRE(*pointer == block);
 }
 
-BOOST_AUTO_TEST_CASE(query_chain_writer__set_links__empty_or_terminal__error)
+BC_AUTO_TEST_CASE(query_chain_writer__set_links__empty_or_terminal__error)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
 
-    BOOST_REQUIRE_EQUAL(query.set_code(header_link{}, tx_links{ 0 }, false), error::txs_header);
-    BOOST_REQUIRE_EQUAL(query.set_code(header_link{ 0 }, tx_links{}, false), error::txs_empty);
+    BC_REQUIRE_EQUAL(query.set_code(header_link{}, tx_links{ 0 }, false), error::txs_header);
+    BC_REQUIRE_EQUAL(query.set_code(header_link{ 0 }, tx_links{}, false), error::txs_empty);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

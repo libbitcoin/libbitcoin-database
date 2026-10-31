@@ -19,7 +19,7 @@
 #include "../test.hpp"
 #include "../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(body_tests)
+BC_AUTO_TEST_SUITE(body_tests)
 
 using namespace system;
 
@@ -29,15 +29,15 @@ using key2 = system::data_array<2>;
 
 // slabs
 
-BOOST_AUTO_TEST_CASE(body__count__empty_slab__zero)
+BC_AUTO_TEST_CASE(body__count__empty_slab__zero)
 {
     test::chunk_storage file;
     const body<linkage<4>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE(is_zero(instance.count()));
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(is_zero(instance.count()));
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__count__non_empty_slab__expected)
+BC_AUTO_TEST_CASE(body__count__non_empty_slab__expected)
 {
     constexpr auto expected = 42u;
     data_chunk buffer(expected, 0xff);
@@ -45,11 +45,11 @@ BOOST_AUTO_TEST_CASE(body__count__non_empty_slab__expected)
 
     // Slab sizing is byte-based (arbitrary, links are file offsets).
     const body<linkage<4>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), expected);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.count(), expected);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__capacity__non_reserved__expected)
+BC_AUTO_TEST_CASE(body__capacity__non_reserved__expected)
 {
     constexpr auto expected = 42u;
     data_chunk buffer(expected, 0xff);
@@ -57,11 +57,11 @@ BOOST_AUTO_TEST_CASE(body__capacity__non_reserved__expected)
 
     // Capacity is byte-based.
     const body<linkage<4>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), expected);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.capacity(), expected);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__capacity__reserved__expected)
+BC_AUTO_TEST_CASE(body__capacity__reserved__expected)
 {
     constexpr auto expand = 7u;
     constexpr auto initial = 42u;
@@ -71,105 +71,105 @@ BOOST_AUTO_TEST_CASE(body__capacity__reserved__expected)
 
     // Capacity is byte-based.
     body<linkage<4>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE(instance.reserve(expand));
-    BOOST_REQUIRE_EQUAL(instance.capacity(), expected);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(instance.reserve(expand));
+    BC_REQUIRE_EQUAL(instance.capacity(), expected);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__truncate__terminal_slab__false_unchanged)
+BC_AUTO_TEST_CASE(body__truncate__terminal_slab__false_unchanged)
 {
     data_chunk buffer{};
     test::chunk_storage file(buffer);
     body<linkage<4>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE(!instance.truncate(linkage<4>::terminal));
-    BOOST_REQUIRE_EQUAL(instance.count(), zero);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.truncate(linkage<4>::terminal));
+    BC_REQUIRE_EQUAL(instance.count(), zero);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__truncate__overflow_slab__false_unchanged)
+BC_AUTO_TEST_CASE(body__truncate__overflow_slab__false_unchanged)
 {
     constexpr auto size = 42u;
     data_chunk buffer(size, 0xff);
     test::chunk_storage file(buffer);
     body<linkage<4>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE(!instance.truncate(add1(size)));
-    BOOST_REQUIRE_EQUAL(instance.count(), size);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.truncate(add1(size)));
+    BC_REQUIRE_EQUAL(instance.count(), size);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__truncate__half_full_slab__true_changed)
+BC_AUTO_TEST_CASE(body__truncate__half_full_slab__true_changed)
 {
     constexpr auto size = 42u;
     constexpr auto half = to_half(size);
     data_chunk buffer(size, 0xff);
     test::chunk_storage file(buffer);
     body<linkage<4>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE(instance.truncate(half));
-    BOOST_REQUIRE_EQUAL(instance.count(), half);
+    BC_REQUIRE(instance.truncate(half));
+    BC_REQUIRE_EQUAL(instance.count(), half);
 
     // Can only truncate to logical limit.
-    BOOST_REQUIRE(!instance.truncate(size));
-    BOOST_REQUIRE_EQUAL(instance.count(), half);
+    BC_REQUIRE(!instance.truncate(size));
+    BC_REQUIRE_EQUAL(instance.count(), half);
 
-    BOOST_REQUIRE(instance.truncate(0));
-    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(instance.truncate(0));
+    BC_REQUIRE_EQUAL(instance.count(), 0u);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__allocate__eof_slab__terminal_unchanged)
+BC_AUTO_TEST_CASE(body__allocate__eof_slab__terminal_unchanged)
 {
     data_chunk buffer{};
     test::chunk_storage file(buffer);
     body<linkage<7>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(storage::eof), linkage<7>::terminal);
-    BOOST_REQUIRE_EQUAL(instance.count(), zero);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.allocate(storage::eof), linkage<7>::terminal);
+    BC_REQUIRE_EQUAL(instance.count(), zero);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__allocate__terminal_slab__terminal_unchanged)
+BC_AUTO_TEST_CASE(body__allocate__terminal_slab__terminal_unchanged)
 {
     data_chunk buffer{};
     test::chunk_storage file(buffer);
     body<linkage<4>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<4>::terminal), linkage<4>::terminal);
-    BOOST_REQUIRE_EQUAL(instance.count(), zero);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.allocate(linkage<4>::terminal), linkage<4>::terminal);
+    BC_REQUIRE_EQUAL(instance.count(), zero);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__allocate__empty_slab__expected)
+BC_AUTO_TEST_CASE(body__allocate__empty_slab__expected)
 {
     constexpr auto expected = 42u;
     data_chunk buffer{};
     test::chunk_storage file(buffer);
     body<linkage<4>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(expected), zero);
-    BOOST_REQUIRE_EQUAL(instance.count(), expected);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.allocate(expected), zero);
+    BC_REQUIRE_EQUAL(instance.count(), expected);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__allocate__non_empty_slab__expected)
+BC_AUTO_TEST_CASE(body__allocate__non_empty_slab__expected)
 {
     constexpr auto expected = 42u;
     data_chunk buffer(to_half(expected), 0xff);
     test::chunk_storage file(buffer);
     body<linkage<4>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(to_half(expected)), to_half(expected));
-    BOOST_REQUIRE_EQUAL(instance.count(), expected);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.allocate(to_half(expected)), to_half(expected));
+    BC_REQUIRE_EQUAL(instance.count(), expected);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__get__terminal_slab__terminal)
+BC_AUTO_TEST_CASE(body__get__terminal_slab__terminal)
 {
     constexpr auto size = 14u;
     data_chunk buffer(size, 0xff);
     test::chunk_storage file(buffer);
     const body<linkage<2>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), size);
-    BOOST_REQUIRE(!instance.get(linkage<2>::terminal));
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.count(), size);
+    BC_REQUIRE(!instance.get(linkage<2>::terminal));
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__get__slab__expected)
+BC_AUTO_TEST_CASE(body__get__slab__expected)
 {
     constexpr auto size = 16u;
     data_chunk buffer
@@ -180,25 +180,25 @@ BOOST_AUTO_TEST_CASE(body__get__slab__expected)
 
     test::chunk_storage file(buffer);
     const body<linkage<2>, key1, max_size_t> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), size);
-    BOOST_REQUIRE_EQUAL(*instance.get(0).begin(), 0x00_u8);
-    BOOST_REQUIRE_EQUAL(*instance.get(1).begin(), 0x01_u8);
-    BOOST_REQUIRE_EQUAL(*instance.get(2).begin(), 0x02_u8);
-    BOOST_REQUIRE_EQUAL(*instance.get(9).begin(), 0x09_u8);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.count(), size);
+    BC_REQUIRE_EQUAL(*instance.get(0).begin(), 0x00_u8);
+    BC_REQUIRE_EQUAL(*instance.get(1).begin(), 0x01_u8);
+    BC_REQUIRE_EQUAL(*instance.get(2).begin(), 0x02_u8);
+    BC_REQUIRE_EQUAL(*instance.get(9).begin(), 0x09_u8);
+    BC_REQUIRE(!instance.get_fault());
 }
 
 // records
 
-BOOST_AUTO_TEST_CASE(body__count__empty_record__zero)
+BC_AUTO_TEST_CASE(body__count__empty_record__zero)
 {
     test::chunk_storage file;
     const body<linkage<4>, key1, 42> instance(file);
-    BOOST_REQUIRE(is_zero(instance.count()));
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(is_zero(instance.count()));
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__count__1_record__expected)
+BC_AUTO_TEST_CASE(body__count__1_record__expected)
 {
     constexpr auto count = 1u;
     constexpr auto bytes = 5u;
@@ -208,11 +208,11 @@ BOOST_AUTO_TEST_CASE(body__count__1_record__expected)
 
     // Record sizing is record count-based (links are record counters).
     const body<linkage<4>, key1, bytes> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.count(), 1u);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__count__33_record__expected)
+BC_AUTO_TEST_CASE(body__count__33_record__expected)
 {
     constexpr auto count = 33u;
     constexpr auto bytes = 5u;
@@ -220,113 +220,113 @@ BOOST_AUTO_TEST_CASE(body__count__33_record__expected)
     data_chunk buffer(expected, 0xff);
     test::chunk_storage file(buffer);
     const body<linkage<4>, key2, bytes> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), 33u);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.count(), 33u);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__truncate__terminal_record__false_unchanged)
+BC_AUTO_TEST_CASE(body__truncate__terminal_record__false_unchanged)
 {
     data_chunk buffer{};
     test::chunk_storage file(buffer);
     body<linkage<2>, key0, 5u> instance(file);
-    BOOST_REQUIRE(!instance.truncate(linkage<2>::terminal));
-    BOOST_REQUIRE_EQUAL(instance.count(), zero);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.truncate(linkage<2>::terminal));
+    BC_REQUIRE_EQUAL(instance.count(), zero);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__truncate__overflow_record__false_unchanged)
+BC_AUTO_TEST_CASE(body__truncate__overflow_record__false_unchanged)
 {
     data_chunk buffer(7, 0xff);
     test::chunk_storage file(buffer);
     body<linkage<2>, key0, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-    BOOST_REQUIRE(!instance.truncate(2));
-    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.count(), 1u);
+    BC_REQUIRE(!instance.truncate(2));
+    BC_REQUIRE_EQUAL(instance.count(), 1u);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__truncate__half_full_record__true_logical_size_changed)
+BC_AUTO_TEST_CASE(body__truncate__half_full_record__true_logical_size_changed)
 {
     constexpr auto bodie = 14u;
     data_chunk buffer(bodie, 0xff);
     test::chunk_storage file(buffer);
     body<linkage<2>, key0, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE(instance.truncate(1));
-    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), bodie);
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE(instance.truncate(1));
+    BC_REQUIRE_EQUAL(instance.count(), 1u);
+    BC_REQUIRE_EQUAL(instance.capacity(), bodie);
 
     // Can only truncate to logical limit.
-    BOOST_REQUIRE(!instance.truncate(2));
-    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), bodie);
+    BC_REQUIRE(!instance.truncate(2));
+    BC_REQUIRE_EQUAL(instance.count(), 1u);
+    BC_REQUIRE_EQUAL(instance.capacity(), bodie);
 
-    BOOST_REQUIRE(instance.truncate(0));
-    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), bodie);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(instance.truncate(0));
+    BC_REQUIRE_EQUAL(instance.count(), 0u);
+    BC_REQUIRE_EQUAL(instance.capacity(), bodie);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__allocate__terminal_empty_record__terminal_unchanged)
+BC_AUTO_TEST_CASE(body__allocate__terminal_empty_record__terminal_unchanged)
 {
     data_chunk buffer{};
     test::chunk_storage file(buffer);
     body<linkage<2>, key0, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<2>::terminal), linkage<2>::terminal);
-    BOOST_REQUIRE_EQUAL(instance.count(), zero);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.allocate(linkage<2>::terminal), linkage<2>::terminal);
+    BC_REQUIRE_EQUAL(instance.count(), zero);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__allocate__terminal_non_empty_record__expected)
+BC_AUTO_TEST_CASE(body__allocate__terminal_non_empty_record__expected)
 {
     data_chunk buffer(7, 0xff);
     test::chunk_storage file(buffer);
     body<linkage<2>, key0, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(1), 1u);
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.allocate(linkage<2>::terminal), linkage<2>::terminal);
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.allocate(1), 1u);
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(instance.allocate(linkage<2>::terminal), linkage<2>::terminal);
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__allocate__empty_record__expected)
+BC_AUTO_TEST_CASE(body__allocate__empty_record__expected)
 {
     data_chunk buffer{};
     test::chunk_storage file(buffer);
     body<linkage<2>, key0, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(1), 0u);
-    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-    BOOST_REQUIRE_EQUAL(instance.allocate(2), 1u);
-    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.allocate(1), 0u);
+    BC_REQUIRE_EQUAL(instance.count(), 1u);
+    BC_REQUIRE_EQUAL(instance.allocate(2), 1u);
+    BC_REQUIRE_EQUAL(instance.count(), 3u);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__allocate__non_empty_record__expected)
+BC_AUTO_TEST_CASE(body__allocate__non_empty_record__expected)
 {
     data_chunk buffer(7, 0xff);
     test::chunk_storage file(buffer);
     body<linkage<2>, key0, 5u> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.allocate(1), 1u);
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.allocate(2), 2u);
-    BOOST_REQUIRE_EQUAL(instance.count(), 4u);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.allocate(1), 1u);
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(instance.allocate(2), 2u);
+    BC_REQUIRE_EQUAL(instance.count(), 4u);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__get__terminal_record__terminal)
+BC_AUTO_TEST_CASE(body__get__terminal_record__terminal)
 {
     constexpr auto bodie = 14u;
     constexpr auto element = 5u;
     data_chunk buffer(bodie, 0xff);
     test::chunk_storage file(buffer);
     const body<linkage<2>, key0, element> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.get(1).size(), to_signed(bodie - 1 * element));
-    BOOST_REQUIRE(!instance.get(linkage<2>::terminal));
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(instance.get(1).size(), to_signed(bodie - 1 * element));
+    BC_REQUIRE(!instance.get(linkage<2>::terminal));
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__get__record__expected)
+BC_AUTO_TEST_CASE(body__get__record__expected)
 {
     data_chunk buffer
     {
@@ -339,14 +339,14 @@ BOOST_AUTO_TEST_CASE(body__get__record__expected)
     const auto expected = to_signed(bodie - 1u * element);
     test::chunk_storage file(buffer);
     const body<linkage<2>, key0, element> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.get(1).size(), expected);
-    BOOST_REQUIRE_EQUAL(*instance.get(0).begin(), 0x00_u8);
-    BOOST_REQUIRE_EQUAL(*instance.get(1).begin(), 0x06_u8);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(instance.get(1).size(), expected);
+    BC_REQUIRE_EQUAL(*instance.get(0).begin(), 0x00_u8);
+    BC_REQUIRE_EQUAL(*instance.get(1).begin(), 0x06_u8);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__get_capacity__terminal_record__terminal)
+BC_AUTO_TEST_CASE(body__get_capacity__terminal_record__terminal)
 {
     constexpr auto bodie = 14u;
     constexpr auto element = 5u;
@@ -354,13 +354,13 @@ BOOST_AUTO_TEST_CASE(body__get_capacity__terminal_record__terminal)
     data_chunk buffer(bodie, 0xff);
     test::chunk_storage file(buffer);
     const body<linkage<2>, key0, element> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.get(1).size(), expected);
-    BOOST_REQUIRE(!instance.get_capacity(linkage<2>::terminal));
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(instance.get(1).size(), expected);
+    BC_REQUIRE(!instance.get_capacity(linkage<2>::terminal));
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(body__get_capacity__record__expected)
+BC_AUTO_TEST_CASE(body__get_capacity__record__expected)
 {
     data_chunk buffer
     {
@@ -373,11 +373,11 @@ BOOST_AUTO_TEST_CASE(body__get_capacity__record__expected)
     const auto expected = to_signed(bodie - 1u * element);
     test::chunk_storage file(buffer);
     body<linkage<2>, key0, element> instance(file);
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.get(1).size(), expected);
-    BOOST_REQUIRE_EQUAL(*instance.get_capacity(0).begin(), 0x00_u8);
-    BOOST_REQUIRE_EQUAL(*instance.get_capacity(1).begin(), 0x06_u8);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(instance.get(1).size(), expected);
+    BC_REQUIRE_EQUAL(*instance.get_capacity(0).begin(), 0x00_u8);
+    BC_REQUIRE_EQUAL(*instance.get_capacity(1).begin(), 0x06_u8);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
