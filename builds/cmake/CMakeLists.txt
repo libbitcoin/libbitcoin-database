@@ -97,16 +97,12 @@ option( with-tests "Compile with unit tests." ON )
 #------------------------------------------------------------------------------
 if ( BUILD_SHARED_LIBS )
   set( libbitcoin-system_USE_STATIC_LIBS "OFF" )
-  set( Boost_USE_STATIC_LIBS "OFF" )
 else()
   set( libbitcoin-system_USE_STATIC_LIBS "ON" )
-  set( Boost_USE_STATIC_LIBS "ON" )
 endif()
 
 find_package( libbitcoin-system 4.0.0 REQUIRED )
 set( libbitcoin_system_VERSION ${libbitcoin-system_VERSION} )
-
-find_package( Boost 1.86.0 REQUIRED )
 
 #------------------------------------------------------------------------------
 # Architecture options.
@@ -331,7 +327,6 @@ if ( with-tests )
 
   target_link_libraries( libbitcoin-database-test
     PRIVATE
-      Boost::headers
       bitcoin::database
   )
 

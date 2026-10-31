@@ -15,7 +15,6 @@
  */
 
 #include <bitcoin/system.hpp>
-#include <bitcoin/database/boost.hpp>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/error.hpp>
 #include <bitcoin/database/query.hpp>

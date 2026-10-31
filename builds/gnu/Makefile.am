@@ -95,7 +95,6 @@ include_bitcoin_databasedir = \
     ${includedir}/bitcoin/database
 
 include_bitcoin_database_HEADERS = \
-    ${srcdir}/../../include/bitcoin/database/boost.hpp \
     ${srcdir}/../../include/bitcoin/database/define.hpp \
     ${srcdir}/../../include/bitcoin/database/error.hpp \
     ${srcdir}/../../include/bitcoin/database/query.hpp \
@@ -409,16 +408,13 @@ if WITH_TESTS
 check_PROGRAMS = test/libbitcoin-database-test
 
 test_libbitcoin_database_test_CPPFLAGS = \
-    ${boost_BUILD_CPPFLAGS} \
     ${src_libbitcoin_database_la_CPPFLAGS}
 
 test_libbitcoin_database_test_LDFLAGS = \
     ${mingw_program_LDFLAGS} \
-    ${boost_LDFLAGS} \
     ${src_libbitcoin_database_la_LDFLAGS}
 
 test_libbitcoin_database_test_LDADD = \
-    ${boost_LIBS} \
     ${src_libbitcoin_database_la_LIBS} \
     ${src_libbitcoin_database_la_LIBADD}
 
