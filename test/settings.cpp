@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BOOST_REQUIRE_EQUAL(configuration.output.size, 1'278'023'220u);
     BOOST_REQUIRE_EQUAL(configuration.candidate.buckets, 950'001u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed.buckets, 950'001u);
-    BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 13'598'717u);
+    BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 1'359'871'695u);
     BOOST_REQUIRE_EQUAL(configuration.scan.buckets, 950'001u);
     BOOST_REQUIRE_EQUAL(configuration.state.buckets, 950'001u);
     BOOST_REQUIRE_EQUAL(configuration.interval_depth, 11u);
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet3__expected)
     BOOST_REQUIRE_EQUAL(configuration.output.size, 600'719'803u);
     BOOST_REQUIRE_EQUAL(configuration.candidate.buckets, 5'100'001u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed.buckets, 5'100'001u);
-    BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 5'366'439u);
+    BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 536'643'888u);
     BOOST_REQUIRE_EQUAL(configuration.scan.buckets, 5'100'001u);
     BOOST_REQUIRE_EQUAL(configuration.state.buckets, 5'100'001u);
     BOOST_REQUIRE_EQUAL(configuration.interval_depth, 11u);
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet4__expected)
     BOOST_REQUIRE_EQUAL(configuration.output.size, 20'343'818u);
     BOOST_REQUIRE_EQUAL(configuration.candidate.buckets, 150'001u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed.buckets, 150'001u);
-    BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 148'101u);
+    BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 14'810'011u);
     BOOST_REQUIRE_EQUAL(configuration.scan.buckets, 150'001u);
     BOOST_REQUIRE_EQUAL(configuration.state.buckets, 150'001u);
     BOOST_REQUIRE_EQUAL(configuration.interval_depth, 11u);
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(configuration.output.size, 0u);
     BOOST_REQUIRE_EQUAL(configuration.candidate.buckets, 10'001u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed.buckets, 10'001u);
-    BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 1'000u);
+    BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 100'000u);
     BOOST_REQUIRE_EQUAL(configuration.scan.buckets, 10'001u);
     BOOST_REQUIRE_EQUAL(configuration.state.buckets, 10'001u);
     BOOST_REQUIRE_EQUAL(configuration.interval_depth, 11u);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__signet__expected)
     BOOST_REQUIRE_EQUAL(configuration.output.size, 0u);
     BOOST_REQUIRE_EQUAL(configuration.candidate.buckets, 330'001u);
     BOOST_REQUIRE_EQUAL(configuration.confirmed.buckets, 330'001u);
-    BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 1'000u);
+    BOOST_REQUIRE_EQUAL(configuration.strong.buckets, 100'000u);
     BOOST_REQUIRE_EQUAL(configuration.scan.buckets, 330'001u);
     BOOST_REQUIRE_EQUAL(configuration.state.buckets, 330'001u);
     BOOST_REQUIRE_EQUAL(configuration.interval_depth, 11u);

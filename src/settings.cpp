@@ -101,7 +101,7 @@ settings::settings(chain::selection context) NOEXCEPT
 
     // expected are element counts, deriving filter k at create.
     // sizes are set to 1% of measured pruned body (tiny tables 100%).
-    // strong buckets are set to 1% of expected tx.
+    // strong buckets are set to expected tx.
     switch (context)
     {
         // Sized for the chain at 950,000 blocks.
@@ -121,7 +121,7 @@ settings::settings(chain::selection context) NOEXCEPT
             output.size = 1'278'023'220;
             candidate.buckets = 950'001;
             confirmed.buckets = 950'001;
-            strong.buckets = 13'598'717;
+            strong.buckets = 1'359'871'695;
             scan.buckets = 950'001;
             state.buckets = 950'001;
             break;
@@ -144,7 +144,7 @@ settings::settings(chain::selection context) NOEXCEPT
             output.size = 600'719'803;
             candidate.buckets = 5'100'001;
             confirmed.buckets = 5'100'001;
-            strong.buckets = 5'366'439;
+            strong.buckets = 536'643'888;
             scan.buckets = 5'100'001;
             state.buckets = 5'100'001;
             break;
@@ -167,7 +167,7 @@ settings::settings(chain::selection context) NOEXCEPT
             output.size = 20'343'818;
             candidate.buckets = 150'001;
             confirmed.buckets = 150'001;
-            strong.buckets = 148'101;
+            strong.buckets = 14'810'011;
             scan.buckets = 150'001;
             state.buckets = 150'001;
             break;
@@ -190,7 +190,7 @@ settings::settings(chain::selection context) NOEXCEPT
             output.size = 0;
             candidate.buckets = 10'001;
             confirmed.buckets = 10'001;
-            strong.buckets = 1'000;
+            strong.buckets = 100'000;
             scan.buckets = 10'001;
             state.buckets = 10'001;
             break;
@@ -213,7 +213,7 @@ settings::settings(chain::selection context) NOEXCEPT
             output.size = 0;
             candidate.buckets = 330'001;
             confirmed.buckets = 330'001;
-            strong.buckets = 1'000;
+            strong.buckets = 100'000;
             scan.buckets = 330'001;
             state.buckets = 330'001;
             break;
