@@ -462,7 +462,7 @@ bool size(size_t& out, int file_descriptor) NOEXCEPT
         return false;
     }
 
-    out = sign_cast<size_t>(sbuf.st_size);
+    out = possible_narrow_sign_cast<size_t>(sbuf.st_size);
     return true;
 }
 
