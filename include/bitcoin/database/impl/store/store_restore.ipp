@@ -46,10 +46,10 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     }
 
     code ec{ error::success };
-    static const auto heads = configuration_.path / schema::dir::heads;
-    static const auto primary = configuration_.path / schema::dir::primary;
-    static const auto secondary = configuration_.path / schema::dir::secondary;
-    static const auto temporary = configuration_.path / schema::dir::temporary;
+    const auto heads = configuration_.path / schema::dir::heads;
+    const auto primary = configuration_.path / schema::dir::primary;
+    const auto secondary = configuration_.path / schema::dir::secondary;
+    const auto temporary = configuration_.path / schema::dir::temporary;
 
     handler(event_t::recover_snapshot, table_t::store);
 

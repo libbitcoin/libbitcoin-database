@@ -76,7 +76,7 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
         }
     };
 
-    static const auto heads = configuration_.path / schema::dir::heads;
+    const auto heads = configuration_.path / schema::dir::heads;
     auto ec = file::clear_directory_ex(heads);
 
     create(ec, header_head_, table_t::header_head);
