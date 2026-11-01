@@ -134,7 +134,7 @@ TEMPLATE
 inline hash_digest CLASS::get_outs_key(const outs_link& link) const NOEXCEPT
 {
     table::outs::get_output put{};
-    if (!store_.outs.puts.get_raw(link, put))
+    if (!store_.outs.puts.get(link, put))
         return {};
 
     table::output::get_script_hash output{};
