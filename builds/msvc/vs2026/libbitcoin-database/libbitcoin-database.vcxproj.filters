@@ -475,6 +475,9 @@
     <ClInclude Include="..\..\..\..\build\include\bitcoin\database\version.hpp">
       <Filter>include\bitcoin\database</Filter>
     </ClInclude>
+    <ClCompile Include="..\..\..\..\build\src\version.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\database\impl\memory\mmap.ipp">
