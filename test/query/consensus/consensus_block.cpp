@@ -325,7 +325,10 @@ constexpr size_t pooled_interval = 210'000;
 constexpr uint64_t pooled_subsidy = 5'000'000'000;
 const database::context pooled_context{ pooled_flags, 8, 9 };
 const system::chain::context block_context{ pooled_flags, 0, 9, 8, 0, 0, 0 };
-const auto genesis_hash = test::genesis.transactions_ptr()->front()->hash(false);
+static hash_digest genesis_hash() NOEXCEPT
+{
+    return test::genesis.transactions_ptr()->front()->hash(false);
+}
 
 static transaction make_coinbase(uint64_t value) NOEXCEPT
 {
@@ -381,7 +384,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__pooled__success_with_prev
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    const auto parent = make_spend(genesis_hash, 0, 4'000'000'000);
+    const auto parent = make_spend(genesis_hash(), 0, 4'000'000'000);
     const auto child = make_spend(parent.hash(false), 0, 3'000'000'000);
     const auto block = make_block({ make_coinbase(1), parent, child });
     BOOST_REQUIRE(store_block(query, block));
@@ -413,7 +416,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__insufficient__unvalidated
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    const auto parent = make_spend(genesis_hash, 0, 4'000'000'000);
+    const auto parent = make_spend(genesis_hash(), 0, 4'000'000'000);
     const auto block = make_block({ make_coinbase(1), parent });
     BOOST_REQUIRE(store_block(query, block));
 
@@ -433,7 +436,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__not_pooled__unvalidated)
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    const auto block = make_block({ make_coinbase(1), make_spend(genesis_hash, 0, 1) });
+    const auto block = make_block({ make_coinbase(1), make_spend(genesis_hash(), 0, 1) });
     BOOST_REQUIRE(store_block(query, block));
 
     const auto link = query.to_header(block.hash());
@@ -450,7 +453,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__overclaim__coinbase_value
     BOOST_REQUIRE(query.initialize(test::genesis));
 
     // Fee is 1'000'000'000, so claim may not exceed 6'000'000'000.
-    const auto parent = make_spend(genesis_hash, 0, 4'000'000'000);
+    const auto parent = make_spend(genesis_hash(), 0, 4'000'000'000);
     const auto block = make_block({ make_coinbase(6'000'000'001), parent });
     BOOST_REQUIRE(store_block(query, block));
 
@@ -470,7 +473,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__forward_reference__forwar
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    const auto parent = make_spend(genesis_hash, 0, 4'000'000'000);
+    const auto parent = make_spend(genesis_hash(), 0, 4'000'000'000);
     const auto child = make_spend(parent.hash(false), 0, 3'000'000'000);
     const auto block = make_block({ make_coinbase(1), child, parent });
     BOOST_REQUIRE(store_block(query, block));
@@ -492,8 +495,8 @@ BOOST_AUTO_TEST_CASE(query_consensus__validate_pooled__internal_double_spend__bl
     BOOST_REQUIRE(!store.create(test::events_handler));
     BOOST_REQUIRE(query.initialize(test::genesis));
 
-    const auto spend1 = make_spend(genesis_hash, 0, 4'000'000'000);
-    const auto spend2 = make_spend(genesis_hash, 0, 3'000'000'000);
+    const auto spend1 = make_spend(genesis_hash(), 0, 4'000'000'000);
+    const auto spend2 = make_spend(genesis_hash(), 0, 3'000'000'000);
     const auto block = make_block({ make_coinbase(1), spend1, spend2 });
     BOOST_REQUIRE(store_block(query, block));
 
