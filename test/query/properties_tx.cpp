@@ -28,7 +28,7 @@ constexpr auto bip113 = flags::bip113_rule;
 
 BOOST_AUTO_TEST_CASE(query_properties_tx__get_wtxid__not_pooled__computed)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_wtxid__not_pooled__computed)
 
 BOOST_AUTO_TEST_CASE(query_properties_tx__get_wtxid__pooled__pool_columns)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_wtxid__pooled__pool_columns)
 
 BOOST_AUTO_TEST_CASE(query_properties_tx__is_coinbase__coinbase__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__is_coinbase__coinbase__true)
 
 BOOST_AUTO_TEST_CASE(query_properties_tx__is_coinbase__non_coinbase__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__is_coinbase__non_coinbase__false)
 
 BOOST_AUTO_TEST_CASE(query_properties_tx__is_tx_segregated__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__is_tx_segregated__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_height__not_strong__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_height__not_strong__false)
 
 BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_position__strong__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_position__strong__expected)
 
 BOOST_AUTO_TEST_CASE(query_properties_tx__get_tx_position__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

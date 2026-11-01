@@ -29,7 +29,7 @@ BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 // flush_unlock is not idempotent
 BOOST_AUTO_TEST_CASE(store__close__uncreated__flush_unlock)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.close(test::events), error::flush_unlock);
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(store__close__uncreated__flush_unlock)
 
 BOOST_AUTO_TEST_CASE(store__close__opened__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));

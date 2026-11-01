@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(store__prune__initialized__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(store__prune__initialized__success)
 
 BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -71,7 +71,7 @@ constexpr database::context validated_context
 
 BOOST_AUTO_TEST_CASE(store__prune__pool__cleared)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(store__prune__pool__cleared)
 
 BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__pool_cleared)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__pool_cleared)
 
 BOOST_AUTO_TEST_CASE(store__prune__spends__cleared)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(store__prune__spends__cleared)
 
 BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__spends_cleared)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -209,7 +209,7 @@ static code pooled(query<store<database::mmap>>& query_, const spend_t& tx) NOEX
 
 BOOST_AUTO_TEST_CASE(store__prune__unconfirmed_pooled__retained)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(store__prune__unconfirmed_pooled__retained)
 
 BOOST_AUTO_TEST_CASE(store__prune__confirmed_pooled__dropped)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(store__prune__confirmed_pooled__dropped)
 
 BOOST_AUTO_TEST_CASE(store__prune__conflicting_pooled__dropped)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(store__prune__conflicting_pooled__dropped)
 
 BOOST_AUTO_TEST_CASE(store__prune__descendant_of_conflicting__dropped)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(store__prune__descendant_of_conflicting__dropped)
 
 BOOST_AUTO_TEST_CASE(store__prune__descendant_of_retained__retained)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(store__prune__descendant_of_retained__retained)
 
 BOOST_AUTO_TEST_CASE(store__prune__retained_and_dropped__only_retained)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(store__prune__retained_and_dropped__only_retained)
 
 BOOST_AUTO_TEST_CASE(store__prune__child_pooled_before_parent__retained)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(store__prune__child_pooled_before_parent__retained)
 
 BOOST_AUTO_TEST_CASE(store__prune__child_of_unpooled_parent__dropped)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(store__prune__child_of_unpooled_parent__dropped)
 
 BOOST_AUTO_TEST_CASE(store__prune__retained__found_by_witness_hash)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(store__prune__retained__found_by_witness_hash)
 
 BOOST_AUTO_TEST_CASE(store__prune__residual_compact_empty_pool__deleted)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(store__prune__residual_compact_empty_pool__deleted)
 
 BOOST_AUTO_TEST_CASE(store__prune__residual_compact_pooled__deleted_retained)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(store__prune__residual_compact_pooled__deleted_retained)
 
 BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__retained_pool_empty)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };

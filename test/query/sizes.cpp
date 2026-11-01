@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(query_sizes_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_sizes__get_tx_sizes__coinbase__204)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

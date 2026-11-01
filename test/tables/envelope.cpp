@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 367_size;
+constexpr auto default_size = 368_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(envelope__serialized_size__default__expected)
 BOOST_AUTO_TEST_CASE(envelope__to_data__default__expected_version)
 {
     const envelope instance{};
-    BOOST_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 17, 0));
+    BOOST_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 18, 0));
     BOOST_REQUIRE_EQUAL(to_chunk(instance).front(), schema::version.front());
 }
 
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(envelope__from_data__truncated__false)
 
 BOOST_AUTO_TEST_CASE(envelope__set__default_settings__expected)
 {
-    const database::settings configuration{};
+    const database::settings configuration{ test::database_settings() };
     envelope instance{};
     instance.set(configuration);
 
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(envelope__set__default_settings__expected)
 
 BOOST_AUTO_TEST_CASE(envelope__set__unbucketed_filter_bk__false)
 {
-    database::settings configuration{};
+    database::settings configuration{ test::database_settings() };
     configuration.filter_bk.buckets = 0;
     envelope instance{};
     instance.set(configuration);
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(envelope__set__unbucketed_filter_bk__false)
 
 BOOST_AUTO_TEST_CASE(envelope__set__unbucketed_filter_tx__false)
 {
-    database::settings configuration{};
+    database::settings configuration{ test::database_settings() };
     configuration.filter_tx.buckets = 0;
     envelope instance{};
     instance.set(configuration);
@@ -135,9 +135,10 @@ BOOST_AUTO_TEST_CASE(envelope__set__unbucketed_filter_tx__false)
 BOOST_AUTO_TEST_CASE(envelope__construct__mainnet__expected)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
-    const database::settings configuration{ chain::selection::mainnet };
+    const database::settings configuration{ test::database_settings() };
     const envelope instance{ bitcoin, configuration, false, 42 };
 
+    BOOST_REQUIRE(instance.network == chain::selection::mainnet);
     BOOST_REQUIRE_EQUAL(instance.initial_subsidy_bitcoin, 50u);
     BOOST_REQUIRE_EQUAL(instance.subsidy_interval_blocks, 210000u);
     BOOST_REQUIRE_EQUAL(instance.bip16_activation_time, 0x4f779a80_u32);
@@ -155,7 +156,7 @@ BOOST_AUTO_TEST_CASE(envelope__construct__mainnet__expected)
 BOOST_AUTO_TEST_CASE(envelope__construct__mainnet__unset_filter_k)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
-    const database::settings configuration{ chain::selection::mainnet };
+    const database::settings configuration{ test::database_settings() };
     const envelope instance{ bitcoin, configuration, false, 42 };
 
     BOOST_REQUIRE_EQUAL(instance.header_k, 0u);
@@ -170,7 +171,7 @@ BOOST_AUTO_TEST_CASE(envelope__construct__mainnet__unset_filter_k)
 BOOST_AUTO_TEST_CASE(envelope__from_data__mainnet__round_trip)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
-    const database::settings configuration{ chain::selection::mainnet };
+    const database::settings configuration{ test::database_settings() };
     const envelope instance{ bitcoin, configuration, false, 42 };
     auto data = to_chunk(instance);
     BOOST_REQUIRE_EQUAL(data.size(), instance.serialized_size());
@@ -183,7 +184,7 @@ BOOST_AUTO_TEST_CASE(envelope__from_data__mainnet__round_trip)
 BOOST_AUTO_TEST_CASE(envelope__from_data__regtest__round_trip)
 {
     const system::settings bitcoin{ chain::selection::regtest };
-    const database::settings configuration{ chain::selection::regtest };
+    const database::settings configuration{ test::database_settings() };
     const envelope instance{ bitcoin, configuration, false, 42 };
     auto data = to_chunk(instance);
     BOOST_REQUIRE_EQUAL(data.size(), instance.serialized_size());
@@ -196,7 +197,7 @@ BOOST_AUTO_TEST_CASE(envelope__from_data__regtest__round_trip)
 BOOST_AUTO_TEST_CASE(envelope__from_data__signet__round_trip)
 {
     const system::settings bitcoin{ chain::selection::signet };
-    const database::settings configuration{ chain::selection::signet };
+    const database::settings configuration{ test::database_settings() };
     const envelope instance{ bitcoin, configuration, false, 42 };
     BOOST_REQUIRE(instance.forks.signet);
     BOOST_REQUIRE(instance.signet_challenge == bitcoin.signet_challenge);
@@ -212,7 +213,7 @@ BOOST_AUTO_TEST_CASE(envelope__from_data__signet__round_trip)
 BOOST_AUTO_TEST_CASE(envelope__initialize__mainnet__expected)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
-    database::settings configuration{ chain::selection::mainnet };
+    database::settings configuration{ test::database_settings() };
     configuration.initialize(bitcoin, false, 42);
 
     BOOST_REQUIRE(configuration.envelope == envelope(bitcoin, configuration, false, 42));
@@ -224,7 +225,7 @@ BOOST_AUTO_TEST_CASE(envelope__initialize__mainnet__expected)
 BOOST_AUTO_TEST_CASE(envelope__apply__matching__unchanged)
 {
     system::settings bitcoin{ chain::selection::mainnet };
-    database::settings configuration{ chain::selection::mainnet };
+    database::settings configuration{ test::database_settings() };
     const envelope instance{ bitcoin, configuration, true, 42 };
 
     auto limited = true;
@@ -237,7 +238,7 @@ BOOST_AUTO_TEST_CASE(envelope__apply__matching__unchanged)
 BOOST_AUTO_TEST_CASE(envelope__apply__differing__assigned)
 {
     system::settings bitcoin{ chain::selection::mainnet };
-    database::settings configuration{ chain::selection::mainnet };
+    database::settings configuration{ test::database_settings() };
     const envelope instance{ bitcoin, configuration, true, 42 };
 
     bitcoin.subsidy_interval_blocks = 1;
@@ -252,10 +253,37 @@ BOOST_AUTO_TEST_CASE(envelope__apply__differing__assigned)
     BOOST_REQUIRE_EQUAL(silent, 42u);
 }
 
+BOOST_AUTO_TEST_CASE(envelope__apply__differing_network__assigned)
+{
+    system::settings bitcoin{ chain::selection::testnet4 };
+    database::settings configuration{ test::database_settings() };
+    const envelope instance{ bitcoin, configuration, true, 42 };
+
+    bitcoin.network = chain::selection::mainnet;
+    auto limited = true;
+    auto silent = 42_u32;
+    const string_list expected{ "network" };
+    BOOST_REQUIRE(instance.apply(bitcoin, configuration, limited, silent) == expected);
+    BOOST_REQUIRE(bitcoin.network == chain::selection::testnet4);
+}
+
+BOOST_AUTO_TEST_CASE(envelope__from_data__testnet4__round_trip_network)
+{
+    const system::settings bitcoin{ chain::selection::testnet4 };
+    const database::settings configuration{ test::database_settings() };
+    const envelope instance{ bitcoin, configuration, false, 42 };
+    auto data = to_chunk(instance);
+    BOOST_REQUIRE_EQUAL(data.size(), instance.serialized_size());
+
+    envelope out{};
+    BOOST_REQUIRE(from_chunk(out, data));
+    BOOST_REQUIRE(out.network == chain::selection::testnet4);
+}
+
 BOOST_AUTO_TEST_CASE(envelope__apply__unprovided_filters__unbucketed)
 {
     system::settings bitcoin{ chain::selection::mainnet };
-    database::settings configuration{ chain::selection::mainnet };
+    database::settings configuration{ test::database_settings() };
     configuration.filter_bk.buckets = 0;
     const envelope instance{ bitcoin, configuration, false, 42 };
 

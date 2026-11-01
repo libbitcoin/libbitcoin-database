@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__genesis__expect
         0u
     };
 
-    database::settings database_settings{};
+    database::settings database_settings{ test::database_settings() };
     database_settings.path = TEST_DIRECTORY;
     test::chunk_store store{ database_settings };
     test::query_accessor query{ store };
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expecte
         expected.median_time_past
     };
 
-    database::settings database_settings{};
+    database::settings database_settings{ test::database_settings() };
     database_settings.path = TEST_DIRECTORY;
     test::chunk_store store{ database_settings };
     test::query_accessor query{ store };

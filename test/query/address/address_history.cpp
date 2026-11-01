@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(query_address_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_address__get_history__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_history__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_address__get_history__turbo_block1a_address0__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_history__turbo_block1a_address0__expecte
 
 BOOST_AUTO_TEST_CASE(query_address__get_history__limited__depth_limited_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_history__limited__depth_limited_empty)
 
 BOOST_AUTO_TEST_CASE(query_address__get_history__start__excludes_prior)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_history__start__excludes_prior)
 
 BOOST_AUTO_TEST_CASE(query_address__get_unconfirmed_history__turbo_block1a_address0__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_unconfirmed_history__turbo_block1a_addre
 
 BOOST_AUTO_TEST_CASE(query_address__get_unconfirmed_history__limited__depth_limited_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_unconfirmed_history__limited__depth_limi
 
 BOOST_AUTO_TEST_CASE(query_address__get_confirmed_history__turbo_block1a_address0__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_confirmed_history__turbo_block1a_address
 
 BOOST_AUTO_TEST_CASE(query_address__get_confirmed_history__limited__depth_limited_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_confirmed_history__limited__depth_limite
 
 BOOST_AUTO_TEST_CASE(query_address__get_confirmed_history__start__excludes_prior)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_confirmed_history__start__excludes_prior
 
 BOOST_AUTO_TEST_CASE(query_address__get_tx_history__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_tx_history__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_address__get_tx_history__confirmed__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -440,7 +440,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_tx_history__confirmed__expected)
 
 BOOST_AUTO_TEST_CASE(query_address__get_tx_history__confirmed_missing_prevout__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_tx_history__confirmed_missing_prevout__e
 
 BOOST_AUTO_TEST_CASE(query_address__get_tx_history__rooted__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_tx_history__rooted__expected)
 
 BOOST_AUTO_TEST_CASE(query_address__get_tx_history__unrooted__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_tx_history__unrooted__expected)
 
 BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__bogus__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__bogus__empty)
 
 BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__confirmed__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_spenders_history__confirmed__expected)
 
 BOOST_AUTO_TEST_CASE(query_address__get_tx_history__duplicate_instances__same_entry)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_tx_history__duplicate_instances__same_en
 
 BOOST_AUTO_TEST_CASE(query_address__get_history__duplicate_instances__deduplicated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

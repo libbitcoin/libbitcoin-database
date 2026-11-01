@@ -81,9 +81,9 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
 
     if (ec) return ec;
 
-    static const auto primary = configuration_.path / schema::dir::primary;
-    static const auto secondary = configuration_.path / schema::dir::secondary;
-    static const auto temporary = configuration_.path / schema::dir::temporary;
+    const auto primary = configuration_.path / schema::dir::primary;
+    const auto secondary = configuration_.path / schema::dir::secondary;
+    const auto temporary = configuration_.path / schema::dir::temporary;
 
     handler(event_t::archive_snapshot, table_t::store);
 

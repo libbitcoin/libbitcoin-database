@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(query_consensus_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__invalid_link__no_state)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__invalid_link__no_state)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__unassociated_link__scanned)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__unassociated_link__scanne
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__associated_link__associated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__associated_link__associat
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__milestone__associated_milestoned)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__milestone__associated_mil
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__checkpoint__associated_checkpointed)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__checkpoint__associated_ch
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__confirmable__associated_confirmable)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__confirmable__associated_c
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__valid__associated_valid)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__valid__associated_valid)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__unconfirmable__associated_unconfirmable)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__unconfirmable__associated
 
 BOOST_AUTO_TEST_CASE(query_consensus__is_validateable__candidate__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__is_validateable__candidate__expected)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__valid_then_unconfirmable__unconfirmable)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__valid_then_unconfirmable_
 
 BOOST_AUTO_TEST_CASE(query_consensus__set_block_unknown__valid__associated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__set_block_unknown__valid__associated)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__filters_disabled__filtered)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.filter_tx.buckets = 0;
     test::chunk_store store{ settings };
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_state__filters_disabled__filtere
 
 BOOST_AUTO_TEST_CASE(query_consensus__set_filter_body__filters_enabled__filtered)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

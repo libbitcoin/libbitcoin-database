@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(query_address_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_address__get_unconfirmed_unspent_outpoints__turbo_genesis__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_unconfirmed_unspent_outpoints__turbo_gen
 
 BOOST_AUTO_TEST_CASE(query_address__get_unconfirmed_unspent_outpoints__turbo_block1a_address0__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_unconfirmed_unspent_outpoints__turbo_blo
 
 BOOST_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outpoints__turbo_genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outpoints__turbo_genes
 
 BOOST_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outpoints__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outpoints__genesis__ex
 
 BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__turbo_above__excluded)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__turbo_above__
 
 BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__above__excluded)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__above__exclud
 
 BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__at__included)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__at__included)
 
 BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__below__included)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__below__includ
 
 BOOST_AUTO_TEST_CASE(query_address__get_address_outpoints1__turbo_genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_address_outpoints1__turbo_genesis__expec
 
 BOOST_AUTO_TEST_CASE(query_address__get_address_outpoints1__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(query_address__get_address_outpoints1__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_address__get_address_outpoints1__cancel__query_canceled_false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

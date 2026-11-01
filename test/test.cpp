@@ -117,4 +117,64 @@ std::string read_line(const std::filesystem::path& file_path,
     return out;
 }
 
+database::settings database_settings() NOEXCEPT
+{
+    const auto simple = [](database::settings::simple_table& table) NOEXCEPT
+    {
+        table.size = 1;
+        table.rate = 5;
+    };
+
+    const auto bucket = [&](database::settings::bucket_table& table) NOEXCEPT
+    {
+        simple(table);
+        table.buckets = 128;
+    };
+
+    const auto hash = [&](database::settings::hash_table& table) NOEXCEPT
+    {
+        bucket(table);
+        table.expected = 0;
+    };
+
+    database::settings out{};
+    out.network = system::chain::selection::none;
+    out.turbo = false;
+    out.gpu_scan_minimum = 65'536;
+    out.mark_unconfirmable = true;
+    out.interval_depth = max_uint8;
+    out.path = "bitcoin";
+
+    hash(out.header);
+    simple(out.input);
+    simple(out.output);
+    hash(out.ins);
+    hash(out.outs);
+    hash(out.tx);
+    bucket(out.txs);
+
+    bucket(out.candidate);
+    bucket(out.confirmed);
+    bucket(out.strong);
+    bucket(out.scan);
+    hash(out.wtxid);
+
+    simple(out.ecdsa);
+    simple(out.schnorr);
+    simple(out.silent);
+    hash(out.duplicate);
+    simple(out.prevalid);
+    simple(out.presilent);
+    bucket(out.prevout);
+    bucket(out.state);
+    hash(out.pool);
+    simple(out.spends);
+
+    bucket(out.filter_bk);
+    bucket(out.filter_tx);
+
+    out.envelope.set(out);
+    return out;
+}
+
 } // namespace test

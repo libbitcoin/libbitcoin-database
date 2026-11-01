@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(store__create__transactor_locked__transactor_lock)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     instance.transactor_mutex().lock();
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(store__create__transactor_locked__transactor_lock)
 #if defined(HAVE_WINDOWS)
 BOOST_AUTO_TEST_CASE(store__create__process_locked__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     interprocess_lock lock{ instance.process_lock_file() };
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(store__create__process_locked__success)
 
 BOOST_AUTO_TEST_CASE(store__create__flush_locked__flush_lock)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::create(instance.flush_lock_file()));
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(store__create__flush_locked__flush_lock)
 
 BOOST_AUTO_TEST_CASE(store__create__process_lock_file__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::create(instance.process_lock_file()));
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(store__create__process_lock_file__success)
 
 BOOST_AUTO_TEST_CASE(store__create__default__locks)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(store__create__default__locks)
 
 BOOST_AUTO_TEST_CASE(store__create__default__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(store__create__default__success)
 // create is index-destructive (by directory)
 BOOST_AUTO_TEST_CASE(store__create__existing_index__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::clear(configuration.path / schema::dir::heads));
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(store__create__existing_index__success)
 // create is body-destructive (by file)
 BOOST_AUTO_TEST_CASE(store__create__existing_body__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(test::create(instance.header_body_file()));

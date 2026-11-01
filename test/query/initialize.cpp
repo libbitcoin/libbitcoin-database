@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__blocks__verify__expected)
 
 BOOST_AUTO_TEST_CASE(query_initialize__initialize__is_initialized__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__initialize__is_initialized__true)
 
 BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__default__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__default__false)
 
 BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__unconfirmed__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__unconfirmed__false)
 
 BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__candidate__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__candidate__false)
 
 BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__confirmed__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__confirmed__false)
 
 BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__candidate_and_confirmed__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__is_initialized__candidate_and_confirmed__
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_top__genesis_confirmed__0)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top__genesis_confirmed__0)
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_top__three_blocks_confirmed__2)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top__three_blocks_confirmed__2)
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_top_candidate__genesis_candidated__0)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top_candidate__genesis_candidated__0)
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_top__three_blocks_candidated__2)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top__three_blocks_candidated__2)
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__terminal__max_size_t)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__terminal__max_si
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__initialized__zero)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__initialized__zer
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__non_candidate__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__non_candidate__e
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__gapped_candidate__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_top_associated_from__gapped_candidate
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__initialized__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__initialized__empt
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_above__gapped_candidate__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(query_initialize__associations__erase__removed_from_both_in
 
 BOOST_AUTO_TEST_CASE(query_initialize__get_unassociated_count_above__gapped_candidate__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

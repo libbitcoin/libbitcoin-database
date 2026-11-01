@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(query_amounts_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_amounts__get_value__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(query_amounts__get_value__genesis__expected)
 BOOST_AUTO_TEST_CASE(query_amounts__get_tx_fee__invalid__false)
 {
     uint64_t out{};
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(query_amounts__get_tx_fee__invalid__false)
 BOOST_AUTO_TEST_CASE(query_amounts__get_tx_fee__missing_prevouts__false)
 {
     uint64_t out{};
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(query_amounts__get_tx_fee__missing_prevouts__false)
 BOOST_AUTO_TEST_CASE(query_amounts__get_tx_fee__pooled_missing_prevouts__pooled_fee)
 {
     uint64_t out{};
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(query_amounts__get_tx_fee__pooled_missing_prevouts__pooled_
 BOOST_AUTO_TEST_CASE(query_amounts__get_tx_fee__coinbase__zero)
 {
     uint64_t out{};
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(query_amounts__get_tx_fee__coinbase__zero)
 BOOST_AUTO_TEST_CASE(query_amounts__get_tx_fee__valid_non_coinbase__expected)
 {
     uint64_t out{};
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(query_amounts__get_tx_fee__valid_non_coinbase__expected)
 BOOST_AUTO_TEST_CASE(query_amounts__get_block_fee__invalid__false)
 {
     uint64_t out{};
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(query_amounts__get_block_fee__invalid__false)
 BOOST_AUTO_TEST_CASE(query_amounts__get_block_fee__block_missing_prevout__false)
 {
     uint64_t out{};
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(query_amounts__get_block_fee__block_missing_prevout__false)
 BOOST_AUTO_TEST_CASE(query_amounts__get_block_fee__coinbases__zero)
 {
     uint64_t out{};
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(query_amounts__get_block_fee__coinbases__zero)
 BOOST_AUTO_TEST_CASE(query_amounts__get_block_fee__valid__expected)
 {
     uint64_t out{};
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(query_amounts__get_block_fee__valid__expected)
 BOOST_AUTO_TEST_CASE(query_amounts__get_block_fee__genesis__zero)
 {
     uint64_t out{};
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

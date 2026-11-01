@@ -37,7 +37,7 @@ static transaction make_coinbase() NOEXCEPT
 
 BOOST_AUTO_TEST_CASE(query_consensus__set_prevouts__coinbase_only__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__set_prevouts__coinbase_only__true)
 
 BOOST_AUTO_TEST_CASE(query_consensus__set_prevouts__spending_block__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__set_prevouts__spending_block__true)
 
 BOOST_AUTO_TEST_CASE(query_consensus__set_prevouts__coinbase_and_spend__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__set_prevouts__coinbase_and_spend__true)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_prevouts__coinbase_only__empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_prevouts__coinbase_only__empty)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_prevouts__spending_block__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_prevouts__spending_block__expect
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_prevouts__internal_spend__terminal)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_prevouts__internal_spend__termin
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_block_prevouts__missing_prevout__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_block_prevouts__missing_prevout__false
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_prevouts__cached__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_prevouts__cached__success)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_prevouts__populated_metadata__success)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_prevouts__populated_metadata__success)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_prevouts__not_cached__integrity_get_prevouts)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

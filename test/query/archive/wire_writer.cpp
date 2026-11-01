@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__genesis__expected)
             "00000000")    // transaction[0]
     });
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.header.buckets = 8;
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__not_pooling_pooled_tx__w
     using namespace system::chain;
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf4 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx4 } };
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_pooled_tx__subst
     using namespace system::chain;
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf4 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx4 } };
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_conflict__writte
     using namespace system::chain;
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf5 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx5 } };
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_malleated_tx__wr
     const transaction malleated{ data, true };
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf6 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, malleated } };
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

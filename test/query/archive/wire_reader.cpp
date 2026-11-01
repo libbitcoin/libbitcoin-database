@@ -42,7 +42,7 @@ static system::chain::block many_tx_block() NOEXCEPT
 BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__non_segregated__true)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__non_segregated__true)
 BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__same_witness__true)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__same_witness__true)
 BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__changed_witness__false)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__changed_witness__false
 BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__other_size__false)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__other_size__false)
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_header__genesis_and_not__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_header__genesis_and_not__expect
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__genesis_and_not__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__genesis_and_not__expected)
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__witness_true__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__witness_true__expected)
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__witness_false__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__witness_false__expected)
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__pruned__empty)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__pruned__empty)
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__empty_input_script__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__empty_input_script__expecte
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__pruned__empty)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__pruned__empty)
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__genesis_and_not__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__genesis_and_not__expecte
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__witness_true__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__witness_true__expected)
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__witness_false__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__witness_false__expected)
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_witness_true__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_witness_true__expe
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_witness_false__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_witness_false__exp
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__base16_target__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__base16_target__expected)
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_ranges__expected)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_ranges__expected)
 BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_missized_target__false)
 {
     using namespace system;
-    database::settings settings{};
+    database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };

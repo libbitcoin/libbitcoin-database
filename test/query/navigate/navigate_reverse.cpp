@@ -29,7 +29,7 @@ const auto& address1 = test::block1a_address1;
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_parent__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_parent__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs1__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs1__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs2__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs2__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs3__parents__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_touched_txs3__parents__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs1__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs1__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs2__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs2__always__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__terminal__not_reduced)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__terminal__not_reduced)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__limit__depth_limited)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__limit__depth_limited)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__stop_mismatch__populated_invalid_cursor)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__stop_mismatch__populat
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__stop_match__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__stop_match__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__progression__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_address_outputs3__progression__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_output_tx__to_output__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_output_tx__to_output__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_prevout_tx__to_prevout__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.tx.buckets = 3;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_prevout_tx__to_prevout__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_block__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
 

@@ -76,8 +76,11 @@ struct BCD_API settings
     /// Properties.
     /// -----------------------------------------------------------------------
 
+    /// The network of the defaults.
+    system::chain::selection network{};
+
     /// Enable concurrency in individual client-server queries.
-    bool turbo{ false };
+    bool turbo{ true };
 
     /// Minimum transactions for a silent payment scan on gpu.
     uint32_t gpu_scan_minimum{ 65'536 };
@@ -86,7 +89,7 @@ struct BCD_API settings
     bool mark_unconfirmable{ true };
 
     /// Depth of merkle tree interval caching (used at store create only).
-    uint16_t interval_depth{ max_uint8 };
+    uint16_t interval_depth{ 11 };
 
     /// Creation settings envelope (used at store create only).
     database::envelope envelope{};

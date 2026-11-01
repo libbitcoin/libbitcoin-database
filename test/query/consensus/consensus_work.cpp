@@ -27,7 +27,7 @@ BOOST_FIXTURE_TEST_SUITE(query_consensus_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_work__empty_states__zero)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_work__empty_states__zero)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_work__genesis__proof_of_bits)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_work__genesis__proof_of_bits)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_work__terminal_link__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_work__terminal_link__false)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_branch__candidate_hash__empty_branch)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_branch__candidate_hash__empty_branch)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_branch__unknown_hash__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(query_consensus__get_branch__unknown_hash__false)
 
 BOOST_AUTO_TEST_CASE(query_consensus__get_branch__uncandidate_header__branch_of_one)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

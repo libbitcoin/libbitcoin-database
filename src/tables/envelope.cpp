@@ -68,6 +68,7 @@ string_list envelope::apply(system::settings& bitcoin, settings& database,
         changed.push_back(name);
     };
 
+    assign(bitcoin.network, network, "network");
     assign(bitcoin.forks, forks, "forks");
     assign(bitcoin.initial_subsidy_bitcoin, initial_subsidy_bitcoin, "initial_subsidy_bitcoin");
     assign(bitcoin.subsidy_interval_blocks, subsidy_interval_blocks, "subsidy_interval_blocks");
@@ -132,6 +133,7 @@ string_list envelope::apply(system::settings& bitcoin, settings& database,
 envelope::envelope(const system::settings& bitcoin, const settings& database,
     bool limited, uint32_t silent) NOEXCEPT
   : schema(compiled),
+    network(bitcoin.network),
     forks(bitcoin.forks),
     initial_subsidy_bitcoin(bitcoin.initial_subsidy_bitcoin),
     subsidy_interval_blocks(bitcoin.subsidy_interval_blocks),
@@ -185,6 +187,7 @@ bool envelope::from_data(reader& source) NOEXCEPT
         return false;
     }
 
+    network = static_cast<chain::selection>(source.read_byte());
     forks.bip16 = to_bool(source.read_byte());
     forks.bip90 = to_bool(source.read_byte());
     forks.bip30 = to_bool(source.read_byte());
@@ -281,6 +284,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     for (const auto segment: schema.segments())
         sink.write_little_endian<uint32_t>(segment);
 
+    sink.write_byte(narrow_sign_cast<uint8_t>(to_value(network)));
     sink.write_byte(to_int<uint8_t>(forks.bip16));
     sink.write_byte(to_int<uint8_t>(forks.bip90));
     sink.write_byte(to_int<uint8_t>(forks.bip30));
@@ -376,7 +380,7 @@ size_t envelope::serialized_size() const NOEXCEPT
 {
     constexpr auto forks_size = 25_size;
     constexpr auto fixed = (4 * sizeof(uint32_t)) + sizeof(uint16_t) +
-        (7 * sizeof(uint32_t)) + (10 * sizeof(uint8_t)) + forks_size +
+        (7 * sizeof(uint32_t)) + (11 * sizeof(uint8_t)) + forks_size +
         sizeof(uint64_t) + (18 * sizeof(uint32_t));
 
     const auto checkpoint_size = [](const chain::checkpoint& in) NOEXCEPT

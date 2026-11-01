@@ -32,7 +32,7 @@ BOOST_FIXTURE_TEST_SUITE(query_fee_rate_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__zero__true_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__zero__true_empty)
 
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__genesis__true_one_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__genesis__true_one_empty)
 
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__unconfirmed_blocks__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__unconfirmed_blocks__false)
 
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_overflow__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_overflow__false)
 
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__zero_over_top__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__zero_over_top__true)
 
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_empty_blocks__all_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_empty_blocks__al
 
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_non_empty_blocks__all_expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__confirmed_non_empty_blocks
 
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__cancel_zero__true_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__cancel_zero__true_empty)
 
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__cancel_genesis__false_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__cancel_genesis__false_empt
 
 BOOST_AUTO_TEST_CASE(query_fee_rate__get_branch_fees__cancel_three_blocks__false_empty)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

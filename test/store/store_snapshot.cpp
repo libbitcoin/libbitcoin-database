@@ -29,7 +29,7 @@ BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(store__snapshot__uncreated__flush_unloaded)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     BOOST_REQUIRE_EQUAL(instance.snapshot(test::events), error::flush_unloaded);
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(store__snapshot__uncreated__flush_unloaded)
 
 BOOST_AUTO_TEST_CASE(store__snapshot__opened__success)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));

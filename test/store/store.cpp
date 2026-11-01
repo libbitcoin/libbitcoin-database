@@ -29,21 +29,21 @@ BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(store__construct__default_configuration__referenced)
 {
-    const settings configuration{};
+    const settings configuration{ test::database_settings() };
     test::map_store instance{ configuration };
     BOOST_REQUIRE_EQUAL(&instance.configuration(), &configuration);
 }
 
 BOOST_AUTO_TEST_CASE(store__is_dirty__uninitialized__true)
 {
-    const settings configuration{};
+    const settings configuration{ test::database_settings() };
     store<database::mmap> instance{ configuration };
     BOOST_REQUIRE(instance.is_dirty());
 }
 
 BOOST_AUTO_TEST_CASE(store__is_dirty__initialized___false)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(store__is_dirty__initialized___false)
 
 BOOST_AUTO_TEST_CASE(store__set_dirty__initialized__is_dirty)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -69,14 +69,14 @@ BOOST_AUTO_TEST_CASE(store__set_dirty__initialized__is_dirty)
 
 BOOST_AUTO_TEST_CASE(store__is_pooling__default__false)
 {
-    const settings configuration{};
+    const settings configuration{ test::database_settings() };
     store<database::mmap> instance{ configuration };
     BOOST_REQUIRE(!instance.is_pooling());
 }
 
 BOOST_AUTO_TEST_CASE(store__set_pooling__initialized__is_pooling_and_dirty)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(store__set_pooling__initialized__is_pooling_and_dirty)
 
 BOOST_AUTO_TEST_CASE(store__is_dirty__open__false)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(store__is_dirty__open__false)
 
 BOOST_AUTO_TEST_CASE(store__is_dirty__open_add_header__false)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(store__is_dirty__open_add_header__false)
 
 BOOST_AUTO_TEST_CASE(store__is_dirty__open_with_two_headers__true)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(store__is_dirty__open_with_two_headers__true)
 
 BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
 {
-    const settings configuration{};
+    const settings configuration{ test::database_settings() };
     test::map_store instance{ configuration };
 
     /// Archive.
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(store__paths__default_configuration__expected)
 
 BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
 {
-    const settings configuration{};
+    const settings configuration{ test::database_settings() };
     test::map_store instance{ configuration };
     auto transactor = instance.get_transactor();
     BOOST_REQUIRE(transactor);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(store__get_transactor__always__share_locked)
 
 BOOST_AUTO_TEST_CASE(store__set_pooling__created__pooling)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(store__set_pooling__created__pooling)
 
 BOOST_AUTO_TEST_CASE(store__set_pooling__twice__remains_pooling)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(store__set_pooling__twice__remains_pooling)
 
 BOOST_AUTO_TEST_CASE(store__set_current__created__not_current)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(store__set_current__created__not_current)
 
 BOOST_AUTO_TEST_CASE(store__set_current__changed__applied_to_heads)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(store__set_current__changed__applied_to_heads)
 
 BOOST_AUTO_TEST_CASE(store__set_current__unchanged__no_effect)
 {
-    settings configuration{};
+    settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     BOOST_REQUIRE(!instance.create(test::events));

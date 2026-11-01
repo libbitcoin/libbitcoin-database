@@ -40,7 +40,7 @@ BOOST_FIXTURE_TEST_SUITE(query_navigate_tests, test::directory_setup_fixture)
 // TODO: break this up.
 BOOST_AUTO_TEST_CASE(query_navigate__to_output__various__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__to_output__various__expected)
 
 BOOST_AUTO_TEST_CASE(query_navigate__to_coinbase__always__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

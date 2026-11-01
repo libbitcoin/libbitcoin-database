@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_header__mmap_get_header__expected)
         0x61626364  // nonce
     };
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.header.buckets = 16;
     settings.path = TEST_DIRECTORY;
     store<database::mmap> store{ settings };
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_header__is_header__expected)
         "00"); // header flags
 
     header_link link{};
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.header.buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__empty__expected)
         "ffffffffff");
 
     // data_chunk store.
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.tx.buckets = 8;
     settings.outs.buckets = 2;
     settings.path = TEST_DIRECTORY;
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_link_tx__null_input__expected)
     BOOST_CHECK_EQUAL(tx_hash, tx.hash(false));
 
     // data_chunk store.
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
     settings.outs.buckets = 2;
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__get_tx__expected)
     BOOST_CHECK_EQUAL(tx_hash, tx.hash(false));
 
     // data_chunk store.
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
     settings.outs.buckets = 2;
@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__get_block__expected)
             "00000000")    // transaction[0]
     });
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.header.buckets = 8;
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
@@ -726,7 +726,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
             "00000000")    // transaction[0]
     });
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.header.buckets = 8;
     settings.tx.buckets = 8;
     settings.ins.buckets = 8;
@@ -779,7 +779,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block_txs__get_block__expected)
 
 BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__not_pooling_duplicate__written)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -797,7 +797,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__not_pooling_duplicate__written)
 
 BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_duplicate__substituted)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -815,7 +815,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_duplicate__substituted)
 
 BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_duplicate__pooled)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -834,7 +834,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_duplicate__pooled)
 
 BOOST_AUTO_TEST_CASE(query_chain_writer__set_tx__pooling_conflict__written)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -855,7 +855,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__not_pooling_pooled_tx__writt
     using namespace system::chain;
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf4 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx4 } };
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -876,7 +876,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_pooled_tx__substitut
     using namespace system::chain;
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf4 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx4 } };
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -912,7 +912,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_malleated_tx__writte
     const transaction malleated{ data, true };
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf6 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, malleated } };
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -936,7 +936,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_block__pooling_malleated_tx__writte
 
 BOOST_AUTO_TEST_CASE(query_chain_writer__set_header__unstorable_work__header_work)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -954,7 +954,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_header__unstorable_work__header_wor
 
 BOOST_AUTO_TEST_CASE(query_chain_writer__set_links__archived_txs__associated)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -991,7 +991,7 @@ BOOST_AUTO_TEST_CASE(query_chain_writer__set_links__archived_txs__associated)
 
 BOOST_AUTO_TEST_CASE(query_chain_writer__set_links__empty_or_terminal__error)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

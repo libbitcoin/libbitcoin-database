@@ -94,6 +94,9 @@ bool create(const std::filesystem::path& file_path,
 std::string read_line(const std::filesystem::path& file_path,
     size_t line=zero) NOEXCEPT;
 
+/// Database settings with explicit values, independent of the defaults.
+database::settings database_settings() NOEXCEPT;
+
 struct directory_setup_fixture
 {
     DELETE_COPY_MOVE(directory_setup_fixture);

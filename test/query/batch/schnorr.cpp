@@ -54,7 +54,7 @@ static bool set_one(test::query_accessor& query, const hash_digest& digest,
 
 BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__empty__empty)
 {
-    const database::settings configuration{};
+    const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
 
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__empty__empty)
 
 BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_valid__empty)
 {
-    const database::settings configuration{};
+    const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
     BOOST_REQUIRE(set_one(query, schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_valid__em
 
 BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_valid_without_gpu__empty)
 {
-    const database::settings configuration{};
+    const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
     BOOST_REQUIRE(set_one(query, schnorr_sighash, schnorr_xonly, schnorr_signature, 42));
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_valid_wit
 
 BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_invalid__expected_link)
 {
-    const database::settings configuration{};
+    const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
     constexpr auto expected = 42u;
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__one_invalid__
 
 BOOST_AUTO_TEST_CASE(query_batch_ecdsa__verify_schnorr_signatures__various__expected_links)
 {
-    const database::settings configuration{};
+    const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
     constexpr auto expected1 = 42u;

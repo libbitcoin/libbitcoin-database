@@ -24,7 +24,7 @@ BOOST_FIXTURE_TEST_SUITE(query_confirmed_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_candidate_block__push_pop_candidate__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_candidate_block__push_pop_candidate__ex
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_candidate_extension__candidates__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_candidate_extension__candidates__expect
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_block__push_pop_confirmed__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_block__push_pop_confirmed__ex
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_tx__confirm__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_tx__confirm__expected)
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_input__genesis__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_input__genesis__true)
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_input__unconfirmed__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_input__unconfirmed__false)
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_input__confirmed_weak__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_input__confirmed_weak__expect
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_input__confirmed_strong__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_input__confirmed_strong__expe
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_output__confirm__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_output__confirm__expected)
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_spent__genesis__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_spent__genesis__false)
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_spent__strong_confirmed__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_spent__strong_confirmed__true
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__genesis__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__genesis__true)
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__unconfirmed_coinbase__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__unconfirmed_coi
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__confirmed_coinbase__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__confirmed_coinb
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__missing_prevouts__false)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__missing_prevout
 
 BOOST_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__prevouts_confirmed__true)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

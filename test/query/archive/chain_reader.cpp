@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__invalid_parent__expected)
         "00000000000000000000000000000000" // work
         "00"); // header flags
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.header.buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__default__expected)
         "00000000000000000000000000000000" // work
         "00"); // header flags
 
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.header.buckets = 16;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_header__default__expected)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_witness__not_found__nullptr)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_witness__not_found__nullptr)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_input_script__not_found__nullptr)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_input_script__not_found__nullptr)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_input__not_found__nullptr)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_input__not_found__nullptr)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_input__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.header.buckets = 8;
     settings.tx.buckets = 8;
     settings.txs.buckets = 16;
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_input__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_inputs__tx_not_found__nullptr)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_inputs__tx_not_found__nullptr)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_inputs__found__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_inputs__found__expected)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_output_script__not_found__nullptr)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_output_script__not_found__nullptr)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_output__not_found__nullptr)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_output__not_found__nullptr)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_output__genesis__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.header.buckets = 8;
     settings.tx.buckets = 8;
     settings.txs.buckets = 16;
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_output__genesis__expected)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_outputs__tx_not_found__nullptr)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_outputs__tx_not_found__nullptr)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_outputs__found__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_outputs__found__expected)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_transactions__tx_not_found__nullptr)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_transactions__tx_not_found__nullptr
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_transactions__found__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_transactions__found__expected)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_transaction__pruned__nullptr)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_transaction__pruned__nullptr)
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_transaction__empty_input_script__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(query_chain_reader__get_transaction__empty_input_script__ex
 
 BOOST_AUTO_TEST_CASE(query_chain_reader__get_spenders__unspent_or_not_found__expected)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };

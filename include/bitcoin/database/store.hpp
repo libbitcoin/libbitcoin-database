@@ -100,8 +100,8 @@ public:
     /// Settings envelope stored at store creation.
     const database::envelope& get_envelope() const NOEXCEPT;
 
-    /// Read the stored schema version without opening the store.
-    code read_schema(system::config::version& schema) NOEXCEPT;
+    /// Read the stored envelope without opening the store.
+    code read_envelope(database::envelope& stored) NOEXCEPT;
 
     /// Determine if the store is non-empty/initialized.
     bool is_dirty() const NOEXCEPT;

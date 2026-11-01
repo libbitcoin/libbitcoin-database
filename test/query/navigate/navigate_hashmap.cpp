@@ -27,7 +27,7 @@ BOOST_FIXTURE_TEST_SUITE(query_navigate_tests, test::directory_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(query_navigate__top_header__genesis_bucket__genesis_link)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.header.buckets = 1;
     test::chunk_store store{ settings };
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__top_header__genesis_bucket__genesis_link)
 
 BOOST_AUTO_TEST_CASE(query_navigate__top_header__empty_bucket__terminal)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.header.buckets = 8;
     test::chunk_store store{ settings };
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__top_header__empty_bucket__terminal)
 
 BOOST_AUTO_TEST_CASE(query_navigate__top_tx__empty_bucket__terminal)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.tx.buckets = 8;
     test::chunk_store store{ settings };
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__top_tx__empty_bucket__terminal)
 
 BOOST_AUTO_TEST_CASE(query_navigate__top_tx__genesis_bucket__genesis_tx)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.tx.buckets = 1;
     test::chunk_store store{ settings };
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(query_navigate__top_tx__genesis_bucket__genesis_tx)
 
 BOOST_AUTO_TEST_CASE(query_navigate__top_point__empty_bucket__terminal)
 {
-    settings settings{};
+    settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.ins.buckets = 8;
     test::chunk_store store{ settings };
