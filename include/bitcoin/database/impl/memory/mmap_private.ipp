@@ -384,9 +384,11 @@ TEMPLATE
 bool CLASS::tick_() NOEXCEPT
 {
     std::unique_lock worker_lock(worker_mutex_);
-    worker_cv_.wait_for(worker_lock, std::chrono::seconds(1));
-    worker_lock.unlock();
-    return working_.load();
+    return !worker_cv_.wait_for(worker_lock, std::chrono::seconds(1),
+        [this]() NOEXCEPT
+        {
+            return !working_.load();
+        });
 }
 
 } // namespace database
