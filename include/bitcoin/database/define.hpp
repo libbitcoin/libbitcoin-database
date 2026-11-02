@@ -25,26 +25,6 @@
 // requires a larger file this is neither validated nor supported.
 ////static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 
-/// Attributes.
-/// ---------------------------------------------------------------------------
-
-// Now we use the generic helper definitions in libbitcoin to
-// define BCD_API and BCD_INTERNAL.
-// BCD_API is used for the public API symbols. It either DLL imports or
-// DLL exports (or does nothing for static build)
-// BCD_INTERNAL is used for non-api symbols.
-
-#if defined BCD_STATIC
-    #define BCD_API
-    #define BCD_INTERNAL
-#elif defined BCD_DLL
-    #define BCD_API      BC_HELPER_DLL_EXPORT
-    #define BCD_INTERNAL BC_HELPER_DLL_LOCAL
-#else
-    #define BCD_API      BC_HELPER_DLL_IMPORT
-    #define BCD_INTERNAL BC_HELPER_DLL_LOCAL
-#endif
-
 namespace libbitcoin {
 namespace database {
 
