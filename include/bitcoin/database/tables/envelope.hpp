@@ -79,8 +79,6 @@ struct BCD_API envelope
     size_t bip90_bip34_height{};
     size_t bip90_bip65_height{};
     size_t bip90_bip66_height{};
-    size_t bip30_reactivate_height{};
-    system::chain::checkpoint bip30_deactivate_checkpoint{};
     system::chain::checkpoint bip9_bit0_active_checkpoint{};
     system::chain::checkpoint bip9_bit1_active_checkpoint{};
     system::chain::checkpoint bip9_bit2_active_checkpoint{};
