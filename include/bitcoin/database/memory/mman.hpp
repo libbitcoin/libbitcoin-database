@@ -57,24 +57,24 @@ typedef size_t oft__;
 #define MS_SYNC         2
 #define MS_INVALIDATE   4
 
-void* mmap(void* addr, size_t len, int prot, int flags, int fd,
+BCD_API void* mmap(void* addr, size_t len, int prot, int flags, int fd,
     oft__ off) noexcept;
-void* mremap_(void* addr, size_t old_size, size_t new_size, int prot,
+BCD_API void* mremap_(void* addr, size_t old_size, size_t new_size, int prot,
     int flags, int fd) noexcept;
-int munmap(void* addr, size_t len) noexcept;
-int madvise(void* addr, size_t len, int advice) noexcept;
-int mprotect(void* addr, size_t len, int prot) noexcept;
-int msync(void* addr, size_t len, int flags) noexcept;
-int working_floor(size_t minimum, size_t maximum) noexcept;
-int mlock(const void* addr, size_t len) noexcept;
-int munlock(const void* addr, size_t len) noexcept;
-int fsync(int fd) noexcept;
-int fallocate(int fd, int mode, oft__ offset, oft__ size) noexcept;
-int ftruncate(int fd, oft__ size) noexcept;
+BCD_API int munmap(void* addr, size_t len) noexcept;
+BCD_API int madvise(void* addr, size_t len, int advice) noexcept;
+BCD_API int mprotect(void* addr, size_t len, int prot) noexcept;
+BCD_API int msync(void* addr, size_t len, int flags) noexcept;
+BCD_API int working_floor(size_t minimum, size_t maximum) noexcept;
+BCD_API int mlock(const void* addr, size_t len) noexcept;
+BCD_API int munlock(const void* addr, size_t len) noexcept;
+BCD_API int fsync(int fd) noexcept;
+BCD_API int fallocate(int fd, int mode, oft__ offset, oft__ size) noexcept;
+BCD_API int ftruncate(int fd, oft__ size) noexcept;
 
 #elif defined(HAVE_APPLE)
 
-int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT;
+BCD_API int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT;
 
 #endif // HAVE_WINDOWS
 
