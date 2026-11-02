@@ -103,7 +103,7 @@ CLASS::store(const settings& config) NOEXCEPT
     silent1_prefix_head_(head(config.path / schema::dir::heads, schema::caches::silent1_prefix), head_settings(config.silent), sequential),
     silent1_prefix_body_(body(config.path, schema::caches::silent1_prefix), config.silent, sequential, staged),
 
-    envelope_head_(head(config.path / schema::dir::heads, schema::caches::envelope), head_settings(config.duplicate), sequential),
+    envelope_head_(head(config.path / schema::dir::heads, schema::caches::envelope), head_settings(config.duplicate), sequential, !staged, shared),
     duplicate_head_(head(config.path / schema::dir::heads, schema::indexes::duplicate), head_settings(config.duplicate), random),
     duplicate_body_(body(config.path, schema::indexes::duplicate), config.duplicate, sequential, staged),
 
