@@ -20,26 +20,26 @@
 #include "../../mocks/blocks.hpp"
 #include "../../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_navigate_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(query_navigate_tests, test::directory_setup_fixture)
 
 // to_txs
 
-BOOST_AUTO_TEST_CASE(query_navigate__to_txs__multiple__expected)
+BC_AUTO_TEST_CASE(query_navigate__to_txs__multiple__expected)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1a, test::context, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2a, test::context, {}, false, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1a, test::context, {}, false, false));
+    BC_REQUIRE(query.set(test::block2a, test::context, {}, false, false));
 
     const tx_links expected_links2{ 2, 3 };
-    BOOST_REQUIRE_EQUAL(query.to_transactions(0), tx_links{ 0 });
-    BOOST_REQUIRE_EQUAL(query.to_transactions(1), tx_links{ 1 });
-    BOOST_REQUIRE_EQUAL(query.to_transactions(2), expected_links2);
-    BOOST_REQUIRE(query.to_transactions(3).empty());
+    BC_REQUIRE_EQUAL(query.to_transactions(0), tx_links{ 0 });
+    BC_REQUIRE_EQUAL(query.to_transactions(1), tx_links{ 1 });
+    BC_REQUIRE_EQUAL(query.to_transactions(2), expected_links2);
+    BC_REQUIRE(query.to_transactions(3).empty());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

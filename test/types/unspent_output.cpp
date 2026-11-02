@@ -18,115 +18,115 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(unspent_output_tests)
+BC_AUTO_TEST_SUITE(unspent_output_tests)
 
 using namespace system;
 
 // less_than.operator()
 
-BOOST_AUTO_TEST_CASE(unspent_output__less_than__confirmed_before_unconfirmed__expected)
+BC_AUTO_TEST_CASE(unspent_output__less_than__confirmed_before_unconfirmed__expected)
 {
     const unspent_output a{ {}, 42, 7 };
     const unspent_output b{ {}, 0, unspent_output::unconfirmed_position };
-    BOOST_REQUIRE(a < b);
-    BOOST_REQUIRE(!(b < a));
+    BC_REQUIRE(a < b);
+    BC_REQUIRE(!(b < a));
 }
 
-BOOST_AUTO_TEST_CASE(unspent_output__less_than__confirmed_height_ascending__expected)
+BC_AUTO_TEST_CASE(unspent_output__less_than__confirmed_height_ascending__expected)
 {
     const unspent_output a{ {}, 100, 5 };
     const unspent_output b{ {}, 200, 5 };
-    BOOST_REQUIRE(a < b);
-    BOOST_REQUIRE(!(b < a));
+    BC_REQUIRE(a < b);
+    BC_REQUIRE(!(b < a));
 }
 
-BOOST_AUTO_TEST_CASE(unspent_output__less_than__confirmed_position_ascending__expected)
+BC_AUTO_TEST_CASE(unspent_output__less_than__confirmed_position_ascending__expected)
 {
     const unspent_output a{ {}, 100, 3 };
     const unspent_output b{ {}, 100, 10 };
-    BOOST_REQUIRE(a < b);
-    BOOST_REQUIRE(!(b < a));
+    BC_REQUIRE(a < b);
+    BC_REQUIRE(!(b < a));
 }
 
-BOOST_AUTO_TEST_CASE(unspent_output__less_than__confirmed_output_index_ascending__expected)
+BC_AUTO_TEST_CASE(unspent_output__less_than__confirmed_output_index_ascending__expected)
 {
     const outpoint p1{ { {}, 0 }, 42 };
     const outpoint p2{ { {}, 5 }, 42 };
     const unspent_output a{ p1, 100, 10 };
     const unspent_output b{ p2, 100, 10 };
-    BOOST_REQUIRE(a < b);
-    BOOST_REQUIRE(!(b < a));
+    BC_REQUIRE(a < b);
+    BC_REQUIRE(!(b < a));
 }
 
-BOOST_AUTO_TEST_CASE(unspent_output__less_than__unconfirmed_outpoint_ascending__expected)
+BC_AUTO_TEST_CASE(unspent_output__less_than__unconfirmed_outpoint_ascending__expected)
 {
     const outpoint p1{ { {}, 3 }, 42 };
     const outpoint p2{ { {}, 8 }, 42 };
     const unspent_output a{ p1, 0, unspent_output::unconfirmed_position };
     const unspent_output b{ p2, 0, unspent_output::unconfirmed_position };
-    BOOST_REQUIRE(a < b);
-    BOOST_REQUIRE(!(b < a));
+    BC_REQUIRE(a < b);
+    BC_REQUIRE(!(b < a));
 }
 
-BOOST_AUTO_TEST_CASE(unspent_output__equality__distinct__false)
+BC_AUTO_TEST_CASE(unspent_output__equality__distinct__false)
 {
     const outpoint p1{ { {}, 0 }, 42 };
     const outpoint p2{ { {}, 1 }, 42 };
     const unspent_output a{ p1, 101, 10 };
     const unspent_output b{ p2, 100, 11 };
-    BOOST_REQUIRE(!(a == b));
-    BOOST_REQUIRE(!(b == a));
+    BC_REQUIRE(!(a == b));
+    BC_REQUIRE(!(b == a));
 }
 
-BOOST_AUTO_TEST_CASE(unspent_output__equality__same__true)
+BC_AUTO_TEST_CASE(unspent_output__equality__same__true)
 {
     const outpoint point{ { {}, 0 }, 42 };
     const unspent_output value{ point, 100, 10 };
-    BOOST_REQUIRE(value == value);
+    BC_REQUIRE(value == value);
 }
 
-BOOST_AUTO_TEST_CASE(unspent_output__valid__always__expected)
+BC_AUTO_TEST_CASE(unspent_output__valid__always__expected)
 {
     const auto valid1 = unspent_output{ { { hash_digest{}, 0 }, 42 }, 2, 0 }.valid();
-    BOOST_REQUIRE(valid1);
+    BC_REQUIRE(valid1);
 
     const auto valid2 = unspent_output{ { { hash_digest{}, 0 }, 42 }, 2, unspent_output::unconfirmed_position }.valid();
-    BOOST_REQUIRE(valid2);
+    BC_REQUIRE(valid2);
 
     const auto invalid1 = !unspent_output{ {}, 2, 3 }.valid();
-    BOOST_REQUIRE(invalid1);
+    BC_REQUIRE(invalid1);
 
     const auto invalid2 = !unspent_output{ {}, 2, unspent_output::unconfirmed_position }.valid();
-    BOOST_REQUIRE(invalid2);
+    BC_REQUIRE(invalid2);
 }
 
-BOOST_AUTO_TEST_CASE(unspent_output__fault__always__expected)
+BC_AUTO_TEST_CASE(unspent_output__fault__always__expected)
 {
     const auto fault1 = unspent_output{}.fault();
-    BOOST_REQUIRE(fault1);
+    BC_REQUIRE(fault1);
 
     const auto fault2 = unspent_output{ {}, 2, 0 }.fault();
-    BOOST_REQUIRE(fault2);
+    BC_REQUIRE(fault2);
 
     const auto nonfault1 = !unspent_output{ {}, 2, 3 }.fault();
-    BOOST_REQUIRE(nonfault1);
+    BC_REQUIRE(nonfault1);
 
     const auto nonfault2 = !unspent_output{ {}, 2, unspent_output::unconfirmed_position }.fault();
-    BOOST_REQUIRE(nonfault2);
+    BC_REQUIRE(nonfault2);
 }
 
-BOOST_AUTO_TEST_CASE(unspent_output__confirmed__always__expected)
+BC_AUTO_TEST_CASE(unspent_output__confirmed__always__expected)
 {
     const auto confirmed = unspent_output{ { { hash_digest{}, 0 }, 42 }, 2, 3 }.confirmed();
-    BOOST_REQUIRE(confirmed);
+    BC_REQUIRE(confirmed);
 
     const auto unconfirmed = !unspent_output{ { { hash_digest{}, 0 }, 42 }, 2, unspent_output::unconfirmed_position }.confirmed();
-    BOOST_REQUIRE(unconfirmed);
+    BC_REQUIRE(unconfirmed);
 }
 
 // filter_sort_and_dedup
 
-BOOST_AUTO_TEST_CASE(unspent_output__filter_sort_and_dedup__unsorted_with_duplicates_mixed__sorted_and_deduped)
+BC_AUTO_TEST_CASE(unspent_output__filter_sort_and_dedup__unsorted_with_duplicates_mixed__sorted_and_deduped)
 {
     const outpoint lo{ { {}, 0 }, 42 };
     const outpoint hi{ { {}, 5 }, 42 };
@@ -140,13 +140,13 @@ BOOST_AUTO_TEST_CASE(unspent_output__filter_sort_and_dedup__unsorted_with_duplic
     };
 
     unspent_output::filter_sort_and_dedup(values);
-    BOOST_REQUIRE_EQUAL(values.size(), 3u);
-    BOOST_REQUIRE_EQUAL(values[0].height, 100u);                    // confirmed, lowest height
-    BOOST_REQUIRE_EQUAL(values[1].height, 200u);                    // confirmed
-    BOOST_REQUIRE_EQUAL(values[2].height, unspent_output::unused_height);  // unconfirmed
+    BC_REQUIRE_EQUAL(values.size(), 3u);
+    BC_REQUIRE_EQUAL(values[0].height, 100u);                    // confirmed, lowest height
+    BC_REQUIRE_EQUAL(values[1].height, 200u);                    // confirmed
+    BC_REQUIRE_EQUAL(values[2].height, unspent_output::unused_height);  // unconfirmed
 }
 
-BOOST_AUTO_TEST_CASE(unspent_output__filter_sort_and_dedup__exclusions__removes_excluded_items)
+BC_AUTO_TEST_CASE(unspent_output__filter_sort_and_dedup__exclusions__removes_excluded_items)
 {
     unspent_outputs items
     {
@@ -158,9 +158,9 @@ BOOST_AUTO_TEST_CASE(unspent_output__filter_sort_and_dedup__exclusions__removes_
     };
 
     unspent_output::filter_sort_and_dedup(items);
-    BOOST_REQUIRE_EQUAL(items.size(), 2u);
-    BOOST_REQUIRE_EQUAL(items[0].position, 5u);
-    BOOST_REQUIRE_EQUAL(items[1].position, 10u);
+    BC_REQUIRE_EQUAL(items.size(), 2u);
+    BC_REQUIRE_EQUAL(items[0].position, 5u);
+    BC_REQUIRE_EQUAL(items[1].position, 10u);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

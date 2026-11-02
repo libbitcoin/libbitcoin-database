@@ -22,46 +22,46 @@
 
 // these include the slow tests (mmap)
 
-BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 // prune
 // ----------------------------------------------------------------------------
 // Empty store asserts so create and initialize.
 
-BOOST_AUTO_TEST_CASE(store__prune__initialized__success)
+BC_AUTO_TEST_CASE(store__prune__initialized__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
-    BOOST_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.prune(test::events));
 
     // The retained snapshot is post-prune (the trim strands nothing).
-    BOOST_REQUIRE(test::folder(configuration.path / schema::dir::primary));
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
-    BOOST_REQUIRE_EQUAL(query_.prevout_body_size(), zero);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::folder(configuration.path / schema::dir::primary));
+    BC_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
+    BC_REQUIRE_EQUAL(query_.prevout_body_size(), zero);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__success)
+BC_AUTO_TEST_CASE(store__prune__faulted_restore__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 
     // Simulate power fault (flush lock persists), restore from post-prune.
-    BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
-    BOOST_REQUIRE(!instance.restore(test::events));
-    BOOST_REQUIRE(query_.is_initialized());
-    BOOST_REQUIRE_EQUAL(query_.prevout_body_size(), zero);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
+    BC_REQUIRE(!instance.restore(test::events));
+    BC_REQUIRE(query_.is_initialized());
+    BC_REQUIRE_EQUAL(query_.prevout_body_size(), zero);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
 constexpr database::context validated_context
@@ -69,92 +69,92 @@ constexpr database::context validated_context
     system::chain::flags::bip113_rule, 8, 9
 };
 
-BOOST_AUTO_TEST_CASE(store__prune__pool__cleared)
+BC_AUTO_TEST_CASE(store__prune__pool__cleared)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     test::tx_spend_one_hash.inputs_ptr()->front()->metadata.parent_tx = 42;
-    BOOST_REQUIRE(query_.set(test::tx_spend_one_hash));
+    BC_REQUIRE(query_.set(test::tx_spend_one_hash));
 
     const auto link = query_.to_tx(test::tx_spend_one_hash.hash(false));
-    BOOST_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context, 0));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
+    BC_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context, 0));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE_EQUAL(query_.pool_body_size(), zero);
 
     pooled_tx pooled{};
     pooled.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, link, validated_context), error::unvalidated);
-    BOOST_REQUIRE(query_.set_pooled(2, test::tx_spend_one_hash, validated_context, 0));
-    BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, 2, validated_context), error::success);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE_EQUAL(query_.get_pooled(pooled, link, validated_context), error::unvalidated);
+    BC_REQUIRE(query_.set_pooled(2, test::tx_spend_one_hash, validated_context, 0));
+    BC_REQUIRE_EQUAL(query_.get_pooled(pooled, 2, validated_context), error::success);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__pool_cleared)
+BC_AUTO_TEST_CASE(store__prune__faulted_restore__pool_cleared)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     test::tx_spend_one_hash.inputs_ptr()->front()->metadata.parent_tx = 42;
-    BOOST_REQUIRE(query_.set(test::tx_spend_one_hash));
+    BC_REQUIRE(query_.set(test::tx_spend_one_hash));
 
     const auto link = query_.to_tx(test::tx_spend_one_hash.hash(false));
-    BOOST_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context, 0));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, validated_context, 0));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 
-    BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
-    BOOST_REQUIRE(!instance.restore(test::events));
-    BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
+    BC_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
+    BC_REQUIRE(!instance.restore(test::events));
+    BC_REQUIRE_EQUAL(query_.pool_body_size(), zero);
 
     pooled_tx pooled{};
     pooled.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query_.get_pooled(pooled, link, validated_context), error::unvalidated);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE_EQUAL(query_.get_pooled(pooled, link, validated_context), error::unvalidated);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__spends__cleared)
+BC_AUTO_TEST_CASE(store__prune__spends__cleared)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
 
     const table::spends::put_refs::parents parents{ 1, 2, 3 };
-    BOOST_REQUIRE(instance.spends.put(table::spends::put_refs{ {}, parents }));
-    BOOST_REQUIRE_EQUAL(query_.spends_records(), 3u);
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE_EQUAL(query_.spends_records(), zero);
-    BOOST_REQUIRE_EQUAL(query_.spends_body_size(), zero);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(instance.spends.put(table::spends::put_refs{ {}, parents }));
+    BC_REQUIRE_EQUAL(query_.spends_records(), 3u);
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE_EQUAL(query_.spends_records(), zero);
+    BC_REQUIRE_EQUAL(query_.spends_body_size(), zero);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__spends_cleared)
+BC_AUTO_TEST_CASE(store__prune__faulted_restore__spends_cleared)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
 
     const table::spends::put_refs::parents parents{ 1, 2, 3 };
-    BOOST_REQUIRE(instance.spends.put(table::spends::put_refs{ {}, parents }));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(instance.spends.put(table::spends::put_refs{ {}, parents }));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 
-    BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
-    BOOST_REQUIRE(!instance.restore(test::events));
-    BOOST_REQUIRE_EQUAL(query_.spends_records(), zero);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
+    BC_REQUIRE(!instance.restore(test::events));
+    BC_REQUIRE_EQUAL(query_.spends_records(), zero);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
 // compaction
@@ -207,269 +207,269 @@ static code pooled(query<store<database::mmap>>& query_, const spend_t& tx) NOEX
     return query_.get_pooled(out, query_.to_tx(tx.hash(false)), validated_context);
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__unconfirmed_pooled__retained)
+BC_AUTO_TEST_CASE(store__prune__unconfirmed_pooled__retained)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     instance.set_pooling();
 
     const auto unconfirmed = spend(genesis_coinbase(), 1u);
-    BOOST_REQUIRE(pool(query_, unconfirmed));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
+    BC_REQUIRE(pool(query_, unconfirmed));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
 
     pooled_tx out{};
     out.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query_.get_pooled(out, query_.to_tx(unconfirmed.hash(false)), validated_context), error::success);
-    BOOST_REQUIRE_EQUAL(out.prevouts.front().parent, 0u);
-    BOOST_REQUIRE(out.prevouts.front().coinbase);
-    BOOST_REQUIRE_EQUAL(query_.spends_records(), one);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE_EQUAL(query_.get_pooled(out, query_.to_tx(unconfirmed.hash(false)), validated_context), error::success);
+    BC_REQUIRE_EQUAL(out.prevouts.front().parent, 0u);
+    BC_REQUIRE(out.prevouts.front().coinbase);
+    BC_REQUIRE_EQUAL(query_.spends_records(), one);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__confirmed_pooled__dropped)
+BC_AUTO_TEST_CASE(store__prune__confirmed_pooled__dropped)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     instance.set_pooling();
 
     const auto confirmed = spend(genesis_coinbase(), 1u);
-    BOOST_REQUIRE(pool(query_, confirmed));
-    BOOST_REQUIRE(confirm(query_, confirmed));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE_EQUAL(pooled(query_, confirmed), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
-    BOOST_REQUIRE_EQUAL(query_.spends_records(), zero);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(pool(query_, confirmed));
+    BC_REQUIRE(confirm(query_, confirmed));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE_EQUAL(pooled(query_, confirmed), error::unvalidated);
+    BC_REQUIRE_EQUAL(query_.pool_body_size(), zero);
+    BC_REQUIRE_EQUAL(query_.spends_records(), zero);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__conflicting_pooled__dropped)
+BC_AUTO_TEST_CASE(store__prune__conflicting_pooled__dropped)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     instance.set_pooling();
 
     const auto conflict = spend(genesis_coinbase(), 2u);
-    BOOST_REQUIRE(pool(query_, conflict));
-    BOOST_REQUIRE(confirm(query_, spend(genesis_coinbase(), 1u)));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE_EQUAL(pooled(query_, conflict), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(pool(query_, conflict));
+    BC_REQUIRE(confirm(query_, spend(genesis_coinbase(), 1u)));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE_EQUAL(pooled(query_, conflict), error::unvalidated);
+    BC_REQUIRE_EQUAL(query_.pool_body_size(), zero);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__descendant_of_conflicting__dropped)
+BC_AUTO_TEST_CASE(store__prune__descendant_of_conflicting__dropped)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     instance.set_pooling();
 
     const auto conflict = spend(genesis_coinbase(), 2u);
     const auto descendant = spend(conflict.hash(false), 1u);
-    BOOST_REQUIRE(pool(query_, conflict));
-    BOOST_REQUIRE(pool(query_, descendant));
-    BOOST_REQUIRE(confirm(query_, spend(genesis_coinbase(), 1u)));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE_EQUAL(pooled(query_, conflict), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(pooled(query_, descendant), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(pool(query_, conflict));
+    BC_REQUIRE(pool(query_, descendant));
+    BC_REQUIRE(confirm(query_, spend(genesis_coinbase(), 1u)));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE_EQUAL(pooled(query_, conflict), error::unvalidated);
+    BC_REQUIRE_EQUAL(pooled(query_, descendant), error::unvalidated);
+    BC_REQUIRE_EQUAL(query_.pool_body_size(), zero);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__descendant_of_retained__retained)
+BC_AUTO_TEST_CASE(store__prune__descendant_of_retained__retained)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     instance.set_pooling();
 
     const auto parent = spend(genesis_coinbase(), 2u);
     const auto child = spend(parent.hash(false), 1u);
-    BOOST_REQUIRE(pool(query_, parent));
-    BOOST_REQUIRE(pool(query_, child));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE_EQUAL(pooled(query_, parent), error::success);
+    BC_REQUIRE(pool(query_, parent));
+    BC_REQUIRE(pool(query_, child));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE_EQUAL(pooled(query_, parent), error::success);
 
     pooled_tx out{};
     out.prevouts.resize(one);
-    BOOST_REQUIRE_EQUAL(query_.get_pooled(out, query_.to_tx(child.hash(false)), validated_context), error::success);
-    BOOST_REQUIRE_EQUAL(out.prevouts.front().parent, query_.to_tx(parent.hash(false)));
-    BOOST_REQUIRE(!out.prevouts.front().coinbase);
-    BOOST_REQUIRE_EQUAL(query_.spends_records(), two);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE_EQUAL(query_.get_pooled(out, query_.to_tx(child.hash(false)), validated_context), error::success);
+    BC_REQUIRE_EQUAL(out.prevouts.front().parent, query_.to_tx(parent.hash(false)));
+    BC_REQUIRE(!out.prevouts.front().coinbase);
+    BC_REQUIRE_EQUAL(query_.spends_records(), two);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__retained_and_dropped__only_retained)
+BC_AUTO_TEST_CASE(store__prune__retained_and_dropped__only_retained)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     instance.set_pooling();
 
     const auto conflict = spend(genesis_coinbase(), 2u);
     const auto retained = spend(spend(genesis_coinbase(), 1u).hash(false), 3u);
     const auto confirmed = spend(genesis_coinbase(), 1u);
-    BOOST_REQUIRE(pool(query_, conflict));
-    BOOST_REQUIRE(pool(query_, confirmed));
-    BOOST_REQUIRE(pool(query_, retained));
-    BOOST_REQUIRE(confirm(query_, confirmed));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE_EQUAL(pooled(query_, conflict), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(pooled(query_, confirmed), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(pooled(query_, retained), error::success);
-    BOOST_REQUIRE_EQUAL(query_.spends_records(), one);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(pool(query_, conflict));
+    BC_REQUIRE(pool(query_, confirmed));
+    BC_REQUIRE(pool(query_, retained));
+    BC_REQUIRE(confirm(query_, confirmed));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE_EQUAL(pooled(query_, conflict), error::unvalidated);
+    BC_REQUIRE_EQUAL(pooled(query_, confirmed), error::unvalidated);
+    BC_REQUIRE_EQUAL(pooled(query_, retained), error::success);
+    BC_REQUIRE_EQUAL(query_.spends_records(), one);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__child_pooled_before_parent__retained)
+BC_AUTO_TEST_CASE(store__prune__child_pooled_before_parent__retained)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     instance.set_pooling();
 
     const auto parent = spend(genesis_coinbase(), 2u);
     const auto child = spend(parent.hash(false), 1u);
-    BOOST_REQUIRE(query_.set(parent));
-    BOOST_REQUIRE(pool(query_, child));
-    BOOST_REQUIRE(query_.set_pooled(query_.to_tx(parent.hash(false)), parent, validated_context, 0));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE_EQUAL(pooled(query_, parent), error::success);
-    BOOST_REQUIRE_EQUAL(pooled(query_, child), error::success);
-    BOOST_REQUIRE_EQUAL(query_.spends_records(), two);
-    BOOST_REQUIRE_EQUAL(query_.wtxid_records(), two);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(query_.set(parent));
+    BC_REQUIRE(pool(query_, child));
+    BC_REQUIRE(query_.set_pooled(query_.to_tx(parent.hash(false)), parent, validated_context, 0));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE_EQUAL(pooled(query_, parent), error::success);
+    BC_REQUIRE_EQUAL(pooled(query_, child), error::success);
+    BC_REQUIRE_EQUAL(query_.spends_records(), two);
+    BC_REQUIRE_EQUAL(query_.wtxid_records(), two);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__child_of_unpooled_parent__dropped)
+BC_AUTO_TEST_CASE(store__prune__child_of_unpooled_parent__dropped)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     instance.set_pooling();
 
     const auto parent = spend(genesis_coinbase(), 2u);
     const auto child = spend(parent.hash(false), 1u);
-    BOOST_REQUIRE(query_.set(parent));
-    BOOST_REQUIRE(pool(query_, child));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE_EQUAL(pooled(query_, child), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
-    BOOST_REQUIRE_EQUAL(query_.wtxid_records(), zero);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(query_.set(parent));
+    BC_REQUIRE(pool(query_, child));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE_EQUAL(pooled(query_, child), error::unvalidated);
+    BC_REQUIRE_EQUAL(query_.pool_body_size(), zero);
+    BC_REQUIRE_EQUAL(query_.wtxid_records(), zero);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__retained__found_by_witness_hash)
+BC_AUTO_TEST_CASE(store__prune__retained__found_by_witness_hash)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     instance.set_pooling();
 
     const auto conflict = spend(genesis_coinbase(), 2u);
     const auto retained = spend(spend(genesis_coinbase(), 1u).hash(false), 3u);
     const auto confirmed = spend(genesis_coinbase(), 1u);
-    BOOST_REQUIRE(pool(query_, conflict));
-    BOOST_REQUIRE(pool(query_, confirmed));
-    BOOST_REQUIRE(pool(query_, retained));
-    BOOST_REQUIRE(confirm(query_, confirmed));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE_EQUAL(query_.wtxid_records(), one);
-    BOOST_REQUIRE_EQUAL(query_.to_witness_tx(retained.hash(true)), query_.to_tx(retained.hash(false)));
-    BOOST_REQUIRE(!query_.is_pooled(query_.to_tx(conflict.hash(false))));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(pool(query_, conflict));
+    BC_REQUIRE(pool(query_, confirmed));
+    BC_REQUIRE(pool(query_, retained));
+    BC_REQUIRE(confirm(query_, confirmed));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE_EQUAL(query_.wtxid_records(), one);
+    BC_REQUIRE_EQUAL(query_.to_witness_tx(retained.hash(true)), query_.to_tx(retained.hash(false)));
+    BC_REQUIRE(!query_.is_pooled(query_.to_tx(conflict.hash(false))));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__residual_compact_empty_pool__deleted)
+BC_AUTO_TEST_CASE(store__prune__residual_compact_empty_pool__deleted)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
-    BOOST_REQUIRE(test::clear(configuration.path / schema::dir::compact));
-    BOOST_REQUIRE(test::create(configuration.path / schema::dir::compact / "cache_pool.head"));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(test::clear(configuration.path / schema::dir::compact));
+    BC_REQUIRE(test::create(configuration.path / schema::dir::compact / "cache_pool.head"));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__residual_compact_pooled__deleted_retained)
+BC_AUTO_TEST_CASE(store__prune__residual_compact_pooled__deleted_retained)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     instance.set_pooling();
 
     const auto unconfirmed = spend(genesis_coinbase(), 1u);
-    BOOST_REQUIRE(pool(query_, unconfirmed));
-    BOOST_REQUIRE(test::clear(configuration.path / schema::dir::compact));
-    BOOST_REQUIRE(test::create(configuration.path / schema::dir::compact / "cache_pool.head"));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
-    BOOST_REQUIRE_EQUAL(pooled(query_, unconfirmed), error::success);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(pool(query_, unconfirmed));
+    BC_REQUIRE(test::clear(configuration.path / schema::dir::compact));
+    BC_REQUIRE(test::create(configuration.path / schema::dir::compact / "cache_pool.head"));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE(!test::folder(configuration.path / schema::dir::compact));
+    BC_REQUIRE_EQUAL(pooled(query_, unconfirmed), error::success);
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__prune__faulted_restore__retained_pool_empty)
+BC_AUTO_TEST_CASE(store__prune__faulted_restore__retained_pool_empty)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     store<database::mmap> instance{ configuration };
     query<store<database::mmap>> query_{ instance };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(query_.initialize(test::genesis));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
     instance.set_pooling();
 
     const auto unconfirmed = spend(genesis_coinbase(), 1u);
-    BOOST_REQUIRE(pool(query_, unconfirmed));
-    BOOST_REQUIRE(!instance.prune(test::events));
-    BOOST_REQUIRE_EQUAL(pooled(query_, unconfirmed), error::success);
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(pool(query_, unconfirmed));
+    BC_REQUIRE(!instance.prune(test::events));
+    BC_REQUIRE_EQUAL(pooled(query_, unconfirmed), error::success);
+    BC_REQUIRE(!instance.close(test::events));
 
     // The restore point is the prune snapshot, which records an empty pool.
-    BOOST_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
-    BOOST_REQUIRE(!instance.restore(test::events));
-    BOOST_REQUIRE_EQUAL(pooled(query_, unconfirmed), error::unvalidated);
-    BOOST_REQUIRE_EQUAL(query_.pool_body_size(), zero);
-    BOOST_REQUIRE_EQUAL(query_.wtxid_body_size(), zero);
-    BOOST_REQUIRE(!query_.is_pooled(query_.to_tx(unconfirmed.hash(false))));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
+    BC_REQUIRE(!instance.restore(test::events));
+    BC_REQUIRE_EQUAL(pooled(query_, unconfirmed), error::unvalidated);
+    BC_REQUIRE_EQUAL(query_.pool_body_size(), zero);
+    BC_REQUIRE_EQUAL(query_.wtxid_body_size(), zero);
+    BC_REQUIRE(!query_.is_pooled(query_.to_tx(unconfirmed.hash(false))));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(pool_tests)
+BC_AUTO_TEST_SUITE(pool_tests)
 
 using namespace system;
 using word = table::pool_word;
@@ -61,37 +61,37 @@ const table::pool::record in2
     0x00000042          // time
 };
 
-BOOST_AUTO_TEST_CASE(pool__put__two__found)
+BC_AUTO_TEST_CASE(pool__put__two__found)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::pool instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
     table::pool::link link1{};
     table::pool::link link2{};
-    BOOST_REQUIRE(instance.put_link(link1, key1, in1));
-    BOOST_REQUIRE(instance.put_link(link2, key2, in2));
-    BOOST_REQUIRE_EQUAL(link1, 0u);
-    BOOST_REQUIRE_EQUAL(link2, 1u);
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.first(key1), link1);
-    BOOST_REQUIRE_EQUAL(instance.first(key2), link2);
+    BC_REQUIRE(instance.put_link(link1, key1, in1));
+    BC_REQUIRE(instance.put_link(link2, key2, in2));
+    BC_REQUIRE_EQUAL(link1, 0u);
+    BC_REQUIRE_EQUAL(link2, 1u);
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(instance.first(key1), link1);
+    BC_REQUIRE_EQUAL(instance.first(key2), link2);
 
     table::pool::record out{};
-    BOOST_REQUIRE(instance.get(link1, out));
-    BOOST_REQUIRE(out == in1);
-    BOOST_REQUIRE(instance.get(link2, out));
-    BOOST_REQUIRE(out == in2);
+    BC_REQUIRE(instance.get(link1, out));
+    BC_REQUIRE(out == in1);
+    BC_REQUIRE(instance.get(link2, out));
+    BC_REQUIRE(out == in2);
 }
 
-BOOST_AUTO_TEST_CASE(pool__put__spine__expected_row)
+BC_AUTO_TEST_CASE(pool__put__spine__expected_row)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::pool instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.put(key1, in1));
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.put(key1, in1));
 
     const auto expected_row = base16_chunk
     (
@@ -105,39 +105,39 @@ BOOST_AUTO_TEST_CASE(pool__put__spine__expected_row)
         "04030201"         // spends_fk
         "8c7d6e5f"         // time
     );
-    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(0), expected_row);
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(0), expected_row);
 }
 
-BOOST_AUTO_TEST_CASE(pool__put__columns_then_commit__expected)
+BC_AUTO_TEST_CASE(pool__put__columns_then_commit__expected)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::pool instance{ head_store, body_store, buckets };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
     const auto link = instance.allocate(1);
-    BOOST_REQUIRE_EQUAL(link, 0u);
+    BC_REQUIRE_EQUAL(link, 0u);
 
     auto guard = instance.get_memory();
-    BOOST_REQUIRE(guard);
-    BOOST_REQUIRE(instance.id0.put(link, word{ {}, 0x0706050403020100 }));
-    BOOST_REQUIRE(instance.id1.put(link, word{ {}, 0x0f0e0d0c0b0a0908 }));
-    BOOST_REQUIRE(instance.id2.put(link, word{ {}, 0x1716151413121110 }));
-    BOOST_REQUIRE(instance.id3.put(link, word{ {}, 0x1f1e1d1c1b1a1918 }));
+    BC_REQUIRE(guard);
+    BC_REQUIRE(instance.id0.put(link, word{ {}, 0x0706050403020100 }));
+    BC_REQUIRE(instance.id1.put(link, word{ {}, 0x0f0e0d0c0b0a0908 }));
+    BC_REQUIRE(instance.id2.put(link, word{ {}, 0x1716151413121110 }));
+    BC_REQUIRE(instance.id3.put(link, word{ {}, 0x1f1e1d1c1b1a1918 }));
     guard.reset();
 
-    BOOST_REQUIRE(instance.first(key1).is_terminal());
-    BOOST_REQUIRE(instance.put(link, key1, in1));
-    BOOST_REQUIRE_EQUAL(instance.first(key1), link);
+    BC_REQUIRE(instance.first(key1).is_terminal());
+    BC_REQUIRE(instance.put(link, key1, in1));
+    BC_REQUIRE_EQUAL(instance.first(key1), link);
 
-    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(1), base16_chunk("0001020304050607"));
-    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(2), base16_chunk("08090a0b0c0d0e0f"));
-    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(3), base16_chunk("1011121314151617"));
-    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(4), base16_chunk("18191a1b1c1d1e1f"));
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(1), base16_chunk("0001020304050607"));
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(2), base16_chunk("08090a0b0c0d0e0f"));
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(3), base16_chunk("1011121314151617"));
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(4), base16_chunk("18191a1b1c1d1e1f"));
 
     word out{};
-    BOOST_REQUIRE(instance.id2.get(link, out));
-    BOOST_REQUIRE_EQUAL(out.word, 0x1716151413121110u);
+    BC_REQUIRE(instance.id2.get(link, out));
+    BC_REQUIRE_EQUAL(out.word, 0x1716151413121110u);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

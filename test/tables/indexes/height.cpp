@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(height_tests)
+BC_AUTO_TEST_SUITE(height_tests)
 
 using namespace system;
 const table::height::link link1{ 0x00345678 };
@@ -30,71 +30,71 @@ const auto expected_head = base16_chunk
     "12ef4d00" // bucket[1]
 );
 
-BOOST_AUTO_TEST_CASE(height__create__empty__expected)
+BC_AUTO_TEST_CASE(height__create__empty__expected)
 {
     data_chunk head_file{};
     test::chunk_storage head_store{ head_file, test::terminal_fill };
     table::height instance{ head_store };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.verify());
-    BOOST_REQUIRE(head_file.empty());
-    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
-    BOOST_REQUIRE_EQUAL(instance.body_size(), zero);
-    BOOST_REQUIRE(instance.at(0).is_terminal());
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.verify());
+    BC_REQUIRE(head_file.empty());
+    BC_REQUIRE_EQUAL(instance.count(), 0u);
+    BC_REQUIRE_EQUAL(instance.body_size(), zero);
+    BC_REQUIRE(instance.at(0).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(height__push__two__expected)
+BC_AUTO_TEST_CASE(height__push__two__expected)
 {
     data_chunk head_file{};
     test::chunk_storage head_store{ head_file, test::terminal_fill };
     table::height instance{ head_store };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.reserve(1u));
-    BOOST_REQUIRE(instance.push(link1));
-    BOOST_REQUIRE(instance.reserve(1u));
-    BOOST_REQUIRE(instance.push(link2));
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(head_file, expected_head);
-    BOOST_REQUIRE(instance.close());
-    BOOST_REQUIRE_EQUAL(head_file, expected_head);
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.reserve(1u));
+    BC_REQUIRE(instance.push(link1));
+    BC_REQUIRE(instance.reserve(1u));
+    BC_REQUIRE(instance.push(link2));
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(head_file, expected_head);
+    BC_REQUIRE(instance.close());
+    BC_REQUIRE_EQUAL(head_file, expected_head);
 }
 
-BOOST_AUTO_TEST_CASE(height__at__two__expected)
+BC_AUTO_TEST_CASE(height__at__two__expected)
 {
     auto head_file = expected_head;
     test::chunk_storage head_store{ head_file, test::terminal_fill };
     table::height instance{ head_store };
-    BOOST_REQUIRE(instance.verify());
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.at(0), link1);
-    BOOST_REQUIRE_EQUAL(instance.at(1), link2);
-    BOOST_REQUIRE(instance.at(2).is_terminal());
+    BC_REQUIRE(instance.verify());
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(instance.at(0), link1);
+    BC_REQUIRE_EQUAL(instance.at(1), link2);
+    BC_REQUIRE(instance.at(2).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(height__truncate__push__rewrites_bucket)
+BC_AUTO_TEST_CASE(height__truncate__push__rewrites_bucket)
 {
     auto head_file = expected_head;
     test::chunk_storage head_store{ head_file, test::terminal_fill };
     table::height instance{ head_store };
-    BOOST_REQUIRE(!instance.truncate(3u));
-    BOOST_REQUIRE(instance.truncate(1u));
-    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-    BOOST_REQUIRE(instance.at(1).is_terminal());
-    BOOST_REQUIRE(instance.reserve(1u));
-    BOOST_REQUIRE(instance.push(link1));
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(instance.at(1), link1);
+    BC_REQUIRE(!instance.truncate(3u));
+    BC_REQUIRE(instance.truncate(1u));
+    BC_REQUIRE_EQUAL(instance.count(), 1u);
+    BC_REQUIRE(instance.at(1).is_terminal());
+    BC_REQUIRE(instance.reserve(1u));
+    BC_REQUIRE(instance.push(link1));
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(instance.at(1), link1);
 }
 
-BOOST_AUTO_TEST_CASE(height__restore__expected__idempotent)
+BC_AUTO_TEST_CASE(height__restore__expected__idempotent)
 {
     auto head_file = expected_head;
     test::chunk_storage head_store{ head_file, test::terminal_fill };
     table::height instance{ head_store };
-    BOOST_REQUIRE(instance.backup());
-    BOOST_REQUIRE(instance.restore());
-    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
-    BOOST_REQUIRE_EQUAL(head_file, expected_head);
+    BC_REQUIRE(instance.backup());
+    BC_REQUIRE(instance.restore());
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(head_file, expected_head);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

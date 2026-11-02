@@ -19,11 +19,11 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(duplicate_tests)
+BC_AUTO_TEST_SUITE(duplicate_tests)
 
-BOOST_AUTO_TEST_CASE(duplicate_test)
+BC_AUTO_TEST_CASE(duplicate_test)
 {
-    BOOST_REQUIRE(true);
+    BC_REQUIRE(true);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

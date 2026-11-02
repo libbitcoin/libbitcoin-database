@@ -20,11 +20,11 @@
 #include "../../mocks/blocks.hpp"
 #include "../../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_wire_writer_writer_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(query_wire_writer_writer_tests, test::directory_setup_fixture)
 
 // The view (wire) block writer must produce a store byte-identical to the
 // chain block writer (see analogous chain_writer expectations).
-BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__genesis__expected)
+BC_AUTO_TEST_CASE(query_wire_writer__set_block_view__genesis__expected)
 {
     constexpr auto milestone = true;
     const auto genesis_header_body = system::base16_chunk(
@@ -86,34 +86,34 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__genesis__expected)
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
 
     // Set header, then txs from the parsed view of the serialized block.
-    BOOST_CHECK(query.set(test::genesis.header(), test::context, {}, milestone));
+    BC_CHECK(query.set(test::genesis.header(), test::context, {}, milestone));
     system::chain::view::block view{ test::genesis.to_data(true), true };
-    BOOST_CHECK(view.is_valid());
-    BOOST_CHECK_EQUAL(query.set_code(view, false, true), error::success);
-    BOOST_CHECK(query.is_block(test::genesis.hash()));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(view.is_valid());
+    BC_CHECK_EQUAL(query.set_code(view, false, true), error::success);
+    BC_CHECK(query.is_block(test::genesis.hash()));
+    BC_CHECK(!store.close(test::events_handler));
 
-    BOOST_CHECK_EQUAL(store.header_body(), genesis_header_body);
-    BOOST_CHECK_EQUAL(store.tx_body(), genesis_tx_body);
-    BOOST_CHECK_EQUAL(store.ins_body(), genesis_ins_body);
-    BOOST_CHECK_EQUAL(store.ins_sequence_body(), genesis_sequence_body);
-    BOOST_CHECK_EQUAL(store.input_body(), genesis_input_body);
-    BOOST_CHECK_EQUAL(store.output_body(), genesis_output_body);
-    BOOST_CHECK_EQUAL(store.outs_body(), genesis_outs_body);
-    BOOST_CHECK_EQUAL(store.txs_body(), genesis_txs_body);
+    BC_CHECK_EQUAL(store.header_body(), genesis_header_body);
+    BC_CHECK_EQUAL(store.tx_body(), genesis_tx_body);
+    BC_CHECK_EQUAL(store.ins_body(), genesis_ins_body);
+    BC_CHECK_EQUAL(store.ins_sequence_body(), genesis_sequence_body);
+    BC_CHECK_EQUAL(store.input_body(), genesis_input_body);
+    BC_CHECK_EQUAL(store.output_body(), genesis_output_body);
+    BC_CHECK_EQUAL(store.outs_body(), genesis_outs_body);
+    BC_CHECK_EQUAL(store.txs_body(), genesis_txs_body);
 
     const auto pointer = query.get_block(query.to_header(test::genesis.hash()), false);
-    BOOST_CHECK(pointer);
-    BOOST_CHECK(*pointer == test::genesis);
+    BC_CHECK(pointer);
+    BC_CHECK(*pointer == test::genesis);
 }
 
 // pooling
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__not_pooling_pooled_tx__written)
+BC_AUTO_TEST_CASE(query_wire_writer__set_block_view__not_pooling_pooled_tx__written)
 {
     using namespace system::chain;
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf4 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx4 } };
@@ -122,22 +122,22 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__not_pooling_pooled_tx__w
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
 
     tx_link pooled{};
-    BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
-    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
+    BC_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
+    BC_REQUIRE_EQUAL(query.tx_records(), 2u);
+    BC_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
     view::block view{ block.to_data(true), true };
-    BOOST_REQUIRE(view.is_valid());
-    BOOST_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 4u);
-    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 2u);
-    BOOST_REQUIRE(query.to_tx(test::tx4.hash(false)) != pooled);
+    BC_REQUIRE(view.is_valid());
+    BC_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
+    BC_REQUIRE_EQUAL(query.tx_records(), 4u);
+    BC_REQUIRE_EQUAL(query.duplicate_records(), 2u);
+    BC_REQUIRE(query.to_tx(test::tx4.hash(false)) != pooled);
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_pooled_tx__substituted)
+BC_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_pooled_tx__substituted)
 {
     using namespace system::chain;
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf4 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx4 } };
@@ -146,31 +146,31 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_pooled_tx__subst
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
     store.set_pooling();
 
     tx_link pooled{};
-    BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 2u);
-    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
+    BC_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
+    BC_REQUIRE_EQUAL(query.tx_records(), 2u);
+    BC_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
     view::block view{ block.to_data(true), true };
-    BOOST_REQUIRE(view.is_valid());
-    BOOST_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 3u);
-    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 0u);
-    BOOST_REQUIRE(query.to_tx(test::tx4.hash(false)) == pooled);
+    BC_REQUIRE(view.is_valid());
+    BC_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
+    BC_REQUIRE_EQUAL(query.tx_records(), 3u);
+    BC_REQUIRE_EQUAL(query.duplicate_records(), 0u);
+    BC_REQUIRE(query.to_tx(test::tx4.hash(false)) == pooled);
 
     const auto link = query.to_header(block.hash());
     const auto pointer = query.get_block(link, true);
-    BOOST_REQUIRE(pointer);
-    BOOST_REQUIRE_EQUAL(pointer->transactions(), 2u);
-    BOOST_REQUIRE_EQUAL(pointer->transactions_ptr()->back()->hash(false), test::tx4.hash(false));
-    BOOST_REQUIRE(query.set_strong(link));
-    BOOST_REQUIRE(query.is_strong_tx(pooled));
+    BC_REQUIRE(pointer);
+    BC_REQUIRE_EQUAL(pointer->transactions(), 2u);
+    BC_REQUIRE_EQUAL(pointer->transactions_ptr()->back()->hash(false), test::tx4.hash(false));
+    BC_REQUIRE(query.set_strong(link));
+    BC_REQUIRE(query.is_strong_tx(pooled));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_conflict__written)
+BC_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_conflict__written)
 {
     using namespace system::chain;
     const block block{ header{ 0x31323334, test::block0_hash, system::hash_digest{ 0xf5 }, 0x41424344, 0x51525354, 0x61626364 }, transactions{ transaction{ 0xb1, inputs{ input{ point{}, script{ { { opcode::size } } }, witness{}, 0xb1 } }, outputs{ output{ 0x42, script{ { { opcode::pick } } } } }, 0xc1 }, test::tx5 } };
@@ -179,21 +179,21 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_conflict__writte
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
     store.set_pooling();
 
     tx_link pooled{};
-    BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
-    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
+    BC_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
+    BC_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
     view::block view{ block.to_data(true), true };
-    BOOST_REQUIRE(view.is_valid());
-    BOOST_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 4u);
-    BOOST_REQUIRE_EQUAL(query.duplicate_records(), 1u);
+    BC_REQUIRE(view.is_valid());
+    BC_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
+    BC_REQUIRE_EQUAL(query.tx_records(), 4u);
+    BC_REQUIRE_EQUAL(query.duplicate_records(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_malleated_tx__written)
+BC_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_malleated_tx__written)
 {
     using namespace system::chain;
     auto data = test::tx4.to_data(true);
@@ -205,25 +205,25 @@ BOOST_AUTO_TEST_CASE(query_wire_writer__set_block_view__pooling_malleated_tx__wr
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
     store.set_pooling();
 
     tx_link pooled{};
-    BOOST_REQUIRE_EQUAL(malleated.hash(false), test::tx4.hash(false));
-    BOOST_REQUIRE_NE(malleated.hash(true), test::tx4.hash(true));
-    BOOST_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
-    BOOST_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
+    BC_REQUIRE_EQUAL(malleated.hash(false), test::tx4.hash(false));
+    BC_REQUIRE_NE(malleated.hash(true), test::tx4.hash(true));
+    BC_REQUIRE_EQUAL(query.set_code(pooled, test::tx4), error::success);
+    BC_REQUIRE(query.set(block.header(), database::context{ 0, 1, 0 }, {}, false));
     view::block view{ block.to_data(true), true };
-    BOOST_REQUIRE(view.is_valid());
-    BOOST_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
-    BOOST_REQUIRE_EQUAL(query.tx_records(), 4u);
+    BC_REQUIRE(view.is_valid());
+    BC_REQUIRE_EQUAL(query.set_code(view, false, false), error::success);
+    BC_REQUIRE_EQUAL(query.tx_records(), 4u);
 
     const auto link = query.to_header(block.hash());
     const auto pointer = query.get_block(link, true);
-    BOOST_REQUIRE(pointer);
-    BOOST_REQUIRE(query.to_transactions(link).back() != pooled);
-    BOOST_REQUIRE_EQUAL(pointer->transactions_ptr()->back()->hash(true), malleated.hash(true));
+    BC_REQUIRE(pointer);
+    BC_REQUIRE(query.to_transactions(link).back() != pooled);
+    BC_REQUIRE_EQUAL(pointer->transactions_ptr()->back()->hash(true), malleated.hash(true));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

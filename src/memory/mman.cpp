@@ -314,6 +314,8 @@ int sysconf(int) noexcept
 
 #elif defined(HAVE_APPLE)
 
+#include <fcntl.h>
+
 // ::fallocate is not defined on macOS, so implement. Ignores mode (linux).
 int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
 {

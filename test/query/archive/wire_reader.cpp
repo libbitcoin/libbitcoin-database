@@ -20,7 +20,7 @@
 #include "../../mocks/blocks.hpp"
 #include "../../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_wire_reader_reader_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(query_wire_reader_reader_tests, test::directory_setup_fixture)
 
 // A block of enough txs that the turbo writer uses more than one range.
 static system::chain::block many_tx_block() NOEXCEPT
@@ -39,55 +39,55 @@ static system::chain::block many_tx_block() NOEXCEPT
 
 // is_witness_match
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__non_segregated__true)
+BC_AUTO_TEST_CASE(query_wire_reader__is_witness_match__non_segregated__true)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
 
     const auto data = test::genesis.transactions_ptr()->at(0)->to_data(true);
     stream::in::fast istream{ data };
     read::bytes::fast reader{ istream };
     const chain::view::transaction view{ reader, data, true, true };
-    BOOST_REQUIRE(view.is_valid());
-    BOOST_REQUIRE(!view.is_segregated());
-    BOOST_CHECK(query.is_witness_match(0, view));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_REQUIRE(view.is_valid());
+    BC_REQUIRE(!view.is_segregated());
+    BC_CHECK(query.is_witness_match(0, view));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__same_witness__true)
+BC_AUTO_TEST_CASE(query_wire_reader__is_witness_match__same_witness__true)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
 
     const auto data = test::block2a.transactions_ptr()->at(1)->to_data(true);
     stream::in::fast istream{ data };
     read::bytes::fast reader{ istream };
     const chain::view::transaction view{ reader, data, false, true };
-    BOOST_REQUIRE(view.is_valid());
-    BOOST_REQUIRE(view.is_segregated());
-    BOOST_CHECK(query.is_witness_match(3, view));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_REQUIRE(view.is_valid());
+    BC_REQUIRE(view.is_segregated());
+    BC_CHECK(query.is_witness_match(3, view));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__changed_witness__false)
+BC_AUTO_TEST_CASE(query_wire_reader__is_witness_match__changed_witness__false)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
 
     // Last witness byte precedes the four byte locktime.
     auto data = test::block2a.transactions_ptr()->at(1)->to_data(true);
@@ -95,297 +95,297 @@ BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__changed_witness__false
     stream::in::fast istream{ data };
     read::bytes::fast reader{ istream };
     const chain::view::transaction view{ reader, data, false, true };
-    BOOST_REQUIRE(view.is_valid());
-    BOOST_REQUIRE(view.is_segregated());
-    BOOST_REQUIRE_EQUAL(view.hash(false), test::block2a.transactions_ptr()->at(1)->hash(false));
-    BOOST_CHECK(!query.is_witness_match(3, view));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_REQUIRE(view.is_valid());
+    BC_REQUIRE(view.is_segregated());
+    BC_REQUIRE_EQUAL(view.hash(false), test::block2a.transactions_ptr()->at(1)->hash(false));
+    BC_CHECK(!query.is_witness_match(3, view));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__is_witness_match__other_size__false)
+BC_AUTO_TEST_CASE(query_wire_reader__is_witness_match__other_size__false)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
 
     const auto data = test::block2a.transactions_ptr()->at(1)->to_data(true);
     stream::in::fast istream{ data };
     read::bytes::fast reader{ istream };
     const chain::view::transaction view{ reader, data, false, true };
-    BOOST_REQUIRE(view.is_valid());
-    BOOST_CHECK(!query.is_witness_match(0, view));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_REQUIRE(view.is_valid());
+    BC_CHECK(!query.is_witness_match(0, view));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
 // get_wire_header
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_header__genesis_and_not__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_header__genesis_and_not__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_store(query));
-    BOOST_CHECK_EQUAL(query.get_wire_header(0), test::genesis.header().to_data());
-    BOOST_CHECK_EQUAL(query.get_wire_header(1), test::block1.header().to_data());
-    BOOST_CHECK_EQUAL(query.get_wire_header(2), test::block2.header().to_data());
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_store(query));
+    BC_CHECK_EQUAL(query.get_wire_header(0), test::genesis.header().to_data());
+    BC_CHECK_EQUAL(query.get_wire_header(1), test::block1.header().to_data());
+    BC_CHECK_EQUAL(query.get_wire_header(2), test::block2.header().to_data());
+    BC_CHECK(!store.close(test::events_handler));
 }
 
 // get_wire_tx
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__genesis_and_not__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__genesis_and_not__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_store(query));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(0, true), test::genesis.transactions_ptr()->front()->to_data(true));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(1, true), test::block1.transactions_ptr()->front()->to_data(true));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(2, true), test::block2.transactions_ptr()->front()->to_data(true));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_store(query));
+    BC_CHECK_EQUAL(query.get_wire_tx(0, true), test::genesis.transactions_ptr()->front()->to_data(true));
+    BC_CHECK_EQUAL(query.get_wire_tx(1, true), test::block1.transactions_ptr()->front()->to_data(true));
+    BC_CHECK_EQUAL(query.get_wire_tx(2, true), test::block2.transactions_ptr()->front()->to_data(true));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__witness_true__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__witness_true__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(0, true), test::genesis.transactions_ptr()->at(0)->to_data(true));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(1, true), test::block1a.transactions_ptr()->at(0)->to_data(true));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(2, true), test::block2a.transactions_ptr()->at(0)->to_data(true));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(3, true), test::block2a.transactions_ptr()->at(1)->to_data(true));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK_EQUAL(query.get_wire_tx(0, true), test::genesis.transactions_ptr()->at(0)->to_data(true));
+    BC_CHECK_EQUAL(query.get_wire_tx(1, true), test::block1a.transactions_ptr()->at(0)->to_data(true));
+    BC_CHECK_EQUAL(query.get_wire_tx(2, true), test::block2a.transactions_ptr()->at(0)->to_data(true));
+    BC_CHECK_EQUAL(query.get_wire_tx(3, true), test::block2a.transactions_ptr()->at(1)->to_data(true));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__witness_false__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__witness_false__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(0, false), test::genesis.transactions_ptr()->at(0)->to_data(false));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(1, false), test::block1a.transactions_ptr()->at(0)->to_data(false));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(2, false), test::block2a.transactions_ptr()->at(0)->to_data(false));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(3, false), test::block2a.transactions_ptr()->at(1)->to_data(false));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK_EQUAL(query.get_wire_tx(0, false), test::genesis.transactions_ptr()->at(0)->to_data(false));
+    BC_CHECK_EQUAL(query.get_wire_tx(1, false), test::block1a.transactions_ptr()->at(0)->to_data(false));
+    BC_CHECK_EQUAL(query.get_wire_tx(2, false), test::block2a.transactions_ptr()->at(0)->to_data(false));
+    BC_CHECK_EQUAL(query.get_wire_tx(3, false), test::block2a.transactions_ptr()->at(1)->to_data(false));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__pruned__empty)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__pruned__empty)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1.header(), database::context{ 0, 1, 0 }, {}, false));
-    BOOST_CHECK(query.set(test::block1, false, false, true));
-    BOOST_CHECK(!query.to_tx(test::block1.transactions_ptr()->front()->hash(false)).is_terminal());
-    BOOST_CHECK(query.get_wire_tx(1, true).empty());
-    BOOST_CHECK(query.get_wire_tx(1, false).empty());
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), database::context{ 0, 1, 0 }, {}, false));
+    BC_CHECK(query.set(test::block1, false, false, true));
+    BC_CHECK(!query.to_tx(test::block1.transactions_ptr()->front()->hash(false)).is_terminal());
+    BC_CHECK(query.get_wire_tx(1, true).empty());
+    BC_CHECK(query.get_wire_tx(1, false).empty());
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__empty_input_script__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__empty_input_script__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(query.initialize(test::genesis));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
 
     const chain::point point{ test::genesis.transactions_ptr()->front()->hash(false), 0 };
     const chain::inputs inputs{ { point, chain::script{}, max_uint32 } };
     const chain::outputs outputs{ { 42, chain::script{} } };
     const chain::transaction tx{ 1, inputs, outputs, 0 };
-    BOOST_CHECK(query.set(tx));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(1, true), tx.to_data(true));
-    BOOST_CHECK_EQUAL(query.get_wire_tx(1, false), tx.to_data(false));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(query.set(tx));
+    BC_CHECK_EQUAL(query.get_wire_tx(1, true), tx.to_data(true));
+    BC_CHECK_EQUAL(query.get_wire_tx(1, false), tx.to_data(false));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
 // get_wire_block
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__pruned__empty)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_block__pruned__empty)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1.header(), database::context{ 0, 1, 0 }, {}, false));
-    BOOST_CHECK(query.set(test::block1, false, false, true));
-    BOOST_CHECK(query.get_wire_block(1, true).empty());
-    BOOST_CHECK(query.get_wire_block(1, false).empty());
-    BOOST_CHECK(query.get_wire_block(1, true, true).empty());
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), database::context{ 0, 1, 0 }, {}, false));
+    BC_CHECK(query.set(test::block1, false, false, true));
+    BC_CHECK(query.get_wire_block(1, true).empty());
+    BC_CHECK(query.get_wire_block(1, false).empty());
+    BC_CHECK(query.get_wire_block(1, true, true).empty());
 
     size_t size{};
-    BOOST_CHECK(query.get_block_size(size, 1, true));
+    BC_CHECK(query.get_block_size(size, 1, true));
 
     std::string hex(two * size, '\0');
-    BOOST_CHECK(!query.get_wire_block<write::base16::fast>(hex, 1, true, false));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!query.get_wire_block<write::base16::fast>(hex, 1, true, false));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__genesis_and_not__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_block__genesis_and_not__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_store(query));
-    BOOST_CHECK_EQUAL(query.get_wire_block(0, true), test::genesis.to_data(true));
-    BOOST_CHECK_EQUAL(query.get_wire_block(1, true), test::block1.to_data(true));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_store(query));
+    BC_CHECK_EQUAL(query.get_wire_block(0, true), test::genesis.to_data(true));
+    BC_CHECK_EQUAL(query.get_wire_block(1, true), test::block1.to_data(true));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__witness_true__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_block__witness_true__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
-    BOOST_CHECK_EQUAL(query.get_wire_block(0, true), test::genesis.to_data(true));
-    BOOST_CHECK_EQUAL(query.get_wire_block(1, true), test::block1a.to_data(true));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK_EQUAL(query.get_wire_block(0, true), test::genesis.to_data(true));
+    BC_CHECK_EQUAL(query.get_wire_block(1, true), test::block1a.to_data(true));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__witness_false__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_block__witness_false__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
-    BOOST_CHECK_EQUAL(query.get_wire_block(0, false), test::genesis.to_data(false));
-    BOOST_CHECK_EQUAL(query.get_wire_block(1, false), test::block1a.to_data(false));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK_EQUAL(query.get_wire_block(0, false), test::genesis.to_data(false));
+    BC_CHECK_EQUAL(query.get_wire_block(1, false), test::block1a.to_data(false));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_witness_true__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_witness_true__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
-    BOOST_CHECK_EQUAL(query.get_wire_block(0, true, true), test::genesis.to_data(true));
-    BOOST_CHECK_EQUAL(query.get_wire_block(1, true, true), test::block1a.to_data(true));
-    BOOST_CHECK_EQUAL(query.get_wire_block(2, true, true), test::block2a.to_data(true));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK_EQUAL(query.get_wire_block(0, true, true), test::genesis.to_data(true));
+    BC_CHECK_EQUAL(query.get_wire_block(1, true, true), test::block1a.to_data(true));
+    BC_CHECK_EQUAL(query.get_wire_block(2, true, true), test::block2a.to_data(true));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_witness_false__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_witness_false__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
-    BOOST_CHECK_EQUAL(query.get_wire_block(0, false, true), test::genesis.to_data(false));
-    BOOST_CHECK_EQUAL(query.get_wire_block(1, false, true), test::block1a.to_data(false));
-    BOOST_CHECK_EQUAL(query.get_wire_block(2, false, true), test::block2a.to_data(false));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK_EQUAL(query.get_wire_block(0, false, true), test::genesis.to_data(false));
+    BC_CHECK_EQUAL(query.get_wire_block(1, false, true), test::block1a.to_data(false));
+    BC_CHECK_EQUAL(query.get_wire_block(2, false, true), test::block2a.to_data(false));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__base16_target__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_block__base16_target__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
 
     size_t size{};
-    BOOST_CHECK(query.get_block_size(size, 2, true));
+    BC_CHECK(query.get_block_size(size, 2, true));
 
     std::string sequential(two * size, '\0');
-    BOOST_CHECK(query.get_wire_block<write::base16::fast>(sequential, 2, true, false));
-    BOOST_CHECK_EQUAL(sequential, encode_base16(test::block2a.to_data(true)));
+    BC_CHECK(query.get_wire_block<write::base16::fast>(sequential, 2, true, false));
+    BC_CHECK_EQUAL(sequential, encode_base16(test::block2a.to_data(true)));
 
     std::string parallel(two * size, '\0');
-    BOOST_CHECK(query.get_wire_block<write::base16::fast>(parallel, 2, true, true));
-    BOOST_CHECK_EQUAL(parallel, encode_base16(test::block2a.to_data(true)));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(query.get_wire_block<write::base16::fast>(parallel, 2, true, true));
+    BC_CHECK_EQUAL(parallel, encode_base16(test::block2a.to_data(true)));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_ranges__expected)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_ranges__expected)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(query.initialize(test::genesis));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
 
     const auto block = many_tx_block();
-    BOOST_CHECK(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
+    BC_CHECK(query.set(block, database::context{ 0, 1, 0 }, {}, false, false));
     const auto link = query.to_header(block.hash());
 
-    BOOST_CHECK_EQUAL(query.get_wire_block(link, true, true), block.to_data(true));
-    BOOST_CHECK_EQUAL(query.get_wire_block(link, false, true), block.to_data(false));
+    BC_CHECK_EQUAL(query.get_wire_block(link, true, true), block.to_data(true));
+    BC_CHECK_EQUAL(query.get_wire_block(link, false, true), block.to_data(false));
 
     size_t size{};
-    BOOST_CHECK(query.get_block_size(size, link, true));
+    BC_CHECK(query.get_block_size(size, link, true));
 
     std::string hex(two * size, '\0');
-    BOOST_CHECK(query.get_wire_block<write::base16::fast>(hex, link, true, true));
-    BOOST_CHECK_EQUAL(hex, encode_base16(block.to_data(true)));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(query.get_wire_block<write::base16::fast>(hex, link, true, true));
+    BC_CHECK_EQUAL(hex, encode_base16(block.to_data(true)));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_missized_target__false)
+BC_AUTO_TEST_CASE(query_wire_reader__get_wire_block__turbo_missized_target__false)
 {
     using namespace system;
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::store_t store{ settings };
     test::query_t query{ store };
-    BOOST_CHECK(!store.create(test::events_handler));
-    BOOST_CHECK(test::setup_three_block_witness_store(query));
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_witness_store(query));
 
     size_t size{};
-    BOOST_CHECK(query.get_block_size(size, 2, true));
+    BC_CHECK(query.get_block_size(size, 2, true));
 
     data_chunk out(add1(size));
-    BOOST_CHECK(!query.get_wire_block(out, 2, true, true));
-    BOOST_CHECK(!store.close(test::events_handler));
+    BC_CHECK(!query.get_wire_block(out, 2, true, true));
+    BC_CHECK(!store.close(test::events_handler));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(unspent_writer_tests)
+BC_AUTO_TEST_SUITE(unspent_writer_tests)
 
 using namespace system;
 
@@ -37,7 +37,7 @@ static unspent_coin coin(size_t height, bool coinbase, uint64_t value,
     return out;
 }
 
-BOOST_AUTO_TEST_CASE(unspent_writer__write__coinbase__expected_head)
+BC_AUTO_TEST_CASE(unspent_writer__write__coinbase__expected_head)
 {
     const auto script = base16_chunk("76a914000000000000000000000000000000000000000088ac");
     const auto subject = coin(1234, true, 5'000'000'000, script);
@@ -49,10 +49,10 @@ BOOST_AUTO_TEST_CASE(unspent_writer__write__coinbase__expected_head)
     write::bytes::data sink{ head };
     unspent_writer::write(sink, subject);
     sink.flush();
-    BOOST_REQUIRE_EQUAL(head, expected);
+    BC_REQUIRE_EQUAL(head, expected);
 }
 
-BOOST_AUTO_TEST_CASE(unspent_writer__write__non_coinbase__expected_head)
+BC_AUTO_TEST_CASE(unspent_writer__write__non_coinbase__expected_head)
 {
     const data_chunk script(300, 0x51);
     const auto subject = coin(42, false, 1, script);
@@ -64,31 +64,31 @@ BOOST_AUTO_TEST_CASE(unspent_writer__write__non_coinbase__expected_head)
     write::bytes::data sink{ head };
     unspent_writer::write(sink, subject);
     sink.flush();
-    BOOST_REQUIRE_EQUAL(head, expected);
+    BC_REQUIRE_EQUAL(head, expected);
 }
 
-BOOST_AUTO_TEST_CASE(unspent_writer__size__script_sizes__expected)
+BC_AUTO_TEST_CASE(unspent_writer__size__script_sizes__expected)
 {
-    BOOST_REQUIRE_EQUAL(unspent_writer::size(0), 48u + 1u);
-    BOOST_REQUIRE_EQUAL(unspent_writer::size(25), 48u + 1u + 25u);
-    BOOST_REQUIRE_EQUAL(unspent_writer::size(300), 48u + 3u + 300u);
+    BC_REQUIRE_EQUAL(unspent_writer::size(0), 48u + 1u);
+    BC_REQUIRE_EQUAL(unspent_writer::size(25), 48u + 1u + 25u);
+    BC_REQUIRE_EQUAL(unspent_writer::size(300), 48u + 3u + 300u);
 }
 
-BOOST_AUTO_TEST_CASE(unspent_writer__add__coin__accumulated)
+BC_AUTO_TEST_CASE(unspent_writer__add__coin__accumulated)
 {
     const auto script = base16_chunk("51");
     const auto subject = coin(1, false, 100, script);
     unspent_totals totals{};
     unspent_writer::add(totals, subject);
     unspent_writer::add(totals, subject);
-    BOOST_REQUIRE_EQUAL(totals.transactions, 2u);
-    BOOST_REQUIRE_EQUAL(totals.outputs, 2u);
-    BOOST_REQUIRE_EQUAL(totals.value, 200u);
-    BOOST_REQUIRE_EQUAL(totals.script_bytes, 2u);
-    BOOST_REQUIRE_EQUAL(totals.coin_bytes, 2u * (48u + 1u + 1u));
+    BC_REQUIRE_EQUAL(totals.transactions, 2u);
+    BC_REQUIRE_EQUAL(totals.outputs, 2u);
+    BC_REQUIRE_EQUAL(totals.value, 200u);
+    BC_REQUIRE_EQUAL(totals.script_bytes, 2u);
+    BC_REQUIRE_EQUAL(totals.coin_bytes, 2u * (48u + 1u + 1u));
 }
 
-BOOST_AUTO_TEST_CASE(unspent_writer__add__totals__summed)
+BC_AUTO_TEST_CASE(unspent_writer__add__totals__summed)
 {
     unspent_totals left{};
     left.transactions = 1;
@@ -98,11 +98,11 @@ BOOST_AUTO_TEST_CASE(unspent_writer__add__totals__summed)
     left.coin_bytes = 5;
     unspent_totals right{ left };
     unspent_writer::add(left, right);
-    BOOST_REQUIRE_EQUAL(left.transactions, 2u);
-    BOOST_REQUIRE_EQUAL(left.outputs, 4u);
-    BOOST_REQUIRE_EQUAL(left.value, 6u);
-    BOOST_REQUIRE_EQUAL(left.script_bytes, 8u);
-    BOOST_REQUIRE_EQUAL(left.coin_bytes, 10u);
+    BC_REQUIRE_EQUAL(left.transactions, 2u);
+    BC_REQUIRE_EQUAL(left.outputs, 4u);
+    BC_REQUIRE_EQUAL(left.value, 6u);
+    BC_REQUIRE_EQUAL(left.script_bytes, 8u);
+    BC_REQUIRE_EQUAL(left.coin_bytes, 10u);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

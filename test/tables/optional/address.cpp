@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(address_tests)
+BC_AUTO_TEST_SUITE(address_tests)
 
 using namespace system;
 
@@ -50,62 +50,62 @@ const data_chunk expected_puts_body
     0x90, 0x78, 0x56, 0x34, 0x12   // output1_fk
 };
 
-BOOST_AUTO_TEST_CASE(address__commit__two__expected_bodies)
+BC_AUTO_TEST_CASE(address__commit__two__expected_bodies)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::outs instance{ head_store, body_store, 8 };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(instance.enabled());
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.enabled());
 
     const auto link = instance.allocate(2);
-    BOOST_REQUIRE_EQUAL(link, 0u);
-    BOOST_REQUIRE(instance.puts.put(link, in));
+    BC_REQUIRE_EQUAL(link, 0u);
+    BC_REQUIRE(instance.puts.put(link, in));
 
     const auto ptr = instance.get_memory();
-    BOOST_REQUIRE(instance.commit(ptr, 0u, { key1 }));
-    BOOST_REQUIRE(instance.commit(ptr, 1u, { key2 }));
+    BC_REQUIRE(instance.commit(ptr, 0u, { key1 }));
+    BC_REQUIRE(instance.commit(ptr, 1u, { key2 }));
 
-    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(0), expected_address_body);
-    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(1), expected_puts_body);
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(0), expected_address_body);
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(1), expected_puts_body);
 }
 
-BOOST_AUTO_TEST_CASE(address__it__co_bucket__all_candidates)
+BC_AUTO_TEST_CASE(address__it__co_bucket__all_candidates)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::outs instance{ head_store, body_store, 8 };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
     const auto link = instance.allocate(2);
-    BOOST_REQUIRE(instance.puts.put(link, in));
+    BC_REQUIRE(instance.puts.put(link, in));
     const auto ptr = instance.get_memory();
-    BOOST_REQUIRE(instance.commit(ptr, 0u, { key1 }));
-    BOOST_REQUIRE(instance.commit(ptr, 1u, { key2 }));
+    BC_REQUIRE(instance.commit(ptr, 0u, { key1 }));
+    BC_REQUIRE(instance.commit(ptr, 1u, { key2 }));
 
     // Nothing is stored, so both rows are candidates for either key.
     std::vector<table::outs::link::integer> links{};
     for (auto it = instance.it({ key1 }); it; ++it)
         links.push_back(*it);
 
-    BOOST_REQUIRE_EQUAL(links.size(), 2u);
-    BOOST_REQUIRE_EQUAL(links.at(0), 1u);
-    BOOST_REQUIRE_EQUAL(links.at(1), 0u);
+    BC_REQUIRE_EQUAL(links.size(), 2u);
+    BC_REQUIRE_EQUAL(links.at(0), 1u);
+    BC_REQUIRE_EQUAL(links.at(1), 0u);
 
     table::outs::get_output out{};
-    BOOST_REQUIRE(instance.puts.get(links.at(0), out));
-    BOOST_REQUIRE_EQUAL(out.out_fk, 0x1234567890_u64);
-    BOOST_REQUIRE(instance.puts.get(links.at(1), out));
-    BOOST_REQUIRE_EQUAL(out.out_fk, 0x7890abcdef_u64);
+    BC_REQUIRE(instance.puts.get(links.at(0), out));
+    BC_REQUIRE_EQUAL(out.out_fk, 0x1234567890_u64);
+    BC_REQUIRE(instance.puts.get(links.at(1), out));
+    BC_REQUIRE_EQUAL(out.out_fk, 0x7890abcdef_u64);
 }
 
-BOOST_AUTO_TEST_CASE(address__enabled__no_buckets__false)
+BC_AUTO_TEST_CASE(address__enabled__no_buckets__false)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::outs instance{ head_store, body_store, 0 };
-    BOOST_REQUIRE(instance.create());
-    BOOST_REQUIRE(!instance.enabled());
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(!instance.enabled());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

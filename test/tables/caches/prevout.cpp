@@ -20,7 +20,7 @@
 #include "../../mocks/blocks.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(prevout_tests)
+BC_AUTO_TEST_SUITE(prevout_tests)
 
 using namespace system;
 using namespace system::chain;
@@ -28,29 +28,29 @@ using tx = schema::transaction::link;
 const std::vector<tx::integer> conflicts1{ 0x01020304 };
 const std::vector<tx::integer> conflicts2{ 0xbaadf00d, 0x01020304 };
 
-BOOST_AUTO_TEST_CASE(prevout__put__at1__expected)
+BC_AUTO_TEST_CASE(prevout__put__at1__expected)
 {
     const table::prevout::slab_put_ref slab1{ {}, conflicts1, test::bogus_block };
     const table::prevout::slab_put_ref slab2{ {}, conflicts2, test::bogus_block };
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
     // Put at key.
-    BOOST_REQUIRE(instance.put(3, slab1));
-    BOOST_REQUIRE(instance.put(42, slab2));
+    BC_REQUIRE(instance.put(3, slab1));
+    BC_REQUIRE(instance.put(42, slab2));
 
     // Dereference at key to get link.
-    BOOST_REQUIRE_EQUAL(instance.at(3), 0u);
-    BOOST_REQUIRE_EQUAL(instance.at(42), 37u);
-    BOOST_REQUIRE(instance.at(0).is_terminal());
-    BOOST_REQUIRE(instance.at(1).is_terminal());
-    BOOST_REQUIRE(instance.at(2).is_terminal());
-    BOOST_REQUIRE(instance.at(4).is_terminal());
+    BC_REQUIRE_EQUAL(instance.at(3), 0u);
+    BC_REQUIRE_EQUAL(instance.at(42), 37u);
+    BC_REQUIRE(instance.at(0).is_terminal());
+    BC_REQUIRE(instance.at(1).is_terminal());
+    BC_REQUIRE(instance.at(2).is_terminal());
+    BC_REQUIRE(instance.at(4).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(prevout__put__at2__expected)
+BC_AUTO_TEST_CASE(prevout__put__at2__expected)
 {
     const table::prevout::slab_put_ref slab1{ {}, conflicts1, test::bogus_block };
     const table::prevout::slab_put_ref slab2{ {}, conflicts2, test::bogus_block };
@@ -58,48 +58,48 @@ BOOST_AUTO_TEST_CASE(prevout__put__at2__expected)
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
     // Put at key.
-    BOOST_REQUIRE(instance.put(3, slab1));
-    BOOST_REQUIRE(instance.put(42, slab2));
+    BC_REQUIRE(instance.put(3, slab1));
+    BC_REQUIRE(instance.put(42, slab2));
 
     // Dereference at key to get element.
-    BOOST_REQUIRE(instance.at(3, element));
-    BOOST_REQUIRE(element.conflicts == slab1.conflicts);
-    ////BOOST_REQUIRE(element.spends == spends1);
-    BOOST_REQUIRE(instance.at(42, element));
-    BOOST_REQUIRE(element.conflicts == slab2.conflicts);
-    ////BOOST_REQUIRE(element.spends == spends2);
-    BOOST_REQUIRE(!instance.at(0, element));
-    BOOST_REQUIRE(!instance.at(1, element));
-    BOOST_REQUIRE(!instance.at(2, element));
-    BOOST_REQUIRE(!instance.at(4, element));
+    BC_REQUIRE(instance.at(3, element));
+    BC_REQUIRE(element.conflicts == slab1.conflicts);
+    ////BC_REQUIRE(element.spends == spends1);
+    BC_REQUIRE(instance.at(42, element));
+    BC_REQUIRE(element.conflicts == slab2.conflicts);
+    ////BC_REQUIRE(element.spends == spends2);
+    BC_REQUIRE(!instance.at(0, element));
+    BC_REQUIRE(!instance.at(1, element));
+    BC_REQUIRE(!instance.at(2, element));
+    BC_REQUIRE(!instance.at(4, element));
 }
 
-BOOST_AUTO_TEST_CASE(prevout__put__exists__expected)
+BC_AUTO_TEST_CASE(prevout__put__exists__expected)
 {
     const table::prevout::slab_put_ref slab1{ {}, conflicts1, test::bogus_block };
     const table::prevout::slab_put_ref slab2{ {}, conflicts2, test::bogus_block };
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
     // Put at key.
-    BOOST_REQUIRE(instance.put(3, slab1));
-    BOOST_REQUIRE(instance.put(42, slab2));
+    BC_REQUIRE(instance.put(3, slab1));
+    BC_REQUIRE(instance.put(42, slab2));
 
     // Exists at key.
-    BOOST_REQUIRE(instance.exists(3));
-    BOOST_REQUIRE(instance.exists(42));
-    BOOST_REQUIRE(!instance.exists(0));
-    BOOST_REQUIRE(!instance.exists(1));
-    BOOST_REQUIRE(!instance.exists(2));
-    BOOST_REQUIRE(!instance.exists(4));
+    BC_REQUIRE(instance.exists(3));
+    BC_REQUIRE(instance.exists(42));
+    BC_REQUIRE(!instance.exists(0));
+    BC_REQUIRE(!instance.exists(1));
+    BC_REQUIRE(!instance.exists(2));
+    BC_REQUIRE(!instance.exists(4));
 }
 
-BOOST_AUTO_TEST_CASE(prevout__put__get__expected)
+BC_AUTO_TEST_CASE(prevout__put__get__expected)
 {
     const table::prevout::slab_put_ref slab1{ {}, conflicts1, test::bogus_block };
     const table::prevout::slab_put_ref slab2{ {}, conflicts2, test::bogus_block };
@@ -107,19 +107,19 @@ BOOST_AUTO_TEST_CASE(prevout__put__get__expected)
     test::chunk_storage head_store{ test::terminal_fill };
     test::chunk_storage body_store{};
     table::prevout instance{ head_store, body_store, 5 };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
     // Put at key.
-    BOOST_REQUIRE(instance.put(3, slab1));
-    BOOST_REQUIRE_EQUAL(instance.at(3), 0u);
-    BOOST_REQUIRE(instance.put(42, slab2));
-    BOOST_REQUIRE_EQUAL(instance.at(42), 37u);
+    BC_REQUIRE(instance.put(3, slab1));
+    BC_REQUIRE_EQUAL(instance.at(3), 0u);
+    BC_REQUIRE(instance.put(42, slab2));
+    BC_REQUIRE_EQUAL(instance.at(42), 37u);
 
     // Get at link.
-    BOOST_REQUIRE(instance.get(0, element));
-    BOOST_REQUIRE(element.conflicts == slab1.conflicts);
-    BOOST_REQUIRE(instance.get(37u, element));
-    BOOST_REQUIRE(element.conflicts == slab2.conflicts);
+    BC_REQUIRE(instance.get(0, element));
+    BC_REQUIRE(element.conflicts == slab1.conflicts);
+    BC_REQUIRE(instance.get(37u, element));
+    BC_REQUIRE(element.conflicts == slab2.conflicts);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

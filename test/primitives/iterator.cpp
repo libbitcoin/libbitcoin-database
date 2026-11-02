@@ -19,11 +19,11 @@
 #include "../test.hpp"
 #include "../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(iterator_tests)
+BC_AUTO_TEST_SUITE(iterator_tests)
 
 using namespace system;
 
-BOOST_AUTO_TEST_CASE(iterator__self__empty__terminal)
+BC_AUTO_TEST_CASE(iterator__self__empty__terminal)
 {
     using link = linkage<4>;
     using key = data_array<0>;
@@ -32,12 +32,12 @@ BOOST_AUTO_TEST_CASE(iterator__self__empty__terminal)
     constexpr key key0{};
     test::chunk_storage file;
     const slab_iterate iterator{ file.get(), start, key0 };
-    BOOST_REQUIRE(iterator.get().is_terminal());
-    BOOST_REQUIRE(!iterator);
-    BOOST_REQUIRE_EQUAL(iterator.key(), key0);
+    BC_REQUIRE(iterator.get().is_terminal());
+    BC_REQUIRE(!iterator);
+    BC_REQUIRE_EQUAL(iterator.key(), key0);
 }
 
-BOOST_AUTO_TEST_CASE(iterator__self__overflow__terminal)
+BC_AUTO_TEST_CASE(iterator__self__overflow__terminal)
 {
     using link = linkage<4>;
     using key = data_array<0>;
@@ -52,12 +52,12 @@ BOOST_AUTO_TEST_CASE(iterator__self__overflow__terminal)
     };
     test::chunk_storage file{ data };
     const slab_iterate iterator{ file.get(), start, key0 };
-    BOOST_REQUIRE(iterator->is_terminal());
-    BOOST_REQUIRE(!iterator);
-    BOOST_REQUIRE_EQUAL(iterator.key(), key0);
+    BC_REQUIRE(iterator->is_terminal());
+    BC_REQUIRE(!iterator);
+    BC_REQUIRE_EQUAL(iterator.key(), key0);
 }
 
-BOOST_AUTO_TEST_CASE(iterator__advance__record__expected)
+BC_AUTO_TEST_CASE(iterator__advance__record__expected)
 {
     using link = linkage<1>;
     using key = data_array<2>;
@@ -72,18 +72,18 @@ BOOST_AUTO_TEST_CASE(iterator__advance__record__expected)
     };
     test::chunk_storage file{ data };
     record_iterate iterator{ file.get(), start, key2 };
-    BOOST_REQUIRE(iterator);
-    BOOST_REQUIRE_EQUAL(iterator.get(), 0x00u);
-    BOOST_REQUIRE(++iterator);
-    BOOST_REQUIRE(iterator);
-    BOOST_REQUIRE_EQUAL(iterator.get(), 0x01u);
-    BOOST_REQUIRE(!iterator.advance());
-    BOOST_REQUIRE(!iterator);
-    BOOST_REQUIRE_EQUAL(*iterator, link::terminal);
-    BOOST_REQUIRE_EQUAL(iterator.key(), key2);
+    BC_REQUIRE(iterator);
+    BC_REQUIRE_EQUAL(iterator.get(), 0x00u);
+    BC_REQUIRE(++iterator);
+    BC_REQUIRE(iterator);
+    BC_REQUIRE_EQUAL(iterator.get(), 0x01u);
+    BC_REQUIRE(!iterator.advance());
+    BC_REQUIRE(!iterator);
+    BC_REQUIRE_EQUAL(*iterator, link::terminal);
+    BC_REQUIRE_EQUAL(iterator.key(), key2);
 }
 
-BOOST_AUTO_TEST_CASE(iterator__advance__slab__expected)
+BC_AUTO_TEST_CASE(iterator__advance__slab__expected)
 {
     using link = linkage<1>;
     using key = data_array<2>;
@@ -99,21 +99,21 @@ BOOST_AUTO_TEST_CASE(iterator__advance__slab__expected)
     };
     test::chunk_storage file{ data };
     slab_iterate iterator{ file.get(), start, key2 };
-    BOOST_REQUIRE(iterator);
-    BOOST_REQUIRE_EQUAL(iterator.get(), 0x00u);
-    BOOST_REQUIRE(++iterator);
-    BOOST_REQUIRE(iterator);
-    BOOST_REQUIRE_EQUAL(iterator.get(), 0x03u);
-    BOOST_REQUIRE(!iterator.advance());
-    BOOST_REQUIRE(!iterator);
-    BOOST_REQUIRE_EQUAL(iterator.get(), link::terminal);
-    BOOST_REQUIRE_EQUAL(iterator.key(), key2);
+    BC_REQUIRE(iterator);
+    BC_REQUIRE_EQUAL(iterator.get(), 0x00u);
+    BC_REQUIRE(++iterator);
+    BC_REQUIRE(iterator);
+    BC_REQUIRE_EQUAL(iterator.get(), 0x03u);
+    BC_REQUIRE(!iterator.advance());
+    BC_REQUIRE(!iterator);
+    BC_REQUIRE_EQUAL(iterator.get(), link::terminal);
+    BC_REQUIRE_EQUAL(iterator.key(), key2);
 
     iterator.reset();
-    BOOST_REQUIRE_EQUAL(iterator.get(), link::terminal);
+    BC_REQUIRE_EQUAL(iterator.get(), link::terminal);
 }
 
-BOOST_AUTO_TEST_CASE(iterator__reset__always__sets_terminal_retains_key)
+BC_AUTO_TEST_CASE(iterator__reset__always__sets_terminal_retains_key)
 {
     using link = linkage<1>;
     using key = data_array<2>;
@@ -129,12 +129,12 @@ BOOST_AUTO_TEST_CASE(iterator__reset__always__sets_terminal_retains_key)
     };
     test::chunk_storage file{ data };
     slab_iterate iterator{ file.get(), start, key2 };
-    BOOST_REQUIRE(iterator);
-    BOOST_REQUIRE_EQUAL(*iterator, 0x00u);
+    BC_REQUIRE(iterator);
+    BC_REQUIRE_EQUAL(*iterator, 0x00u);
 
     iterator.reset();
-    BOOST_REQUIRE_EQUAL(*iterator, link::terminal);
-    BOOST_REQUIRE_EQUAL(iterator.key(), key2);
+    BC_REQUIRE_EQUAL(*iterator, link::terminal);
+    BC_REQUIRE_EQUAL(iterator.key(), key2);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

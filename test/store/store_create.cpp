@@ -19,95 +19,95 @@
 #include "../test.hpp"
 #include "../mocks/map_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 // create
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(store__create__transactor_locked__transactor_lock)
+BC_AUTO_TEST_CASE(store__create__transactor_locked__transactor_lock)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     instance.transactor_mutex().lock();
-    BOOST_REQUIRE_EQUAL(instance.create(test::events), error::transactor_lock);
+    BC_REQUIRE_EQUAL(instance.create(test::events), error::transactor_lock);
 }
 
 // The lock is process-exclusive in linux/macOS, globally in win32.
 #if defined(HAVE_WINDOWS)
-BOOST_AUTO_TEST_CASE(store__create__process_locked__success)
+BC_AUTO_TEST_CASE(store__create__process_locked__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
     interprocess_lock lock{ instance.process_lock_file() };
-    BOOST_REQUIRE(lock.try_lock());
-    BOOST_REQUIRE_EQUAL(instance.create(test::events), error::process_lock);
+    BC_REQUIRE(lock.try_lock());
+    BC_REQUIRE_EQUAL(instance.create(test::events), error::process_lock);
 }
 #endif
 
-BOOST_AUTO_TEST_CASE(store__create__flush_locked__flush_lock)
+BC_AUTO_TEST_CASE(store__create__flush_locked__flush_lock)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(test::create(instance.flush_lock_file()));
-    BOOST_REQUIRE_EQUAL(instance.create(test::events), error::flush_lock);
+    BC_REQUIRE(test::create(instance.flush_lock_file()));
+    BC_REQUIRE_EQUAL(instance.create(test::events), error::flush_lock);
 }
 
-BOOST_AUTO_TEST_CASE(store__create__process_lock_file__success)
+BC_AUTO_TEST_CASE(store__create__process_lock_file__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(test::create(instance.process_lock_file()));
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(instance.process_lock_file()));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__create__default__locks)
+BC_AUTO_TEST_CASE(store__create__default__locks)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(test::exists(instance.flush_lock_file()));
-    BOOST_REQUIRE(test::exists(instance.process_lock_file()));
-    BOOST_REQUIRE(instance.transactor_mutex().try_lock());
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(test::exists(instance.flush_lock_file()));
+    BC_REQUIRE(test::exists(instance.process_lock_file()));
+    BC_REQUIRE(instance.transactor_mutex().try_lock());
     instance.transactor_mutex().unlock();
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_CASE(store__create__default__success)
+BC_AUTO_TEST_CASE(store__create__default__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
 // create is index-destructive (by directory)
-BOOST_AUTO_TEST_CASE(store__create__existing_index__success)
+BC_AUTO_TEST_CASE(store__create__existing_index__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(test::clear(configuration.path / schema::dir::heads));
-    BOOST_REQUIRE(test::create(instance.header_head_file()));
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::clear(configuration.path / schema::dir::heads));
+    BC_REQUIRE(test::create(instance.header_head_file()));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
 // create is body-destructive (by file)
-BOOST_AUTO_TEST_CASE(store__create__existing_body__success)
+BC_AUTO_TEST_CASE(store__create__existing_body__success)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
     test::map_store instance{ configuration };
-    BOOST_REQUIRE(test::create(instance.header_body_file()));
-    BOOST_REQUIRE(!instance.create(test::events));
-    BOOST_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(instance.header_body_file()));
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

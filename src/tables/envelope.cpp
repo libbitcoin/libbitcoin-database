@@ -252,7 +252,7 @@ bool envelope::from_data(reader& source) NOEXCEPT
     milestone = read_checkpoint();
     signet_challenge = chain::script{ source, true };
 
-    interval_depth = source.read_little_endian<uint16_t>();
+    interval_depth = source.read_byte();
     header_buckets = source.read_little_endian<uint32_t>();
     ins_buckets = source.read_little_endian<uint32_t>();
     outs_buckets = source.read_little_endian<uint32_t>();
@@ -349,7 +349,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     write_checkpoint(milestone);
     signet_challenge.to_data(sink, true);
 
-    sink.write_little_endian<uint16_t>(interval_depth);
+    sink.write_byte(interval_depth);
     sink.write_little_endian<uint32_t>(header_buckets);
     sink.write_little_endian<uint32_t>(ins_buckets);
     sink.write_little_endian<uint32_t>(outs_buckets);
@@ -379,8 +379,8 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
 size_t envelope::serialized_size() const NOEXCEPT
 {
     constexpr auto forks_size = 25_size;
-    constexpr auto fixed = (4 * sizeof(uint32_t)) + sizeof(uint16_t) +
-        (7 * sizeof(uint32_t)) + (11 * sizeof(uint8_t)) + forks_size +
+    constexpr auto fixed = (4 * sizeof(uint32_t)) +
+        (7 * sizeof(uint32_t)) + (12 * sizeof(uint8_t)) + forks_size +
         sizeof(uint64_t) + (18 * sizeof(uint32_t));
 
     const auto checkpoint_size = [](const chain::checkpoint& in) NOEXCEPT

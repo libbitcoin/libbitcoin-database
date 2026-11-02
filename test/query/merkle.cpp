@@ -20,7 +20,7 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_merkle_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(query_merkle_tests, test::directory_setup_fixture)
 
 // Example vector from electrumx documentation.
 // electrumx.readthedocs.io/en/latest/protocol-methods.html#cp-height-example
@@ -53,323 +53,323 @@ public:
 
 // merkle_branch
 
-BOOST_AUTO_TEST_CASE(query_merkle___merkle_branch__leaf_zero__empty)
+BC_AUTO_TEST_CASE(query_merkle___merkle_branch__leaf_zero__empty)
 {
-    BOOST_REQUIRE(merkle_accessor::merkle_branch(0, 0, true).empty());
-    BOOST_REQUIRE(merkle_accessor::merkle_branch(0, 0, false).empty());
+    BC_REQUIRE(merkle_accessor::merkle_branch(0, 0, true).empty());
+    BC_REQUIRE(merkle_accessor::merkle_branch(0, 0, false).empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle___merkle_branch__one__zero)
+BC_AUTO_TEST_CASE(query_merkle___merkle_branch__one__zero)
 {
     auto branch = merkle_accessor::merkle_branch(1, 2, true);
-    BOOST_REQUIRE_EQUAL(branch.size(), 1u);
-    BOOST_REQUIRE_EQUAL(branch[0].sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
+    BC_REQUIRE_EQUAL(branch.size(), 1u);
+    BC_REQUIRE_EQUAL(branch[0].sibling, 0u);
+    BC_REQUIRE_EQUAL(branch[0].width, 1u);
 
     branch = merkle_accessor::merkle_branch(1, 2, false);
-    BOOST_REQUIRE_EQUAL(branch.size(), 1u);
-    BOOST_REQUIRE_EQUAL(branch[0].sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
+    BC_REQUIRE_EQUAL(branch.size(), 1u);
+    BC_REQUIRE_EQUAL(branch[0].sibling, 0u);
+    BC_REQUIRE_EQUAL(branch[0].width, 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle___merkle_branch__three__two_and_zero)
+BC_AUTO_TEST_CASE(query_merkle___merkle_branch__three__two_and_zero)
 {
     auto branch = merkle_accessor::merkle_branch(3, 4, true);
-    BOOST_REQUIRE_EQUAL(branch.size(), 2u);
-    BOOST_REQUIRE_EQUAL(branch[0].sibling, 2u);
-    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
-    BOOST_REQUIRE_EQUAL(branch[1].sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
+    BC_REQUIRE_EQUAL(branch.size(), 2u);
+    BC_REQUIRE_EQUAL(branch[0].sibling, 2u);
+    BC_REQUIRE_EQUAL(branch[0].width, 1u);
+    BC_REQUIRE_EQUAL(branch[1].sibling, 0u);
+    BC_REQUIRE_EQUAL(branch[1].width, 2u);
 
     branch = merkle_accessor::merkle_branch(3, 4, false);
-    BOOST_REQUIRE_EQUAL(branch.size(), 2u);
-    BOOST_REQUIRE_EQUAL(branch[0].sibling, 2u);
-    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
-    BOOST_REQUIRE_EQUAL(branch[1].sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
+    BC_REQUIRE_EQUAL(branch.size(), 2u);
+    BC_REQUIRE_EQUAL(branch[0].sibling, 2u);
+    BC_REQUIRE_EQUAL(branch[0].width, 1u);
+    BC_REQUIRE_EQUAL(branch[1].sibling, 0u);
+    BC_REQUIRE_EQUAL(branch[1].width, 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle___merkle_branch__seven__six_four_and_zero)
+BC_AUTO_TEST_CASE(query_merkle___merkle_branch__seven__six_four_and_zero)
 {
     auto branch = merkle_accessor::merkle_branch(7, 8, true);
-    BOOST_REQUIRE_EQUAL(branch.size(), 3u);
-    BOOST_REQUIRE_EQUAL(branch[0].sibling, 6u);
-    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
-    BOOST_REQUIRE_EQUAL(branch[1].sibling, 2u);
-    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
-    BOOST_REQUIRE_EQUAL(branch[2].sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch[2].width, 4u);
+    BC_REQUIRE_EQUAL(branch.size(), 3u);
+    BC_REQUIRE_EQUAL(branch[0].sibling, 6u);
+    BC_REQUIRE_EQUAL(branch[0].width, 1u);
+    BC_REQUIRE_EQUAL(branch[1].sibling, 2u);
+    BC_REQUIRE_EQUAL(branch[1].width, 2u);
+    BC_REQUIRE_EQUAL(branch[2].sibling, 0u);
+    BC_REQUIRE_EQUAL(branch[2].width, 4u);
 
     branch = merkle_accessor::merkle_branch(7, 8, false);
-    BOOST_REQUIRE_EQUAL(branch.size(), 3u);
-    BOOST_REQUIRE_EQUAL(branch[0].sibling, 6u);
-    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
-    BOOST_REQUIRE_EQUAL(branch[1].sibling, 2u);
-    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
-    BOOST_REQUIRE_EQUAL(branch[2].sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch[2].width, 4u);
+    BC_REQUIRE_EQUAL(branch.size(), 3u);
+    BC_REQUIRE_EQUAL(branch[0].sibling, 6u);
+    BC_REQUIRE_EQUAL(branch[0].width, 1u);
+    BC_REQUIRE_EQUAL(branch[1].sibling, 2u);
+    BC_REQUIRE_EQUAL(branch[1].width, 2u);
+    BC_REQUIRE_EQUAL(branch[2].sibling, 0u);
+    BC_REQUIRE_EQUAL(branch[2].width, 4u);
 }
 
-BOOST_AUTO_TEST_CASE(block__merkle_branch__medium_power_of_two__expected)
+BC_AUTO_TEST_CASE(block__merkle_branch__medium_power_of_two__expected)
 {
     const positions expected{ { 14, 1 }, { 6, 2 }, { 2, 4 }, { 0, 8 } };
 
     auto branch = merkle_accessor::merkle_branch(15, 16, true);
-    BOOST_REQUIRE_EQUAL(branch.size(), 4u);
-    BOOST_REQUIRE_EQUAL(branch[0].sibling, 14u);
-    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
-    BOOST_REQUIRE_EQUAL(branch[1].sibling, 6u);
-    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
-    BOOST_REQUIRE_EQUAL(branch[2].sibling, 2u);
-    BOOST_REQUIRE_EQUAL(branch[2].width, 4u);
-    BOOST_REQUIRE_EQUAL(branch[3].sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch[3].width, 8u);
+    BC_REQUIRE_EQUAL(branch.size(), 4u);
+    BC_REQUIRE_EQUAL(branch[0].sibling, 14u);
+    BC_REQUIRE_EQUAL(branch[0].width, 1u);
+    BC_REQUIRE_EQUAL(branch[1].sibling, 6u);
+    BC_REQUIRE_EQUAL(branch[1].width, 2u);
+    BC_REQUIRE_EQUAL(branch[2].sibling, 2u);
+    BC_REQUIRE_EQUAL(branch[2].width, 4u);
+    BC_REQUIRE_EQUAL(branch[3].sibling, 0u);
+    BC_REQUIRE_EQUAL(branch[3].width, 8u);
 
     branch = merkle_accessor::merkle_branch(15, 16, false);
-    BOOST_REQUIRE_EQUAL(branch.size(), 4u);
-    BOOST_REQUIRE_EQUAL(branch[0].sibling, 14u);
-    BOOST_REQUIRE_EQUAL(branch[0].width, 1u);
-    BOOST_REQUIRE_EQUAL(branch[1].sibling, 6u);
-    BOOST_REQUIRE_EQUAL(branch[1].width, 2u);
-    BOOST_REQUIRE_EQUAL(branch[2].sibling, 2u);
-    BOOST_REQUIRE_EQUAL(branch[2].width, 4u);
-    BOOST_REQUIRE_EQUAL(branch[3].sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch[3].width, 8u);
+    BC_REQUIRE_EQUAL(branch.size(), 4u);
+    BC_REQUIRE_EQUAL(branch[0].sibling, 14u);
+    BC_REQUIRE_EQUAL(branch[0].width, 1u);
+    BC_REQUIRE_EQUAL(branch[1].sibling, 6u);
+    BC_REQUIRE_EQUAL(branch[1].width, 2u);
+    BC_REQUIRE_EQUAL(branch[2].sibling, 2u);
+    BC_REQUIRE_EQUAL(branch[2].width, 4u);
+    BC_REQUIRE_EQUAL(branch[3].sibling, 0u);
+    BC_REQUIRE_EQUAL(branch[3].width, 8u);
 }
 
-BOOST_AUTO_TEST_CASE(block__merkle_branch__power_of_two_minus_one__expected)
+BC_AUTO_TEST_CASE(block__merkle_branch__power_of_two_minus_one__expected)
 {
     constexpr auto leaf = 1023u;
     constexpr auto size = system::ceilinged_log2(add1(leaf));
     auto branch = merkle_accessor::merkle_branch(leaf, add1(leaf), true);
-    BOOST_REQUIRE_EQUAL(branch.size(), size);
-    BOOST_REQUIRE_EQUAL(branch.front().sibling, 1022u);
-    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
-    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
+    BC_REQUIRE_EQUAL(branch.size(), size);
+    BC_REQUIRE_EQUAL(branch.front().sibling, 1022u);
+    BC_REQUIRE_EQUAL(branch.front().width, 1u);
+    BC_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BC_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
 
     branch = merkle_accessor::merkle_branch(leaf, add1(leaf), false);
-    BOOST_REQUIRE_EQUAL(branch.size(), size);
-    BOOST_REQUIRE_EQUAL(branch.front().sibling, 1022u);
-    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
-    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
+    BC_REQUIRE_EQUAL(branch.size(), size);
+    BC_REQUIRE_EQUAL(branch.front().sibling, 1022u);
+    BC_REQUIRE_EQUAL(branch.front().width, 1u);
+    BC_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BC_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
 }
 
-BOOST_AUTO_TEST_CASE(block__merkle_branch__odd_large_leaf_with_duplication__expected)
+BC_AUTO_TEST_CASE(block__merkle_branch__odd_large_leaf_with_duplication__expected)
 {
     constexpr auto leaf = 2047u;
     constexpr auto size = system::ceilinged_log2(add1(leaf));
     auto branch = merkle_accessor::merkle_branch(leaf, add1(leaf), true);
-    BOOST_REQUIRE_EQUAL(branch.size(), size);
-    BOOST_REQUIRE_EQUAL(branch.front().sibling, 2046u);
-    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
-    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
+    BC_REQUIRE_EQUAL(branch.size(), size);
+    BC_REQUIRE_EQUAL(branch.front().sibling, 2046u);
+    BC_REQUIRE_EQUAL(branch.front().width, 1u);
+    BC_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BC_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
 
     branch = merkle_accessor::merkle_branch(leaf, add1(leaf), false);
-    BOOST_REQUIRE_EQUAL(branch.size(), size);
-    BOOST_REQUIRE_EQUAL(branch.front().sibling, 2046u);
-    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
-    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
+    BC_REQUIRE_EQUAL(branch.size(), size);
+    BC_REQUIRE_EQUAL(branch.front().sibling, 2046u);
+    BC_REQUIRE_EQUAL(branch.front().width, 1u);
+    BC_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BC_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(size)));
 }
 
-BOOST_AUTO_TEST_CASE(block__merkle_branch__maximum_non_overflow__expected)
+BC_AUTO_TEST_CASE(block__merkle_branch__maximum_non_overflow__expected)
 {
     constexpr auto maximum = sub1(system::power2(sub1(bits<size_t>)));
     auto branch = merkle_accessor::merkle_branch(maximum, add1(maximum), true);
-    BOOST_REQUIRE_EQUAL(branch.size(), sub1(bits<size_t>));
-    BOOST_REQUIRE_EQUAL(branch.front().sibling, sub1(maximum));
-    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
-    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(sub1(bits<size_t>))));
+    BC_REQUIRE_EQUAL(branch.size(), sub1(bits<size_t>));
+    BC_REQUIRE_EQUAL(branch.front().sibling, sub1(maximum));
+    BC_REQUIRE_EQUAL(branch.front().width, 1u);
+    BC_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BC_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(sub1(bits<size_t>))));
 
     branch = merkle_accessor::merkle_branch(maximum, add1(maximum), false);
-    BOOST_REQUIRE_EQUAL(branch.size(), sub1(bits<size_t>));
-    BOOST_REQUIRE_EQUAL(branch.front().sibling, sub1(maximum));
-    BOOST_REQUIRE_EQUAL(branch.front().width, 1u);
-    BOOST_REQUIRE_EQUAL(branch.back().sibling, 0u);
-    BOOST_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(sub1(bits<size_t>))));
+    BC_REQUIRE_EQUAL(branch.size(), sub1(bits<size_t>));
+    BC_REQUIRE_EQUAL(branch.front().sibling, sub1(maximum));
+    BC_REQUIRE_EQUAL(branch.front().width, 1u);
+    BC_REQUIRE_EQUAL(branch.back().sibling, 0u);
+    BC_REQUIRE_EQUAL(branch.back().width, system::power2(sub1(sub1(bits<size_t>))));
 }
 
 // interval_span
 
-BOOST_AUTO_TEST_CASE(query_merkle__interval_span__uninitialized__max_size_t)
+BC_AUTO_TEST_CASE(query_merkle__interval_span__uninitialized__max_size_t)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(settings.interval_depth, max_uint8);
-    BOOST_CHECK_EQUAL(query.interval_span(), max_size_t);
+    BC_CHECK_EQUAL(settings.interval_depth, max_uint8);
+    BC_CHECK_EQUAL(query.interval_span(), max_size_t);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__interval_span__11__2048)
+BC_AUTO_TEST_CASE(query_merkle__interval_span__11__2048)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 11;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK_EQUAL(query.interval_span(), 2048u);
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK_EQUAL(query.interval_span(), 2048u);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__interval_span__0__1)
+BC_AUTO_TEST_CASE(query_merkle__interval_span__0__1)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK_EQUAL(query.interval_span(), 1u);
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK_EQUAL(query.interval_span(), 1u);
 }
 
 // create_interval
 
-BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_0__block_hash)
+BC_AUTO_TEST_CASE(query_merkle__create_interval__depth_0__block_hash)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
 
     const auto header0 = query.to_header(test::block0_hash);
     const auto header1 = query.to_header(test::block1_hash);
     const auto header2 = query.to_header(test::block2_hash);
     const auto header3 = query.to_header(test::block3_hash);
-    BOOST_CHECK(!header0.is_terminal());
-    BOOST_CHECK(!header1.is_terminal());
-    BOOST_CHECK(!header2.is_terminal());
-    BOOST_CHECK(!header3.is_terminal());
-    BOOST_CHECK(query.create_interval(header0, 0).has_value());
-    BOOST_CHECK(query.create_interval(header1, 1).has_value());
-    BOOST_CHECK(query.create_interval(header2, 2).has_value());
-    BOOST_CHECK(query.create_interval(header3, 3).has_value());
-    BOOST_CHECK_EQUAL(query.create_interval(header0, 0).value(), test::block0_hash);
-    BOOST_CHECK_EQUAL(query.create_interval(header1, 1).value(), test::block1_hash);
-    BOOST_CHECK_EQUAL(query.create_interval(header2, 2).value(), test::block2_hash);
-    BOOST_CHECK_EQUAL(query.create_interval(header3, 3).value(), test::block3_hash);
+    BC_CHECK(!header0.is_terminal());
+    BC_CHECK(!header1.is_terminal());
+    BC_CHECK(!header2.is_terminal());
+    BC_CHECK(!header3.is_terminal());
+    BC_CHECK(query.create_interval(header0, 0).has_value());
+    BC_CHECK(query.create_interval(header1, 1).has_value());
+    BC_CHECK(query.create_interval(header2, 2).has_value());
+    BC_CHECK(query.create_interval(header3, 3).has_value());
+    BC_CHECK_EQUAL(query.create_interval(header0, 0).value(), test::block0_hash);
+    BC_CHECK_EQUAL(query.create_interval(header1, 1).value(), test::block1_hash);
+    BC_CHECK_EQUAL(query.create_interval(header2, 2).value(), test::block2_hash);
+    BC_CHECK_EQUAL(query.create_interval(header3, 3).value(), test::block3_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_1__expected)
+BC_AUTO_TEST_CASE(query_merkle__create_interval__depth_1__expected)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 1;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
 
     const auto header0 = query.to_header(test::block0_hash);
     const auto header1 = query.to_header(test::block1_hash);
     const auto header2 = query.to_header(test::block2_hash);
     const auto header3 = query.to_header(test::block3_hash);
-    BOOST_CHECK(!header0.is_terminal());
-    BOOST_CHECK(!header1.is_terminal());
-    BOOST_CHECK(!header2.is_terminal());
-    BOOST_CHECK(!header3.is_terminal());
-    BOOST_CHECK(!query.create_interval(header0, 0).has_value());
-    BOOST_CHECK( query.create_interval(header1, 1).has_value());
-    BOOST_CHECK(!query.create_interval(header2, 2).has_value());
-    BOOST_CHECK( query.create_interval(header3, 3).has_value());
-    BOOST_CHECK_EQUAL(query.create_interval(header1, 1).value(), test::root01);
-    BOOST_CHECK_EQUAL(query.create_interval(header3, 3).value(), test::root23);
+    BC_CHECK(!header0.is_terminal());
+    BC_CHECK(!header1.is_terminal());
+    BC_CHECK(!header2.is_terminal());
+    BC_CHECK(!header3.is_terminal());
+    BC_CHECK(!query.create_interval(header0, 0).has_value());
+    BC_CHECK( query.create_interval(header1, 1).has_value());
+    BC_CHECK(!query.create_interval(header2, 2).has_value());
+    BC_CHECK( query.create_interval(header3, 3).has_value());
+    BC_CHECK_EQUAL(query.create_interval(header1, 1).value(), test::root01);
+    BC_CHECK_EQUAL(query.create_interval(header3, 3).value(), test::root23);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__create_interval__depth_2__expected)
+BC_AUTO_TEST_CASE(query_merkle__create_interval__depth_2__expected)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
 
     const auto header3 = query.to_header(test::block3_hash);
-    BOOST_CHECK(!header3.is_terminal());
-    BOOST_CHECK(query.create_interval(header3, 3).has_value());
-    BOOST_CHECK_EQUAL(query.create_interval(header3, 3).value(), test::root03);
+    BC_CHECK(!header3.is_terminal());
+    BC_CHECK(query.create_interval(header3, 3).has_value());
+    BC_CHECK_EQUAL(query.create_interval(header3, 3).value(), test::root03);
 }
 
 // get_confirmed_interval
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__not_multiple__no_value)
+BC_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__not_multiple__no_value)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 3;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(query.interval_span(), system::power2(settings.interval_depth));
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(!query.get_confirmed_interval(0).has_value());
-    BOOST_CHECK(!query.get_confirmed_interval(1).has_value());
-    BOOST_CHECK(!query.get_confirmed_interval(6).has_value());
-    BOOST_CHECK(!query.get_confirmed_interval(7).has_value());
-    BOOST_CHECK(!query.get_confirmed_interval(14).has_value());
+    BC_CHECK_EQUAL(query.interval_span(), system::power2(settings.interval_depth));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(!query.get_confirmed_interval(0).has_value());
+    BC_CHECK(!query.get_confirmed_interval(1).has_value());
+    BC_CHECK(!query.get_confirmed_interval(6).has_value());
+    BC_CHECK(!query.get_confirmed_interval(7).has_value());
+    BC_CHECK(!query.get_confirmed_interval(14).has_value());
 }
 
 // Interval is set by create_interval(), integral to set(block).
-BOOST_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__multiple__expected_value)
+BC_AUTO_TEST_CASE(query_merkle__get_confirmed_interval__multiple__expected_value)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(query.interval_span(), system::power2(settings.interval_depth));
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
-    BOOST_CHECK(!query.get_confirmed_interval(0).has_value());
-    BOOST_CHECK(!query.get_confirmed_interval(1).has_value());
-    BOOST_CHECK(!query.get_confirmed_interval(2).has_value());
-    BOOST_CHECK( query.get_confirmed_interval(3).has_value());
-    BOOST_CHECK(!query.get_confirmed_interval(4).has_value());
+    BC_CHECK_EQUAL(query.interval_span(), system::power2(settings.interval_depth));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
+    BC_CHECK(!query.get_confirmed_interval(0).has_value());
+    BC_CHECK(!query.get_confirmed_interval(1).has_value());
+    BC_CHECK(!query.get_confirmed_interval(2).has_value());
+    BC_CHECK( query.get_confirmed_interval(3).has_value());
+    BC_CHECK(!query.get_confirmed_interval(4).has_value());
 }
 
 // merge_merkle
 
-BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__empty_from__expected)
+BC_AUTO_TEST_CASE(query_merkle__merge_merkle__empty_from__expected)
 {
     hashes to{};
     merkle_accessor::merge_merkle(to, {}, 0, 0);
-    BOOST_CHECK(to.empty());
+    BC_CHECK(to.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__one_hash__empty)
+BC_AUTO_TEST_CASE(query_merkle__merge_merkle__one_hash__empty)
 {
     hashes to{};
     merkle_accessor::merge_merkle(to, { system::null_hash }, 0, 0);
-    BOOST_CHECK(to.empty());
+    BC_CHECK(to.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__push_merkle__two_leaves_target_zero__expected)
+BC_AUTO_TEST_CASE(query_merkle__push_merkle__two_leaves_target_zero__expected)
 {
     hashes to{};
     hashes from
@@ -379,11 +379,11 @@ BOOST_AUTO_TEST_CASE(query_merkle__push_merkle__two_leaves_target_zero__expected
     };
 
     merkle_accessor::merge_merkle(to, std::move(from), 0, 0);
-    BOOST_CHECK_EQUAL(to.size(), 1u);
-    BOOST_CHECK_EQUAL(to[0], test::block1_hash);
+    BC_CHECK_EQUAL(to.size(), 1u);
+    BC_CHECK_EQUAL(to[0], test::block1_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__three_leaves_target_two__expected)
+BC_AUTO_TEST_CASE(query_merkle__merge_merkle__three_leaves_target_two__expected)
 {
     hashes to{};
     hashes from
@@ -394,12 +394,12 @@ BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__three_leaves_target_two__expect
     };
 
     merkle_accessor::merge_merkle(to, std::move(from), 2, 0);
-    BOOST_CHECK_EQUAL(to.size(), 2u);
-    BOOST_CHECK_EQUAL(to[0], test::block2_hash);
-    BOOST_CHECK_EQUAL(to[1], test::root01);
+    BC_CHECK_EQUAL(to.size(), 2u);
+    BC_CHECK_EQUAL(to[0], test::block2_hash);
+    BC_CHECK_EQUAL(to[1], test::root01);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__four_leaves_target_three__expected)
+BC_AUTO_TEST_CASE(query_merkle__merge_merkle__four_leaves_target_three__expected)
 {
     hashes to{};
     hashes from
@@ -411,12 +411,12 @@ BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__four_leaves_target_three__expec
     };
 
     merkle_accessor::merge_merkle(to, std::move(from), 3, 0);
-    BOOST_CHECK_EQUAL(to.size(), 2u);
-    BOOST_CHECK_EQUAL(to[0], test::block2_hash);
-    BOOST_CHECK_EQUAL(to[1], test::root01);
+    BC_CHECK_EQUAL(to.size(), 2u);
+    BC_CHECK_EQUAL(to[0], test::block2_hash);
+    BC_CHECK_EQUAL(to[1], test::root01);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__six_leaves_target_five__expected)
+BC_AUTO_TEST_CASE(query_merkle__merge_merkle__six_leaves_target_five__expected)
 {
     hashes to{};
     hashes from
@@ -430,67 +430,67 @@ BOOST_AUTO_TEST_CASE(query_merkle__merge_merkle__six_leaves_target_five__expecte
     };
 
     merkle_accessor::merge_merkle(to, std::move(from), 5, 0);
-    BOOST_CHECK_EQUAL(to.size(), 3u);
-    BOOST_CHECK_EQUAL(to[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(to[1], test::root45);
-    BOOST_CHECK_EQUAL(to[2], test::root03);
+    BC_CHECK_EQUAL(to.size(), 3u);
+    BC_CHECK_EQUAL(to[0], test::block4_hash);
+    BC_CHECK_EQUAL(to[1], test::root45);
+    BC_CHECK_EQUAL(to[2], test::root03);
 }
 
 // get_merkle_proof
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__no_confirmed_blocks__error_merkle_proof)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_proof__no_confirmed_blocks__error_merkle_proof)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
 
     hashes proof{};
-    BOOST_CHECK_EQUAL(query.get_merkle_proof(proof, {}, 5, 10), error::merkle_proof);
-    BOOST_CHECK(proof.empty());
+    BC_CHECK_EQUAL(query.get_merkle_proof(proof, {}, 5, 10), error::merkle_proof);
+    BC_CHECK(proof.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__target_in_first_interval__expected)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_proof__target_in_first_interval__expected)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
 
     hashes proof{};
-    BOOST_CHECK_EQUAL(query.get_merkle_proof(proof, {}, 3u, 3u), error::success);
-    BOOST_CHECK_EQUAL(proof.size(), 2u);
-    BOOST_CHECK_EQUAL(proof[0], test::block2_hash);
-    BOOST_CHECK_EQUAL(proof[1], test::root01);
+    BC_CHECK_EQUAL(query.get_merkle_proof(proof, {}, 3u, 3u), error::success);
+    BC_CHECK_EQUAL(proof.size(), 2u);
+    BC_CHECK_EQUAL(proof[0], test::block2_hash);
+    BC_CHECK_EQUAL(proof[1], test::root01);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__multiple_intervals__expected)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_proof__multiple_intervals__expected)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 1;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
 
     hashes proof{};
     const hashes roots
@@ -498,140 +498,140 @@ BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_proof__multiple_intervals__expecte
         test::root01,
         test::root23
     };
-    BOOST_CHECK_EQUAL(query.get_merkle_proof(proof, roots, 3u, 3u), error::success);
-    BOOST_CHECK_EQUAL(proof.size(), 2u);
-    BOOST_CHECK_EQUAL(proof[0], test::block2_hash);
-    BOOST_CHECK_EQUAL(proof[1], test::root01);
+    BC_CHECK_EQUAL(query.get_merkle_proof(proof, roots, 3u, 3u), error::success);
+    BC_CHECK_EQUAL(proof.size(), 2u);
+    BC_CHECK_EQUAL(proof[0], test::block2_hash);
+    BC_CHECK_EQUAL(proof[1], test::root01);
 }
 
 // get_merkle_subroots
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__waypoint_zero__genesis)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__waypoint_zero__genesis)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
 
     hashes roots{};
-    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 0), error::success);
-    BOOST_CHECK_EQUAL(roots.size(), 1u);
+    BC_CHECK_EQUAL(query.get_merkle_subroots(roots, 0), error::success);
+    BC_CHECK_EQUAL(roots.size(), 1u);
 
     // At depth 2, the 1st position (block 0) the hash is the root.
-    BOOST_CHECK_EQUAL(roots[0], test::block0_hash);
+    BC_CHECK_EQUAL(roots[0], test::block0_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__one_full_interval__expected_root)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__one_full_interval__expected_root)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
 
     hashes roots{};
-    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 3), error::success);
-    BOOST_CHECK_EQUAL(roots.size(), 1u);
+    BC_CHECK_EQUAL(query.get_merkle_subroots(roots, 3), error::success);
+    BC_CHECK_EQUAL(roots.size(), 1u);
 
     // At depth 2, the 4th position (block 3) results in an interval subroot as the root.
-    BOOST_CHECK_EQUAL(roots[0], test::root03);
+    BC_CHECK_EQUAL(roots[0], test::root03);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__full_and_partial_interval__expected_two_roots)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_subroots__full_and_partial_interval__expected_two_roots)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block4, context{ 0, 4, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block5, context{ 0, 5, 0 }, {}, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block4_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block5_hash), false));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block4, context{ 0, 4, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block5, context{ 0, 5, 0 }, {}, false, false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block4_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block5_hash), false));
 
     hashes roots{};
-    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 5), error::success);
-    BOOST_CHECK_EQUAL(roots.size(), 2u);
-    BOOST_CHECK_EQUAL(roots[0], test::root03);
+    BC_CHECK_EQUAL(query.get_merkle_subroots(roots, 5), error::success);
+    BC_CHECK_EQUAL(roots.size(), 2u);
+    BC_CHECK_EQUAL(roots[0], test::root03);
 
     // At depth 2, the 6th position (block 5) results in one complete and one partial root.
     const auto root45 = system::sha256::double_hash(test::block4_hash, test::block5_hash);
     const auto root4545 = system::sha256::double_hash(root45, test::root45);
-    BOOST_CHECK_EQUAL(roots[1], root4545);
+    BC_CHECK_EQUAL(roots[1], root4545);
 }
 
 // get_merkle_root_and_proof
 // get_merkle_proof
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_equals_waypoint__success)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_equals_waypoint__success)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 3, 3));
-    BOOST_CHECK_EQUAL(proof.size(), 2u);
-    BOOST_CHECK_EQUAL(proof[0], test::block2_hash);
-    BOOST_CHECK_EQUAL(proof[1], test::root01);
-    BOOST_CHECK_EQUAL(root, query.get_merkle_root(3));
-    BOOST_CHECK_EQUAL(root, test::root03);
+    BC_CHECK(!query.get_merkle_root_and_proof(root, proof, 3, 3));
+    BC_CHECK_EQUAL(proof.size(), 2u);
+    BC_CHECK_EQUAL(proof[0], test::block2_hash);
+    BC_CHECK_EQUAL(proof[1], test::root01);
+    BC_CHECK_EQUAL(root, query.get_merkle_root(3));
+    BC_CHECK_EQUAL(root, test::root03);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_less_than_waypoint__success)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_less_than_waypoint__success)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
-    BOOST_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
-    BOOST_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_CHECK(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block1_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block2_hash), false));
+    BC_CHECK(query.push_confirmed(query.to_header(test::block3_hash), false));
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 1, 3));
-    BOOST_CHECK_EQUAL(proof.size(), 2u);
-    BOOST_CHECK_EQUAL(proof[0], test::block0_hash);
-    BOOST_CHECK_EQUAL(proof[1], test::root23);
-    BOOST_CHECK_EQUAL(root, query.get_merkle_root(3));
-    BOOST_CHECK_EQUAL(root, test::root03);
+    BC_CHECK(!query.get_merkle_root_and_proof(root, proof, 1, 3));
+    BC_CHECK_EQUAL(proof.size(), 2u);
+    BC_CHECK_EQUAL(proof[0], test::block0_hash);
+    BC_CHECK_EQUAL(proof[1], test::root23);
+    BC_CHECK_EQUAL(root, query.get_merkle_root(3));
+    BC_CHECK_EQUAL(root, test::root03);
 }
 
 bool setup_eight_block_store(merkle_accessor& query)
@@ -655,293 +655,293 @@ bool setup_eight_block_store(merkle_accessor& query)
         query.push_confirmed(query.to_header(test::block8_hash), false);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_0__success)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_0__success)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(setup_eight_block_store(query));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
-    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
-    BOOST_CHECK_EQUAL(roots.size(), 9u);
-    BOOST_CHECK_EQUAL(roots[0], test::block0_hash);
-    BOOST_CHECK_EQUAL(roots[1], test::block1_hash);
-    BOOST_CHECK_EQUAL(roots[2], test::block2_hash);
-    BOOST_CHECK_EQUAL(roots[3], test::block3_hash);
-    BOOST_CHECK_EQUAL(roots[4], test::block4_hash);
-    BOOST_CHECK_EQUAL(roots[5], test::block5_hash);
-    BOOST_CHECK_EQUAL(roots[6], test::block6_hash);
-    BOOST_CHECK_EQUAL(roots[7], test::block7_hash);
-    BOOST_CHECK_EQUAL(roots[8], test::block8_hash);
+    BC_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
+    BC_CHECK_EQUAL(roots.size(), 9u);
+    BC_CHECK_EQUAL(roots[0], test::block0_hash);
+    BC_CHECK_EQUAL(roots[1], test::block1_hash);
+    BC_CHECK_EQUAL(roots[2], test::block2_hash);
+    BC_CHECK_EQUAL(roots[3], test::block3_hash);
+    BC_CHECK_EQUAL(roots[4], test::block4_hash);
+    BC_CHECK_EQUAL(roots[5], test::block5_hash);
+    BC_CHECK_EQUAL(roots[6], test::block6_hash);
+    BC_CHECK_EQUAL(roots[7], test::block7_hash);
+    BC_CHECK_EQUAL(roots[8], test::block8_hash);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
+    BC_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
-    BOOST_CHECK_EQUAL(root, test::root08);
-    BOOST_CHECK_EQUAL(proof.size(), 4u);
-    BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], test::root67);
-    BOOST_CHECK_EQUAL(proof[2], test::root03);
-    BOOST_CHECK_EQUAL(proof[3], test::root88);
+    BC_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
+    BC_CHECK_EQUAL(root, test::root08);
+    BC_CHECK_EQUAL(proof.size(), 4u);
+    BC_CHECK_EQUAL(proof[0], test::block4_hash);
+    BC_CHECK_EQUAL(proof[1], test::root67);
+    BC_CHECK_EQUAL(proof[2], test::root03);
+    BC_CHECK_EQUAL(proof[3], test::root88);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_1__success)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_1__success)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 1;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(setup_eight_block_store(query));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
-    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
-    BOOST_CHECK_EQUAL(roots.size(), 5u);
-    BOOST_CHECK_EQUAL(roots[0], test::root01);
-    BOOST_CHECK_EQUAL(roots[1], test::root23);
-    BOOST_CHECK_EQUAL(roots[2], test::root45);
-    BOOST_CHECK_EQUAL(roots[3], test::root67);
-    BOOST_CHECK_EQUAL(roots[4], test::root82);
+    BC_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
+    BC_CHECK_EQUAL(roots.size(), 5u);
+    BC_CHECK_EQUAL(roots[0], test::root01);
+    BC_CHECK_EQUAL(roots[1], test::root23);
+    BC_CHECK_EQUAL(roots[2], test::root45);
+    BC_CHECK_EQUAL(roots[3], test::root67);
+    BC_CHECK_EQUAL(roots[4], test::root82);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
+    BC_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
-    BOOST_CHECK_EQUAL(root, test::root08);
-    BOOST_CHECK_EQUAL(proof.size(), 4u);
-    BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], test::root67);
-    BOOST_CHECK_EQUAL(proof[2], test::root03);
-    BOOST_CHECK_EQUAL(proof[3], test::root88);
+    BC_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
+    BC_CHECK_EQUAL(root, test::root08);
+    BC_CHECK_EQUAL(proof.size(), 4u);
+    BC_CHECK_EQUAL(proof[0], test::block4_hash);
+    BC_CHECK_EQUAL(proof[1], test::root67);
+    BC_CHECK_EQUAL(proof[2], test::root03);
+    BC_CHECK_EQUAL(proof[3], test::root88);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_2__success)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_2__success)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(setup_eight_block_store(query));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
-    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
-    BOOST_CHECK_EQUAL(roots.size(), 3u);
-    BOOST_CHECK_EQUAL(roots[0], test::root03);
-    BOOST_CHECK_EQUAL(roots[1], test::root47);
-    BOOST_CHECK_EQUAL(roots[2], test::root84);
+    BC_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
+    BC_CHECK_EQUAL(roots.size(), 3u);
+    BC_CHECK_EQUAL(roots[0], test::root03);
+    BC_CHECK_EQUAL(roots[1], test::root47);
+    BC_CHECK_EQUAL(roots[2], test::root84);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
+    BC_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
-    BOOST_CHECK_EQUAL(root, test::root08);
-    BOOST_CHECK_EQUAL(proof.size(), 4u);
-    BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], test::root67);
-    BOOST_CHECK_EQUAL(proof[2], test::root03);
-    BOOST_CHECK_EQUAL(proof[3], test::root88);
+    BC_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
+    BC_CHECK_EQUAL(root, test::root08);
+    BC_CHECK_EQUAL(proof.size(), 4u);
+    BC_CHECK_EQUAL(proof[0], test::block4_hash);
+    BC_CHECK_EQUAL(proof[1], test::root67);
+    BC_CHECK_EQUAL(proof[2], test::root03);
+    BC_CHECK_EQUAL(proof[3], test::root88);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_3__success)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_3__success)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 3;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(setup_eight_block_store(query));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
-    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
-    BOOST_CHECK_EQUAL(roots.size(), 2u);
-    BOOST_CHECK_EQUAL(roots[0], test::root07);
-    BOOST_CHECK_EQUAL(roots[1], test::root88);
+    BC_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
+    BC_CHECK_EQUAL(roots.size(), 2u);
+    BC_CHECK_EQUAL(roots[0], test::root07);
+    BC_CHECK_EQUAL(roots[1], test::root88);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
+    BC_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
-    BOOST_CHECK_EQUAL(root, test::root08);
-    BOOST_CHECK_EQUAL(proof.size(), 4u);
-    BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], test::root67);
-    BOOST_CHECK_EQUAL(proof[2], test::root03);
-    BOOST_CHECK_EQUAL(proof[3], test::root88);
+    BC_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
+    BC_CHECK_EQUAL(root, test::root08);
+    BC_CHECK_EQUAL(proof.size(), 4u);
+    BC_CHECK_EQUAL(proof[0], test::block4_hash);
+    BC_CHECK_EQUAL(proof[1], test::root67);
+    BC_CHECK_EQUAL(proof[2], test::root03);
+    BC_CHECK_EQUAL(proof[3], test::root88);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_4__success)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_4__success)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 4;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(setup_eight_block_store(query));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
-    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
-    BOOST_CHECK_EQUAL(roots.size(), 1u);
-    BOOST_CHECK_EQUAL(roots[0], test::root08);
+    BC_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
+    BC_CHECK_EQUAL(roots.size(), 1u);
+    BC_CHECK_EQUAL(roots[0], test::root08);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
+    BC_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
-    BOOST_CHECK_EQUAL(root, test::root08);
-    BOOST_CHECK_EQUAL(proof.size(), 4u); // <<<<< FAIL (proof.size() == 5)
-    BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], test::root67);
-    BOOST_CHECK_EQUAL(proof[2], test::root03);
-    BOOST_CHECK_EQUAL(proof[3], test::root88);
+    BC_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
+    BC_CHECK_EQUAL(root, test::root08);
+    BC_CHECK_EQUAL(proof.size(), 4u); // <<<<< FAIL (proof.size() == 5)
+    BC_CHECK_EQUAL(proof[0], test::block4_hash);
+    BC_CHECK_EQUAL(proof[1], test::root67);
+    BC_CHECK_EQUAL(proof[2], test::root03);
+    BC_CHECK_EQUAL(proof[3], test::root88);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_11__success)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__electrumx_example_depth_11__success)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 11;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(setup_eight_block_store(query));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
-    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
-    BOOST_CHECK_EQUAL(roots.size(), 1u);
-    BOOST_CHECK_EQUAL(roots[0], test::root08);
+    BC_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
+    BC_CHECK_EQUAL(roots.size(), 1u);
+    BC_CHECK_EQUAL(roots[0], test::root08);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
+    BC_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
-    BOOST_CHECK_EQUAL(root, test::root08);
-    BOOST_CHECK_EQUAL(proof.size(), 4u); // <<<<< FAIL (proof.size() == 11)
-    BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], test::root67);
-    BOOST_CHECK_EQUAL(proof[2], test::root03);
-    BOOST_CHECK_EQUAL(proof[3], test::root88);
+    BC_CHECK(!query.get_merkle_root_and_proof(root, proof, 5, 8));
+    BC_CHECK_EQUAL(root, test::root08);
+    BC_CHECK_EQUAL(proof.size(), 4u); // <<<<< FAIL (proof.size() == 11)
+    BC_CHECK_EQUAL(proof[0], test::block4_hash);
+    BC_CHECK_EQUAL(proof[1], test::root67);
+    BC_CHECK_EQUAL(proof[2], test::root03);
+    BC_CHECK_EQUAL(proof[3], test::root88);
 }
 
 // This tests a potentially sparse path (avoids compression).
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_8_depth_0__success)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_8_depth_0__success)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 0;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(setup_eight_block_store(query));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(setup_eight_block_store(query));
 
     hashes roots{};
-    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
-    BOOST_CHECK_EQUAL(roots.size(), 9u);
-    BOOST_CHECK_EQUAL(roots[0], test::block0_hash);
-    BOOST_CHECK_EQUAL(roots[1], test::block1_hash);
-    BOOST_CHECK_EQUAL(roots[2], test::block2_hash);
-    BOOST_CHECK_EQUAL(roots[3], test::block3_hash);
-    BOOST_CHECK_EQUAL(roots[4], test::block4_hash);
-    BOOST_CHECK_EQUAL(roots[5], test::block5_hash);
-    BOOST_CHECK_EQUAL(roots[6], test::block6_hash);
-    BOOST_CHECK_EQUAL(roots[7], test::block7_hash);
-    BOOST_CHECK_EQUAL(roots[8], test::block8_hash);
+    BC_CHECK_EQUAL(query.get_merkle_subroots(roots, 8), error::success);
+    BC_CHECK_EQUAL(roots.size(), 9u);
+    BC_CHECK_EQUAL(roots[0], test::block0_hash);
+    BC_CHECK_EQUAL(roots[1], test::block1_hash);
+    BC_CHECK_EQUAL(roots[2], test::block2_hash);
+    BC_CHECK_EQUAL(roots[3], test::block3_hash);
+    BC_CHECK_EQUAL(roots[4], test::block4_hash);
+    BC_CHECK_EQUAL(roots[5], test::block5_hash);
+    BC_CHECK_EQUAL(roots[6], test::block6_hash);
+    BC_CHECK_EQUAL(roots[7], test::block7_hash);
+    BC_CHECK_EQUAL(roots[8], test::block8_hash);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
+    BC_CHECK_EQUAL(query.get_merkle_root(8), test::root08);
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 8, 8));
-    BOOST_CHECK_EQUAL(root, test::root08);
-    BOOST_CHECK_EQUAL(proof.size(), 4u);
-    BOOST_CHECK_EQUAL(proof[0], test::block8_hash);
-    BOOST_CHECK_EQUAL(proof[1], test::root82);
-    BOOST_CHECK_EQUAL(proof[2], test::root84);
-    BOOST_CHECK_EQUAL(proof[3], test::root07);
+    BC_CHECK(!query.get_merkle_root_and_proof(root, proof, 8, 8));
+    BC_CHECK_EQUAL(root, test::root08);
+    BC_CHECK_EQUAL(proof.size(), 4u);
+    BC_CHECK_EQUAL(proof[0], test::block8_hash);
+    BC_CHECK_EQUAL(proof[1], test::root82);
+    BC_CHECK_EQUAL(proof[2], test::root84);
+    BC_CHECK_EQUAL(proof[3], test::root07);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__partial_interval_with_elevation_depth__success)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__partial_interval_with_elevation_depth__success)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(setup_eight_block_store(query));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(setup_eight_block_store(query));
 
     const auto root42 = system::sha256::double_hash(test::block4_hash, test::block4_hash);
     const auto root44 = system::sha256::double_hash(root42, root42);
     const auto expected_root = system::sha256::double_hash(test::root03, root44);
 
     hashes roots{};
-    BOOST_CHECK_EQUAL(query.get_merkle_subroots(roots, 4), error::success);
-    BOOST_CHECK_EQUAL(roots.size(), 2u);
-    BOOST_CHECK_EQUAL(roots[0], test::root03);
-    BOOST_CHECK_EQUAL(roots[1], root44);
+    BC_CHECK_EQUAL(query.get_merkle_subroots(roots, 4), error::success);
+    BC_CHECK_EQUAL(roots.size(), 2u);
+    BC_CHECK_EQUAL(roots[0], test::root03);
+    BC_CHECK_EQUAL(roots[1], root44);
 
-    BOOST_CHECK_EQUAL(query.get_merkle_root(4), expected_root);
+    BC_CHECK_EQUAL(query.get_merkle_root(4), expected_root);
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK(!query.get_merkle_root_and_proof(root, proof, 4, 4));
-    BOOST_CHECK_EQUAL(root, expected_root);
+    BC_CHECK(!query.get_merkle_root_and_proof(root, proof, 4, 4));
+    BC_CHECK_EQUAL(root, expected_root);
 
     // expected result:
-    BOOST_CHECK_EQUAL(proof.size(), 3u);
-    BOOST_CHECK_EQUAL(proof[0], test::block4_hash);
-    BOOST_CHECK_EQUAL(proof[1], root42);
-    BOOST_CHECK_EQUAL(proof[2], test::root03);
+    BC_CHECK_EQUAL(proof.size(), 3u);
+    BC_CHECK_EQUAL(proof[0], test::block4_hash);
+    BC_CHECK_EQUAL(proof[1], root42);
+    BC_CHECK_EQUAL(proof[2], test::root03);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_greater_than_waypoint__error_invalid_argument)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__target_greater_than_waypoint__error_invalid_argument)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK_EQUAL(query.get_merkle_root_and_proof(root, proof, 5, 3), error::invalid_argument);
-    BOOST_CHECK_EQUAL(query.get_merkle_root(3), system::null_hash);
+    BC_CHECK_EQUAL(query.get_merkle_root_and_proof(root, proof, 5, 3), error::invalid_argument);
+    BC_CHECK_EQUAL(query.get_merkle_root(3), system::null_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__waypoint_beyond_top__error_not_found)
+BC_AUTO_TEST_CASE(query_merkle__get_merkle_root_and_proof__waypoint_beyond_top__error_not_found)
 {
     settings settings{ test::database_settings() };
     settings.interval_depth = 2;
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     merkle_accessor query{ store };
-    BOOST_CHECK_EQUAL(store.create(test::events_handler), error::success);
-    BOOST_CHECK(query.initialize(test::genesis));
+    BC_CHECK_EQUAL(store.create(test::events_handler), error::success);
+    BC_CHECK(query.initialize(test::genesis));
 
     hashes proof{};
     hash_digest root{};
-    BOOST_CHECK_EQUAL(query.get_merkle_root_and_proof(root, proof, 0, 100), error::not_found);
-    BOOST_CHECK_EQUAL(query.get_merkle_root(100), system::null_hash);
+    BC_CHECK_EQUAL(query.get_merkle_root_and_proof(root, proof, 0, 100), error::not_found);
+    BC_CHECK_EQUAL(query.get_merkle_root(100), system::null_hash);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
 
 // ==================================
 // config   : 0

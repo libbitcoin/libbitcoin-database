@@ -20,7 +20,7 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_locator_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(query_locator_tests, test::directory_setup_fixture)
 
 class query_access
   : public test::query_accessor
@@ -37,608 +37,608 @@ public:
 
 // get_headers
 
-BOOST_AUTO_TEST_CASE(query_locator__get_headers__empty_locator__returns_confirmed_headers)
+BC_AUTO_TEST_CASE(query_locator__get_headers__empty_locator__returns_confirmed_headers)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
     const auto headers = query.get_headers(locator, system::null_hash, 10);
-    BOOST_REQUIRE_EQUAL(headers.size(), 3u);
-    BOOST_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
-    BOOST_REQUIRE_EQUAL(headers[1]->hash(), test::block2_hash);
-    BOOST_REQUIRE_EQUAL(headers[2]->hash(), test::block3_hash);
+    BC_REQUIRE_EQUAL(headers.size(), 3u);
+    BC_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
+    BC_REQUIRE_EQUAL(headers[1]->hash(), test::block2_hash);
+    BC_REQUIRE_EQUAL(headers[2]->hash(), test::block3_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_headers__genesis_locator__returns_all_confirmed)
+BC_AUTO_TEST_CASE(query_locator__get_headers__genesis_locator__returns_all_confirmed)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
 
     const hashes locator{ test::block0_hash };
     const auto headers = query.get_headers(locator, system::null_hash, 10);
-    BOOST_REQUIRE_EQUAL(headers.size(), 2u);
-    BOOST_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
-    BOOST_REQUIRE_EQUAL(headers[1]->hash(), test::block2_hash);
+    BC_REQUIRE_EQUAL(headers.size(), 2u);
+    BC_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
+    BC_REQUIRE_EQUAL(headers[1]->hash(), test::block2_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_headers__mid_chain_locator__starts_after_fork)
+BC_AUTO_TEST_CASE(query_locator__get_headers__mid_chain_locator__starts_after_fork)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{ test::block1_hash, test::block0_hash };
     const auto headers = query.get_headers(locator, system::null_hash, 10);
-    BOOST_REQUIRE_EQUAL(headers.size(), 2u);
-    BOOST_REQUIRE_EQUAL(headers[0]->hash(), test::block2_hash);
-    BOOST_REQUIRE_EQUAL(headers[1]->hash(), test::block3_hash);
+    BC_REQUIRE_EQUAL(headers.size(), 2u);
+    BC_REQUIRE_EQUAL(headers[0]->hash(), test::block2_hash);
+    BC_REQUIRE_EQUAL(headers[1]->hash(), test::block3_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_headers__highest_first_locator__correct)
+BC_AUTO_TEST_CASE(query_locator__get_headers__highest_first_locator__correct)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{ test::block2_hash, test::block1_hash, test::block0_hash };
     const auto headers = query.get_headers(locator, system::null_hash, 10);
-    BOOST_REQUIRE_EQUAL(headers.size(), 1u);
-    BOOST_REQUIRE_EQUAL(headers[0]->hash(), test::block3_hash);
+    BC_REQUIRE_EQUAL(headers.size(), 1u);
+    BC_REQUIRE_EQUAL(headers[0]->hash(), test::block3_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_headers__stop_hash__includes_stop_excludes_later)
+BC_AUTO_TEST_CASE(query_locator__get_headers__stop_hash__includes_stop_excludes_later)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
     const auto headers = query.get_headers(locator, test::block2_hash, 10);
-    BOOST_REQUIRE_EQUAL(headers.size(), 2u);
-    BOOST_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
-    BOOST_REQUIRE_EQUAL(headers[1]->hash(), test::block2_hash);
+    BC_REQUIRE_EQUAL(headers.size(), 2u);
+    BC_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
+    BC_REQUIRE_EQUAL(headers[1]->hash(), test::block2_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_headers__genesis_locator_stop_next__stop_header)
+BC_AUTO_TEST_CASE(query_locator__get_headers__genesis_locator_stop_next__stop_header)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
 
     const hashes locator{ test::block0_hash };
     const auto headers = query.get_headers(locator, test::block1_hash, 10);
-    BOOST_REQUIRE_EQUAL(headers.size(), 1u);
-    BOOST_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
+    BC_REQUIRE_EQUAL(headers.size(), 1u);
+    BC_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_headers__limit__respects_limit)
+BC_AUTO_TEST_CASE(query_locator__get_headers__limit__respects_limit)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
     const auto headers = query.get_headers(locator, system::null_hash, 2);
-    BOOST_REQUIRE_EQUAL(headers.size(), 2u);
-    BOOST_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
-    BOOST_REQUIRE_EQUAL(headers[1]->hash(), test::block2_hash);
+    BC_REQUIRE_EQUAL(headers.size(), 2u);
+    BC_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
+    BC_REQUIRE_EQUAL(headers[1]->hash(), test::block2_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_headers__no_confirmed_blocks__empty)
+BC_AUTO_TEST_CASE(query_locator__get_headers__no_confirmed_blocks__empty)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
 
     const hashes locator{};
     const auto headers = query.get_headers(locator, system::null_hash, 10);
-    BOOST_REQUIRE(headers.empty());
+    BC_REQUIRE(headers.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_headers__reorg_terminal__returns_empty)
+BC_AUTO_TEST_CASE(query_locator__get_headers__reorg_terminal__returns_empty)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
 
     // Simulate a reorg by not confirming height 2, to_confirmed(2) is terminal.
-    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
 
     const hashes locator{};
     const auto headers = query.get_headers(locator, system::null_hash, 10);
-    BOOST_REQUIRE_EQUAL(headers.size(), 1u);
-    BOOST_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
+    BC_REQUIRE_EQUAL(headers.size(), 1u);
+    BC_REQUIRE_EQUAL(headers[0]->hash(), test::block1_hash);
 }
 
 // get_blocks
 
-BOOST_AUTO_TEST_CASE(query_locator__get_blocks__empty_locator__confirmed_headers)
+BC_AUTO_TEST_CASE(query_locator__get_blocks__empty_locator__confirmed_headers)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
     const auto blocks = query.get_blocks(locator, system::null_hash, 10);
-    BOOST_REQUIRE_EQUAL(blocks.size(), 3u);
-    BOOST_REQUIRE_EQUAL(blocks[0], test::block1_hash);
-    BOOST_REQUIRE_EQUAL(blocks[1], test::block2_hash);
-    BOOST_REQUIRE_EQUAL(blocks[2], test::block3_hash);
+    BC_REQUIRE_EQUAL(blocks.size(), 3u);
+    BC_REQUIRE_EQUAL(blocks[0], test::block1_hash);
+    BC_REQUIRE_EQUAL(blocks[1], test::block2_hash);
+    BC_REQUIRE_EQUAL(blocks[2], test::block3_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_blocks__genesis_locator__all_confirmed)
+BC_AUTO_TEST_CASE(query_locator__get_blocks__genesis_locator__all_confirmed)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
 
     const hashes locator{ test::block0_hash };
     const auto blocks = query.get_blocks(locator, system::null_hash, 10);
-    BOOST_REQUIRE_EQUAL(blocks.size(), 2u);
-    BOOST_REQUIRE_EQUAL(blocks[0], test::block1_hash);
-    BOOST_REQUIRE_EQUAL(blocks[1], test::block2_hash);
+    BC_REQUIRE_EQUAL(blocks.size(), 2u);
+    BC_REQUIRE_EQUAL(blocks[0], test::block1_hash);
+    BC_REQUIRE_EQUAL(blocks[1], test::block2_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_blocks__mid_chain_locator__starts_after_fork)
+BC_AUTO_TEST_CASE(query_locator__get_blocks__mid_chain_locator__starts_after_fork)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{ test::block1_hash, test::block0_hash };
     const auto blocks = query.get_blocks(locator, system::null_hash, 10);
-    BOOST_REQUIRE_EQUAL(blocks.size(), 2u);
-    BOOST_REQUIRE_EQUAL(blocks[0], test::block2_hash);
-    BOOST_REQUIRE_EQUAL(blocks[1], test::block3_hash);
+    BC_REQUIRE_EQUAL(blocks.size(), 2u);
+    BC_REQUIRE_EQUAL(blocks[0], test::block2_hash);
+    BC_REQUIRE_EQUAL(blocks[1], test::block3_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_blocks__highest_first_locator__expected)
+BC_AUTO_TEST_CASE(query_locator__get_blocks__highest_first_locator__expected)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{ test::block2_hash, test::block1_hash, test::block0_hash };
     const auto blocks = query.get_blocks(locator, system::null_hash, 10);
-    BOOST_REQUIRE_EQUAL(blocks.size(), 1u);
-    BOOST_REQUIRE_EQUAL(blocks[0], test::block3_hash);
+    BC_REQUIRE_EQUAL(blocks.size(), 1u);
+    BC_REQUIRE_EQUAL(blocks[0], test::block3_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_blocks__stop_hash__excludes_stop_and_after)
+BC_AUTO_TEST_CASE(query_locator__get_blocks__stop_hash__excludes_stop_and_after)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
     const auto blocks = query.get_blocks(locator, test::block2_hash, 10);
-    BOOST_REQUIRE_EQUAL(blocks.size(), 1u);
-    BOOST_REQUIRE_EQUAL(blocks[0], test::block1_hash);
+    BC_REQUIRE_EQUAL(blocks.size(), 1u);
+    BC_REQUIRE_EQUAL(blocks[0], test::block1_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_blocks__limit__respects_limit)
+BC_AUTO_TEST_CASE(query_locator__get_blocks__limit__respects_limit)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
     const auto blocks = query.get_blocks(locator, system::null_hash, 2);
-    BOOST_REQUIRE_EQUAL(blocks.size(), 2u);
-    BOOST_REQUIRE_EQUAL(blocks[0], test::block1_hash);
-    BOOST_REQUIRE_EQUAL(blocks[1], test::block2_hash);
+    BC_REQUIRE_EQUAL(blocks.size(), 2u);
+    BC_REQUIRE_EQUAL(blocks[0], test::block1_hash);
+    BC_REQUIRE_EQUAL(blocks[1], test::block2_hash);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_blocks__no_confirmed_blocks__empty)
+BC_AUTO_TEST_CASE(query_locator__get_blocks__no_confirmed_blocks__empty)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
 
     const hashes locator{};
     const auto blocks = query.get_blocks(locator, system::null_hash, 10);
-    BOOST_REQUIRE(blocks.empty());
+    BC_REQUIRE(blocks.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_blocks__reorg_terminal__returns_empty)
+BC_AUTO_TEST_CASE(query_locator__get_blocks__reorg_terminal__returns_empty)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
 
     // Simulate a reorg by not confirming height 2, to_confirmed(2) is terminal.
-    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
 
     const hashes locator{};
     const auto blocks = query.get_blocks(locator, system::null_hash, 10);
-    BOOST_REQUIRE_EQUAL(blocks.size(), 1u);
-    BOOST_REQUIRE_EQUAL(blocks[0], test::block1_hash);
+    BC_REQUIRE_EQUAL(blocks.size(), 1u);
+    BC_REQUIRE_EQUAL(blocks[0], test::block1_hash);
 }
 
 // get_locator_span
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__empty_locator__starts_after_genesis)
+BC_AUTO_TEST_CASE(query_locator__get_locator_span__empty_locator__starts_after_genesis)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
     const auto span = query.get_locator_span(locator, system::null_hash, 10, false);
-    BOOST_REQUIRE_EQUAL(span.begin, 1u);
-    BOOST_REQUIRE_EQUAL(span.end, 4u);
-    BOOST_REQUIRE_EQUAL(span.size(), 3u);
+    BC_REQUIRE_EQUAL(span.begin, 1u);
+    BC_REQUIRE_EQUAL(span.end, 4u);
+    BC_REQUIRE_EQUAL(span.size(), 3u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__genesis_locator__starts_after_genesis)
+BC_AUTO_TEST_CASE(query_locator__get_locator_span__genesis_locator__starts_after_genesis)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
 
     const hashes locator{ test::block0_hash };
     const auto span = query.get_locator_span(locator, system::null_hash, 10, false);
-    BOOST_REQUIRE_EQUAL(span.begin, 1u);
-    BOOST_REQUIRE_EQUAL(span.end, 3u);
-    BOOST_REQUIRE_EQUAL(span.size(), 2u);
+    BC_REQUIRE_EQUAL(span.begin, 1u);
+    BC_REQUIRE_EQUAL(span.end, 3u);
+    BC_REQUIRE_EQUAL(span.size(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__mid_chain_locator__starts_after_fork)
+BC_AUTO_TEST_CASE(query_locator__get_locator_span__mid_chain_locator__starts_after_fork)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{ test::block1_hash, test::block0_hash };
     const auto span = query.get_locator_span(locator, system::null_hash, 10, false);
-    BOOST_REQUIRE_EQUAL(span.begin, 2u);
-    BOOST_REQUIRE_EQUAL(span.end, 4u);
-    BOOST_REQUIRE_EQUAL(span.size(), 2u);
+    BC_REQUIRE_EQUAL(span.begin, 2u);
+    BC_REQUIRE_EQUAL(span.end, 4u);
+    BC_REQUIRE_EQUAL(span.size(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_hash__limits_to_stop_exclusive)
+BC_AUTO_TEST_CASE(query_locator__get_locator_span__stop_hash__limits_to_stop_exclusive)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
     const auto span = query.get_locator_span(locator, test::block2_hash, 10, false);
-    BOOST_REQUIRE_EQUAL(span.begin, 1u);
-    BOOST_REQUIRE_EQUAL(span.end, 2u);
-    BOOST_REQUIRE_EQUAL(span.size(), 1u);
+    BC_REQUIRE_EQUAL(span.begin, 1u);
+    BC_REQUIRE_EQUAL(span.end, 2u);
+    BC_REQUIRE_EQUAL(span.size(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_hash_inclusive__limits_to_stop_inclusive)
+BC_AUTO_TEST_CASE(query_locator__get_locator_span__stop_hash_inclusive__limits_to_stop_inclusive)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
 
     const hashes locator{ test::block0_hash };
     const auto span = query.get_locator_span(locator, test::block1_hash, 10, true);
-    BOOST_REQUIRE_EQUAL(span.begin, 1u);
-    BOOST_REQUIRE_EQUAL(span.end, 2u);
-    BOOST_REQUIRE_EQUAL(span.size(), 1u);
+    BC_REQUIRE_EQUAL(span.begin, 1u);
+    BC_REQUIRE_EQUAL(span.end, 2u);
+    BC_REQUIRE_EQUAL(span.size(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_at_fork_inclusive__empty_span)
+BC_AUTO_TEST_CASE(query_locator__get_locator_span__stop_at_fork_inclusive__empty_span)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
 
     const hashes locator{ test::block1_hash };
     const auto span = query.get_locator_span(locator, test::block1_hash, 10, true);
-    BOOST_REQUIRE_EQUAL(span.begin, 2u);
-    BOOST_REQUIRE_EQUAL(span.end, 2u);
-    BOOST_REQUIRE_EQUAL(span.size(), 0u);
+    BC_REQUIRE_EQUAL(span.begin, 2u);
+    BC_REQUIRE_EQUAL(span.end, 2u);
+    BC_REQUIRE_EQUAL(span.size(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__limit_smaller_than_range__respects_limit)
+BC_AUTO_TEST_CASE(query_locator__get_locator_span__limit_smaller_than_range__respects_limit)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
 
     const hashes locator{};
     const auto span = query.get_locator_span(locator, system::null_hash, 2, false);
-    BOOST_REQUIRE_EQUAL(span.begin, 1u);
-    BOOST_REQUIRE_EQUAL(span.end, 3u);
-    BOOST_REQUIRE_EQUAL(span.size(), 2u);
+    BC_REQUIRE_EQUAL(span.begin, 1u);
+    BC_REQUIRE_EQUAL(span.end, 3u);
+    BC_REQUIRE_EQUAL(span.size(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__no_confirmed_blocks__empty_span)
+BC_AUTO_TEST_CASE(query_locator__get_locator_span__no_confirmed_blocks__empty_span)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
 
     const hashes locator{};
     const auto span = query.get_locator_span(locator, system::null_hash, 10, false);
-    BOOST_REQUIRE_EQUAL(span.begin, 1u);
-    BOOST_REQUIRE_EQUAL(span.end, 1u);
-    BOOST_REQUIRE_EQUAL(span.size(), 0u);
+    BC_REQUIRE_EQUAL(span.begin, 1u);
+    BC_REQUIRE_EQUAL(span.end, 1u);
+    BC_REQUIRE_EQUAL(span.size(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__stop_before_start__empty_span)
+BC_AUTO_TEST_CASE(query_locator__get_locator_span__stop_before_start__empty_span)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
 
     const hashes locator{ test::block1_hash };
     const auto span = query.get_locator_span(locator, test::block0_hash, 10, false);
-    BOOST_REQUIRE_EQUAL(span.begin, 2u);
-    BOOST_REQUIRE_EQUAL(span.end, 2u);
-    BOOST_REQUIRE_EQUAL(span.size(), 0u);
+    BC_REQUIRE_EQUAL(span.begin, 2u);
+    BC_REQUIRE_EQUAL(span.end, 2u);
+    BC_REQUIRE_EQUAL(span.size(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_span__large_limit__capped_by_top_confirmed)
+BC_AUTO_TEST_CASE(query_locator__get_locator_span__large_limit__capped_by_top_confirmed)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
 
     const hashes locator{};
     const auto span = query.get_locator_span(locator, system::null_hash, 1000, false);
-    BOOST_REQUIRE_EQUAL(span.begin, 1u);
-    BOOST_REQUIRE_EQUAL(span.end, 2u);
-    BOOST_REQUIRE_EQUAL(span.size(), 1u);
+    BC_REQUIRE_EQUAL(span.begin, 1u);
+    BC_REQUIRE_EQUAL(span.end, 2u);
+    BC_REQUIRE_EQUAL(span.size(), 1u);
 }
 
 // get_locator_start
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__empty__zero)
+BC_AUTO_TEST_CASE(query_locator__get_locator_start__empty__zero)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.get_locator_start({}), 0u);
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE_EQUAL(query.get_locator_start({}), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__genesis__zero)
+BC_AUTO_TEST_CASE(query_locator__get_locator_start__genesis__zero)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.get_locator_start({ test::block0_hash }), 0u);
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE_EQUAL(query.get_locator_start({ test::block0_hash }), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__unconfirmed__zero)
+BC_AUTO_TEST_CASE(query_locator__get_locator_start__unconfirmed__zero)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE_EQUAL(query.get_locator_start({ test::block1_hash }), 0u);
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE_EQUAL(query.get_locator_start({ test::block1_hash }), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_locator__get_locator_start__confirmed__first_match)
+BC_AUTO_TEST_CASE(query_locator__get_locator_start__confirmed__first_match)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     query_access query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
-    BOOST_REQUIRE(query.push_confirmed(3, false));
-    BOOST_REQUIRE_EQUAL(query.get_locator_start({ system::null_hash, test::block2_hash, test::block1_hash }), 2u);
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block3, context{ 0, 3, 0 }, {}, false, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.push_confirmed(3, false));
+    BC_REQUIRE_EQUAL(query.get_locator_start({ system::null_hash, test::block2_hash, test::block1_hash }), 2u);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -20,50 +20,50 @@
 #include "../mocks/blocks.hpp"
 #include "../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_unspent_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(query_unspent_tests, test::directory_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_totals__empty_branch__success_zeros)
+BC_AUTO_TEST_CASE(query_unspent__get_unspent_totals__empty_branch__success_zeros)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
 
     const stopper cancel{};
     unspent_totals totals{};
-    BOOST_REQUIRE(!query.get_unspent_totals(cancel, totals, {}));
-    BOOST_REQUIRE_EQUAL(totals.outputs, 0u);
-    BOOST_REQUIRE_EQUAL(totals.transactions, 0u);
-    BOOST_REQUIRE_EQUAL(totals.script_bytes, 0u);
-    BOOST_REQUIRE_EQUAL(totals.value, 0u);
+    BC_REQUIRE(!query.get_unspent_totals(cancel, totals, {}));
+    BC_REQUIRE_EQUAL(totals.outputs, 0u);
+    BC_REQUIRE_EQUAL(totals.transactions, 0u);
+    BC_REQUIRE_EQUAL(totals.script_bytes, 0u);
+    BC_REQUIRE_EQUAL(totals.value, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_totals__two_block_branch__expected)
+BC_AUTO_TEST_CASE(query_unspent__get_unspent_totals__two_block_branch__expected)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(1));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(2));
+    BC_REQUIRE(query.push_confirmed(2, false));
 
     // Each block is one coinbase with one unspent p2pk output (67 bytes).
     const stopper cancel{};
     unspent_totals totals{};
     const header_links branch{ header_link{ 2 }, header_link{ 1 } };
-    BOOST_REQUIRE(!query.get_unspent_totals(cancel, totals, branch));
-    BOOST_REQUIRE_EQUAL(totals.outputs, 2u);
-    BOOST_REQUIRE_EQUAL(totals.transactions, 2u);
-    BOOST_REQUIRE_EQUAL(totals.script_bytes, 134u);
-    BOOST_REQUIRE_EQUAL(totals.value, 10'000'000'000u);
+    BC_REQUIRE(!query.get_unspent_totals(cancel, totals, branch));
+    BC_REQUIRE_EQUAL(totals.outputs, 2u);
+    BC_REQUIRE_EQUAL(totals.transactions, 2u);
+    BC_REQUIRE_EQUAL(totals.script_bytes, 134u);
+    BC_REQUIRE_EQUAL(totals.value, 10'000'000'000u);
 }
 
 // The commitment element (bitcoind coin serialization) of a confirmed output.
@@ -88,20 +88,20 @@ static system::data_chunk coin_element(const system::chain::block& block,
     return output_element(*block.transactions_ptr()->front(), 0, height);
 }
 
-BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_muhash__two_block_branch__expected)
+BC_AUTO_TEST_CASE(query_unspent__get_unspent_muhash__two_block_branch__expected)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(1));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(2));
+    BC_REQUIRE(query.push_confirmed(2, false));
 
     system::muhash3072 expected{};
     expected.insert(coin_element(test::block1, 1));
@@ -111,29 +111,29 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_muhash__two_block_branch__expect
     hash_digest digest{};
     unspent_totals totals{};
     const header_links branch{ header_link{ 2 }, header_link{ 1 } };
-    BOOST_REQUIRE(!query.get_unspent_muhash(cancel, totals, digest, branch));
-    BOOST_REQUIRE_EQUAL(digest, expected.flush());
-    BOOST_REQUIRE_EQUAL(totals.outputs, 2u);
-    BOOST_REQUIRE_EQUAL(totals.transactions, 2u);
-    BOOST_REQUIRE_EQUAL(totals.script_bytes, 134u);
-    BOOST_REQUIRE_EQUAL(totals.coin_bytes, 2u * (48u + 1u + 67u));
-    BOOST_REQUIRE_EQUAL(totals.value, 10'000'000'000u);
+    BC_REQUIRE(!query.get_unspent_muhash(cancel, totals, digest, branch));
+    BC_REQUIRE_EQUAL(digest, expected.flush());
+    BC_REQUIRE_EQUAL(totals.outputs, 2u);
+    BC_REQUIRE_EQUAL(totals.transactions, 2u);
+    BC_REQUIRE_EQUAL(totals.script_bytes, 134u);
+    BC_REQUIRE_EQUAL(totals.coin_bytes, 2u * (48u + 1u + 67u));
+    BC_REQUIRE_EQUAL(totals.value, 10'000'000'000u);
 }
 
-BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_block_branch__expected)
+BC_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_block_branch__expected)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(1));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(2));
+    BC_REQUIRE(query.push_confirmed(2, false));
 
     // Canonical order is by txid, the stream is double sha256 hashed.
     const auto first = coin_element(test::block1, 1);
@@ -149,26 +149,26 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_block_branch__ex
     hash_digest digest{};
     unspent_totals totals{};
     const header_links branch{ header_link{ 2 }, header_link{ 1 } };
-    BOOST_REQUIRE(!query.get_unspent_serialized(cancel, totals, digest, branch));
-    BOOST_REQUIRE_EQUAL(digest, expected);
-    BOOST_REQUIRE_EQUAL(totals.outputs, 2u);
-    BOOST_REQUIRE_EQUAL(totals.transactions, 2u);
-    BOOST_REQUIRE_EQUAL(totals.script_bytes, 134u);
-    BOOST_REQUIRE_EQUAL(totals.coin_bytes, 2u * (48u + 1u + 67u));
-    BOOST_REQUIRE_EQUAL(totals.value, 10'000'000'000u);
+    BC_REQUIRE(!query.get_unspent_serialized(cancel, totals, digest, branch));
+    BC_REQUIRE_EQUAL(digest, expected);
+    BC_REQUIRE_EQUAL(totals.outputs, 2u);
+    BC_REQUIRE_EQUAL(totals.transactions, 2u);
+    BC_REQUIRE_EQUAL(totals.script_bytes, 134u);
+    BC_REQUIRE_EQUAL(totals.coin_bytes, 2u * (48u + 1u + 67u));
+    BC_REQUIRE_EQUAL(totals.value, 10'000'000'000u);
 }
 
-BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_output_coinbase__one_transaction)
+BC_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_output_coinbase__one_transaction)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1c, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1c, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(1));
+    BC_REQUIRE(query.push_confirmed(1, false));
 
     // Both outputs of the one coinbase are unspent, ordered by index.
     const auto& tx = *test::block1c.transactions_ptr()->front();
@@ -183,33 +183,33 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__two_output_coinbase_
     hash_digest digest{};
     unspent_totals totals{};
     const header_links branch{ header_link{ 1 } };
-    BOOST_REQUIRE(!query.get_unspent_serialized(cancel, totals, digest, branch));
-    BOOST_REQUIRE_EQUAL(digest, expected);
-    BOOST_REQUIRE_EQUAL(totals.outputs, 2u);
-    BOOST_REQUIRE_EQUAL(totals.transactions, 1u);
-    BOOST_REQUIRE_EQUAL(totals.value, 66u);
+    BC_REQUIRE(!query.get_unspent_serialized(cancel, totals, digest, branch));
+    BC_REQUIRE_EQUAL(digest, expected);
+    BC_REQUIRE_EQUAL(totals.outputs, 2u);
+    BC_REQUIRE_EQUAL(totals.transactions, 1u);
+    BC_REQUIRE_EQUAL(totals.value, 66u);
 
     totals = {};
-    BOOST_REQUIRE(!query.get_unspent_muhash(cancel, totals, digest, branch));
-    BOOST_REQUIRE_EQUAL(digest, muhash.flush());
-    BOOST_REQUIRE_EQUAL(totals.outputs, 2u);
-    BOOST_REQUIRE_EQUAL(totals.transactions, 1u);
+    BC_REQUIRE(!query.get_unspent_muhash(cancel, totals, digest, branch));
+    BC_REQUIRE_EQUAL(digest, muhash.flush());
+    BC_REQUIRE_EQUAL(totals.outputs, 2u);
+    BC_REQUIRE_EQUAL(totals.transactions, 1u);
 }
 
-BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_matches__two_block_branch__one_match)
+BC_AUTO_TEST_CASE(query_unspent__get_unspent_matches__two_block_branch__one_match)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
-    BOOST_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set_strong(2));
-    BOOST_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(1));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(2));
+    BC_REQUIRE(query.push_confirmed(2, false));
 
     const auto& tx = *test::block1.transactions_ptr()->front();
     const auto script = tx.outputs_ptr()->front()->script().to_data(false);
@@ -219,56 +219,56 @@ BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_matches__two_block_branch__one_m
     size_t txouts{};
     unspent_coins coins{};
     const header_links branch{ header_link{ 2 }, header_link{ 1 } };
-    BOOST_REQUIRE(!query.get_unspent_matches(cancel, coins, txouts, keys, branch));
-    BOOST_REQUIRE_EQUAL(txouts, 2u);
-    BOOST_REQUIRE_EQUAL(coins.size(), 1u);
-    BOOST_REQUIRE_EQUAL(coins.front().out.point().hash(), tx.hash(false));
-    BOOST_REQUIRE_EQUAL(coins.front().out.point().index(), 0u);
-    BOOST_REQUIRE_EQUAL(coins.front().height, 1u);
-    BOOST_REQUIRE(coins.front().coinbase);
-    BOOST_REQUIRE_EQUAL(coins.front().out.value(), 5'000'000'000u);
-    BOOST_REQUIRE_EQUAL(coins.front().script, script);
+    BC_REQUIRE(!query.get_unspent_matches(cancel, coins, txouts, keys, branch));
+    BC_REQUIRE_EQUAL(txouts, 2u);
+    BC_REQUIRE_EQUAL(coins.size(), 1u);
+    BC_REQUIRE_EQUAL(coins.front().out.point().hash(), tx.hash(false));
+    BC_REQUIRE_EQUAL(coins.front().out.point().index(), 0u);
+    BC_REQUIRE_EQUAL(coins.front().height, 1u);
+    BC_REQUIRE(coins.front().coinbase);
+    BC_REQUIRE_EQUAL(coins.front().out.value(), 5'000'000'000u);
+    BC_REQUIRE_EQUAL(coins.front().script, script);
 }
 
-BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_matches__no_keys__no_matches)
+BC_AUTO_TEST_CASE(query_unspent__get_unspent_matches__no_keys__no_matches)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(1));
+    BC_REQUIRE(query.push_confirmed(1, false));
 
     const stopper cancel{};
     size_t txouts{};
     unspent_coins coins{};
     const std::unordered_set<hash_digest> keys{};
     const header_links branch{ header_link{ 1 } };
-    BOOST_REQUIRE(!query.get_unspent_matches(cancel, coins, txouts, keys, branch));
-    BOOST_REQUIRE_EQUAL(txouts, 1u);
-    BOOST_REQUIRE(coins.empty());
+    BC_REQUIRE(!query.get_unspent_matches(cancel, coins, txouts, keys, branch));
+    BC_REQUIRE_EQUAL(txouts, 1u);
+    BC_REQUIRE(coins.empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_unspent__get_unspent_totals__cancelled__query_canceled)
+BC_AUTO_TEST_CASE(query_unspent__get_unspent_totals__cancelled__query_canceled)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
-    BOOST_REQUIRE(query.set_strong(1));
-    BOOST_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(1));
+    BC_REQUIRE(query.push_confirmed(1, false));
 
     const stopper cancel{ true };
     unspent_totals totals{};
     const header_links branch{ header_link{ 1 } };
     const auto ec = query.get_unspent_totals(cancel, totals, branch);
-    BOOST_REQUIRE_EQUAL(ec, error::query_canceled);
+    BC_REQUIRE_EQUAL(ec, error::query_canceled);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

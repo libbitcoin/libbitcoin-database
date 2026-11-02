@@ -25,337 +25,337 @@
 // error::load_failure, error::flush_failure, error::unload_failure codes, but
 // don't want to make this class virtual.
 
-BOOST_FIXTURE_TEST_SUITE(mmap_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(mmap_tests, test::directory_setup_fixture)
 
 // map is an alias for mmap<one>.
 
-BOOST_AUTO_TEST_CASE(mmap__file__always__expected)
+BC_AUTO_TEST_CASE(mmap__file__always__expected)
 {
     const std::string file = TEST_PATH;
     map instance(file);
-    BOOST_REQUIRE_EQUAL(instance.file(), file);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.file(), file);
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__open__opened__open_open)
+BC_AUTO_TEST_CASE(mmap__open__opened__open_open)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(test::exists(file));
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE_EQUAL(instance.open(), error::open_open);
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(test::exists(file));
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE_EQUAL(instance.open(), error::open_open);
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__open__no_file__false)
+BC_AUTO_TEST_CASE(mmap__open__no_file__false)
 {
     const std::string file = TEST_PATH;
     map instance(file);
-    BOOST_REQUIRE(!test::exists(file));
-    BOOST_REQUIRE(instance.open());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!test::exists(file));
+    BC_REQUIRE(instance.open());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__close__open__true)
+BC_AUTO_TEST_CASE(mmap__close__open__true)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(instance.is_open());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(instance.is_open());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__close__closed__true)
+BC_AUTO_TEST_CASE(mmap__close__closed__true)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.is_open());
-    BOOST_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.is_open());
+    BC_REQUIRE(!instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__close__loaded__close_loaded)
+BC_AUTO_TEST_CASE(mmap__close__loaded__close_loaded)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.close(), error::close_loaded);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.close(), error::close_loaded);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__properties__open_close__expected)
+BC_AUTO_TEST_CASE(mmap__properties__open_close__expected)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.is_open());
-    BOOST_REQUIRE(!instance.is_loaded());
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), 0u);
+    BC_REQUIRE(!instance.is_open());
+    BC_REQUIRE(!instance.is_loaded());
+    BC_REQUIRE_EQUAL(instance.size(), 0u);
+    BC_REQUIRE_EQUAL(instance.capacity(), 0u);
 
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(instance.is_open());
-    BOOST_REQUIRE(!instance.is_loaded());
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), 0u);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(instance.is_open());
+    BC_REQUIRE(!instance.is_loaded());
+    BC_REQUIRE_EQUAL(instance.size(), 0u);
+    BC_REQUIRE_EQUAL(instance.capacity(), 0u);
 
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.is_open());
-    BOOST_REQUIRE(!instance.is_loaded());
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), 0u);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.is_open());
+    BC_REQUIRE(!instance.is_loaded());
+    BC_REQUIRE_EQUAL(instance.size(), 0u);
+    BC_REQUIRE_EQUAL(instance.capacity(), 0u);
+    BC_REQUIRE(!instance.get_fault());
 
-    BOOST_REQUIRE(test::exists(file));
+    BC_REQUIRE(test::exists(file));
 }
 
-BOOST_AUTO_TEST_CASE(mmap__properties__load_unload__expected)
+BC_AUTO_TEST_CASE(mmap__properties__load_unload__expected)
 {
     constexpr auto default_minimum_capacity = 1u;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.is_loaded());
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), 0u);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.is_loaded());
+    BC_REQUIRE_EQUAL(instance.size(), 0u);
+    BC_REQUIRE_EQUAL(instance.capacity(), 0u);
 
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.is_loaded());
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), default_minimum_capacity);
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(instance.is_loaded());
+    BC_REQUIRE_EQUAL(instance.size(), 0u);
+    BC_REQUIRE_EQUAL(instance.capacity(), default_minimum_capacity);
 
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.is_loaded());
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), 0u);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.is_loaded());
+    BC_REQUIRE_EQUAL(instance.size(), 0u);
+    BC_REQUIRE_EQUAL(instance.capacity(), 0u);
 
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.is_open());
-    BOOST_REQUIRE(!instance.is_loaded());
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), 0u);
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.is_open());
+    BC_REQUIRE(!instance.is_loaded());
+    BC_REQUIRE_EQUAL(instance.size(), 0u);
+    BC_REQUIRE_EQUAL(instance.capacity(), 0u);
+    BC_REQUIRE(!instance.get_fault());
 
-    BOOST_REQUIRE(test::exists(file));
+    BC_REQUIRE(test::exists(file));
 }
 
-BOOST_AUTO_TEST_CASE(mmap__load__unloaded__true)
+BC_AUTO_TEST_CASE(mmap__load__unloaded__true)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__load__shared__load_locked)
+BC_AUTO_TEST_CASE(mmap__load__shared__load_locked)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
     auto memory = instance.get(instance.allocate(1));
 
-    BOOST_REQUIRE(memory);
-    BOOST_REQUIRE_EQUAL(instance.load(), error::load_locked);
+    BC_REQUIRE(memory);
+    BC_REQUIRE_EQUAL(instance.load(), error::load_locked);
 
     memory.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__load__loaded__load_loaded)
+BC_AUTO_TEST_CASE(mmap__load__loaded__load_loaded)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.load(), error::load_loaded);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.load(), error::load_loaded);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__unload__unloaded__true)
+BC_AUTO_TEST_CASE(mmap__unload__unloaded__true)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__unload__loaded__true)
+BC_AUTO_TEST_CASE(mmap__unload__loaded__true)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__shrink__unloaded__shrink_unloaded)
+BC_AUTO_TEST_CASE(mmap__shrink__unloaded__shrink_unloaded)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE_EQUAL(instance.shrink(), error::shrink_unloaded);
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE_EQUAL(instance.shrink(), error::shrink_unloaded);
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__shrink__loaded__true)
+BC_AUTO_TEST_CASE(mmap__shrink__loaded__true)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(!instance.shrink());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.shrink());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__capacity__default__expected)
+BC_AUTO_TEST_CASE(mmap__capacity__default__expected)
 {
 
     constexpr auto default_minimum_capacity = 1_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE_EQUAL(instance.capacity(), zero);
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.capacity(), default_minimum_capacity);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE_EQUAL(instance.capacity(), zero);
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.capacity(), default_minimum_capacity);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__allocate__unloaded__false)
+BC_AUTO_TEST_CASE(mmap__allocate__unloaded__false)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE_EQUAL(instance.allocate(42), map::eof);
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE_EQUAL(instance.allocate(42), map::eof);
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__allocate__loaded__expected_capacity)
+BC_AUTO_TEST_CASE(mmap__allocate__loaded__expected_capacity)
 {
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 42_size;
     constexpr auto size = 100_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, half_rate });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
-    BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BC_REQUIRE_EQUAL(instance.allocate(size), zero);
 
     constexpr auto capacity = size + to_half(size);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.capacity(), capacity);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__allocate__add_overflow__eof)
+BC_AUTO_TEST_CASE(mmap__allocate__add_overflow__eof)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.allocate(100), zero);
-    BOOST_REQUIRE_EQUAL(instance.allocate(max_size_t), storage::eof);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.allocate(100), zero);
+    BC_REQUIRE_EQUAL(instance.allocate(max_size_t), storage::eof);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__allocate__minimum_no_expansion__expected_capacity)
+BC_AUTO_TEST_CASE(mmap__allocate__minimum_no_expansion__expected_capacity)
 {
     constexpr auto size = 42_size;
     constexpr auto minimum = 100_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, 0 });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.allocate(size), zero);
 
     constexpr auto capacity = std::max(minimum, size);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.capacity(), capacity);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__allocate__no_minimum_expansion__expected_capacity)
+BC_AUTO_TEST_CASE(mmap__allocate__no_minimum_expansion__expected_capacity)
 {
     // map will fail if minimum is zero.
     constexpr auto minimum = 1_size;
     constexpr auto rate = 42_size;
     constexpr auto size = 100_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.allocate(size), zero);
 
     // These add only because size is 100.
     constexpr auto capacity = size + rate;
-    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.capacity(), capacity);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
 // Growth admission (headroom).
@@ -369,317 +369,317 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__no_minimum_expansion__expected_capacity)
 
 constexpr uint64_t unsatisfiable_headroom = 0x0001000000000000_u64;
 
-BOOST_AUTO_TEST_CASE(mmap__allocate__unsatisfiable_headroom__eof)
+BC_AUTO_TEST_CASE(mmap__allocate__unsatisfiable_headroom__eof)
 {
     constexpr auto minimum = 42_size;
     constexpr auto rate = 50_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate, unsatisfiable_headroom });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__allocate__unsatisfiable_headroom__space_no_fault)
+BC_AUTO_TEST_CASE(mmap__allocate__unsatisfiable_headroom__space_no_fault)
 {
     constexpr auto minimum = 42_size;
     constexpr auto rate = 50_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate, unsatisfiable_headroom });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
 
-    BOOST_REQUIRE_NE(instance.get_space(), zero);
-    BOOST_REQUIRE(!instance.get_fault());
-    BOOST_REQUIRE(instance.is_loaded());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
+    BC_REQUIRE_NE(instance.get_space(), zero);
+    BC_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(instance.is_loaded());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__allocate__unsatisfiable_headroom__capacity_retained)
+BC_AUTO_TEST_CASE(mmap__allocate__unsatisfiable_headroom__capacity_retained)
 {
     constexpr auto minimum = 42_size;
     constexpr auto rate = 50_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate, unsatisfiable_headroom });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
-    BOOST_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BC_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
 
-    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__allocate__within_capacity_unsatisfiable_headroom__success)
+BC_AUTO_TEST_CASE(mmap__allocate__within_capacity_unsatisfiable_headroom__success)
 {
     constexpr auto minimum = 100_size;
     constexpr auto rate = 50_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate, unsatisfiable_headroom });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.allocate(42), zero);
-    BOOST_REQUIRE(!instance.get_fault());
-    BOOST_REQUIRE_EQUAL(instance.get_space(), zero);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.allocate(42), zero);
+    BC_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.get_space(), zero);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__reload__after_headroom_refusal__clears_space)
+BC_AUTO_TEST_CASE(mmap__reload__after_headroom_refusal__clears_space)
 {
     constexpr auto minimum = 42_size;
     constexpr auto rate = 50_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate, unsatisfiable_headroom });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
-    BOOST_REQUIRE_NE(instance.get_space(), zero);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.allocate(1000), map::eof);
+    BC_REQUIRE_NE(instance.get_space(), zero);
 
-    BOOST_REQUIRE(!instance.reload());
-    BOOST_REQUIRE_EQUAL(instance.get_space(), zero);
-    BOOST_REQUIRE(!instance.get_fault());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.reload());
+    BC_REQUIRE_EQUAL(instance.get_space(), zero);
+    BC_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__expand__unsatisfiable_headroom__false_no_fault)
+BC_AUTO_TEST_CASE(mmap__expand__unsatisfiable_headroom__false_no_fault)
 {
     constexpr auto minimum = 42_size;
     constexpr auto rate = 50_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate, unsatisfiable_headroom });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(!instance.expand(1000));
-    BOOST_REQUIRE_NE(instance.get_space(), zero);
-    BOOST_REQUIRE(!instance.get_fault());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.expand(1000));
+    BC_REQUIRE_NE(instance.get_space(), zero);
+    BC_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__reserve__unsatisfiable_headroom__false_no_fault)
+BC_AUTO_TEST_CASE(mmap__reserve__unsatisfiable_headroom__false_no_fault)
 {
     constexpr auto minimum = 42_size;
     constexpr auto rate = 50_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate, unsatisfiable_headroom });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(!instance.reserve(1000));
-    BOOST_REQUIRE_NE(instance.get_space(), zero);
-    BOOST_REQUIRE(!instance.get_fault());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.reserve(1000));
+    BC_REQUIRE_NE(instance.get_space(), zero);
+    BC_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
 }
 
 #endif // !MANAGE_STAGING
 
-BOOST_AUTO_TEST_CASE(mmap__allocate__zero_headroom__growth_admitted)
+BC_AUTO_TEST_CASE(mmap__allocate__zero_headroom__growth_admitted)
 {
     constexpr auto minimum = 42_size;
     constexpr auto rate = 50_size;
     constexpr auto size = 1000_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate, 0 });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.allocate(size), zero);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.allocate(size), zero);
 
     constexpr auto capacity = size + to_half(size);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
-    BOOST_REQUIRE_EQUAL(instance.get_space(), zero);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.capacity(), capacity);
+    BC_REQUIRE_EQUAL(instance.get_space(), zero);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__truncate__unloaded__failure)
+BC_AUTO_TEST_CASE(mmap__truncate__unloaded__failure)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.truncate(42));
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.truncate(42));
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__truncate__default_to_zero__success)
+BC_AUTO_TEST_CASE(mmap__truncate__default_to_zero__success)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE( instance.truncate(0));
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE( instance.truncate(0));
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__truncate__increase_capacity__failure)
+BC_AUTO_TEST_CASE(mmap__truncate__increase_capacity__failure)
 {
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 42_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, half_rate });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
-    BOOST_REQUIRE(!instance.truncate(add1(minimum)));
-    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BC_REQUIRE(!instance.truncate(add1(minimum)));
+    BC_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__truncate__unchanged__success_capacity_unchanged)
+BC_AUTO_TEST_CASE(mmap__truncate__unchanged__success_capacity_unchanged)
 {
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 42_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, half_rate });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.size(), zero);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
-    BOOST_REQUIRE( instance.truncate(zero));
-    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
-    BOOST_REQUIRE_EQUAL(instance.size(), zero);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.size(), zero);
+    BC_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BC_REQUIRE( instance.truncate(zero));
+    BC_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BC_REQUIRE_EQUAL(instance.size(), zero);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__truncate__decrease__success_logical_decreased_capacity_unchanged)
+BC_AUTO_TEST_CASE(mmap__truncate__decrease__success_logical_decreased_capacity_unchanged)
 {
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 42_size;
     constexpr auto half = to_half(minimum);
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, half_rate });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.allocate(minimum), zero);
-    BOOST_REQUIRE_EQUAL(instance.size(), minimum);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
-    BOOST_REQUIRE( instance.truncate(half));
-    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
-    BOOST_REQUIRE_EQUAL(instance.size(), half);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.allocate(minimum), zero);
+    BC_REQUIRE_EQUAL(instance.size(), minimum);
+    BC_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BC_REQUIRE( instance.truncate(half));
+    BC_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BC_REQUIRE_EQUAL(instance.size(), half);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__get_filled__unloaded__false)
+BC_AUTO_TEST_CASE(mmap__get_filled__unloaded__false)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.get_filled(42, 24));
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.get_filled(42, 24));
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_capacity)
+BC_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_capacity)
 {
     constexpr auto half_rate = 50_size;
     constexpr auto minimum = 42_size;
     constexpr auto size = 100_size;
     constexpr auto offset = 42_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, half_rate });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.capacity(), minimum);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.capacity(), minimum);
 
     auto memory = instance.get_filled(offset, size);
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     const auto expected = std::next(instance.get().data(), offset);
-    BOOST_REQUIRE(memory.data() == expected);
+    BC_REQUIRE(memory.data() == expected);
 
     constexpr auto capacity = offset + size + to_half(offset + size);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
-    BOOST_REQUIRE_EQUAL(instance.unload(), error::unload_locked);
+    BC_REQUIRE_EQUAL(instance.capacity(), capacity);
+    BC_REQUIRE_EQUAL(instance.unload(), error::unload_locked);
 
     memory.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__get_filled__add_overflow__eof)
+BC_AUTO_TEST_CASE(mmap__get_filled__add_overflow__eof)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.get_filled(100, 24));
-    BOOST_REQUIRE(!instance.get_filled(max_size_t, 24));
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(instance.get_filled(100, 24));
+    BC_REQUIRE(!instance.get_filled(max_size_t, 24));
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__get_filled__minimum_no_expansion__expected_capacity)
+BC_AUTO_TEST_CASE(mmap__get_filled__minimum_no_expansion__expected_capacity)
 {
     constexpr auto rate = 0_size;
     constexpr auto minimum = 42_size;
     constexpr auto size = 100_size;
     constexpr auto offset = 42_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.get_filled(offset, size));
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(instance.get_filled(offset, size));
 
     constexpr auto capacity = std::max(minimum, offset + size);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.capacity(), capacity);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__get_filled__no_minimum_expansion__expected_capacity)
+BC_AUTO_TEST_CASE(mmap__get_filled__no_minimum_expansion__expected_capacity)
 {
     // map will fail if minimum is zero.
     constexpr auto rate = 42_size;
@@ -687,22 +687,22 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__no_minimum_expansion__expected_capacity)
     constexpr auto size = 51_size;
     constexpr auto offset = 49_size;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { minimum, rate });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.get_filled(offset, size));
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(instance.get_filled(offset, size));
 
     // These add only because offset + size is 100.
     constexpr auto capacity = offset + size + rate;
-    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(instance.capacity(), capacity);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
+BC_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
 {
     BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 
@@ -712,33 +712,33 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
     constexpr auto offset1 = 5_size;
     constexpr auto fill1 = 0b0101'0101_u8;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { .size = minimum, .rate = half_rate, .fill = fill1 });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     auto memory = instance.get_filled(offset1, size1);
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     constexpr auto capacity = offset1 + size1 + to_half(offset1 + size1);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity);
-    BOOST_REQUIRE_EQUAL(capacity, 12u);
+    BC_REQUIRE_EQUAL(instance.capacity(), capacity);
+    BC_REQUIRE_EQUAL(capacity, 12u);
 
     auto data = instance.get().data();
-    BOOST_REQUIRE_EQUAL(data[ 0], fill1);   // load and expansion
-    BOOST_REQUIRE_EQUAL(data[ 1], fill1);   // load and expansion
-    BOOST_REQUIRE_EQUAL(data[ 2], fill1);   // load and expansion
-    BOOST_REQUIRE_EQUAL(data[ 3], fill1);   // load and expansion
-    BOOST_REQUIRE_EQUAL(data[ 4], fill1);   // load and expansion
+    BC_REQUIRE_EQUAL(data[ 0], fill1);   // load and expansion
+    BC_REQUIRE_EQUAL(data[ 1], fill1);   // load and expansion
+    BC_REQUIRE_EQUAL(data[ 2], fill1);   // load and expansion
+    BC_REQUIRE_EQUAL(data[ 3], fill1);   // load and expansion
+    BC_REQUIRE_EQUAL(data[ 4], fill1);   // load and expansion
 
-    BOOST_REQUIRE_EQUAL(data[ 5], fill1);   // offset + 0
-    BOOST_REQUIRE_EQUAL(data[ 6], fill1);   // offset + 1
-    BOOST_REQUIRE_EQUAL(data[ 7], fill1);   // offset + 2
-    BOOST_REQUIRE_EQUAL(data[ 8], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[ 9], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[10], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[11], fill1);   // sub1(offset1 + size1 + to_half(offset1 + size1))
+    BC_REQUIRE_EQUAL(data[ 5], fill1);   // offset + 0
+    BC_REQUIRE_EQUAL(data[ 6], fill1);   // offset + 1
+    BC_REQUIRE_EQUAL(data[ 7], fill1);   // offset + 2
+    BC_REQUIRE_EQUAL(data[ 8], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[ 9], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[10], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[11], fill1);   // sub1(offset1 + size1 + to_half(offset1 + size1))
 
     data[5] = 'a';
     data[6] = 'b';
@@ -748,11 +748,11 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
     constexpr auto offset2 = 15_size;
     memory.reset();
     memory = instance.get_filled(offset2, size2);
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     constexpr auto capacity2 = offset2 + size2 + to_half(offset2 + size2);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), capacity2);
-    BOOST_REQUIRE_EQUAL(capacity2, 30u);
+    BC_REQUIRE_EQUAL(instance.capacity(), capacity2);
+    BC_REQUIRE_EQUAL(capacity2, 30u);
 
     data[15] = 'd';
     data[16] = 'e';
@@ -762,187 +762,187 @@ BOOST_AUTO_TEST_CASE(mmap__get_filled__loaded__expected_fill)
 
     // Get data again in case it has been remapped by get_filled().
     data = instance.get().data();
-    ////BOOST_REQUIRE_EQUAL(data[ 0], 0x00_u8); // cannot assume mmap default fill
-    ////BOOST_REQUIRE_EQUAL(data[ 1], 0x00_u8); // cannot assume mmap default fill
-    ////BOOST_REQUIRE_EQUAL(data[ 2], 0x00_u8); // cannot assume mmap default fill
-    ////BOOST_REQUIRE_EQUAL(data[ 3], 0x00_u8); // cannot assume mmap default fill
-    ////BOOST_REQUIRE_EQUAL(data[ 4], 0x00_u8); // cannot assume mmap default fill
+    ////BC_REQUIRE_EQUAL(data[ 0], 0x00_u8); // cannot assume mmap default fill
+    ////BC_REQUIRE_EQUAL(data[ 1], 0x00_u8); // cannot assume mmap default fill
+    ////BC_REQUIRE_EQUAL(data[ 2], 0x00_u8); // cannot assume mmap default fill
+    ////BC_REQUIRE_EQUAL(data[ 3], 0x00_u8); // cannot assume mmap default fill
+    ////BC_REQUIRE_EQUAL(data[ 4], 0x00_u8); // cannot assume mmap default fill
 
-    BOOST_REQUIRE_EQUAL(data[ 5], 'a');     // offset + 0
-    BOOST_REQUIRE_EQUAL(data[ 6], 'b');     // offset + 1
-    BOOST_REQUIRE_EQUAL(data[ 7], 'c');     // offset + 2
-    BOOST_REQUIRE_EQUAL(data[ 8], fill1);   // expansion, resize_ (macos) trims on remap...
-    BOOST_REQUIRE_EQUAL(data[ 9], fill1);   // expansion, so it goes to zero if not refilled.
-    BOOST_REQUIRE_EQUAL(data[10], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[11], fill1);   // sub1(offset + size + to_half(offset + size))
-    BOOST_REQUIRE_EQUAL(data[12], fill1);   // cannot assume mmap default fill
-    BOOST_REQUIRE_EQUAL(data[13], fill1);   // cannot assume mmap default fill
-    BOOST_REQUIRE_EQUAL(data[14], fill1);   // cannot assume mmap default fill
-    BOOST_REQUIRE_EQUAL(data[15], 'd');     // offset2 + 0
-    BOOST_REQUIRE_EQUAL(data[16], 'e');     // offset2 + 1
-    BOOST_REQUIRE_EQUAL(data[17], 'f');     // offset2 + 2
-    BOOST_REQUIRE_EQUAL(data[18], 'g');     // offset2 + 3
-    BOOST_REQUIRE_EQUAL(data[19], 'h');     // offset2 + 4
-    BOOST_REQUIRE_EQUAL(data[20], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[21], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[22], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[23], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[24], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[25], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[26], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[27], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[28], fill1);   // expansion
-    BOOST_REQUIRE_EQUAL(data[29], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[ 5], 'a');     // offset + 0
+    BC_REQUIRE_EQUAL(data[ 6], 'b');     // offset + 1
+    BC_REQUIRE_EQUAL(data[ 7], 'c');     // offset + 2
+    BC_REQUIRE_EQUAL(data[ 8], fill1);   // expansion, resize_ (macos) trims on remap...
+    BC_REQUIRE_EQUAL(data[ 9], fill1);   // expansion, so it goes to zero if not refilled.
+    BC_REQUIRE_EQUAL(data[10], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[11], fill1);   // sub1(offset + size + to_half(offset + size))
+    BC_REQUIRE_EQUAL(data[12], fill1);   // cannot assume mmap default fill
+    BC_REQUIRE_EQUAL(data[13], fill1);   // cannot assume mmap default fill
+    BC_REQUIRE_EQUAL(data[14], fill1);   // cannot assume mmap default fill
+    BC_REQUIRE_EQUAL(data[15], 'd');     // offset2 + 0
+    BC_REQUIRE_EQUAL(data[16], 'e');     // offset2 + 1
+    BC_REQUIRE_EQUAL(data[17], 'f');     // offset2 + 2
+    BC_REQUIRE_EQUAL(data[18], 'g');     // offset2 + 3
+    BC_REQUIRE_EQUAL(data[19], 'h');     // offset2 + 4
+    BC_REQUIRE_EQUAL(data[20], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[21], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[22], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[23], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[24], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[25], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[26], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[27], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[28], fill1);   // expansion
+    BC_REQUIRE_EQUAL(data[29], fill1);   // expansion
 
     memory.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 
     BC_POP_WARNING()
 }
 
-BOOST_AUTO_TEST_CASE(mmap__get__unloaded__false)
+BC_AUTO_TEST_CASE(mmap__get__unloaded__false)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.get());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.get());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__get__loaded__success)
+BC_AUTO_TEST_CASE(mmap__get__loaded__success)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(instance.get(instance.allocate(1)));
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(instance.get(instance.allocate(1)));
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__get__size__expected)
+BC_AUTO_TEST_CASE(mmap__get__size__expected)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     constexpr auto expected = 42u;
     auto ptr = instance.get(instance.allocate(expected));
-    BOOST_CHECK_EQUAL(ptr.size(), system::to_signed(expected));
-    BOOST_CHECK_EQUAL(*ptr.begin(), 0x00u);
-    BOOST_REQUIRE(instance.unload());
+    BC_CHECK_EQUAL(ptr.size(), system::to_signed(expected));
+    BC_CHECK_EQUAL(*ptr.begin(), 0x00u);
+    BC_REQUIRE(instance.unload());
 
     ptr.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__get_capacity__size__expected)
+BC_AUTO_TEST_CASE(mmap__get_capacity__size__expected)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     // No expansion, so capacity equals the allocation.
     map instance(file, { 1, 0 });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     constexpr auto expected = 42u;
     auto ptr = instance.get_capacity(instance.allocate(expected));
-    BOOST_REQUIRE_EQUAL(ptr.size(), system::to_signed(expected));
-    BOOST_REQUIRE_EQUAL(*ptr.begin(), 0x00u);
-    BOOST_REQUIRE(instance.unload());
+    BC_REQUIRE_EQUAL(ptr.size(), system::to_signed(expected));
+    BC_REQUIRE_EQUAL(*ptr.begin(), 0x00u);
+    BC_REQUIRE(instance.unload());
 
     ptr.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__get_raw__always__nonblocking)
+BC_AUTO_TEST_CASE(mmap__get_raw__always__nonblocking)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     constexpr auto expected = 42u;
     const auto raw = instance.get_raw(instance.allocate(expected));
-    BOOST_REQUIRE(raw != nullptr);
-    BOOST_REQUIRE_EQUAL(*raw, 0x00u);
+    BC_REQUIRE(raw != nullptr);
+    BC_REQUIRE_EQUAL(*raw, 0x00u);
 
     // raw pointer does not block remap.
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__flush__unloaded__flush_unloaded)
+BC_AUTO_TEST_CASE(mmap__flush__unloaded__flush_unloaded)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE_EQUAL(instance.flush(), error::flush_unloaded);
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE_EQUAL(instance.flush(), error::flush_unloaded);
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__flush__loaded__true)
+BC_AUTO_TEST_CASE(mmap__flush__loaded__true)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(!instance.flush());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__write__read__expected)
+BC_AUTO_TEST_CASE(mmap__write__read__expected)
 {
     constexpr uint64_t expected = 0x0102030405060708_u64;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     auto memory = instance.get(instance.allocate(sizeof(uint64_t)));
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     system::unsafe_to_little_endian<uint64_t>(memory.begin(), expected);
     memory.reset();
-    BOOST_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.flush());
 
     memory = instance.get();
-    BOOST_REQUIRE(memory);
-    BOOST_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory.begin()), expected);
+    BC_REQUIRE(memory);
+    BC_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint64_t>(memory.begin()), expected);
 
     memory.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
 // The staged parameter engages the anonymous staging backend where built
@@ -973,16 +973,16 @@ const auto stage_vector = [](auto pattern, size_t size, size_t offset={})
 
 BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
 
-BOOST_AUTO_TEST_CASE(mmap__staged__write_flush_write_reload__expected)
+BC_AUTO_TEST_CASE(mmap__staged__write_flush_write_reload__expected)
 {
     constexpr size_t first = 10'000;
     constexpr size_t second = 7'000;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { 1, 50 }, true, true);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     const auto head = stage_vector(stage_pattern, first);
     const auto tail = stage_vector(stage_pattern, second, first);
@@ -990,60 +990,60 @@ BOOST_AUTO_TEST_CASE(mmap__staged__write_flush_write_reload__expected)
 
     // Write and flush twice, settling from zero and then a page interior.
     auto memory = instance.get(instance.allocate(first));
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
     std::copy_n(head.begin(), head.size(), memory.begin());
 
     memory.reset();
-    BOOST_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.flush());
 
     memory = instance.get(instance.allocate(second));
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
     std::copy_n(tail.begin(), tail.size(), memory.begin());
 
     memory.reset();
-    BOOST_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.flush());
 
     // All content is readable through the settled and unsettled regions.
     memory = instance.get();
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     const auto end1 = std::next(memory.begin(), full.size());
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end1, full.begin(), full.end());
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end1, full.begin(), full.end());
 
     memory.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 
     // All content persists across close and reopen.
     map reopened(file, { 1, 50 }, true, true);
-    BOOST_REQUIRE(!reopened.open());
-    BOOST_REQUIRE(!reopened.load());
-    BOOST_REQUIRE_EQUAL(reopened.size(), first + second);
+    BC_REQUIRE(!reopened.open());
+    BC_REQUIRE(!reopened.load());
+    BC_REQUIRE_EQUAL(reopened.size(), first + second);
 
     memory = reopened.get();
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     const auto end2 = std::next(memory.begin(), full.size());
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end2, full.begin(), full.end());
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end2, full.begin(), full.end());
 
     memory.reset();
-    BOOST_REQUIRE(!reopened.unload());
-    BOOST_REQUIRE(!reopened.close());
-    BOOST_REQUIRE(!reopened.get_fault());
+    BC_REQUIRE(!reopened.unload());
+    BC_REQUIRE(!reopened.close());
+    BC_REQUIRE(!reopened.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_rewrite__expected)
+BC_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_rewrite__expected)
 {
     constexpr size_t initial = 12'000;
     constexpr size_t retained = 5'000;
     constexpr size_t appended = 4'000;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { 1, 50 }, true, true);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     const auto original = stage_vector(stage_pattern, initial);
     const auto replaced = stage_vector(stage_repattern, appended, retained);
@@ -1053,216 +1053,216 @@ BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_rewrite__expected)
     expected.insert(expected.end(), replaced.begin(), replaced.end());
 
     auto memory = instance.get(instance.allocate(initial));
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
     std::copy_n(original.begin(), original.size(), memory.begin());
 
     memory.reset();
-    BOOST_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.flush());
 
     // Truncate below the flushed extent and append replacement content.
-    BOOST_REQUIRE(instance.truncate(retained));
-    BOOST_REQUIRE_EQUAL(instance.allocate(appended), retained);
+    BC_REQUIRE(instance.truncate(retained));
+    BC_REQUIRE_EQUAL(instance.allocate(appended), retained);
 
     memory = instance.get(retained);
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
     std::copy_n(replaced.begin(), replaced.size(), memory.begin());
 
     memory.reset();
-    BOOST_REQUIRE(!instance.flush());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 
     // Retained content precedes replacement content across reopen.
     map reopened(file, { 1, 50 }, true, true);
-    BOOST_REQUIRE(!reopened.open());
-    BOOST_REQUIRE(!reopened.load());
-    BOOST_REQUIRE_EQUAL(reopened.size(), retained + appended);
+    BC_REQUIRE(!reopened.open());
+    BC_REQUIRE(!reopened.load());
+    BC_REQUIRE_EQUAL(reopened.size(), retained + appended);
 
     memory = reopened.get();
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     const auto end = std::next(memory.begin(), expected.size());
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, expected.begin(), expected.end());
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, expected.begin(), expected.end());
 
     memory.reset();
-    BOOST_REQUIRE(!reopened.unload());
-    BOOST_REQUIRE(!reopened.close());
-    BOOST_REQUIRE(!reopened.get_fault());
+    BC_REQUIRE(!reopened.unload());
+    BC_REQUIRE(!reopened.close());
+    BC_REQUIRE(!reopened.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__truncate__reallocate__zeroed)
+BC_AUTO_TEST_CASE(mmap__truncate__reallocate__zeroed)
 {
     constexpr size_t initial = 12'000;
     constexpr size_t retained = 5'000;
     constexpr size_t appended = 4'000;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { 1, 50 });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     const auto original = stage_vector(stage_repattern, initial, one);
     auto memory = instance.get(instance.allocate(initial));
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
     std::copy_n(original.begin(), original.size(), memory.begin());
 
     memory.reset();
-    BOOST_REQUIRE(instance.truncate(retained));
-    BOOST_REQUIRE_EQUAL(instance.allocate(appended), retained);
+    BC_REQUIRE(instance.truncate(retained));
+    BC_REQUIRE_EQUAL(instance.allocate(appended), retained);
 
     memory = instance.get(retained);
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     const system::data_chunk zeros(appended);
     const auto end = std::next(memory.begin(), appended);
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, zeros.begin(), zeros.end());
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, zeros.begin(), zeros.end());
 
     memory.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__truncate__unzeroed_reallocate__retained)
+BC_AUTO_TEST_CASE(mmap__truncate__unzeroed_reallocate__retained)
 {
     constexpr size_t initial = 12'000;
     constexpr size_t retained = 5'000;
     constexpr size_t appended = 4'000;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { .size = 1, .rate = 50, .zeroed = false });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     const auto original = stage_vector(stage_repattern, initial, one);
     auto memory = instance.get(instance.allocate(initial));
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
     std::copy_n(original.begin(), original.size(), memory.begin());
 
     memory.reset();
-    BOOST_REQUIRE(instance.truncate(retained));
+    BC_REQUIRE(instance.truncate(retained));
     memory = instance.get_capacity(retained);
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     const auto released = std::next(original.begin(), retained);
     const auto released_end = std::next(released, appended);
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), std::next(memory.begin(), appended), released, released_end);
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), std::next(memory.begin(), appended), released, released_end);
 
     memory.reset();
-    BOOST_REQUIRE_EQUAL(instance.allocate(appended), retained);
+    BC_REQUIRE_EQUAL(instance.allocate(appended), retained);
     memory = instance.get(retained);
-    BOOST_REQUIRE(memory);
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), std::next(memory.begin(), appended), released, released_end);
+    BC_REQUIRE(memory);
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), std::next(memory.begin(), appended), released, released_end);
 
     memory.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_reallocate__zeroed)
+BC_AUTO_TEST_CASE(mmap__staged__truncate_below_flush_reallocate__zeroed)
 {
     constexpr size_t initial = 12'000;
     constexpr size_t retained = 5'000;
     constexpr size_t appended = 6'000;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { 1, 50 }, true, true);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     const auto original = stage_vector(stage_repattern, initial, one);
     auto memory = instance.get(instance.allocate(initial));
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
     std::copy_n(original.begin(), original.size(), memory.begin());
 
     memory.reset();
-    BOOST_REQUIRE(!instance.flush());
-    BOOST_REQUIRE(instance.truncate(retained));
-    BOOST_REQUIRE_EQUAL(instance.allocate(appended), retained);
+    BC_REQUIRE(!instance.flush());
+    BC_REQUIRE(instance.truncate(retained));
+    BC_REQUIRE_EQUAL(instance.allocate(appended), retained);
 
     memory = instance.get(retained);
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     const system::data_chunk zeros(appended);
     const auto end = std::next(memory.begin(), appended);
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, zeros.begin(), zeros.end());
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, zeros.begin(), zeros.end());
 
     memory.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
 #if defined(MANAGE_STAGING)
 
-BOOST_AUTO_TEST_CASE(mmap__frontier__staged_out_of_order_completion__expected)
+BC_AUTO_TEST_CASE(mmap__frontier__staged_out_of_order_completion__expected)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { 1, 50 }, true, true);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     // Frontier holds at each extent start until its writes complete.
     const auto first = instance.allocate(100);
     const auto second = instance.allocate(50);
-    BOOST_REQUIRE_EQUAL(instance.frontier(), first);
+    BC_REQUIRE_EQUAL(instance.frontier(), first);
 
     // Completing the second extent does not advance past the first.
     instance.complete(second, 50);
-    BOOST_REQUIRE_EQUAL(instance.frontier(), first);
+    BC_REQUIRE_EQUAL(instance.frontier(), first);
 
     // Completing the first pops both, frontier reaches logical.
     instance.complete(first, 100);
-    BOOST_REQUIRE_EQUAL(instance.frontier(), instance.size());
+    BC_REQUIRE_EQUAL(instance.frontier(), instance.size());
 
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__frontier__staged_truncate__discards_extents)
+BC_AUTO_TEST_CASE(mmap__frontier__staged_truncate__discards_extents)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { 1, 50 }, true, true);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     const auto first = instance.allocate(100);
     instance.complete(first, 100);
     const auto second = instance.allocate(50);
-    BOOST_REQUIRE_EQUAL(instance.frontier(), second);
+    BC_REQUIRE_EQUAL(instance.frontier(), second);
 
     // Truncation below the open extent discards it, frontier follows logical.
-    BOOST_REQUIRE(instance.truncate(first + 100));
-    BOOST_REQUIRE_EQUAL(instance.frontier(), instance.size());
+    BC_REQUIRE(instance.truncate(first + 100));
+    BC_REQUIRE_EQUAL(instance.frontier(), instance.size());
 
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
 #endif // MANAGE_STAGING
 
-BOOST_AUTO_TEST_CASE(mmap__unstaged__rewrite_below_flush__expected)
+BC_AUTO_TEST_CASE(mmap__unstaged__rewrite_below_flush__expected)
 {
     constexpr size_t size = 10'000;
     constexpr size_t rewrite = 100;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     // Unstaged (default) retains in-place rewrite of flushed content (heads).
     map instance(file, { 1, 50 }, true);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     const auto original = stage_vector(stage_pattern, size);
     const auto replaced = stage_vector(stage_repattern, rewrite);
@@ -1273,53 +1273,53 @@ BOOST_AUTO_TEST_CASE(mmap__unstaged__rewrite_below_flush__expected)
     expected.insert(expected.end(), retained.begin(), retained.end());
 
     auto memory = instance.get(instance.allocate(size));
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
     std::copy_n(original.begin(), original.size(), memory.begin());
 
     // Raw unstaged mutation is marked (heads mark via their primitives).
     memory.reset();
     instance.mark(zero, size);
-    BOOST_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.flush());
 
     memory = instance.get();
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     std::copy_n(replaced.begin(), replaced.size(), memory.begin());
     memory.reset();
     instance.mark(zero, rewrite);
-    BOOST_REQUIRE(!instance.flush());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 
     map reopened(file, { 1, 50 }, true);
-    BOOST_REQUIRE(!reopened.open());
-    BOOST_REQUIRE(!reopened.load());
-    BOOST_REQUIRE_EQUAL(reopened.size(), size);
+    BC_REQUIRE(!reopened.open());
+    BC_REQUIRE(!reopened.load());
+    BC_REQUIRE_EQUAL(reopened.size(), size);
 
     memory = reopened.get();
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     const auto end = std::next(memory.begin(), expected.size());
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, expected.begin(), expected.end());
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, expected.begin(), expected.end());
 
     memory.reset();
-    BOOST_REQUIRE(!reopened.unload());
-    BOOST_REQUIRE(!reopened.close());
-    BOOST_REQUIRE(!reopened.get_fault());
+    BC_REQUIRE(!reopened.unload());
+    BC_REQUIRE(!reopened.close());
+    BC_REQUIRE(!reopened.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__shared__rewrite_below_flush__expected)
+BC_AUTO_TEST_CASE(mmap__shared__rewrite_below_flush__expected)
 {
     constexpr size_t size = 10'000;
     constexpr size_t rewrite = 100;
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     // Shared head writes through its file mapping (no mark or transfer).
     map instance(file, { 1, 50 }, true, false, true);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     const auto original = stage_vector(stage_pattern, size);
     const auto replaced = stage_vector(stage_repattern, rewrite);
@@ -1329,57 +1329,57 @@ BOOST_AUTO_TEST_CASE(mmap__shared__rewrite_below_flush__expected)
     expected.insert(expected.end(), retained.begin(), retained.end());
 
     auto memory = instance.get(instance.allocate(size));
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
     std::copy_n(original.begin(), original.size(), memory.begin());
     memory.reset();
-    BOOST_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.flush());
 
     memory = instance.get();
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
     std::copy_n(replaced.begin(), replaced.size(), memory.begin());
     memory.reset();
-    BOOST_REQUIRE(!instance.flush());
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 
     map reopened(file, { 1, 50 }, true, false, true);
-    BOOST_REQUIRE(!reopened.open());
-    BOOST_REQUIRE(!reopened.load());
-    BOOST_REQUIRE_EQUAL(reopened.size(), size);
+    BC_REQUIRE(!reopened.open());
+    BC_REQUIRE(!reopened.load());
+    BC_REQUIRE_EQUAL(reopened.size(), size);
 
     memory = reopened.get();
-    BOOST_REQUIRE(memory);
+    BC_REQUIRE(memory);
 
     const auto end = std::next(memory.begin(), expected.size());
-    BOOST_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, expected.begin(), expected.end());
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, expected.begin(), expected.end());
 
     memory.reset();
-    BOOST_REQUIRE(!reopened.unload());
-    BOOST_REQUIRE(!reopened.close());
-    BOOST_REQUIRE(!reopened.get_fault());
+    BC_REQUIRE(!reopened.unload());
+    BC_REQUIRE(!reopened.close());
+    BC_REQUIRE(!reopened.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__unload__shared__unload_locked)
+BC_AUTO_TEST_CASE(mmap__unload__shared__unload_locked)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file);
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     auto memory = instance.get(instance.allocate(1));
-    BOOST_REQUIRE(memory);
-    BOOST_REQUIRE_EQUAL(instance.unload(), error::unload_locked);
+    BC_REQUIRE(memory);
+    BC_REQUIRE_EQUAL(instance.unload(), error::unload_locked);
 
     memory.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
+BC_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
 {
     // Two columns, widths 1 and 3 (stride 4): denomination errors that are
     // identity at width 1 are visible on the width 3 column.
@@ -1391,18 +1391,18 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
 
     // minimum 1 byte -> 1 row; zero expansion makes capacity == rows exactly.
     storage_t instance(files, { 1, 0 });
-    BOOST_REQUIRE(!instance.create());
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.capacity(), 1u);
+    BC_REQUIRE(!instance.create());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.capacity(), 1u);
 
     // Row zero, written before remap (verifies preservation across remap).
-    BOOST_REQUIRE_EQUAL(instance.allocate(1), zero);
+    BC_REQUIRE_EQUAL(instance.allocate(1), zero);
 
     auto write0_column0 = instance.get_at(0, 0);
     auto write0_column1 = instance.get_at(1, 0);
-    BOOST_REQUIRE(write0_column0);
-    BOOST_REQUIRE(write0_column1);
+    BC_REQUIRE(write0_column0);
+    BC_REQUIRE(write0_column1);
 
     write0_column0.begin()[0] = 'a';
     write0_column1.begin()[0] = 'b';
@@ -1412,20 +1412,20 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     write0_column1.reset();
 
     // Forces remap_all_ (1 -> 42 rows); macOS takes the no-mremap branch.
-    BOOST_REQUIRE_EQUAL(instance.allocate(sub1(rows)), 1u);
-    BOOST_REQUIRE_EQUAL(instance.size(), rows);
-    BOOST_REQUIRE_EQUAL(instance.capacity(), rows);
+    BC_REQUIRE_EQUAL(instance.allocate(sub1(rows)), 1u);
+    BC_REQUIRE_EQUAL(instance.size(), rows);
+    BC_REQUIRE_EQUAL(instance.capacity(), rows);
 
     // Loaded geometry: resize_ extends each file to capacity x width. This is
     // the remap denomination check (unload's trim would mask an oversize).
-    BOOST_REQUIRE_EQUAL(std::filesystem::file_size(files.front()), rows * 1u);
-    BOOST_REQUIRE_EQUAL(std::filesystem::file_size(files.back()), rows * 3u);
+    BC_REQUIRE_EQUAL(std::filesystem::file_size(files.front()), rows * 1u);
+    BC_REQUIRE_EQUAL(std::filesystem::file_size(files.back()), rows * 3u);
 
     // Last row, through the remapped pointers.
     auto write1_column0 = instance.get_at(0, last * 1);
     auto write1_column1 = instance.get_at(1, last * 3);
-    BOOST_REQUIRE(write1_column0);
-    BOOST_REQUIRE(write1_column1);
+    BC_REQUIRE(write1_column0);
+    BC_REQUIRE(write1_column1);
 
     write1_column0.begin()[0] = 'w';
     write1_column1.begin()[0] = 'x';
@@ -1433,51 +1433,51 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     write1_column1.begin()[2] = 'z';
     write1_column0.reset();
     write1_column1.reset();
-    BOOST_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.unload());
 
     // Unloaded geometry: trimmed to logical x width (trim denomination).
-    BOOST_REQUIRE_EQUAL(std::filesystem::file_size(files.front()), rows * 1u);
-    BOOST_REQUIRE_EQUAL(std::filesystem::file_size(files.back()), rows * 3u);
+    BC_REQUIRE_EQUAL(std::filesystem::file_size(files.front()), rows * 1u);
+    BC_REQUIRE_EQUAL(std::filesystem::file_size(files.back()), rows * 3u);
 
     // Round trip.
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(instance.size(), rows);
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.size(), rows);
 
     auto read_column0 = instance.get_at(0, 0);
     auto read_column1 = instance.get_at(1, 0);
-    BOOST_REQUIRE(read_column0);
-    BOOST_REQUIRE(read_column1);
-    BOOST_REQUIRE_EQUAL(read_column0.begin()[0], 'a');
-    BOOST_REQUIRE_EQUAL(read_column0.begin()[last], 'w');
-    BOOST_REQUIRE_EQUAL(read_column1.begin()[0], 'b');
-    BOOST_REQUIRE_EQUAL(read_column1.begin()[1], 'c');
-    BOOST_REQUIRE_EQUAL(read_column1.begin()[2], 'd');
-    BOOST_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 0], 'x');
-    BOOST_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 1], 'y');
-    BOOST_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 2], 'z');
+    BC_REQUIRE(read_column0);
+    BC_REQUIRE(read_column1);
+    BC_REQUIRE_EQUAL(read_column0.begin()[0], 'a');
+    BC_REQUIRE_EQUAL(read_column0.begin()[last], 'w');
+    BC_REQUIRE_EQUAL(read_column1.begin()[0], 'b');
+    BC_REQUIRE_EQUAL(read_column1.begin()[1], 'c');
+    BC_REQUIRE_EQUAL(read_column1.begin()[2], 'd');
+    BC_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 0], 'x');
+    BC_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 1], 'y');
+    BC_REQUIRE_EQUAL(read_column1.begin()[last * 3 + 2], 'z');
 
     read_column0.reset();
     read_column1.reset();
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
 // Concurrency stress: allocations must be unique, dense claims under
 // contention, with growth forced through the remap slow path.
-BOOST_AUTO_TEST_CASE(mmap__allocate__concurrent__unique_dense_claims)
+BC_AUTO_TEST_CASE(mmap__allocate__concurrent__unique_dense_claims)
 {
     constexpr size_t threads = 8;
     constexpr size_t rounds = 10'000;
     using claim = std::pair<size_t, size_t>;
 
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     // Tiny minimum and modest expansion force frequent slow-path remaps.
     map instance(file, { 1, 25 });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
 
     std::vector<std::thread> pool{};
     std::vector<size_t> identifiers(threads);
@@ -1529,15 +1529,15 @@ BOOST_AUTO_TEST_CASE(mmap__allocate__concurrent__unique_dense_claims)
             return (left.first + left.second) != right.first;
         });
 
-    BOOST_REQUIRE(!failed);
-    BOOST_REQUIRE(gapped == all.end());
-    BOOST_REQUIRE_EQUAL(all.front().first, zero);
-    BOOST_REQUIRE_EQUAL(all.back().first + all.back().second, instance.size());
-    BOOST_REQUIRE_GE(instance.capacity(), instance.size());
+    BC_REQUIRE(!failed);
+    BC_REQUIRE(gapped == all.end());
+    BC_REQUIRE_EQUAL(all.front().first, zero);
+    BC_REQUIRE_EQUAL(all.back().first + all.back().second, instance.size());
+    BC_REQUIRE_GE(instance.capacity(), instance.size());
 
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
 #if defined(MANAGE_STAGING)
@@ -1611,78 +1611,78 @@ static std::vector<uint64_t> drive(map& instance, size_t cells,
     return last;
 }
 
-BOOST_AUTO_TEST_CASE(mmap__share__not_current__unshared)
+BC_AUTO_TEST_CASE(mmap__share__not_current__unshared)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { 1, 50 });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
 
-    BOOST_REQUIRE(!shared_within(instance, true, drain_wait));
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!shared_within(instance, true, drain_wait));
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__share__current_quiescent__shared_until_unload)
+BC_AUTO_TEST_CASE(mmap__share__current_quiescent__shared_until_unload)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { 1, 50 });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
 
     instance.current(true);
-    BOOST_REQUIRE(shared_within(instance, true, share_wait));
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.shared());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(shared_within(instance, true, share_wait));
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.shared());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__share__write_while_shared__persists)
+BC_AUTO_TEST_CASE(mmap__share__write_while_shared__persists)
 {
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { 1, 50 });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
 
     instance.current(true);
-    BOOST_REQUIRE(shared_within(instance, true, share_wait));
+    BC_REQUIRE(shared_within(instance, true, share_wait));
     stamp(instance, zero, 42);
 
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_EQUAL(read_cells(instance, one).front(), 42u);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(read_cells(instance, one).front(), 42u);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__share__sustained_writes__unshared_without_loss)
+BC_AUTO_TEST_CASE(mmap__share__sustained_writes__unshared_without_loss)
 {
     constexpr size_t cells = 512;
 
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { 1, 50 });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_NE(instance.allocate(cells * cell_width), storage::eof);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_NE(instance.allocate(cells * cell_width), storage::eof);
 
     instance.current(true);
-    BOOST_REQUIRE(shared_within(instance, true, share_wait));
+    BC_REQUIRE(shared_within(instance, true, share_wait));
 
     std::atomic_bool stop{};
     std::vector<uint64_t> expected{};
@@ -1691,32 +1691,32 @@ BOOST_AUTO_TEST_CASE(mmap__share__sustained_writes__unshared_without_loss)
     stop.store(true);
     writer.join();
 
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(unshared);
-    BOOST_REQUIRE(!instance.shared());
-    BOOST_REQUIRE(read_cells(instance, cells) == expected);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(unshared);
+    BC_REQUIRE(!instance.shared());
+    BC_REQUIRE(read_cells(instance, cells) == expected);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__share__sustained_held_writes__unshared_without_loss)
+BC_AUTO_TEST_CASE(mmap__share__sustained_held_writes__unshared_without_loss)
 {
     constexpr size_t cells = 512;
 
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { 1, 50 });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_NE(instance.allocate(cells * cell_width), storage::eof);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_NE(instance.allocate(cells * cell_width), storage::eof);
 
     instance.current(true);
-    BOOST_REQUIRE(shared_within(instance, true, share_wait));
+    BC_REQUIRE(shared_within(instance, true, share_wait));
 
     std::atomic_bool stop{};
     std::vector<uint64_t> expected{};
@@ -1725,46 +1725,46 @@ BOOST_AUTO_TEST_CASE(mmap__share__sustained_held_writes__unshared_without_loss)
     stop.store(true);
     writer.join();
 
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE(unshared);
-    BOOST_REQUIRE(!instance.shared());
-    BOOST_REQUIRE(read_cells(instance, cells) == expected);
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(unshared);
+    BC_REQUIRE(!instance.shared());
+    BC_REQUIRE(read_cells(instance, cells) == expected);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
-BOOST_AUTO_TEST_CASE(mmap__share__filled_tail_above_logical__survives_share)
+BC_AUTO_TEST_CASE(mmap__share__filled_tail_above_logical__survives_share)
 {
     constexpr size_t cells = 512;
     constexpr size_t tail = add1(cells);
     constexpr auto fill = system::bit_all<uint64_t>;
 
     const std::string file = TEST_PATH;
-    BOOST_REQUIRE(test::create(file));
+    BC_REQUIRE(test::create(file));
 
     map instance(file, { .size = 1, .rate = 50, .fill = system::bit_all<uint8_t> });
-    BOOST_REQUIRE(!instance.open());
-    BOOST_REQUIRE(!instance.load());
-    BOOST_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
-    BOOST_REQUIRE(instance.get_filled(cells * cell_width, cell_width));
-    BOOST_REQUIRE_GT(instance.capacity(), add1(tail) * cell_width);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_NE(instance.allocate(cell_width), storage::eof);
+    BC_REQUIRE(instance.get_filled(cells * cell_width, cell_width));
+    BC_REQUIRE_GT(instance.capacity(), add1(tail) * cell_width);
 
     instance.current(true);
-    BOOST_REQUIRE(shared_within(instance, true, share_wait));
-    BOOST_REQUIRE(instance.get_filled(tail * cell_width, cell_width));
-    BOOST_REQUIRE_EQUAL(read_cells(instance, add1(tail)).back(), fill);
+    BC_REQUIRE(shared_within(instance, true, share_wait));
+    BC_REQUIRE(instance.get_filled(tail * cell_width, cell_width));
+    BC_REQUIRE_EQUAL(read_cells(instance, add1(tail)).back(), fill);
 
-    BOOST_REQUIRE(!instance.unload());
-    BOOST_REQUIRE(!instance.close());
-    BOOST_REQUIRE(!instance.get_fault());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
 }
 
 #endif // MANAGE_STAGING
 
 BC_POP_WARNING()
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

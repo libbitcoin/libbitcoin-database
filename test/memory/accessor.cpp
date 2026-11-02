@@ -18,37 +18,37 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(accessor_tests)
+BC_AUTO_TEST_SUITE(accessor_tests)
 
 using namespace system;
 
-BOOST_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__invalid_nulls)
+BC_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__invalid_nulls)
 {
     shared_mutex mutex;
     accessor instance(mutex);
-    BOOST_REQUIRE(!instance);
-    BOOST_REQUIRE(is_null(instance.data()));
-    BOOST_REQUIRE(is_null(instance.begin()));
-    BOOST_REQUIRE(is_null(instance.end()));
+    BC_REQUIRE(!instance);
+    BC_REQUIRE(is_null(instance.data()));
+    BC_REQUIRE(is_null(instance.begin()));
+    BC_REQUIRE(is_null(instance.end()));
 }
 
-BOOST_AUTO_TEST_CASE(accessor__destruct__shared_lock__released)
+BC_AUTO_TEST_CASE(accessor__destruct__shared_lock__released)
 {
     shared_mutex mutex;
     auto access = std::make_shared<accessor>(mutex);
-    BOOST_REQUIRE(!mutex.try_lock());
+    BC_REQUIRE(!mutex.try_lock());
     access.reset();
-    BOOST_REQUIRE(mutex.try_lock());
+    BC_REQUIRE(mutex.try_lock());
 }
 
-BOOST_AUTO_TEST_CASE(accessor__size__default__empty)
+BC_AUTO_TEST_CASE(accessor__size__default__empty)
 {
     shared_mutex mutex;
     accessor instance(mutex);
-    BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_cast<ptrdiff_t>(0));
+    BC_REQUIRE_EQUAL(instance.size(), system::possible_narrow_cast<ptrdiff_t>(0));
 }
 
-BOOST_AUTO_TEST_CASE(accessor__assign__forward__positive_size)
+BC_AUTO_TEST_CASE(accessor__assign__forward__positive_size)
 {
     data_chunk chunk{ 0x00 };
     shared_mutex mutex;
@@ -56,13 +56,13 @@ BOOST_AUTO_TEST_CASE(accessor__assign__forward__positive_size)
     const auto expected_begin = chunk.data();
     const auto expected_end = std::next(expected_begin, chunk.size());
     instance.assign(expected_begin, expected_end);
-    BOOST_REQUIRE_EQUAL(instance.data(), expected_begin);
-    BOOST_REQUIRE_EQUAL(instance.begin(), expected_begin);
-    BOOST_REQUIRE_EQUAL(instance.end(), expected_end);
-    BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_cast<ptrdiff_t>(1));
+    BC_REQUIRE_EQUAL(instance.data(), expected_begin);
+    BC_REQUIRE_EQUAL(instance.begin(), expected_begin);
+    BC_REQUIRE_EQUAL(instance.end(), expected_end);
+    BC_REQUIRE_EQUAL(instance.size(), system::possible_narrow_cast<ptrdiff_t>(1));
 }
 
-BOOST_AUTO_TEST_CASE(accessor__assign__reverse__negative_size)
+BC_AUTO_TEST_CASE(accessor__assign__reverse__negative_size)
 {
     data_chunk chunk{ 0x00 };
     shared_mutex mutex;
@@ -70,13 +70,13 @@ BOOST_AUTO_TEST_CASE(accessor__assign__reverse__negative_size)
     const auto expected_end = chunk.data();
     const auto expected_begin = std::next(expected_end, chunk.size());
     instance.assign(expected_begin, expected_end);
-    BOOST_REQUIRE_EQUAL(instance.data(), expected_begin);
-    BOOST_REQUIRE_EQUAL(instance.begin(), expected_begin);
-    BOOST_REQUIRE_EQUAL(instance.end(), expected_end);
-    BOOST_REQUIRE_EQUAL(instance.size(), system::possible_narrow_cast<ptrdiff_t>(-1));
+    BC_REQUIRE_EQUAL(instance.data(), expected_begin);
+    BC_REQUIRE_EQUAL(instance.begin(), expected_begin);
+    BC_REQUIRE_EQUAL(instance.end(), expected_end);
+    BC_REQUIRE_EQUAL(instance.size(), system::possible_narrow_cast<ptrdiff_t>(-1));
 }
 
-BOOST_AUTO_TEST_CASE(accessor__offset__valid__expected)
+BC_AUTO_TEST_CASE(accessor__offset__valid__expected)
 {
     constexpr auto offset = 42u;
     data_chunk chunk(add1(offset), 0x00);
@@ -85,10 +85,10 @@ BOOST_AUTO_TEST_CASE(accessor__offset__valid__expected)
     accessor instance(mutex);
     const auto buffer = chunk.data();
     instance.assign(buffer, std::next(buffer, add1(offset)));
-    BOOST_REQUIRE_EQUAL(*instance.offset(offset), 0xff);
+    BC_REQUIRE_EQUAL(*instance.offset(offset), 0xff);
 }
 
-BOOST_AUTO_TEST_CASE(accessor__offset__overflow__expected)
+BC_AUTO_TEST_CASE(accessor__offset__overflow__expected)
 {
     constexpr auto offset = 42u;
     data_chunk chunk(offset, 0x00);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(accessor__offset__overflow__expected)
     accessor instance(mutex);
     const auto buffer = chunk.data();
     instance.assign(buffer, std::next(buffer, offset));
-    BOOST_REQUIRE(is_null(instance.offset(add1(offset))));
+    BC_REQUIRE(is_null(instance.offset(add1(offset))));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

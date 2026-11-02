@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_ERROR_HPP
 #define LIBBITCOIN_DATABASE_ERROR_HPP
 
-#include <bitcoin/database/boost.hpp>
+#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace database {

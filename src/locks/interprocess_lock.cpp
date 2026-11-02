@@ -19,14 +19,78 @@
 #include <bitcoin/database/locks/interprocess_lock.hpp>
 
 #include <filesystem>
+#if !defined(HAVE_WINDOWS)
+    #include <fcntl.h>
+    #include <unistd.h>
+#endif
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/locks/file_lock.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-// ipcdetail functions do not throw (but are unannotated).
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+#if defined(HAVE_WINDOWS)
+static void* const invalid = INVALID_HANDLE_VALUE;
+#else
+static constexpr int invalid = -1;
+#endif
+
+// Open the existing file and take an exclusive lock on its whole extent.
+// Sharing allows the owner to delete the file before closing it.
+static auto open_locked(const std::filesystem::path& file) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    const auto path = system::extended_path(file);
+    BC_POP_WARNING()
+
+#if defined(HAVE_WINDOWS)
+    constexpr auto share = FILE_SHARE_READ | FILE_SHARE_WRITE |
+        FILE_SHARE_DELETE;
+    const auto handle = ::CreateFileW(path.c_str(), GENERIC_READ |
+        GENERIC_WRITE, share, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+        nullptr);
+
+    if (handle == invalid)
+        return invalid;
+
+    constexpr auto flags = LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY;
+    OVERLAPPED overlapped{};
+    if (::LockFileEx(handle, flags, 0, MAXDWORD, MAXDWORD, &overlapped) ==
+        FALSE)
+    {
+        ::CloseHandle(handle);
+        return invalid;
+    }
+
+    return handle;
+#else
+    const auto descriptor = ::open(path.c_str(), O_RDWR);
+    if (descriptor == invalid)
+        return invalid;
+
+    struct flock lock{};
+    lock.l_type = F_WRLCK;
+    lock.l_whence = SEEK_SET;
+    if (::fcntl(descriptor, F_SETLK, &lock) == -1)
+    {
+        ::close(descriptor);
+        return invalid;
+    }
+
+    return descriptor;
+#endif
+}
+
+// Closing releases the lock.
+template <typename Handle>
+static void close_locked(Handle handle) NOEXCEPT
+{
+#if defined(HAVE_WINDOWS)
+    ::CloseHandle(handle);
+#else
+    ::close(handle);
+#endif
+}
 
 interprocess_lock::interprocess_lock(const std::filesystem::path& file) NOEXCEPT
   : file_lock(file), handle_(invalid)
@@ -50,19 +114,9 @@ bool interprocess_lock::try_lock() NOEXCEPT
     if (!create())
         return false;
 
-    // Get a handle to the file.
-    const auto handle = open_existing_file(file());
-    bool result;
-
     // Obtain exclusive access to the file.
-    if (ipcdetail::try_acquire_file_lock(handle, result) && result)
-    {
-        handle_ = handle;
-        return true;
-    }
-
-    handle_ = invalid;
-    return false;
+    handle_ = open_locked(file());
+    return handle_ != invalid;
 }
 
 // Unlock is idempotent, returns true if unlocked on return (or success).
@@ -79,12 +133,10 @@ bool interprocess_lock::try_unlock() NOEXCEPT
     const auto result = destroy();
 
     // Release exclusive access to the file.
-    ipcdetail::close_file(handle_);
+    close_locked(handle_);
     handle_ = invalid;
     return result;
 }
-
-BC_POP_WARNING()
 
 } // namespace database
 } // namespace libbitcoin

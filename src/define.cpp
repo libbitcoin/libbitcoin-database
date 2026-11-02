@@ -23,8 +23,7 @@
 // Database inclusions are chained as follows.
 
 // version        : <generated>
-// boost          : version <bitcoin/system>
-// error          : boost
+// error          : version <bitcoin/system>
 // define         : error
 
 // Other directory common includes are not internally chained.

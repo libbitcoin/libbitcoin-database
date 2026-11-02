@@ -21,6 +21,8 @@
 #if defined(HAVE_WINDOWS)
     #include <io.h>
     #include <share.h>
+#else
+    #include <unistd.h>
 #endif
 #include <fcntl.h>
 #include <sys/stat.h>

@@ -89,7 +89,7 @@ struct BCD_API settings
     bool mark_unconfirmable{ true };
 
     /// Depth of merkle tree interval caching (used at store create only).
-    uint16_t interval_depth{ 11 };
+    uint8_t interval_depth{ 11 };
 
     /// Creation settings envelope (used at store create only).
     database::envelope envelope{};

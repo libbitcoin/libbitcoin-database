@@ -20,72 +20,72 @@
 #include "../../mocks/blocks.hpp"
 #include "../../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_navigate_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(query_navigate_tests, test::directory_setup_fixture)
 
 // top_header
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(query_navigate__top_header__genesis_bucket__genesis_link)
+BC_AUTO_TEST_CASE(query_navigate__top_header__genesis_bucket__genesis_link)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.header.buckets = 1;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.top_header(0), 0u);
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE_EQUAL(query.top_header(0), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(query_navigate__top_header__empty_bucket__terminal)
+BC_AUTO_TEST_CASE(query_navigate__top_header__empty_bucket__terminal)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.header.buckets = 8;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.top_header(7).is_terminal());
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.top_header(7).is_terminal());
 }
 
 // top_tx
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(query_navigate__top_tx__empty_bucket__terminal)
+BC_AUTO_TEST_CASE(query_navigate__top_tx__empty_bucket__terminal)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.tx.buckets = 8;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.top_tx(7).is_terminal());
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.top_tx(7).is_terminal());
 }
 
-BOOST_AUTO_TEST_CASE(query_navigate__top_tx__genesis_bucket__genesis_tx)
+BC_AUTO_TEST_CASE(query_navigate__top_tx__genesis_bucket__genesis_tx)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.tx.buckets = 1;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.initialize(test::genesis));
-    BOOST_REQUIRE_EQUAL(query.top_tx(0), 0u);
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE_EQUAL(query.top_tx(0), 0u);
 }
 
 // top_point
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(query_navigate__top_point__empty_bucket__terminal)
+BC_AUTO_TEST_CASE(query_navigate__top_point__empty_bucket__terminal)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     settings.ins.buckets = 8;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BOOST_REQUIRE(!store.create(test::events_handler));
-    BOOST_REQUIRE(query.top_point(7).is_terminal());
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.top_point(7).is_terminal());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

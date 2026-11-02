@@ -20,46 +20,46 @@
 #include "../../mocks/blocks.hpp"
 #include "../../mocks/chunk_store.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(query_batch_prevalid_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(query_batch_prevalid_tests, test::directory_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(query_batch_prevalid__get_prevalids__empty__empty)
+BC_AUTO_TEST_CASE(query_batch_prevalid__get_prevalids__empty__empty)
 {
     const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
 
-    BOOST_REQUIRE(query.get_prevalids(false).empty());
+    BC_REQUIRE(query.get_prevalids(false).empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_batch_prevalid__set_get__two__round_trips)
+BC_AUTO_TEST_CASE(query_batch_prevalid__set_get__two__round_trips)
 {
     const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
 
     const header_links links{ 0x00345678, 0x00cdef12 };
-    BOOST_REQUIRE(query.set_prevalids(links, false));
+    BC_REQUIRE(query.set_prevalids(links, false));
 
     const auto out = query.get_prevalids(false);
-    BOOST_REQUIRE_EQUAL(out.size(), 2u);
-    BOOST_REQUIRE(out == links);
+    BC_REQUIRE_EQUAL(out.size(), 2u);
+    BC_REQUIRE(out == links);
 }
 
-BOOST_AUTO_TEST_CASE(query_batch_prevalid__purge__after_set__empty)
+BC_AUTO_TEST_CASE(query_batch_prevalid__purge__after_set__empty)
 {
     const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
     test::query_accessor query{ store };
 
     const header_links links{ 0x00345678, 0x00cdef12 };
-    BOOST_REQUIRE(query.set_prevalids(links, false));
-    BOOST_REQUIRE(!query.get_prevalids(false).empty());
+    BC_REQUIRE(query.set_prevalids(links, false));
+    BC_REQUIRE(!query.get_prevalids(false).empty());
 
-    BOOST_REQUIRE(query.purge_prevalids(false));
-    BOOST_REQUIRE(query.get_prevalids(false).empty());
+    BC_REQUIRE(query.purge_prevalids(false));
+    BC_REQUIRE(query.get_prevalids(false).empty());
 }
 
-BOOST_AUTO_TEST_CASE(query_batch_prevalid__set_purge_set__reuses_empty__round_trips)
+BC_AUTO_TEST_CASE(query_batch_prevalid__set_purge_set__reuses_empty__round_trips)
 {
     const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
@@ -67,20 +67,20 @@ BOOST_AUTO_TEST_CASE(query_batch_prevalid__set_purge_set__reuses_empty__round_tr
 
     // First dump, consumed and purged (startup-consume pattern).
     const header_links first{ 0x00345678, 0x00cdef12 };
-    BOOST_REQUIRE(query.set_prevalids(first, false));
-    BOOST_REQUIRE(query.get_prevalids(false) == first);
-    BOOST_REQUIRE(query.purge_prevalids(false));
+    BC_REQUIRE(query.set_prevalids(first, false));
+    BC_REQUIRE(query.get_prevalids(false) == first);
+    BC_REQUIRE(query.purge_prevalids(false));
 
     // Second dump appends into the now-empty table (next-shutdown pattern).
     const header_links second{ 0x00111111 };
-    BOOST_REQUIRE(query.set_prevalids(second, false));
+    BC_REQUIRE(query.set_prevalids(second, false));
 
     const auto out = query.get_prevalids(false);
-    BOOST_REQUIRE_EQUAL(out.size(), 1u);
-    BOOST_REQUIRE(out == second);
+    BC_REQUIRE_EQUAL(out.size(), 1u);
+    BC_REQUIRE(out == second);
 }
 
-BOOST_AUTO_TEST_CASE(query_batch_prevalid__set_get_purge__banks__independent)
+BC_AUTO_TEST_CASE(query_batch_prevalid__set_get_purge__banks__independent)
 {
     const database::settings configuration{ test::database_settings() };
     test::chunk_store store{ configuration };
@@ -88,16 +88,16 @@ BOOST_AUTO_TEST_CASE(query_batch_prevalid__set_get_purge__banks__independent)
 
     const header_links zero_links{ 0x00345678 };
     const header_links one_links{ 0x00cdef12, 0x00111111 };
-    BOOST_REQUIRE(query.set_prevalids(zero_links, false));
-    BOOST_REQUIRE(query.set_prevalids(one_links, true));
-    BOOST_REQUIRE_EQUAL(query.prevalid_records(false), 1u);
-    BOOST_REQUIRE_EQUAL(query.prevalid_records(true), 2u);
-    BOOST_REQUIRE(query.get_prevalids(false) == zero_links);
-    BOOST_REQUIRE(query.get_prevalids(true) == one_links);
+    BC_REQUIRE(query.set_prevalids(zero_links, false));
+    BC_REQUIRE(query.set_prevalids(one_links, true));
+    BC_REQUIRE_EQUAL(query.prevalid_records(false), 1u);
+    BC_REQUIRE_EQUAL(query.prevalid_records(true), 2u);
+    BC_REQUIRE(query.get_prevalids(false) == zero_links);
+    BC_REQUIRE(query.get_prevalids(true) == one_links);
 
-    BOOST_REQUIRE(query.purge_prevalids(true));
-    BOOST_REQUIRE(query.get_prevalids(true).empty());
-    BOOST_REQUIRE(query.get_prevalids(false) == zero_links);
+    BC_REQUIRE(query.purge_prevalids(true));
+    BC_REQUIRE(query.get_prevalids(true).empty());
+    BC_REQUIRE(query.get_prevalids(false) == zero_links);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

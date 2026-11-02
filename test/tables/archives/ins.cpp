@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 #include "../../mocks/chunk_storage.hpp"
 
-BOOST_AUTO_TEST_SUITE(ins_tests)
+BC_AUTO_TEST_SUITE(ins_tests)
 
 ////ffffffff 0000000000000000000000000000000000000000000000000000000000000000 ffffff
 ////00000000 110102030405060708090a0b0c0d0e0f220102030405060708090a0b0c0d0e0f 420000
@@ -55,47 +55,47 @@ const data_chunk expected_point_file
     0x42, 0x00, 0x00
 };
 
-BOOST_AUTO_TEST_CASE(ins__point_put__get__expected)
+BC_AUTO_TEST_CASE(ins__point_put__get__expected)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::ins instance{ head_store, body_store, 5 };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
     table::ins::link link{};
     const system::chain::point null_point{ null_hash, 0x00ffffff_u32 };
 
-    BOOST_REQUIRE(instance.put_link(link, null_point, table::ins_point::record{}));
-    BOOST_REQUIRE_EQUAL(link, 0u);
+    BC_REQUIRE(instance.put_link(link, null_point, table::ins_point::record{}));
+    BC_REQUIRE_EQUAL(link, 0u);
 
     const system::chain::point key{ hash, 0x00000042_u32 };
-    BOOST_REQUIRE(instance.put_link(link, key, table::ins_point::record{}));
-    BOOST_REQUIRE_EQUAL(link, 1u);
-    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(0), expected_point_file);
+    BC_REQUIRE(instance.put_link(link, key, table::ins_point::record{}));
+    BC_REQUIRE_EQUAL(link, 1u);
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(0), expected_point_file);
 
     table::ins_point::record element{};
-    BOOST_REQUIRE(instance.get(0, element));
-    BOOST_REQUIRE_EQUAL(element.hash, null_hash);
-    BOOST_REQUIRE(instance.get(1, element));
-    BOOST_REQUIRE_EQUAL(element.hash, hash);
+    BC_REQUIRE(instance.get(0, element));
+    BC_REQUIRE_EQUAL(element.hash, null_hash);
+    BC_REQUIRE(instance.get(1, element));
+    BC_REQUIRE_EQUAL(element.hash, hash);
 }
 
-BOOST_AUTO_TEST_CASE(ins__sequence_put__get__expected)
+BC_AUTO_TEST_CASE(ins__sequence_put__get__expected)
 {
     test::chunk_storage head_store{ test::terminal_fill };
     body_storages body_store{ body_paths };
     table::ins instance{ head_store, body_store, 5 };
-    BOOST_REQUIRE(instance.create());
+    BC_REQUIRE(instance.create());
 
     // Point put allocates the shared point/sequence row.
     table::ins::link link{};
     const system::chain::point key{ hash, 0x00000042_u32 };
-    BOOST_REQUIRE(instance.put_link(link, key, table::ins_point::record{}));
-    BOOST_REQUIRE_EQUAL(link, 0u);
+    BC_REQUIRE(instance.put_link(link, key, table::ins_point::record{}));
+    BC_REQUIRE_EQUAL(link, 0u);
 
     // Sequence put is unguarded, the accessor guards its rows against remap.
     auto ptr = instance.get_memory();
-    BOOST_REQUIRE(instance.sequence.put(link, table::ins_sequence::record
+    BC_REQUIRE(instance.sequence.put(link, table::ins_sequence::record
     {
         {},
         0x01020304_u32,
@@ -106,10 +106,10 @@ BOOST_AUTO_TEST_CASE(ins__sequence_put__get__expected)
     ptr.reset();
 
     table::ins_sequence::record element{};
-    BOOST_REQUIRE(instance.sequence.get(link, element));
-    BOOST_REQUIRE_EQUAL(element.sequence, 0x01020304_u32);
-    BOOST_REQUIRE_EQUAL(element.input_fk, 0x0505050505_u64);
-    BOOST_REQUIRE_EQUAL(element.parent_fk, 0x0a0b0c0d_u32);
+    BC_REQUIRE(instance.sequence.get(link, element));
+    BC_REQUIRE_EQUAL(element.sequence, 0x01020304_u32);
+    BC_REQUIRE_EQUAL(element.input_fk, 0x0505050505_u64);
+    BC_REQUIRE_EQUAL(element.parent_fk, 0x0a0b0c0d_u32);
 
     const data_chunk expected_sequence_file
     {
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(ins__sequence_put__get__expected)
         // parent_fk
         0x0d, 0x0c, 0x0b, 0x0a
     };
-    BOOST_REQUIRE_EQUAL(body_store.buffers_.at(1), expected_sequence_file);
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(1), expected_sequence_file);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
