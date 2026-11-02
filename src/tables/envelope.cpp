@@ -92,8 +92,6 @@ string_list envelope::apply(system::settings& bitcoin, settings& database,
     assign(bitcoin.bip90_bip34_height, bip90_bip34_height, "bip90_bip34_height");
     assign(bitcoin.bip90_bip65_height, bip90_bip65_height, "bip90_bip65_height");
     assign(bitcoin.bip90_bip66_height, bip90_bip66_height, "bip90_bip66_height");
-    assign(bitcoin.bip30_reactivate_height, bip30_reactivate_height, "bip30_reactivate_height");
-    assign(bitcoin.bip30_deactivate_checkpoint, bip30_deactivate_checkpoint, "bip30_deactivate_checkpoint");
     assign(bitcoin.bip9_bit0_active_checkpoint, bip9_bit0_active_checkpoint, "bip9_bit0_active_checkpoint");
     assign(bitcoin.bip9_bit1_active_checkpoint, bip9_bit1_active_checkpoint, "bip9_bit1_active_checkpoint");
     assign(bitcoin.bip9_bit2_active_checkpoint, bip9_bit2_active_checkpoint, "bip9_bit2_active_checkpoint");
@@ -157,8 +155,6 @@ envelope::envelope(const system::settings& bitcoin, const settings& database,
     bip90_bip34_height(bitcoin.bip90_bip34_height),
     bip90_bip65_height(bitcoin.bip90_bip65_height),
     bip90_bip66_height(bitcoin.bip90_bip66_height),
-    bip30_reactivate_height(bitcoin.bip30_reactivate_height),
-    bip30_deactivate_checkpoint(bitcoin.bip30_deactivate_checkpoint),
     bip9_bit0_active_checkpoint(bitcoin.bip9_bit0_active_checkpoint),
     bip9_bit1_active_checkpoint(bitcoin.bip9_bit1_active_checkpoint),
     bip9_bit2_active_checkpoint(bitcoin.bip9_bit2_active_checkpoint),
@@ -191,8 +187,6 @@ bool envelope::from_data(reader& source) NOEXCEPT
     forks.bip16 = to_bool(source.read_byte());
     forks.bip90 = to_bool(source.read_byte());
     forks.bip30 = to_bool(source.read_byte());
-    forks.bip30_deactivate = to_bool(source.read_byte());
-    forks.bip30_reactivate = to_bool(source.read_byte());
     forks.bip42 = to_bool(source.read_byte());
     forks.bip34 = to_bool(source.read_byte());
     forks.bip65 = to_bool(source.read_byte());
@@ -236,7 +230,6 @@ bool envelope::from_data(reader& source) NOEXCEPT
     bip90_bip34_height = source.read_size();
     bip90_bip65_height = source.read_size();
     bip90_bip66_height = source.read_size();
-    bip30_reactivate_height = source.read_size();
 
     const auto read_checkpoint = [&]() NOEXCEPT
     {
@@ -244,7 +237,6 @@ bool envelope::from_data(reader& source) NOEXCEPT
         return chain::checkpoint{ hash, source.read_size() };
     };
 
-    bip30_deactivate_checkpoint = read_checkpoint();
     bip9_bit0_active_checkpoint = read_checkpoint();
     bip9_bit1_active_checkpoint = read_checkpoint();
     bip9_bit2_active_checkpoint = read_checkpoint();
@@ -288,8 +280,6 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_byte(to_int<uint8_t>(forks.bip16));
     sink.write_byte(to_int<uint8_t>(forks.bip90));
     sink.write_byte(to_int<uint8_t>(forks.bip30));
-    sink.write_byte(to_int<uint8_t>(forks.bip30_deactivate));
-    sink.write_byte(to_int<uint8_t>(forks.bip30_reactivate));
     sink.write_byte(to_int<uint8_t>(forks.bip42));
     sink.write_byte(to_int<uint8_t>(forks.bip34));
     sink.write_byte(to_int<uint8_t>(forks.bip65));
@@ -333,7 +323,6 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_variable(bip90_bip34_height);
     sink.write_variable(bip90_bip65_height);
     sink.write_variable(bip90_bip66_height);
-    sink.write_variable(bip30_reactivate_height);
 
     const auto write_checkpoint = [&](const chain::checkpoint& in) NOEXCEPT
     {
@@ -341,7 +330,6 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
         sink.write_variable(in.height());
     };
 
-    write_checkpoint(bip30_deactivate_checkpoint);
     write_checkpoint(bip9_bit0_active_checkpoint);
     write_checkpoint(bip9_bit1_active_checkpoint);
     write_checkpoint(bip9_bit2_active_checkpoint);
@@ -378,7 +366,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
 
 size_t envelope::serialized_size() const NOEXCEPT
 {
-    constexpr auto forks_size = 25_size;
+    constexpr auto forks_size = 23_size;
     constexpr auto fixed = (4 * sizeof(uint32_t)) +
         (7 * sizeof(uint32_t)) + (12 * sizeof(uint8_t)) + forks_size +
         sizeof(uint64_t) + (18 * sizeof(uint32_t));
@@ -395,8 +383,6 @@ size_t envelope::serialized_size() const NOEXCEPT
         variable_size(bip90_bip34_height) +
         variable_size(bip90_bip65_height) +
         variable_size(bip90_bip66_height) +
-        variable_size(bip30_reactivate_height) +
-        checkpoint_size(bip30_deactivate_checkpoint) +
         checkpoint_size(bip9_bit0_active_checkpoint) +
         checkpoint_size(bip9_bit1_active_checkpoint) +
         checkpoint_size(bip9_bit2_active_checkpoint) +

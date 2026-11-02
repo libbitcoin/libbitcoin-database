@@ -63,7 +63,8 @@ namespace schema {
 /// 4.0.17.0 Signet fork and challenge in the envelope.
 /// 4.0.18.0 Network in the envelope.
 /// 4.0.19.0 Single byte interval depth in the envelope.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 19, 0 };
+/// 4.0.20.0 Bip30 deactivate and reactivate removed from the envelope.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 20, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------

@@ -114,10 +114,6 @@ TEMPLATE
 bool CLASS::populate_hashes(chain_state::data& data,
     const chain_state::map& map) const NOEXCEPT
 {
-    if (map.bip30_deactivate_height != chain_state::map::unrequested)
-        data.bip30_deactivate_hash = get_header_key(
-            to_candidate(map.bip30_deactivate_height));
-
     if (map.bip9_bit0_height != chain_state::map::unrequested)
         data.bip9_bit0_hash = get_header_key(
             to_candidate(map.bip9_bit0_height));

@@ -97,6 +97,7 @@ include_bitcoin_databasedir = \
 include_bitcoin_database_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/define.hpp \
     ${srcdir}/../../include/bitcoin/database/error.hpp \
+    ${srcdir}/../../include/bitcoin/database/preprocessor.hpp \
     ${srcdir}/../../include/bitcoin/database/query.hpp \
     ${srcdir}/../../include/bitcoin/database/settings.hpp \
     ${srcdir}/../../include/bitcoin/database/store.hpp \

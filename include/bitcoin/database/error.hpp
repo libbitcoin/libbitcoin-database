@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_DATABASE_ERROR_HPP
 #define LIBBITCOIN_DATABASE_ERROR_HPP
 
-#include <bitcoin/system.hpp>
+#include <bitcoin/database/preprocessor.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -149,7 +149,7 @@ enum error_t : uint8_t
 };
 
 // No current need for error_code equivalence mapping.
-DECLARE_ERROR_T_CODE_CATEGORY(error);
+DECLARE_ERROR_T_CODE_CATEGORY(error, BCD_API);
 
 } // namespace error
 } // namespace database
