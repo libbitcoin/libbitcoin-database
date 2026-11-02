@@ -246,7 +246,6 @@ code CLASS::accept_pooled_block(const pooled_block& block,
     const auto bip16 = ctx.is_enabled(chain::flags::bip16_rule);
     const auto bip34 = ctx.is_enabled(chain::flags::bip34_rule);
     const auto bip42 = ctx.is_enabled(chain::flags::bip42_rule);
-    const auto bip50 = ctx.is_enabled(chain::flags::bip50_rule);
     const auto bip141 = ctx.is_enabled(chain::flags::bip141_rule);
 
     const auto weight = ceilinged_add(
@@ -270,19 +269,6 @@ code CLASS::accept_pooled_block(const pooled_block& block,
         !chain::script::is_coinbase_pattern(ins.front()->script().ops(),
             ctx.height))
         return system::error::coinbase_height_mismatch;
-
-    if (bip50)
-    {
-        std::unordered_set<hash_digest> hashes{};
-        for (const auto& position: block.positions)
-            hashes.insert(position.first);
-
-        for (const auto& point: block.points)
-            hashes.insert(point.hash());
-
-        if (hashes.size() > chain::hash_limit)
-            return system::error::temporary_hash_limit;
-    }
 
     const auto subsidy = chain::block::subsidy(ctx.height, subsidy_interval,
         initial_subsidy, bip42);
