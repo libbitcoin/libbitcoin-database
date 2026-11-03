@@ -99,6 +99,7 @@ string_list envelope::apply(system::settings& bitcoin, settings& database,
     assign(bitcoin.bip54_timewarp_deployment, bip54_timewarp_deployment, "bip54_timewarp_deployment");
     assign(bitcoin.bip54_timespan_deployment, bip54_timespan_deployment, "bip54_timespan_deployment");
     assign(bitcoin.bip54_sigops_deployment, bip54_sigops_deployment, "bip54_sigops_deployment");
+    assign(bitcoin.bip54_txsize_deployment, bip54_txsize_deployment, "bip54_txsize_deployment");
     assign(bitcoin.bip9_bit0_active_checkpoint, bip9_bit0_active_checkpoint, "bip9_bit0_active_checkpoint");
     assign(bitcoin.bip9_bit1_active_checkpoint, bip9_bit1_active_checkpoint, "bip9_bit1_active_checkpoint");
     assign(bitcoin.bip9_bit2_active_checkpoint, bip9_bit2_active_checkpoint, "bip9_bit2_active_checkpoint");
@@ -169,6 +170,7 @@ envelope::envelope(const system::settings& bitcoin, const settings& database,
     bip54_timewarp_deployment(bitcoin.bip54_timewarp_deployment),
     bip54_timespan_deployment(bitcoin.bip54_timespan_deployment),
     bip54_sigops_deployment(bitcoin.bip54_sigops_deployment),
+    bip54_txsize_deployment(bitcoin.bip54_txsize_deployment),
     bip9_bit0_active_checkpoint(bitcoin.bip9_bit0_active_checkpoint),
     bip9_bit1_active_checkpoint(bitcoin.bip9_bit1_active_checkpoint),
     bip9_bit2_active_checkpoint(bitcoin.bip9_bit2_active_checkpoint),
@@ -216,6 +218,7 @@ bool envelope::from_data(reader& source) NOEXCEPT
     forks.bip54_timewarp = to_bool(source.read_byte());
     forks.bip54_timespan = to_bool(source.read_byte());
     forks.bip54_sigops = to_bool(source.read_byte());
+    forks.bip54_txsize = to_bool(source.read_byte());
     forks.retarget = to_bool(source.read_byte());
     forks.difficult = to_bool(source.read_byte());
     forks.time_warp_patch = to_bool(source.read_byte());
@@ -269,6 +272,7 @@ bool envelope::from_data(reader& source) NOEXCEPT
     bip54_timewarp_deployment = read_deployment();
     bip54_timespan_deployment = read_deployment();
     bip54_sigops_deployment = read_deployment();
+    bip54_txsize_deployment = read_deployment();
 
     const auto read_checkpoint = [&]() NOEXCEPT
     {
@@ -334,6 +338,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_byte(to_int<uint8_t>(forks.bip54_timewarp));
     sink.write_byte(to_int<uint8_t>(forks.bip54_timespan));
     sink.write_byte(to_int<uint8_t>(forks.bip54_sigops));
+    sink.write_byte(to_int<uint8_t>(forks.bip54_txsize));
     sink.write_byte(to_int<uint8_t>(forks.retarget));
     sink.write_byte(to_int<uint8_t>(forks.difficult));
     sink.write_byte(to_int<uint8_t>(forks.time_warp_patch));
@@ -386,6 +391,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     write_deployment(bip54_timewarp_deployment);
     write_deployment(bip54_timespan_deployment);
     write_deployment(bip54_sigops_deployment);
+    write_deployment(bip54_txsize_deployment);
 
     const auto write_checkpoint = [&](const chain::checkpoint& in) NOEXCEPT
     {
@@ -429,7 +435,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
 
 size_t envelope::serialized_size() const NOEXCEPT
 {
-    constexpr auto forks_size = 26_size;
+    constexpr auto forks_size = 27_size;
     constexpr auto fixed = (4 * sizeof(uint32_t)) +
         (7 * sizeof(uint32_t)) + (12 * sizeof(uint8_t)) + forks_size +
         sizeof(uint64_t) + (18 * sizeof(uint32_t));
@@ -460,6 +466,7 @@ size_t envelope::serialized_size() const NOEXCEPT
         deployment_size(bip54_timewarp_deployment) +
         deployment_size(bip54_timespan_deployment) +
         deployment_size(bip54_sigops_deployment) +
+        deployment_size(bip54_txsize_deployment) +
         checkpoint_size(bip9_bit0_active_checkpoint) +
         checkpoint_size(bip9_bit1_active_checkpoint) +
         checkpoint_size(bip9_bit2_active_checkpoint) +

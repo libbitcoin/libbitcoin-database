@@ -22,7 +22,7 @@ BC_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 455_size;
+constexpr auto default_size = 476_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {
@@ -52,7 +52,7 @@ BC_AUTO_TEST_CASE(envelope__serialized_size__default__expected)
 BC_AUTO_TEST_CASE(envelope__to_data__default__expected_version)
 {
     const envelope instance{};
-    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 24, 0));
+    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 25, 0));
     BC_REQUIRE_EQUAL(to_chunk(instance).front(), schema::version.front());
 }
 
@@ -158,6 +158,8 @@ BC_AUTO_TEST_CASE(envelope__construct__mainnet__expected)
     BC_REQUIRE_EQUAL(instance.bip54_timespan_deployment.threshold, 0u);
     BC_REQUIRE(instance.forks.bip54_sigops);
     BC_REQUIRE_EQUAL(instance.bip54_sigops_deployment.threshold, 0u);
+    BC_REQUIRE(instance.forks.bip54_txsize);
+    BC_REQUIRE_EQUAL(instance.bip54_txsize_deployment.threshold, 0u);
     BC_REQUIRE(instance.provide_filters);
     BC_REQUIRE_EQUAL(instance.interval_depth, configuration.interval_depth);
     BC_REQUIRE_EQUAL(instance.header_buckets, configuration.header.buckets);
