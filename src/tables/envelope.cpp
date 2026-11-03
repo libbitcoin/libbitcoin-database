@@ -101,9 +101,6 @@ string_list envelope::apply(system::settings& bitcoin, settings& database,
     assign(bitcoin.bip54_sigops_deployment, bip54_sigops_deployment, "bip54_sigops_deployment");
     assign(bitcoin.bip54_txsize_deployment, bip54_txsize_deployment, "bip54_txsize_deployment");
     assign(bitcoin.bip54_coinbase_deployment, bip54_coinbase_deployment, "bip54_coinbase_deployment");
-    assign(bitcoin.bip9_bit0_active_checkpoint, bip9_bit0_active_checkpoint, "bip9_bit0_active_checkpoint");
-    assign(bitcoin.bip9_bit1_active_checkpoint, bip9_bit1_active_checkpoint, "bip9_bit1_active_checkpoint");
-    assign(bitcoin.bip9_bit2_active_checkpoint, bip9_bit2_active_checkpoint, "bip9_bit2_active_checkpoint");
     assign(bitcoin.milestone, milestone, "milestone");
     assign(bitcoin.signet_challenge, signet_challenge, "signet_challenge");
 
@@ -173,9 +170,6 @@ envelope::envelope(const system::settings& bitcoin, const settings& database,
     bip54_sigops_deployment(bitcoin.bip54_sigops_deployment),
     bip54_txsize_deployment(bitcoin.bip54_txsize_deployment),
     bip54_coinbase_deployment(bitcoin.bip54_coinbase_deployment),
-    bip9_bit0_active_checkpoint(bitcoin.bip9_bit0_active_checkpoint),
-    bip9_bit1_active_checkpoint(bitcoin.bip9_bit1_active_checkpoint),
-    bip9_bit2_active_checkpoint(bitcoin.bip9_bit2_active_checkpoint),
     top_checkpoint(bitcoin.top_checkpoint()),
     milestone(bitcoin.milestone),
     signet_challenge(bitcoin.signet_challenge),
@@ -265,7 +259,6 @@ bool envelope::from_data(reader& source) NOEXCEPT
         out.threshold = source.read_size();
         out.activation_height = source.read_size();
         out.speedy = to_bool(source.read_byte());
-        out.buried = to_bool(source.read_byte());
         return out;
     };
 
@@ -284,9 +277,6 @@ bool envelope::from_data(reader& source) NOEXCEPT
         return chain::checkpoint{ hash, source.read_size() };
     };
 
-    bip9_bit0_active_checkpoint = read_checkpoint();
-    bip9_bit1_active_checkpoint = read_checkpoint();
-    bip9_bit2_active_checkpoint = read_checkpoint();
     top_checkpoint = read_checkpoint();
     milestone = read_checkpoint();
     signet_challenge = chain::script{ source, true };
@@ -387,7 +377,6 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
         sink.write_variable(in.threshold);
         sink.write_variable(in.activation_height);
         sink.write_byte(to_int<uint8_t>(in.speedy));
-        sink.write_byte(to_int<uint8_t>(in.buried));
     };
 
     write_deployment(bip9_bit0_deployment);
@@ -405,9 +394,6 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
         sink.write_variable(in.height());
     };
 
-    write_checkpoint(bip9_bit0_active_checkpoint);
-    write_checkpoint(bip9_bit1_active_checkpoint);
-    write_checkpoint(bip9_bit2_active_checkpoint);
     write_checkpoint(top_checkpoint);
     write_checkpoint(milestone);
     signet_challenge.to_data(sink, true);
@@ -454,7 +440,7 @@ size_t envelope::serialized_size() const NOEXCEPT
     const auto deployment_size = [](
         const chain::chain_state::deployment& in) NOEXCEPT
     {
-        return (4 * sizeof(uint32_t)) + (2 * sizeof(uint8_t)) +
+        return (4 * sizeof(uint32_t)) + sizeof(uint8_t) +
             variable_size(in.threshold) + variable_size(in.activation_height);
     };
 
@@ -474,9 +460,6 @@ size_t envelope::serialized_size() const NOEXCEPT
         deployment_size(bip54_sigops_deployment) +
         deployment_size(bip54_txsize_deployment) +
         deployment_size(bip54_coinbase_deployment) +
-        checkpoint_size(bip9_bit0_active_checkpoint) +
-        checkpoint_size(bip9_bit1_active_checkpoint) +
-        checkpoint_size(bip9_bit2_active_checkpoint) +
         checkpoint_size(top_checkpoint) +
         checkpoint_size(milestone) +
         signet_challenge.serialized_size(true);

@@ -88,9 +88,6 @@ struct BCD_API envelope
     system::chain::chain_state::deployment bip54_sigops_deployment{};
     system::chain::chain_state::deployment bip54_txsize_deployment{};
     system::chain::chain_state::deployment bip54_coinbase_deployment{};
-    system::chain::checkpoint bip9_bit0_active_checkpoint{};
-    system::chain::checkpoint bip9_bit1_active_checkpoint{};
-    system::chain::checkpoint bip9_bit2_active_checkpoint{};
     system::chain::checkpoint top_checkpoint{};
     system::chain::checkpoint milestone{};
     system::chain::script signet_challenge{};
