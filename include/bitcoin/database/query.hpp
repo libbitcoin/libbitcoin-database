@@ -1202,6 +1202,11 @@ protected:
         const chain_state::map& map, header_link link) const NOEXCEPT;
     bool populate_hashes(chain_state::data& data,
         const chain_state::map& map) const NOEXCEPT;
+    bool populate_signal(chain_state::data::signal& signal,
+        const chain_state::map::signal& map, size_t height,
+        const header_links& branch) const NOEXCEPT;
+    bool populate_signals(chain_state::data& data,
+        const chain_state::map& map, header_link link) const NOEXCEPT;
     bool populate_work(chain_state::data& data,
         header_link link) const NOEXCEPT;
     bool populate_all(chain_state::data& data,
