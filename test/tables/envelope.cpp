@@ -22,7 +22,7 @@ BC_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 392_size;
+constexpr auto default_size = 413_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {
@@ -52,7 +52,7 @@ BC_AUTO_TEST_CASE(envelope__serialized_size__default__expected)
 BC_AUTO_TEST_CASE(envelope__to_data__default__expected_version)
 {
     const envelope instance{};
-    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 21, 0));
+    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 22, 0));
     BC_REQUIRE_EQUAL(to_chunk(instance).front(), schema::version.front());
 }
 
@@ -152,6 +152,8 @@ BC_AUTO_TEST_CASE(envelope__construct__mainnet__expected)
     BC_REQUIRE_EQUAL(instance.bip9_bit1_active_checkpoint.height(), 481824u);
     BC_REQUIRE_EQUAL(instance.bip9_bit1_active_checkpoint.hash(), bitcoin.bip9_bit1_active_checkpoint.hash());
     BC_REQUIRE(instance.forks.bip341);
+    BC_REQUIRE(instance.forks.bip54_timewarp);
+    BC_REQUIRE_EQUAL(instance.bip54_timewarp_deployment.threshold, 0u);
     BC_REQUIRE(instance.provide_filters);
     BC_REQUIRE_EQUAL(instance.interval_depth, configuration.interval_depth);
     BC_REQUIRE_EQUAL(instance.header_buckets, configuration.header.buckets);
