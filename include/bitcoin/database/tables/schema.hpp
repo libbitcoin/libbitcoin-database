@@ -67,7 +67,8 @@ namespace schema {
 /// 4.0.21.0 Bip9 deployments in the envelope.
 /// 4.0.22.0 Bip54 timewarp fork in the envelope.
 /// 4.0.23.0 Bip54 timespan fork in the envelope.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 23, 0 };
+/// 4.0.24.0 Bip54 sigops fork in the envelope.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 24, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
