@@ -130,6 +130,134 @@ bool CLASS::populate_hashes(chain_state::data& data,
 }
 
 TEMPLATE
+bool CLASS::populate_signal(chain_state::data::signal& signal,
+    const chain_state::map::signal& map, size_t height,
+    const header_links& branch) const NOEXCEPT
+{
+    if (map.high == chain_state::map::unrequested)
+        return true;
+
+    // Branch links are above the candidate chain, by descending height.
+    const auto fork = height - branch.size();
+    const auto to_link = [&](size_t at) NOEXCEPT
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        return at > fork ? header_link{ branch.at(height - at) } :
+            to_candidate(at);
+        BC_POP_WARNING()
+    };
+
+    // Median time past of a period boundary (zero at genesis).
+    const auto median = [&](uint32_t& out, size_t boundary) NOEXCEPT
+    {
+        chain_state::timestamps times(std::min(boundary,
+            system::chain::median_time_past_interval));
+
+        for (auto& time: times)
+            if (!get_timestamp(time, to_link(--boundary)))
+                return false;
+
+        out = chain_state::median(times);
+        return true;
+    };
+
+    // Signaling blocks of heights [from, to).
+    const auto count = [&](size_t& out, size_t from, size_t to) NOEXCEPT
+    {
+        uint32_t version{};
+        for (out = zero; from < to; ++from)
+        {
+            if (!get_version(version, to_link(from)))
+                return false;
+
+            if (chain_state::is_signal(version, map.base, map.bit))
+                ++out;
+        }
+
+        return true;
+    };
+
+    // Periods below a boundary with median time past below start are defined.
+    // A period is counted only if its opening boundary is at/above start and
+    // the boundary below that is below timeout, as otherwise it is not started.
+    auto boundary = map.high;
+    uint32_t current{};
+    if (!median(current, boundary))
+        return false;
+
+    if (is_zero(boundary) || current < map.start)
+        return true;
+
+    uint32_t below{};
+    if (!median(below, boundary - map.period))
+        return false;
+
+    if (below < map.timeout && !count(signal.count, boundary, height))
+        return false;
+
+    for (;;)
+    {
+        const auto opening = boundary - map.period;
+
+        size_t value{};
+        uint32_t lower{};
+        if (!is_zero(opening) && below >= map.start)
+        {
+            if (!median(lower, opening - map.period))
+                return false;
+
+            if (lower < map.timeout && !count(value, opening, boundary))
+                return false;
+        }
+
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        signal.ordered.push_back({ current, value });
+        BC_POP_WARNING()
+
+        if (is_zero(opening) || below < map.start)
+            return true;
+
+        boundary = opening;
+        current = below;
+        below = lower;
+    }
+}
+
+TEMPLATE
+bool CLASS::populate_signals(chain_state::data& data,
+    const chain_state::map& map, header_link link) const NOEXCEPT
+{
+    constexpr auto unrequested = chain_state::map::unrequested;
+    const auto requested = [](const auto& signal) NOEXCEPT
+    {
+        return signal.high != unrequested;
+    };
+
+    if (std::none_of(map.signals.begin(), map.signals.end(), requested))
+        return true;
+
+    // Branch links above the candidate chain, by descending height.
+    header_links branch{};
+    while (!is_candidate_header(link))
+    {
+        if (link.is_terminal())
+            return false;
+
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        branch.push_back(link);
+        BC_POP_WARNING()
+        link = to_parent(link);
+    }
+
+    for (size_t index{}; index < map.signals.size(); ++index)
+        if (!populate_signal(data.signals.at(index), map.signals.at(index),
+            data.height, branch))
+            return false;
+
+    return true;
+}
+
+TEMPLATE
 bool CLASS::populate_work(chain_state::data& data,
     header_link link) const NOEXCEPT
 {
@@ -152,6 +280,7 @@ bool CLASS::populate_all(chain_state::data& data,
         populate_timestamps(data, map, link) &&
         populate_retarget(data, map, link) &&
         populate_hashes(data, map) &&
+        populate_signals(data, map, link) &&
         populate_work(data, link);
 }
 
@@ -279,7 +408,8 @@ bool CLASS::populate_candidate_all(chain_state::data& data,
         populate_candidate_timestamps(data, map, header) &&
         populate_candidate_retarget(data, map, header) &&
         populate_candidate_work(data, header) &&
-        populate_hashes(data, map);
+        populate_hashes(data, map) &&
+        populate_signals(data, map, link);
 }
 
 TEMPLATE

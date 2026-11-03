@@ -92,6 +92,15 @@ string_list envelope::apply(system::settings& bitcoin, settings& database,
     assign(bitcoin.bip90_bip34_height, bip90_bip34_height, "bip90_bip34_height");
     assign(bitcoin.bip90_bip65_height, bip90_bip65_height, "bip90_bip65_height");
     assign(bitcoin.bip90_bip66_height, bip90_bip66_height, "bip90_bip66_height");
+    assign(bitcoin.bip9_activation_period, bip9_activation_period, "bip9_activation_period");
+    assign(bitcoin.bip9_bit0_deployment, bip9_bit0_deployment, "bip9_bit0_deployment");
+    assign(bitcoin.bip9_bit1_deployment, bip9_bit1_deployment, "bip9_bit1_deployment");
+    assign(bitcoin.bip9_bit2_deployment, bip9_bit2_deployment, "bip9_bit2_deployment");
+    assign(bitcoin.bip54_timewarp_deployment, bip54_timewarp_deployment, "bip54_timewarp_deployment");
+    assign(bitcoin.bip54_timespan_deployment, bip54_timespan_deployment, "bip54_timespan_deployment");
+    assign(bitcoin.bip54_sigops_deployment, bip54_sigops_deployment, "bip54_sigops_deployment");
+    assign(bitcoin.bip54_txsize_deployment, bip54_txsize_deployment, "bip54_txsize_deployment");
+    assign(bitcoin.bip54_coinbase_deployment, bip54_coinbase_deployment, "bip54_coinbase_deployment");
     assign(bitcoin.bip9_bit0_active_checkpoint, bip9_bit0_active_checkpoint, "bip9_bit0_active_checkpoint");
     assign(bitcoin.bip9_bit1_active_checkpoint, bip9_bit1_active_checkpoint, "bip9_bit1_active_checkpoint");
     assign(bitcoin.bip9_bit2_active_checkpoint, bip9_bit2_active_checkpoint, "bip9_bit2_active_checkpoint");
@@ -155,6 +164,15 @@ envelope::envelope(const system::settings& bitcoin, const settings& database,
     bip90_bip34_height(bitcoin.bip90_bip34_height),
     bip90_bip65_height(bitcoin.bip90_bip65_height),
     bip90_bip66_height(bitcoin.bip90_bip66_height),
+    bip9_activation_period(bitcoin.bip9_activation_period),
+    bip9_bit0_deployment(bitcoin.bip9_bit0_deployment),
+    bip9_bit1_deployment(bitcoin.bip9_bit1_deployment),
+    bip9_bit2_deployment(bitcoin.bip9_bit2_deployment),
+    bip54_timewarp_deployment(bitcoin.bip54_timewarp_deployment),
+    bip54_timespan_deployment(bitcoin.bip54_timespan_deployment),
+    bip54_sigops_deployment(bitcoin.bip54_sigops_deployment),
+    bip54_txsize_deployment(bitcoin.bip54_txsize_deployment),
+    bip54_coinbase_deployment(bitcoin.bip54_coinbase_deployment),
     bip9_bit0_active_checkpoint(bitcoin.bip9_bit0_active_checkpoint),
     bip9_bit1_active_checkpoint(bitcoin.bip9_bit1_active_checkpoint),
     bip9_bit2_active_checkpoint(bitcoin.bip9_bit2_active_checkpoint),
@@ -199,6 +217,11 @@ bool envelope::from_data(reader& source) NOEXCEPT
     forks.bip147 = to_bool(source.read_byte());
     forks.bip341 = to_bool(source.read_byte());
     forks.bip342 = to_bool(source.read_byte());
+    forks.bip54_timewarp = to_bool(source.read_byte());
+    forks.bip54_timespan = to_bool(source.read_byte());
+    forks.bip54_sigops = to_bool(source.read_byte());
+    forks.bip54_txsize = to_bool(source.read_byte());
+    forks.bip54_coinbase = to_bool(source.read_byte());
     forks.retarget = to_bool(source.read_byte());
     forks.difficult = to_bool(source.read_byte());
     forks.time_warp_patch = to_bool(source.read_byte());
@@ -230,6 +253,30 @@ bool envelope::from_data(reader& source) NOEXCEPT
     bip90_bip34_height = source.read_size();
     bip90_bip65_height = source.read_size();
     bip90_bip66_height = source.read_size();
+    bip9_activation_period = source.read_size();
+
+    const auto read_deployment = [&]() NOEXCEPT
+    {
+        chain::chain_state::deployment out{};
+        out.bit = source.read_little_endian<uint32_t>();
+        out.flags = source.read_little_endian<uint32_t>();
+        out.start = source.read_little_endian<uint32_t>();
+        out.timeout = source.read_little_endian<uint32_t>();
+        out.threshold = source.read_size();
+        out.activation_height = source.read_size();
+        out.speedy = to_bool(source.read_byte());
+        out.buried = to_bool(source.read_byte());
+        return out;
+    };
+
+    bip9_bit0_deployment = read_deployment();
+    bip9_bit1_deployment = read_deployment();
+    bip9_bit2_deployment = read_deployment();
+    bip54_timewarp_deployment = read_deployment();
+    bip54_timespan_deployment = read_deployment();
+    bip54_sigops_deployment = read_deployment();
+    bip54_txsize_deployment = read_deployment();
+    bip54_coinbase_deployment = read_deployment();
 
     const auto read_checkpoint = [&]() NOEXCEPT
     {
@@ -292,6 +339,11 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_byte(to_int<uint8_t>(forks.bip147));
     sink.write_byte(to_int<uint8_t>(forks.bip341));
     sink.write_byte(to_int<uint8_t>(forks.bip342));
+    sink.write_byte(to_int<uint8_t>(forks.bip54_timewarp));
+    sink.write_byte(to_int<uint8_t>(forks.bip54_timespan));
+    sink.write_byte(to_int<uint8_t>(forks.bip54_sigops));
+    sink.write_byte(to_int<uint8_t>(forks.bip54_txsize));
+    sink.write_byte(to_int<uint8_t>(forks.bip54_coinbase));
     sink.write_byte(to_int<uint8_t>(forks.retarget));
     sink.write_byte(to_int<uint8_t>(forks.difficult));
     sink.write_byte(to_int<uint8_t>(forks.time_warp_patch));
@@ -323,6 +375,29 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_variable(bip90_bip34_height);
     sink.write_variable(bip90_bip65_height);
     sink.write_variable(bip90_bip66_height);
+    sink.write_variable(bip9_activation_period);
+
+    const auto write_deployment = [&](
+        const chain::chain_state::deployment& in) NOEXCEPT
+    {
+        sink.write_little_endian<uint32_t>(in.bit);
+        sink.write_little_endian<uint32_t>(in.flags);
+        sink.write_little_endian<uint32_t>(in.start);
+        sink.write_little_endian<uint32_t>(in.timeout);
+        sink.write_variable(in.threshold);
+        sink.write_variable(in.activation_height);
+        sink.write_byte(to_int<uint8_t>(in.speedy));
+        sink.write_byte(to_int<uint8_t>(in.buried));
+    };
+
+    write_deployment(bip9_bit0_deployment);
+    write_deployment(bip9_bit1_deployment);
+    write_deployment(bip9_bit2_deployment);
+    write_deployment(bip54_timewarp_deployment);
+    write_deployment(bip54_timespan_deployment);
+    write_deployment(bip54_sigops_deployment);
+    write_deployment(bip54_txsize_deployment);
+    write_deployment(bip54_coinbase_deployment);
 
     const auto write_checkpoint = [&](const chain::checkpoint& in) NOEXCEPT
     {
@@ -366,7 +441,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
 
 size_t envelope::serialized_size() const NOEXCEPT
 {
-    constexpr auto forks_size = 23_size;
+    constexpr auto forks_size = 28_size;
     constexpr auto fixed = (4 * sizeof(uint32_t)) +
         (7 * sizeof(uint32_t)) + (12 * sizeof(uint8_t)) + forks_size +
         sizeof(uint64_t) + (18 * sizeof(uint32_t));
@@ -376,6 +451,13 @@ size_t envelope::serialized_size() const NOEXCEPT
         return hash_size + variable_size(in.height());
     };
 
+    const auto deployment_size = [](
+        const chain::chain_state::deployment& in) NOEXCEPT
+    {
+        return (4 * sizeof(uint32_t)) + (2 * sizeof(uint8_t)) +
+            variable_size(in.threshold) + variable_size(in.activation_height);
+    };
+
     return fixed +
         variable_size(bip34_activation_threshold) +
         variable_size(bip34_enforcement_threshold) +
@@ -383,6 +465,15 @@ size_t envelope::serialized_size() const NOEXCEPT
         variable_size(bip90_bip34_height) +
         variable_size(bip90_bip65_height) +
         variable_size(bip90_bip66_height) +
+        variable_size(bip9_activation_period) +
+        deployment_size(bip9_bit0_deployment) +
+        deployment_size(bip9_bit1_deployment) +
+        deployment_size(bip9_bit2_deployment) +
+        deployment_size(bip54_timewarp_deployment) +
+        deployment_size(bip54_timespan_deployment) +
+        deployment_size(bip54_sigops_deployment) +
+        deployment_size(bip54_txsize_deployment) +
+        deployment_size(bip54_coinbase_deployment) +
         checkpoint_size(bip9_bit0_active_checkpoint) +
         checkpoint_size(bip9_bit1_active_checkpoint) +
         checkpoint_size(bip9_bit2_active_checkpoint) +

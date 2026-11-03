@@ -286,6 +286,8 @@ constexpr CLASS::integer CLASS::cast_link(size_t link) NOEXCEPT
 
     // link limit is sub1(terminal), where terminal is 2^((8*Link::bytes)-1).
     // It is ok for the payload to exceed link limit (link is identity only).
+    // A link above the limit is a table sizing violation and is deliberately
+    // not mapped to terminal, as that would present it as not found/not put.
     return link == ceiling ? terminal : possible_narrow_cast<integer>(link);
 }
 

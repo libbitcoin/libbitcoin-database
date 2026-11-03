@@ -79,6 +79,15 @@ struct BCD_API envelope
     size_t bip90_bip34_height{};
     size_t bip90_bip65_height{};
     size_t bip90_bip66_height{};
+    size_t bip9_activation_period{};
+    system::chain::chain_state::deployment bip9_bit0_deployment{};
+    system::chain::chain_state::deployment bip9_bit1_deployment{};
+    system::chain::chain_state::deployment bip9_bit2_deployment{};
+    system::chain::chain_state::deployment bip54_timewarp_deployment{};
+    system::chain::chain_state::deployment bip54_timespan_deployment{};
+    system::chain::chain_state::deployment bip54_sigops_deployment{};
+    system::chain::chain_state::deployment bip54_txsize_deployment{};
+    system::chain::chain_state::deployment bip54_coinbase_deployment{};
     system::chain::checkpoint bip9_bit0_active_checkpoint{};
     system::chain::checkpoint bip9_bit1_active_checkpoint{};
     system::chain::checkpoint bip9_bit2_active_checkpoint{};

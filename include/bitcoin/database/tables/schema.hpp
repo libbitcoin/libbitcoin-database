@@ -64,7 +64,13 @@ namespace schema {
 /// 4.0.18.0 Network in the envelope.
 /// 4.0.19.0 Single byte interval depth in the envelope.
 /// 4.0.20.0 Bip30 deactivate and reactivate removed from the envelope.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 20, 0 };
+/// 4.0.21.0 Bip9 deployments in the envelope.
+/// 4.0.22.0 Bip54 timewarp fork in the envelope.
+/// 4.0.23.0 Bip54 timespan fork in the envelope.
+/// 4.0.24.0 Bip54 sigops fork in the envelope.
+/// 4.0.25.0 Bip54 txsize fork in the envelope.
+/// 4.0.26.0 Bip54 coinbase fork in the envelope.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 26, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------

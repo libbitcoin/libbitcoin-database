@@ -22,7 +22,7 @@ BC_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 331_size;
+constexpr auto default_size = 497_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {
@@ -52,7 +52,7 @@ BC_AUTO_TEST_CASE(envelope__serialized_size__default__expected)
 BC_AUTO_TEST_CASE(envelope__to_data__default__expected_version)
 {
     const envelope instance{};
-    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 20, 0));
+    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 26, 0));
     BC_REQUIRE_EQUAL(to_chunk(instance).front(), schema::version.front());
 }
 
@@ -145,9 +145,23 @@ BC_AUTO_TEST_CASE(envelope__construct__mainnet__expected)
     BC_REQUIRE_EQUAL(instance.bip34_activation_threshold, 750u);
     BC_REQUIRE_EQUAL(instance.bip34_enforcement_threshold, 950u);
     BC_REQUIRE_EQUAL(instance.bip34_activation_sample, 1000u);
+    BC_REQUIRE_EQUAL(instance.bip9_activation_period, 2016u);
+    BC_REQUIRE_EQUAL(instance.bip9_bit2_deployment.activation_height, 709632u);
+    BC_REQUIRE(instance.bip9_bit2_deployment.speedy);
+    BC_REQUIRE(instance.bip9_bit2_deployment.buried);
     BC_REQUIRE_EQUAL(instance.bip9_bit1_active_checkpoint.height(), 481824u);
     BC_REQUIRE_EQUAL(instance.bip9_bit1_active_checkpoint.hash(), bitcoin.bip9_bit1_active_checkpoint.hash());
     BC_REQUIRE(instance.forks.bip341);
+    BC_REQUIRE(instance.forks.bip54_timewarp);
+    BC_REQUIRE_EQUAL(instance.bip54_timewarp_deployment.threshold, 0u);
+    BC_REQUIRE(instance.forks.bip54_timespan);
+    BC_REQUIRE_EQUAL(instance.bip54_timespan_deployment.threshold, 0u);
+    BC_REQUIRE(instance.forks.bip54_sigops);
+    BC_REQUIRE_EQUAL(instance.bip54_sigops_deployment.threshold, 0u);
+    BC_REQUIRE(instance.forks.bip54_txsize);
+    BC_REQUIRE_EQUAL(instance.bip54_txsize_deployment.threshold, 0u);
+    BC_REQUIRE(instance.forks.bip54_coinbase);
+    BC_REQUIRE_EQUAL(instance.bip54_coinbase_deployment.threshold, 0u);
     BC_REQUIRE(instance.provide_filters);
     BC_REQUIRE_EQUAL(instance.interval_depth, configuration.interval_depth);
     BC_REQUIRE_EQUAL(instance.header_buckets, configuration.header.buckets);
