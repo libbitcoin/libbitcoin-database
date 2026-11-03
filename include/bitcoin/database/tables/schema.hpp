@@ -69,7 +69,8 @@ namespace schema {
 /// 4.0.23.0 Bip54 timespan fork in the envelope.
 /// 4.0.24.0 Bip54 sigops fork in the envelope.
 /// 4.0.25.0 Bip54 txsize fork in the envelope.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 25, 0 };
+/// 4.0.26.0 Bip54 coinbase fork in the envelope.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 26, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
