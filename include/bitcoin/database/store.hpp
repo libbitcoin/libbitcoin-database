@@ -115,6 +115,11 @@ public:
     size_t get_scan_frontier() const NOEXCEPT;
     size_t get_latch_tx() const NOEXCEPT;
 
+    /// Fork activation slot, flags activated together and their header.
+    database::envelope::activation get_activation(size_t index) const NOEXCEPT;
+    bool set_activation(size_t index, uint32_t flags,
+        const header_link& link) NOEXCEPT;
+
     /// Get first fault code or error::success.
     code get_fault() const NOEXCEPT;
 
@@ -137,6 +142,9 @@ public:
 
 protected:
     using path = std::filesystem::path;
+    using activation_link = std::atomic<header_link::integer>;
+    static constexpr auto activation_count =
+        database::envelope::activation_count;
 
     /// Method helpers.
     code create_load(const event_handler& handler) NOEXCEPT;
@@ -307,6 +315,8 @@ protected:
     stopper pooling_{ false };
     std::atomic<uint32_t> scan_frontier_{};
     std::atomic<uint32_t> latch_tx_{};
+    std::array<std::atomic<uint32_t>, activation_count> activation_flags_{};
+    std::array<activation_link, activation_count> activation_links_{};
 
 private:
     static constexpr bool random = true;

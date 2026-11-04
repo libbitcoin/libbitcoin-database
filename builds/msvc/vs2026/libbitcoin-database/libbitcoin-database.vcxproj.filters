@@ -621,6 +621,9 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_work.ipp">
       <Filter>include\bitcoin\database\impl\query\consensus</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\envelope_state.ipp">
+      <Filter>include\bitcoin\database\impl\query</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\extent.ipp">
       <Filter>include\bitcoin\database\impl\query</Filter>
     </None>

@@ -91,14 +91,6 @@ public:
     /// True if candidate top is fork point header.
     bool is_coalesced() const NOEXCEPT;
 
-    /// Transaction pooling is enabled (one way latch).
-    bool is_pooling() const NOEXCEPT;
-    void set_pooling() NOEXCEPT;
-
-    /// Scan table row count and tx table count when pooling was latched.
-    size_t get_scan_frontier() const NOEXCEPT;
-    size_t get_latch_tx() const NOEXCEPT;
-
     /// Get the space required to clear the disk full condition.
     size_t get_space() const NOEXCEPT;
 
@@ -119,6 +111,25 @@ public:
 
     /// Settings envelope stored at store creation.
     const database::envelope& envelope() const NOEXCEPT;
+
+    /// Dynamic envelope state.
+    /// -----------------------------------------------------------------------
+
+    /// Transaction pooling is enabled (one way latch).
+    bool is_pooling() const NOEXCEPT;
+    void set_pooling() NOEXCEPT;
+
+    /// Scan table row count and tx table count when pooling was latched.
+    size_t get_scan_frontier() const NOEXCEPT;
+    size_t get_latch_tx() const NOEXCEPT;
+
+    /// Height at which the forks of the flag activated, if active there in the
+    /// confirmed chain.
+    bool get_activation(size_t& out, uint32_t flag) const NOEXCEPT;
+
+    /// Candidate chain header at which the set of forks activated.
+    bool set_activation(uint32_t flags, const header_link& link) NOEXCEPT;
+    bool clear_activation(uint32_t flags) NOEXCEPT;
 
     /// Store extent.
     /// -----------------------------------------------------------------------
@@ -1200,8 +1211,6 @@ protected:
         const chain_state::map& map, header_link link) const NOEXCEPT;
     bool populate_retarget(chain_state::data& data,
         const chain_state::map& map, header_link link) const NOEXCEPT;
-    bool populate_hashes(chain_state::data& data,
-        const chain_state::map& map) const NOEXCEPT;
     bool populate_signal(chain_state::data::signal& signal,
         const chain_state::map::signal& map, size_t height,
         const header_links& branch) const NOEXCEPT;
@@ -1453,6 +1462,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 #include <bitcoin/database/impl/query/amounts.ipp>
 #include <bitcoin/database/impl/query/confirmed.ipp>
+#include <bitcoin/database/impl/query/envelope_state.ipp>
 #include <bitcoin/database/impl/query/extent.ipp>
 #include <bitcoin/database/impl/query/fee_rate.ipp>
 #include <bitcoin/database/impl/query/filters.ipp>

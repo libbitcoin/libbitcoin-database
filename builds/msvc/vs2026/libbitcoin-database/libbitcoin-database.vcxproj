@@ -289,6 +289,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_strong.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_transaction.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\consensus\consensus_work.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\envelope_state.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\extent.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\fee_rate.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\filters.ipp" />

@@ -111,25 +111,6 @@ bool CLASS::populate_retarget(chain_state::data& data,
 }
 
 TEMPLATE
-bool CLASS::populate_hashes(chain_state::data& data,
-    const chain_state::map& map) const NOEXCEPT
-{
-    if (map.bip9_bit0_height != chain_state::map::unrequested)
-        data.bip9_bit0_hash = get_header_key(
-            to_candidate(map.bip9_bit0_height));
-
-    if (map.bip9_bit1_height != chain_state::map::unrequested)
-        data.bip9_bit1_hash = get_header_key(
-            to_candidate(map.bip9_bit1_height));
-
-    if (map.bip9_bit2_height != chain_state::map::unrequested)
-        data.bip9_bit2_hash = get_header_key(
-            to_candidate(map.bip9_bit2_height));
-
-    return true;
-}
-
-TEMPLATE
 bool CLASS::populate_signal(chain_state::data::signal& signal,
     const chain_state::map::signal& map, size_t height,
     const header_links& branch) const NOEXCEPT
@@ -279,7 +260,6 @@ bool CLASS::populate_all(chain_state::data& data,
         populate_versions(data, map, link) &&
         populate_timestamps(data, map, link) &&
         populate_retarget(data, map, link) &&
-        populate_hashes(data, map) &&
         populate_signals(data, map, link) &&
         populate_work(data, link);
 }
@@ -408,7 +388,6 @@ bool CLASS::populate_candidate_all(chain_state::data& data,
         populate_candidate_timestamps(data, map, header) &&
         populate_candidate_retarget(data, map, header) &&
         populate_candidate_work(data, header) &&
-        populate_hashes(data, map) &&
         populate_signals(data, map, link);
 }
 

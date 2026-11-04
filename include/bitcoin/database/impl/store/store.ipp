@@ -270,9 +270,43 @@ void CLASS::set_pooling() NOEXCEPT
     latch_tx_.store(envelope_.latch_tx, std::memory_order_relaxed);
     pooling_.store(true, std::memory_order_relaxed);
 
-    code ec{};
-    store_envelope(ec);
+    using integer = table::envelope::link::integer;
+    const auto position = envelope_.pooling_offset();
+    const auto offset = system::possible_narrow_cast<integer>(position);
+    const table::envelope::put_pooling record
+    {
+        envelope_.pooling,
+        envelope_.scan_frontier,
+        envelope_.latch_tx
+    };
+
+    /* bool */ envelope.put(offset, record);
     set_dirty();
+}
+
+TEMPLATE
+database::envelope::activation CLASS::get_activation(
+    size_t index) const NOEXCEPT
+{
+    const auto& flags = activation_flags_.at(index);
+    const auto& link = activation_links_.at(index);
+    const auto value = flags.load(std::memory_order_acquire);
+    return { value, link.load(std::memory_order_relaxed) };
+}
+
+TEMPLATE
+bool CLASS::set_activation(size_t index, uint32_t flags,
+    const header_link& link) NOEXCEPT
+{
+    envelope_.activations.at(index) = { flags, link.value };
+    activation_links_.at(index).store(link.value, std::memory_order_relaxed);
+    activation_flags_.at(index).store(flags, std::memory_order_release);
+
+    using integer = table::envelope::link::integer;
+    const auto position = envelope_.activation_offset(index);
+    const auto offset = system::possible_narrow_cast<integer>(position);
+    const table::envelope::put_activation record{ flags, link.value };
+    return envelope.put(offset, record);
 }
 
 TEMPLATE

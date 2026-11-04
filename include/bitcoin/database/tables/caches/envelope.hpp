@@ -57,6 +57,51 @@ struct envelope
 
         database::envelope envelope{};
     };
+
+    struct put_pooling
+    {
+        static constexpr size_t size = max_size_t;
+
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                database::envelope::pooling_size);
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_byte(to_int<uint8_t>(pooling));
+            sink.write_little_endian<uint32_t>(scan_frontier);
+            sink.write_little_endian<uint32_t>(latch_tx);
+            return sink;
+        }
+
+        bool pooling{};
+        uint32_t scan_frontier{};
+        uint32_t latch_tx{};
+    };
+
+    struct put_activation
+    {
+        static constexpr size_t size = max_size_t;
+
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                database::envelope::activation_size);
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using header = schema::header::link;
+            sink.write_little_endian<uint32_t>(flags);
+            sink.write_little_endian<header::integer, header::size>(header_fk);
+            return sink;
+        }
+
+        uint32_t flags{};
+        schema::header::link::integer header_fk{};
+    };
 };
 
 } // namespace table
