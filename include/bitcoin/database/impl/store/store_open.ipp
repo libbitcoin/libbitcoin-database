@@ -215,6 +215,15 @@ code CLASS::load_envelope() NOEXCEPT
     // The stored latch governs, it is one-way and survives the session.
     scan_frontier_.store(envelope_.scan_frontier, std::memory_order_relaxed);
     latch_tx_.store(envelope_.latch_tx, std::memory_order_relaxed);
+    for (size_t index{}; index < activation_count; ++index)
+    {
+        const auto& activation = envelope_.activations.at(index);
+        auto& link = activation_links_.at(index);
+        auto& flags = activation_flags_.at(index);
+        link.store(activation.link, std::memory_order_relaxed);
+        flags.store(activation.flags, std::memory_order_release);
+    }
+
     if (envelope_.pooling)
         pooling_.store(true, std::memory_order_relaxed);
 

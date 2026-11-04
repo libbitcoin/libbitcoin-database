@@ -110,30 +110,6 @@ bool CLASS::is_coalesced() const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_pooling() const NOEXCEPT
-{
-    return store_.is_pooling();
-}
-
-TEMPLATE
-void CLASS::set_pooling() NOEXCEPT
-{
-    store_.set_pooling();
-}
-
-TEMPLATE
-size_t CLASS::get_scan_frontier() const NOEXCEPT
-{
-    return store_.get_scan_frontier();
-}
-
-TEMPLATE
-size_t CLASS::get_latch_tx() const NOEXCEPT
-{
-    return store_.get_latch_tx();
-}
-
-TEMPLATE
 size_t CLASS::get_space() const NOEXCEPT
 {
     return store_.get_space();

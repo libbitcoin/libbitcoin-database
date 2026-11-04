@@ -152,6 +152,7 @@
     <ClCompile Include="..\..\..\..\test\query\consensus\consensus_strong.cpp" />
     <ClCompile Include="..\..\..\..\test\query\consensus\consensus_transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\query\consensus\consensus_work.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\envelope_state.cpp" />
     <ClCompile Include="..\..\..\..\test\query\extent.cpp" />
     <ClCompile Include="..\..\..\..\test\query\fee_rate.cpp" />
     <ClCompile Include="..\..\..\..\test\query\filters.cpp" />

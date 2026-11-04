@@ -22,7 +22,7 @@ BC_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 390_size;
+constexpr auto default_size = 614_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {
@@ -52,7 +52,7 @@ BC_AUTO_TEST_CASE(envelope__serialized_size__default__expected)
 BC_AUTO_TEST_CASE(envelope__to_data__default__expected_version)
 {
     const envelope instance{};
-    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 27, 0));
+    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 29, 0));
     BC_REQUIRE_EQUAL(to_chunk(instance).front(), schema::version.front());
 }
 
@@ -65,6 +65,54 @@ BC_AUTO_TEST_CASE(envelope__from_data__default__round_trip)
     envelope out{};
     BC_REQUIRE(from_chunk(out, data));
     BC_REQUIRE(out == instance);
+}
+
+BC_AUTO_TEST_CASE(envelope__construct__default__activations_empty)
+{
+    const envelope instance{};
+    BC_REQUIRE_EQUAL(instance.activations.front().flags, 0u);
+    BC_REQUIRE_EQUAL(instance.activations.front().link, schema::header::link::terminal);
+    BC_REQUIRE_EQUAL(instance.activations.back().flags, 0u);
+    BC_REQUIRE_EQUAL(instance.activations.back().link, schema::header::link::terminal);
+}
+
+BC_AUTO_TEST_CASE(envelope__from_data__activations__round_trip)
+{
+    envelope instance{};
+    instance.activations.front() = { 0x00000700, 419328 };
+    instance.activations.back() = { 0x00018000, 709632 };
+    auto data = to_chunk(instance);
+    BC_REQUIRE_EQUAL(data.size(), default_size);
+
+    envelope out{};
+    BC_REQUIRE(from_chunk(out, data));
+    BC_REQUIRE(out == instance);
+}
+
+BC_AUTO_TEST_CASE(envelope__pooling_offset__serialized__expected)
+{
+    envelope instance{};
+    instance.pooling = true;
+    instance.scan_frontier = 0x01020304;
+    instance.latch_tx = 0x05060708;
+    const auto data = to_chunk(instance);
+    const auto offset = instance.pooling_offset();
+    BC_REQUIRE_EQUAL(data.at(offset), 0x01u);
+    BC_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint32_t>(&data.at(add1(offset))), 0x01020304u);
+    BC_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint32_t>(&data.at(offset + 5u)), 0x05060708u);
+}
+
+BC_AUTO_TEST_CASE(envelope__activation_offset__serialized__expected)
+{
+    envelope instance{};
+    instance.activations.front() = { 0x01020304, 42 };
+    instance.activations.back() = { 0x05060708, 42 };
+    const auto data = to_chunk(instance);
+    const auto first = instance.activation_offset(0);
+    const auto last = instance.activation_offset(sub1(envelope::activation_count));
+    BC_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint32_t>(&data.at(first)), 0x01020304u);
+    BC_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint32_t>(&data.at(last)), 0x05060708u);
+    BC_REQUIRE_EQUAL(last + envelope::activation_size, data.size());
 }
 
 BC_AUTO_TEST_CASE(envelope__from_data__prior_version__false)

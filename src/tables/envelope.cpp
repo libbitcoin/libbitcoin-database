@@ -305,6 +305,15 @@ bool envelope::from_data(reader& source) NOEXCEPT
     pooling = to_bool(source.read_byte());
     scan_frontier = source.read_little_endian<uint32_t>();
     latch_tx = source.read_little_endian<uint32_t>();
+
+    using integer = schema::header::link::integer;
+    constexpr auto size = schema::header::link::size;
+    for (auto& activation: activations)
+    {
+        activation.flags = source.read_little_endian<uint32_t>();
+        activation.link = source.read_little_endian<integer, size>();
+    }
+
     return source;
 }
 
@@ -422,15 +431,35 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_byte(to_int<uint8_t>(pooling));
     sink.write_little_endian<uint32_t>(scan_frontier);
     sink.write_little_endian<uint32_t>(latch_tx);
+
+    using integer = schema::header::link::integer;
+    constexpr auto size = schema::header::link::size;
+    for (const auto& activation: activations)
+    {
+        sink.write_little_endian<uint32_t>(activation.flags);
+        sink.write_little_endian<integer, size>(activation.link);
+    }
+
     return sink;
+}
+
+size_t envelope::pooling_offset() const NOEXCEPT
+{
+    constexpr auto activations_size = activation_count * activation_size;
+    return serialized_size() - pooling_size - activations_size;
+}
+
+size_t envelope::activation_offset(size_t index) const NOEXCEPT
+{
+    return serialized_size() - ((activation_count - index) * activation_size);
 }
 
 size_t envelope::serialized_size() const NOEXCEPT
 {
-    constexpr auto forks_size = 28_size;
     constexpr auto fixed = (4 * sizeof(uint32_t)) +
-        (7 * sizeof(uint32_t)) + (12 * sizeof(uint8_t)) + forks_size +
-        sizeof(uint64_t) + (18 * sizeof(uint32_t));
+        (7 * sizeof(uint32_t)) + (12 * sizeof(uint8_t)) + forks_count +
+        sizeof(uint64_t) + (18 * sizeof(uint32_t)) +
+        (activation_count * activation_size);
 
     const auto checkpoint_size = [](const chain::checkpoint& in) NOEXCEPT
     {

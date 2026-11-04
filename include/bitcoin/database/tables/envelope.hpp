@@ -21,6 +21,7 @@
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
+#include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
@@ -31,8 +32,22 @@ struct settings;
 /// values govern the store, configuration is consumed only at creation.
 struct BCD_API envelope
 {
+    /// Flags activated together, and the header that activated them.
+    struct activation
+    {
+        uint32_t flags{};
+        schema::header::link::integer link{ schema::header::link::terminal };
+        bool operator==(const activation& other) const NOEXCEPT = default;
+    };
+
     /// The schema version compiled into this build (see schema::version).
     static const system::config::version compiled;
+    static constexpr size_t forks_count = 28;
+    static constexpr auto activation_count = to_bits(sizeof(uint32_t));
+    static constexpr size_t activation_size = sizeof(uint32_t) +
+        schema::header::pk;
+    static constexpr size_t pooling_size = sizeof(uint8_t) +
+        (2 * sizeof(uint32_t));
 
     envelope() NOEXCEPT;
     envelope(const system::settings& bitcoin, const settings& database,
@@ -49,6 +64,9 @@ struct BCD_API envelope
     bool from_data(reader& source) NOEXCEPT;
     bool to_data(flipper& sink) const NOEXCEPT;
     size_t serialized_size() const NOEXCEPT;
+
+    size_t pooling_offset() const NOEXCEPT;
+    size_t activation_offset(size_t index) const NOEXCEPT;
     bool operator==(const envelope& other) const NOEXCEPT = default;
 
     /// Store schema version, fixed width (see schema::version).
@@ -120,6 +138,7 @@ struct BCD_API envelope
     bool pooling{};
     uint32_t scan_frontier{};
     uint32_t latch_tx{};
+    std::array<activation, activation_count> activations{};
 };
 
 } // namespace database

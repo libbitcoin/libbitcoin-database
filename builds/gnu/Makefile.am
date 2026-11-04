@@ -149,6 +149,7 @@ include_bitcoin_database_impl_querydir = \
 include_bitcoin_database_impl_query_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/impl/query/amounts.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/confirmed.ipp \
+    ${srcdir}/../../include/bitcoin/database/impl/query/envelope_state.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/extent.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/fee_rate.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/filters.ipp \
@@ -446,6 +447,7 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/primitives/nomap.cpp \
     ${srcdir}/../../test/query/amounts.cpp \
     ${srcdir}/../../test/query/confirmed.cpp \
+    ${srcdir}/../../test/query/envelope_state.cpp \
     ${srcdir}/../../test/query/extent.cpp \
     ${srcdir}/../../test/query/fee_rate.cpp \
     ${srcdir}/../../test/query/filters.cpp \
