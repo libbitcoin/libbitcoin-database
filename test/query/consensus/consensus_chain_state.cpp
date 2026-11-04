@@ -27,7 +27,7 @@ BC_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__genesis__expected)
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
     {
-        16523u,
+        16395u,
         test::genesis.header().timestamp(),
         0u,
         0u,
@@ -61,7 +61,7 @@ BC_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expected)
     const system::settings system_settings{ system::chain::selection::mainnet };
     const system::chain::context expected
     {
-        16523u,                             // flags
+        16395u,                             // flags
         test::block1.header().timestamp(),  // timestamp
         test::genesis.header().timestamp(), // mtp
         1u,                                 // height
@@ -110,7 +110,6 @@ BC_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expected)
 static system::settings signal_settings()
 {
     system::settings settings{ system::chain::selection::mainnet };
-    settings.forks.bip90 = false;
     settings.bip9_activation_period = 2;
     settings.bip9_bit0_deployment.start = 1;
     settings.bip9_bit0_deployment.timeout = max_uint32;
