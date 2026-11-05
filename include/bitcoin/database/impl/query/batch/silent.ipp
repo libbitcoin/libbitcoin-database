@@ -114,6 +114,7 @@ bool CLASS::scan_silent(const stopper& cancel,
             merged.emplace_back(low, high);
     }
 
+    const auto strong = store_.strong.get_memory();
     const auto selected = [&](link_t link) NOEXCEPT
     {
         const auto it = std::upper_bound(merged.cbegin(), merged.cend(), link,
@@ -125,7 +126,7 @@ bool CLASS::scan_silent(const stopper& cancel,
         if (it != merged.cbegin() && link <= std::prev(it)->second)
             return true;
 
-        return to_block(link).is_terminal();
+        return to_block(strong, link).is_terminal();
     };
 
     const auto guard = store_.scan.guard();
