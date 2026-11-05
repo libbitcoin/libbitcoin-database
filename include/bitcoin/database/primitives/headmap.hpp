@@ -22,7 +22,6 @@
 #include <atomic>
 #include <shared_mutex>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
 
@@ -201,7 +200,7 @@ private:
     // These are thread safe.
     storage& file_;
     const size_t initial_buckets_;
-    mutable shared_mutex mutex_{};
+    mutable std::shared_mutex mutex_{};
 };
 
 template <typename Schema>

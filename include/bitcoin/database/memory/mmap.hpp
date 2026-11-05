@@ -28,7 +28,6 @@
 #include <tuple>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/file/file.hpp>
-#include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/memory/accessor.hpp>
 #include <bitcoin/database/memory/interfaces/storage.hpp>
 #include <bitcoin/database/memory/mstage.hpp>
@@ -445,11 +444,11 @@ private:
 
     // This is protected by field_mutex_.
     std::array<int, columns> opened_;
-    mutable shared_mutex field_mutex_{};
+    mutable std::shared_mutex field_mutex_{};
 
     // This is protected by remap_mutex_.
     std::array<uint8_t*, columns> memory_map_{};
-    mutable shared_mutex remap_mutex_{};
+    mutable std::shared_mutex remap_mutex_{};
 
     // These are protected by worker_mutex_ (working_ is atomic).
     std::thread worker_{};

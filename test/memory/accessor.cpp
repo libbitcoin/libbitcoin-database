@@ -24,7 +24,7 @@ using namespace system;
 
 BC_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__invalid_nulls)
 {
-    shared_mutex mutex;
+    std::shared_mutex mutex;
     accessor instance(mutex);
     BC_REQUIRE(!instance);
     BC_REQUIRE(is_null(instance.data()));
@@ -34,7 +34,7 @@ BC_AUTO_TEST_CASE(accessor__construct_shared_mutex__unassigned__invalid_nulls)
 
 BC_AUTO_TEST_CASE(accessor__destruct__shared_lock__released)
 {
-    shared_mutex mutex;
+    std::shared_mutex mutex;
     auto access = std::make_shared<accessor>(mutex);
     BC_REQUIRE(!mutex.try_lock());
     access.reset();
@@ -43,7 +43,7 @@ BC_AUTO_TEST_CASE(accessor__destruct__shared_lock__released)
 
 BC_AUTO_TEST_CASE(accessor__size__default__empty)
 {
-    shared_mutex mutex;
+    std::shared_mutex mutex;
     accessor instance(mutex);
     BC_REQUIRE_EQUAL(instance.size(), system::possible_narrow_cast<ptrdiff_t>(0));
 }
@@ -51,7 +51,7 @@ BC_AUTO_TEST_CASE(accessor__size__default__empty)
 BC_AUTO_TEST_CASE(accessor__assign__forward__positive_size)
 {
     data_chunk chunk{ 0x00 };
-    shared_mutex mutex;
+    std::shared_mutex mutex;
     accessor instance(mutex);
     const auto expected_begin = chunk.data();
     const auto expected_end = std::next(expected_begin, chunk.size());
@@ -65,7 +65,7 @@ BC_AUTO_TEST_CASE(accessor__assign__forward__positive_size)
 BC_AUTO_TEST_CASE(accessor__assign__reverse__negative_size)
 {
     data_chunk chunk{ 0x00 };
-    shared_mutex mutex;
+    std::shared_mutex mutex;
     accessor instance(mutex);
     const auto expected_end = chunk.data();
     const auto expected_begin = std::next(expected_end, chunk.size());
@@ -81,7 +81,7 @@ BC_AUTO_TEST_CASE(accessor__offset__valid__expected)
     constexpr auto offset = 42u;
     data_chunk chunk(add1(offset), 0x00);
     chunk[offset] = 0xff;
-    shared_mutex mutex;
+    std::shared_mutex mutex;
     accessor instance(mutex);
     const auto buffer = chunk.data();
     instance.assign(buffer, std::next(buffer, add1(offset)));
@@ -92,7 +92,7 @@ BC_AUTO_TEST_CASE(accessor__offset__overflow__expected)
 {
     constexpr auto offset = 42u;
     data_chunk chunk(offset, 0x00);
-    shared_mutex mutex;
+    std::shared_mutex mutex;
     accessor instance(mutex);
     const auto buffer = chunk.data();
     instance.assign(buffer, std::next(buffer, offset));
