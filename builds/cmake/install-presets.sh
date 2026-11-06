@@ -36,8 +36,6 @@
 #                                Default: ON
 # -Dwith-valgrind=<ON/OFF>     Use valgrind memcheck client requests.
 #                                Default: OFF
-# -Denable-cuda=<ON/OFF>       Use cuda (gpu) batch signature verification (inert on macOS).
-#                                Default: ON
 # --build-libsecp256k1         Build bitcoin core libsecp256k1 libraries
 # --build-preset=<preset>      Specifies preset configuration to build.
 # --build-src-dir=<path>       Location for sources.
@@ -930,8 +928,6 @@ help()
     msg "                               Default: ON"
     msg "-Dwith-valgrind=<ON/OFF>     Use valgrind memcheck client requests."
     msg "                               Default: OFF"
-    msg "-Denable-cuda=<ON/OFF>       Use cuda (gpu) batch signature verification (inert on macOS)."
-    msg "                               Default: ON"
     msg "--build-libsecp256k1         Build bitcoin core libsecp256k1 libraries"
     msg "--build-preset=<preset>      Specifies preset configuration to build."
     msg "--build-src-dir=<path>       Location for sources."

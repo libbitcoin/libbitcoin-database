@@ -36,8 +36,6 @@
 #                                 Default: --with-secp256k1
 # --<with/without>-valgrind     Use valgrind memcheck client requests.
 #                                 Default: --without-valgrind
-# --<enable/disable>-cuda       Use cuda (gpu) batch signature verification (inert on macOS).
-#                                 Default: --enable-cuda
 # --build-libsecp256k1          Build bitcoin core libsecp256k1 libraries
 # --build-src-dir=<path>        Location for sources.
 #                                 Default: $(pwd)
@@ -924,8 +922,6 @@ help()
     msg "                                Default: --with-secp256k1"
     msg "--<with/without>-valgrind     Use valgrind memcheck client requests."
     msg "                                Default: --without-valgrind"
-    msg "--<enable/disable>-cuda       Use cuda (gpu) batch signature verification (inert on macOS)."
-    msg "                                Default: --enable-cuda"
     msg "--build-libsecp256k1          Build bitcoin core libsecp256k1 libraries"
     msg "--build-src-dir=<path>        Location for sources."
     msg "                                Default: $(pwd)"
