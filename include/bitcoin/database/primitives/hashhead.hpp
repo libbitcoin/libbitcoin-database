@@ -22,7 +22,6 @@
 #include <atomic>
 #include <shared_mutex>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/keys.hpp>
 #include <bitcoin/database/primitives/linkage.hpp>
@@ -181,7 +180,7 @@ private:
 
     // These are thread safe.
     storage& file_;
-    mutable shared_mutex mutex_{};
+    mutable std::shared_mutex mutex_{};
 
     // Protected by order - derived at construct, envelope overrides at open.
     Link buckets_;

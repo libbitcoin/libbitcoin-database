@@ -122,7 +122,6 @@
     <ClCompile Include="..\..\..\..\src\locks\file_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\flush_lock.cpp" />
     <ClCompile Include="..\..\..\..\src\locks\interprocess_lock.cpp" />
-    <ClCompile Include="..\..\..\..\src\locks\shared_mutex.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\mman.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\mstage.cpp" />
     <ClCompile Include="..\..\..\..\src\memory\utilities.cpp">
@@ -146,7 +145,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\flush_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\interprocess_lock.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\locks.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\database\locks\shared_mutex.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\accessor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\finalizer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\memory\interfaces\storage.hpp" />
@@ -340,13 +338,11 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(NuGetPackageRoot)secp256k1_vc145.0.8.0\build\native\secp256k1_vc145.targets" Condition="Exists('$(NuGetPackageRoot)secp256k1_vc145.0.8.0\build\native\secp256k1_vc145.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The Missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('$(NuGetPackageRoot)secp256k1_vc145.0.8.0\build\native\secp256k1_vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)secp256k1_vc145.0.8.0\build\native\secp256k1_vc145.targets'))" />
   </Target>
   <ItemGroup>
     <Natvis Include="..\..\debug.natvis" />

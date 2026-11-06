@@ -22,7 +22,6 @@
 #include <atomic>
 #include <shared_mutex>
 #include <bitcoin/database/define.hpp>
-#include <bitcoin/database/locks/locks.hpp>
 #include <bitcoin/database/primitives/body.hpp>
 
 namespace libbitcoin {
@@ -110,7 +109,7 @@ private:
     // These are thread safe.
     storage& file_;
     const Link initial_buckets_;
-    mutable shared_mutex mutex_{};
+    mutable std::shared_mutex mutex_{};
 };
 
 } // namespace database

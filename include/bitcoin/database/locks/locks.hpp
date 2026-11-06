@@ -22,6 +22,5 @@
 #include <bitcoin/database/locks/file_lock.hpp>
 #include <bitcoin/database/locks/flush_lock.hpp>
 #include <bitcoin/database/locks/interprocess_lock.hpp>
-#include <bitcoin/database/locks/shared_mutex.hpp>
 
 #endif

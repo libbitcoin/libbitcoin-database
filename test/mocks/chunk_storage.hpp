@@ -397,8 +397,8 @@ private:
     const paths paths_;
     const std::optional<uint8_t> fill_{};
     const bool zeroed_{ true };
-    mutable shared_mutex field_mutex_{};
-    mutable shared_mutex map_mutex_{};
+    mutable std::shared_mutex field_mutex_{};
+    mutable std::shared_mutex map_mutex_{};
 };
 
 BC_POP_WARNING()
