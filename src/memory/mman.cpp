@@ -382,5 +382,31 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
     return ::ftruncate(fd, target);
 }
 
+#elif defined(HAVE_BSD)
+
+#include <cerrno>
+#include <fcntl.h>
+#include <unistd.h>
+
+// ::fallocate is not defined on BSD, so implement. Ignores mode (linux).
+int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
+{
+#if !defined(HAVE_OPENBSD)
+    const auto result = ::posix_fallocate(fd, offset, len);
+    if (result == 0)
+        return 0;
+
+    if ((result != EINVAL) && (result != EOPNOTSUPP))
+    {
+        errno = result;
+        return -1;
+    }
+#endif
+
+    // Preallocation is not supported by the platform or file system, so only
+    // the logical size is extended (as with WITHOUT_FALLOCATE).
+    return ::ftruncate(fd, offset + len);
+}
+
 #endif // HAVE_WINDOWS
 

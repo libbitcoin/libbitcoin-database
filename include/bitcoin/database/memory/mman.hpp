@@ -72,7 +72,7 @@ BCD_API int fsync(int fd) noexcept;
 BCD_API int fallocate(int fd, int mode, oft__ offset, oft__ size) noexcept;
 BCD_API int ftruncate(int fd, oft__ size) noexcept;
 
-#elif defined(HAVE_APPLE)
+#elif defined(HAVE_APPLE) || defined(HAVE_BSD)
 
 BCD_API int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT;
 
