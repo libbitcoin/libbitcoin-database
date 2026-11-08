@@ -61,15 +61,6 @@ BCD_API bool solid_state(const std::filesystem::path& path) NOEXCEPT;
 /// True if the path resides on internal storage, or is not determinable.
 BCD_API bool internal_storage(const std::filesystem::path& path) NOEXCEPT;
 
-/// True if the cuda runtime reports a device the compiled kernels support.
-BCD_API bool cuda_device() NOEXCEPT;
-
-/// True if a cuda device is present and supports ecc memory.
-BCD_API bool cuda_ecc() NOEXCEPT;
-
-/// True if a cuda device is present and reports ecc memory enabled.
-BCD_API bool cuda_ecc_enabled() NOEXCEPT;
-
 } // namespace database
 } // namespace libbitcoin
 

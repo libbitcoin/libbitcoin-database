@@ -40,16 +40,4 @@ BC_AUTO_TEST_CASE(memory_utilities__physical_memory__always__not_less_than_syste
     BC_REQUIRE_GE(physical_memory(), system_memory());
 }
 
-BC_AUTO_TEST_CASE(memory_utilities__cuda_ecc__always__implies_cuda_device)
-{
-    const auto ecc = cuda_ecc();
-    BC_REQUIRE(!ecc || cuda_device());
-}
-
-BC_AUTO_TEST_CASE(memory_utilities__cuda_ecc_enabled__always__implies_cuda_ecc)
-{
-    const auto enabled = cuda_ecc_enabled();
-    BC_REQUIRE(!enabled || cuda_ecc());
-}
-
 BC_AUTO_TEST_SUITE_END()
