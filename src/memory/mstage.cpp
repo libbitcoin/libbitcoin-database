@@ -183,7 +183,10 @@ int mmap_name(void*, size_t, const char*) NOEXCEPT
 int mmap_resident(const void* address, size_t size,
     unsigned char* vector) NOEXCEPT
 {
-#if defined(HAVE_APPLE)
+#if defined(HAVE_OPENBSD)
+    errno = ENOSYS;
+    return -1;
+#elif defined(HAVE_APPLE) || defined(HAVE_BSD)
     return ::mincore(const_cast<void*>(address), size,
         reinterpret_cast<char*>(vector));
 #else
@@ -264,6 +267,65 @@ int mmap_evict(void* address, size_t size) NOEXCEPT
 #endif
 }
 
+#if defined(HAVE_BSD)
+
+// An unnamed memory object of the given size (-1 on failure).
+static int mmap_object(size_t size) NOEXCEPT
+{
+#if defined(HAVE_OPENBSD)
+    char name[] = "/libbitcoin.XXXXXXXXXX";
+    const auto fd = ::shm_mkstemp(name);
+    if (fd != -1)
+        ::shm_unlink(name);
+#else
+    const auto fd = ::memfd_create("libbitcoin", MFD_CLOEXEC);
+#endif
+
+    if (fd == -1)
+        return -1;
+
+    if (::ftruncate(fd, possible_narrow_sign_cast<off_t>(size)) == -1)
+    {
+        ::close(fd);
+        return -1;
+    }
+
+    return fd;
+}
+
+// There is no mremap, so the staging copy is a memory object, which a fixed
+// mapping installs atomically over the target range (readers see old or new
+// bytes, never zeros).
+int mmap_restore(void* address, size_t size) NOEXCEPT
+{
+    const auto fd = mmap_object(size);
+    if (fd == -1)
+        return -1;
+
+    const auto source = ::mmap(nullptr, size, PROT_READ | PROT_WRITE,
+        MAP_SHARED, fd, 0);
+
+    if (source == MAP_FAILED)
+    {
+        ::close(fd);
+        return -1;
+    }
+
+    std::memcpy(source, address, size);
+    const auto target = ::mmap(address, size, PROT_READ | PROT_WRITE,
+        MAP_SHARED | MAP_FIXED, fd, 0);
+
+    ::munmap(source, size);
+    ::close(fd);
+    if (target == MAP_FAILED)
+        return -1;
+
+    mmap_wire(address, size);
+    return 0;
+}
+
+#else
+
 // Atomically install the source anonymous mapping over the target range,
 // consuming the source (readers see old or new bytes, never zeros).
 static int mmap_install(void* address, void* source, size_t size) NOEXCEPT
@@ -304,6 +366,8 @@ int mmap_restore(void* address, size_t size) NOEXCEPT
     mmap_wire(address, size);
     return 0;
 }
+
+#endif // HAVE_BSD
 
 bool pread_all(int fd, uint8_t* to, size_t size, size_t offset) NOEXCEPT
 {

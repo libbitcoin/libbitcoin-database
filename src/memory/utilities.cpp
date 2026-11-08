@@ -28,6 +28,10 @@
     #include <mach/mach.h>
     #include <sys/sysctl.h>
 #endif
+#if defined(HAVE_FREEBSD)
+    #include <sys/types.h>
+    #include <sys/sysctl.h>
+#endif
 #if defined(HAVE_LINUX)
     #include <algorithm>
     #include <cinttypes>
@@ -178,6 +182,14 @@ uint64_t system_free() NOEXCEPT
         pointer_cast<integer_t>(&statistics), &count) == KERN_SUCCESS)
     {
         return ceilinged_multiply<uint64_t>(statistics.free_count, page_size());
+    }
+#elif defined(HAVE_FREEBSD)
+    u_int pages{};
+    auto length = sizeof(pages);
+    if (is_zero(::sysctlbyname("vm.stats.vm.v_free_count", &pages, &length,
+        nullptr, 0)))
+    {
+        return ceilinged_multiply<uint64_t>(pages, page_size());
     }
 #else
     errno = 0;
