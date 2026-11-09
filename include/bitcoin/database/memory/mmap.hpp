@@ -525,7 +525,7 @@ private:
     // Set when a quiescent head settles to its file mapping (retires tracking).
     std::atomic_bool shared_{};
 
-    // Set while the store reports currency (permits settle).
+    // Set while the store is current (permits settle, stops linux eviction).
     std::atomic_bool current_{};
 
     // Set across a settle transition (head writers back off, uncounted).

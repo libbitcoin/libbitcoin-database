@@ -263,7 +263,13 @@ void CLASS::body_run_() NOEXCEPT
 
         // Scarcity is read directly: clean cache is reclaimable, so the
         // kernel pressure level does not raise while free memory exhausts.
+        // Once current, reads are not write-ordered, so linux reclaims
+        // (darwin exhausts its free target without the sweep).
+#if defined(HAVE_LINUX)
+        if (!current_.load() && (system_free() < scarce))
+#else
         if (system_free() < scarce)
+#endif
             evict_next_(sweep, evicted);
 
         auto bytes = backlog();
