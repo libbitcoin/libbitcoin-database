@@ -247,4 +247,30 @@ BC_AUTO_TEST_CASE(settings__construct__signet__expected)
     BC_REQUIRE_EQUAL(configuration.turbo, true);
 }
 
+BC_AUTO_TEST_CASE(settings__construct__testnet5__expected)
+{
+    database::settings configuration{ system::chain::selection::testnet5 };
+    BC_REQUIRE(configuration.network == system::chain::selection::testnet5);
+    BC_REQUIRE_EQUAL(configuration.path, "testnet5");
+    BC_REQUIRE_EQUAL(configuration.header.expected, 156'456u);
+    BC_REQUIRE_EQUAL(configuration.header.size, 17'835'984u);
+    BC_REQUIRE_EQUAL(configuration.txs.buckets, 150'001u);
+    BC_REQUIRE_EQUAL(configuration.txs.size, 604'424u);
+    BC_REQUIRE_EQUAL(configuration.tx.expected, 14'810'011u);
+    BC_REQUIRE_EQUAL(configuration.tx.size, 9'478'407u);
+    BC_REQUIRE_EQUAL(configuration.ins.expected, 33'127'580u);
+    BC_REQUIRE_EQUAL(configuration.ins.size, 17'226'342u);
+    BC_REQUIRE_EQUAL(configuration.outs.expected, 57'089'349u);
+    BC_REQUIRE_EQUAL(configuration.outs.size, 5'138'041u);
+    BC_REQUIRE_EQUAL(configuration.input.size, 87'852'864u);
+    BC_REQUIRE_EQUAL(configuration.output.size, 20'343'818u);
+    BC_REQUIRE_EQUAL(configuration.candidate.buckets, 150'001u);
+    BC_REQUIRE_EQUAL(configuration.confirmed.buckets, 150'001u);
+    BC_REQUIRE_EQUAL(configuration.strong.buckets, 14'810'011u);
+    BC_REQUIRE_EQUAL(configuration.scan.buckets, 150'001u);
+    BC_REQUIRE_EQUAL(configuration.state.buckets, 150'001u);
+    BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
+    BC_REQUIRE_EQUAL(configuration.turbo, true);
+}
+
 BC_AUTO_TEST_SUITE_END()

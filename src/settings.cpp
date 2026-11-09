@@ -151,8 +151,9 @@ settings::settings(chain::selection context) NOEXCEPT
             break;
         }
 
-        // Sized for the chain at 150,000 blocks.
+        // Sized for the testnet4 chain at 150,000 blocks.
         case chain::selection::testnet4:
+        case chain::selection::testnet5:
         {
             header.expected = 156'456;
             header.size = 17'835'984;
