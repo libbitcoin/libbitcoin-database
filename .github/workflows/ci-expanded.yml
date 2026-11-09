@@ -528,6 +528,7 @@ jobs:
             rm sysroot.archive
             shift 2
           done
+          chmod -R u+rwX /tmp/sysroot
           find /tmp/sysroot -name '*.la' -delete
 
       - name: Verify emulation [cross]
@@ -1176,6 +1177,7 @@ jobs:
             rm sysroot.archive
             shift 2
           done
+          chmod -R u+rwX /tmp/sysroot
           find /tmp/sysroot -name '*.la' -delete
 
       - name: Execute installation
