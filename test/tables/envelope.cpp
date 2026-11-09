@@ -340,6 +340,19 @@ BC_AUTO_TEST_CASE(envelope__from_data__testnet4__round_trip_network)
     BC_REQUIRE(out.network == chain::selection::testnet4);
 }
 
+BC_AUTO_TEST_CASE(envelope__from_data__testnet5__round_trip_network)
+{
+    const system::settings bitcoin{ chain::selection::testnet5 };
+    const database::settings configuration{ test::database_settings() };
+    const envelope instance{ bitcoin, configuration, false, 42 };
+    auto data = to_chunk(instance);
+    BC_REQUIRE_EQUAL(data.size(), instance.serialized_size());
+
+    envelope out{};
+    BC_REQUIRE(from_chunk(out, data));
+    BC_REQUIRE(out.network == chain::selection::testnet5);
+}
+
 BC_AUTO_TEST_CASE(envelope__apply__unprovided_filters__unbucketed)
 {
     system::settings bitcoin{ chain::selection::mainnet };
