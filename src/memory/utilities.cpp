@@ -20,6 +20,7 @@
 
 #if defined(HAVE_WINDOWS)
     #include <windows.h>
+    #include <psapi.h>
     #include <winioctl.h>
 #else
     #include <unistd.h>
@@ -42,6 +43,7 @@
     #include <sys/vfs.h>
 #endif
 #include <filesystem>
+#include <span>
 #include <system_error>
 #include <bitcoin/database/define.hpp>
 
@@ -113,6 +115,41 @@ uint64_t system_compressed() NOEXCEPT
 {
     // No cheap source (performance counters only).
     return zero;
+}
+
+bool resident(const data_slab& region) NOEXCEPT
+{
+    if (region.empty())
+        return true;
+
+    std::array<PSAPI_WORKING_SET_EX_INFORMATION, two> pages{};
+    pages.front().VirtualAddress = region.begin();
+    pages.back().VirtualAddress = std::prev(region.end());
+    const auto bytes = possible_narrow_cast<DWORD>(pages.size() *
+        sizeof(PSAPI_WORKING_SET_EX_INFORMATION));
+
+    if (is_zero(::QueryWorkingSetEx(::GetCurrentProcess(), pages.data(),
+        bytes)))
+        return true;
+
+    return is_nonzero(pages.front().VirtualAttributes.Valid)
+        && is_nonzero(pages.back().VirtualAttributes.Valid);
+}
+
+void prefetch(const std::span<const data_slab>& regions) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    std::vector<WIN32_MEMORY_RANGE_ENTRY> ranges{};
+    ranges.reserve(regions.size());
+    for (const auto& region: regions)
+        if (!region.empty())
+            ranges.push_back({ region.begin(), region.size() });
+
+    BC_POP_WARNING()
+
+    if (!ranges.empty())
+        ::PrefetchVirtualMemory(::GetCurrentProcess(), ranges.size(),
+            ranges.data(), 0);
 }
 
 #else // HAVE_WINDOWS
@@ -301,6 +338,15 @@ uint64_t system_compressed() NOEXCEPT
     // Failed or no platform source adopted. Linux zswap/zram accounting is
     // configuration dependent, PSI carries the pressure signal there.
     return zero;
+}
+
+bool resident(const data_slab&) NOEXCEPT
+{
+    return true;
+}
+
+void prefetch(const std::span<const data_slab>&) NOEXCEPT
+{
 }
 
 #endif // HAVE_WINDOWS

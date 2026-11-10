@@ -265,7 +265,9 @@ bool CLASS::get_wire_block(bytewriter& sink, const header_link& link,
     if (txs.empty())
         return false;
 
-    return get_wire_block(sink, get_wire_accessors(), link, txs, witness);
+    const auto ptrs = get_wire_accessors();
+    page_wire_block(ptrs, txs);
+    return get_wire_block(sink, ptrs, link, txs, witness);
 }
 
 // protected
@@ -282,6 +284,134 @@ bool CLASS::get_wire_block(bytewriter& sink, const wire_accessors& ptrs,
             return false;
 
     return true;
+}
+
+// protected
+TEMPLATE
+bool CLASS::page_in(bool& admitted,
+    const std::span<const system::data_slab>& regions) const NOEXCEPT
+{
+    // One table's rows of a block cannot exceed the block weight limit.
+    const auto invalid = [](const system::data_slab& region) NOEXCEPT
+    {
+        return region.empty() ||
+            region.size() > system::chain::max_block_weight;
+    };
+
+    if (std::any_of(regions.begin(), regions.end(), invalid))
+        return false;
+
+    if (std::all_of(regions.begin(), regions.end(), resident))
+        return true;
+
+    if (!admitted && !is_zero(store_.cold_reads()))
+    {
+        cold_reads_.acquire();
+        admitted = true;
+    }
+
+    prefetch(regions);
+    return true;
+}
+
+// protected
+TEMPLATE
+void CLASS::page_wire_regions(bool& admitted, const wire_accessors& ptrs,
+    const tx_links& txs) const NOEXCEPT
+{
+    using namespace system;
+    const auto first = txs.front();
+    const auto last = txs.back();
+
+    // Table rows of a block are contiguous only if its tx links are.
+    if (last < first ||
+        possible_wide_cast<size_t>(last - first) != sub1(txs.size()))
+        return;
+
+    const auto records = [](const memory& ptr, size_t begin, size_t end,
+        size_t size) NOEXCEPT
+    {
+        const auto to = ptr.offset(end * size);
+        return (end < begin) || is_null(to) ? data_slab{} :
+            data_slab{ ptr.offset(begin * size), to };
+    };
+
+    const auto slabs = [](const memory& ptr, uint64_t begin, uint64_t last,
+        size_t size) NOEXCEPT
+    {
+        const auto to = ptr.offset(possible_narrow_cast<size_t>(last) + size);
+        return (last < begin) || is_null(to) ? data_slab{} :
+            data_slab{ ptr.offset(possible_narrow_cast<size_t>(begin)), to };
+    };
+
+    const std::array tx_regions
+    {
+        records(ptrs.tx, possible_wide_cast<size_t>(first),
+            add1(possible_wide_cast<size_t>(last)),
+            schema::transaction::minrow)
+    };
+
+    table::transaction::only head{};
+    table::transaction::only tail{};
+    if (!page_in(admitted, tx_regions) ||
+        !store_.tx.get(ptrs.tx, first, head) ||
+        !store_.tx.get(ptrs.tx, last, tail))
+        return;
+
+    // Point and put links are contiguous (computed).
+    const auto ins_final = tail.point_fk + tail.ins_count;
+    const auto outs_final = tail.outs_fk + tail.outs_count;
+    const auto ins_begin = possible_wide_cast<size_t>(head.point_fk);
+    const auto ins_end = possible_wide_cast<size_t>(ins_final);
+
+    // The ins accessor guards its sequence column.
+    const auto sequences = store_.ins.sequence.get_raw();
+    if (is_null(sequences))
+        return;
+
+    const std::array put_regions
+    {
+        records(ptrs.ins, ins_begin, ins_end, schema::ins::minrow),
+        data_slab
+        {
+            std::next(sequences, ins_begin * schema::ins_sequence::minrow),
+            std::next(sequences, ins_end * schema::ins_sequence::minrow)
+        },
+        records(ptrs.puts, possible_wide_cast<size_t>(head.outs_fk),
+            possible_wide_cast<size_t>(outs_final), schema::outs::minrow)
+    };
+
+    table::ins_sequence::get_input in_head{};
+    table::ins_sequence::get_input in_tail{};
+    table::outs::get_output out_head{};
+    table::outs::get_output out_tail{};
+    if (!page_in(admitted, put_regions) ||
+        !store_.ins.sequence.get_raw(head.point_fk, in_head) ||
+        !store_.ins.sequence.get_raw(sub1(ins_final), in_tail) ||
+        !store_.outs.puts.get(ptrs.puts, head.outs_fk, out_head) ||
+        !store_.outs.puts.get(ptrs.puts, sub1(outs_final), out_tail))
+        return;
+
+    const std::array slab_regions
+    {
+        slabs(ptrs.input, in_head.input_fk, in_tail.input_fk,
+            schema::input::minrow),
+        slabs(ptrs.output, out_head.out_fk, out_tail.out_fk,
+            schema::output::minrow)
+    };
+
+    page_in(admitted, slab_regions);
+}
+
+// protected
+TEMPLATE
+void CLASS::page_wire_block(const wire_accessors& ptrs,
+    const tx_links& txs) const NOEXCEPT
+{
+    auto admitted = false;
+    page_wire_regions(admitted, ptrs, txs);
+    if (admitted)
+        cold_reads_.release();
 }
 
 // These convenience wrappers are made practical by size caching for block and
@@ -360,6 +490,8 @@ bool CLASS::get_wire_block(const system::data_slab& out,
     // Tx sizes, converted in place to offsets. Tasks read through the held
     // accessors, as a task taking a held lock could wait behind a remap.
     const auto ptrs = get_wire_accessors();
+    page_wire_block(ptrs, txs);
+
     std::vector<size_t> offsets(txs.size());
     for (size_t index{}; index < txs.size(); ++index)
     {

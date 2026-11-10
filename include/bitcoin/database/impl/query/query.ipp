@@ -69,7 +69,8 @@ namespace database {
 
 TEMPLATE
 CLASS::query(Store& store) NOEXCEPT
-  : store_(store)
+  : cold_reads_(system::sign_cast<ptrdiff_t>(store.cold_reads())),
+    store_(store)
 {
 }
 

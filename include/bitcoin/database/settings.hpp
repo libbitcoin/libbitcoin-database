@@ -82,6 +82,9 @@ struct BCD_API settings
     /// Enable concurrency in individual client-server queries.
     bool turbo{ true };
 
+    /// Limit of concurrent prefetched block reads from disk (zero unlimited).
+    uint16_t cold_reads{ 0 };
+
     /// Minimum transactions for a silent payment scan on gpu.
     uint32_t gpu_scan_minimum{ 65'536 };
 

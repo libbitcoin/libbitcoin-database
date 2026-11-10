@@ -204,6 +204,12 @@ bool CLASS::turbo() const NOEXCEPT
 }
 
 TEMPLATE
+size_t CLASS::cold_reads() const NOEXCEPT
+{
+    return configuration_.cold_reads;
+}
+
+TEMPLATE
 size_t CLASS::gpu_scan_minimum() const NOEXCEPT
 {
     return configuration_.gpu_scan_minimum;

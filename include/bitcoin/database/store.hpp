@@ -88,6 +88,9 @@ public:
     /// Allows full throttle concurrent query execution (may use 100% CPU).
     bool turbo() const NOEXCEPT;
 
+    /// Limit of concurrent prefetched block reads from disk (zero unlimited).
+    size_t cold_reads() const NOEXCEPT;
+
     /// Minimum transactions for a silent payment scan on gpu.
     size_t gpu_scan_minimum() const NOEXCEPT;
 
