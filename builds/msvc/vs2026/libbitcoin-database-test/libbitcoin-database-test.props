@@ -1,53 +1,42 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ |  Copyright (c) 2014-2026 libbitcoin-database developers (see COPYING).
+ |
+ |         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
+ |
+ -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <_PropertySheetDisplayName>Libbitcoin Database Test Common Settings</_PropertySheetDisplayName>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <_PropertySheetDisplayName>libbitcoin-database-test Settings</_PropertySheetDisplayName>
   </PropertyGroup>
 
-  <!-- Configuration -->
+  <ItemGroup Label="BuildOptionsExtension">
+    <PropertyPageSchema Condition="Exists('$(MSBuildThisFileDirectory)libbitcoin-database-test.xml')" Include="$(MSBuildThisFileDirectory)libbitcoin-database-test.xml" />
+  </ItemGroup>
 
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(RepoRoot)include\;(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <EnablePREfast>false</EnablePREfast>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
-    <PostBuildEvent Condition="'$(DebugOrRelease)' == 'release'">
+    <PostBuildEvent Condition="'$(DebugOrRelease)' == 'Release'">
       <Command>"$(TargetPath)" --log_level=warning --run_test=* --show_progress=no --build_info=yes</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-
-  <!-- Dependencies -->
 
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)libbitcoin-system.import.props" />
     <Import Project="$(SolutionDir)libbitcoin-database.import.props" />
   </ImportGroup>
 
-  <PropertyGroup Condition="'$(NuGetPackageRoot)' == ''">
-    <NuGetPackageRoot>..\..\..\..\..\.nuget\packages\</NuGetPackageRoot>
+  <PropertyGroup>
+    <Linkage-libbitcoin-system>$(DefaultLinkage)</Linkage-libbitcoin-system>
+    <Linkage-libbitcoin-database>$(DefaultLinkage)</Linkage-libbitcoin-database>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(DefaultLinkage)' == 'dynamic'">
-    <Linkage-libbitcoin-system>dynamic</Linkage-libbitcoin-system>
-    <Linkage-libbitcoin-database>dynamic</Linkage-libbitcoin-database>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(DefaultLinkage)' == 'ltcg'">
-    <Linkage-libbitcoin-system>ltcg</Linkage-libbitcoin-system>
-    <Linkage-libbitcoin-database>ltcg</Linkage-libbitcoin-database>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(DefaultLinkage)' == 'static'">
-    <Linkage-libbitcoin-system>static</Linkage-libbitcoin-system>
-    <Linkage-libbitcoin-database>static</Linkage-libbitcoin-database>
-  </PropertyGroup>
-
-  <!-- Messages -->
 
   <Target Name="LinkageInfo" BeforeTargets="PrepareForBuild">
-    <Message Text="Linkage-_system   : $(Linkage-libbitcoin-system)" Importance="high"/>
-    <Message Text="Linkage-_database : $(Linkage-libbitcoin-database)" Importance="high"/>
+    <Message Text="Linkage-libbitcoin-system   : $(Linkage-libbitcoin-system)" Importance="high"/>
+    <Message Text="Linkage-libbitcoin-database : $(Linkage-libbitcoin-database)" Importance="high"/>
   </Target>
 
 </Project>
