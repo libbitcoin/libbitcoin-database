@@ -261,15 +261,22 @@ TEMPLATE
 bool CLASS::get_wire_block(bytewriter& sink, const header_link& link,
     bool witness) const NOEXCEPT
 {
-    if (!get_wire_header(sink, link))
-        return false;
-
     const auto txs = to_transactions(link);
     if (txs.empty())
         return false;
 
+    return get_wire_block(sink, get_wire_accessors(), link, txs, witness);
+}
+
+// protected
+TEMPLATE
+bool CLASS::get_wire_block(bytewriter& sink, const wire_accessors& ptrs,
+    const header_link& link, const tx_links& txs, bool witness) const NOEXCEPT
+{
+    if (!get_wire_header(sink, link))
+        return false;
+
     sink.write_variable(txs.size());
-    const auto ptrs = get_wire_accessors();
     for (const auto& tx_link: txs)
         if (!get_wire_tx(sink, ptrs, tx_link, witness))
             return false;
@@ -382,7 +389,7 @@ bool CLASS::get_wire_block(const system::data_slab& out,
     {
         stream::out::fast sink{ out };
         Writer writer{ sink };
-        return get_wire_block(writer, link, witness) && writer;
+        return get_wire_block(writer, ptrs, link, txs, witness) && writer;
     }
 
     const auto region = [&](size_t offset, size_t size) NOEXCEPT
