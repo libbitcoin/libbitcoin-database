@@ -1368,6 +1368,9 @@ protected:
         const ins_link& link) const NOEXCEPT;
     bool get_wire_tx(bytewriter& sink, const wire_accessors& ptrs,
         const tx_link& link, bool witness) const NOEXCEPT;
+    bool get_wire_block(bytewriter& sink, const wire_accessors& ptrs,
+        const header_link& link, const tx_links& txs,
+        bool witness) const NOEXCEPT;
 
     /// History.
     /// -----------------------------------------------------------------------

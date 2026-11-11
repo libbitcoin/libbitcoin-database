@@ -1,49 +1,39 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ |  Copyright (c) 2014-2026 libbitcoin-database developers (see COPYING).
+ |
+ |         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
+ |
+ -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <_PropertySheetDisplayName>Libbitcoin Database Library Common Settings</_PropertySheetDisplayName>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <_PropertySheetDisplayName>libbitcoin-database Settings</_PropertySheetDisplayName>
   </PropertyGroup>
 
-  <!-- Configuration -->
+  <ItemGroup Label="BuildOptionsExtension">
+    <PropertyPageSchema Condition="Exists('$(MSBuildThisFileDirectory)libbitcoin-database.xml')" Include="$(MSBuildThisFileDirectory)libbitcoin-database.xml" />
+  </ItemGroup>
 
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(RepoRoot)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories>$(RepoRoot)build\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <EnablePREfast>false</EnablePREfast>
-      <PreprocessorDefinitions Condition="'$(Linkage-libbitcoin-consensus)' != 'none'">WITH_CONSENSUS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(RepoRoot)build\include\;$(RepoRoot)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(ConfigurationType)' == 'DynamicLibrary'">BCD_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(ConfigurationType)' == 'StaticLibrary'">BCD_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
 
-  <!-- Dependencies -->
-
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)libbitcoin-system.import.props" />
   </ImportGroup>
 
-  <PropertyGroup Condition="'$(NuGetPackageRoot)' == ''">
-    <NuGetPackageRoot>..\..\..\..\..\.nuget\packages\</NuGetPackageRoot>
+  <PropertyGroup>
+    <Linkage-libbitcoin-system>$(DefaultLinkage)</Linkage-libbitcoin-system>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(DefaultLinkage)' == 'dynamic'">
-    <Linkage-libbitcoin-system>dynamic</Linkage-libbitcoin-system>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(DefaultLinkage)' == 'ltcg'">
-    <Linkage-libbitcoin-system>ltcg</Linkage-libbitcoin-system>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(DefaultLinkage)' == 'static'">
-    <Linkage-libbitcoin-system>static</Linkage-libbitcoin-system>
-  </PropertyGroup>
-
-  <!-- Messages -->
 
   <Target Name="LinkageInfo" BeforeTargets="PrepareForBuild">
-    <Message Text="Linkage-_system   : $(Linkage-libbitcoin-system)" Importance="high"/>
+    <Message Text="Linkage-libbitcoin-system : $(Linkage-libbitcoin-system)" Importance="high"/>
   </Target>
 
 </Project>
