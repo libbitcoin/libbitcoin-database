@@ -334,6 +334,15 @@ private:
     void worker_run_() NOEXCEPT;
     bool tick_() NOEXCEPT;
 
+    // body memory bounds (worker thread).
+    template <size_t... Index>
+    bool evict_all_(size_t from, size_t to,
+        std::index_sequence<Index...>) NOEXCEPT;
+    template <size_t Column>
+    bool evict_(size_t from, size_t to) NOEXCEPT;
+    bool exceeded_() const NOEXCEPT;
+    void reclaim_(size_t& cursor) NOEXCEPT;
+
 #if defined(HAVE_WINDOWS)
     template <size_t Column>
     bool release_(size_t size) NOEXCEPT;
@@ -344,8 +353,9 @@ private:
     // cache manager trims without knowing that head residency is the store's
     // priority, and every head miss is a serial fault on the probe path, so
     // the scan asserts residency (a read sets the access bit). Body placement
-    // is left to the cache manager.
+    // is left to the cache manager, within the body memory bounds.
     void scan_run_() NOEXCEPT;
+    void reclaim_run_() NOEXCEPT;
 #endif
 
 #if defined(MANAGE_STAGING)
@@ -379,17 +389,12 @@ private:
     template <size_t... Index>
     bool unsettle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
-    bool evict_all_(size_t from, size_t to,
-        std::index_sequence<Index...>) NOEXCEPT;
-    template <size_t... Index>
     bool settle_write_(size_t from, size_t to,
         std::index_sequence<Index...>) NOEXCEPT;
     template <size_t Column>
     bool settle_(size_t from, size_t to) NOEXCEPT;
     template <size_t Column>
     bool unsettle_(size_t rows) NOEXCEPT;
-    template <size_t Column>
-    bool evict_(size_t from, size_t to) NOEXCEPT;
     void throttle_() NOEXCEPT;
     void signal_() NOEXCEPT;
     void body_run_() NOEXCEPT;
@@ -425,6 +430,8 @@ private:
     const size_t expansion_;
     const size_t commit_headroom_;
     const uint64_t disk_headroom_;
+    const uint64_t reserve_;
+    const uint64_t ceiling_;
     const advice access_;
     const bool zeroed_;
     const bool random_;
@@ -441,6 +448,7 @@ private:
     std::atomic<size_t> logical_{};
     std::atomic_bool fault_{};
     std::atomic_bool loaded_{};
+    std::atomic_bool current_{};
 
     // This is protected by field_mutex_.
     std::array<int, columns> opened_;
@@ -524,9 +532,6 @@ private:
 
     // Set when a quiescent head settles to its file mapping (retires tracking).
     std::atomic_bool shared_{};
-
-    // Set while the store is current (permits settle, stops linux eviction).
-    std::atomic_bool current_{};
 
     // Set across a settle transition (head writers back off, uncounted).
     std::atomic_bool transition_{};

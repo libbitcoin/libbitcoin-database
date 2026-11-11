@@ -212,6 +212,23 @@ int working_floor(size_t minimum, size_t maximum) noexcept
         maximum) == FALSE ? -1 : 0;
 }
 
+// Remove the pages from the process working set: unlocking pages that are
+// not locked does so, reporting that they were not locked. Mapped file pages
+// remain cached by the system (dirty pages are written), so a later read is
+// a fault without a disk read until the system reclaims the page.
+int working_evict(void* addr, size_t len) noexcept
+{
+    if ((len == 0) || (VirtualUnlock(addr, len) != FALSE) ||
+        (GetLastError() == ERROR_NOT_LOCKED))
+    {
+        errno = 0;
+        return 0;
+    }
+
+    errno = last_error(EPERM);
+    return -1;
+}
+
 // unused
 int mlock(const void* addr, size_t len) noexcept
 {

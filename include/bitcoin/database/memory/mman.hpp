@@ -66,6 +66,7 @@ BCD_API int madvise(void* addr, size_t len, int advice) noexcept;
 BCD_API int mprotect(void* addr, size_t len, int prot) noexcept;
 BCD_API int msync(void* addr, size_t len, int flags) noexcept;
 BCD_API int working_floor(size_t minimum, size_t maximum) noexcept;
+BCD_API int working_evict(void* addr, size_t len) noexcept;
 BCD_API int mlock(const void* addr, size_t len) noexcept;
 BCD_API int munlock(const void* addr, size_t len) noexcept;
 BCD_API int fsync(int fd) noexcept;

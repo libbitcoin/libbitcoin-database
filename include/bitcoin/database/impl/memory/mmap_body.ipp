@@ -61,14 +61,6 @@ bool CLASS::unsettle_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT
 
 TEMPLATE
 template <size_t... Index>
-bool CLASS::evict_all_(size_t from, size_t to,
-    std::index_sequence<Index...>) NOEXCEPT
-{
-    return (evict_<Index>(from, to) && ...);
-}
-
-TEMPLATE
-template <size_t... Index>
 bool CLASS::settle_write_(size_t from, size_t to,
     std::index_sequence<Index...>) NOEXCEPT
 {
@@ -247,6 +239,7 @@ void CLASS::body_run_() NOEXCEPT
     auto mark = logical_.load();
     size_t still{};
     size_t evicted{};
+    size_t reclaimed{};
 
     const auto backlog = [this]() NOEXCEPT
     {
@@ -271,6 +264,9 @@ void CLASS::body_run_() NOEXCEPT
         if (system_free() < scarce)
 #endif
             evict_next_(sweep, evicted);
+
+        if (current_.load())
+            reclaim_(reclaimed);
 
         auto bytes = backlog();
         if (is_zero(bytes))

@@ -26,6 +26,8 @@ BC_AUTO_TEST_CASE(settings__construct__default__expected)
     BC_REQUIRE(configuration.network == system::chain::selection::none);
     BC_REQUIRE_EQUAL(configuration.turbo, true);
     BC_REQUIRE_EQUAL(configuration.cold_reads, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_reserve, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_ceiling, 0u);
     BC_REQUIRE_EQUAL(configuration.gpu_scan_minimum, 65'536u);
     BC_REQUIRE_EQUAL(configuration.mark_unconfirmable, true);
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
@@ -143,6 +145,8 @@ BC_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
     BC_REQUIRE_EQUAL(configuration.turbo, true);
     BC_REQUIRE_EQUAL(configuration.cold_reads, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_reserve, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_ceiling, 0u);
 }
 
 BC_AUTO_TEST_CASE(settings__construct__testnet3__expected)
@@ -170,6 +174,8 @@ BC_AUTO_TEST_CASE(settings__construct__testnet3__expected)
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
     BC_REQUIRE_EQUAL(configuration.turbo, true);
     BC_REQUIRE_EQUAL(configuration.cold_reads, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_reserve, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_ceiling, 0u);
 }
 
 BC_AUTO_TEST_CASE(settings__construct__testnet4__expected)
@@ -197,6 +203,8 @@ BC_AUTO_TEST_CASE(settings__construct__testnet4__expected)
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
     BC_REQUIRE_EQUAL(configuration.turbo, true);
     BC_REQUIRE_EQUAL(configuration.cold_reads, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_reserve, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_ceiling, 0u);
 }
 
 BC_AUTO_TEST_CASE(settings__construct__regtest__expected)
@@ -224,6 +232,8 @@ BC_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
     BC_REQUIRE_EQUAL(configuration.turbo, true);
     BC_REQUIRE_EQUAL(configuration.cold_reads, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_reserve, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_ceiling, 0u);
 }
 
 BC_AUTO_TEST_CASE(settings__construct__signet__expected)
@@ -251,6 +261,8 @@ BC_AUTO_TEST_CASE(settings__construct__signet__expected)
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
     BC_REQUIRE_EQUAL(configuration.turbo, true);
     BC_REQUIRE_EQUAL(configuration.cold_reads, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_reserve, 0u);
+    BC_REQUIRE_EQUAL(configuration.memory_ceiling, 0u);
 }
 
 BC_AUTO_TEST_CASE(settings__construct__testnet5__expected)

@@ -94,6 +94,15 @@ uint64_t system_available() NOEXCEPT
     return system_free();
 }
 
+uint64_t process_resident() NOEXCEPT
+{
+    PROCESS_MEMORY_COUNTERS counters{};
+    counters.cb = sizeof(counters);
+    return is_zero(::GetProcessMemoryInfo(::GetCurrentProcess(), &counters,
+        sizeof(counters))) ? zero :
+        possible_wide_cast<uint64_t>(counters.WorkingSetSize);
+}
+
 size_t system_pressure() NOEXCEPT
 {
     // The kernel low memory resource signal (no configurable threshold).
@@ -280,6 +289,33 @@ uint64_t system_available() NOEXCEPT
 
     // Failed or no platform source (free approximates on other platforms).
     return system_free();
+}
+
+uint64_t process_resident() NOEXCEPT
+{
+#if defined(HAVE_APPLE)
+    mach_task_basic_info_data_t information{};
+    mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
+    if (::task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
+        pointer_cast<integer_t>(&information), &count) == KERN_SUCCESS)
+    {
+        return information.resident_size;
+    }
+#elif defined(HAVE_LINUX)
+    // Process memory in pages: total program size, then resident set size.
+    if (const auto file = std::fopen("/proc/self/statm", "r"))
+    {
+        uint64_t pages{};
+        const auto fields = std::fscanf(file, "%*u %" SCNu64, &pages);
+        std::fclose(file);
+
+        if (fields == 1)
+            return ceilinged_multiply<uint64_t>(pages, page_size());
+    }
+#endif
+
+    // Failed or no platform source.
+    return zero;
 }
 
 size_t system_pressure() NOEXCEPT

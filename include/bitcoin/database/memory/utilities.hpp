@@ -45,6 +45,10 @@ BCD_API uint64_t system_free() NOEXCEPT;
 /// appropriate scarcity signal (free approximates zero on a busy system).
 BCD_API uint64_t system_available() NOEXCEPT;
 
+/// The bytes of physical memory resident in the process, zero if failed or
+/// the platform provides no source.
+BCD_API uint64_t process_resident() NOEXCEPT;
+
 /// The system memory pressure level (1 normal, 2 warning, 4 critical), zero
 /// if failed or the platform provides no source.
 BCD_API size_t system_pressure() NOEXCEPT;

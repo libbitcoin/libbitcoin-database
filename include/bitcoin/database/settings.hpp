@@ -85,6 +85,14 @@ struct BCD_API settings
     /// Limit of concurrent prefetched block reads from disk (zero unlimited).
     uint16_t cold_reads{ 0 };
 
+    /// Unused physical memory restored by body cache release while current
+    /// (bytes, zero disables).
+    uint64_t memory_reserve{ 0 };
+
+    /// Resident process memory above which body cache is released while
+    /// current (bytes, zero disables).
+    uint64_t memory_ceiling{ 0 };
+
     /// Minimum transactions for a silent payment scan on gpu.
     uint32_t gpu_scan_minimum{ 65'536 };
 

@@ -116,11 +116,9 @@ void CLASS::mark(size_t STAGING_ONLY(offset),
 }
 
 TEMPLATE
-void CLASS::current(bool STAGING_ONLY(state)) NOEXCEPT
+void CLASS::current(bool state) NOEXCEPT
 {
-#if defined(MANAGE_STAGING)
     current_.store(state);
-#endif
 }
 
 #if defined(MANAGE_STAGING)

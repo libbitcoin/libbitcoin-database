@@ -19,9 +19,11 @@
 #ifndef LIBBITCOIN_DATABASE_MEMORY_MMAP_PRIVATE_IPP
 #define LIBBITCOIN_DATABASE_MEMORY_MMAP_PRIVATE_IPP
 
+#include <algorithm>
 #include <chrono>
 #include <fcntl.h>
 #include <mutex>
+#include <shared_mutex>
 #include <tuple>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/mman.hpp>
@@ -337,9 +339,9 @@ void CLASS::worker_start_() NOEXCEPT
 
     limit_ = system_memory() / throttle_factor;
 #else
-    // Only managed heads steer residency; bodies and a shared head are the
-    // cache manager's to place.
-    if (staged_ || head_shared_)
+    // Managed heads steer residency and bounded bodies release cache; other
+    // bodies and a shared head are the cache manager's to place.
+    if (head_shared_ || (staged_ && is_zero(reserve_) && is_zero(ceiling_)))
         return;
 #endif
 
@@ -375,7 +377,7 @@ void CLASS::worker_run_() NOEXCEPT
 #if defined(MANAGE_STAGING)
     staged_ ? body_run_() : head_run_();
 #else
-    scan_run_();
+    staged_ ? reclaim_run_() : scan_run_();
 #endif
 }
 
@@ -389,6 +391,63 @@ bool CLASS::tick_() NOEXCEPT
         {
             return !working_.load();
         });
+}
+
+// body memory bounds (worker thread).
+// ----------------------------------------------------------------------------
+// private
+
+TEMPLATE
+template <size_t... Index>
+bool CLASS::evict_all_(size_t from, size_t to,
+    std::index_sequence<Index...>) NOEXCEPT
+{
+    return (evict_<Index>(from, to) && ...);
+}
+
+// Free memory is under the reserve or resident memory is over the ceiling.
+TEMPLATE
+bool CLASS::exceeded_() const NOEXCEPT
+{
+    using namespace system;
+    return (!is_zero(reserve_) && (system_free() < reserve_)) ||
+        (!is_zero(ceiling_) && (process_resident() > ceiling_));
+}
+
+// Release the cache of the body by chunk until no memory bound is exceeded:
+// a wrapping sweep of at most one lap, by chunk under the shared remap lock
+// (readers proceed, a remap waits one chunk). A wrong release costs one read.
+TEMPLATE
+void CLASS::reclaim_(size_t& cursor) NOEXCEPT
+{
+    using namespace system;
+#if defined(MANAGE_STAGING)
+    const auto& bound = settled_;
+#else
+    const auto& bound = logical_;
+#endif
+
+    const auto chunk = std::max(one, evict_chunk / stride);
+    auto rows = bound.load();
+
+    while (!is_zero(rows) && working_.load() && exceeded_())
+    {
+        std::shared_lock map_lock(remap_mutex_);
+        if (!loaded_.load() || fault_.load())
+            return;
+
+        // A truncated boundary self-heals here (the cursor wraps).
+        const auto end = bound.load();
+        const auto from = (cursor < end) ? cursor : zero;
+        const auto to = std::min(end, ceilinged_add(from,
+            std::min(rows, chunk)));
+
+        if ((to == from) || !evict_all_(from, to, sequence{}))
+            return;
+
+        rows = floored_subtract(rows, to - from);
+        cursor = to;
+    }
 }
 
 } // namespace database

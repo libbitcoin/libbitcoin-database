@@ -350,6 +350,16 @@ private:
             table.buckets, Cell), access, fill);
     }
 
+    // Bodies carry the store memory bounds.
+    static constexpr storage_settings body_settings(const settings& config,
+        const storage_settings& table) NOEXCEPT
+    {
+        auto out = table;
+        out.reserve = config.memory_reserve;
+        out.ceiling = config.memory_ceiling;
+        return out;
+    }
+
     // Bodies are append-only, so stage writes in anonymous memory where the
     // staging backend is built (heads update in place and remain resident).
     static constexpr bool staged = true;
