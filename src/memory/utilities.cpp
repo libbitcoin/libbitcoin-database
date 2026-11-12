@@ -23,6 +23,7 @@
     #include <psapi.h>
     #include <winioctl.h>
 #else
+    #include <sys/mman.h>
     #include <unistd.h>
 #endif
 #if defined(HAVE_APPLE)
@@ -376,13 +377,55 @@ uint64_t system_compressed() NOEXCEPT
     return zero;
 }
 
-bool resident(const data_slab&) NOEXCEPT
+static uint8_t* page_start(const uint8_t* byte, size_t page) NOEXCEPT
 {
-    return true;
+    const auto address = std::bit_cast<uintptr_t>(byte);
+    return std::bit_cast<uint8_t*>(address - (address % page));
 }
 
-void prefetch(const std::span<const data_slab>&) NOEXCEPT
+bool resident(const data_slab& region) NOEXCEPT
 {
+    const auto page = page_size();
+    if (region.empty() || is_zero(page))
+        return true;
+
+    const auto in_core = [page](const uint8_t* byte) NOEXCEPT
+    {
+#if defined(HAVE_LINUX)
+        unsigned char state{};
+#else
+        char state{};
+#endif
+        return !is_zero(::mincore(page_start(byte, page), page, &state)) ||
+            is_nonzero(state & 1);
+    };
+
+    return in_core(region.begin()) && in_core(std::prev(region.end()));
+}
+
+void prefetch(const std::span<const data_slab>& regions) NOEXCEPT
+{
+    const auto page = page_size();
+    if (is_zero(page))
+        return;
+
+    for (const auto& region: regions)
+    {
+        if (region.empty())
+            continue;
+
+        const auto start = page_start(region.begin(), page);
+        const auto bytes = sign_cast<size_t>(std::distance(start, region.end()));
+#if defined(HAVE_LINUX)
+        // Linux reads at most the device readahead window per advice.
+        constexpr auto window = power2<size_t>(17u);
+        for (size_t offset{}; offset < bytes; offset += window)
+            ::madvise(std::next(start, offset), std::min(window,
+                bytes - offset), MADV_WILLNEED);
+#else
+        ::madvise(start, bytes, MADV_WILLNEED);
+#endif
+    }
 }
 
 #endif // HAVE_WINDOWS
