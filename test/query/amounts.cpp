@@ -116,7 +116,7 @@ BC_AUTO_TEST_CASE(query_amounts__get_tx_fee__pooled_missing_prevouts__pooled_fee
     BC_CHECK(query.get_tx_fees(rate, 3));
     BC_CHECK_EQUAL(rate.fee, expected_fee);
     BC_CHECK_EQUAL(rate.bytes, bytes);
-    BC_CHECK_EQUAL(rate.height, expected_height);
+    BC_CHECK_EQUAL(rate.pooled_height, expected_height);
 }
 
 BC_AUTO_TEST_CASE(query_amounts__get_tx_fee__coinbase__zero)
@@ -167,7 +167,7 @@ BC_AUTO_TEST_CASE(query_amounts__get_tx_fee__valid_non_coinbase__expected)
     BC_CHECK_EQUAL(rate.bytes, virtual_size);
     BC_CHECK_EQUAL(rate.bytes, test::tx2b.virtual_size());
     BC_CHECK_EQUAL(rate.fee, test::tx2b.fee());
-    BC_CHECK_EQUAL(rate.height, max_size_t);
+    BC_CHECK_EQUAL(rate.pooled_height, max_size_t);
 }
 
 // get_block_fee

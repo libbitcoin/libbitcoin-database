@@ -32,7 +32,7 @@ namespace database {
 TEMPLATE
 bool CLASS::get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT
 {
-    if (get_pooled_fee(out.fee, out.height, link))
+    if (get_pooled_fee(out.fee, out.pooled_height, link))
         return get_tx_virtual_size(out.bytes, link);
 
     // This is somehow ~15-20% less efficient.
@@ -43,7 +43,7 @@ bool CLASS::get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT
 
     out.bytes = tx->virtual_size();
     out.fee = tx->fee();
-    out.height = max_size_t;
+    out.pooled_height = max_size_t;
     return true;
 }
 

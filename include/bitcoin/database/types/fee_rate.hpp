@@ -24,12 +24,12 @@
 namespace libbitcoin {
 namespace database {
 
-/// Fee rate of a tx, with the pool entry height of a pooled tx.
+/// Fee rate of a tx, with the first height at which a pooled tx could confirm.
 struct BCD_API fee_rate
 {
     size_t bytes{};
     uint64_t fee{};
-    size_t height{ max_size_t };
+    size_t pooled_height{ max_size_t };
 };
 
 using fee_rates = std::vector<fee_rate>;
