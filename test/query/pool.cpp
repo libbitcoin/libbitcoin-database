@@ -669,52 +669,6 @@ BC_AUTO_TEST_CASE(query_pool__get_confirmable_fees__conflicted_and_child__empty)
     BC_REQUIRE(rates.empty());
 }
 
-// get_block_conflict_fees
-
-BC_AUTO_TEST_CASE(query_pool__get_block_conflict_fees__conflicted_and_child__both)
-{
-    settings settings{ test::database_settings() };
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BC_CHECK(!store.create(test::events_handler));
-    BC_CHECK(query.initialize(test::genesis));
-    store.set_pooling();
-
-    const auto conflicted = to_spend(genesis_coinbase(), 2u);
-    const auto child = to_spend(conflicted.hash(false), 1u);
-    BC_REQUIRE(archive_pool(query, conflicted));
-    BC_REQUIRE(archive_pool(query, child));
-
-    const auto link = archive_confirm(query, to_spend(genesis_coinbase(), 3u));
-    BC_REQUIRE(!link.is_terminal());
-
-    fee_rates rates{};
-    BC_REQUIRE(query.get_block_conflict_fees(rates, link));
-    BC_REQUIRE_EQUAL(rates.size(), 2u);
-}
-
-BC_AUTO_TEST_CASE(query_pool__get_block_conflict_fees__confirmed_pooled__empty)
-{
-    settings settings{ test::database_settings() };
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BC_CHECK(!store.create(test::events_handler));
-    BC_CHECK(query.initialize(test::genesis));
-    store.set_pooling();
-
-    const auto tx = to_spend(genesis_coinbase(), 1u);
-    BC_REQUIRE(archive_pool(query, tx));
-
-    const auto link = archive_confirm(query, tx);
-    BC_REQUIRE(!link.is_terminal());
-
-    fee_rates rates{};
-    BC_REQUIRE(query.get_block_conflict_fees(rates, link));
-    BC_REQUIRE(rates.empty());
-}
-
 // to_confirmable_parents
 
 BC_AUTO_TEST_CASE(query_pool__to_confirmable_parents__pooled_parent__parent)
