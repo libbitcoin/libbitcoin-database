@@ -643,9 +643,9 @@ BC_AUTO_TEST_CASE(query_pool__get_confirmable_fees__unconfirmed_and_confirmed__u
     BC_CHECK(query.get_confirmable_fees(rates));
     BC_REQUIRE_EQUAL(rates.size(), 2u);
     BC_CHECK_EQUAL(rates.at(0).fee, 20u);
-    BC_CHECK_EQUAL(rates.at(0).height, 2u);
+    BC_CHECK_EQUAL(rates.at(0).pooled_height, 2u);
     BC_CHECK_EQUAL(rates.at(1).fee, 30u);
-    BC_CHECK_EQUAL(rates.at(1).height, 3u);
+    BC_CHECK_EQUAL(rates.at(1).pooled_height, 3u);
 }
 
 BC_AUTO_TEST_CASE(query_pool__get_confirmable_fees__conflicted_and_child__empty)
