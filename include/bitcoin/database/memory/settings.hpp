@@ -40,6 +40,14 @@ struct storage_settings
     /// of the backing resource (memory commitment, disk space) unclaimed.
     uint64_t headroom{ system::power2(28u) };
 
+    /// Unused physical memory restored by body cache release while the store
+    /// is current (bytes, zero disables).
+    uint64_t reserve{};
+
+    /// Resident process memory above which body cache is released while the
+    /// store is current (bytes, zero disables).
+    uint64_t ceiling{};
+
     /// Page advice for mapped reads (see advice). Bodies default to
     /// scattered: they are far too large to reside, and validation reads
     /// prevouts from arbitrary earlier blocks, so read-ahead manufactures

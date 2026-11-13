@@ -87,7 +87,10 @@ code CLASS::get_address_totals(const stopper& cancel,
     confirmed = {};
     unconfirmed = {};
     output_links outs{};
-    if (const auto ec = to_address_outputs(cancel, outs, key))
+    tx_links parents{};
+    outs_link cursor{};
+    if (const auto ec = to_address_outputs(cancel, cursor, outs, parents, key,
+        max_size_t))
         return ec;
 
     const auto fund = [](address_totals& totals, uint64_t value) NOEXCEPT
@@ -102,16 +105,25 @@ code CLASS::get_address_totals(const stopper& cancel,
         totals.spent_value = ceilinged_add(totals.spent_value, value);
     };
 
-    for (const auto& out: outs)
+    for (size_t index{}; index < outs.size(); ++index)
     {
         if (cancel)
             return error::query_canceled;
+
+        const auto& out = outs.at(index);
+        const auto& parent = parents.at(index);
+
+        tx_link strong{};
+        const auto block = find_strong(strong, parent);
+        const auto is_strong = !block.is_terminal();
+        if (is_strong && strong != parent)
+            continue;
 
         uint64_t value{};
         if (!get_value(value, out))
             return error::integrity;
 
-        if (is_confirmed_output(out))
+        if (is_strong && is_confirmed_block(block))
         {
             fund(confirmed, value);
             if (is_confirmed_spent(out))

@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_MEMORY_UTILITIES_HPP
 
 #include <filesystem>
+#include <span>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -44,6 +45,10 @@ BCD_API uint64_t system_free() NOEXCEPT;
 /// appropriate scarcity signal (free approximates zero on a busy system).
 BCD_API uint64_t system_available() NOEXCEPT;
 
+/// The bytes of physical memory resident in the process, zero if failed or
+/// the platform provides no source.
+BCD_API uint64_t process_resident() NOEXCEPT;
+
 /// The system memory pressure level (1 normal, 2 warning, 4 critical), zero
 /// if failed or the platform provides no source.
 BCD_API size_t system_pressure() NOEXCEPT;
@@ -51,6 +56,15 @@ BCD_API size_t system_pressure() NOEXCEPT;
 /// The bytes held by system memory compression (a pressure precursor), zero
 /// if failed or the platform provides no source.
 BCD_API uint64_t system_compressed() NOEXCEPT;
+
+/// True if the first and last pages of the region are in the working set, or
+/// the platform provides no source.
+BCD_API bool resident(const system::data_slab& region) NOEXCEPT;
+
+/// Read the regions into memory as one request (advisory), no effect if the
+/// platform provides no source.
+BCD_API void prefetch(
+    const std::span<const system::data_slab>& regions) NOEXCEPT;
 
 /// Number of cores, no less than one.
 BCD_API size_t cores() NOEXCEPT;

@@ -191,6 +191,36 @@ BC_AUTO_TEST_CASE(query_address__get_address_totals__unconfirmed_blocks__expecte
     BC_REQUIRE_EQUAL(unconfirmed.spent_value, 0x18u);
 }
 
+BC_AUTO_TEST_CASE(query_address__get_address_totals__duplicate_instances__counted_once)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(1));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.set(test::tx4));
+    BC_REQUIRE(query.set(test::block_spend_1a, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(2));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE_EQUAL(query.to_duplicates(test::tx4.hash(false)).size(), 2u);
+
+    // block1a output 0 (0x18) is spent by tx4, whose 0x08 output is counted once.
+    address_totals confirmed{};
+    address_totals unconfirmed{};
+    const std::atomic_bool cancel{};
+    BC_REQUIRE(!query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0));
+    BC_REQUIRE_EQUAL(confirmed.funded_count, 2u);
+    BC_REQUIRE_EQUAL(confirmed.funded_value, 0x18u + 0x08u);
+    BC_REQUIRE_EQUAL(confirmed.spent_count, 1u);
+    BC_REQUIRE_EQUAL(confirmed.spent_value, 0x18u);
+    BC_REQUIRE_EQUAL(unconfirmed.funded_count, 0u);
+    BC_REQUIRE_EQUAL(unconfirmed.spent_count, 0u);
+}
+
 BC_AUTO_TEST_CASE(query_address__get_address_totals__canceled__query_canceled)
 {
     settings settings{ test::database_settings() };

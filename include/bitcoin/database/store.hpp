@@ -88,6 +88,9 @@ public:
     /// Allows full throttle concurrent query execution (may use 100% CPU).
     bool turbo() const NOEXCEPT;
 
+    /// Limit of concurrent prefetched block reads from disk (zero unlimited).
+    size_t cold_reads() const NOEXCEPT;
+
     /// Minimum transactions for a silent payment scan on gpu.
     size_t gpu_scan_minimum() const NOEXCEPT;
 
@@ -345,6 +348,16 @@ private:
     {
         return head_settings(table, system::ceilinged_multiply<uint64_t>(
             table.buckets, Cell), access, fill);
+    }
+
+    // Bodies carry the store memory bounds.
+    static constexpr storage_settings body_settings(const settings& config,
+        const storage_settings& table) NOEXCEPT
+    {
+        auto out = table;
+        out.reserve = config.memory_reserve;
+        out.ceiling = config.memory_ceiling;
+        return out;
     }
 
     // Bodies are append-only, so stage writes in anonymous memory where the

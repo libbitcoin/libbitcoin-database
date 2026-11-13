@@ -194,9 +194,40 @@ bool CLASS::finalize_() NOEXCEPT
     return true;
 }
 
-// working set scan (worker thread).
+// working set (worker thread).
 // ----------------------------------------------------------------------------
 // private
+
+// Remove the pages of rows [from, to) from the working set. The mapping is
+// unaffected (a later read faults the page back). Advisory: failure alters
+// nothing and is not a fault.
+TEMPLATE
+template <size_t Column>
+bool CLASS::evict_(size_t from, size_t to) NOEXCEPT
+{
+    if constexpr (is_zero(widths.at(Column)))
+    {
+        return true;
+    }
+    else
+    {
+        const auto begin = to_width<Column>(from);
+        const auto size = to_width<Column>(to) - begin;
+        /* int */ ::working_evict(std::next(memory_map_[Column], begin), size);
+        return true;
+    }
+}
+
+// Bodies hold the memory bounds while the store is current.
+TEMPLATE
+void CLASS::reclaim_run_() NOEXCEPT
+{
+    size_t reclaimed{};
+
+    while (tick_())
+        if (current_.load())
+            reclaim_(reclaimed);
+}
 
 // Heads assert residency. Advisory: failure alters nothing and is not a fault.
 TEMPLATE

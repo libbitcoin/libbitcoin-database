@@ -20,6 +20,7 @@
 #define LIBBITCOIN_DATABASE_QUERY_HPP
 
 #include <mutex>
+#include <semaphore>
 #include <span>
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/settings.hpp>
@@ -1371,6 +1372,12 @@ protected:
     bool get_wire_block(bytewriter& sink, const wire_accessors& ptrs,
         const header_link& link, const tx_links& txs,
         bool witness) const NOEXCEPT;
+    bool page_in(bool& admitted,
+        const std::span<const system::data_slab>& regions) const NOEXCEPT;
+    void page_wire_regions(bool& admitted, const wire_accessors& ptrs,
+        const tx_links& txs) const NOEXCEPT;
+    void page_wire_block(const wire_accessors& ptrs,
+        const tx_links& txs) const NOEXCEPT;
 
     /// History.
     /// -----------------------------------------------------------------------
@@ -1419,6 +1426,7 @@ private:
     mutable std::shared_mutex candidate_reorganization_mutex_{};
     mutable std::shared_mutex confirmed_reorganization_mutex_{};
     mutable std::atomic<size_t> span_{};
+    mutable std::counting_semaphore<> cold_reads_;
     Store& store_;
 };
 

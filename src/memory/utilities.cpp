@@ -20,8 +20,10 @@
 
 #if defined(HAVE_WINDOWS)
     #include <windows.h>
+    #include <psapi.h>
     #include <winioctl.h>
 #else
+    #include <sys/mman.h>
     #include <unistd.h>
 #endif
 #if defined(HAVE_APPLE)
@@ -42,6 +44,7 @@
     #include <sys/vfs.h>
 #endif
 #include <filesystem>
+#include <span>
 #include <system_error>
 #include <bitcoin/database/define.hpp>
 
@@ -92,6 +95,15 @@ uint64_t system_available() NOEXCEPT
     return system_free();
 }
 
+uint64_t process_resident() NOEXCEPT
+{
+    PROCESS_MEMORY_COUNTERS counters{};
+    counters.cb = sizeof(counters);
+    return is_zero(::GetProcessMemoryInfo(::GetCurrentProcess(), &counters,
+        sizeof(counters))) ? zero :
+        possible_wide_cast<uint64_t>(counters.WorkingSetSize);
+}
+
 size_t system_pressure() NOEXCEPT
 {
     // The kernel low memory resource signal (no configurable threshold).
@@ -113,6 +125,41 @@ uint64_t system_compressed() NOEXCEPT
 {
     // No cheap source (performance counters only).
     return zero;
+}
+
+bool resident(const data_slab& region) NOEXCEPT
+{
+    if (region.empty())
+        return true;
+
+    std::array<PSAPI_WORKING_SET_EX_INFORMATION, two> pages{};
+    pages.front().VirtualAddress = region.begin();
+    pages.back().VirtualAddress = std::prev(region.end());
+    const auto bytes = possible_narrow_cast<DWORD>(pages.size() *
+        sizeof(PSAPI_WORKING_SET_EX_INFORMATION));
+
+    if (is_zero(::QueryWorkingSetEx(::GetCurrentProcess(), pages.data(),
+        bytes)))
+        return true;
+
+    return is_nonzero(pages.front().VirtualAttributes.Valid)
+        && is_nonzero(pages.back().VirtualAttributes.Valid);
+}
+
+void prefetch(const std::span<const data_slab>& regions) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    std::vector<WIN32_MEMORY_RANGE_ENTRY> ranges{};
+    ranges.reserve(regions.size());
+    for (const auto& region: regions)
+        if (!region.empty())
+            ranges.push_back({ region.begin(), region.size() });
+
+    BC_POP_WARNING()
+
+    if (!ranges.empty())
+        ::PrefetchVirtualMemory(::GetCurrentProcess(), ranges.size(),
+            ranges.data(), 0);
 }
 
 #else // HAVE_WINDOWS
@@ -245,6 +292,33 @@ uint64_t system_available() NOEXCEPT
     return system_free();
 }
 
+uint64_t process_resident() NOEXCEPT
+{
+#if defined(HAVE_APPLE)
+    mach_task_basic_info_data_t information{};
+    mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
+    if (::task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
+        pointer_cast<integer_t>(&information), &count) == KERN_SUCCESS)
+    {
+        return information.resident_size;
+    }
+#elif defined(HAVE_LINUX)
+    // Process memory in pages: total program size, then resident set size.
+    if (const auto file = std::fopen("/proc/self/statm", "r"))
+    {
+        uint64_t pages{};
+        const auto fields = std::fscanf(file, "%*u %" SCNu64, &pages);
+        std::fclose(file);
+
+        if (fields == 1)
+            return ceilinged_multiply<uint64_t>(pages, page_size());
+    }
+#endif
+
+    // Failed or no platform source.
+    return zero;
+}
+
 size_t system_pressure() NOEXCEPT
 {
 #if defined(HAVE_APPLE)
@@ -301,6 +375,57 @@ uint64_t system_compressed() NOEXCEPT
     // Failed or no platform source adopted. Linux zswap/zram accounting is
     // configuration dependent, PSI carries the pressure signal there.
     return zero;
+}
+
+static uint8_t* page_start(const uint8_t* byte, size_t page) NOEXCEPT
+{
+    const auto address = std::bit_cast<uintptr_t>(byte);
+    return std::bit_cast<uint8_t*>(address - (address % page));
+}
+
+bool resident(const data_slab& region) NOEXCEPT
+{
+    const auto page = page_size();
+    if (region.empty() || is_zero(page))
+        return true;
+
+    const auto in_core = [page](const uint8_t* byte) NOEXCEPT
+    {
+#if defined(HAVE_LINUX)
+        unsigned char state{};
+#else
+        char state{};
+#endif
+        return !is_zero(::mincore(page_start(byte, page), page, &state)) ||
+            is_nonzero(state & 1);
+    };
+
+    return in_core(region.begin()) && in_core(std::prev(region.end()));
+}
+
+void prefetch(const std::span<const data_slab>& regions) NOEXCEPT
+{
+    const auto page = page_size();
+    if (is_zero(page))
+        return;
+
+    for (const auto& region: regions)
+    {
+        if (region.empty())
+            continue;
+
+        const auto start = page_start(region.begin(), page);
+        const auto bytes = sign_cast<size_t>(std::distance(start, region.end()));
+#if defined(HAVE_LINUX)
+        // Linux reads at most the device readahead window per advice.
+        constexpr auto window = power2<size_t>(17u);
+        for (size_t offset{}; offset < bytes; offset += window)
+            ::madvise(std::next(start, offset), std::min(window,
+                bytes - offset), MADV_WILLNEED);
+#else
+        ::madvise(start, bytes, MADV_WILLNEED);
+#endif
+    }
 }
 
 #endif // HAVE_WINDOWS
