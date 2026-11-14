@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_POOL_INDEX_IPP
 #define LIBBITCOIN_DATABASE_QUERY_POOL_INDEX_IPP
 
-#include <bit>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
@@ -207,7 +206,6 @@ bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
     using link_t = algorithm::link_t;
     using edges_t = algorithm::edges_t;
     using totals_t = algorithm::totals_t;
-    static_assert(std::endian::native == std::endian::little);
 
     const auto rows = std::min
     ({

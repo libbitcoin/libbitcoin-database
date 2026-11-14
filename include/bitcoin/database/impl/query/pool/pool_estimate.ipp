@@ -74,7 +74,7 @@ code CLASS::get_pool_arrivals(pool_arrivals& out, size_t top, size_t count,
 
     for (size_t at{}; at < columns.cells.size(); ++at)
     {
-        const auto cell = columns.cells[at];
+        const auto cell = algorithm::from_column(columns.cells[at]);
         if (!algorithm::is_present(cell) && !algorithm::is_boundary(cell))
             continue;
 
@@ -87,7 +87,7 @@ code CLASS::get_pool_arrivals(pool_arrivals& out, size_t top, size_t count,
         if (height >= top || (top - height) > count)
             continue;
 
-        const auto& totals = columns.totals[at];
+        const auto totals = algorithm::from_column(columns.totals[at]);
         const auto rate = algorithm::fee_rate(totals, bytes_per_sigop);
         const auto size = algorithm::chargeable(totals, bytes_per_sigop);
         out.at(sub1(top - height)).push_back({ rate, size });

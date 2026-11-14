@@ -157,6 +157,19 @@ code CLASS::get_pool_graph(pool_graph& out,
         ++row;
     }
 
+    const auto encode = [](auto& column) NOEXCEPT
+    {
+        for (auto& value: column)
+            value = algorithm::to_column(value);
+    };
+
+    encode(out.cells);
+    encode(out.children);
+    encode(out.edges);
+    encode(out.totals);
+    encode(out.rows);
+    encode(out.siblings);
+    encode(out.rivals);
     out.graph =
     {
         table,
@@ -194,12 +207,17 @@ code CLASS::get_pool_coverage_(bool& out, const pool_graph& graph,
     // A candidate with an absent parent cannot be confirmed.
     for (const auto candidate: graph.candidates)
     {
-        const auto& slice = graph.edges.at(candidate - rows);
+        const auto offset = candidate - rows;
+        const auto slice = algorithm::from_column(graph.edges.at(offset));
         for (auto at = slice.first; at < slice.first + slice.count; ++at)
         {
-            const auto parent = graph.rows.at(at - inputs);
-            if (parent != none && parent < rows &&
-                g.table.cells[parent] == algorithm::absent)
+            const auto input = at - inputs;
+            const auto parent = algorithm::from_column(graph.rows.at(input));
+            if (parent == none || parent >= rows)
+                continue;
+
+            const auto cell = algorithm::from_column(g.table.cells[parent]);
+            if (cell == algorithm::absent)
                 return error::success;
         }
     }
@@ -211,7 +229,8 @@ code CLASS::get_pool_coverage_(bool& out, const pool_graph& graph,
     for (const auto candidate: graph.candidates)
     {
         const std::span<const link_t> self{ &candidate, one };
-        const auto& totals = graph.totals.at(candidate - rows);
+        const auto offset = candidate - rows;
+        const auto totals = algorithm::from_column(graph.totals.at(offset));
         const auto size = algorithm::chargeable(totals, bytes_per_sigop);
         const auto seen = [&](const auto& component) NOEXCEPT
         {
