@@ -256,8 +256,9 @@ template <typename Schema>
 struct value_head
   : public value_map<Schema>
 {
+    using base = value_map<Schema>;
     using value = typename Schema::value;
-    using value_map<Schema>::headmap;
+    using base::base;
 
     /// Replace the value.
     struct replace
