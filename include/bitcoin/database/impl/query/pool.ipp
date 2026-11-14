@@ -241,52 +241,6 @@ bool CLASS::get_confirmable_fees(fee_rates& out) const NOEXCEPT
     return true;
 }
 
-// The block's own txs are excluded.
-TEMPLATE
-bool CLASS::get_block_conflict_fees(fee_rates& out,
-    const header_link& link) const NOEXCEPT
-{
-    out.clear();
-    if (!store_.pool.enabled())
-        return true;
-
-    const auto txs = to_transactions(link);
-    if (txs.empty())
-        return false;
-
-    const std::unordered_set<tx_link::integer> block
-    {
-        txs.cbegin(), txs.cend()
-    };
-
-    std::vector<tx_link::integer> pending{};
-    std::unordered_set<tx_link::integer> visited{};
-    const auto add = [&](const tx_link& tx) NOEXCEPT
-    {
-        if (!block.contains(tx.value) && is_pooled(tx) &&
-            visited.insert(tx.value).second)
-            pending.push_back(tx.value);
-    };
-
-    for (const auto& point: to_points(txs))
-        for (const auto& in: to_spenders(get_point_key(point)))
-            add(to_input_tx(in));
-
-    while (!pending.empty())
-    {
-        const tx_link next{ pending.back() };
-        pending.pop_back();
-        if (!get_tx_fees(out.emplace_back(), next))
-            return false;
-
-        for (const auto& output: to_outputs(next))
-            for (const auto& in: to_spenders(output))
-                add(to_input_tx(in));
-    }
-
-    return true;
-}
-
 // protected
 // The first record of a tx is its last committed, so the tx of any earlier or
 // uncommitted record (its key does not resolve to it) is terminal.

@@ -592,11 +592,9 @@ public:
     bool get_tx_virtual_size(size_t& out, const tx_link& link) const NOEXCEPT;
     bool get_block_virtual_size(size_t& out, const header_link& link) const NOEXCEPT;
 
-    /// Fee rate tuples by tx, block or branch.
+    /// Fee rate tuples by tx or block.
     bool get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT;
     bool get_block_fees(fee_rates& out, const header_link& link) const NOEXCEPT;
-    bool get_branch_fees(const stopper& cancel, fee_rate_sets& out, size_t start,
-        size_t count) const NOEXCEPT;
 
     /// Merkle.
     /// -----------------------------------------------------------------------
@@ -766,10 +764,6 @@ public:
 
     /// Fee rate tuples of the confirmable txs.
     bool get_confirmable_fees(fee_rates& out) const NOEXCEPT;
-
-    /// Fee rate tuples of the pooled txs conflicted by the block.
-    bool get_block_conflict_fees(fee_rates& out,
-        const header_link& link) const NOEXCEPT;
 
     /// Setters.
     bool set_pooled(const tx_link& link, const transaction& tx,

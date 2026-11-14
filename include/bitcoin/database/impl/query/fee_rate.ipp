@@ -19,15 +19,14 @@
 #ifndef LIBBITCOIN_DATABASE_QUERY_FEE_RATE_IPP
 #define LIBBITCOIN_DATABASE_QUERY_FEE_RATE_IPP
 
-#include <atomic>
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
 
-// tx/block/branch fee rates
+// tx/block fee rates
 // ----------------------------------------------------------------------------
-// server estimator
+// server
 
 TEMPLATE
 bool CLASS::get_tx_fees(fee_rate& out, const tx_link& link) const NOEXCEPT
@@ -66,41 +65,6 @@ bool CLASS::get_block_fees(fee_rates& out,
             return false;
 
     return true;
-}
-
-TEMPLATE
-bool CLASS::get_branch_fees(const stopper& cancel, fee_rate_sets& out,
-    size_t start, size_t count) const NOEXCEPT
-{
-    out.clear();
-    if (is_zero(count))
-        return true;
-
-    if (system::is_add_overflow(start, sub1(count)) ||
-        (start + sub1(count) > get_top_confirmed()))
-        return false;
-
-    out.resize(count);
-    stopper fail{};
-    std::vector<size_t> it(count);
-    std::iota(it.begin(), it.end(), zero);
-    constexpr auto parallel = poolstl::execution::par;
-    constexpr auto relaxed = std::memory_order_relaxed;
-
-    // Parallel execution saves ~50%.
-    std::for_each(parallel, it.cbegin(), it.cend(), [&](size_t offset) NOEXCEPT
-    {
-        if (fail.load(relaxed))
-            return;
-
-        if (cancel.load(relaxed) || !get_block_fees(out.at(offset),
-            to_confirmed(start + offset)))
-            fail.store(true, relaxed);
-    });
-
-    const auto failed = fail.load(relaxed);
-    if (failed) out.clear();
-    return !failed;
 }
 
 } // namespace database
