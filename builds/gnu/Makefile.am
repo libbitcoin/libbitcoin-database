@@ -442,6 +442,7 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/memory/release.cpp \
     ${srcdir}/../../test/memory/utilities.cpp \
     ${srcdir}/../../test/mocks/blocks.cpp \
+    ${srcdir}/../../test/mocks/pooling.cpp \
     ${srcdir}/../../test/primitives/arrayhead.cpp \
     ${srcdir}/../../test/primitives/arraymap.cpp \
     ${srcdir}/../../test/primitives/body.cpp \
@@ -464,7 +465,6 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/query/initialize.cpp \
     ${srcdir}/../../test/query/locator.cpp \
     ${srcdir}/../../test/query/merkle.cpp \
-    ${srcdir}/../../test/query/pool.cpp \
     ${srcdir}/../../test/query/properties_block.cpp \
     ${srcdir}/../../test/query/properties_tx.cpp \
     ${srcdir}/../../test/query/sequences.cpp \
@@ -497,6 +497,13 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/query/navigate/navigate_hashmap.cpp \
     ${srcdir}/../../test/query/navigate/navigate_natural.cpp \
     ${srcdir}/../../test/query/navigate/navigate_reverse.cpp \
+    ${srcdir}/../../test/query/pool/pool_confirmable.cpp \
+    ${srcdir}/../../test/query/pool/pool_coverage.cpp \
+    ${srcdir}/../../test/query/pool/pool_estimate.cpp \
+    ${srcdir}/../../test/query/pool/pool_index.cpp \
+    ${srcdir}/../../test/query/pool/pool_reader.cpp \
+    ${srcdir}/../../test/query/pool/pool_template.cpp \
+    ${srcdir}/../../test/query/pool/pool_writer.cpp \
     ${srcdir}/../../test/store/store.cpp \
     ${srcdir}/../../test/store/store_backup.cpp \
     ${srcdir}/../../test/store/store_close.cpp \
