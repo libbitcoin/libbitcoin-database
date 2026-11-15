@@ -22,4 +22,10 @@ BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 // events enum
 
+BC_AUTO_TEST_CASE(store__events__each_event__named)
+{
+    const auto count = add1(static_cast<size_t>(event_t::recover_snapshot));
+    BC_REQUIRE_EQUAL(store<database::mmap>::events.size(), count);
+}
+
 BC_AUTO_TEST_SUITE_END()

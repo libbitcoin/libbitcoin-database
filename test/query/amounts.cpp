@@ -105,14 +105,14 @@ BC_AUTO_TEST_CASE(query_amounts__get_tx_fee__pooled_missing_prevouts__pooled_fee
     // Missing prevout fails value, but a pooled fee is returned directly.
     constexpr uint64_t expected_fee = 42;
     constexpr size_t expected_height = 7;
-    BC_CHECK(store.pool.put(tx_link{ 3 }, table::pool::record{ {}, { 0, expected_height, 0 }, expected_fee, {}, {} }));
+    size_t bytes{};
+    BC_CHECK(query.get_tx_virtual_size(bytes, 3));
+    BC_CHECK(test::put_pooled(store, tx_link{ 3 }, expected_fee, expected_height, system::possible_narrow_cast<uint32_t>(bytes)));
     BC_CHECK(!query.get_tx_value(out, 3));
     BC_CHECK(query.get_tx_fee(out, 3));
     BC_CHECK_EQUAL(out, expected_fee);
 
-    size_t bytes{};
     fee_rate rate{};
-    BC_CHECK(query.get_tx_virtual_size(bytes, 3));
     BC_CHECK(query.get_tx_fees(rate, 3));
     BC_CHECK_EQUAL(rate.fee, expected_fee);
     BC_CHECK_EQUAL(rate.bytes, bytes);

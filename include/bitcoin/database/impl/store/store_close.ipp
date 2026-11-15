@@ -78,6 +78,11 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     close(ec, state, table_t::state_table);
     close(ec, pool, table_t::pool_table);
     close(ec, spends, table_t::spends_table);
+    close(ec, pool_cells, table_t::pool_cells_table);
+    close(ec, pool_children, table_t::pool_children_table);
+    close(ec, spends_rows, table_t::spends_rows_table);
+    close(ec, spends_siblings, table_t::spends_siblings_table);
+    close(ec, spends_rivals, table_t::spends_rivals_table);
     close(ec, wtxid, table_t::wtxid_table);
 
     close(ec, filter_bk, table_t::filter_bk_table);

@@ -21,6 +21,7 @@
 
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
+#include <bitcoin/database/tables/caches/pool.hpp>
 #include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
@@ -112,6 +113,18 @@ struct spends
         const parents& parent_fks;
     };
 };
+
+/// spends_rows is the pool row spent by each pooled input (none if its
+/// parent is not pooled).
+using spends_rows = value_head<schema::spends_rows>;
+
+/// spends_siblings is the next input spending the same row as each pooled
+/// input (none at the end of the list).
+using spends_siblings = value_head<schema::spends_siblings>;
+
+/// spends_rivals is the next input spending the same point as each pooled
+/// input (a ring, none if sole).
+using spends_rivals = value_head<schema::spends_rivals>;
 
 } // namespace table
 } // namespace database

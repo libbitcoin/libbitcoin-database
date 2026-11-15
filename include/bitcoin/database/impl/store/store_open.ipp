@@ -96,6 +96,11 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, state, table_t::state_table);
     verify(ec, pool, table_t::pool_table);
     verify(ec, spends, table_t::spends_table);
+    verify(ec, pool_cells, table_t::pool_cells_table);
+    verify(ec, pool_children, table_t::pool_children_table);
+    verify(ec, spends_rows, table_t::spends_rows_table);
+    verify(ec, spends_siblings, table_t::spends_siblings_table);
+    verify(ec, spends_rivals, table_t::spends_rivals_table);
     verify(ec, wtxid, table_t::wtxid_table);
 
     verify(ec, filter_bk, table_t::filter_bk_table);

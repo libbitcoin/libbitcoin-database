@@ -125,6 +125,11 @@ CLASS::store(const settings& config) NOEXCEPT
     pool_body_(body(config.path, schema::caches::pool), body_settings(config, config.pool), sequential, staged),
     spends_head_(head(config.path / schema::dir::heads, schema::caches::spends), head_settings(config.spends), sequential),
     spends_body_(body(config.path, schema::caches::spends), body_settings(config, config.spends), sequential, staged),
+    pool_cells_head_(head(config.path / schema::dir::heads, schema::caches::pool_cells), head_settings(config.pool, one, advice::sequential), sequential, !staged, shared),
+    pool_children_head_(head(config.path / schema::dir::heads, schema::caches::pool_children), head_settings(config.pool, one, advice::sequential), sequential, !staged, shared),
+    spends_rows_head_(head(config.path / schema::dir::heads, schema::caches::spends_rows), head_settings(config.spends, one, advice::sequential), sequential, !staged, shared),
+    spends_siblings_head_(head(config.path / schema::dir::heads, schema::caches::spends_siblings), head_settings(config.spends, one, advice::sequential), sequential, !staged, shared),
+    spends_rivals_head_(head(config.path / schema::dir::heads, schema::caches::spends_rivals), head_settings(config.spends, one, advice::sequential), sequential, !staged, shared),
     wtxid_head_(head(config.path / schema::dir::heads, schema::indexes::wtxid), head_settings(config.wtxid), random),
     wtxid_body_(body(config.path, schema::indexes::wtxid), body_settings(config, config.wtxid), sequential, staged),
 
@@ -178,6 +183,11 @@ CLASS::store(const settings& config) NOEXCEPT
     state(state_head_, config.state.buckets),
     pool(pool_head_, pool_body_, config.pool.buckets, config.pool.expected_()),
     spends(spends_head_, spends_body_),
+    pool_cells(pool_cells_head_),
+    pool_children(pool_children_head_),
+    spends_rows(spends_rows_head_),
+    spends_siblings(spends_siblings_head_),
+    spends_rivals(spends_rivals_head_),
     wtxid(wtxid_head_, wtxid_body_, config.wtxid.buckets, config.wtxid.expected_()),
 
     filter_bk(filter_bk_head_, filter_bk_body_, config.filter_bk.buckets),
@@ -437,6 +447,11 @@ void CLASS::set_current(bool current) NOEXCEPT
     pool_body_.current(current);
     spends_head_.current(current);
     spends_body_.current(current);
+    pool_cells_head_.current(current);
+    pool_children_head_.current(current);
+    spends_rows_head_.current(current);
+    spends_siblings_head_.current(current);
+    spends_rivals_head_.current(current);
     wtxid_head_.current(current);
     wtxid_body_.current(current);
     filter_bk_head_.current(current);

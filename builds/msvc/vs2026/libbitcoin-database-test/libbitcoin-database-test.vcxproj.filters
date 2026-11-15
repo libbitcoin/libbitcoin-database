@@ -43,29 +43,32 @@
     <Filter Include="src\query\navigate">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\store">
+    <Filter Include="src\query\pool">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables">
+    <Filter Include="src\store">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\archives">
+    <Filter Include="src\tables">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\caches">
+    <Filter Include="src\tables\archives">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-00000000000F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\indexes">
+    <Filter Include="src\tables\caches">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tables\optional">
+    <Filter Include="src\tables\indexes">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\types">
+    <Filter Include="src\tables\optional">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\unspent">
+    <Filter Include="src\types">
       <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\unspent">
+      <UniqueIdentifier>{5C4DA53A-8C06-4DA6-0000-000000000005}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -103,6 +106,9 @@
       <Filter>src\memory</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\mocks\blocks.cpp">
+      <Filter>src\mocks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\mocks\pooling.cpp">
       <Filter>src\mocks</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\primitives\arrayhead.cpp">
@@ -252,8 +258,26 @@
     <ClCompile Include="..\..\..\..\test\query\navigate\navigate_reverse.cpp">
       <Filter>src\query\navigate</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\query\pool.cpp">
-      <Filter>src\query</Filter>
+    <ClCompile Include="..\..\..\..\test\query\pool\pool_confirmable.cpp">
+      <Filter>src\query\pool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\pool\pool_coverage.cpp">
+      <Filter>src\query\pool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\pool\pool_estimate.cpp">
+      <Filter>src\query\pool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\pool\pool_index.cpp">
+      <Filter>src\query\pool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\pool\pool_reader.cpp">
+      <Filter>src\query\pool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\pool\pool_template.cpp">
+      <Filter>src\query\pool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\pool\pool_writer.cpp">
+      <Filter>src\query\pool</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\properties_block.cpp">
       <Filter>src\query</Filter>
@@ -417,6 +441,9 @@
       <Filter>src\mocks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\test\mocks\map_store.hpp">
+      <Filter>src\mocks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\mocks\pooling.hpp">
       <Filter>src\mocks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\test\test.hpp">

@@ -25,10 +25,11 @@ using namespace system;
 using word = table::pool_word;
 using body_storages = test::chunk_storages<schema::pool::minrow,
     schema::pool_id0::size, schema::pool_id0::size,
-    schema::pool_id0::size, schema::pool_id0::size>;
+    schema::pool_id0::size, schema::pool_id0::size,
+    schema::pool_totals::size, schema::pool_edges::size>;
 static const body_storages::paths body_paths
 {
-    "state", "id0", "id1", "id2", "id3"
+    "state", "id0", "id1", "id2", "id3", "totals", "edges"
 };
 
 constexpr auto buckets = 8u;
@@ -42,9 +43,6 @@ const table::pool::record in1
         0x00667788, // height
         0x99aabbcc  // mtp
     },
-    0x1122334455667788, // fee
-    0x00345678,         // sigops
-    0x01020304,         // spends_fk
     0x5f6e7d8c          // time
 };
 const table::pool::record in2
@@ -55,9 +53,6 @@ const table::pool::record in2
         0x00332211, // height
         0xabcdef99  // mtp
     },
-    0x0000000000000042, // fee
-    0x00000055,         // sigops
-    0x0a0b0c0d,         // spends_fk
     0x00000042          // time
 };
 
@@ -100,9 +95,6 @@ BC_AUTO_TEST_CASE(pool__put__spine__expected_row)
         "44332211"         // flags
         "887766"           // height
         "ccbbaa99"         // mtp
-        "8877665544332211" // fee
-        "785634"           // sigops
-        "04030201"         // spends_fk
         "8c7d6e5f"         // time
     );
     BC_REQUIRE_EQUAL(body_store.buffers_.at(0), expected_row);
@@ -138,6 +130,67 @@ BC_AUTO_TEST_CASE(pool__put__columns_then_commit__expected)
     word out{};
     BC_REQUIRE(instance.id2.get(link, out));
     BC_REQUIRE_EQUAL(out.word, 0x1716151413121110u);
+}
+
+BC_AUTO_TEST_CASE(pool__put__scan_columns__expected)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    body_storages body_store{ body_paths };
+    table::pool instance{ head_store, body_store, buckets };
+    BC_REQUIRE(instance.create());
+
+    const auto link = instance.allocate(1);
+    BC_REQUIRE_EQUAL(link, 0u);
+
+    const table::pool_total total{ {}, 0x1122334455667788, 0x00000190, 0x00000005 };
+    const table::pool_edge edge{ {}, 0x01020304, 0x00000003 };
+    auto guard = instance.get_memory();
+    BC_REQUIRE(guard);
+    BC_REQUIRE(instance.totals.put(link, total));
+    BC_REQUIRE(instance.edges.put(link, edge));
+    guard.reset();
+
+    BC_REQUIRE(instance.put(link, key1, in1));
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(5), base16_chunk("88776655443322119001000005000000"));
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(6), base16_chunk("0403020103000000"));
+
+    table::pool_total total_out{};
+    table::pool_edge edge_out{};
+    BC_REQUIRE(instance.totals.get(link, total_out));
+    BC_REQUIRE(instance.edges.get(link, edge_out));
+    BC_REQUIRE(total_out == total);
+    BC_REQUIRE(edge_out == edge);
+}
+
+// value heads
+// ----------------------------------------------------------------------------
+
+BC_AUTO_TEST_CASE(pool_cells__set__two__expected)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    table::pool_cells instance{ head_store };
+    const auto expected = base16_chunk("00000000" "ffffff3f" "00000040");
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.set(1u, table::pool_cells::replace{ {}, 0x3fffffff }));
+    BC_REQUIRE(instance.set(2u, table::pool_cells::replace{ {}, 0x40000000 }));
+    BC_REQUIRE_EQUAL(instance.count(), 3u);
+    BC_REQUIRE_EQUAL(instance.at(0u), 0u);
+    BC_REQUIRE_EQUAL(instance.at(1u), 0x3fffffffu);
+    BC_REQUIRE_EQUAL(instance.at(2u), 0x40000000u);
+    BC_REQUIRE_EQUAL(head_file, expected);
+}
+
+BC_AUTO_TEST_CASE(pool_children__set__replace__expected)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file };
+    table::pool_children instance{ head_store };
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.set(0u, table::pool_children::replace{ {}, 0xffffffff }));
+    BC_REQUIRE(instance.set(0u, table::pool_children::replace{ {}, 0x00000007 }));
+    BC_REQUIRE_EQUAL(instance.count(), 1u);
+    BC_REQUIRE_EQUAL(instance.at(0u), 7u);
 }
 
 BC_AUTO_TEST_SUITE_END()

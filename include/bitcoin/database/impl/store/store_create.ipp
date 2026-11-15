@@ -136,6 +136,11 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     create(ec, pool_body_, table_t::pool_body);
     create(ec, spends_head_, table_t::spends_head);
     create(ec, spends_body_, table_t::spends_body);
+    create(ec, pool_cells_head_, table_t::pool_cells_head);
+    create(ec, pool_children_head_, table_t::pool_children_head);
+    create(ec, spends_rows_head_, table_t::spends_rows_head);
+    create(ec, spends_siblings_head_, table_t::spends_siblings_head);
+    create(ec, spends_rivals_head_, table_t::spends_rivals_head);
     create(ec, wtxid_head_, table_t::wtxid_head);
     create(ec, wtxid_body_, table_t::wtxid_body);
 
@@ -190,6 +195,11 @@ code CLASS::create_load(const event_handler& handler) NOEXCEPT
     populate(ec, state, table_t::state_table);
     populate(ec, pool, table_t::pool_table);
     populate(ec, spends, table_t::spends_table);
+    populate(ec, pool_cells, table_t::pool_cells_table);
+    populate(ec, pool_children, table_t::pool_children_table);
+    populate(ec, spends_rows, table_t::spends_rows_table);
+    populate(ec, spends_siblings, table_t::spends_siblings_table);
+    populate(ec, spends_rivals, table_t::spends_rivals_table);
     populate(ec, wtxid, table_t::wtxid_table);
 
     populate(ec, filter_bk, table_t::filter_bk_table);

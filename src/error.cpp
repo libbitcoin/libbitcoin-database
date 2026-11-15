@@ -95,6 +95,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     // states
     { block_unconfirmable, "block unconfirmable" },
     { unvalidated, "unvalidated" },
+    { pool_limit, "pool component limit" },
 
     // tx archive
     { tx_empty, "tx_empty" },

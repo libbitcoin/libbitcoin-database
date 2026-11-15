@@ -16,40 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_DATABASE_QUERY_POOL_IPP
-#define LIBBITCOIN_DATABASE_QUERY_POOL_IPP
+#ifndef LIBBITCOIN_DATABASE_QUERY_POOL_CONFIRMABLE_IPP
+#define LIBBITCOIN_DATABASE_QUERY_POOL_CONFIRMABLE_IPP
 
 #include <bitcoin/database/define.hpp>
 
 namespace libbitcoin {
 namespace database {
-
-// Transaction pool.
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-bool CLASS::is_pooled(const tx_link& link) const NOEXCEPT
-{
-    return store_.pool.enabled() && !store_.pool.first(link).is_terminal();
-}
-
-TEMPLATE
-bool CLASS::get_pooled_time(uint32_t& out, const tx_link& link) const NOEXCEPT
-{
-    if (!store_.pool.enabled())
-        return false;
-
-    const auto fk = store_.pool.first(link);
-    if (fk.is_terminal())
-        return false;
-
-    table::pool::get_time pooled{};
-    if (!store_.pool.get(fk, pooled))
-        return false;
-
-    out = pooled.time;
-    return true;
-}
 
 TEMPLATE
 bool CLASS::is_confirmable_tx(const tx_link& link) const NOEXCEPT
@@ -82,44 +55,6 @@ ins_link CLASS::find_confirmable_spender(const point& prevout) const NOEXCEPT
     }
 
     return {};
-}
-
-TEMPLATE
-code CLASS::get_pooled(pooled_tx& out, const tx_link& link,
-    const context& ctx) const NOEXCEPT
-{
-    using prevout = table::prevout::slab_get;
-    if (!store_.pool.enabled())
-        return error::unvalidated;
-
-    const auto fk = store_.pool.first(link);
-    if (fk.is_terminal())
-        return error::unvalidated;
-
-    table::pool::record valid{};
-    if (!store_.pool.get(fk, valid))
-        return error::integrity;
-
-    if (!is_sufficient(ctx, valid.ctx))
-        return error::unvalidated;
-
-    table::spends::get_refs::parents parents(out.prevouts.size());
-    table::spends::get_refs run{ {}, parents };
-    if (!store_.spends.get(valid.spends_fk, run))
-        return error::integrity;
-
-    out.fee = valid.fee;
-    out.sigops = valid.sigops;
-    std::ranges::transform(parents, out.prevouts.begin(),
-        [](auto merged) NOEXCEPT
-        {
-            return pooled_tx::prevout
-            {
-                prevout::output_tx_fk(merged), prevout::coinbase(merged)
-            };
-        });
-
-    return error::success;
 }
 
 // A terminal cursor starts at the first record, and the cursor is set to end
@@ -241,64 +176,6 @@ bool CLASS::get_confirmable_fees(fee_rates& out) const NOEXCEPT
     return true;
 }
 
-// protected
-// The first record of a tx is its last committed, so the tx of any earlier or
-// uncommitted record (its key does not resolve to it) is terminal.
-TEMPLATE
-tx_link CLASS::to_pool_tx(const pool_link& link) const NOEXCEPT
-{
-    const tx_link tx{ store_.pool.get_key(link) };
-    return store_.pool.first(tx) == link ? tx : tx_link{};
-}
-
-TEMPLATE
-bool CLASS::get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT
-{
-    size_t height{};
-    return get_pooled_fee(out, height, link);
-}
-
-TEMPLATE
-bool CLASS::get_pooled_fee(uint64_t& fee, size_t& height,
-    const tx_link& link) const NOEXCEPT
-{
-    if (!store_.pool.enabled())
-        return false;
-
-    const auto fk = store_.pool.first(link);
-    if (fk.is_terminal())
-        return false;
-
-    table::pool::get_fee pooled{};
-    if (!store_.pool.get(fk, pooled))
-        return false;
-
-    fee = pooled.fee;
-    height = pooled.height;
-    return true;
-}
-
-TEMPLATE
-hash_digest CLASS::get_pooled_wtxid(const table::pool::link& link) const NOEXCEPT
-{
-    using namespace system;
-    table::pool_word id0{}, id1{}, id2{}, id3{};
-    if (!store_.pool.id0.get(link, id0) ||
-        !store_.pool.id1.get(link, id1) ||
-        !store_.pool.id2.get(link, id2) ||
-        !store_.pool.id3.get(link, id3))
-        return {};
-
-    using lane_t = schema::pool::witness_lane;
-    using lanes_t = std_array<lane_t, schema::pool::witness_lanes>;
-    const auto words = to_little_endians(lanes_t
-    {
-        id0.word, id1.word, id2.word, id3.word
-    });
-
-    return array_cast<uint8_t>(words);
-}
-
 // A walk that finds no confirmed spend proves each tx visited confirmable.
 TEMPLATE
 bool CLASS::is_confirmable_tx(confirmables& memo,
@@ -365,8 +242,15 @@ bool CLASS::get_confirmable_totals(fee_totals& out, const tx_link& link,
         if (!get_tx_fees(rate, fk))
             return false;
 
+        // A confirmed relative is not pooled (and has no sigops total).
+        table::pool_total total{};
+        const auto row = store_.pool.first(tx_link{ fk });
+        if (!row.is_terminal() && !store_.pool.totals.get(row, total))
+            return false;
+
         ++out.count;
         out.bytes = ceilinged_add(out.bytes, rate.bytes);
+        out.sigops = ceilinged_add(out.sigops, total.sigops);
         out.fee = ceilinged_add(out.fee, rate.fee);
     }
 
@@ -399,94 +283,6 @@ tx_links CLASS::to_confirmable_relatives(const tx_link& link,
     }
 
     return out;
-}
-
-// writers
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
-    const chain_context& ctx, uint32_t time) NOEXCEPT
-{
-    return set_pooled(link, tx, context::from(ctx), time);
-}
-
-TEMPLATE
-bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
-    const context& ctx, uint32_t time) NOEXCEPT
-{
-    if (!store_.pool.enabled())
-        return true;
-
-    using namespace system;
-    using sigs = linkage<schema::sigops>;
-    const auto& ins = *tx.inputs_ptr();
-    tx_links prevouts(ins.size());
-
-    auto it = prevouts.begin();
-    for (const auto& in: ins)
-    {
-        tx_link parent{ in->metadata.parent_tx };
-        auto coinbase = in->metadata.coinbase;
-
-        // Prevouts populated from the tx's own package are not yet linked.
-        if (in->metadata.parent_tx == max_uint32)
-        {
-            if ((parent = to_tx(in->point().hash())).is_terminal())
-                return false;
-
-            coinbase = is_coinbase(parent);
-        }
-
-        *it++ = table::prevout::merge(coinbase, parent);
-    }
-
-    const auto bip16 = ctx.is_enabled(chain::flags::bip16_rule);
-    const auto bip141 = ctx.is_enabled(chain::flags::bip141_rule);
-    const auto sigops = tx.signature_operations(bip16, bip141);
-    using lane_t = schema::pool::witness_lane;
-    const auto hash = tx.get_hash(true);
-    const auto words = from_little_endians(array_cast<lane_t>(hash));
-
-    // ========================================================================
-    const auto scope = get_transactor();
-
-    // Clean single allocation failure (e.g. disk full).
-    table::spends::link first{};
-    if (!store_.spends.put_link(first, table::spends::put_refs{ {}, prevouts }))
-        return false;
-
-    auto& vtx = store_.pool;
-    const auto fk = vtx.allocate(1);
-    if (fk.is_terminal())
-        return false;
-
-    if (!store_.wtxid.put(fk, hash))
-        return false;
-
-    // Column puts are unguarded, the accessor guards their rows against remap.
-    using word = table::pool_word;
-    auto guard = vtx.get_memory();
-    if (!guard ||
-        !vtx.id0.put(fk, word{ {}, std::get<0>(words) }) ||
-        !vtx.id1.put(fk, word{ {}, std::get<1>(words) }) ||
-        !vtx.id2.put(fk, word{ {}, std::get<2>(words) }) ||
-        !vtx.id3.put(fk, word{ {}, std::get<3>(words) }))
-        return false;
-
-    guard.reset();
-
-    // Commit is deferred until the columns are set.
-    return vtx.put(fk, link, table::pool::record
-    {
-        {},
-        ctx,
-        tx.fee(),
-        possible_narrow_cast<sigs::integer>(sigops),
-        first,
-        time
-    });
-    // ========================================================================
 }
 
 } // namespace database

@@ -34,11 +34,12 @@ struct BCD_API fee_rate
 
 using fee_rates = std::vector<fee_rate>;
 
-/// Count, virtual size and fee of a set of txs.
+/// Count, virtual size, sigops and fee of a set of txs.
 struct BCD_API fee_totals
 {
     size_t count{};
     size_t bytes{};
+    size_t sigops{};
     uint64_t fee{};
 };
 

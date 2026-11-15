@@ -59,6 +59,10 @@ public:
     using chain_context = system::chain::context;
     using prevout_spends = table::prevout::spends;
     using short_id = system::chain::short_id::integer;
+    using pool_totals = system::pool::algorithm::totals_t;
+    using pool_projection = system::pool::algorithm::projection_t;
+    using pool_links = std::vector<system::pool::algorithm::link_t>;
+    using pool_arrivals = std::vector<system::pool::algorithm::takes_t>;
     using ec_compresseds = system::ec_compresseds;
     using ec_compressed = system::ec_compressed;
     using ec_signatures = system::ec_signatures;
@@ -771,6 +775,39 @@ public:
     bool set_pooled(const tx_link& link, const transaction& tx,
         const chain_context& ctx, uint32_t time) NOEXCEPT;
 
+    /// Rebuild the pool index heads from the pool (after compaction).
+    bool set_pool_index() NOEXCEPT;
+
+    /// Coverage.
+    /// -----------------------------------------------------------------------
+
+    /// True if the fee the package adds to the pool covers it at the rate.
+    code get_pool_coverage(bool& out,
+        const system::chain::transaction_cptrs& txs,
+        const std::vector<bool>& stored, const context& ctx, uint64_t rate,
+        uint32_t bytes_per_sigop, const pool_totals& limit,
+        size_t maximum_outcomes) const NOEXCEPT;
+
+    /// Template.
+    /// -----------------------------------------------------------------------
+
+    /// The pooled txs of a block template within the budget, parents first.
+    code get_pool_template(tx_links& out, pool_projection& projection,
+        const pool_totals& budget, size_t depth, uint32_t bytes_per_sigop,
+        size_t maximum_outcomes) const NOEXCEPT;
+
+    /// Estimate.
+    /// -----------------------------------------------------------------------
+
+    /// The projection extended to the count of blocks, or to exhaustion.
+    code get_pool_projection(pool_projection& projection, size_t count,
+        const pool_totals& budget, size_t depth, uint32_t bytes_per_sigop,
+        size_t maximum_outcomes) const NOEXCEPT;
+
+    /// Rate and size of the rows pooled at each height below top, top first.
+    code get_pool_arrivals(pool_arrivals& out, size_t top, size_t count,
+        uint32_t bytes_per_sigop) const NOEXCEPT;
+
     /// Batching.
     /// -----------------------------------------------------------------------
 
@@ -1136,7 +1173,71 @@ protected:
     bool get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT;
     bool get_pooled_fee(uint64_t& fee, size_t& height,
         const tx_link& link) const NOEXCEPT;
+    bool get_pooled_fee(uint64_t& fee, size_t& size, size_t& height,
+        const tx_link& link) const NOEXCEPT;
     hash_digest get_pooled_wtxid(const table::pool::link& link) const NOEXCEPT;
+
+    /// Accessors held across spans over the pool columns and index heads.
+    struct pool_guards
+    {
+        memory pool{};
+        memory cells{};
+        memory children{};
+        memory rows{};
+        memory siblings{};
+        memory rivals{};
+    };
+
+    /// The pool columns with the package's txs appended as candidates.
+    struct pool_graph
+    {
+        using algorithm = system::pool::algorithm;
+        pool_guards guards{};
+        pool_links cells{};
+        pool_links children{};
+        std::vector<algorithm::edges_t> edges{};
+        std::vector<algorithm::totals_t> totals{};
+        pool_links rows{};
+        pool_links siblings{};
+        pool_links rivals{};
+        std::vector<algorithm::bridge_t> child_bridges{};
+        std::vector<algorithm::bridge_t> rival_bridges{};
+        pool_links candidates{};
+        algorithm::graph_t graph{};
+        bool conflicted{};
+    };
+
+    /// The table columns and heads as spans (guards held).
+    bool get_pool_columns(system::pool::algorithm::columns_t& out,
+        pool_guards& guards) const NOEXCEPT;
+
+    /// The index of a pooled row and its inputs (parent rows and ring mates).
+    bool set_pool_links(system::pool::algorithm::link_t row,
+        system::pool::algorithm::link_t start,
+        const pool_links& parents, const pool_links& mates) NOEXCEPT;
+
+    /// The pooled spenders of the tx take its row as their parent row.
+    bool set_pool_adoption(system::pool::algorithm::link_t row,
+        const transaction& tx) NOEXCEPT;
+
+    /// The pool graph of the package.
+    code get_pool_graph(pool_graph& out,
+        const system::chain::transaction_cptrs& txs,
+        const std::vector<bool>& stored, const context& ctx) const NOEXCEPT;
+
+    /// The coverage of the package in the pool graph.
+    code get_pool_coverage_(bool& out, const pool_graph& graph,
+        uint64_t rate, uint32_t bytes_per_sigop, const pool_totals& limit,
+        size_t maximum_outcomes) const NOEXCEPT;
+
+    /// The input of a pooled spender of the point, and if it is confirmed spent.
+    bool get_pooled_spender(system::pool::algorithm::link_t& out,
+        bool& conflicted, const point& point, const tx_link& self,
+        bool archived) const NOEXCEPT;
+
+    /// The pool index transitions of the confirmed or reorganized block txs.
+    bool set_pool_block(const header_link& link, const tx_links& txs,
+        bool confirmed) NOEXCEPT;
 
     /// Confirmability memoized across the txs of a scan.
     bool is_confirmable_tx(confirmables& memo,
@@ -1464,6 +1565,14 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/navigate/navigate_natural.ipp>
 #include <bitcoin/database/impl/query/navigate/navigate_reverse.ipp>
 
+#include <bitcoin/database/impl/query/pool/pool_confirmable.ipp>
+#include <bitcoin/database/impl/query/pool/pool_coverage.ipp>
+#include <bitcoin/database/impl/query/pool/pool_estimate.ipp>
+#include <bitcoin/database/impl/query/pool/pool_index.ipp>
+#include <bitcoin/database/impl/query/pool/pool_reader.ipp>
+#include <bitcoin/database/impl/query/pool/pool_template.ipp>
+#include <bitcoin/database/impl/query/pool/pool_writer.ipp>
+
 #include <bitcoin/database/impl/query/amounts.ipp>
 #include <bitcoin/database/impl/query/confirmed.ipp>
 #include <bitcoin/database/impl/query/envelope_state.ipp>
@@ -1474,7 +1583,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/initialize.ipp>
 #include <bitcoin/database/impl/query/locator.ipp>
 #include <bitcoin/database/impl/query/merkle.ipp>
-#include <bitcoin/database/impl/query/pool.ipp>
 #include <bitcoin/database/impl/query/properties_block.ipp>
 #include <bitcoin/database/impl/query/properties_tx.ipp>
 #include <bitcoin/database/impl/query/query.ipp>

@@ -150,9 +150,19 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
         handler(event_t::prune_table, table_t::pool_body);
         handler(event_t::prune_table, table_t::spends_body);
         handler(event_t::prune_table, table_t::wtxid_body);
+        handler(event_t::prune_table, table_t::pool_cells_head);
+        handler(event_t::prune_table, table_t::pool_children_head);
+        handler(event_t::prune_table, table_t::spends_rows_head);
+        handler(event_t::prune_table, table_t::spends_siblings_head);
+        handler(event_t::prune_table, table_t::spends_rivals_head);
         return pool_body_.truncate(0)
             && spends_body_.truncate(0)
-            && wtxid_body_.truncate(0);
+            && wtxid_body_.truncate(0)
+            && pool_cells.truncate(0)
+            && pool_children.truncate(0)
+            && spends_rows.truncate(0)
+            && spends_siblings.truncate(0)
+            && spends_rivals.truncate(0);
     };
 
     const auto restart = [&]() NOEXCEPT -> code
@@ -302,6 +312,10 @@ code CLASS::compact(const event_handler& handler, const Reset& reset) NOEXCEPT
         !copy_pool(pool, spends, empty_pool, empty_spends, all, indexed)))
         ec = error::prune_table;
 
+    query<CLASS> writer{ *this };
+    if (!ec && !writer.set_pool_index())
+        ec = error::prune_table;
+
     const auto close = [&](auto& storage, table_t table) NOEXCEPT
     {
         handler(event_t::unload_file, table);
@@ -346,14 +360,13 @@ bool CLASS::is_retained(bool& out, const tx_link& link,
         if (fk.is_terminal())
             return true;
 
-        table::transaction::only tx_record{};
-        table::pool::record record{};
-        if (!tx.get(next, tx_record) || !pool.get(fk, record))
+        table::pool_edge edge{};
+        if (!pool.edges.get(fk, edge))
             return false;
 
-        parents spent(tx_record.ins_count);
+        parents spent(edge.inputs);
         table::spends::get_refs run{ {}, spent };
-        if (!spends.get(record.spends_fk, run))
+        if (!spends.get(edge.spends_fk, run))
             return false;
 
         for (const auto merged: spent)
@@ -392,23 +405,25 @@ bool CLASS::copy_pool(table::pool& to, table::spends& to_spends,
             continue;
 
         word id0{}, id1{}, id2{}, id3{};
+        table::pool_total total{};
+        table::pool_edge edge{};
         table::pool::record record{};
         if (!from.get(link, record) ||
             !from.id0.get(link, id0) || !from.id1.get(link, id1) ||
-            !from.id2.get(link, id2) || !from.id3.get(link, id3))
+            !from.id2.get(link, id2) || !from.id3.get(link, id3) ||
+            !from.totals.get(link, total) || !from.edges.get(link, edge))
             return false;
 
         bool kept{};
-        table::transaction::only tx_record{};
-        if (!tx.get(tx_fk, tx_record) || !keep(kept, tx_fk))
+        if (!keep(kept, tx_fk))
             return false;
 
         if (!kept)
             continue;
 
-        parents spent(tx_record.ins_count);
+        parents spent(edge.inputs);
         table::spends::get_refs run{ {}, spent };
-        if (!from_spends.get(record.spends_fk, run))
+        if (!from_spends.get(edge.spends_fk, run))
             return false;
 
         table::spends::link first{};
@@ -428,16 +443,17 @@ bool CLASS::copy_pool(table::pool& to, table::spends& to_spends,
             return false;
 
         // Column puts are unguarded, the accessor guards their rows.
+        edge.spends_fk = first;
         auto guard = to.get_memory();
         if (!guard ||
             !to.id0.put(target, id0) || !to.id1.put(target, id1) ||
-            !to.id2.put(target, id2) || !to.id3.put(target, id3))
+            !to.id2.put(target, id2) || !to.id3.put(target, id3) ||
+            !to.totals.put(target, total) || !to.edges.put(target, edge))
             return false;
 
         guard.reset();
 
         // Commit is deferred until the columns are set.
-        record.spends_fk = first;
         if (!to.put(target, tx_fk, record))
             return false;
     }

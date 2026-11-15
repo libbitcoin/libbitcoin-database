@@ -73,7 +73,8 @@ namespace schema {
 /// 4.0.27.0 Bip9 active checkpoints removed from the envelope.
 /// 4.0.28.0 Fork activation heights in the envelope.
 /// 4.0.29.0 Fork activation groups in the envelope.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 29, 0 };
+/// 4.0.30.0 Pool totals and edges columns, pool index heads.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 30, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
@@ -469,16 +470,13 @@ struct pool
         schema::flags +         // context.flags
         schema::height_ +       // context.height
         sizeof(uint32_t) +      // context.mtp
-        sizeof(uint64_t) +      // fee (could narrow to 3, skipping larger)
-        schema::sigops +        // sigops (could narrow to 2, skipping larger)
-        schema::spends_ +       // spends->spends (first of tx inputs)
         sizeof(uint32_t);       // time
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = link::size;
     static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 30u);
-    static_assert(minrow == 38u);
+    static_assert(minsize == 15u);
+    static_assert(minrow == 23u);
     static_assert(link::size == 4u);
     static_assert(cell == 4u);
     static_assert(witness_lanes * sizeof(witness_lane) == schema::hash);
@@ -491,6 +489,42 @@ TABLE_COLUMN(caches, pool_id1, sizeof(pool::witness_lane));
 TABLE_COLUMN(caches, pool_id2, sizeof(pool::witness_lane));
 TABLE_COLUMN(caches, pool_id3, sizeof(pool::witness_lane));
 static_assert(is_same_type<pool_id0::link, pool::link>);
+
+// pool scan columns, word aligned (fee, size, sigops; spends, inputs).
+TABLE_COLUMN(caches, pool_totals, sizeof(uint64_t) + two * sizeof(uint32_t));
+TABLE_COLUMN(caches, pool_edges, schema::spends_ + sizeof(uint32_t));
+static_assert(pool_totals::size == 16u);
+static_assert(pool_edges::size == 8u);
+
+// headmap (values), indexed by pool link: state and label of the row.
+struct pool_cells
+{
+    static constexpr size_t pk = schema::pool_;
+    using link = linkage<pk, to_bits(pk)>;
+    using value = uint32_t;
+    static constexpr size_t minsize = sizeof(value);
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static constexpr size_t cell = minsize;
+    static_assert(link::size == 4u);
+    static_assert(cell == 4u);
+    bool operator==(const pool_cells&) const NOEXCEPT = default;
+};
+
+// headmap (values), indexed by pool link: first input spending the row.
+struct pool_children
+{
+    static constexpr size_t pk = schema::pool_;
+    using link = linkage<pk, to_bits(pk)>;
+    using value = uint32_t;
+    static constexpr size_t minsize = sizeof(value);
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static constexpr size_t cell = minsize;
+    static_assert(link::size == 4u);
+    static_assert(cell == 4u);
+    bool operator==(const pool_children&) const NOEXCEPT = default;
+};
 
 // record hashmap (sk:0), records aligned by link with the pool.
 struct wtxid
@@ -528,6 +562,52 @@ struct spends
     static_assert(link::size == 4u);
     bool operator==(const spends&) const NOEXCEPT = default;
 };
+
+// headmaps (values), indexed by spends link: the pool row spent by the
+// input, the next input spending the same row, and the next input spending
+// the same point.
+struct spends_rows
+{
+    static constexpr size_t pk = schema::spends_;
+    using link = linkage<pk, to_bits(pk)>;
+    using value = uint32_t;
+    static constexpr size_t minsize = sizeof(value);
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static constexpr size_t cell = minsize;
+    static_assert(link::size == 4u);
+    static_assert(cell == 4u);
+    bool operator==(const spends_rows&) const NOEXCEPT = default;
+};
+
+struct spends_siblings
+{
+    static constexpr size_t pk = schema::spends_;
+    using link = linkage<pk, to_bits(pk)>;
+    using value = uint32_t;
+    static constexpr size_t minsize = sizeof(value);
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static constexpr size_t cell = minsize;
+    static_assert(link::size == 4u);
+    static_assert(cell == 4u);
+    bool operator==(const spends_siblings&) const NOEXCEPT = default;
+};
+
+struct spends_rivals
+{
+    static constexpr size_t pk = schema::spends_;
+    using link = linkage<pk, to_bits(pk)>;
+    using value = uint32_t;
+    static constexpr size_t minsize = sizeof(value);
+    static constexpr size_t minrow = minsize;
+    static constexpr size_t size = minsize;
+    static constexpr size_t cell = minsize;
+    static_assert(link::size == 4u);
+    static_assert(cell == 4u);
+    bool operator==(const spends_rivals&) const NOEXCEPT = default;
+};
+static_assert(is_same_type<spends::link, pool::link>);
 
 /// Optional tables.
 /// ---------------------------------------------------------------------------

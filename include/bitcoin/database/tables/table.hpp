@@ -121,6 +121,16 @@ enum class table_t
     wtxid_table,
     wtxid_head,
     wtxid_body,
+    pool_cells_table,
+    pool_cells_head,
+    pool_children_table,
+    pool_children_head,
+    spends_rows_table,
+    spends_rows_head,
+    spends_siblings_table,
+    spends_siblings_head,
+    spends_rivals_table,
+    spends_rivals_head,
 
     /// Optionals.
     filter_bk_table,

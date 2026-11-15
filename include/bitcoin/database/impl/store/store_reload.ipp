@@ -109,6 +109,11 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
     reload(ec, pool_head_, table_t::pool_head);
     reload(ec, pool_body_, table_t::pool_body);
     reload(ec, spends_head_, table_t::spends_head);
+    reload(ec, pool_cells_head_, table_t::pool_cells_head);
+    reload(ec, pool_children_head_, table_t::pool_children_head);
+    reload(ec, spends_rows_head_, table_t::spends_rows_head);
+    reload(ec, spends_siblings_head_, table_t::spends_siblings_head);
+    reload(ec, spends_rivals_head_, table_t::spends_rivals_head);
     reload(ec, spends_body_, table_t::spends_body);
     reload(ec, wtxid_head_, table_t::wtxid_head);
     reload(ec, wtxid_body_, table_t::wtxid_body);

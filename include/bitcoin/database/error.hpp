@@ -101,6 +101,7 @@ enum error_t : uint8_t
     /// validation/confirmation
     block_unconfirmable,
     unvalidated,
+    pool_limit,
 
     /// tx archive
     tx_empty,

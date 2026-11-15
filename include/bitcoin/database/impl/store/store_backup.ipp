@@ -74,6 +74,11 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
     backup(ec, state, table_t::state_table);
     backup(ec, pool, table_t::pool_table, prune);
     backup(ec, spends, table_t::spends_table, prune);
+    backup(ec, pool_cells, table_t::pool_cells_table, prune);
+    backup(ec, pool_children, table_t::pool_children_table, prune);
+    backup(ec, spends_rows, table_t::spends_rows_table, prune);
+    backup(ec, spends_siblings, table_t::spends_siblings_table, prune);
+    backup(ec, spends_rivals, table_t::spends_rivals_table, prune);
     backup(ec, wtxid, table_t::wtxid_table, prune);
 
     backup(ec, filter_bk, table_t::filter_bk_table);

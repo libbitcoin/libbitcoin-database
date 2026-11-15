@@ -285,6 +285,22 @@ public:
 
 using query_accessor = query<store<chunk_storages>>;
 
+inline bool put_pooled(chunk_store& store, const tx_link& tx, uint64_t fee,
+    size_t height, uint32_t bytes=0) NOEXCEPT
+{
+    const auto link = store.pool.allocate(1);
+    const table::pool_total total{ {}, fee, bytes, 0 };
+    auto guard = store.pool.get_memory();
+    if (!guard || !store.pool.totals.put(link, total))
+        return false;
+
+    guard.reset();
+    using height_t = database::context::height_t::integer;
+    const auto high = system::possible_narrow_cast<height_t>(height);
+    const table::pool::record record{ {}, { 0, high, 0 }, 0 };
+    return store.pool.put(link, tx, record);
+}
+
 } // namespace test
 
 #endif

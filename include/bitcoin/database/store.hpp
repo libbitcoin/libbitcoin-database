@@ -291,6 +291,13 @@ protected:
     table::pool_storage<Storage> pool_body_;
     Storage<one> spends_head_;
     Storage<one> spends_body_;
+
+    // headmaps (pool index)
+    Storage<one> pool_cells_head_;
+    Storage<one> pool_children_head_;
+    Storage<one> spends_rows_head_;
+    Storage<one> spends_siblings_head_;
+    Storage<one> spends_rivals_head_;
     Storage<one> wtxid_head_;
     Storage<one> wtxid_body_;
 
@@ -424,6 +431,11 @@ public:
     table::state state;
     table::pool pool;
     table::spends spends;
+    table::pool_cells pool_cells;
+    table::pool_children pool_children;
+    table::spends_rows spends_rows;
+    table::spends_siblings spends_siblings;
+    table::spends_rivals spends_rivals;
     table::wtxid wtxid;
 
     /// Optionals.

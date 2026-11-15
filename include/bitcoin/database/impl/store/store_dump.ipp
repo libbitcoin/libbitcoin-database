@@ -74,6 +74,11 @@ code CLASS::dump(const path& folder,
     dump(ec, state_head_, schema::indexes::state, table_t::state_head);
     dump(ec, pool_head_, schema::caches::pool, table_t::pool_head);
     dump(ec, spends_head_, schema::caches::spends, table_t::spends_head);
+    dump(ec, pool_cells_head_, schema::caches::pool_cells, table_t::pool_cells_head);
+    dump(ec, pool_children_head_, schema::caches::pool_children, table_t::pool_children_head);
+    dump(ec, spends_rows_head_, schema::caches::spends_rows, table_t::spends_rows_head);
+    dump(ec, spends_siblings_head_, schema::caches::spends_siblings, table_t::spends_siblings_head);
+    dump(ec, spends_rivals_head_, schema::caches::spends_rivals, table_t::spends_rivals_head);
     dump(ec, wtxid_head_, schema::indexes::wtxid, table_t::wtxid_head);
 
     dump(ec, filter_bk_head_, schema::optionals::filter_bk, table_t::filter_bk_head);

@@ -96,6 +96,11 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     unload(ec, pool_head_, table_t::pool_head);
     unload(ec, pool_body_, table_t::pool_body);
     unload(ec, spends_head_, table_t::spends_head);
+    unload(ec, pool_cells_head_, table_t::pool_cells_head);
+    unload(ec, pool_children_head_, table_t::pool_children_head);
+    unload(ec, spends_rows_head_, table_t::spends_rows_head);
+    unload(ec, spends_siblings_head_, table_t::spends_siblings_head);
+    unload(ec, spends_rivals_head_, table_t::spends_rivals_head);
     unload(ec, spends_body_, table_t::spends_body);
     unload(ec, wtxid_head_, table_t::wtxid_head);
     unload(ec, wtxid_body_, table_t::wtxid_body);
@@ -170,6 +175,11 @@ code CLASS::unload_close(const event_handler& handler) NOEXCEPT
     close(ec, pool_head_, table_t::pool_head);
     close(ec, pool_body_, table_t::pool_body);
     close(ec, spends_head_, table_t::spends_head);
+    close(ec, pool_cells_head_, table_t::pool_cells_head);
+    close(ec, pool_children_head_, table_t::pool_children_head);
+    close(ec, spends_rows_head_, table_t::spends_rows_head);
+    close(ec, spends_siblings_head_, table_t::spends_siblings_head);
+    close(ec, spends_rivals_head_, table_t::spends_rivals_head);
     close(ec, spends_body_, table_t::spends_body);
     close(ec, wtxid_head_, table_t::wtxid_head);
     close(ec, wtxid_body_, table_t::wtxid_body);

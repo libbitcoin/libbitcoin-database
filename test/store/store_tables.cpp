@@ -22,4 +22,10 @@ BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
 
 // tables enum
 
+BC_AUTO_TEST_CASE(store__tables__each_table__named)
+{
+    const auto count = add1(static_cast<size_t>(table_t::filter_tx_body));
+    BC_REQUIRE_EQUAL(store<database::mmap>::tables.size(), count);
+}
+
 BC_AUTO_TEST_SUITE_END()

@@ -168,6 +168,11 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         restore(ec, state, table_t::state_table);
         restore(ec, pool, table_t::pool_table);
         restore(ec, spends, table_t::spends_table);
+        restore(ec, pool_cells, table_t::pool_cells_table);
+        restore(ec, pool_children, table_t::pool_children_table);
+        restore(ec, spends_rows, table_t::spends_rows_table);
+        restore(ec, spends_siblings, table_t::spends_siblings_table);
+        restore(ec, spends_rivals, table_t::spends_rivals_table);
         restore(ec, wtxid, table_t::wtxid_table);
 
         restore(ec, filter_bk, table_t::filter_bk_table);

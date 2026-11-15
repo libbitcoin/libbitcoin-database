@@ -107,7 +107,14 @@ namespace caches
     constexpr auto pool_id1 = "id1"_t;
     constexpr auto pool_id2 = "id2"_t;
     constexpr auto pool_id3 = "id3"_t;
+    constexpr auto pool_totals = "totals"_t;
+    constexpr auto pool_edges = "edges"_t;
+    constexpr auto pool_cells = "cache_pool_cells";
+    constexpr auto pool_children = "cache_pool_children";
     constexpr auto spends = "cache_spends";
+    constexpr auto spends_rows = "cache_spends_rows";
+    constexpr auto spends_siblings = "cache_spends_siblings";
+    constexpr auto spends_rivals = "cache_spends_rivals";
 }
 
 namespace optionals
