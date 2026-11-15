@@ -61,9 +61,9 @@ BC_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__empty__empty)
     test::query_accessor query{ store };
 
     header_links links{};
-    bool use_gpu{ true };
+    bool used_gpu{};
     BC_REQUIRE_EQUAL(query.ecdsa0_records(), 0u);
-    BC_REQUIRE(query.verify_ecdsa_signatures({}, use_gpu, links, false));
+    BC_REQUIRE(query.verify_ecdsa_signatures({}, used_gpu, links, false));
     BC_REQUIRE(links.empty());
 }
 
@@ -75,9 +75,9 @@ BC_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__one_valid__empty)
     BC_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 42, false));
 
     header_links links{};
-    bool use_gpu{ true };
+    bool used_gpu{};
     BC_REQUIRE_EQUAL(query.ecdsa0_records(), 1u);
-    BC_REQUIRE(query.verify_ecdsa_signatures({}, use_gpu, links, false));
+    BC_REQUIRE(query.verify_ecdsa_signatures({}, used_gpu, links, false));
     BC_REQUIRE(links.empty());
 }
 
@@ -89,11 +89,16 @@ BC_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__one_valid_without_
     BC_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 42, false));
 
     header_links links{};
-    bool use_gpu{ false };
+    bool used_gpu{ true };
     BC_REQUIRE_EQUAL(query.ecdsa0_records(), 1u);
-    BC_REQUIRE(query.verify_ecdsa_signatures({}, use_gpu, links, false));
+
+    system::batched::accelerate(false);
+    const auto verified = query.verify_ecdsa_signatures({}, used_gpu, links, false);
+    system::batched::accelerate(true);
+
+    BC_REQUIRE(verified);
     BC_REQUIRE(links.empty());
-    BC_REQUIRE(!use_gpu);
+    BC_REQUIRE(!used_gpu);
 }
 
 BC_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__one_invalid__expected_link)
@@ -105,9 +110,9 @@ BC_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__one_invalid__expec
     BC_REQUIRE(set_one(query, sighash_bad, ecdsa_compressed, ecdsa_signature, expected, false));
 
     header_links links{};
-    bool use_gpu{ true };
+    bool used_gpu{};
     BC_REQUIRE_EQUAL(query.ecdsa0_records(), 1u);
-    BC_REQUIRE(query.verify_ecdsa_signatures({}, use_gpu, links, false));
+    BC_REQUIRE(query.verify_ecdsa_signatures({}, used_gpu, links, false));
     BC_REQUIRE_EQUAL(links.size(), 1u);
     BC_REQUIRE_EQUAL(links.front(), expected);
 }
@@ -130,9 +135,9 @@ BC_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__various__expected_
     BC_REQUIRE(set_one(query, ecdsa_sighash, ecdsa_compressed, ecdsa_signature, 6, false));
 
     header_links links{};
-    bool use_gpu{ true };
+    bool used_gpu{};
     BC_REQUIRE_EQUAL(query.ecdsa0_records(), 8u);
-    BC_REQUIRE(query.verify_ecdsa_signatures({}, use_gpu, links, false));
+    BC_REQUIRE(query.verify_ecdsa_signatures({}, used_gpu, links, false));
     BC_REQUIRE_EQUAL(links.size(), 2u);
 
     const auto back = links.back();
@@ -152,10 +157,10 @@ BC_AUTO_TEST_CASE(query_batch_ecdsa__verify_ecdsa_signatures__banks__independent
     BC_REQUIRE_EQUAL(query.ecdsa_records(true), 1u);
 
     header_links links{};
-    bool use_gpu{ true };
-    BC_REQUIRE(query.verify_ecdsa_signatures({}, use_gpu, links, false));
+    bool used_gpu{};
+    BC_REQUIRE(query.verify_ecdsa_signatures({}, used_gpu, links, false));
     BC_REQUIRE(links.empty());
-    BC_REQUIRE(query.verify_ecdsa_signatures({}, use_gpu, links, true));
+    BC_REQUIRE(query.verify_ecdsa_signatures({}, used_gpu, links, true));
     BC_REQUIRE_EQUAL(links.size(), 1u);
     BC_REQUIRE_EQUAL(links.front(), expected);
 

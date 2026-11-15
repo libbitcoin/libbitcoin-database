@@ -562,7 +562,7 @@ bool CLASS::get_prevouts_(data_chunk& prevouts, std::vector<bool>& selected,
 // cpu), and each tx is then published by its correlate
 // (an invalid tx with no outputs).
 TEMPLATE
-code CLASS::compute_silents(const stopper& cancel, bool& use_gpu,
+code CLASS::compute_silents(const stopper& cancel, bool& used_gpu,
     bool bank) NOEXCEPT
 {
     using namespace system;
@@ -644,7 +644,7 @@ code CLASS::compute_silents(const stopper& cancel, bool& use_gpu,
     // Write is concurrent with gpu, after cpu.
     data_chunk valid(txs);
     const silent::batch in{ { sums, txs }, { hashes, txs } };
-    if (!silent::batch::compute(cancel, use_gpu, points, valid, in, write))
+    if (!silent::batch::compute(cancel, used_gpu, points, valid, in, write))
         return error::query_canceled;
 
     if (failed.load())

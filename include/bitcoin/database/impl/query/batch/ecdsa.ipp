@@ -33,7 +33,7 @@ size_t CLASS::ecdsa_records(bool bank) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::verify_ecdsa_signatures(const stopper& cancel, bool& use_gpu,
+bool CLASS::verify_ecdsa_signatures(const stopper& cancel, bool& used_gpu,
     header_links& links, bool bank) NOEXCEPT
 {
     auto& bank_table = store_.ecdsa_bank(bank);
@@ -63,7 +63,7 @@ bool CLASS::verify_ecdsa_signatures(const stopper& cancel, bool& use_gpu,
     };
 
     // False return only implies canceled.
-    links = ecdsa::batch::verify(cancel, use_gpu, batch);
+    links = ecdsa::batch::verify(cancel, used_gpu, batch);
     return !cancel;
 }
 
