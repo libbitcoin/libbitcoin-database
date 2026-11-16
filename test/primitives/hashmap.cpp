@@ -1246,6 +1246,19 @@ BC_AUTO_TEST_CASE(hashmap__record_clear__populated_head__cleared)
     BC_REQUIRE(!instance.get_fault());
 }
 
+BC_AUTO_TEST_CASE(hashmap__record_drop__populated__empties_head_and_body)
+{
+    data_chunk head(head_size, 0x00);
+    auto body = base16_chunk("1122334455667788990011223344556677889911223344556677889900112233445566778899");
+    test::chunk_storage head_store{ head, test::terminal_fill };
+    test::chunk_storage body_store{ body };
+    record_table instance{ head_store, body_store, buckets };
+    BC_REQUIRE(instance.drop());
+    BC_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BC_REQUIRE_EQUAL(instance.body_size(), 0u);
+    BC_REQUIRE(!instance.get_fault());
+}
+
 BC_AUTO_TEST_CASE(hashmap__record_body_count__empty_restore__truncates)
 {
     auto head = base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");

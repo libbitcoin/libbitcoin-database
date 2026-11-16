@@ -142,6 +142,9 @@ public:
     /// Unload and load, causing underyling map(s) to shrink to logical size.
     code shrink() NOEXCEPT override;
 
+    /// Unload and load, a body staged or else as a shared (rewritable) map.
+    code restage(bool staged) NOEXCEPT override;
+
     /// Dump current logical map to a new file in path, must not exist.
     code dump(const path& path) const NOEXCEPT override;
 
@@ -297,7 +300,7 @@ private:
     template <size_t... Index>
     bool flush_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
-    bool map_all_(std::index_sequence<Index...>) NOEXCEPT;
+    bool map_all_(std::index_sequence<Index...>, bool staged=true) NOEXCEPT;
     template <size_t... Index>
     bool unmap_all_(std::index_sequence<Index...>) NOEXCEPT;
     template <size_t... Index>
@@ -435,10 +438,13 @@ private:
     const advice access_;
     const bool zeroed_;
     const bool random_;
-    const bool staged_;
-    const bool head_shared_;
+    const bool body_;
     const bool managed_;
     const std::optional<uint8_t> fill_;
+
+    // These are set at map and constant while loaded.
+    bool staged_;
+    bool head_shared_;
 
     // These are thread safe (atomic).
     std::atomic<error::error_t> error_{ error::success };

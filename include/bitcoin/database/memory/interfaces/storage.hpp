@@ -81,6 +81,9 @@ public:
     /// Unload and load, causing underyling map to shrink to logical size.
     virtual code shrink() NOEXCEPT = 0;
 
+    /// Unload and load, a body staged or else as a shared (rewritable) map.
+    virtual code restage(bool staged) NOEXCEPT = 0;
+
     /// Dump current logical map to a new file in path, must not exist.
     virtual code dump(const path& path) const NOEXCEPT = 0;
 

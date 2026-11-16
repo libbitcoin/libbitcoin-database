@@ -498,9 +498,9 @@ BC_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row__scanned)
 
     size_t rows{};
     const stopper cancel{};
-    bool use_gpu{ true };
+    bool used_gpu{};
     BC_REQUIRE(query.set_silents(rows, link, block, false));
-    BC_REQUIRE_EQUAL(query.compute_silents(cancel, use_gpu, false), database::error::success);
+    BC_REQUIRE_EQUAL(query.compute_silents(cancel, used_gpu, false), database::error::success);
     BC_REQUIRE_EQUAL(query.scan_records(), 1u);
 
     std::vector<tx_link_t> links{};
@@ -529,11 +529,16 @@ BC_AUTO_TEST_CASE(query_batch_silent__compute_silents__banked_row_without_gpu__s
 
     size_t rows{};
     const stopper cancel{};
-    bool use_gpu{ false };
+    bool used_gpu{ true };
     BC_REQUIRE(query.set_silents(rows, link, block, false));
-    BC_REQUIRE_EQUAL(query.compute_silents(cancel, use_gpu, false), database::error::success);
+
+    system::batched::accelerate(false);
+    const auto computed = query.compute_silents(cancel, used_gpu, false);
+    system::batched::accelerate(true);
+
+    BC_REQUIRE_EQUAL(computed, database::error::success);
     BC_REQUIRE_EQUAL(query.scan_records(), 1u);
-    BC_REQUIRE(!use_gpu);
+    BC_REQUIRE(!used_gpu);
 
     std::vector<tx_link_t> links{};
     const auto handler = [&](const code&, tx_link_t link, const ec_compressed&) NOEXCEPT
@@ -555,8 +560,8 @@ BC_AUTO_TEST_CASE(query_batch_silent__compute_silents__empty__success)
     BC_REQUIRE(query.initialize(test::genesis));
 
     const stopper cancel{};
-    bool use_gpu{ true };
-    BC_REQUIRE_EQUAL(query.compute_silents(cancel, use_gpu, false), database::error::success);
+    bool used_gpu{};
+    BC_REQUIRE_EQUAL(query.compute_silents(cancel, used_gpu, false), database::error::success);
     BC_REQUIRE_EQUAL(query.scan_records(), 0u);
 }
 
@@ -595,10 +600,10 @@ BC_AUTO_TEST_CASE(query_batch_silent__compute_silents__presilent_banked_row__sca
 
     size_t rows{};
     const stopper cancel{};
-    bool use_gpu{ true };
+    bool used_gpu{};
     BC_REQUIRE(query.set_silents(rows, link, block, false));
     BC_REQUIRE_EQUAL(query.presilent_records(false), 1u);
-    BC_REQUIRE_EQUAL(query.compute_silents(cancel, use_gpu, false), database::error::success);
+    BC_REQUIRE_EQUAL(query.compute_silents(cancel, used_gpu, false), database::error::success);
     BC_REQUIRE(is_scanned(query.get_block_state(link)));
 }
 

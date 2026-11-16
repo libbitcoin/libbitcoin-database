@@ -356,6 +356,75 @@ BC_AUTO_TEST_CASE(hashmaps__clear__populated__not_found)
     BC_REQUIRE(!instance.get_fault());
 }
 
+BC_AUTO_TEST_CASE(hashmaps__drop__populated__empty)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    body_storages body_store{ body_paths };
+    table instance{ head_store, body_store, buckets };
+    BC_REQUIRE(instance.create());
+
+    constexpr key1 key_first{ 0x41 };
+    BC_REQUIRE(instance.put(key_first, little_record{ 0x04030201_u32 }));
+    BC_REQUIRE(instance.drop());
+    BC_REQUIRE(!instance.exists(key_first));
+    BC_REQUIRE_EQUAL(head_store.buffer(), base16_chunk("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+    BC_REQUIRE_EQUAL(instance.count(), 0u);
+    BC_REQUIRE(!instance.get_fault());
+}
+
+BC_AUTO_TEST_CASE(hashmaps__truncate__excess__false)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    body_storages body_store{ body_paths };
+    table instance{ head_store, body_store, buckets };
+    BC_REQUIRE(instance.create());
+
+    constexpr key1 key_first{ 0x41 };
+    BC_REQUIRE(instance.put(key_first, little_record{ 0x04030201_u32 }));
+    BC_REQUIRE(!instance.truncate(2));
+    BC_REQUIRE_EQUAL(instance.count(), 1u);
+    BC_REQUIRE(!instance.get_fault());
+}
+
+BC_AUTO_TEST_CASE(hashmaps__truncate__cleared_moved_down__found_at_row)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    body_storages body_store{ body_paths };
+    table instance{ head_store, body_store, buckets };
+    BC_REQUIRE(instance.create());
+
+    constexpr key1 key_first{ 0x41 };
+    constexpr key1 key_second{ 0x42 };
+    BC_REQUIRE(instance.put(key_first, little_record{ 0x04030201_u32 }));
+    BC_REQUIRE(instance.put(key_second, little_record{ 0x08070605_u32 }));
+    BC_REQUIRE(instance.clear());
+    BC_REQUIRE(instance.put(link5{ 0 }, key_second, little_record{ 0x08070605_u32 }));
+    BC_REQUIRE(instance.truncate(1));
+
+    little_record element{};
+    BC_REQUIRE_EQUAL(instance.count(), 1u);
+    BC_REQUIRE_EQUAL(instance.first(key_second), 0u);
+    BC_REQUIRE(instance.first(key_first).is_terminal());
+    BC_REQUIRE(instance.get(0, element));
+    BC_REQUIRE_EQUAL(element.value, 0x08070605_u32);
+    BC_REQUIRE(!instance.get_fault());
+}
+
+BC_AUTO_TEST_CASE(hashmaps__restage__populated__retained)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    body_storages body_store{ body_paths };
+    table instance{ head_store, body_store, buckets };
+    BC_REQUIRE(instance.create());
+
+    constexpr key1 key_first{ 0x41 };
+    BC_REQUIRE(instance.put(key_first, little_record{ 0x04030201_u32 }));
+    BC_REQUIRE(!instance.restage(false));
+    BC_REQUIRE(!instance.restage(true));
+    BC_REQUIRE(instance.exists(key_first));
+    BC_REQUIRE(!instance.get_fault());
+}
+
 BC_AUTO_TEST_CASE(hashmaps__backup__prune__zero_count)
 {
     test::chunk_storage head_store{ test::terminal_fill };

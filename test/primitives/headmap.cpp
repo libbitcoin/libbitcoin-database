@@ -346,6 +346,21 @@ BC_AUTO_TEST_CASE(headmap__setup__lifecycle__expected)
     BC_REQUIRE(!instance.get_fault());
 }
 
+BC_AUTO_TEST_CASE(headmap__drop__populated__empty)
+{
+    data_chunk head_file{};
+    test::chunk_storage head_store{ head_file, test::terminal_fill };
+    test_headmap instance{ head_store };
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.reserve(2u));
+    BC_REQUIRE(instance.push(0x1122_u16));
+    BC_REQUIRE(instance.push(0x3344_u16));
+    BC_REQUIRE(instance.drop());
+    BC_REQUIRE_EQUAL(instance.count(), 0u);
+    BC_REQUIRE(instance.at(0).is_terminal());
+    BC_REQUIRE(!instance.get_fault());
+}
+
 // slab
 
 BC_AUTO_TEST_CASE(headmap__slab_create__empty__expected)

@@ -48,10 +48,11 @@ CLASS::mmap(const path& filename, const storage_settings& settings,
     access_(settings.access),
     zeroed_(settings.zeroed),
     random_(random),
-    staged_(staged),
-    head_shared_(!staged && shared),
+    body_(staged),
     managed_(!staged && !shared),
     fill_(settings.fill),
+    staged_(staged),
+    head_shared_(!staged && shared),
     opened_{ file::invalid }
 {
 #if defined(MANAGE_STAGING)
@@ -74,10 +75,11 @@ CLASS::mmap(const paths& filenames, const storage_settings& settings,
     access_(settings.access),
     zeroed_(settings.zeroed),
     random_(random),
-    staged_(staged),
-    head_shared_(false),
+    body_(staged),
     managed_(false),
     fill_(settings.fill),
+    staged_(staged),
+    head_shared_(false),
     opened_{}
 {
     opened_.fill(file::invalid);

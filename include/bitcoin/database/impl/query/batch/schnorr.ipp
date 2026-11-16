@@ -32,7 +32,7 @@ size_t CLASS::schnorr_records(bool bank) const NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::verify_schnorr_signatures(const stopper& cancel, bool& use_gpu,
+bool CLASS::verify_schnorr_signatures(const stopper& cancel, bool& used_gpu,
     header_links& links, bool bank) NOEXCEPT
 {
     auto& bank_table = store_.schnorr_bank(bank);
@@ -61,7 +61,7 @@ bool CLASS::verify_schnorr_signatures(const stopper& cancel, bool& use_gpu,
     };
 
     // False return only implies canceled.
-    links = schnorr::batch::verify(cancel, use_gpu, batch);
+    links = schnorr::batch::verify(cancel, used_gpu, batch);
     return !cancel;
 }
 

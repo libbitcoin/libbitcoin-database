@@ -835,7 +835,7 @@ public:
         const header_link& link, const block_view& block) const NOEXCEPT;
 
     /// Compute a bank's silent payment batch, then set its scan records.
-    code compute_silents(const stopper& cancel, bool& use_gpu,
+    code compute_silents(const stopper& cancel, bool& used_gpu,
         bool bank) NOEXCEPT;
 
     /// Commit a block's captured ecdsa signature groups (band-expanded).
@@ -894,9 +894,9 @@ public:
     scan_link get_scan_floor(size_t height) const NOEXCEPT;
 
     /// Verify all signatures in table, false implies cancel.
-    bool verify_ecdsa_signatures(const stopper& cancel, bool& use_gpu,
+    bool verify_ecdsa_signatures(const stopper& cancel, bool& used_gpu,
         header_links& links, bool bank) NOEXCEPT;
-    bool verify_schnorr_signatures(const stopper& cancel, bool& use_gpu,
+    bool verify_schnorr_signatures(const stopper& cancel, bool& used_gpu,
         header_links& links, bool bank) NOEXCEPT;
 
     /// Purge all entries in table.

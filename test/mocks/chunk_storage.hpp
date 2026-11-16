@@ -168,6 +168,11 @@ public:
         return error::success;
     }
 
+    code restage(bool) NOEXCEPT override
+    {
+        return error::success;
+    }
+
     code dump(const path&) const NOEXCEPT override
     {
         return error::success;

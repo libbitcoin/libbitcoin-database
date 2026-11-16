@@ -292,6 +292,47 @@ code CLASS::shrink() NOEXCEPT
     return error::shrink_locked;
 }
 
+// Suspend writes before calling.
+TEMPLATE
+code CLASS::restage(bool staged) NOEXCEPT
+{
+    worker_stop_();
+    std::unique_lock field_lock(field_mutex_);
+
+    if (remap_mutex_.try_lock())
+    {
+        if (!loaded_.load())
+        {
+            remap_mutex_.unlock();
+            return error::restage_unloaded;
+        }
+
+        // Updates fields.
+        if (!unmap_all_(sequence{}))
+        {
+            remap_mutex_.unlock();
+            return error::restage_unload_failure;
+        }
+
+        // Updates fields.
+        if (!map_all_(sequence{}, staged))
+        {
+            remap_mutex_.unlock();
+            return error::restage_load_failure;
+        }
+
+        remap_mutex_.unlock();
+        worker_start_();
+        return error::success;
+    }
+
+    // Locked by reader(s), so remains loaded.
+    if (loaded_.load())
+        worker_start_();
+
+    return error::restage_locked;
+}
+
 // Used to copy headers in snapshot (scalar only).
 TEMPLATE
 code CLASS::dump(const std::filesystem::path& path) const NOEXCEPT

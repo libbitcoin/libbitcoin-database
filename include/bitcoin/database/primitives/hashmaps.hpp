@@ -63,10 +63,14 @@ public:
 
     bool create() NOEXCEPT;
     bool clear() NOEXCEPT;
+    bool drop() NOEXCEPT;
     bool close() NOEXCEPT;
     bool backup(bool prune=false) NOEXCEPT;
     bool restore() NOEXCEPT;
     bool verify() const NOEXCEPT;
+
+    /// Unload and load the body, staged or else as shared (rewritable) maps.
+    code restage(bool staged) NOEXCEPT;
 
     /// Sizing.
     /// -----------------------------------------------------------------------
@@ -117,6 +121,9 @@ public:
 
     /// Count of body records (common across columns).
     Link count() const NOEXCEPT;
+
+    /// Reduce count as specified (no record at or above it may be linked).
+    bool truncate(const Link& count) NOEXCEPT;
 
     /// Diagnostic counters.
     /// -----------------------------------------------------------------------

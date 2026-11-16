@@ -48,6 +48,12 @@ bool CLASS::create() NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::drop() NOEXCEPT
+{
+    return truncate(0);
+}
+
+TEMPLATE
 bool CLASS::close() NOEXCEPT
 {
     // Count is the head logical size.

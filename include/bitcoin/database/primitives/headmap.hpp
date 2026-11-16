@@ -51,6 +51,7 @@ public:
     /// -----------------------------------------------------------------------
 
     bool create() NOEXCEPT;
+    bool drop() NOEXCEPT;
     bool close() NOEXCEPT;
     bool backup(bool=false) NOEXCEPT;
     bool restore() NOEXCEPT;

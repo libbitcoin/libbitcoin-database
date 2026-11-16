@@ -782,4 +782,112 @@ BC_AUTO_TEST_CASE(error_t__code__merkle_hashes__true_expected_message)
     BC_REQUIRE_EQUAL(ec.message(), "merkle_hashes");
 }
 
+BC_AUTO_TEST_CASE(error_t__code__restage_unloaded__true_expected_message)
+{
+    constexpr auto value = error::restage_unloaded;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "restaging unloaded file");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__restage_unload_failure__true_expected_message)
+{
+    constexpr auto value = error::restage_unload_failure;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "restage failed to unload file");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__restage_load_failure__true_expected_message)
+{
+    constexpr auto value = error::restage_load_failure;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "restage failed to load file");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__restage_locked__true_expected_message)
+{
+    constexpr auto value = error::restage_locked;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "restaging locked file");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__compact_retain__true_expected_message)
+{
+    constexpr auto value = error::compact_retain;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "compact_retain");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__compact_clear__true_expected_message)
+{
+    constexpr auto value = error::compact_clear;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "compact_clear");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__compact_spends__true_expected_message)
+{
+    constexpr auto value = error::compact_spends;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "compact_spends");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__compact_pool__true_expected_message)
+{
+    constexpr auto value = error::compact_pool;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "compact_pool");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__compact_truncate__true_expected_message)
+{
+    constexpr auto value = error::compact_truncate;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "compact_truncate");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__compact_wtxid__true_expected_message)
+{
+    constexpr auto value = error::compact_wtxid;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "compact_wtxid");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__compact_index__true_expected_message)
+{
+    constexpr auto value = error::compact_index;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "compact_index");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__compact_count__true_expected_message)
+{
+    constexpr auto value = error::compact_count;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "compact_count");
+}
+
 BC_AUTO_TEST_SUITE_END()
