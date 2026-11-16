@@ -166,14 +166,16 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         dropped(ec, presilent1, table_t::presilent1_table);
         restore(ec, prevout, table_t::prevout_table);
         restore(ec, state, table_t::state_table);
-        restore(ec, pool, table_t::pool_table);
-        restore(ec, spends, table_t::spends_table);
-        restore(ec, pool_cells, table_t::pool_cells_table);
-        restore(ec, pool_children, table_t::pool_children_table);
-        restore(ec, spends_rows, table_t::spends_rows_table);
-        restore(ec, spends_siblings, table_t::spends_siblings_table);
-        restore(ec, spends_rivals, table_t::spends_rivals_table);
-        restore(ec, wtxid, table_t::wtxid_table);
+
+        // pool, spends, wtxid and the pool index heads are dropped.
+        dropped(ec, pool, table_t::pool_table);
+        dropped(ec, spends, table_t::spends_table);
+        dropped(ec, pool_cells, table_t::pool_cells_table);
+        dropped(ec, pool_children, table_t::pool_children_table);
+        dropped(ec, spends_rows, table_t::spends_rows_table);
+        dropped(ec, spends_siblings, table_t::spends_siblings_table);
+        dropped(ec, spends_rivals, table_t::spends_rivals_table);
+        dropped(ec, wtxid, table_t::wtxid_table);
 
         restore(ec, filter_bk, table_t::filter_bk_table);
         restore(ec, filter_tx, table_t::filter_tx_table);

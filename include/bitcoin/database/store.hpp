@@ -61,7 +61,7 @@ public:
     /// Create the set of empty files.
     code create(const event_handler& handler) NOEXCEPT;
 
-    /// Open and load the set of tables, set locks.
+    /// Open and load the set of tables, compact the pool, set locks.
     code open(const event_handler& handler) NOEXCEPT;
 
     /// Prune prunable tables (from loaded, leaves loaded).
@@ -160,18 +160,24 @@ protected:
     code backup(const event_handler& handler, bool prune=false) NOEXCEPT;
     code dump(const path& folder, const event_handler& handler) NOEXCEPT;
 
-    /// Retain the pool records of txs that can yet confirm (prune helpers).
-    template <typename Reset>
-    code compact(const event_handler& handler, const Reset& reset) NOEXCEPT;
-    bool is_retained(bool& out, const tx_link& link,
-        table::pool& retained) NOEXCEPT;
+    /// A retained pool record, by its row and spends.
+    struct retention
+    {
+        pool_link::integer row;
+        table::spends::link::integer spends_fk;
+        uint32_t inputs;
+    };
 
-    /// Copy the pool records accepted by keep, with their spends, in order,
-    /// passing the link and witness hash of each copied record to index.
-    template <typename Keep, typename Index>
-    bool copy_pool(table::pool& to, table::spends& to_spends,
-        table::pool& from, table::spends& from_spends, const Keep& keep,
-        const Index& index) NOEXCEPT;
+    using retentions = std::vector<retention>;
+
+    /// Retain the pool records of txs that can yet confirm (open helpers).
+    code compact(const event_handler& handler) NOEXCEPT;
+    bool retain_pool(retentions& out) NOEXCEPT;
+    bool is_retained(bool& out, const tx_link& link,
+        const retentions& kept) NOEXCEPT;
+    bool move_spends(retentions& keep) NOEXCEPT;
+    bool move_pool(const retentions& keep) NOEXCEPT;
+    bool index_pool() NOEXCEPT;
 
     /// Currency (coalesced with a recent top), reported to head storage.
     bool is_current() const NOEXCEPT;

@@ -106,14 +106,24 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     verify(ec, filter_bk, table_t::filter_bk_table);
     verify(ec, filter_tx, table_t::filter_tx_table);
 
+    // Pool records are rewritten, so nothing may be reading the pool.
+    const auto verified = !ec;
+    if (verified)
+        ec = compact(handler);
+
     if (ec)
     {
-        // open_load leaves nothing open on a schema mismatch.
-        if (ec != error::schema_version)
-            /* code */ unload_close(handler);
+        // A failed compaction leaves the pool undefined, as does a fault.
+        auto corrupt = verified;
 
-        // unlock errors override ec.
-        if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
+        // open_load leaves nothing open on a schema mismatch.
+        if (ec != error::schema_version && unload_close(handler))
+            corrupt = true;
+
+        // unlock errors override ec, corruption leaves behind flush_lock.
+        if (!corrupt && !get_fault() && !flush_lock_.try_unlock())
+            ec = error::flush_unlock;
+
         if (!process_lock_.try_unlock()) ec = error::process_unlock;
     }
 

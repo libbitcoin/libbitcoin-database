@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "../mocks/blocks.hpp"
 #include "../mocks/map_store.hpp"
 
 BC_FIXTURE_TEST_SUITE(store_tests, test::directory_setup_fixture)
@@ -250,6 +251,32 @@ BC_AUTO_TEST_CASE(store__restore__secondary_only__promoted_success)
     BC_REQUIRE(test::folder(primary));
     BC_REQUIRE(!test::folder(secondary));
     BC_REQUIRE(test::folder(configuration.path / schema::dir::heads));
+    BC_REQUIRE(!instance.close(test::events));
+}
+
+BC_AUTO_TEST_CASE(store__restore__pooled_snapshot__pool_empty)
+{
+    constexpr database::context context{ system::chain::flags::bip113_rule, 8, 9 };
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    test::tx_spend_one_hash.inputs_ptr()->front()->metadata.parent_tx = 42;
+    BC_REQUIRE(query_.set(test::tx_spend_one_hash));
+
+    const auto link = query_.to_tx(test::tx_spend_one_hash.hash(false));
+    BC_REQUIRE(query_.set_pooled(link, test::tx_spend_one_hash, context, 0));
+    BC_REQUIRE(!instance.snapshot(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
+    BC_REQUIRE(!instance.restore(test::events));
+
+    BC_REQUIRE(!query_.is_pooled(link));
+    BC_REQUIRE_EQUAL(query_.pool_body_size(), zero);
+    BC_REQUIRE_EQUAL(query_.spends_records(), zero);
+    BC_REQUIRE_EQUAL(query_.wtxid_body_size(), zero);
     BC_REQUIRE(!instance.close(test::events));
 }
 

@@ -51,6 +51,12 @@ bool CLASS::clear() NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::drop() NOEXCEPT
+{
+    return head_.clear() && body_.truncate(0);
+}
+
+TEMPLATE
 bool CLASS::close() NOEXCEPT
 {
     return head_.set_body_count(body_.count());

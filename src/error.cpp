@@ -146,7 +146,17 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { restage_unloaded, "restaging unloaded file" },
     { restage_unload_failure, "restage failed to unload file" },
     { restage_load_failure, "restage failed to load file" },
-    { restage_locked, "restaging locked file" }
+    { restage_locked, "restaging locked file" },
+
+    // pool compaction
+    { compact_retain, "compact_retain" },
+    { compact_clear, "compact_clear" },
+    { compact_spends, "compact_spends" },
+    { compact_pool, "compact_pool" },
+    { compact_truncate, "compact_truncate" },
+    { compact_wtxid, "compact_wtxid" },
+    { compact_index, "compact_index" },
+    { compact_count, "compact_count" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

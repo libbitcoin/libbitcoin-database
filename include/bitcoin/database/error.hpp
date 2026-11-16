@@ -152,7 +152,17 @@ enum error_t : uint8_t
     restage_unloaded,
     restage_unload_failure,
     restage_load_failure,
-    restage_locked
+    restage_locked,
+
+    /// pool compaction
+    compact_retain,
+    compact_clear,
+    compact_spends,
+    compact_pool,
+    compact_truncate,
+    compact_wtxid,
+    compact_index,
+    compact_count
 };
 
 // No current need for error_code equivalence mapping.
