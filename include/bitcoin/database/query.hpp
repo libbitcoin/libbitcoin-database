@@ -778,6 +778,9 @@ public:
     /// Rebuild the pool index heads from the pool (after compaction).
     bool set_pool_index() NOEXCEPT;
 
+    /// Apply the confirmation (or reorganization) of the block to the index.
+    bool set_pool_block(const header_link& link, bool confirmed) NOEXCEPT;
+
     /// Coverage.
     /// -----------------------------------------------------------------------
 
@@ -1235,9 +1238,8 @@ protected:
         bool& conflicted, const point& point, const tx_link& self,
         bool archived) const NOEXCEPT;
 
-    /// The pool index transitions of the confirmed or reorganized block txs.
-    bool set_pool_block(const header_link& link, const tx_links& txs,
-        bool confirmed) NOEXCEPT;
+    /// The pooled spenders of the points spent by the txs (their conflicts).
+    bool get_pool_conflicts(tx_links& out, const tx_links& txs) const NOEXCEPT;
 
     /// Confirmability memoized across the txs of a scan.
     bool is_confirmable_tx(confirmables& memo,

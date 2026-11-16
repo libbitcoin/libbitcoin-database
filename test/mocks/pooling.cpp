@@ -59,7 +59,8 @@ database::header_link archive_confirm(query_t& query,
     const auto link = query.to_header(block.hash());
     const auto candidate = stored && query.push_candidate(link);
     const auto confirmed = candidate && query.push_confirmed(link, true);
-    return confirmed ? link : database::header_link{};
+    const auto applied = confirmed && query.set_pool_block(link, true);
+    return applied ? link : database::header_link{};
 }
 
 bool pool_populated(query_t& query, const transaction& tx,

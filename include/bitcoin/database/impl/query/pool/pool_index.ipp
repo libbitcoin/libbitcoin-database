@@ -321,17 +321,47 @@ bool CLASS::get_pooled_spender(system::pool::algorithm::link_t& out,
 }
 
 // protected
-// The conflicts of the block's txs that are not pooled are in its prevout
-// cache, which is absent when the block was confirmed by bypass.
+// The first tx is the coinbase, which spends nothing.
 TEMPLATE
-bool CLASS::set_pool_block(const header_link& link, const tx_links& txs,
-    bool confirmed) NOEXCEPT
+bool CLASS::get_pool_conflicts(tx_links& out,
+    const tx_links& txs) const NOEXCEPT
+{
+    out.clear();
+    if (is_zero(store_.duplicate.body_size()))
+        return true;
+
+    for (auto tx = std::next(txs.cbegin()); tx != txs.cend(); ++tx)
+    {
+        table::transaction::get_puts record{};
+        if (!store_.tx.get(*tx, record))
+            return false;
+
+        // Point links are contiguous (computed).
+        const auto end = record.points_fk + record.ins_count;
+        for (auto fk = record.points_fk; fk < end; ++fk)
+            if (!get_doubles(out, get_point_key(fk)))
+                return false;
+    }
+
+    return true;
+}
+
+// The conflicts of the block's txs are in its prevout cache, which the prune
+// leaves in place until the block is settled, and otherwise are taken from
+// the archive (a block that was not validated, or was pruned before a
+// reorganization). They include the block's own txs, as each spends a
+// conflicted point.
+TEMPLATE
+bool CLASS::set_pool_block(const header_link& link, bool confirmed) NOEXCEPT
 {
     using namespace system;
     using algorithm = system::pool::algorithm;
     using link_t = algorithm::link_t;
     if (!store_.pool.enabled())
         return true;
+
+    // ========================================================================
+    const auto scope = get_transactor();
 
     pool_guards guards{};
     algorithm::columns_t columns{};
@@ -342,7 +372,11 @@ bool CLASS::set_pool_block(const header_link& link, const tx_links& txs,
     if (is_zero(rows))
         return true;
 
-    for (const auto fk: txs)
+    table::txs::get_txs txs{};
+    if (!store_.txs.at(to_txs(link), txs) || txs.tx_fks.empty())
+        return false;
+
+    for (const auto fk: txs.tx_fks)
     {
         const auto row = store_.pool.first(tx_link{ fk });
         if (row.is_terminal() || row.value >= rows)
@@ -356,11 +390,17 @@ bool CLASS::set_pool_block(const header_link& link, const tx_links& txs,
     }
 
     table::prevout::slab_get cache{};
-    if (!store_.prevout.at(to_prevout(link), cache))
-        return true;
+    if (!store_.prevout.at(to_prevout(link), cache) &&
+        !get_pool_conflicts(cache.conflicts, txs.tx_fks))
+        return false;
 
+    auto own = txs.tx_fks;
+    std::ranges::sort(own);
     for (const auto conflict: cache.conflicts)
     {
+        if (std::ranges::binary_search(own, conflict))
+            continue;
+
         const auto row = store_.pool.first(tx_link{ conflict });
         if (row.is_terminal() || row.value >= rows)
             continue;
@@ -373,6 +413,7 @@ bool CLASS::set_pool_block(const header_link& link, const tx_links& txs,
     }
 
     return true;
+    // ========================================================================
 }
 
 } // namespace database
