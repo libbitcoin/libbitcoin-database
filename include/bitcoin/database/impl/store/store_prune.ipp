@@ -40,10 +40,17 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
 
     code ec{ error::success };
 
-    // Prevouts resettable if all candidates confirmed (fork is candidate top).
-    if (!query<CLASS>{ *this }.is_coalesced())
+    // Prevouts resettable if all candidates confirmed (fork is candidate top),
+    // and the pool index is settled to the top (its sweep reads the prevouts).
+    const query<CLASS> reader{ *this };
+    if (!reader.is_coalesced())
     {
         ec = error::not_coalesced;
+    }
+    else if (is_nonzero(pool.count().value) &&
+        reader.to_top_confirmed() != get_pool_settled())
+    {
+        ec = error::not_settled;
     }
     else
     {

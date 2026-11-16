@@ -347,10 +347,10 @@ bool CLASS::get_pool_conflicts(tx_links& out,
 }
 
 // The conflicts of the block's txs are in its prevout cache, which the prune
-// leaves in place until the block is settled, and otherwise are taken from
-// the archive (a block that was not validated, or was pruned before a
-// reorganization). They include the block's own txs, as each spends a
-// conflicted point.
+// leaves in place until the index is settled to the top, and otherwise are
+// taken from the archive (a block that was not validated, or was pruned
+// before a reorganization). They include the block's own txs, as each spends
+// a conflicted point.
 TEMPLATE
 bool CLASS::set_pool_block(const header_link& link, bool confirmed) NOEXCEPT
 {
@@ -368,9 +368,13 @@ bool CLASS::set_pool_block(const header_link& link, bool confirmed) NOEXCEPT
     if (!get_pool_columns(columns, guards))
         return false;
 
+    const auto settled = confirmed ? link : to_parent(link);
     const auto rows = columns.cells.size();
     if (is_zero(rows))
+    {
+        store_.set_pool_settled(settled);
         return true;
+    }
 
     table::txs::get_txs txs{};
     if (!store_.txs.at(to_txs(link), txs) || txs.tx_fks.empty())
@@ -412,6 +416,7 @@ bool CLASS::set_pool_block(const header_link& link, bool confirmed) NOEXCEPT
             algorithm::revive(columns, at);
     }
 
+    store_.set_pool_settled(settled);
     return true;
     // ========================================================================
 }

@@ -162,7 +162,10 @@ enum error_t : uint8_t
     compact_truncate,
     compact_wtxid,
     compact_index,
-    compact_count
+    compact_count,
+
+    /// prune
+    not_settled
 };
 
 // No current need for error_code equivalence mapping.
