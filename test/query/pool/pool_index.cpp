@@ -32,6 +32,12 @@ using test::archive_confirm;
 using test::pool_populated;
 using test::pool_cell;
 
+// Absent cells, by cause.
+constexpr auto absent = system::pool::algorithm::absent;
+constexpr auto absent_rivaled = system::bit_or(absent, system::pool::algorithm::rivaled);
+constexpr auto absent_ancestor = system::bit_or(absent, system::pool::algorithm::ancestor);
+constexpr auto absent_conflicted = system::bit_or(absent, system::pool::algorithm::conflicted);
+
 // pool index
 // ----------------------------------------------------------------------------
 
@@ -101,8 +107,8 @@ BC_AUTO_TEST_CASE(query_pool__push_pop_confirmed__rival__excluded_and_revived)
     BC_REQUIRE(pooled_rival);
     BC_REQUIRE(!block.is_terminal());
     BC_REQUIRE_EQUAL(rival_confirmed, system::pool::algorithm::boundary);
-    BC_REQUIRE_EQUAL(parent_confirmed, system::pool::algorithm::absent);
-    BC_REQUIRE_EQUAL(child_confirmed, system::pool::algorithm::absent);
+    BC_REQUIRE_EQUAL(parent_confirmed, system::bit_or(absent_rivaled, system::pool::algorithm::conflicted));
+    BC_REQUIRE_EQUAL(child_confirmed, absent_ancestor);
     BC_REQUIRE(popped);
     BC_REQUIRE(reverted);
     BC_REQUIRE_EQUAL(pool_cell(query, store, rival), 0u);
@@ -160,8 +166,8 @@ BC_AUTO_TEST_CASE(query_pool__set_pool_block__unpooled_rival_no_prevout_cache__e
     BC_REQUIRE(pooled_child);
     BC_REQUIRE(!block.is_terminal());
     BC_REQUIRE(!query.is_pooled(query.to_tx(rival.hash(false))));
-    BC_REQUIRE_EQUAL(parent_confirmed, system::pool::algorithm::absent);
-    BC_REQUIRE_EQUAL(child_confirmed, system::pool::algorithm::absent);
+    BC_REQUIRE_EQUAL(parent_confirmed, absent_conflicted);
+    BC_REQUIRE_EQUAL(child_confirmed, absent_ancestor);
     BC_REQUIRE(popped);
     BC_REQUIRE(reverted);
     BC_REQUIRE_EQUAL(pool_cell(query, store, parent), parent_pooled);

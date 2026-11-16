@@ -217,7 +217,7 @@ code CLASS::get_pool_coverage_(bool& out, const pool_graph& graph,
                 continue;
 
             const auto cell = algorithm::from_column(g.table.cells[parent]);
-            if (cell == algorithm::absent)
+            if (algorithm::is_absent(cell))
                 return error::success;
         }
     }

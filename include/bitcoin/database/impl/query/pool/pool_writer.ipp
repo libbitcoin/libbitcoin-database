@@ -140,9 +140,11 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
         !set_pool_adoption(row, tx))
         return false;
 
-    // A conflict with a confirmed spender remains absent.
+    // A conflict with a confirmed spender is absent for it.
+    using replace = table::pool_cells::replace;
+    constexpr auto cause = bit_or(algorithm::absent, algorithm::conflicted);
     if (conflicted)
-        return true;
+        return store_.pool_cells.set(row, replace{ {}, cause });
 
     pool_guards guards{};
     algorithm::columns_t columns{};

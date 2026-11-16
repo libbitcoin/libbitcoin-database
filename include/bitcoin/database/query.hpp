@@ -1241,6 +1241,10 @@ protected:
     /// The pooled spenders of the points spent by the txs (their conflicts).
     bool get_pool_conflicts(tx_links& out, const tx_links& txs) const NOEXCEPT;
 
+    /// A point of the pooled tx is spent by a confirmed tx.
+    bool is_pool_conflicted(bool& out, const tx_link& link,
+        const pool_link& row) const NOEXCEPT;
+
     /// Confirmability memoized across the txs of a scan.
     bool is_confirmable_tx(confirmables& memo,
         const tx_link& link) const NOEXCEPT;

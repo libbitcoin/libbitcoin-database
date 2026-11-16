@@ -500,6 +500,30 @@ BC_AUTO_TEST_CASE(store__open__all_dropped__counts_recorded)
     BC_REQUIRE(!instance.close(test::events));
 }
 
+BC_AUTO_TEST_CASE(store__open__retained_and_dropped__retained_present)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    instance.set_pooling();
+
+    const auto conflict = spend(genesis_coinbase(), 2u);
+    const auto retained = spend(spend(genesis_coinbase(), 1u).hash(false), 3u);
+    const auto confirmed = spend(genesis_coinbase(), 1u);
+    BC_REQUIRE(pool(query_, conflict));
+    BC_REQUIRE(pool(query_, confirmed));
+    BC_REQUIRE(pool(query_, retained));
+    BC_REQUIRE(confirm(query_, confirmed));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE_EQUAL(query_.pool_records(), one);
+    BC_REQUIRE(system::pool::algorithm::is_present(instance.pool_cells.at(zero)));
+    BC_REQUIRE(!instance.close(test::events));
+}
+
 BC_AUTO_TEST_CASE(store__open__compacted_reopened__retained)
 {
     settings configuration{ test::database_settings() };
