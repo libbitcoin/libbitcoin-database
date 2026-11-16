@@ -356,6 +356,21 @@ BC_AUTO_TEST_CASE(hashmaps__clear__populated__not_found)
     BC_REQUIRE(!instance.get_fault());
 }
 
+BC_AUTO_TEST_CASE(hashmaps__restage__populated__retained)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    body_storages body_store{ body_paths };
+    table instance{ head_store, body_store, buckets };
+    BC_REQUIRE(instance.create());
+
+    constexpr key1 key_first{ 0x41 };
+    BC_REQUIRE(instance.put(key_first, little_record{ 0x04030201_u32 }));
+    BC_REQUIRE(!instance.restage(false));
+    BC_REQUIRE(!instance.restage(true));
+    BC_REQUIRE(instance.exists(key_first));
+    BC_REQUIRE(!instance.get_fault());
+}
+
 BC_AUTO_TEST_CASE(hashmaps__backup__prune__zero_count)
 {
     test::chunk_storage head_store{ test::terminal_fill };

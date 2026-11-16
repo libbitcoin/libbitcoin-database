@@ -140,7 +140,13 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { missing_prevouts, "missing_prevouts" },
     { merkle_proof, "merkle_proof" },
     { merkle_interval, "merkle_interval" },
-    { merkle_hashes, "merkle_hashes" }
+    { merkle_hashes, "merkle_hashes" },
+
+    // memory map restage
+    { restage_unloaded, "restaging unloaded file" },
+    { restage_unload_failure, "restage failed to unload file" },
+    { restage_load_failure, "restage failed to load file" },
+    { restage_locked, "restaging locked file" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

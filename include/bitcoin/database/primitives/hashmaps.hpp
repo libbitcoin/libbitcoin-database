@@ -68,6 +68,9 @@ public:
     bool restore() NOEXCEPT;
     bool verify() const NOEXCEPT;
 
+    /// Unload and load the body, staged or else as shared (rewritable) maps.
+    code restage(bool staged) NOEXCEPT;
+
     /// Sizing.
     /// -----------------------------------------------------------------------
 

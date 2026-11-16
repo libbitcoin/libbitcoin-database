@@ -94,6 +94,9 @@ public:
     /// Unified resume from disk full condition.
     code reload() NOEXCEPT;
 
+    /// Unified unload and load, staged or else as shared (rewritable) maps.
+    code restage(bool staged) NOEXCEPT;
+
 private:
     static constexpr auto columns = sizeof...(Sizes);
     static constexpr auto key_size = keys::size<Key>();

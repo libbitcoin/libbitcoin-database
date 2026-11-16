@@ -46,8 +46,15 @@ bool CLASS::flush_all_(size_t rows, std::index_sequence<Index...>) NOEXCEPT
 
 TEMPLATE
 template <size_t... Index>
-bool CLASS::map_all_(std::index_sequence<Index...>) NOEXCEPT
+bool CLASS::map_all_(std::index_sequence<Index...>, bool staged) NOEXCEPT
 {
+    // A body maps staged, or else as its files (as a shared head).
+    if (body_)
+    {
+        staged_ = staged;
+        head_shared_ = !staged;
+    }
+
 #if defined(MANAGE_STAGING)
     using namespace system;
     const auto page = page_size();

@@ -78,6 +78,12 @@ bool CLASS::verify() const NOEXCEPT
         (count == body_.count());
 }
 
+TEMPLATE
+code CLASS::restage(bool staged) NOEXCEPT
+{
+    return body_.restage(staged);
+}
+
 // sizing
 // ----------------------------------------------------------------------------
 

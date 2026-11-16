@@ -782,4 +782,40 @@ BC_AUTO_TEST_CASE(error_t__code__merkle_hashes__true_expected_message)
     BC_REQUIRE_EQUAL(ec.message(), "merkle_hashes");
 }
 
+BC_AUTO_TEST_CASE(error_t__code__restage_unloaded__true_expected_message)
+{
+    constexpr auto value = error::restage_unloaded;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "restaging unloaded file");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__restage_unload_failure__true_expected_message)
+{
+    constexpr auto value = error::restage_unload_failure;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "restage failed to unload file");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__restage_load_failure__true_expected_message)
+{
+    constexpr auto value = error::restage_load_failure;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "restage failed to load file");
+}
+
+BC_AUTO_TEST_CASE(error_t__code__restage_locked__true_expected_message)
+{
+    constexpr auto value = error::restage_locked;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "restaging locked file");
+}
+
 BC_AUTO_TEST_SUITE_END()

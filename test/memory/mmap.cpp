@@ -1360,6 +1360,361 @@ BC_AUTO_TEST_CASE(mmap__shared__rewrite_below_flush__expected)
     BC_REQUIRE(!reopened.get_fault());
 }
 
+BC_AUTO_TEST_CASE(mmap__restage__unloaded__restage_unloaded)
+{
+    const std::string file = TEST_PATH;
+    BC_REQUIRE(test::create(file));
+
+    map instance(file, {}, true, true);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE_EQUAL(instance.restage(false), error::restage_unloaded);
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+}
+
+BC_AUTO_TEST_CASE(mmap__restage__shared__restage_locked)
+{
+    const std::string file = TEST_PATH;
+    BC_REQUIRE(test::create(file));
+
+    map instance(file, {}, true, true);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+
+    auto memory = instance.get(instance.allocate(1));
+    BC_REQUIRE(memory);
+    BC_REQUIRE_EQUAL(instance.restage(false), error::restage_locked);
+    BC_REQUIRE(instance.is_loaded());
+
+    memory.reset();
+    BC_REQUIRE(!instance.restage(false));
+    BC_REQUIRE(!instance.restage(true));
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+}
+
+BC_AUTO_TEST_CASE(mmap__restage__unstaged_rewrite_below_flush__expected)
+{
+    constexpr size_t size = 40'000;
+    constexpr size_t rewrite = 100;
+    const std::string file = TEST_PATH;
+    BC_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 }, true, true);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+
+    const auto original = stage_vector(stage_pattern, size);
+    const auto replaced = stage_vector(stage_repattern, rewrite);
+
+    // Replacement content precedes retained content.
+    auto expected = stage_vector(stage_repattern, rewrite);
+    const auto retained = stage_vector(stage_pattern, size - rewrite, rewrite);
+    expected.insert(expected.end(), retained.begin(), retained.end());
+
+    auto memory = instance.get(instance.allocate(size));
+    BC_REQUIRE(memory);
+    std::copy_n(original.begin(), original.size(), memory.begin());
+
+    memory.reset();
+    BC_REQUIRE(!instance.flush());
+
+    // Flushed content of a staged body is rewritable while it is unstaged.
+    BC_REQUIRE(!instance.restage(false));
+    BC_REQUIRE_EQUAL(instance.size(), size);
+
+    memory = instance.get();
+    BC_REQUIRE(memory);
+    std::copy_n(replaced.begin(), replaced.size(), memory.begin());
+
+    memory.reset();
+    BC_REQUIRE(!instance.restage(true));
+    BC_REQUIRE_EQUAL(instance.size(), size);
+
+    memory = instance.get();
+    BC_REQUIRE(memory);
+
+    const auto end1 = std::next(memory.begin(), expected.size());
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end1, expected.begin(), expected.end());
+
+    memory.reset();
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+
+    map reopened(file, { 1, 50 }, true, true);
+    BC_REQUIRE(!reopened.open());
+    BC_REQUIRE(!reopened.load());
+    BC_REQUIRE_EQUAL(reopened.size(), size);
+
+    memory = reopened.get();
+    BC_REQUIRE(memory);
+
+    const auto end2 = std::next(memory.begin(), expected.size());
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end2, expected.begin(), expected.end());
+
+    memory.reset();
+    BC_REQUIRE(!reopened.unload());
+    BC_REQUIRE(!reopened.close());
+    BC_REQUIRE(!reopened.get_fault());
+}
+
+BC_AUTO_TEST_CASE(mmap__restage__unstaged_move_down_truncate__expected)
+{
+    constexpr size_t size = 40'000;
+    constexpr size_t kept = 15'000;
+    constexpr size_t appended = 5'000;
+    const std::string file = TEST_PATH;
+    BC_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 }, true, true);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+
+    const auto original = stage_vector(stage_pattern, size);
+    const auto extended = stage_vector(stage_repattern, appended);
+
+    // The kept tail precedes content appended once restaged.
+    auto expected = stage_vector(stage_pattern, kept, size - kept);
+    expected.insert(expected.end(), extended.begin(), extended.end());
+
+    auto memory = instance.get(instance.allocate(size));
+    BC_REQUIRE(memory);
+    std::copy_n(original.begin(), original.size(), memory.begin());
+
+    memory.reset();
+    BC_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.restage(false));
+
+    memory = instance.get();
+    BC_REQUIRE(memory);
+    std::copy_n(std::next(memory.begin(), size - kept), kept, memory.begin());
+
+    memory.reset();
+    BC_REQUIRE(instance.truncate(kept));
+    BC_REQUIRE(!instance.restage(true));
+    BC_REQUIRE_EQUAL(instance.size(), kept);
+    BC_REQUIRE_EQUAL(instance.allocate(appended), kept);
+
+    memory = instance.get(kept);
+    BC_REQUIRE(memory);
+    std::copy_n(extended.begin(), extended.size(), memory.begin());
+
+    memory.reset();
+    BC_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+
+    map reopened(file, { 1, 50 }, true, true);
+    BC_REQUIRE(!reopened.open());
+    BC_REQUIRE(!reopened.load());
+    BC_REQUIRE_EQUAL(reopened.size(), kept + appended);
+
+    memory = reopened.get();
+    BC_REQUIRE(memory);
+
+    const auto end = std::next(memory.begin(), expected.size());
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, expected.begin(), expected.end());
+
+    memory.reset();
+    BC_REQUIRE(!reopened.unload());
+    BC_REQUIRE(!reopened.close());
+    BC_REQUIRE(!reopened.get_fault());
+}
+
+BC_AUTO_TEST_CASE(mmap__restage__unstaged_aggregate_rewrite_below_flush__expected)
+{
+    // Two columns, widths 1 and 3 (stride 4), each flushed across pages.
+    using storage_t = database::mmap<1, 3>;
+    constexpr size_t rows = 40'000;
+    constexpr size_t rewrite = 100;
+    const std::string file = TEST_PATH;
+    const storage_t::paths files{ file + "_0", file + "_1" };
+
+    storage_t instance(files, { 1, 50 }, true, true);
+    BC_REQUIRE(!instance.create());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+
+    const auto original0 = stage_vector(stage_pattern, rows);
+    const auto original1 = stage_vector(stage_pattern, rows * 3u);
+    const auto replaced0 = stage_vector(stage_repattern, rewrite);
+    const auto replaced1 = stage_vector(stage_repattern, rewrite * 3u);
+
+    // Replacement content precedes retained content, in each column.
+    auto expected0 = stage_vector(stage_repattern, rewrite);
+    auto expected1 = stage_vector(stage_repattern, rewrite * 3u);
+    const auto retained0 = stage_vector(stage_pattern, rows - rewrite, rewrite);
+    const auto retained1 = stage_vector(stage_pattern, (rows - rewrite) * 3u, rewrite * 3u);
+    expected0.insert(expected0.end(), retained0.begin(), retained0.end());
+    expected1.insert(expected1.end(), retained1.begin(), retained1.end());
+
+    BC_REQUIRE_EQUAL(instance.allocate(rows), zero);
+
+    auto column0 = instance.get_at(0);
+    auto column1 = instance.get_at(1);
+    BC_REQUIRE(column0);
+    BC_REQUIRE(column1);
+    std::copy_n(original0.begin(), original0.size(), column0.begin());
+    std::copy_n(original1.begin(), original1.size(), column1.begin());
+
+    column0.reset();
+    column1.reset();
+    BC_REQUIRE(!instance.flush());
+    BC_REQUIRE(!instance.restage(false));
+    BC_REQUIRE_EQUAL(instance.size(), rows);
+
+    column0 = instance.get_at(0);
+    column1 = instance.get_at(1);
+    BC_REQUIRE(column0);
+    BC_REQUIRE(column1);
+    std::copy_n(replaced0.begin(), replaced0.size(), column0.begin());
+    std::copy_n(replaced1.begin(), replaced1.size(), column1.begin());
+
+    column0.reset();
+    column1.reset();
+    BC_REQUIRE(!instance.restage(true));
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+
+    storage_t reopened(files, { 1, 50 }, true, true);
+    BC_REQUIRE(!reopened.open());
+    BC_REQUIRE(!reopened.load());
+    BC_REQUIRE_EQUAL(reopened.size(), rows);
+
+    column0 = reopened.get_at(0);
+    column1 = reopened.get_at(1);
+    BC_REQUIRE(column0);
+    BC_REQUIRE(column1);
+
+    const auto end0 = std::next(column0.begin(), expected0.size());
+    const auto end1 = std::next(column1.begin(), expected1.size());
+    BC_REQUIRE_EQUAL_COLLECTIONS(column0.begin(), end0, expected0.begin(), expected0.end());
+    BC_REQUIRE_EQUAL_COLLECTIONS(column1.begin(), end1, expected1.begin(), expected1.end());
+
+    column0.reset();
+    column1.reset();
+    BC_REQUIRE(!reopened.unload());
+    BC_REQUIRE(!reopened.close());
+    BC_REQUIRE(!reopened.get_fault());
+}
+
+BC_AUTO_TEST_CASE(mmap__restage__head__rewrite_expected)
+{
+    constexpr size_t size = 10'000;
+    constexpr size_t rewrite = 100;
+    const std::string file = TEST_PATH;
+    BC_REQUIRE(test::create(file));
+
+    // A head has no staging, so restages as constructed.
+    map instance(file, { 1, 50 }, true);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+
+    const auto original = stage_vector(stage_pattern, size);
+    const auto replaced = stage_vector(stage_repattern, rewrite);
+
+    auto expected = stage_vector(stage_repattern, rewrite);
+    const auto retained = stage_vector(stage_pattern, size - rewrite, rewrite);
+    expected.insert(expected.end(), retained.begin(), retained.end());
+
+    auto memory = instance.get(instance.allocate(size));
+    BC_REQUIRE(memory);
+    std::copy_n(original.begin(), original.size(), memory.begin());
+
+    memory.reset();
+    instance.mark(zero, size);
+    BC_REQUIRE(!instance.restage(false));
+
+    memory = instance.get();
+    BC_REQUIRE(memory);
+    instance.prepare(zero, rewrite);
+    std::copy_n(replaced.begin(), replaced.size(), memory.begin());
+
+    memory.reset();
+    instance.mark(zero, rewrite);
+    BC_REQUIRE(!instance.restage(true));
+
+    memory = instance.get();
+    BC_REQUIRE(memory);
+
+    const auto end = std::next(memory.begin(), expected.size());
+    BC_REQUIRE_EQUAL_COLLECTIONS(memory.begin(), end, expected.begin(), expected.end());
+
+    memory.reset();
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+}
+
+#if defined(MANAGE_STAGING)
+
+BC_AUTO_TEST_CASE(mmap__restage__unstaged__frontier_follows_size)
+{
+    const std::string file = TEST_PATH;
+    BC_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 }, true, true);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.restage(false));
+
+    // An unstaged claim is not held by the frontier.
+    BC_REQUIRE_EQUAL(instance.allocate(100), zero);
+    BC_REQUIRE_EQUAL(instance.frontier(), instance.size());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+}
+
+BC_AUTO_TEST_CASE(mmap__restage__staged__frontier_holds_claim)
+{
+    const std::string file = TEST_PATH;
+    BC_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 }, true, true);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.restage(false));
+    BC_REQUIRE(!instance.restage(true));
+
+    const auto first = instance.allocate(100);
+    BC_REQUIRE_EQUAL(instance.frontier(), first);
+
+    instance.complete(first, 100);
+    BC_REQUIRE_EQUAL(instance.frontier(), instance.size());
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+}
+
+BC_AUTO_TEST_CASE(mmap__restage__unstaged_reloaded__staged)
+{
+    const std::string file = TEST_PATH;
+    BC_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 }, true, true);
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(!instance.restage(false));
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.load());
+
+    // Unstaging lasts for the one load.
+    const auto first = instance.allocate(100);
+    BC_REQUIRE_EQUAL(instance.frontier(), first);
+
+    instance.complete(first, 100);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+}
+
+#endif // MANAGE_STAGING
+
 BC_AUTO_TEST_CASE(mmap__unload__shared__unload_locked)
 {
     const std::string file = TEST_PATH;

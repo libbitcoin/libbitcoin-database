@@ -824,6 +824,22 @@ BC_AUTO_TEST_CASE(nomap__slab_drop__populated__empties_body_and_head)
     BC_REQUIRE(!instance.get_fault());
 }
 
+// restage
+// ----------------------------------------------------------------------------
+
+BC_AUTO_TEST_CASE(nomap__record_restage__populated__retained)
+{
+    auto head = base16_chunk("0200000000");
+    auto body = base16_chunk("1234567812345678");
+    test::chunk_storage head_store{ head, test::terminal_fill };
+    test::chunk_storage body_store{ body };
+    record_table instance{ head_store, body_store };
+    BC_REQUIRE(!instance.restage(false));
+    BC_REQUIRE(!instance.restage(true));
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE(!instance.get_fault());
+}
+
 // allocate/put (batch)
 // ----------------------------------------------------------------------------
 

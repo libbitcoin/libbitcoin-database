@@ -182,6 +182,12 @@ code CLASS::reload() NOEXCEPT
     return files_.load();
 }
 
+TEMPLATE
+code CLASS::restage(bool staged) NOEXCEPT
+{
+    return files_.restage(staged);
+}
+
 // static
 // ----------------------------------------------------------------------------
 
