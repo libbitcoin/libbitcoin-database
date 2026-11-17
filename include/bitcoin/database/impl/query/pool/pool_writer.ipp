@@ -144,18 +144,16 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
         !set_pool_adoption(row, tx))
         return false;
 
-    // A conflict with a confirmed spender is absent for it.
-    using replace = table::pool_cells::replace;
-    constexpr auto cause = bit_or(algorithm::absent, algorithm::conflicted);
-    if (conflicted)
-        return store_.pool_cells.set(row, replace{ {}, cause });
-
     pool_guards guards{};
     algorithm::columns_t columns{};
     if (!get_pool_columns(columns, guards))
         return false;
 
-    algorithm::admit(columns, row);
+    // A conflict with a confirmed spender is absent for it, and a component
+    // over the member limit is labeled by the columns.
+    if (!algorithm::admit(columns, row, conflicted))
+        system::pool::label(columns);
+
     return true;
     // ========================================================================
 }

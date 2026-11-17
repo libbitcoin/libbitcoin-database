@@ -443,25 +443,21 @@ bool CLASS::set_pool_block(const header_link& link, bool confirmed) NOEXCEPT
     if (!get_pool_columns(columns, guards))
         return false;
 
-    const auto state = confirmed ? algorithm::boundary : algorithm::unlabeled;
-    for (const auto row: block)
-        if (row < columns.cells.size())
-            columns.cells[row] = algorithm::to_column(state);
-
-    for (const auto row: conflicts)
+    const auto beyond = [&](link_t row) NOEXCEPT
     {
-        if (row >= columns.cells.size())
-            continue;
+        return row >= columns.cells.size();
+    };
 
-        auto& cell = columns.cells[row];
-        const auto value = algorithm::from_column(cell);
-        cell = algorithm::to_column(confirmed ?
-            algorithm::raised(value, algorithm::conflicted) :
-            algorithm::lowered(value, algorithm::conflicted));
-    }
+    std::erase_if(block, beyond);
+    std::erase_if(conflicts, beyond);
+    const auto complete = confirmed ?
+        algorithm::confirm(columns, block, conflicts) :
+        algorithm::unconfirm(columns, block, conflicts);
 
-    system::pool::settle(columns);
-    system::pool::label(columns);
+    // A component over the member limit is labeled by the columns.
+    if (!complete)
+        system::pool::label(columns);
+
     store_.set_pool_settled(settled);
     return true;
     // ========================================================================
