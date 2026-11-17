@@ -259,6 +259,9 @@ bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
 
     const auto raw_edges = store_.pool.edges.get_raw();
     const auto raw_totals = store_.pool.totals.get_raw();
+    const auto raw_flags = store_.pool.flags.get_raw();
+    const auto raw_heights = store_.pool.heights.get_raw();
+    const auto raw_medians = store_.pool.medians.get_raw();
     const auto edges = pointer_cast<const edges_t>(raw_edges);
     const auto totals = pointer_cast<const totals_t>(raw_totals);
     out =
@@ -269,7 +272,10 @@ bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
         { totals, rows },
         { data(guards.rows), inputs },
         { data(guards.siblings), inputs },
-        { data(guards.rivals), inputs }
+        { data(guards.rivals), inputs },
+        { pointer_cast<const uint32_t>(raw_flags), rows },
+        { pointer_cast<const uint32_t>(raw_heights), rows },
+        { pointer_cast<const uint32_t>(raw_medians), rows }
     };
 
     return true;

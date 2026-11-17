@@ -108,6 +108,9 @@ namespace caches
     constexpr auto pool_id3 = "id3"_t;
     constexpr auto pool_totals = "totals"_t;
     constexpr auto pool_edges = "edges"_t;
+    constexpr auto pool_flags = "flags"_t;
+    constexpr auto pool_heights = "heights"_t;
+    constexpr auto pool_medians = "medians"_t;
     constexpr auto pool_cells = "cache_pool_cells";
     constexpr auto pool_children = "cache_pool_children";
     constexpr auto spends = "cache_spends";

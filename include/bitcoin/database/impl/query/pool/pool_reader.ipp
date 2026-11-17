@@ -40,7 +40,7 @@ bool CLASS::get_pooled_time(uint32_t& out, const tx_link& link) const NOEXCEPT
     if (fk.is_terminal())
         return false;
 
-    table::pool::get_time pooled{};
+    table::pool::record pooled{};
     if (!store_.pool.get(fk, pooled))
         return false;
 
@@ -60,11 +60,13 @@ code CLASS::get_pooled(pooled_tx& out, const tx_link& link,
     if (fk.is_terminal())
         return error::unvalidated;
 
-    table::pool::record valid{};
-    if (!store_.pool.get(fk, valid))
+    table::pool_scalar flags{}, height{}, median{};
+    if (!store_.pool.flags.get(fk, flags) ||
+        !store_.pool.heights.get(fk, height) ||
+        !store_.pool.medians.get(fk, median))
         return error::integrity;
 
-    if (!is_sufficient(ctx, valid.ctx))
+    if (!is_sufficient(ctx, { flags.value, height.value, median.value }))
         return error::unvalidated;
 
     table::pool_edge edge{};
@@ -128,13 +130,14 @@ bool CLASS::get_pooled_fee(uint64_t& fee, size_t& size, size_t& height,
         return false;
 
     table::pool_total total{};
-    table::pool::get_height pooled{};
-    if (!store_.pool.get(fk, pooled) || !store_.pool.totals.get(fk, total))
+    table::pool_scalar pooled{};
+    if (!store_.pool.heights.get(fk, pooled) ||
+        !store_.pool.totals.get(fk, total))
         return false;
 
     fee = total.fee;
     size = total.bytes;
-    height = pooled.height;
+    height = pooled.value;
     return true;
 }
 

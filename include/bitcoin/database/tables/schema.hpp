@@ -74,7 +74,8 @@ namespace schema {
 /// 4.0.28.0 Fork activation heights in the envelope.
 /// 4.0.29.0 Fork activation groups in the envelope.
 /// 4.0.30.0 Pool totals and edges columns, pool index heads.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 30, 0 };
+/// 4.0.31.0 Pool flags, heights and medians columns (from the pool record).
+constexpr std::array<uint32_t, 4> version{ 4, 0, 31, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------
@@ -467,16 +468,13 @@ struct pool
     static constexpr size_t witness_lanes = 4;
     using witness_lane = unsigned_type<schema::hash / witness_lanes>;
     static constexpr size_t minsize =
-        schema::flags +         // context.flags
-        schema::height_ +       // context.height
-        sizeof(uint32_t) +      // context.mtp
         sizeof(uint32_t);       // time
     static constexpr size_t minrow = pk + sk + minsize;
     static constexpr size_t size = minsize;
     static constexpr size_t cell = link::size;
     static constexpr link count() NOEXCEPT { return 1; }
-    static_assert(minsize == 15u);
-    static_assert(minrow == 23u);
+    static_assert(minsize == 4u);
+    static_assert(minrow == 12u);
     static_assert(link::size == 4u);
     static_assert(cell == 4u);
     static_assert(witness_lanes * sizeof(witness_lane) == schema::hash);
@@ -495,6 +493,12 @@ TABLE_COLUMN(caches, pool_totals, sizeof(uint64_t) + two * sizeof(uint32_t));
 TABLE_COLUMN(caches, pool_edges, schema::spends_ + sizeof(uint32_t));
 static_assert(pool_totals::size == 16u);
 static_assert(pool_edges::size == 8u);
+
+// pool context columns, word aligned (flags, height, median time past).
+TABLE_COLUMN(caches, pool_flags, sizeof(uint32_t));
+TABLE_COLUMN(caches, pool_heights, sizeof(uint32_t));
+TABLE_COLUMN(caches, pool_medians, sizeof(uint32_t));
+static_assert(pool_flags::size == schema::flags);
 
 // headmap (values), indexed by pool link: state and label of the row.
 struct pool_cells
