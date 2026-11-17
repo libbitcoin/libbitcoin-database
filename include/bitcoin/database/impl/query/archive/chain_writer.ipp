@@ -100,12 +100,17 @@ code CLASS::set_code(tx_link& out_fk, bool& pooled,
         }
     }
 
-    // Allocate tx record.
     constexpr auto txs = system::possible_narrow_cast<tx_link::integer>(one);
+
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    // Allocate tx record.
     if (out_fk = store_.tx.allocate(txs); out_fk.is_terminal())
         return error::tx_tx_allocate;
 
     return set_code(out_fk, tx, false, false);
+    // ========================================================================
 }
 
 TEMPLATE
@@ -140,9 +145,6 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
     const auto inputs = possible_narrow_cast<ix::integer>(ins->size());
     const auto outputs = possible_narrow_cast<ix::integer>(ous->size());
     const auto coinbase = tx.is_coinbase();
-
-    // ========================================================================
-    const auto scope = get_transactor();
 
     // Allocate contiguously and store inputs.
     input_link in_fk{};
@@ -267,7 +269,6 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
     // tx.get_hash() assumes cached or is not thread safe.
     return store_.tx.commit(tx_fk, tx.get_hash(false)) ?
         error::success : error::tx_tx_commit;
-    // ========================================================================
 }
 
 // set header
@@ -442,7 +443,16 @@ code CLASS::set_code(const block& block, const header_link& key,
                 --txs;
     }
 
+    // Optional hash, only has value on height intervals.
+    auto interval = create_interval(key, height);
+
     using count = linkage<schema::count_>::integer;
+    const auto light = block.serialized_size(false);
+    const auto heavy = block.serialized_size(true);
+
+    // ========================================================================
+    const auto scope = get_transactor();
+
     auto fk = store_.tx.allocate(possible_narrow_cast<count>(txs));
     if (fk.is_terminal())
         return error::tx_tx_allocate;
@@ -462,14 +472,6 @@ code CLASS::set_code(const block& block, const header_link& key,
         ++it;
     }
 
-    // Optional hash, only has value on height intervals.
-    auto interval = create_interval(key, height);
-
-    const auto light = block.serialized_size(false);
-    const auto heavy = block.serialized_size(true);
-
-    // ========================================================================
-    const auto scope = get_transactor();
     return set_txs(key, std::move(links), light, heavy, std::move(interval),
         strong);
     // ========================================================================
