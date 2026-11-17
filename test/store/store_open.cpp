@@ -197,6 +197,23 @@ static bool confirm(query<store<database::mmap>>& query_, const spend_t& tx) NOE
     return candidate && query_.push_confirmed(link, true);
 }
 
+// Each of the first count inputs returns to itself along its ring of rivals,
+// after visiting every other of them.
+static bool is_ring(const store<database::mmap>& instance, size_t count) NOEXCEPT
+{
+    for (size_t start{}; start < count; ++start)
+    {
+        auto at = start;
+        for (size_t step{}; step < count; ++step)
+            at = instance.spends_rivals.at(at);
+
+        if (at != start)
+            return false;
+    }
+
+    return true;
+}
+
 static code pooled(query<store<database::mmap>>& query_, const spend_t& tx) NOEXCEPT
 {
     pooled_tx out{};
@@ -521,6 +538,30 @@ BC_AUTO_TEST_CASE(store__open__retained_and_dropped__retained_present)
     BC_REQUIRE(!instance.open(test::events));
     BC_REQUIRE_EQUAL(query_.pool_records(), one);
     BC_REQUIRE(system::pool::algorithm::is_present(instance.pool_cells.at(zero)));
+    BC_REQUIRE(!instance.close(test::events));
+}
+
+BC_AUTO_TEST_CASE(store__open__retained_rivals__closed_ring)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    instance.set_pooling();
+
+    const auto confirmed = spend(genesis_coinbase(), 1u);
+    BC_REQUIRE(pool(query_, confirmed));
+    BC_REQUIRE(pool(query_, spend(confirmed.hash(false), 5u)));
+    BC_REQUIRE(pool(query_, spend(confirmed.hash(false), 4u)));
+    BC_REQUIRE(pool(query_, spend(confirmed.hash(false), 3u)));
+    BC_REQUIRE(pool(query_, spend(confirmed.hash(false), 2u)));
+    BC_REQUIRE(confirm(query_, confirmed));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE_EQUAL(query_.pool_records(), 4u);
+    BC_REQUIRE(is_ring(instance, 4u));
     BC_REQUIRE(!instance.close(test::events));
 }
 

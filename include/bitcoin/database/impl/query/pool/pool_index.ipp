@@ -25,7 +25,8 @@ namespace libbitcoin {
 namespace database {
 
 // The pool index is rebuilt from the compacted pool. Retained rows are
-// confirmable, so none has a stored cause of absence.
+// confirmable, so none has a stored cause of absence. Inputs follow row order,
+// so a row joins only the rings of the rows rebuilt before it.
 TEMPLATE
 bool CLASS::set_pool_index() NOEXCEPT
 {
@@ -71,7 +72,8 @@ bool CLASS::set_pool_index() NOEXCEPT
             bool conflict{};
             auto& mate = mates.at(at);
             const auto point = get_point_key(to_point(tx, at));
-            if (!get_pooled_spender(mate, conflict, point, tx, true))
+            if (!get_pooled_spender(mate, conflict, point, tx, true,
+                edge.spends_fk))
                 return false;
         }
 
@@ -286,7 +288,7 @@ bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
 TEMPLATE
 bool CLASS::get_pooled_spender(system::pool::algorithm::link_t& out,
     bool& conflicted, const point& point, const tx_link& self,
-    bool archived) const NOEXCEPT
+    bool archived, system::pool::algorithm::link_t bound) const NOEXCEPT
 {
     using namespace system;
     using link_t = system::pool::algorithm::link_t;
@@ -321,7 +323,10 @@ bool CLASS::get_pooled_spender(system::pool::algorithm::link_t& out,
             return false;
 
         const auto position = in - to_point(tx, zero).value;
-        out = edge.spends_fk + possible_narrow_cast<link_t>(position);
+        const auto offset = possible_narrow_cast<link_t>(position);
+        const auto input = edge.spends_fk + offset;
+        if (input < bound)
+            out = input;
     }
 
     return true;

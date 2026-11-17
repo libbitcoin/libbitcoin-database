@@ -1242,10 +1242,13 @@ protected:
     bool set_pool_adoption(system::pool::algorithm::link_t row,
         const transaction& tx) NOEXCEPT;
 
-    /// The input of a pooled spender of the point, and if it is confirmed spent.
+    /// The input of a pooled spender of the point below the bound, and if it is
+    /// confirmed spent.
     bool get_pooled_spender(system::pool::algorithm::link_t& out,
         bool& conflicted, const point& point, const tx_link& self,
-        bool archived) const NOEXCEPT;
+        bool archived,
+        system::pool::algorithm::link_t bound=system::pool::algorithm::none)
+        const NOEXCEPT;
 
     /// The pooled spenders of the points spent by the txs (their conflicts).
     bool get_pool_conflicts(tx_links& out, const tx_links& txs) const NOEXCEPT;
