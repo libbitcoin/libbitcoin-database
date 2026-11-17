@@ -731,6 +731,10 @@ public:
     /// Pool.
     /// -----------------------------------------------------------------------
 
+    /// A validation under the evaluated context holds under the current.
+    inline bool is_sufficient(const context& current,
+        const context& evaluated) const NOEXCEPT;
+
     bool is_pooled(const tx_link& link) const NOEXCEPT;
     code get_pooled(pooled_tx& out, const tx_link& link,
         const context& ctx) const NOEXCEPT;
@@ -780,6 +784,9 @@ public:
 
     /// Apply the confirmation (or reorganization) of the block to the index.
     bool set_pool_block(const header_link& link, bool confirmed) NOEXCEPT;
+
+    /// Apply the pool context to the index, out the rows it does not satisfy.
+    bool set_pool_context(size_t& out, const context& ctx) NOEXCEPT;
 
     /// Coverage.
     /// -----------------------------------------------------------------------
@@ -1163,11 +1170,6 @@ protected:
 
     bool get_outputs_total_value(uint64_t& out,
         const output_links& links) const NOEXCEPT;
-
-    /// Validate.
-    /// -----------------------------------------------------------------------
-    inline bool is_sufficient(const context& current,
-        const context& evaluated) const NOEXCEPT;
 
 
     /// Pool.
@@ -1577,6 +1579,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/pool/pool_estimate.ipp>
 #include <bitcoin/database/impl/query/pool/pool_index.ipp>
 #include <bitcoin/database/impl/query/pool/pool_reader.ipp>
+#include <bitcoin/database/impl/query/pool/pool_suffice.ipp>
 #include <bitcoin/database/impl/query/pool/pool_template.ipp>
 #include <bitcoin/database/impl/query/pool/pool_writer.ipp>
 

@@ -60,17 +60,16 @@ bool CLASS::is_validateable(size_t height) const NOEXCEPT
         !database::is_unconfirmable(state);
 }
 
-// protected
 TEMPLATE
 inline bool CLASS::is_sufficient(const context& current,
     const context& evaluated) const NOEXCEPT
 {
     // Past evaluation at a lesser height and mtp is sufficient, provided that
     // absolute locktime is evaluated against mtp (not block timestamp).
-    return evaluated.flags == current.flags
-        && evaluated.is_enabled(system::chain::flags::bip113_rule)
-        && evaluated.height <= current.height
-        && evaluated.mtp <= current.mtp;
+    return system::pool::algorithm::is_sufficient(
+        { evaluated.flags, evaluated.height, evaluated.mtp },
+        { current.flags, current.height, current.mtp },
+        system::chain::flags::bip113_rule);
 }
 
 // writers
