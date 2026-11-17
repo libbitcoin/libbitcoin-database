@@ -104,6 +104,25 @@ tx_link CLASS::to_pool_tx(const pool_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::get_pooled_totals(pool_totals& out,
+    const tx_link& link) const NOEXCEPT
+{
+    if (!store_.pool.enabled())
+        return false;
+
+    const auto fk = store_.pool.first(link);
+    if (fk.is_terminal())
+        return false;
+
+    table::pool_total total{};
+    if (!store_.pool.totals.get(fk, total))
+        return false;
+
+    out = { total.fee, total.bytes, total.sigops };
+    return true;
+}
+
+TEMPLATE
 bool CLASS::get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT
 {
     size_t height{};

@@ -740,6 +740,10 @@ public:
         const context& ctx) const NOEXCEPT;
     bool get_pooled_time(uint32_t& out, const tx_link& link) const NOEXCEPT;
 
+    /// The fee, virtual size and sigops of the pooled tx.
+    bool get_pooled_totals(pool_totals& out,
+        const tx_link& link) const NOEXCEPT;
+
     /// Unconfirmed, and not conflicted by a confirmed tx (or via ancestry).
     bool is_confirmable_tx(const tx_link& link) const NOEXCEPT;
 
