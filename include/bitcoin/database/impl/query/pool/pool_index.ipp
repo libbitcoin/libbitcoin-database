@@ -84,6 +84,9 @@ bool CLASS::set_pool_index() NOEXCEPT
     if (!get_pool_columns(columns, guards))
         return false;
 
+    std::ranges::fill(columns.cells,
+        algorithm::to_column(algorithm::unlabeled));
+
     pool_links scratch(columns.rows.size());
     algorithm::initialize(columns);
     while (algorithm::propagate(columns, scratch));

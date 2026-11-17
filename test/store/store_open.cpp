@@ -19,6 +19,7 @@
 #include "../test.hpp"
 #include "../mocks/blocks.hpp"
 #include "../mocks/map_store.hpp"
+#include "../mocks/pooling.hpp"
 
 // these include the slow tests (mmap)
 
@@ -555,6 +556,64 @@ BC_AUTO_TEST_CASE(store__open__compacted__pooled_after)
     BC_REQUIRE_EQUAL(out.prevouts.front().parent, query_.to_tx(retained.hash(false)));
     BC_REQUIRE_EQUAL(query_.spends_records(), two);
     BC_REQUIRE_EQUAL(query_.wtxid_records(), two);
+    BC_REQUIRE(!instance.close(test::events));
+}
+
+BC_AUTO_TEST_CASE(store__open__compacted_child_of_retained__covered)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    instance.set_pooling();
+
+    // Each fee is 1,000 (the genesis coinbase is 5,000,000,000).
+    const auto confirmed = spend(genesis_coinbase(), 4'999'999'000);
+    const auto retained = spend(confirmed.hash(false), 4'999'998'000);
+    const auto child = system::to_shared(spend(retained.hash(false), 4'999'997'000));
+    const auto rate = uint64_t{ 1'000'000 } / child->virtual_size();
+    BC_REQUIRE(query_.populate_without_metadata(confirmed));
+    BC_REQUIRE(pool(query_, confirmed));
+    BC_REQUIRE(query_.populate_without_metadata(retained));
+    BC_REQUIRE(pool(query_, retained));
+    BC_REQUIRE(confirm(query_, confirmed));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE(query_.populate_with_metadata(*child, true, true));
+
+    bool covered{};
+    BC_REQUIRE_EQUAL(query_.get_pool_coverage(covered, { child }, { false }, validated_context, rate, 20, test::block_limit, 1'024), error::success);
+    BC_REQUIRE(covered);
+    BC_REQUIRE(!instance.close(test::events));
+}
+
+BC_AUTO_TEST_CASE(store__open__compacted_retained__templated)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    instance.set_pooling();
+
+    const auto confirmed = spend(genesis_coinbase(), 4'999'999'000);
+    const auto retained = spend(confirmed.hash(false), 4'999'998'000);
+    BC_REQUIRE(query_.populate_without_metadata(confirmed));
+    BC_REQUIRE(pool(query_, confirmed));
+    BC_REQUIRE(query_.populate_without_metadata(retained));
+    BC_REQUIRE(pool(query_, retained));
+    BC_REQUIRE(confirm(query_, confirmed));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.open(test::events));
+
+    tx_links out{};
+    test::pool_projection projection{};
+    BC_REQUIRE_EQUAL(query_.get_pool_template(out, projection, test::block_limit, 25, 20, 1'024), error::success);
+    BC_REQUIRE_EQUAL(out.size(), one);
+    BC_REQUIRE_EQUAL(out.front(), query_.to_tx(retained.hash(false)));
     BC_REQUIRE(!instance.close(test::events));
 }
 
