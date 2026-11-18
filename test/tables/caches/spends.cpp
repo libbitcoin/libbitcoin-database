@@ -117,37 +117,51 @@ BC_AUTO_TEST_CASE(spends__put_refs_get_refs__second_run__expected)
     BC_REQUIRE(result == second);
 }
 
-// value heads
+// spends_index
 // ----------------------------------------------------------------------------
 
-BC_AUTO_TEST_CASE(spends_rows__set__two__expected)
+using index_storages = test::chunk_storages<schema::spends_index::cell, schema::spends_index::cell, schema::spends_index::cell>;
+static const index_storages::paths index_paths{ "rows", "siblings", "rivals" };
+
+BC_AUTO_TEST_CASE(spends_index__rows__set_two__expected)
 {
-    data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
-    table::spends_rows instance{ head_store };
-    const auto expected = base16_chunk("07000000" "ffffffff");
+    index_storages head_store{ index_paths };
+    table::spends_index instance{ head_store };
     BC_REQUIRE(instance.create());
-    BC_REQUIRE(instance.set(0u, table::spends_rows::replace{ {}, 0x00000007 }));
-    BC_REQUIRE(instance.set(1u, table::spends_rows::replace{ {}, 0xffffffff }));
+    BC_REQUIRE(instance.rows.set(0u, table::spends_index::replace{ {}, 0x00000007 }));
+    BC_REQUIRE(instance.rows.set(1u, table::spends_index::replace{ {}, 0xffffffff }));
     BC_REQUIRE_EQUAL(instance.count(), 2u);
-    BC_REQUIRE_EQUAL(instance.at(0u), 7u);
-    BC_REQUIRE_EQUAL(instance.at(1u), 0xffffffffu);
-    BC_REQUIRE_EQUAL(head_file, expected);
+    BC_REQUIRE_EQUAL(instance.rows.at(0u), 7u);
+    BC_REQUIRE_EQUAL(instance.rows.at(1u), 0xffffffffu);
+    BC_REQUIRE_EQUAL(head_store.buffers_.at(0), base16_chunk("07000000" "ffffffff"));
+    BC_REQUIRE_EQUAL(head_store.buffers_.at(1), base16_chunk("00000000" "00000000"));
+    BC_REQUIRE_EQUAL(head_store.buffers_.at(2), base16_chunk("00000000" "00000000"));
 }
 
-BC_AUTO_TEST_CASE(spends_rivals__set__ring__expected)
+BC_AUTO_TEST_CASE(spends_index__siblings__set__expected)
 {
-    data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
-    table::spends_rivals instance{ head_store };
+    index_storages head_store{ index_paths };
+    table::spends_index instance{ head_store };
     BC_REQUIRE(instance.create());
-    BC_REQUIRE(instance.set(0u, table::spends_rivals::replace{ {}, 2u }));
-    BC_REQUIRE(instance.set(1u, table::spends_rivals::replace{ {}, 0xffffffff }));
-    BC_REQUIRE(instance.set(2u, table::spends_rivals::replace{ {}, 0u }));
+    BC_REQUIRE(instance.siblings.set(1u, table::spends_index::replace{ {}, 0x00000003 }));
+    BC_REQUIRE_EQUAL(instance.count(), 2u);
+    BC_REQUIRE_EQUAL(instance.siblings.at(1u), 3u);
+    BC_REQUIRE_EQUAL(instance.rows.at(1u), 0u);
+    BC_REQUIRE_EQUAL(instance.rivals.at(1u), 0u);
+}
+
+BC_AUTO_TEST_CASE(spends_index__rivals__set_ring__expected)
+{
+    index_storages head_store{ index_paths };
+    table::spends_index instance{ head_store };
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.rivals.set(0u, table::spends_index::replace{ {}, 2u }));
+    BC_REQUIRE(instance.rivals.set(1u, table::spends_index::replace{ {}, 0xffffffff }));
+    BC_REQUIRE(instance.rivals.set(2u, table::spends_index::replace{ {}, 0u }));
     BC_REQUIRE_EQUAL(instance.count(), 3u);
-    BC_REQUIRE_EQUAL(instance.at(0u), 2u);
-    BC_REQUIRE_EQUAL(instance.at(1u), 0xffffffffu);
-    BC_REQUIRE_EQUAL(instance.at(2u), 0u);
+    BC_REQUIRE_EQUAL(instance.rivals.at(0u), 2u);
+    BC_REQUIRE_EQUAL(instance.rivals.at(1u), 0xffffffffu);
+    BC_REQUIRE_EQUAL(instance.rivals.at(2u), 0u);
 }
 
 BC_AUTO_TEST_SUITE_END()

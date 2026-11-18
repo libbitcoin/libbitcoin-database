@@ -254,7 +254,7 @@ static bool is_ring(const store<database::mmap>& instance, size_t count) NOEXCEP
     {
         auto at = start;
         for (size_t step{}; step < count; ++step)
-            at = instance.spends_rivals.at(at);
+            at = instance.spends_index.rivals.at(at);
 
         if (at != start)
             return false;
@@ -586,7 +586,7 @@ BC_AUTO_TEST_CASE(store__open__retained_and_dropped__retained_present)
     BC_REQUIRE(!instance.close(test::events));
     BC_REQUIRE(!instance.open(test::events));
     BC_REQUIRE_EQUAL(query_.pool_records(), one);
-    BC_REQUIRE(system::pool::algorithm::is_present(instance.pool_cells.at(zero)));
+    BC_REQUIRE(system::pool::algorithm::is_present(instance.pool_index.cells.at(zero)));
     BC_REQUIRE(!instance.close(test::events));
 }
 

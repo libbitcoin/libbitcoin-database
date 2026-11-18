@@ -274,41 +274,59 @@ using pool_storage = mmaps<Storage, pool_time,
     pool_id0, pool_id1, pool_id2, pool_id3, pool_totals, pool_edges,
     pool_flags, pool_heights, pool_medians>;
 
-/// A value head aligned with a table, one word per row, updated in place.
+/// Replace the value of a head cell.
 template <typename Schema>
-struct value_head
-  : public value_map<Schema>
+struct head_value
+  : public Schema
 {
-    using base = value_map<Schema>;
     using value = typename Schema::value;
-    using base::base;
 
-    /// Replace the value.
-    struct replace
-      : public Schema
+    inline bool from_data(reader& source) NOEXCEPT
     {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.skip_bytes(Schema::cell);
-            return source;
-        }
+        source.skip_bytes(Schema::cell);
+        return source;
+    }
 
-        inline bool to_data(flipper& sink) const NOEXCEPT
-        {
-            sink.write_little_endian<value, Schema::cell>(value_);
-            return sink;
-        }
+    inline bool to_data(flipper& sink) const NOEXCEPT
+    {
+        sink.write_little_endian<value, Schema::cell>(value_);
+        return sink;
+    }
 
-        value value_{};
-    };
+    value value_{};
 };
 
-/// pool_cells is the state and component label of each pool row.
-using pool_cells = value_head<schema::pool_cells>;
+/// State and component label of each pool row.
+struct pool_cells
+{
+    static constexpr auto width = schema::pool_index::cell;
+    static constexpr auto suffix = schema::caches::pool_cells;
+};
 
-/// pool_children is the first input spending each pool row (none if
-/// childless), heading the list of its spending inputs.
-using pool_children = value_head<schema::pool_children>;
+/// First input spending each pool row (none if childless), heading the list
+/// of its spending inputs.
+struct pool_children
+{
+    static constexpr auto width = schema::pool_index::cell;
+    static constexpr auto suffix = schema::caches::pool_children;
+};
+
+/// pool_index is a head-only array of value columns aligned with the pool,
+/// one word per row and column, updated in place.
+struct pool_index
+  : public head_maps<schema::pool_index, pool_cells, pool_children>
+{
+    using base = head_maps<schema::pool_index, pool_cells, pool_children>;
+    using base::headmaps;
+    using replace = head_value<schema::pool_index>;
+
+    head_column<base, 0> cells{ *this };
+    head_column<base, 1> children{ *this };
+};
+
+/// Aggregate (files).
+template <template <size_t...> class Storage>
+using pool_index_storage = mmaps<Storage, pool_cells, pool_children>;
 
 } // namespace table
 } // namespace database

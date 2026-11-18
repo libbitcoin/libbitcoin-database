@@ -799,11 +799,8 @@ public:
     struct pool_guards
     {
         memory pool{};
-        memory cells{};
-        memory children{};
-        memory rows{};
-        memory siblings{};
-        memory rivals{};
+        memory pool_index{};
+        memory spends_index{};
     };
 
     /// The pool columns with txs appended as candidates (guards held).

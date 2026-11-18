@@ -61,10 +61,10 @@ BC_AUTO_TEST_CASE(query_pool__set_pooled__conflict_and_child__one_component)
     const auto child_before = pool_cell(query, store, child);
     const auto rivaled = pool_populated(query, rival);
     const auto parent_row = store.pool.first(query.to_tx(parent.hash(false)));
-    const auto head = store.pool_children.at(parent_row.value);
-    const auto ring0 = store.spends_rivals.at(0u);
-    const auto ring1 = store.spends_rivals.at(1u);
-    const auto ring2 = store.spends_rivals.at(2u);
+    const auto head = store.pool_index.children.at(parent_row.value);
+    const auto ring0 = store.spends_index.rivals.at(0u);
+    const auto ring1 = store.spends_index.rivals.at(1u);
+    const auto ring2 = store.spends_index.rivals.at(2u);
 
     BC_REQUIRE(pooled);
     BC_REQUIRE_EQUAL(parent_before, system::pool::algorithm::unlabeled);
@@ -188,12 +188,12 @@ BC_AUTO_TEST_CASE(query_pool__set_pooled__reorganized_parent__children_adopted)
     const auto child = to_spend(parent.hash(false), 4'999'998'000);
     const auto confirmed = !archive_confirm(query, parent).is_terminal();
     const auto pooled = pool_populated(query, child);
-    const auto before = store.spends_rows.at(0u);
+    const auto before = store.spends_index.rows.at(0u);
     const auto popped = query.pop_confirmed();
     const auto link = query.to_tx(parent.hash(false));
     const auto repooled = query.set_pooled(link, parent, context{ bip113, 8, 9 }, 0);
-    const auto after = store.spends_rows.at(0u);
-    const auto head = store.pool_children.at(1u);
+    const auto after = store.spends_index.rows.at(0u);
+    const auto head = store.pool_index.children.at(1u);
     const auto rivaled = pool_populated(query, to_spend(genesis_coinbase(), 4'999'998'500));
 
     BC_REQUIRE(confirmed);

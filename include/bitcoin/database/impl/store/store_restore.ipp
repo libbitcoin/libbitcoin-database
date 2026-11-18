@@ -170,11 +170,8 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         // pool, spends, wtxid and the pool index heads are dropped.
         dropped(ec, pool, table_t::pool_table);
         dropped(ec, spends, table_t::spends_table);
-        dropped(ec, pool_cells, table_t::pool_cells_table);
-        dropped(ec, pool_children, table_t::pool_children_table);
-        dropped(ec, spends_rows, table_t::spends_rows_table);
-        dropped(ec, spends_siblings, table_t::spends_siblings_table);
-        dropped(ec, spends_rivals, table_t::spends_rivals_table);
+        dropped(ec, pool_index, table_t::pool_index_table);
+        dropped(ec, spends_index, table_t::spends_index_table);
         dropped(ec, wtxid, table_t::wtxid_table);
 
         restore(ec, filter_bk, table_t::filter_bk_table);
