@@ -140,9 +140,11 @@ code CLASS::migrate_envelope(table::envelope::record& record) NOEXCEPT
         !database::envelope::migrate(raw.data, envelope_))
         return error::verify_table;
 
+    using integer = schema::envelope::link::integer;
     const auto size = envelope.head_size();
     const auto count = raw.data.size();
-    if ((count > size) && envelope.allocate(count - size).is_terminal())
+    if ((count > size) && envelope.allocate(
+        possible_narrow_cast<integer>(count - size)).is_terminal())
         return error::disk_full;
 
     if (!envelope.put(zero, raw) || !envelope.get(zero, record))
