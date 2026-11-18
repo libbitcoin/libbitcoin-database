@@ -42,6 +42,25 @@ struct BCD_API envelope
 
     /// The schema version compiled into this build (see schema::version).
     static const system::config::version compiled;
+
+    /// The oldest schema version migrated to compiled (see schema::migratable).
+    static const system::config::version migratable;
+
+    /// True if the schema is compiled or migratable to compiled.
+    static bool is_readable(const system::config::version& schema) NOEXCEPT;
+
+    /// The schema of a serialized envelope (default if too short).
+    static system::config::version get_schema(
+        const system::data_chunk& data) NOEXCEPT;
+
+    /// Migrate a serialized migratable envelope to the next schema, taking
+    /// values the prior schema does not store from configured.
+    static bool migrate_step(system::data_chunk& data,
+        const envelope& configured) NOEXCEPT;
+
+    /// Migrate a serialized readable envelope to the compiled schema.
+    static bool migrate(system::data_chunk& data,
+        const envelope& configured) NOEXCEPT;
     static constexpr size_t forks_count = 28;
     static constexpr auto activation_count = to_bits(sizeof(uint32_t));
     static constexpr size_t activation_size = sizeof(uint32_t) +
@@ -51,15 +70,16 @@ struct BCD_API envelope
 
     envelope() NOEXCEPT;
     envelope(const system::settings& bitcoin, const settings& database,
-        bool limited, uint32_t silent) NOEXCEPT;
+        bool limited, bool filters, bool witness, uint32_t silent) NOEXCEPT;
 
     void set(const settings& database) NOEXCEPT;
 
     /// Assign the stored values to configuration, returning the names of those
-    /// that differed. A differing top checkpoint, or provided filters, cannot
-    /// be assigned to configuration and are only returned.
+    /// that differed. A differing top checkpoint cannot be assigned to
+    /// configuration and is only returned. Filters are not assigned, but
+    /// their tables are unbucketed when not provided.
     system::string_list apply(system::settings& bitcoin, settings& database,
-        bool& limited, uint32_t& silent) const NOEXCEPT;
+        bool& limited, bool& witness, uint32_t& silent) const NOEXCEPT;
 
     bool from_data(reader& source) NOEXCEPT;
     bool to_data(flipper& sink) const NOEXCEPT;
@@ -132,6 +152,7 @@ struct BCD_API envelope
     bool provide_filters{};
 
     /// Node settings.
+    bool require_witness{};
     uint32_t silent_start_height{ max_uint32 };
 
     /// Node state.

@@ -63,7 +63,7 @@ BC_AUTO_TEST_CASE(query_consensus__get_validated_fork__filters_disabled__bypass_
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
-    settings.filter_tx.buckets = 0;
+    settings.envelope.provide_filters = false;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BC_REQUIRE(!store.create(test::events_handler));
@@ -91,8 +91,7 @@ BC_AUTO_TEST_CASE(query_consensus__get_validated_fork__bypassed_unscanned__stops
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
-    settings.filter_tx.buckets = 0;
-    settings.initialize(system::settings{ system::chain::selection::regtest }, false, 2);
+    settings.initialize(system::settings{ system::chain::selection::regtest }, false, false, true, 2);
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BC_REQUIRE(!store.create(test::events_handler));

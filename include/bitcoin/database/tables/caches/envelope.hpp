@@ -58,6 +58,30 @@ struct envelope
         database::envelope envelope{};
     };
 
+    struct raw
+    {
+        static constexpr size_t size = max_size_t;
+
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(data.size());
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            data = source.read_bytes();
+            return source;
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            sink.write_bytes(data);
+            return sink;
+        }
+
+        system::data_chunk data{};
+    };
+
     struct put_pooling
     {
         static constexpr size_t size = max_size_t;

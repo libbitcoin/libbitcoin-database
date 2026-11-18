@@ -318,7 +318,7 @@ bool CLASS::address_enabled() const NOEXCEPT
 TEMPLATE
 bool CLASS::filter_enabled() const NOEXCEPT
 {
-    return store_.filter_bk.enabled() && store_.filter_tx.enabled();
+    return store_.get_envelope().provide_filters;
 }
 
 TEMPLATE

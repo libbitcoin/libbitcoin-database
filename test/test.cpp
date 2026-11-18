@@ -37,6 +37,27 @@ namespace test {
 
 const std::string directory = "tests";
 
+const system::data_chunk envelope_4_0_31 = system::base16_chunk(
+    "04000000000000001f000000000000000101000101010101010101010101010101010101"
+    "010101000000000000320000000000000050340300201c00000400000000751200580200"
+    "00ffff001d01000000020000000300000004000000010000000200000004000000000000"
+    "20809a774ffdee02fdb603fde803fe5b7a0300fe1ded0500fecd8c0500fde00700000000"
+    "0007000000472557807a0659fd7c070000010000000038000000502a5880830b5afd7c07"
+    "00000200000000800100805f836000131361fd1707fe00d40a0001050000000000020000"
+    "000000000000000000010600000000000400000000000000000000000107000000000008"
+    "000000000000000000000001080000000000100000000000000000000000010900000000"
+    "002000000000000000000000000183a93246c67003105af33ae0b29dd66f689d0f0ff54e"
+    "9b4d0000000000000000fe58800400ff85e802588bde261f7d0f3f3877a2fe291ceac993"
+    "0b01000000000000000000fef07e0e0000ff800000008000000080000000800000008000"
+    "000080000000800000000305000003000000012a00000000000000000000000000000000"
+    "ffff7f00000000ffff7f00000000ffff7f00000000ffff7f00000000ffff7f00000000ff"
+    "ff7f00000000ffff7f00000000ffff7f00000000ffff7f00000000ffff7f00000000ffff"
+    "7f00000000ffff7f00000000ffff7f00000000ffff7f00000000ffff7f00000000ffff7f"
+    "00000000ffff7f00000000ffff7f00000000ffff7f00000000ffff7f00000000ffff7f00"
+    "000000ffff7f00000000ffff7f00000000ffff7f00000000ffff7f00000000ffff7f0000"
+    "0000ffff7f00000000ffff7f00000000ffff7f00000000ffff7f00000000ffff7f000000"
+    "00ffff7f");
+
 size_t size(const std::filesystem::path& file_path) NOEXCEPT
 {
     // returns max_size_t on error.
@@ -108,6 +129,18 @@ bool create(const std::filesystem::path& file_path,
     return result;
 }
 
+bool create(const std::filesystem::path& file_path,
+    const system::data_chunk& data) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    system::ofstream file(file_path, std::ios_base::binary);
+    const auto result = file.good();
+    file << std::string{ data.begin(), data.end() };
+    file.close();
+    BC_POP_WARNING()
+    return result;
+}
+
 std::string read_line(const std::filesystem::path& file_path,
     size_t line) NOEXCEPT
 {
@@ -174,6 +207,7 @@ database::settings database_settings() NOEXCEPT
     bucket(out.filter_tx);
 
     out.envelope.set(out);
+    out.envelope.provide_filters = true;
     return out;
 }
 

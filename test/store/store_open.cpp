@@ -109,6 +109,30 @@ BC_AUTO_TEST_CASE(store__open__schema_mismatch__schema_version)
     BC_REQUIRE_EQUAL(instance.open(test::events), error::schema_version);
 }
 
+BC_AUTO_TEST_CASE(store__open__4_0_31__migrated)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    configuration.envelope.require_witness = true;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+
+    const auto& image = test::envelope_4_0_31;
+    BC_REQUIRE(test::create(instance.envelope_head_file(), image));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), add1(image.size()));
+
+    database::envelope stored{};
+    BC_REQUIRE(!instance.read_envelope(stored));
+    BC_REQUIRE(stored.schema == envelope::compiled);
+    BC_REQUIRE(stored.network == system::chain::selection::mainnet);
+    BC_REQUIRE(stored.require_witness);
+    BC_REQUIRE(stored.provide_filters);
+    BC_REQUIRE_EQUAL(stored.silent_start_height, 42u);
+}
+
 // read_envelope
 // ----------------------------------------------------------------------------
 
@@ -133,6 +157,31 @@ BC_AUTO_TEST_CASE(store__read_envelope__created__stored)
     BC_REQUIRE(!instance.read_envelope(stored));
     BC_REQUIRE(stored.schema == envelope::compiled);
     BC_REQUIRE(stored.network == system::chain::selection::testnet4);
+}
+
+BC_AUTO_TEST_CASE(store__read_envelope__4_0_31__migrated_unchanged)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+
+    const auto& image = test::envelope_4_0_31;
+    BC_REQUIRE(test::create(instance.envelope_head_file(), image));
+
+    database::envelope stored{};
+    stored.require_witness = true;
+    BC_REQUIRE(!instance.read_envelope(stored));
+    BC_REQUIRE(stored.schema == envelope::migratable);
+    BC_REQUIRE(stored.network == system::chain::selection::mainnet);
+    BC_REQUIRE(stored.require_witness);
+    BC_REQUIRE_EQUAL(stored.silent_start_height, 42u);
+    BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), image.size());
+
+    database::envelope reread{};
+    BC_REQUIRE(!instance.read_envelope(reread));
+    BC_REQUIRE(reread.schema == envelope::migratable);
 }
 
 BC_AUTO_TEST_CASE(store__read_envelope__schema_mismatch__schema_version)

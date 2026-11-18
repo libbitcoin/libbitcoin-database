@@ -22,7 +22,7 @@ BC_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 614_size;
+constexpr auto default_size = 615_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {
@@ -52,7 +52,7 @@ BC_AUTO_TEST_CASE(envelope__serialized_size__default__expected)
 BC_AUTO_TEST_CASE(envelope__to_data__default__expected_version)
 {
     const envelope instance{};
-    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 31, 0));
+    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 32, 0));
     BC_REQUIRE_EQUAL(to_chunk(instance).front(), schema::version.front());
 }
 
@@ -159,32 +159,24 @@ BC_AUTO_TEST_CASE(envelope__set__default_settings__expected)
     BC_REQUIRE_EQUAL(instance.duplicate_buckets, configuration.duplicate.buckets);
     BC_REQUIRE_EQUAL(instance.pool_buckets, configuration.pool.buckets);
     BC_REQUIRE_EQUAL(instance.wtxid_buckets, configuration.wtxid.buckets);
-    BC_REQUIRE(instance.provide_filters);
 }
 
-BC_AUTO_TEST_CASE(envelope__set__unbucketed_filter_bk__false)
+BC_AUTO_TEST_CASE(envelope__set__unbucketed_filters__provide_filters_unchanged)
 {
     database::settings configuration{ test::database_settings() };
     configuration.filter_bk.buckets = 0;
-    envelope instance{};
-    instance.set(configuration);
-    BC_REQUIRE(!instance.provide_filters);
-}
-
-BC_AUTO_TEST_CASE(envelope__set__unbucketed_filter_tx__false)
-{
-    database::settings configuration{ test::database_settings() };
     configuration.filter_tx.buckets = 0;
     envelope instance{};
+    instance.provide_filters = true;
     instance.set(configuration);
-    BC_REQUIRE(!instance.provide_filters);
+    BC_REQUIRE(instance.provide_filters);
 }
 
 BC_AUTO_TEST_CASE(envelope__construct__mainnet__expected)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
     const database::settings configuration{ test::database_settings() };
-    const envelope instance{ bitcoin, configuration, false, 42 };
+    const envelope instance{ bitcoin, configuration, false, true, true, 42 };
 
     BC_REQUIRE(instance.network == chain::selection::mainnet);
     BC_REQUIRE_EQUAL(instance.initial_subsidy_bitcoin, 50u);
@@ -217,7 +209,7 @@ BC_AUTO_TEST_CASE(envelope__construct__mainnet__unset_filter_k)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
     const database::settings configuration{ test::database_settings() };
-    const envelope instance{ bitcoin, configuration, false, 42 };
+    const envelope instance{ bitcoin, configuration, false, true, true, 42 };
 
     BC_REQUIRE_EQUAL(instance.header_k, 0u);
     BC_REQUIRE_EQUAL(instance.ins_k, 0u);
@@ -232,7 +224,7 @@ BC_AUTO_TEST_CASE(envelope__from_data__mainnet__round_trip)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
     const database::settings configuration{ test::database_settings() };
-    const envelope instance{ bitcoin, configuration, false, 42 };
+    const envelope instance{ bitcoin, configuration, false, true, true, 42 };
     auto data = to_chunk(instance);
     BC_REQUIRE_EQUAL(data.size(), instance.serialized_size());
 
@@ -245,7 +237,7 @@ BC_AUTO_TEST_CASE(envelope__from_data__regtest__round_trip)
 {
     const system::settings bitcoin{ chain::selection::regtest };
     const database::settings configuration{ test::database_settings() };
-    const envelope instance{ bitcoin, configuration, false, 42 };
+    const envelope instance{ bitcoin, configuration, false, true, true, 42 };
     auto data = to_chunk(instance);
     BC_REQUIRE_EQUAL(data.size(), instance.serialized_size());
 
@@ -258,7 +250,7 @@ BC_AUTO_TEST_CASE(envelope__from_data__signet__round_trip)
 {
     const system::settings bitcoin{ chain::selection::signet };
     const database::settings configuration{ test::database_settings() };
-    const envelope instance{ bitcoin, configuration, false, 42 };
+    const envelope instance{ bitcoin, configuration, false, true, true, 42 };
     BC_REQUIRE(instance.forks.signet);
     BC_REQUIRE(instance.signet_challenge == bitcoin.signet_challenge);
 
@@ -274,9 +266,11 @@ BC_AUTO_TEST_CASE(envelope__initialize__mainnet__expected)
 {
     const system::settings bitcoin{ chain::selection::mainnet };
     database::settings configuration{ test::database_settings() };
-    configuration.initialize(bitcoin, false, 42);
+    configuration.initialize(bitcoin, false, true, true, 42);
 
-    BC_REQUIRE(configuration.envelope == envelope(bitcoin, configuration, false, 42));
+    BC_REQUIRE(configuration.envelope == envelope(bitcoin, configuration, false, true, true, 42));
+    BC_REQUIRE(configuration.envelope.provide_filters);
+    BC_REQUIRE(configuration.envelope.require_witness);
     BC_REQUIRE_EQUAL(configuration.envelope.silent_start_height, 42u);
     BC_REQUIRE_EQUAL(configuration.envelope.proof_of_work_limit, bitcoin.proof_of_work_limit);
     BC_REQUIRE_EQUAL(configuration.envelope.bip9_bit1_deployment.threshold, 1916u);
@@ -286,12 +280,14 @@ BC_AUTO_TEST_CASE(envelope__apply__matching__unchanged)
 {
     system::settings bitcoin{ chain::selection::mainnet };
     database::settings configuration{ test::database_settings() };
-    const envelope instance{ bitcoin, configuration, true, 42 };
+    const envelope instance{ bitcoin, configuration, true, true, true, 42 };
 
     auto limited = true;
+    auto witness = true;
     auto silent = 42_u32;
-    BC_REQUIRE(instance.apply(bitcoin, configuration, limited, silent).empty());
+    BC_REQUIRE(instance.apply(bitcoin, configuration, limited, witness, silent).empty());
     BC_REQUIRE(limited);
+    BC_REQUIRE(witness);
     BC_REQUIRE_EQUAL(silent, 42u);
 }
 
@@ -299,17 +295,19 @@ BC_AUTO_TEST_CASE(envelope__apply__differing__assigned)
 {
     system::settings bitcoin{ chain::selection::mainnet };
     database::settings configuration{ test::database_settings() };
-    const envelope instance{ bitcoin, configuration, true, 42 };
+    const envelope instance{ bitcoin, configuration, true, true, true, 42 };
 
     bitcoin.subsidy_interval_blocks = 1;
     configuration.tx.buckets = 1;
     auto limited = false;
+    auto witness = false;
     auto silent = 7_u32;
-    const string_list expected{ "subsidy_interval_blocks", "tx_buckets", "limited_blocks", "silent_start_height" };
-    BC_REQUIRE(instance.apply(bitcoin, configuration, limited, silent) == expected);
+    const string_list expected{ "subsidy_interval_blocks", "tx_buckets", "limited_blocks", "require_witness", "silent_start_height" };
+    BC_REQUIRE(instance.apply(bitcoin, configuration, limited, witness, silent) == expected);
     BC_REQUIRE_EQUAL(bitcoin.subsidy_interval_blocks, instance.subsidy_interval_blocks);
     BC_REQUIRE_EQUAL(configuration.tx.buckets, instance.tx_buckets);
     BC_REQUIRE(limited);
+    BC_REQUIRE(witness);
     BC_REQUIRE_EQUAL(silent, 42u);
 }
 
@@ -317,13 +315,14 @@ BC_AUTO_TEST_CASE(envelope__apply__differing_network__assigned)
 {
     system::settings bitcoin{ chain::selection::testnet4 };
     database::settings configuration{ test::database_settings() };
-    const envelope instance{ bitcoin, configuration, true, 42 };
+    const envelope instance{ bitcoin, configuration, true, true, true, 42 };
 
     bitcoin.network = chain::selection::mainnet;
     auto limited = true;
+    auto witness = true;
     auto silent = 42_u32;
     const string_list expected{ "network" };
-    BC_REQUIRE(instance.apply(bitcoin, configuration, limited, silent) == expected);
+    BC_REQUIRE(instance.apply(bitcoin, configuration, limited, witness, silent) == expected);
     BC_REQUIRE(bitcoin.network == chain::selection::testnet4);
 }
 
@@ -331,7 +330,7 @@ BC_AUTO_TEST_CASE(envelope__from_data__testnet4__round_trip_network)
 {
     const system::settings bitcoin{ chain::selection::testnet4 };
     const database::settings configuration{ test::database_settings() };
-    const envelope instance{ bitcoin, configuration, false, 42 };
+    const envelope instance{ bitcoin, configuration, false, true, true, 42 };
     auto data = to_chunk(instance);
     BC_REQUIRE_EQUAL(data.size(), instance.serialized_size());
 
@@ -344,7 +343,7 @@ BC_AUTO_TEST_CASE(envelope__from_data__testnet5__round_trip_network)
 {
     const system::settings bitcoin{ chain::selection::testnet5 };
     const database::settings configuration{ test::database_settings() };
-    const envelope instance{ bitcoin, configuration, false, 42 };
+    const envelope instance{ bitcoin, configuration, false, true, true, 42 };
     auto data = to_chunk(instance);
     BC_REQUIRE_EQUAL(data.size(), instance.serialized_size());
 
@@ -357,16 +356,116 @@ BC_AUTO_TEST_CASE(envelope__apply__unprovided_filters__unbucketed)
 {
     system::settings bitcoin{ chain::selection::mainnet };
     database::settings configuration{ test::database_settings() };
-    configuration.filter_bk.buckets = 0;
-    const envelope instance{ bitcoin, configuration, false, 42 };
+    const envelope instance{ bitcoin, configuration, false, false, true, 42 };
 
-    configuration.filter_bk.buckets = 1;
     auto limited = false;
+    auto witness = true;
     auto silent = 42_u32;
-    const string_list expected{ "provide_filters" };
-    BC_REQUIRE(instance.apply(bitcoin, configuration, limited, silent) == expected);
+    BC_REQUIRE(instance.apply(bitcoin, configuration, limited, witness, silent).empty());
     BC_REQUIRE_EQUAL(configuration.filter_bk.buckets, 0u);
     BC_REQUIRE_EQUAL(configuration.filter_tx.buckets, 0u);
+}
+
+BC_AUTO_TEST_CASE(envelope__apply__provided_filters__buckets_unchanged)
+{
+    system::settings bitcoin{ chain::selection::mainnet };
+    database::settings configuration{ test::database_settings() };
+    const envelope instance{ bitcoin, configuration, false, true, true, 42 };
+
+    auto limited = false;
+    auto witness = true;
+    auto silent = 42_u32;
+    BC_REQUIRE(instance.apply(bitcoin, configuration, limited, witness, silent).empty());
+    BC_REQUIRE_EQUAL(configuration.filter_bk.buckets, 128u);
+    BC_REQUIRE_EQUAL(configuration.filter_tx.buckets, 128u);
+}
+
+BC_AUTO_TEST_CASE(envelope__from_data__migratable__false)
+{
+    auto data = test::envelope_4_0_31;
+    envelope out{};
+    BC_REQUIRE(!from_chunk(out, data));
+    BC_REQUIRE(out.schema == envelope::migratable);
+}
+
+BC_AUTO_TEST_CASE(envelope__get_schema__short__default)
+{
+    BC_REQUIRE(envelope::get_schema(data_chunk(15)).is_default());
+}
+
+BC_AUTO_TEST_CASE(envelope__migrate_step__4_0_31__stepwise_expected)
+{
+    envelope configured{};
+    configured.require_witness = true;
+    auto data = test::envelope_4_0_31;
+    BC_REQUIRE(envelope::get_schema(data) == system::config::version(4, 0, 31, 0));
+
+    // 4.0.31 -> 4.0.32
+    BC_REQUIRE(envelope::migrate_step(data, configured));
+    BC_REQUIRE(envelope::get_schema(data) == system::config::version(4, 0, 32, 0));
+    BC_REQUIRE_EQUAL(data.size(), add1(test::envelope_4_0_31.size()));
+
+    // compiled
+    BC_REQUIRE(envelope::get_schema(data) == envelope::compiled);
+    BC_REQUIRE(!envelope::migrate_step(data, configured));
+
+    envelope out{};
+    BC_REQUIRE(from_chunk(out, data));
+    BC_REQUIRE(out.network == chain::selection::mainnet);
+    BC_REQUIRE(out.require_witness);
+    BC_REQUIRE(out.provide_filters);
+    BC_REQUIRE(!out.limited_blocks);
+    BC_REQUIRE_EQUAL(out.silent_start_height, 42u);
+}
+
+BC_AUTO_TEST_CASE(envelope__migrate__4_0_31__compiled)
+{
+    envelope configured{};
+    configured.require_witness = false;
+    auto data = test::envelope_4_0_31;
+    BC_REQUIRE(envelope::migrate(data, configured));
+    BC_REQUIRE(envelope::get_schema(data) == envelope::compiled);
+
+    envelope out{};
+    BC_REQUIRE(from_chunk(out, data));
+    BC_REQUIRE(!out.require_witness);
+    BC_REQUIRE_EQUAL(out.silent_start_height, 42u);
+}
+
+BC_AUTO_TEST_CASE(envelope__migrate__premigratable__false)
+{
+    const system::settings bitcoin{ chain::selection::mainnet };
+    const database::settings configuration{ test::database_settings() };
+    const envelope instance{ bitcoin, configuration, false, true, true, 42 };
+    auto data = to_chunk(instance);
+    const auto schema = to_little_endian(sub1(envelope::migratable.segments().at(2)));
+    std::copy(schema.begin(), schema.end(), std::next(data.begin(), 2 * sizeof(uint32_t)));
+
+    BC_REQUIRE(!envelope::migrate(data, instance));
+    envelope out{};
+    BC_REQUIRE(!from_chunk(out, data));
+}
+
+BC_AUTO_TEST_CASE(envelope__is_readable__range__expected)
+{
+    BC_REQUIRE(envelope::is_readable(envelope::compiled));
+    BC_REQUIRE(envelope::is_readable(envelope::migratable));
+    BC_REQUIRE(!envelope::is_readable({ 4, 0, sub1(envelope::migratable.segments().at(2)), 0 }));
+    BC_REQUIRE(!envelope::is_readable({ 4, 0, add1(envelope::compiled.segments().at(2)), 0 }));
+}
+
+BC_AUTO_TEST_CASE(envelope__from_data__filters_witness__round_trip)
+{
+    const system::settings bitcoin{ chain::selection::mainnet };
+    const database::settings configuration{ test::database_settings() };
+    const envelope instance{ bitcoin, configuration, false, false, true, 42 };
+    auto data = to_chunk(instance);
+    BC_REQUIRE_EQUAL(data.size(), instance.serialized_size());
+
+    envelope out{};
+    BC_REQUIRE(from_chunk(out, data));
+    BC_REQUIRE(!out.provide_filters);
+    BC_REQUIRE(out.require_witness);
 }
 
 BC_AUTO_TEST_SUITE_END()

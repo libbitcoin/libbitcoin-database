@@ -141,6 +141,8 @@ BC_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BC_REQUIRE_EQUAL(configuration.confirmed.buckets, 950'001u);
     BC_REQUIRE_EQUAL(configuration.strong.buckets, 1'359'871'695u);
     BC_REQUIRE_EQUAL(configuration.scan.buckets, 950'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_bk.buckets, 950'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_tx.buckets, 950'001u);
     BC_REQUIRE_EQUAL(configuration.state.buckets, 950'001u);
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
     BC_REQUIRE_EQUAL(configuration.turbo, true);
@@ -170,6 +172,8 @@ BC_AUTO_TEST_CASE(settings__construct__testnet3__expected)
     BC_REQUIRE_EQUAL(configuration.confirmed.buckets, 5'100'001u);
     BC_REQUIRE_EQUAL(configuration.strong.buckets, 536'643'888u);
     BC_REQUIRE_EQUAL(configuration.scan.buckets, 5'100'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_bk.buckets, 5'100'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_tx.buckets, 5'100'001u);
     BC_REQUIRE_EQUAL(configuration.state.buckets, 5'100'001u);
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
     BC_REQUIRE_EQUAL(configuration.turbo, true);
@@ -199,6 +203,8 @@ BC_AUTO_TEST_CASE(settings__construct__testnet4__expected)
     BC_REQUIRE_EQUAL(configuration.confirmed.buckets, 150'001u);
     BC_REQUIRE_EQUAL(configuration.strong.buckets, 14'810'011u);
     BC_REQUIRE_EQUAL(configuration.scan.buckets, 150'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_bk.buckets, 150'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_tx.buckets, 150'001u);
     BC_REQUIRE_EQUAL(configuration.state.buckets, 150'001u);
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
     BC_REQUIRE_EQUAL(configuration.turbo, true);
@@ -228,6 +234,8 @@ BC_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BC_REQUIRE_EQUAL(configuration.confirmed.buckets, 10'001u);
     BC_REQUIRE_EQUAL(configuration.strong.buckets, 100'000u);
     BC_REQUIRE_EQUAL(configuration.scan.buckets, 10'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_bk.buckets, 10'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_tx.buckets, 10'001u);
     BC_REQUIRE_EQUAL(configuration.state.buckets, 10'001u);
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
     BC_REQUIRE_EQUAL(configuration.turbo, true);
@@ -257,6 +265,8 @@ BC_AUTO_TEST_CASE(settings__construct__signet__expected)
     BC_REQUIRE_EQUAL(configuration.confirmed.buckets, 330'001u);
     BC_REQUIRE_EQUAL(configuration.strong.buckets, 35'000'000u);
     BC_REQUIRE_EQUAL(configuration.scan.buckets, 330'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_bk.buckets, 330'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_tx.buckets, 330'001u);
     BC_REQUIRE_EQUAL(configuration.state.buckets, 330'001u);
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
     BC_REQUIRE_EQUAL(configuration.turbo, true);
@@ -286,6 +296,8 @@ BC_AUTO_TEST_CASE(settings__construct__testnet5__expected)
     BC_REQUIRE_EQUAL(configuration.confirmed.buckets, 150'001u);
     BC_REQUIRE_EQUAL(configuration.strong.buckets, 14'810'011u);
     BC_REQUIRE_EQUAL(configuration.scan.buckets, 150'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_bk.buckets, 150'001u);
+    BC_REQUIRE_EQUAL(configuration.filter_tx.buckets, 150'001u);
     BC_REQUIRE_EQUAL(configuration.state.buckets, 150'001u);
     BC_REQUIRE_EQUAL(configuration.interval_depth, 11u);
     BC_REQUIRE_EQUAL(configuration.turbo, true);

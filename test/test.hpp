@@ -87,11 +87,17 @@ bool folder(const std::filesystem::path& directory) NOEXCEPT;
 bool create(const std::filesystem::path& file_path) NOEXCEPT;
 bool create(const std::filesystem::path& file_path,
     const std::string& text) NOEXCEPT;
+bool create(const std::filesystem::path& file_path,
+    const system::data_chunk& data) NOEXCEPT;
 std::string read_line(const std::filesystem::path& file_path,
     size_t line=zero) NOEXCEPT;
 
 /// Database settings with explicit values, independent of the defaults.
 database::settings database_settings() NOEXCEPT;
+
+/// The oldest migratable envelope (4.0.31), of a store created with
+/// database_settings(): mainnet, unlimited, silent start 42, filters provided.
+extern const system::data_chunk envelope_4_0_31;
 
 struct directory_setup_fixture
 {
