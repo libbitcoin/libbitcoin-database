@@ -82,7 +82,7 @@ public:
     /// Aggregate construction (columns > 1): one backing per column.
     chunk_storages(const paths& filenames,
         const database::storage_settings& settings={}, bool=true,
-        bool=false) NOEXCEPT requires (columns > one)
+        bool=false, bool=false) NOEXCEPT requires (columns > one)
       : alias_{}, paths_{ filenames }, logical_{}, fill_{ settings.fill },
         zeroed_{ settings.zeroed }
     {

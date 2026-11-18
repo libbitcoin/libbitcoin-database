@@ -63,7 +63,7 @@ CLASS::mmap(const path& filename, const storage_settings& settings,
 
 TEMPLATE
 CLASS::mmap(const paths& filenames, const storage_settings& settings,
-    bool random, bool staged) NOEXCEPT
+    bool random, bool staged, bool shared) NOEXCEPT
     requires (columns > one)
   : filenames_(filenames),
     minimum_(to_rows(settings.size)),
@@ -79,7 +79,7 @@ CLASS::mmap(const paths& filenames, const storage_settings& settings,
     managed_(false),
     fill_(settings.fill),
     staged_(staged),
-    head_shared_(false),
+    head_shared_(!staged && shared),
     opened_{}
 {
     opened_.fill(file::invalid);

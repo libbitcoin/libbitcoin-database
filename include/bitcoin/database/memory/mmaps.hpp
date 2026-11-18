@@ -26,8 +26,9 @@
 namespace libbitcoin {
 namespace database {
 
-/// SoA aggregate body: one substitutable multi-column map (Storage) over N
-/// column files, one shared allocation guard. Storage is the map family.
+/// SoA aggregate body or head: one substitutable multi-column map (Storage)
+/// over N column files, one shared allocation guard. Storage is the map
+/// family. A shared (unstaged) aggregate maps its files, as a head.
 template <template <size_t...> class Storage, typename... Columns>
 class mmaps
   : public Storage<Columns::width...>
@@ -50,20 +51,46 @@ public:
     };
 
     mmaps(const path& base_path, const storage_settings& settings,
-        bool random_access, bool staged=false) NOEXCEPT
-      : mmaps(base_path, settings, random_access, staged, sequence)
+        bool random_access, bool staged=false, bool shared=false) NOEXCEPT
+      : mmaps(base_path, settings, random_access, staged, shared, sequence)
     {
+    }
+
+    /// Dump each column's logical map to a new column file of path.
+    code dump(const path& path) const NOEXCEPT override
+    {
+        return dump_columns(path, sequence);
     }
 
 protected:
     template <size_t... Index>
     mmaps(const path& base_path, const storage_settings& settings,
-        bool random_access, bool staged,
+        bool random_access, bool staged, bool shared,
         std::index_sequence<Index...>) NOEXCEPT
       : base(paths{ to_subpath(base_path, suffixes[Index])... }, settings,
-          random_access, staged),
+          random_access, staged, shared),
         base_path_{ base_path }
     {
+    }
+
+    template <size_t... Index>
+    code dump_columns(const path& path,
+        std::index_sequence<Index...>) const NOEXCEPT
+    {
+        code ec{};
+        const auto failed = ((ec = dump_column(to_subpath(path,
+            suffixes[Index]), Index)) || ...);
+
+        return failed ? ec : error::success;
+    }
+
+    code dump_column(const path& path, size_t column) const NOEXCEPT
+    {
+        const auto ptr = base::get_at(column);
+        if (!ptr)
+            return error::unloaded_file;
+
+        return file::create_file_ex(path, ptr.begin(), ptr.size());
     }
 
     static path to_subpath(const path& base,
