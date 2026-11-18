@@ -198,7 +198,7 @@ settings::settings(chain::selection context) NOEXCEPT
             break;
         }
 
-        // Chain height tables sized for the chain at 330,000 blocks.
+        // Sized for the chain at 330,000 blocks.
         case chain::selection::signet:
         {
             header.expected = 330'000;
