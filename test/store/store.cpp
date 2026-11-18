@@ -165,7 +165,7 @@ BC_AUTO_TEST_CASE(store__paths__default_configuration__expected)
     BC_REQUIRE_EQUAL(instance.prevout_head_file(), "bitcoin/heads/cache_prevout.head");
     BC_REQUIRE_EQUAL(instance.prevout_body_file(), "bitcoin/cache_prevout.data");
     BC_REQUIRE_EQUAL(instance.pool_head_file(), "bitcoin/heads/cache_pool.head");
-    BC_REQUIRE_EQUAL(instance.pool_body_file(), "bitcoin/cache_pool_context.data");
+    BC_REQUIRE_EQUAL(instance.pool_body_file(), "bitcoin/cache_pool_time.data");
 
     /// Option.
     BC_REQUIRE_EQUAL(instance.filter_bk_head_file(), "bitcoin/heads/option_filter_bk.head");

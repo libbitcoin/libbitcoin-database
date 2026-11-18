@@ -731,10 +731,18 @@ public:
     /// Pool.
     /// -----------------------------------------------------------------------
 
+    /// A validation under the evaluated context holds under the current.
+    inline bool is_sufficient(const context& current,
+        const context& evaluated) const NOEXCEPT;
+
     bool is_pooled(const tx_link& link) const NOEXCEPT;
     code get_pooled(pooled_tx& out, const tx_link& link,
         const context& ctx) const NOEXCEPT;
     bool get_pooled_time(uint32_t& out, const tx_link& link) const NOEXCEPT;
+
+    /// The fee, virtual size and sigops of the pooled tx.
+    bool get_pooled_totals(pool_totals& out,
+        const tx_link& link) const NOEXCEPT;
 
     /// Unconfirmed, and not conflicted by a confirmed tx (or via ancestry).
     bool is_confirmable_tx(const tx_link& link) const NOEXCEPT;
@@ -778,14 +786,63 @@ public:
     /// Rebuild the pool index heads from the pool (after compaction).
     bool set_pool_index() NOEXCEPT;
 
+    /// Apply the confirmation (or reorganization) of the block to the index.
+    bool set_pool_block(const header_link& link, bool confirmed) NOEXCEPT;
+
+    /// Apply the pool context to the index, out the rows it does not satisfy.
+    bool set_pool_context(size_t& out, const context& ctx) NOEXCEPT;
+
     /// Coverage.
     /// -----------------------------------------------------------------------
+
+    /// Accessors held across spans over the pool columns and index heads.
+    struct pool_guards
+    {
+        memory pool{};
+        memory cells{};
+        memory children{};
+        memory rows{};
+        memory siblings{};
+        memory rivals{};
+    };
+
+    /// The pool columns with txs appended as candidates (guards held).
+    struct pool_graph
+    {
+        using algorithm = system::pool::algorithm;
+        using link_t = algorithm::link_t;
+        pool_guards guards{};
+        pool_links cells{};
+        pool_links children{};
+        std::vector<algorithm::edges_t> edges{};
+        std::vector<algorithm::totals_t> totals{};
+        pool_links rows{};
+        pool_links siblings{};
+        pool_links rivals{};
+        std::vector<algorithm::bridge_t> child_bridges{};
+        std::vector<algorithm::bridge_t> rival_bridges{};
+        pool_links candidates{};
+        std::unordered_map<hash_digest, link_t> positions{};
+        std::unordered_map<point, link_t> points{};
+        algorithm::graph_t graph{};
+        bool conflicted{};
+    };
 
     /// True if the fee the package adds to the pool covers it at the rate.
     code get_pool_coverage(bool& out,
         const system::chain::transaction_cptrs& txs,
         const std::vector<bool>& stored, const context& ctx, uint64_t rate,
         uint32_t bytes_per_sigop, const pool_totals& limit,
+        size_t maximum_outcomes) const NOEXCEPT;
+
+    /// Append the tx to the graph as a candidate (parents precede children).
+    code get_pool_candidate(pool_graph& out, const transaction& tx,
+        const context& ctx) const NOEXCEPT;
+
+    /// True if the fee the candidates from first add to the pool, given those
+    /// before it, covers them at the rate.
+    code get_pool_coverage(bool& out, const pool_graph& graph, size_t first,
+        uint64_t rate, uint32_t bytes_per_sigop, const pool_totals& limit,
         size_t maximum_outcomes) const NOEXCEPT;
 
     /// Template.
@@ -1161,12 +1218,6 @@ protected:
     bool get_outputs_total_value(uint64_t& out,
         const output_links& links) const NOEXCEPT;
 
-    /// Validate.
-    /// -----------------------------------------------------------------------
-    inline bool is_sufficient(const context& current,
-        const context& evaluated) const NOEXCEPT;
-
-
     /// Pool.
     /// -----------------------------------------------------------------------
     tx_link to_pool_tx(const pool_link& link) const NOEXCEPT;
@@ -1176,36 +1227,6 @@ protected:
     bool get_pooled_fee(uint64_t& fee, size_t& size, size_t& height,
         const tx_link& link) const NOEXCEPT;
     hash_digest get_pooled_wtxid(const table::pool::link& link) const NOEXCEPT;
-
-    /// Accessors held across spans over the pool columns and index heads.
-    struct pool_guards
-    {
-        memory pool{};
-        memory cells{};
-        memory children{};
-        memory rows{};
-        memory siblings{};
-        memory rivals{};
-    };
-
-    /// The pool columns with the package's txs appended as candidates.
-    struct pool_graph
-    {
-        using algorithm = system::pool::algorithm;
-        pool_guards guards{};
-        pool_links cells{};
-        pool_links children{};
-        std::vector<algorithm::edges_t> edges{};
-        std::vector<algorithm::totals_t> totals{};
-        pool_links rows{};
-        pool_links siblings{};
-        pool_links rivals{};
-        std::vector<algorithm::bridge_t> child_bridges{};
-        std::vector<algorithm::bridge_t> rival_bridges{};
-        pool_links candidates{};
-        algorithm::graph_t graph{};
-        bool conflicted{};
-    };
 
     /// The table columns and heads as spans (guards held).
     bool get_pool_columns(system::pool::algorithm::columns_t& out,
@@ -1220,24 +1241,20 @@ protected:
     bool set_pool_adoption(system::pool::algorithm::link_t row,
         const transaction& tx) NOEXCEPT;
 
-    /// The pool graph of the package.
-    code get_pool_graph(pool_graph& out,
-        const system::chain::transaction_cptrs& txs,
-        const std::vector<bool>& stored, const context& ctx) const NOEXCEPT;
-
-    /// The coverage of the package in the pool graph.
-    code get_pool_coverage_(bool& out, const pool_graph& graph,
-        uint64_t rate, uint32_t bytes_per_sigop, const pool_totals& limit,
-        size_t maximum_outcomes) const NOEXCEPT;
-
-    /// The input of a pooled spender of the point, and if it is confirmed spent.
+    /// The input of a pooled spender of the point below the bound, and if it is
+    /// confirmed spent.
     bool get_pooled_spender(system::pool::algorithm::link_t& out,
         bool& conflicted, const point& point, const tx_link& self,
-        bool archived) const NOEXCEPT;
+        bool archived,
+        system::pool::algorithm::link_t bound=system::pool::algorithm::none)
+        const NOEXCEPT;
 
-    /// The pool index transitions of the confirmed or reorganized block txs.
-    bool set_pool_block(const header_link& link, const tx_links& txs,
-        bool confirmed) NOEXCEPT;
+    /// The pooled spenders of the points spent by the txs (their conflicts).
+    bool get_pool_conflicts(tx_links& out, const tx_links& txs) const NOEXCEPT;
+
+    /// A point of the pooled tx is spent by a confirmed tx.
+    bool is_pool_conflicted(bool& out, const tx_link& link,
+        const pool_link& row) const NOEXCEPT;
 
     /// Confirmability memoized across the txs of a scan.
     bool is_confirmable_tx(confirmables& memo,
@@ -1571,6 +1588,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #include <bitcoin/database/impl/query/pool/pool_estimate.ipp>
 #include <bitcoin/database/impl/query/pool/pool_index.ipp>
 #include <bitcoin/database/impl/query/pool/pool_reader.ipp>
+#include <bitcoin/database/impl/query/pool/pool_suffice.ipp>
 #include <bitcoin/database/impl/query/pool/pool_template.ipp>
 #include <bitcoin/database/impl/query/pool/pool_writer.ipp>
 

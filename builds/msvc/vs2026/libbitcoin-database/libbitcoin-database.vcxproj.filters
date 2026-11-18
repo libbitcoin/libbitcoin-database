@@ -672,6 +672,9 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\pool\pool_reader.ipp">
       <Filter>include\bitcoin\database\impl\query\pool</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\pool\pool_suffice.ipp">
+      <Filter>include\bitcoin\database\impl\query\pool</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\pool\pool_template.ipp">
       <Filter>include\bitcoin\database\impl\query\pool</Filter>
     </None>

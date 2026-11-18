@@ -32,6 +32,12 @@ using test::archive_confirm;
 using test::pool_populated;
 using test::pool_cell;
 
+// Absent cells, by cause.
+constexpr auto absent = system::pool::algorithm::absent;
+constexpr auto absent_rivaled = system::bit_or(absent, system::pool::algorithm::rivaled);
+constexpr auto absent_ancestor = system::bit_or(absent, system::pool::algorithm::ancestor);
+constexpr auto absent_conflicted = system::bit_or(absent, system::pool::algorithm::conflicted);
+
 // pool index
 // ----------------------------------------------------------------------------
 
@@ -89,23 +95,83 @@ BC_AUTO_TEST_CASE(query_pool__push_pop_confirmed__rival__excluded_and_revived)
     const auto pooled_parent = pool_populated(query, parent);
     const auto pooled_child = pool_populated(query, child);
     const auto pooled_rival = pool_populated(query, rival);
-    const auto confirmed = !archive_confirm(query, rival).is_terminal();
+    const auto block = archive_confirm(query, rival);
     const auto rival_confirmed = pool_cell(query, store, rival);
     const auto parent_confirmed = pool_cell(query, store, parent);
     const auto child_confirmed = pool_cell(query, store, child);
     const auto popped = query.pop_confirmed();
+    const auto reverted = query.set_pool_block(block, false);
 
     BC_REQUIRE(pooled_parent);
     BC_REQUIRE(pooled_child);
     BC_REQUIRE(pooled_rival);
-    BC_REQUIRE(confirmed);
+    BC_REQUIRE(!block.is_terminal());
     BC_REQUIRE_EQUAL(rival_confirmed, system::pool::algorithm::boundary);
-    BC_REQUIRE_EQUAL(parent_confirmed, system::pool::algorithm::absent);
-    BC_REQUIRE_EQUAL(child_confirmed, system::pool::algorithm::absent);
+    BC_REQUIRE_EQUAL(parent_confirmed, system::bit_or(absent_rivaled, system::pool::algorithm::conflicted));
+    BC_REQUIRE_EQUAL(child_confirmed, absent_ancestor);
     BC_REQUIRE(popped);
+    BC_REQUIRE(reverted);
     BC_REQUIRE_EQUAL(pool_cell(query, store, rival), 0u);
     BC_REQUIRE_EQUAL(pool_cell(query, store, parent), 0u);
     BC_REQUIRE_EQUAL(pool_cell(query, store, child), 0u);
+}
+
+BC_AUTO_TEST_CASE(query_pool__push_confirmed__rival__index_unchanged)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto rival = to_spend(genesis_coinbase(), 4'999'998'500);
+    const auto pooled = pool_populated(query, rival);
+    const auto before = pool_cell(query, store, rival);
+    const auto stored = query.set(test::block1, context{ 0, 1, 0 }, {}, false, true);
+    const auto link = query.to_header(test::block1.hash());
+    const auto pushed = query.push_candidate(link) && query.push_confirmed(link, true);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(stored);
+    BC_REQUIRE(pushed);
+    BC_REQUIRE_EQUAL(pool_cell(query, store, rival), before);
+}
+
+BC_AUTO_TEST_CASE(query_pool__set_pool_block__unpooled_rival_no_prevout_cache__excluded_and_revived)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto child = to_spend(parent.hash(false), 4'999'998'000);
+    const auto rival = to_spend(genesis_coinbase(), 4'999'998'500);
+    const auto pooled_parent = pool_populated(query, parent);
+    const auto pooled_child = pool_populated(query, child);
+    const auto parent_pooled = pool_cell(query, store, parent);
+    const auto child_pooled = pool_cell(query, store, child);
+    const auto block = archive_confirm(query, rival);
+    const auto parent_confirmed = pool_cell(query, store, parent);
+    const auto child_confirmed = pool_cell(query, store, child);
+    const auto popped = query.pop_confirmed();
+    const auto reverted = query.set_pool_block(block, false);
+
+    BC_REQUIRE(pooled_parent);
+    BC_REQUIRE(pooled_child);
+    BC_REQUIRE(!block.is_terminal());
+    BC_REQUIRE(!query.is_pooled(query.to_tx(rival.hash(false))));
+    BC_REQUIRE_EQUAL(parent_confirmed, absent_conflicted);
+    BC_REQUIRE_EQUAL(child_confirmed, absent_ancestor);
+    BC_REQUIRE(popped);
+    BC_REQUIRE(reverted);
+    BC_REQUIRE_EQUAL(pool_cell(query, store, parent), parent_pooled);
+    BC_REQUIRE_EQUAL(pool_cell(query, store, child), child_pooled);
 }
 
 BC_AUTO_TEST_CASE(query_pool__set_pooled__reorganized_parent__children_adopted)

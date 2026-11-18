@@ -40,10 +40,17 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
 
     code ec{ error::success };
 
-    // Prevouts resettable if all candidates confirmed (fork is candidate top).
-    if (!query<CLASS>{ *this }.is_coalesced())
+    // Prevouts resettable if all candidates confirmed (fork is candidate top),
+    // and the pool index is settled to the top (its sweep reads the prevouts).
+    const query<CLASS> reader{ *this };
+    if (!reader.is_coalesced())
     {
         ec = error::not_coalesced;
+    }
+    else if (is_nonzero(pool.count().value) &&
+        reader.to_top_confirmed() != get_pool_settled())
+    {
+        ec = error::not_settled;
     }
     else
     {
@@ -332,10 +339,12 @@ TEMPLATE
 bool CLASS::move_pool(const retentions& keep) NOEXCEPT
 {
     using word = table::pool_word;
+    using scalar = table::pool_scalar;
     pool_link::integer next{};
     for (const auto& kept: keep)
     {
         word id0{}, id1{}, id2{}, id3{};
+        scalar flags{}, height{}, median{};
         table::pool_edge edge{};
         table::pool_total total{};
         table::pool::record record{};
@@ -344,7 +353,10 @@ bool CLASS::move_pool(const retentions& keep) NOEXCEPT
             !pool.id0.get(kept.row, id0) || !pool.id1.get(kept.row, id1) ||
             !pool.id2.get(kept.row, id2) || !pool.id3.get(kept.row, id3) ||
             !pool.totals.get(kept.row, total) ||
-            !pool.edges.get(kept.row, edge))
+            !pool.edges.get(kept.row, edge) ||
+            !pool.flags.get(kept.row, flags) ||
+            !pool.heights.get(kept.row, height) ||
+            !pool.medians.get(kept.row, median))
             return false;
 
         // Column puts are unguarded, the accessor guards their rows.
@@ -353,7 +365,9 @@ bool CLASS::move_pool(const retentions& keep) NOEXCEPT
         if (!guard ||
             !pool.id0.put(next, id0) || !pool.id1.put(next, id1) ||
             !pool.id2.put(next, id2) || !pool.id3.put(next, id3) ||
-            !pool.totals.put(next, total) || !pool.edges.put(next, edge))
+            !pool.totals.put(next, total) || !pool.edges.put(next, edge) ||
+            !pool.flags.put(next, flags) || !pool.heights.put(next, height) ||
+            !pool.medians.put(next, median))
             return false;
 
         guard.reset();

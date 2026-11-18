@@ -305,6 +305,7 @@
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\pool\pool_estimate.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\pool\pool_index.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\pool\pool_reader.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\database\impl\query\pool\pool_suffice.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\pool\pool_template.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\pool\pool_writer.ipp" />
     <None Include="..\..\..\..\include\bitcoin\database\impl\query\properties_block.ipp" />

@@ -173,6 +173,7 @@
     <ClCompile Include="..\..\..\..\test\query\pool\pool_estimate.cpp" />
     <ClCompile Include="..\..\..\..\test\query\pool\pool_index.cpp" />
     <ClCompile Include="..\..\..\..\test\query\pool\pool_reader.cpp" />
+    <ClCompile Include="..\..\..\..\test\query\pool\pool_suffice.cpp" />
     <ClCompile Include="..\..\..\..\test\query\pool\pool_template.cpp" />
     <ClCompile Include="..\..\..\..\test\query\pool\pool_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\query\properties_block.cpp" />

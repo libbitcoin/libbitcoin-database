@@ -40,155 +40,134 @@ code CLASS::get_pool_coverage(bool& out,
     }
 
     pool_graph graph{};
-    if (const auto ec = get_pool_graph(graph, txs, stored, ctx))
-        return ec;
+    for (size_t index{}; index < txs.size(); ++index)
+        if (!stored.at(index))
+            if (const auto ec = get_pool_candidate(graph, *txs.at(index), ctx))
+                return ec;
 
-    return get_pool_coverage_(out, graph, rate, bytes_per_sigop, limit,
+    return get_pool_coverage(out, graph, zero, rate, bytes_per_sigop, limit,
         maximum_outcomes);
 }
 
-// protected
-// Candidates are rows and inputs numbered from the table counts. A parent in
-// the package is found by hash (parents precede children), a pooled parent by
-// link, and any other parent is none. An input joins the ring of a pooled
-// spender of its point by a bridge from that input, or a ring of candidate
-// spenders if there is none.
+// Candidates are rows and inputs numbered from the table counts. A parent
+// among the candidates is found by hash, a pooled parent by link, and any
+// other parent is none. An input joins the ring of a pooled spender of its
+// point by a bridge from that input, or a ring of candidate spenders if there
+// is none.
 TEMPLATE
-code CLASS::get_pool_graph(pool_graph& out,
-    const system::chain::transaction_cptrs& txs,
-    const std::vector<bool>& stored, const context& ctx) const NOEXCEPT
+code CLASS::get_pool_candidate(pool_graph& out, const transaction& tx,
+    const context& ctx) const NOEXCEPT
 {
     using namespace system;
     using algorithm = system::pool::algorithm;
     using link_t = algorithm::link_t;
     constexpr auto none = algorithm::none;
 
-    algorithm::columns_t table{};
-    if (!get_pool_columns(table, out.guards))
+    auto& table = out.graph.table;
+    if (out.candidates.empty() && !get_pool_columns(table, out.guards))
         return error::integrity;
 
     const auto rows = possible_narrow_cast<link_t>(table.cells.size());
     const auto inputs = possible_narrow_cast<link_t>(table.rows.size());
+    const auto row = possible_narrow_cast<link_t>(rows +
+        out.candidates.size());
+
+    auto input = possible_narrow_cast<link_t>(inputs + out.rows.size());
     const auto bip16 = ctx.is_enabled(chain::flags::bip16_rule);
     const auto bip141 = ctx.is_enabled(chain::flags::bip141_rule);
-    std::unordered_map<hash_digest, link_t> positions{};
-    std::unordered_map<point, link_t> points{};
-    auto input = inputs;
-    auto row = rows;
-    for (size_t index{}; index < txs.size(); ++index)
+    const auto& ins = *tx.inputs_ptr();
+    const auto count = possible_narrow_cast<link_t>(ins.size());
+    const auto sigops = tx.signature_operations(bip16, bip141);
+    out.positions.emplace(tx.get_hash(false), row);
+    out.candidates.push_back(row);
+    out.cells.push_back(algorithm::to_column(algorithm::absent));
+    out.children.push_back(algorithm::to_column(none));
+    out.edges.push_back(algorithm::to_column(
+        algorithm::edges_t{ input, count }));
+
+    out.totals.push_back(algorithm::to_column(algorithm::totals_t
     {
-        if (stored.at(index))
-            continue;
+        tx.fee(),
+        possible_narrow_cast<uint32_t>(tx.virtual_size()),
+        possible_narrow_cast<uint32_t>(sigops)
+    }));
 
-        const auto& tx = *txs.at(index);
-        const auto& ins = *tx.inputs_ptr();
-        const auto count = possible_narrow_cast<link_t>(ins.size());
-        const auto sigops = tx.signature_operations(bip16, bip141);
-        positions.emplace(tx.get_hash(false), row);
-        out.candidates.push_back(row);
-        out.cells.push_back(algorithm::absent);
-        out.children.push_back(none);
-        out.edges.push_back({ input, count });
-        out.totals.push_back(
+    for (const auto& in: ins)
+    {
+        const auto& point = in->point();
+        auto parent = none;
+        tx_link parent_tx{ in->metadata.parent_tx };
+        const auto it = out.positions.find(point.hash());
+        if (it != out.positions.end())
+            parent = it->second;
+        else if (in->metadata.parent_tx == max_uint32)
+            parent_tx = to_tx(point.hash());
+
+        if (parent == none && !parent_tx.is_terminal())
         {
-            tx.fee(),
-            possible_narrow_cast<uint32_t>(tx.virtual_size()),
-            possible_narrow_cast<uint32_t>(sigops)
-        });
-
-        for (const auto& in: ins)
-        {
-            const auto& point = in->point();
-            auto parent = none;
-            if (in->metadata.parent_tx == max_uint32)
-            {
-                const auto it = positions.find(point.hash());
-                if (it != positions.end())
-                    parent = it->second;
-            }
-            else
-            {
-                const tx_link parent_tx{ in->metadata.parent_tx };
-                const auto fk = store_.pool.first(parent_tx);
-                if (!fk.is_terminal())
-                    parent = possible_narrow_cast<link_t>(fk.value);
-            }
-
-            out.rows.push_back(parent);
-            out.siblings.push_back(none);
-            out.rivals.push_back(none);
-
-            if (parent != none && parent < rows)
-            {
-                out.child_bridges.push_back({ parent, input });
-            }
-            else if (parent != none)
-            {
-                auto& head = out.children.at(parent - rows);
-                out.siblings.back() = head;
-                head = input;
-            }
-
-            link_t mate{};
-            bool conflict{};
-            if (!get_pooled_spender(mate, conflict, point, {}, false))
-                return error::integrity;
-
-            out.conflicted |= conflict;
-            if (mate != none)
-            {
-                out.rivals.back() = mate;
-                out.rival_bridges.push_back({ mate, input });
-            }
-            else if (const auto it = points.find(point); it == points.end())
-            {
-                points.emplace(point, input);
-            }
-            else
-            {
-                auto& ring = out.rivals.at(it->second - inputs);
-                out.rivals.back() = (ring == none) ? it->second : ring;
-                ring = input;
-            }
-
-            ++input;
+            const auto fk = store_.pool.first(parent_tx);
+            if (!fk.is_terminal())
+                parent = possible_narrow_cast<link_t>(fk.value);
         }
 
-        ++row;
+        out.rows.push_back(algorithm::to_column(parent));
+        out.siblings.push_back(algorithm::to_column(none));
+        out.rivals.push_back(algorithm::to_column(none));
+
+        if (parent != none && parent < rows)
+        {
+            out.child_bridges.push_back({ parent, input });
+        }
+        else if (parent != none)
+        {
+            auto& head = out.children.at(parent - rows);
+            out.siblings.back() = head;
+            head = algorithm::to_column(input);
+        }
+
+        link_t mate{};
+        bool conflict{};
+        if (!get_pooled_spender(mate, conflict, point, {}, false))
+            return error::integrity;
+
+        out.conflicted |= conflict;
+        if (mate != none)
+        {
+            out.rivals.back() = algorithm::to_column(mate);
+            out.rival_bridges.push_back({ mate, input });
+        }
+        else if (const auto at = out.points.find(point);
+            at == out.points.end())
+        {
+            out.points.emplace(point, input);
+        }
+        else
+        {
+            auto& ring = out.rivals.at(at->second - inputs);
+            out.rivals.back() = (algorithm::from_column(ring) == none) ?
+                algorithm::to_column(at->second) : ring;
+
+            ring = algorithm::to_column(input);
+        }
+
+        ++input;
     }
 
-    const auto encode = [](auto& column) NOEXCEPT
+    out.graph.extra =
     {
-        for (auto& value: column)
-            value = algorithm::to_column(value);
+        out.cells, out.children, out.edges, out.totals,
+        out.rows, out.siblings, out.rivals
     };
 
-    encode(out.cells);
-    encode(out.children);
-    encode(out.edges);
-    encode(out.totals);
-    encode(out.rows);
-    encode(out.siblings);
-    encode(out.rivals);
-    out.graph =
-    {
-        table,
-        {
-            out.cells, out.children, out.edges, out.totals,
-            out.rows, out.siblings, out.rivals
-        },
-        out.child_bridges,
-        out.rival_bridges
-    };
-
+    out.graph.children = out.child_bridges;
+    out.graph.rivals = out.rival_bridges;
     return error::success;
 }
 
-// protected
 TEMPLATE
-code CLASS::get_pool_coverage_(bool& out, const pool_graph& graph,
-    uint64_t rate, uint32_t bytes_per_sigop, const pool_totals& limit,
-    size_t maximum_outcomes) const NOEXCEPT
+code CLASS::get_pool_coverage(bool& out, const pool_graph& graph,
+    size_t first, uint64_t rate, uint32_t bytes_per_sigop,
+    const pool_totals& limit, size_t maximum_outcomes) const NOEXCEPT
 {
     using namespace system;
     using algorithm = system::pool::algorithm;
@@ -200,7 +179,7 @@ code CLASS::get_pool_coverage_(bool& out, const pool_graph& graph,
     const auto inputs = possible_narrow_cast<link_t>(g.table.rows.size());
     out = false;
 
-    // A point of the package spent by a confirmed tx cannot be confirmed.
+    // A point of the candidates spent by a confirmed tx cannot be confirmed.
     if (graph.conflicted)
         return error::success;
 
@@ -217,16 +196,21 @@ code CLASS::get_pool_coverage_(bool& out, const pool_graph& graph,
                 continue;
 
             const auto cell = algorithm::from_column(g.table.cells[parent]);
-            if (cell == algorithm::absent)
+            if (algorithm::is_absent(cell))
                 return error::success;
         }
     }
+
+    const std::span<const link_t> measured
+    {
+        std::next(graph.candidates.begin(), first), graph.candidates.end()
+    };
 
     algorithm::initialize(g, graph.candidates);
     uint64_t added{};
     uint64_t bytes{};
     std::vector<algorithm::component_t> components{};
-    for (const auto candidate: graph.candidates)
+    for (const auto candidate: measured)
     {
         const std::span<const link_t> self{ &candidate, one };
         const auto offset = candidate - rows;
@@ -261,7 +245,7 @@ code CLASS::get_pool_coverage_(bool& out, const pool_graph& graph,
 
         uint64_t best{};
         uint64_t best_without{};
-        const auto members = algorithm::members(component, graph.candidates);
+        const auto members = algorithm::members(component, measured);
         algorithm::evaluate(best, best_without, masks, members, component, g);
 
         added = ceilinged_add(added, floored_subtract(best, best_without));

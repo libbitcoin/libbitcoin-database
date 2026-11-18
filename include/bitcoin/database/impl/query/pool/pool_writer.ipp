@@ -104,6 +104,7 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
 
     // Column puts are unguarded, the accessor guards their rows against remap.
     using word = table::pool_word;
+    using scalar = table::pool_scalar;
     const table::pool_total total
     {
         {},
@@ -125,13 +126,16 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
         !vtx.id2.put(fk, word{ {}, std::get<2>(words) }) ||
         !vtx.id3.put(fk, word{ {}, std::get<3>(words) }) ||
         !vtx.totals.put(fk, total) ||
-        !vtx.edges.put(fk, edge))
+        !vtx.edges.put(fk, edge) ||
+        !vtx.flags.put(fk, scalar{ {}, ctx.flags }) ||
+        !vtx.heights.put(fk, scalar{ {}, ctx.height }) ||
+        !vtx.medians.put(fk, scalar{ {}, ctx.mtp }))
         return false;
 
     guard.reset();
 
     // Commit is deferred until the columns are set.
-    if (!vtx.put(fk, link, table::pool::record{ {}, ctx, time }))
+    if (!vtx.put(fk, link, table::pool::record{ {}, time }))
         return false;
 
     const auto row = possible_narrow_cast<link_t>(fk.value);
@@ -140,16 +144,16 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
         !set_pool_adoption(row, tx))
         return false;
 
-    // A conflict with a confirmed spender remains absent.
-    if (conflicted)
-        return true;
-
     pool_guards guards{};
     algorithm::columns_t columns{};
     if (!get_pool_columns(columns, guards))
         return false;
 
-    algorithm::admit(columns, row);
+    // A conflict with a confirmed spender is absent for it, and a component
+    // over the member limit is labeled by the columns.
+    if (!algorithm::admit(columns, row, conflicted))
+        system::pool::label(columns);
+
     return true;
     // ========================================================================
 }

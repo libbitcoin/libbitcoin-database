@@ -78,12 +78,7 @@ code CLASS::get_pool_arrivals(pool_arrivals& out, size_t top, size_t count,
         if (!algorithm::is_present(cell) && !algorithm::is_boundary(cell))
             continue;
 
-        table::pool::get_height pooled{};
-        const auto row = possible_narrow_cast<algorithm::link_t>(at);
-        if (!store_.pool.get(pool_link{ row }, pooled))
-            return error::integrity;
-
-        const size_t height = pooled.height;
+        const size_t height = algorithm::from_column(columns.heights[at]);
         if (height >= top || (top - height) > count)
             continue;
 

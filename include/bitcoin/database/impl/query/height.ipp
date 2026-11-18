@@ -94,9 +94,6 @@ bool CLASS::push_confirmed(const header_link& link, bool strong) NOEXCEPT
     if (strong && !set_strong(link, txs.tx_fks, true))
         return false;
 
-    if (strong && !set_pool_block(link, txs.tx_fks, true))
-        return false;
-
     const auto pushed = store_.confirmed.push(link);
     if (pushed)
         store_.evaluate_currency();
@@ -123,9 +120,6 @@ bool CLASS::pop_confirmed() NOEXCEPT
 
     // Clean single allocation failure.
     if (!set_strong(link, txs.tx_fks, false))
-        return false;
-
-    if (!set_pool_block(link, txs.tx_fks, false))
         return false;
 
     ///////////////////////////////////////////////////////////////////////////

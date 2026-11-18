@@ -156,7 +156,10 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { compact_truncate, "compact_truncate" },
     { compact_wtxid, "compact_wtxid" },
     { compact_index, "compact_index" },
-    { compact_count, "compact_count" }
+    { compact_count, "compact_count" },
+
+    // prune
+    { not_settled, "not settled" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "database", "database code")

@@ -890,4 +890,13 @@ BC_AUTO_TEST_CASE(error_t__code__compact_count__true_expected_message)
     BC_REQUIRE_EQUAL(ec.message(), "compact_count");
 }
 
+BC_AUTO_TEST_CASE(error_t__code__not_settled__true_expected_message)
+{
+    constexpr auto value = error::not_settled;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "not settled");
+}
+
 BC_AUTO_TEST_SUITE_END()

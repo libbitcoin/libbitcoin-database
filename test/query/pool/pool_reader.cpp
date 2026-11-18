@@ -149,4 +149,40 @@ BC_AUTO_TEST_CASE(query_pool__get_pooled_time__not_pooled__false)
     BC_REQUIRE(!query.get_pooled_time(time, 0));
 }
 
+// get_pooled_totals
+
+BC_AUTO_TEST_CASE(query_pool__get_pooled_totals__not_pooled__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    system::pool::algorithm::totals_t out{};
+    BC_REQUIRE(!query.get_pooled_totals(out, 1));
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_pooled_totals__pooled__fee_size_and_sigops)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto tx = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto pooled = test::pool_populated(query, tx);
+    system::pool::algorithm::totals_t out{};
+    const auto found = query.get_pooled_totals(out, query.to_tx(tx.hash(false)));
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(found);
+    BC_REQUIRE_EQUAL(out.fee, 1'000u);
+    BC_REQUIRE_EQUAL(out.size, tx.virtual_size());
+}
+
 BC_AUTO_TEST_SUITE_END()

@@ -22,19 +22,18 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/memory.hpp>
 #include <bitcoin/database/primitives/primitives.hpp>
-#include <bitcoin/database/tables/context.hpp>
 #include <bitcoin/database/tables/schema.hpp>
 
 namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// Spine column (search key and validation context).
-struct pool_context
+/// Spine column (search key and arrival time).
+struct pool_time
 {
     using link = schema::pool::link;
     static constexpr auto width = schema::pool::minrow;
-    static constexpr auto suffix = "context"_t;
+    static constexpr auto suffix = "time"_t;
 };
 
 /// One lane of the witness hash (common to the id columns).
@@ -134,6 +133,34 @@ struct pool_edge
     uint32_t inputs{};
 };
 
+/// One word of the validation context (common to the context columns).
+struct pool_scalar
+  : public schema::pool_flags
+{
+    static constexpr link count() NOEXCEPT
+    {
+        return 1;
+    }
+
+    inline bool from_data(reader& source) NOEXCEPT
+    {
+        value = source.read_little_endian<uint32_t>();
+        BC_ASSERT(!source || source.get_read_position() == minrow);
+        return source;
+    }
+
+    inline bool to_data(flipper& sink) const NOEXCEPT
+    {
+        sink.write_little_endian<uint32_t>(value);
+        BC_ASSERT(!sink || sink.get_write_position() == minrow);
+        return sink;
+    }
+
+    inline bool operator==(const pool_scalar&) const NOEXCEPT = default;
+
+    uint32_t value{};
+};
+
 /// Transaction identifier columns (words 0-3 of the short id hash).
 struct pool_id0
   : public no_map<schema::pool_id0>
@@ -172,15 +199,35 @@ struct pool_edges
     using no_map<schema::pool_edges>::nomap;
 };
 
-/// pool is a record hashmap of pooled tx validation context keyed by tx
-/// link, with the short id hash (txid or wtxid) as four word columns, and
-/// the totals and edges of the tx as two more.
+/// Context columns (flags, height and median time past of the validation).
+struct pool_flags
+  : public no_map<schema::pool_flags>
+{
+    using no_map<schema::pool_flags>::nomap;
+};
+
+struct pool_heights
+  : public no_map<schema::pool_heights>
+{
+    using no_map<schema::pool_heights>::nomap;
+};
+
+struct pool_medians
+  : public no_map<schema::pool_medians>
+{
+    using no_map<schema::pool_medians>::nomap;
+};
+
+/// pool is a record hashmap of pooled tx arrival time keyed by tx link, with
+/// the short id hash (txid or wtxid) as four word columns, the totals and
+/// edges of the tx as two more, and its validation context as three more.
 struct pool
   : public hash_maps<schema::pool, pool_id0, pool_id1, pool_id2, pool_id3,
-        pool_totals, pool_edges>
+        pool_totals, pool_edges, pool_flags, pool_heights, pool_medians>
 {
     using base = hash_maps<schema::pool, pool_id0, pool_id1, pool_id2,
-        pool_id3, pool_totals, pool_edges>;
+        pool_id3, pool_totals, pool_edges, pool_flags, pool_heights,
+        pool_medians>;
     using base::hashmaps;
 
     struct record
@@ -188,7 +235,6 @@ struct pool
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
-            context::from_data(source, ctx);
             time = source.read_little_endian<uint32_t>();
             BC_ASSERT(!source || source.get_read_position() == minrow);
             return source;
@@ -196,41 +242,12 @@ struct pool
 
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
-            context::to_data(sink, ctx);
             sink.write_little_endian<uint32_t>(time);
             BC_ASSERT(!sink || sink.get_write_position() == minrow);
             return sink;
         }
 
         inline bool operator==(const record&) const NOEXCEPT = default;
-
-        context ctx{};
-        uint32_t time{};
-    };
-
-    struct get_height
-      : public schema::pool
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            using height_t = context::height_t;
-            source.skip_bytes(context::flag_t::size);
-            height = source.read_little_endian<height_t::integer, height_t::size>();
-            return source;
-        }
-
-        context::height_t::integer height{};
-    };
-
-    struct get_time
-      : public schema::pool
-    {
-        inline bool from_data(reader& source) NOEXCEPT
-        {
-            source.skip_bytes(minsize - sizeof(uint32_t));
-            time = source.read_little_endian<uint32_t>();
-            return source;
-        }
 
         uint32_t time{};
     };
@@ -244,12 +261,18 @@ struct pool
     /// The scan columns (rows aligned with the spine).
     column<base, 5> totals{ *this };
     column<base, 6> edges{ *this };
+
+    /// The context columns (rows aligned with the spine).
+    column<base, 7> flags{ *this };
+    column<base, 8> heights{ *this };
+    column<base, 9> medians{ *this };
 };
 
 /// Aggregate (files).
 template <template <size_t...> class Storage>
-using pool_storage = mmaps<Storage, pool_context,
-    pool_id0, pool_id1, pool_id2, pool_id3, pool_totals, pool_edges>;
+using pool_storage = mmaps<Storage, pool_time,
+    pool_id0, pool_id1, pool_id2, pool_id3, pool_totals, pool_edges,
+    pool_flags, pool_heights, pool_medians>;
 
 /// A value head aligned with a table, one word per row, updated in place.
 template <typename Schema>

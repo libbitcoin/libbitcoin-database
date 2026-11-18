@@ -25,7 +25,8 @@ namespace libbitcoin {
 namespace database {
 
 // The pool index is rebuilt from the compacted pool. Retained rows are
-// confirmable, so all are present.
+// confirmable, so none has a stored cause of absence. Inputs follow row order,
+// so a row joins only the rings of the rows rebuilt before it.
 TEMPLATE
 bool CLASS::set_pool_index() NOEXCEPT
 {
@@ -71,7 +72,8 @@ bool CLASS::set_pool_index() NOEXCEPT
             bool conflict{};
             auto& mate = mates.at(at);
             const auto point = get_point_key(to_point(tx, at));
-            if (!get_pooled_spender(mate, conflict, point, tx, true))
+            if (!get_pooled_spender(mate, conflict, point, tx, true,
+                edge.spends_fk))
                 return false;
         }
 
@@ -84,9 +86,8 @@ bool CLASS::set_pool_index() NOEXCEPT
     if (!get_pool_columns(columns, guards))
         return false;
 
-    pool_links scratch(columns.rows.size());
-    algorithm::initialize(columns);
-    while (algorithm::propagate(columns, scratch));
+    system::pool::settle(columns);
+    system::pool::label(columns);
     return true;
 }
 
@@ -260,6 +261,9 @@ bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
 
     const auto raw_edges = store_.pool.edges.get_raw();
     const auto raw_totals = store_.pool.totals.get_raw();
+    const auto raw_flags = store_.pool.flags.get_raw();
+    const auto raw_heights = store_.pool.heights.get_raw();
+    const auto raw_medians = store_.pool.medians.get_raw();
     const auto edges = pointer_cast<const edges_t>(raw_edges);
     const auto totals = pointer_cast<const totals_t>(raw_totals);
     out =
@@ -270,7 +274,10 @@ bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
         { totals, rows },
         { data(guards.rows), inputs },
         { data(guards.siblings), inputs },
-        { data(guards.rivals), inputs }
+        { data(guards.rivals), inputs },
+        { pointer_cast<const uint32_t>(raw_flags), rows },
+        { pointer_cast<const uint32_t>(raw_heights), rows },
+        { pointer_cast<const uint32_t>(raw_medians), rows }
     };
 
     return true;
@@ -281,7 +288,7 @@ bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
 TEMPLATE
 bool CLASS::get_pooled_spender(system::pool::algorithm::link_t& out,
     bool& conflicted, const point& point, const tx_link& self,
-    bool archived) const NOEXCEPT
+    bool archived, system::pool::algorithm::link_t bound) const NOEXCEPT
 {
     using namespace system;
     using link_t = system::pool::algorithm::link_t;
@@ -316,18 +323,69 @@ bool CLASS::get_pooled_spender(system::pool::algorithm::link_t& out,
             return false;
 
         const auto position = in - to_point(tx, zero).value;
-        out = edge.spends_fk + possible_narrow_cast<link_t>(position);
+        const auto offset = possible_narrow_cast<link_t>(position);
+        const auto input = edge.spends_fk + offset;
+        if (input < bound)
+            out = input;
     }
 
     return true;
 }
 
 // protected
-// The conflicts of the block's txs that are not pooled are in its prevout
-// cache, which is absent when the block was confirmed by bypass.
+// The first tx is the coinbase, which spends nothing.
 TEMPLATE
-bool CLASS::set_pool_block(const header_link& link, const tx_links& txs,
-    bool confirmed) NOEXCEPT
+bool CLASS::get_pool_conflicts(tx_links& out,
+    const tx_links& txs) const NOEXCEPT
+{
+    out.clear();
+    if (is_zero(store_.duplicate.body_size()))
+        return true;
+
+    for (auto tx = std::next(txs.cbegin()); tx != txs.cend(); ++tx)
+    {
+        table::transaction::get_puts record{};
+        if (!store_.tx.get(*tx, record))
+            return false;
+
+        // Point links are contiguous (computed).
+        const auto end = record.points_fk + record.ins_count;
+        for (auto fk = record.points_fk; fk < end; ++fk)
+            if (!get_doubles(out, get_point_key(fk)))
+                return false;
+    }
+
+    return true;
+}
+
+TEMPLATE
+bool CLASS::is_pool_conflicted(bool& out, const tx_link& link,
+    const pool_link& row) const NOEXCEPT
+{
+    out = false;
+    table::pool_edge edge{};
+    if (!store_.pool.edges.get(row, edge))
+        return false;
+
+    for (uint32_t at{}; !out && at < edge.inputs; ++at)
+    {
+        system::pool::algorithm::link_t mate{};
+        const auto point = get_point_key(to_point(link, at));
+        if (!get_pooled_spender(mate, out, point, link, true))
+            return false;
+    }
+
+    return true;
+}
+
+// The conflicts of the block's txs are in its prevout cache, which the prune
+// leaves in place until the index is settled to the top, and otherwise are
+// taken from the archive (a block that was not validated, or was pruned
+// before a reorganization). They include the block's own txs, as each spends
+// a conflicted point. A conflict is cleared at a reorganization only if no
+// other confirmed tx spends a point of the row.
+TEMPLATE
+bool CLASS::set_pool_block(const header_link& link, bool confirmed) NOEXCEPT
 {
     using namespace system;
     using algorithm = system::pool::algorithm;
@@ -335,46 +393,79 @@ bool CLASS::set_pool_block(const header_link& link, const tx_links& txs,
     if (!store_.pool.enabled())
         return true;
 
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    const auto settled = confirmed ? link : to_parent(link);
+    const auto count = store_.pool.count().value;
+    if (is_zero(count))
+    {
+        store_.set_pool_settled(settled);
+        return true;
+    }
+
+    table::txs::get_txs txs{};
+    if (!store_.txs.at(to_txs(link), txs) || txs.tx_fks.empty())
+        return false;
+
+    pool_links block{};
+    for (const auto fk: txs.tx_fks)
+    {
+        const auto row = store_.pool.first(tx_link{ fk });
+        if (!row.is_terminal() && row.value < count)
+            block.push_back(possible_narrow_cast<link_t>(row.value));
+    }
+
+    table::prevout::slab_get cache{};
+    if (!store_.prevout.at(to_prevout(link), cache) &&
+        !get_pool_conflicts(cache.conflicts, txs.tx_fks))
+        return false;
+
+    auto own = txs.tx_fks;
+    std::ranges::sort(own);
+    pool_links conflicts{};
+    for (const auto conflict: cache.conflicts)
+    {
+        if (std::ranges::binary_search(own, conflict))
+            continue;
+
+        const tx_link tx{ conflict };
+        const auto row = store_.pool.first(tx);
+        if (row.is_terminal() || row.value >= count)
+            continue;
+
+        // A row still spent by another confirmed tx keeps its conflict.
+        auto still = false;
+        if (!confirmed && !is_pool_conflicted(still, tx, row))
+            return false;
+
+        if (!still)
+            conflicts.push_back(possible_narrow_cast<link_t>(row.value));
+    }
+
     pool_guards guards{};
     algorithm::columns_t columns{};
     if (!get_pool_columns(columns, guards))
         return false;
 
-    const auto rows = columns.cells.size();
-    if (is_zero(rows))
-        return true;
-
-    for (const auto fk: txs)
+    const auto beyond = [&](link_t row) NOEXCEPT
     {
-        const auto row = store_.pool.first(tx_link{ fk });
-        if (row.is_terminal() || row.value >= rows)
-            continue;
+        return row >= columns.cells.size();
+    };
 
-        const auto at = possible_narrow_cast<link_t>(row.value);
-        if (confirmed)
-            algorithm::confirm(columns, at);
-        else
-            algorithm::unconfirm(columns, at);
-    }
+    std::erase_if(block, beyond);
+    std::erase_if(conflicts, beyond);
+    const auto complete = confirmed ?
+        algorithm::confirm(columns, block, conflicts) :
+        algorithm::unconfirm(columns, block, conflicts);
 
-    table::prevout::slab_get cache{};
-    if (!store_.prevout.at(to_prevout(link), cache))
-        return true;
+    // A component over the member limit is labeled by the columns.
+    if (!complete)
+        system::pool::label(columns);
 
-    for (const auto conflict: cache.conflicts)
-    {
-        const auto row = store_.pool.first(tx_link{ conflict });
-        if (row.is_terminal() || row.value >= rows)
-            continue;
-
-        const auto at = possible_narrow_cast<link_t>(row.value);
-        if (confirmed)
-            algorithm::exclude(columns, at);
-        else
-            algorithm::revive(columns, at);
-    }
-
+    store_.set_pool_settled(settled);
     return true;
+    // ========================================================================
 }
 
 } // namespace database

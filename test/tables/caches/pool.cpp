@@ -23,38 +23,24 @@ BC_AUTO_TEST_SUITE(pool_tests)
 
 using namespace system;
 using word = table::pool_word;
+using scalar = table::pool_scalar;
 using body_storages = test::chunk_storages<schema::pool::minrow,
     schema::pool_id0::size, schema::pool_id0::size,
     schema::pool_id0::size, schema::pool_id0::size,
-    schema::pool_totals::size, schema::pool_edges::size>;
+    schema::pool_totals::size, schema::pool_edges::size,
+    schema::pool_flags::size, schema::pool_heights::size,
+    schema::pool_medians::size>;
 static const body_storages::paths body_paths
 {
-    "state", "id0", "id1", "id2", "id3", "totals", "edges"
+    "state", "id0", "id1", "id2", "id3", "totals", "edges", "flags",
+    "heights", "medians"
 };
 
 constexpr auto buckets = 8u;
 const table::pool::key key1{ 0x01, 0x02, 0x03, 0x04 };
 const table::pool::key key2{ 0xa1, 0xa2, 0xa3, 0xa4 };
-const table::pool::record in1
-{
-    {},
-    {
-        0x11223344, // flags
-        0x00667788, // height
-        0x99aabbcc  // mtp
-    },
-    0x5f6e7d8c          // time
-};
-const table::pool::record in2
-{
-    {},
-    {
-        0xaabbccdd, // flags
-        0x00332211, // height
-        0xabcdef99  // mtp
-    },
-    0x00000042          // time
-};
+const table::pool::record in1{ {}, 0x5f6e7d8c };
+const table::pool::record in2{ {}, 0x00000042 };
 
 BC_AUTO_TEST_CASE(pool__put__two__found)
 {
@@ -92,9 +78,6 @@ BC_AUTO_TEST_CASE(pool__put__spine__expected_row)
     (
         "ffffffff"         // next->end
         "01020304"         // key1
-        "44332211"         // flags
-        "887766"           // height
-        "ccbbaa99"         // mtp
         "8c7d6e5f"         // time
     );
     BC_REQUIRE_EQUAL(body_store.buffers_.at(0), expected_row);
@@ -160,6 +143,31 @@ BC_AUTO_TEST_CASE(pool__put__scan_columns__expected)
     BC_REQUIRE(instance.edges.get(link, edge_out));
     BC_REQUIRE(total_out == total);
     BC_REQUIRE(edge_out == edge);
+}
+
+BC_AUTO_TEST_CASE(pool__put__context_columns__expected)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    body_storages body_store{ body_paths };
+    table::pool instance{ head_store, body_store, buckets };
+    BC_REQUIRE(instance.create());
+
+    const auto link = instance.allocate(1);
+    auto guard = instance.get_memory();
+    BC_REQUIRE(guard);
+    BC_REQUIRE(instance.flags.put(link, scalar{ {}, 0x11223344 }));
+    BC_REQUIRE(instance.heights.put(link, scalar{ {}, 0x00667788 }));
+    BC_REQUIRE(instance.medians.put(link, scalar{ {}, 0x99aabbcc }));
+    guard.reset();
+
+    BC_REQUIRE(instance.put(link, key1, in1));
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(7), base16_chunk("44332211"));
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(8), base16_chunk("88776600"));
+    BC_REQUIRE_EQUAL(body_store.buffers_.at(9), base16_chunk("ccbbaa99"));
+
+    scalar out{};
+    BC_REQUIRE(instance.heights.get(link, out));
+    BC_REQUIRE_EQUAL(out.value, 0x00667788u);
 }
 
 // value heads

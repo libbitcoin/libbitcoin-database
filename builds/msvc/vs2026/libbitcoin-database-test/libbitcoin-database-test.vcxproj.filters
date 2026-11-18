@@ -273,6 +273,9 @@
     <ClCompile Include="..\..\..\..\test\query\pool\pool_reader.cpp">
       <Filter>src\query\pool</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\query\pool\pool_suffice.cpp">
+      <Filter>src\query\pool</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\query\pool\pool_template.cpp">
       <Filter>src\query\pool</Filter>
     </ClCompile>

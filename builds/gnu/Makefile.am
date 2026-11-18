@@ -224,6 +224,7 @@ include_bitcoin_database_impl_query_pool_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/impl/query/pool/pool_estimate.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/pool/pool_index.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/pool/pool_reader.ipp \
+    ${srcdir}/../../include/bitcoin/database/impl/query/pool/pool_suffice.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/pool/pool_template.ipp \
     ${srcdir}/../../include/bitcoin/database/impl/query/pool/pool_writer.ipp
 
@@ -502,6 +503,7 @@ test_libbitcoin_database_test_SOURCES = \
     ${srcdir}/../../test/query/pool/pool_estimate.cpp \
     ${srcdir}/../../test/query/pool/pool_index.cpp \
     ${srcdir}/../../test/query/pool/pool_reader.cpp \
+    ${srcdir}/../../test/query/pool/pool_suffice.cpp \
     ${srcdir}/../../test/query/pool/pool_template.cpp \
     ${srcdir}/../../test/query/pool/pool_writer.cpp \
     ${srcdir}/../../test/store/store.cpp \

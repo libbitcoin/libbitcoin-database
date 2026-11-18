@@ -114,6 +114,10 @@ public:
     bool is_pooling() const NOEXCEPT;
     void set_pooling() NOEXCEPT;
 
+    /// The block to which the pool index is settled (terminal if none).
+    header_link get_pool_settled() const NOEXCEPT;
+    void set_pool_settled(const header_link& link) NOEXCEPT;
+
     /// Scan table row count and tx table count when pooling was latched.
     size_t get_scan_frontier() const NOEXCEPT;
     size_t get_latch_tx() const NOEXCEPT;
@@ -329,6 +333,7 @@ protected:
     // This is thread safe.
     stopper dirty_{ true };
     stopper pooling_{ false };
+    std::atomic<header_link::integer> pool_settled_{ header_link::terminal };
     std::atomic<uint32_t> scan_frontier_{};
     std::atomic<uint32_t> latch_tx_{};
     std::array<std::atomic<uint32_t>, activation_count> activation_flags_{};
