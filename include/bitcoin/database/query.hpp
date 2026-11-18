@@ -1218,7 +1218,6 @@ protected:
     bool get_outputs_total_value(uint64_t& out,
         const output_links& links) const NOEXCEPT;
 
-
     /// Pool.
     /// -----------------------------------------------------------------------
     tx_link to_pool_tx(const pool_link& link) const NOEXCEPT;
