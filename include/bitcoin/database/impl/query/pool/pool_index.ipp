@@ -26,7 +26,8 @@ namespace database {
 
 // The pool index is rebuilt from the compacted pool. Retained rows are
 // confirmable, so none has a stored cause of absence. Inputs follow row order,
-// so a row joins only the rings of the rows rebuilt before it.
+// so a row joins only the rings of the rows rebuilt before it. A parent may
+// follow its child, so all rows are set before any input is linked.
 TEMPLATE
 bool CLASS::set_pool_index() NOEXCEPT
 {
@@ -43,6 +44,9 @@ bool CLASS::set_pool_index() NOEXCEPT
         return false;
 
     const auto count = store_.pool.count().value;
+    if (!set_pool_rows({}, count))
+        return false;
+
     for (pool_link::integer row{}; row < count; ++row)
     {
         const tx_link tx{ store_.pool.get_key(row) };
@@ -74,7 +78,7 @@ bool CLASS::set_pool_index() NOEXCEPT
                 return false;
         }
 
-        if (!set_pool_links(row, edge.spends_fk, parents, mates))
+        if (!set_pool_links(edge.spends_fk, parents, mates))
             return false;
     }
 
@@ -89,12 +93,34 @@ bool CLASS::set_pool_index() NOEXCEPT
 }
 
 // protected
-// The row's cell and children head, and each input's parent row, sibling
-// (joining the list of inputs spending its parent) and rival (joining the
-// ring of inputs spending its point at a pooled spender of it).
+// The cell and children head of each row in the range.
 TEMPLATE
-bool CLASS::set_pool_links(system::pool::algorithm::link_t row,
-    system::pool::algorithm::link_t start,
+bool CLASS::set_pool_rows(system::pool::algorithm::link_t begin,
+    system::pool::algorithm::link_t end) NOEXCEPT
+{
+    using row_cell = table::pool_index::replace;
+    constexpr auto none = system::pool::algorithm::none;
+    constexpr auto absent = system::pool::algorithm::absent;
+    auto& index = store_.pool_index;
+    if (!index.expand(end))
+        return false;
+
+    // An accessor guards every column of its table against remap.
+    const auto guard = index.get_memory();
+    for (auto row = begin; row < end; ++row)
+        if (!index.cells.set(guard, row, row_cell{ {}, absent }) ||
+            !index.children.set(guard, row, row_cell{ {}, none }))
+            return false;
+
+    return true;
+}
+
+// protected
+// Each input's parent row, sibling (joining the list of inputs spending its
+// parent) and rival (joining the ring of inputs spending its point at a pooled
+// spender of it).
+TEMPLATE
+bool CLASS::set_pool_links(system::pool::algorithm::link_t start,
     const pool_links& parents, const pool_links& mates) NOEXCEPT
 {
     using namespace system;
@@ -102,29 +128,18 @@ bool CLASS::set_pool_links(system::pool::algorithm::link_t row,
     using row_cell = table::pool_index::replace;
     using input_cell = table::spends_index::replace;
     constexpr auto none = system::pool::algorithm::none;
-    constexpr auto absent = system::pool::algorithm::absent;
     auto& index = store_.pool_index;
     auto& links = store_.spends_index;
 
-    // Rows are allocated through the highest parent, inputs through the last.
-    auto top = row;
-    for (const auto parent: parents)
-        if (parent != none)
-            top = std::max(top, parent);
-
     const auto inputs = parents.size();
     const auto end = start + possible_narrow_cast<link_t>(inputs);
-    if (!index.expand(add1(top)) || !links.expand(end))
+    if (!links.expand(end))
         return false;
 
     // An accessor guards every column of its table against remap.
     const auto index_guard = index.get_memory();
     const auto links_guard = links.get_memory();
-    if (!index_guard || (is_nonzero(inputs) && !links_guard))
-        return false;
-
-    if (!index.cells.set(index_guard, row, row_cell{ {}, absent }) ||
-        !index.children.set(index_guard, row, row_cell{ {}, none }))
+    if (is_nonzero(inputs) && (!index_guard || !links_guard))
         return false;
 
     for (size_t at{}; at < inputs; ++at)

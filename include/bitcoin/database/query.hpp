@@ -1229,9 +1229,12 @@ protected:
     bool get_pool_columns(system::pool::algorithm::columns_t& out,
         pool_guards& guards) const NOEXCEPT;
 
-    /// The index of a pooled row and its inputs (parent rows and ring mates).
-    bool set_pool_links(system::pool::algorithm::link_t row,
-        system::pool::algorithm::link_t start,
+    /// The index of each pooled row in the range (cell and children head).
+    bool set_pool_rows(system::pool::algorithm::link_t begin,
+        system::pool::algorithm::link_t end) NOEXCEPT;
+
+    /// The index of a pooled row's inputs (parent rows and ring mates).
+    bool set_pool_links(system::pool::algorithm::link_t start,
         const pool_links& parents, const pool_links& mates) NOEXCEPT;
 
     /// The pooled spenders of the tx take its row as their parent row.

@@ -208,4 +208,36 @@ BC_AUTO_TEST_CASE(query_pool__set_pooled__reorganized_parent__children_adopted)
     BC_REQUIRE_EQUAL(pool_cell(query, store, child), 0u);
 }
 
+BC_AUTO_TEST_CASE(query_pool__set_pool_index__parent_above_child__child_retained)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto child = to_spend(parent.hash(false), 4'999'998'000);
+    const auto confirmed = !archive_confirm(query, parent).is_terminal();
+    const auto pooled = pool_populated(query, child);
+    const auto popped = query.pop_confirmed();
+    const auto link = query.to_tx(parent.hash(false));
+    const auto repooled = query.set_pooled(link, parent, context{ bip113, 8, 9 }, 0);
+    const auto rebuilt = query.set_pool_index();
+
+    BC_REQUIRE(confirmed);
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(popped);
+    BC_REQUIRE(repooled);
+    BC_REQUIRE(rebuilt);
+    BC_REQUIRE_EQUAL(store.spends_index.rows.at(0u), 1u);
+    BC_REQUIRE_EQUAL(store.spends_index.siblings.at(0u), system::pool::algorithm::none);
+    BC_REQUIRE_EQUAL(store.pool_index.children.at(0u), system::pool::algorithm::none);
+    BC_REQUIRE_EQUAL(store.pool_index.children.at(1u), 0u);
+    BC_REQUIRE_EQUAL(pool_cell(query, store, parent), system::pool::algorithm::unlabeled);
+    BC_REQUIRE_EQUAL(pool_cell(query, store, child), system::pool::algorithm::unlabeled);
+}
+
 BC_AUTO_TEST_SUITE_END()
