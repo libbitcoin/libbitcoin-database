@@ -141,7 +141,7 @@ BC_AUTO_TEST_CASE(query_batch_silent__set_silent__eligible_header__scanned)
 {
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
-    settings.initialize(system::settings{ system::chain::selection::regtest }, false, 1);
+    settings.initialize(system::settings{ system::chain::selection::regtest }, false, true, true, 1);
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BC_REQUIRE(!store.create(test::events_handler));
@@ -587,7 +587,7 @@ BC_AUTO_TEST_CASE(query_batch_silent__compute_silents__presilent_banked_row__sca
 {
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
-    settings.initialize(system::settings{ system::chain::selection::regtest }, false, 1);
+    settings.initialize(system::settings{ system::chain::selection::regtest }, false, true, true, 1);
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BC_REQUIRE(!store.create(test::events_handler));
@@ -611,7 +611,7 @@ BC_AUTO_TEST_CASE(query_batch_silent__set_silents__no_rows__scanned)
 {
     database::settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
-    settings.initialize(system::settings{ system::chain::selection::regtest }, false, 1);
+    settings.initialize(system::settings{ system::chain::selection::regtest }, false, true, true, 1);
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BC_REQUIRE(!store.create(test::events_handler));

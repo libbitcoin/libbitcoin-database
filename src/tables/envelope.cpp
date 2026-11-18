@@ -35,6 +35,84 @@ const system::config::version envelope::compiled
     schema::version.at(3)
 };
 
+const system::config::version envelope::migratable
+{
+    schema::migratable.at(0),
+    schema::migratable.at(1),
+    schema::migratable.at(2),
+    schema::migratable.at(3)
+};
+
+bool envelope::is_readable(const system::config::version& schema) NOEXCEPT
+{
+    return schema >= migratable && schema <= compiled;
+}
+
+config::version envelope::get_schema(const data_chunk& data) NOEXCEPT
+{
+    if (data.size() < 4 * sizeof(uint32_t))
+        return {};
+
+    read::bytes::copy source{ data };
+    const auto major = source.read_little_endian<uint32_t>();
+    const auto minor = source.read_little_endian<uint32_t>();
+    const auto subminor = source.read_little_endian<uint32_t>();
+    const auto patch = source.read_little_endian<uint32_t>();
+    return { major, minor, subminor, patch };
+}
+
+// Migration steps
+// ----------------------------------------------------------------------------
+// Each step is written against the fixed layout of its own schema, and is
+// retained until that schema is no longer migratable.
+
+static void set_schema(data_chunk& data,
+    const config::version& schema) NOEXCEPT
+{
+    write::bytes::copy sink{ data };
+    for (const auto segment: schema.segments())
+        sink.write_little_endian<uint32_t>(segment);
+}
+
+// 4.0.31 -> 4.0.32: require_witness precedes silent_start_height.
+static bool migrate_4_0_31(data_chunk& data,
+    const envelope& configured) NOEXCEPT
+{
+    constexpr size_t silent = sizeof(uint32_t);
+    constexpr size_t pooling = sizeof(uint8_t) + 2 * sizeof(uint32_t);
+    constexpr size_t activations = 32 * (sizeof(uint32_t) + 3);
+    constexpr auto tail = silent + pooling + activations;
+    if (data.size() < tail)
+        return false;
+
+    const auto witness = to_int<uint8_t>(configured.require_witness);
+    data.insert(std::prev(data.end(), tail), witness);
+    set_schema(data, { 4, 0, 32, 0 });
+    return true;
+}
+
+bool envelope::migrate_step(data_chunk& data,
+    const envelope& configured) NOEXCEPT
+{
+    const auto schema = get_schema(data);
+    if (!is_readable(schema) || schema == compiled)
+        return false;
+
+    if (schema == config::version{ 4, 0, 31, 0 })
+        return migrate_4_0_31(data, configured);
+
+    return false;
+}
+
+bool envelope::migrate(data_chunk& data, const envelope& configured) NOEXCEPT
+{
+    while (get_schema(data) != compiled)
+        if (!migrate_step(data, configured))
+            return false;
+
+    return true;
+}
+
 envelope::envelope() NOEXCEPT
   : schema(compiled)
 {
@@ -50,12 +128,10 @@ void envelope::set(const settings& database) NOEXCEPT
     duplicate_buckets = database.duplicate.buckets;
     pool_buckets = database.pool.buckets;
     wtxid_buckets = database.wtxid.buckets;
-    provide_filters = to_bool(database.filter_bk.buckets) &&
-        to_bool(database.filter_tx.buckets);
 }
 
 string_list envelope::apply(system::settings& bitcoin, settings& database,
-    bool& limited, uint32_t& silent) const NOEXCEPT
+    bool& limited, bool& witness, uint32_t& silent) const NOEXCEPT
 {
     string_list changed{};
     const auto assign = [&](auto& configured, const auto& stored,
@@ -116,26 +192,20 @@ string_list envelope::apply(system::settings& bitcoin, settings& database,
     assign(database.pool.buckets, pool_buckets, "pool_buckets");
     assign(database.wtxid.buckets, wtxid_buckets, "wtxid_buckets");
 
-    const auto filters = to_bool(database.filter_bk.buckets) &&
-        to_bool(database.filter_tx.buckets);
-
-    if (filters != provide_filters)
+    if (!provide_filters)
     {
-        changed.push_back("provide_filters");
-        if (!provide_filters)
-        {
-            database.filter_bk.buckets = 0;
-            database.filter_tx.buckets = 0;
-        }
+        database.filter_bk.buckets = 0;
+        database.filter_tx.buckets = 0;
     }
 
     assign(limited, limited_blocks, "limited_blocks");
+    assign(witness, require_witness, "require_witness");
     assign(silent, silent_start_height, "silent_start_height");
     return changed;
 }
 
 envelope::envelope(const system::settings& bitcoin, const settings& database,
-    bool limited, uint32_t silent) NOEXCEPT
+    bool limited, bool filters, bool witness, uint32_t silent) NOEXCEPT
   : schema(compiled),
     network(bitcoin.network),
     forks(bitcoin.forks),
@@ -174,6 +244,8 @@ envelope::envelope(const system::settings& bitcoin, const settings& database,
     milestone(bitcoin.milestone),
     signet_challenge(bitcoin.signet_challenge),
     limited_blocks(limited),
+    provide_filters(filters),
+    require_witness(witness),
     silent_start_height(silent)
 {
     set(database);
@@ -300,6 +372,7 @@ bool envelope::from_data(reader& source) NOEXCEPT
     limited_blocks = to_bool(source.read_byte());
     provide_filters = to_bool(source.read_byte());
 
+    require_witness = to_bool(source.read_byte());
     silent_start_height = source.read_little_endian<uint32_t>();
 
     pooling = to_bool(source.read_byte());
@@ -426,6 +499,7 @@ bool envelope::to_data(flipper& sink) const NOEXCEPT
     sink.write_byte(to_int<uint8_t>(limited_blocks));
     sink.write_byte(to_int<uint8_t>(provide_filters));
 
+    sink.write_byte(to_int<uint8_t>(require_witness));
     sink.write_little_endian<uint32_t>(silent_start_height);
 
     sink.write_byte(to_int<uint8_t>(pooling));
@@ -457,7 +531,7 @@ size_t envelope::activation_offset(size_t index) const NOEXCEPT
 size_t envelope::serialized_size() const NOEXCEPT
 {
     constexpr auto fixed = (4 * sizeof(uint32_t)) +
-        (7 * sizeof(uint32_t)) + (12 * sizeof(uint8_t)) + forks_count +
+        (7 * sizeof(uint32_t)) + (13 * sizeof(uint8_t)) + forks_count +
         sizeof(uint64_t) + (18 * sizeof(uint32_t)) +
         (activation_count * activation_size);
 

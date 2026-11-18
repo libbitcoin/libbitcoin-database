@@ -81,12 +81,10 @@ settings::settings() NOEXCEPT
 
     // optional
 
-    // also disabled by filter_tx
     filter_bk.buckets = 0;
     filter_bk.size = 0;
     filter_bk.rate = 1;
 
-    // also disabled by filter_bk
     filter_tx.buckets = 0;
     filter_tx.size = 0;
     filter_tx.rate = 1;
@@ -124,6 +122,8 @@ settings::settings(chain::selection context) NOEXCEPT
             confirmed.buckets = 950'001;
             strong.buckets = 1'359'871'695;
             scan.buckets = 950'001;
+            filter_bk.buckets = 950'001;
+            filter_tx.buckets = 950'001;
             state.buckets = 950'001;
             break;
         }
@@ -147,6 +147,8 @@ settings::settings(chain::selection context) NOEXCEPT
             confirmed.buckets = 5'100'001;
             strong.buckets = 536'643'888;
             scan.buckets = 5'100'001;
+            filter_bk.buckets = 5'100'001;
+            filter_tx.buckets = 5'100'001;
             state.buckets = 5'100'001;
             break;
         }
@@ -171,6 +173,8 @@ settings::settings(chain::selection context) NOEXCEPT
             confirmed.buckets = 150'001;
             strong.buckets = 14'810'011;
             scan.buckets = 150'001;
+            filter_bk.buckets = 150'001;
+            filter_tx.buckets = 150'001;
             state.buckets = 150'001;
             break;
         }
@@ -194,6 +198,8 @@ settings::settings(chain::selection context) NOEXCEPT
             confirmed.buckets = 10'001;
             strong.buckets = 100'000;
             scan.buckets = 10'001;
+            filter_bk.buckets = 10'001;
+            filter_tx.buckets = 10'001;
             state.buckets = 10'001;
             break;
         }
@@ -217,6 +223,8 @@ settings::settings(chain::selection context) NOEXCEPT
             confirmed.buckets = 330'001;
             strong.buckets = 35'000'000;
             scan.buckets = 330'001;
+            filter_bk.buckets = 330'001;
+            filter_tx.buckets = 330'001;
             state.buckets = 330'001;
             break;
         }
@@ -229,9 +237,10 @@ settings::settings(chain::selection context) NOEXCEPT
 }
 
 void settings::initialize(const system::settings& bitcoin, bool limited_blocks,
-    uint32_t silent_start) NOEXCEPT
+    bool provide_filters, bool require_witness, uint32_t silent_start) NOEXCEPT
 {
-    envelope = { bitcoin, *this, limited_blocks, silent_start };
+    envelope = { bitcoin, *this, limited_blocks, provide_filters,
+        require_witness, silent_start };
 }
 
 } // namespace database

@@ -40,6 +40,7 @@ struct BCD_API settings
 
     /// Pack the creation envelope, must follow configuration parse.
     void initialize(const system::settings& bitcoin, bool limited_blocks,
+        bool provide_filters, bool require_witness,
         uint32_t silent_start) NOEXCEPT;
 
     /// Table settings.

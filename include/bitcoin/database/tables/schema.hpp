@@ -75,7 +75,10 @@ namespace schema {
 /// 4.0.29.0 Fork activation groups in the envelope.
 /// 4.0.30.0 Pool totals and edges columns, pool index heads.
 /// 4.0.31.0 Pool flags, heights and medians columns (from the pool record).
-constexpr std::array<uint32_t, 4> version{ 4, 0, 31, 0 };
+constexpr std::array<uint32_t, 4> version{ 4, 0, 32, 0 };
+
+/// The oldest store schema migrated by rewriting its envelope.
+constexpr std::array<uint32_t, 4> migratable{ 4, 0, 31, 0 };
 
 /// Values.
 /// -----------------------------------------------------------------------

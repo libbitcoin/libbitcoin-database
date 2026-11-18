@@ -159,6 +159,7 @@ protected:
     bool get_schema(system::config::version& schema) const NOEXCEPT;
     code load_schema() NOEXCEPT;
     code load_envelope() NOEXCEPT;
+    code migrate_envelope(table::envelope::record& record) NOEXCEPT;
     void store_envelope(code& ec) NOEXCEPT;
     code unload_close(const event_handler& handler) NOEXCEPT;
     code backup(const event_handler& handler, bool prune=false) NOEXCEPT;

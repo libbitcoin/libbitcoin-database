@@ -132,6 +132,28 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     return ec;
 }
 
+// The head is expanded before the envelope is rewritten, so a failed expansion
+// (disk full) leaves the stored envelope unchanged.
+TEMPLATE
+code CLASS::migrate_envelope(table::envelope::record& record) NOEXCEPT
+{
+    using namespace system;
+    table::envelope::raw raw{};
+    if (!envelope.get(zero, raw) ||
+        !database::envelope::migrate(raw.data, envelope_))
+        return error::verify_table;
+
+    const auto size = envelope.head_size();
+    const auto count = raw.data.size();
+    if ((count > size) && envelope.allocate(count - size).is_terminal())
+        return error::disk_full;
+
+    if (!envelope.put(zero, raw) || !envelope.get(zero, record))
+        return error::verify_table;
+
+    return error::success;
+}
+
 // The envelope is fixed width, so it is rewritten at its allocated link.
 TEMPLATE
 void CLASS::store_envelope(code& ec) NOEXCEPT
@@ -154,7 +176,8 @@ void CLASS::store_envelope(code& ec) NOEXCEPT
 
 // public
 // The schema is deserialized before it is validated, so the record holds it
-// when envelope deserialization fails.
+// when envelope deserialization fails. The stored argument provides the
+// configured values for a migrated envelope.
 TEMPLATE
 code CLASS::read_envelope(database::envelope& stored) NOEXCEPT
 {
@@ -166,11 +189,28 @@ code CLASS::read_envelope(database::envelope& stored) NOEXCEPT
     if (!ec)
     {
         table::envelope::record record{};
-        const auto valid = !is_zero(envelope.head_size()) &&
+        auto valid = !is_zero(envelope.head_size()) &&
             envelope.get(zero, record);
 
+        // A migratable envelope is migrated in memory, the store is unchanged.
+        const auto schema = record.envelope.schema;
+        table::envelope::raw raw{};
+        if (!valid && database::envelope::is_readable(schema) &&
+            envelope.get(zero, raw) &&
+            database::envelope::migrate(raw.data, stored))
+        {
+            using namespace system;
+            const auto size = possible_narrow_sign_cast<ptrdiff_t>(
+                raw.data.size());
+            iostream stream{ raw.data.data(), size };
+            reader source{ stream };
+            valid = record.envelope.from_data(source);
+        }
+
+        // The stored schema is retained, as the store is not yet migrated.
         stored = record.envelope;
-        if (stored.schema != database::envelope::compiled)
+        stored.schema = schema;
+        if (!database::envelope::is_readable(schema))
             ec = error::schema_version;
         else if (!valid)
             ec = error::verify_table;
@@ -195,7 +235,7 @@ code CLASS::load_schema() NOEXCEPT
     if (!get_schema(schema))
         return error::verify_table;
 
-    return (schema == database::envelope::compiled) ? error::success :
+    return database::envelope::is_readable(schema) ? error::success :
         error::schema_version;
 }
 
@@ -216,13 +256,23 @@ bool CLASS::get_schema(system::config::version& schema) const NOEXCEPT
 TEMPLATE
 code CLASS::load_envelope() NOEXCEPT
 {
-    // The stored creation envelope governs, configuration is not read.
+    // The stored creation envelope governs, configuration fills only values
+    // that a migrated schema does not store.
     table::envelope::record record{};
     if (!is_zero(envelope.head_size()))
     {
         if (!envelope.get(zero, record))
-            return record.envelope.schema == envelope_.schema ?
-                error::verify_table : error::schema_version;
+        {
+            const auto schema = record.envelope.schema;
+            if (!database::envelope::is_readable(schema))
+                return error::schema_version;
+
+            if (schema == database::envelope::compiled)
+                return error::verify_table;
+
+            if (const auto ec = migrate_envelope(record))
+                return ec;
+        }
 
         envelope_ = record.envelope;
     }

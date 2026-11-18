@@ -183,7 +183,7 @@ BC_AUTO_TEST_CASE(query_extent__filter_enabled__disabled__false)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
-    settings.filter_tx.buckets = 0;
+    settings.envelope.provide_filters = false;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
     BC_REQUIRE(!store.create(test::events_handler));
