@@ -369,6 +369,16 @@ private:
             table.buckets, Cell), access, fill);
     }
 
+    // The envelope is allocated whole, sized by its content.
+    static constexpr storage_settings envelope_settings
+    {
+        .size = one,
+        .rate = zero,
+        .access = advice::random,
+        .zeroed = false,
+        .fill = system::bit_all<uint8_t>
+    };
+
     // Bodies carry the store memory bounds.
     static constexpr storage_settings body_settings(const settings& config,
         const storage_settings& table) NOEXCEPT
