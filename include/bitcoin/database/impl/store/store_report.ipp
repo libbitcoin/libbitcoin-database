@@ -22,8 +22,7 @@
 #include <bitcoin/database/define.hpp>
 
 // TODO: there are now headers that increase in size, so these need to be
-// included in faults and computations for disk full recovery, and in variable
-// sizing reports.
+// included in variable sizing reports.
 
 namespace libbitcoin {
 namespace database {
@@ -41,33 +40,68 @@ void CLASS::report(const error_handler& handler) const NOEXCEPT
         handler(ec, table);
     };
 
+    report(header_head_, table_t::header_head);
     report(header_body_, table_t::header_body);
+    report(input_head_, table_t::input_head);
     report(input_body_, table_t::input_body);
+    report(output_head_, table_t::output_head);
     report(output_body_, table_t::output_body);
+    report(ins_head_, table_t::ins_head);
     report(ins_body_, table_t::ins_body);
+    report(outs_head_, table_t::outs_head);
     report(*outs_body_, table_t::outs_body);
+    report(tx_head_, table_t::tx_head);
     report(tx_body_, table_t::tx_body);
+    report(txs_head_, table_t::txs_head);
     report(txs_body_, table_t::txs_body);
+    report(candidate_head_, table_t::candidate_head);
+    report(confirmed_head_, table_t::confirmed_head);
+    report(strong_head_, table_t::strong_head);
+    report(scan_head_, table_t::scan_head);
     report(scan_body_, table_t::scan_body);
+    report(scan_prefix_head_, table_t::scan_prefix_head);
     report(scan_prefix_body_, table_t::scan_prefix_body);
+    report(ecdsa0_head_, table_t::ecdsa0_head);
     report(ecdsa0_body_, table_t::ecdsa0_body);
+    report(ecdsa1_head_, table_t::ecdsa1_head);
     report(ecdsa1_body_, table_t::ecdsa1_body);
+    report(schnorr0_head_, table_t::schnorr0_head);
     report(schnorr0_body_, table_t::schnorr0_body);
+    report(schnorr1_head_, table_t::schnorr1_head);
     report(schnorr1_body_, table_t::schnorr1_body);
+    report(silent0_head_, table_t::silent0_head);
     report(silent0_body_, table_t::silent0_body);
+    report(silent1_head_, table_t::silent1_head);
     report(silent1_body_, table_t::silent1_body);
+    report(silent0_prefix_head_, table_t::silent0_prefix_head);
     report(silent0_prefix_body_, table_t::silent0_prefix_body);
+    report(silent1_prefix_head_, table_t::silent1_prefix_head);
     report(silent1_prefix_body_, table_t::silent1_prefix_body);
+    report(envelope_head_, table_t::envelope_head);
+    report(duplicate_head_, table_t::duplicate_head);
     report(duplicate_body_, table_t::duplicate_body);
+    report(prevalid0_head_, table_t::prevalid0_head);
     report(prevalid0_body_, table_t::prevalid0_body);
+    report(prevalid1_head_, table_t::prevalid1_head);
     report(prevalid1_body_, table_t::prevalid1_body);
+    report(presilent0_head_, table_t::presilent0_head);
     report(presilent0_body_, table_t::presilent0_body);
+    report(presilent1_head_, table_t::presilent1_head);
     report(presilent1_body_, table_t::presilent1_body);
+    report(prevout_head_, table_t::prevout_head);
     report(prevout_body_, table_t::prevout_body);
+    report(state_head_, table_t::state_head);
+    report(pool_head_, table_t::pool_head);
     report(pool_body_, table_t::pool_body);
+    report(spends_head_, table_t::spends_head);
+    report(pool_index_head_, table_t::pool_index_head);
+    report(spends_index_head_, table_t::spends_index_head);
     report(spends_body_, table_t::spends_body);
+    report(wtxid_head_, table_t::wtxid_head);
     report(wtxid_body_, table_t::wtxid_body);
+    report(filter_bk_head_, table_t::filter_bk_head);
     report(filter_bk_body_, table_t::filter_bk_body);
+    report(filter_tx_head_, table_t::filter_tx_head);
     report(filter_tx_body_, table_t::filter_tx_body);
 }
 

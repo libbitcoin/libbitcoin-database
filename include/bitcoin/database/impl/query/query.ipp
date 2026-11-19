@@ -105,6 +105,18 @@ bool CLASS::is_full() const NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::is_fault_locked() const NOEXCEPT
+{
+    return store_.is_fault_locked();
+}
+
+TEMPLATE
+bool CLASS::set_fault_lock() NOEXCEPT
+{
+    return store_.set_fault_lock();
+}
+
+TEMPLATE
 bool CLASS::is_coalesced() const NOEXCEPT
 {
     return get_fork() == get_top_candidate();

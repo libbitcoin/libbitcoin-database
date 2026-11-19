@@ -142,6 +142,7 @@ CLASS::store(const settings& config) NOEXCEPT
     // Locks.
     // ------------------------------------------------------------------------
 
+    fault_lock_(lock(config.path, schema::locks::fault)),
     flush_lock_(lock(config.path, schema::locks::flush)),
     process_lock_(lock(config.path, schema::locks::process)),
 
@@ -235,6 +236,18 @@ TEMPLATE
 const database::envelope& CLASS::get_envelope() const NOEXCEPT
 {
     return envelope_;
+}
+
+TEMPLATE
+bool CLASS::is_fault_locked() const NOEXCEPT
+{
+    return fault_lock_.is_locked();
+}
+
+TEMPLATE
+bool CLASS::set_fault_lock() NOEXCEPT
+{
+    return fault_lock_.is_locked() || fault_lock_.try_lock();
 }
 
 TEMPLATE

@@ -33,7 +33,7 @@ BC_AUTO_TEST_CASE(store__report__created__reports_all_tables_without_fault)
     size_t calls{};
     size_t faults{};
     instance.report([&](const code& ec, auto) NOEXCEPT { ++calls; faults += static_cast<size_t>(static_cast<bool>(ec)); });
-    BC_REQUIRE_NE(calls, 0u);
+    BC_REQUIRE_EQUAL(calls, 63u);
     BC_REQUIRE_EQUAL(faults, 0u);
     BC_REQUIRE(!instance.close(test::events));
 }

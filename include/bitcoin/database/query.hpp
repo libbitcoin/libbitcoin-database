@@ -92,6 +92,10 @@ public:
     /// True if there is a disk full condition.
     bool is_full() const NOEXCEPT;
 
+    /// A fault locked store does not open or restore.
+    bool is_fault_locked() const NOEXCEPT;
+    bool set_fault_lock() NOEXCEPT;
+
     /// True if candidate top is fork point header.
     bool is_coalesced() const NOEXCEPT;
 

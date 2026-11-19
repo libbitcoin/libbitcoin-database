@@ -47,6 +47,18 @@ BC_AUTO_TEST_CASE(store__restore__process_locked__success)
 }
 #endif
 
+BC_AUTO_TEST_CASE(store__restore__fault_locked__fault_lock)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(test::create(instance.fault_lock_file()));
+    BC_REQUIRE(test::create(instance.flush_lock_file()));
+    BC_REQUIRE_EQUAL(instance.restore(test::events), error::fault_lock);
+    BC_REQUIRE(test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(test::exists(instance.flush_lock_file()));
+}
+
 BC_AUTO_TEST_CASE(store__restore__no_flush_lock__flush_lock)
 {
     settings configuration{ test::database_settings() };

@@ -91,11 +91,17 @@ code CLASS::close(const event_handler& handler) NOEXCEPT
     if (!process_lock_.try_unlock())
         ec = error::process_unlock;
 
-    // fault overrides unlock errors and leaves behind flush_lock.
+    // fault overrides unlock errors, leaves behind flush_lock and fault locks
+    // the store.
     if (get_fault())
+    {
+        /* bool */ set_fault_lock();
         ec = error::integrity;
+    }
     else if (!flush_lock_.try_unlock())
+    {
         ec = error::flush_unlock;
+    }
 
     transactor_mutex_.unlock();
     return ec;
