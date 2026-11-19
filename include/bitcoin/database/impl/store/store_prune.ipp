@@ -180,11 +180,8 @@ code CLASS::compact(const event_handler& handler) NOEXCEPT
         handler(event_t::prune_table, table_t::spends_body);
         handler(event_t::prune_table, table_t::wtxid_head);
         handler(event_t::prune_table, table_t::wtxid_body);
-        handler(event_t::prune_table, table_t::pool_cells_head);
-        handler(event_t::prune_table, table_t::pool_children_head);
-        handler(event_t::prune_table, table_t::spends_rows_head);
-        handler(event_t::prune_table, table_t::spends_siblings_head);
-        handler(event_t::prune_table, table_t::spends_rivals_head);
+        handler(event_t::prune_table, table_t::pool_index_head);
+        handler(event_t::prune_table, table_t::spends_index_head);
 
         query<CLASS> writer{ *this };
         if (!pool.clear())

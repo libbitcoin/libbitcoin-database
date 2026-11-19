@@ -130,11 +130,8 @@ code CLASS::get_fault() const NOEXCEPT
     if ((ec = pool_head_.get_fault())) return ec;
     if ((ec = pool_body_.get_fault())) return ec;
     if ((ec = spends_head_.get_fault())) return ec;
-    if ((ec = pool_cells_head_.get_fault())) return ec;
-    if ((ec = pool_children_head_.get_fault())) return ec;
-    if ((ec = spends_rows_head_.get_fault())) return ec;
-    if ((ec = spends_siblings_head_.get_fault())) return ec;
-    if ((ec = spends_rivals_head_.get_fault())) return ec;
+    if ((ec = pool_index_head_.get_fault())) return ec;
+    if ((ec = spends_index_head_.get_fault())) return ec;
     if ((ec = spends_body_.get_fault())) return ec;
     if ((ec = wtxid_head_.get_fault())) return ec;
     if ((ec = wtxid_body_.get_fault())) return ec;
@@ -209,11 +206,8 @@ size_t CLASS::get_space() const NOEXCEPT
     space(pool_head_);
     space(pool_body_);
     space(spends_head_);
-    space(pool_cells_head_);
-    space(pool_children_head_);
-    space(spends_rows_head_);
-    space(spends_siblings_head_);
-    space(spends_rivals_head_);
+    space(pool_index_head_);
+    space(spends_index_head_);
     space(spends_body_);
     space(wtxid_head_);
     space(wtxid_body_);

@@ -1602,6 +1602,92 @@ BC_AUTO_TEST_CASE(mmap__restage__unstaged_aggregate_rewrite_below_flush__expecte
     BC_REQUIRE(!reopened.get_fault());
 }
 
+BC_AUTO_TEST_CASE(mmap__load__shared_aggregate__columns_persist)
+{
+    // Two columns, widths 1 and 3 (stride 4), each mapped across pages.
+    using storage_t = database::mmap<1, 3>;
+    constexpr size_t rows = 40'000;
+    const std::string file = TEST_PATH;
+    const storage_t::paths files{ file + "_0", file + "_1" };
+    const auto expected0 = stage_vector(stage_pattern, rows);
+    const auto expected1 = stage_vector(stage_pattern, rows * 3u);
+
+    storage_t instance(files, { 1, 50 }, false, false, true);
+    BC_REQUIRE(!instance.create());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(instance.expand(rows));
+    BC_REQUIRE_EQUAL(instance.size(), rows);
+
+    auto column0 = instance.get_at(0);
+    auto column1 = instance.get_at(1);
+    BC_REQUIRE(column0);
+    BC_REQUIRE(column1);
+    std::copy_n(expected0.begin(), expected0.size(), column0.begin());
+    std::copy_n(expected1.begin(), expected1.size(), column1.begin());
+
+    column0.reset();
+    column1.reset();
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+    BC_REQUIRE_EQUAL(test::size(files.at(0)), rows);
+    BC_REQUIRE_EQUAL(test::size(files.at(1)), rows * 3u);
+
+    storage_t reopened(files, { 1, 50 }, false, false, true);
+    BC_REQUIRE(!reopened.open());
+    BC_REQUIRE(!reopened.load());
+    BC_REQUIRE_EQUAL(reopened.size(), rows);
+
+    column0 = reopened.get_at(0);
+    column1 = reopened.get_at(1);
+    BC_REQUIRE(column0);
+    BC_REQUIRE(column1);
+
+    const auto end0 = std::next(column0.begin(), expected0.size());
+    const auto end1 = std::next(column1.begin(), expected1.size());
+    BC_REQUIRE_EQUAL_COLLECTIONS(column0.begin(), end0, expected0.begin(), expected0.end());
+    BC_REQUIRE_EQUAL_COLLECTIONS(column1.begin(), end1, expected1.begin(), expected1.end());
+
+    column0.reset();
+    column1.reset();
+    BC_REQUIRE(!reopened.unload());
+    BC_REQUIRE(!reopened.close());
+    BC_REQUIRE(!reopened.get_fault());
+}
+
+struct dump_narrow
+{
+    static constexpr size_t width = 1;
+    static constexpr std::string_view suffix{ "narrow" };
+};
+
+struct dump_wide
+{
+    static constexpr size_t width = 3;
+    static constexpr std::string_view suffix{ "wide" };
+};
+
+BC_AUTO_TEST_CASE(mmaps__dump__shared_aggregate__column_files)
+{
+    using storage_t = database::mmaps<database::mmap, dump_narrow, dump_wide>;
+    constexpr size_t rows = 100;
+    const std::string file = TEST_PATH;
+    const std::string copy = file + "_copy";
+
+    storage_t instance(file, { 1, 50 }, false, false, true);
+    BC_REQUIRE(!instance.create());
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE(instance.expand(rows));
+    BC_REQUIRE(!instance.dump(copy));
+    BC_REQUIRE_EQUAL(test::size(copy + "_narrow"), rows);
+    BC_REQUIRE_EQUAL(test::size(copy + "_wide"), rows * 3u);
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+}
+
 BC_AUTO_TEST_CASE(mmap__restage__head__rewrite_expected)
 {
     constexpr size_t size = 10'000;

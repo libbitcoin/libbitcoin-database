@@ -304,11 +304,8 @@ protected:
     Storage<one> spends_body_;
 
     // headmaps (pool index)
-    Storage<one> pool_cells_head_;
-    Storage<one> pool_children_head_;
-    Storage<one> spends_rows_head_;
-    Storage<one> spends_siblings_head_;
-    Storage<one> spends_rivals_head_;
+    table::pool_index_storage<Storage> pool_index_head_;
+    table::spends_index_storage<Storage> spends_index_head_;
     Storage<one> wtxid_head_;
     Storage<one> wtxid_body_;
 
@@ -368,6 +365,16 @@ private:
         return head_settings(table, system::ceilinged_multiply<uint64_t>(
             table.buckets, Cell), access, fill);
     }
+
+    // The envelope is allocated whole, sized by its content.
+    static constexpr storage_settings envelope_settings
+    {
+        .size = one,
+        .rate = zero,
+        .access = advice::random,
+        .zeroed = false,
+        .fill = system::bit_all<uint8_t>
+    };
 
     // Bodies carry the store memory bounds.
     static constexpr storage_settings body_settings(const settings& config,
@@ -443,11 +450,8 @@ public:
     table::state state;
     table::pool pool;
     table::spends spends;
-    table::pool_cells pool_cells;
-    table::pool_children pool_children;
-    table::spends_rows spends_rows;
-    table::spends_siblings spends_siblings;
-    table::spends_rivals spends_rivals;
+    table::pool_index pool_index;
+    table::spends_index spends_index;
     table::wtxid wtxid;
 
     /// Optionals.

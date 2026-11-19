@@ -26,7 +26,8 @@ namespace database {
 
 // The pool index is rebuilt from the compacted pool. Retained rows are
 // confirmable, so none has a stored cause of absence. Inputs follow row order,
-// so a row joins only the rings of the rows rebuilt before it.
+// so a row joins only the rings of the rows rebuilt before it. A parent may
+// follow its child, so all rows are set before any input is linked.
 TEMPLATE
 bool CLASS::set_pool_index() NOEXCEPT
 {
@@ -38,14 +39,14 @@ bool CLASS::set_pool_index() NOEXCEPT
     using link_t = algorithm::link_t;
     constexpr auto none = algorithm::none;
 
-    if (!store_.pool_cells.truncate(0) ||
-        !store_.pool_children.truncate(0) ||
-        !store_.spends_rows.truncate(0) ||
-        !store_.spends_siblings.truncate(0) ||
-        !store_.spends_rivals.truncate(0))
+    if (!store_.pool_index.truncate(0) ||
+        !store_.spends_index.truncate(0))
         return false;
 
     const auto count = store_.pool.count().value;
+    if (!set_pool_rows({}, count))
+        return false;
+
     for (pool_link::integer row{}; row < count; ++row)
     {
         const tx_link tx{ store_.pool.get_key(row) };
@@ -77,7 +78,7 @@ bool CLASS::set_pool_index() NOEXCEPT
                 return false;
         }
 
-        if (!set_pool_links(row, edge.spends_fk, parents, mates))
+        if (!set_pool_links(edge.spends_fk, parents, mates))
             return false;
     }
 
@@ -92,29 +93,55 @@ bool CLASS::set_pool_index() NOEXCEPT
 }
 
 // protected
-// The row's cell and children head, and each input's parent row, sibling
-// (joining the list of inputs spending its parent) and rival (joining the
-// ring of inputs spending its point at a pooled spender of it).
+// The cell and children head of each row in the range.
 TEMPLATE
-bool CLASS::set_pool_links(system::pool::algorithm::link_t row,
-    system::pool::algorithm::link_t start,
+bool CLASS::set_pool_rows(system::pool::algorithm::link_t begin,
+    system::pool::algorithm::link_t end) NOEXCEPT
+{
+    using row_cell = table::pool_index::replace;
+    constexpr auto none = system::pool::algorithm::none;
+    constexpr auto absent = system::pool::algorithm::absent;
+    auto& index = store_.pool_index;
+    if (!index.expand(end))
+        return false;
+
+    // An accessor guards every column of its table against remap.
+    const auto guard = index.get_memory();
+    for (auto row = begin; row < end; ++row)
+        if (!index.cells.set(guard, row, row_cell{ {}, absent }) ||
+            !index.children.set(guard, row, row_cell{ {}, none }))
+            return false;
+
+    return true;
+}
+
+// protected
+// Each input's parent row, sibling (joining the list of inputs spending its
+// parent) and rival (joining the ring of inputs spending its point at a pooled
+// spender of it).
+TEMPLATE
+bool CLASS::set_pool_links(system::pool::algorithm::link_t start,
     const pool_links& parents, const pool_links& mates) NOEXCEPT
 {
     using namespace system;
     using link_t = system::pool::algorithm::link_t;
+    using row_cell = table::pool_index::replace;
+    using input_cell = table::spends_index::replace;
     constexpr auto none = system::pool::algorithm::none;
-    constexpr auto absent = system::pool::algorithm::absent;
-    const auto put = [](auto& head, link_t index, link_t value) NOEXCEPT
-    {
-        using replace = typename std::decay_t<decltype(head)>::replace;
-        return head.set(index, replace{ {}, value });
-    };
-
-    if (!put(store_.pool_cells, row, absent) ||
-        !put(store_.pool_children, row, none))
-        return false;
+    auto& index = store_.pool_index;
+    auto& links = store_.spends_index;
 
     const auto inputs = parents.size();
+    const auto end = start + possible_narrow_cast<link_t>(inputs);
+    if (!links.expand(end))
+        return false;
+
+    // An accessor guards every column of its table against remap.
+    const auto index_guard = index.get_memory();
+    const auto links_guard = links.get_memory();
+    if (is_nonzero(inputs) && (!index_guard || !links_guard))
+        return false;
+
     for (size_t at{}; at < inputs; ++at)
     {
         const auto input = start + possible_narrow_cast<link_t>(at);
@@ -125,22 +152,23 @@ bool CLASS::set_pool_links(system::pool::algorithm::link_t row,
 
         if (parent != none)
         {
-            sibling = store_.pool_children.at(parent);
-            if (!put(store_.pool_children, parent, input))
+            sibling = index.children.at(index_guard, parent);
+            if (!index.children.set(index_guard, parent, row_cell{ {}, input }))
                 return false;
         }
 
         if (mate != none)
         {
-            const auto next = store_.spends_rivals.at(mate);
+            const auto next = links.rivals.at(links_guard, mate);
             rival = (next == none) ? mate : next;
-            if (!put(store_.spends_rivals, mate, input))
+            if (!links.rivals.set(links_guard, mate, input_cell{ {}, input }))
                 return false;
         }
 
-        if (!put(store_.spends_rows, input, parent) ||
-            !put(store_.spends_siblings, input, sibling) ||
-            !put(store_.spends_rivals, input, rival))
+        if (!links.rows.set(links_guard, input, input_cell{ {}, parent }) ||
+            !links.siblings.set(links_guard, input,
+                input_cell{ {}, sibling }) ||
+            !links.rivals.set(links_guard, input, input_cell{ {}, rival }))
             return false;
     }
 
@@ -156,12 +184,12 @@ bool CLASS::set_pool_adoption(system::pool::algorithm::link_t row,
 {
     using namespace system;
     using link_t = system::pool::algorithm::link_t;
+    using row_cell = table::pool_index::replace;
+    using input_cell = table::spends_index::replace;
     constexpr auto none = system::pool::algorithm::none;
-    const auto put = [](auto& head, link_t index, link_t value) NOEXCEPT
-    {
-        using replace = typename std::decay_t<decltype(head)>::replace;
-        return head.set(index, replace{ {}, value });
-    };
+    auto& children = store_.pool_index.children;
+    auto& rows = store_.spends_index.rows;
+    auto& siblings = store_.spends_index.siblings;
 
     const auto outputs = tx.outputs_ptr()->size();
     const auto txid = tx.get_hash(false);
@@ -182,13 +210,13 @@ bool CLASS::set_pool_adoption(system::pool::algorithm::link_t row,
             const auto offset = possible_narrow_cast<link_t>(position);
             const auto input = edge.spends_fk + offset;
 
-            if (store_.spends_rows.at(input) != none)
+            if (rows.at(input) != none)
                 continue;
 
-            const auto sibling = store_.pool_children.at(row);
-            if (!put(store_.spends_rows, input, row) ||
-                !put(store_.spends_siblings, input, sibling) ||
-                !put(store_.pool_children, row, input))
+            const auto sibling = children.at(row);
+            if (!rows.set(input, input_cell{ {}, row }) ||
+                !siblings.set(input, input_cell{ {}, sibling }) ||
+                !children.set(row, row_cell{ {}, input }))
                 return false;
         }
     }
@@ -197,7 +225,8 @@ bool CLASS::set_pool_adoption(system::pool::algorithm::link_t row,
 }
 
 // protected
-// The index heads hold no count cell, so each is a plain array of cells.
+// The index heads hold no count cell, so each column is a plain array of
+// cells.
 TEMPLATE
 bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
     pool_guards& guards) const NOEXCEPT
@@ -208,56 +237,49 @@ bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
     using edges_t = algorithm::edges_t;
     using totals_t = algorithm::totals_t;
 
-    const auto rows = std::min
-    ({
+    const auto& index = store_.pool_index;
+    const auto& links = store_.spends_index;
+    const auto rows = std::min(
         possible_narrow_cast<size_t>(store_.pool.count().value),
-        possible_narrow_cast<size_t>(store_.pool_cells.count().value),
-        possible_narrow_cast<size_t>(store_.pool_children.count().value)
-    });
+        possible_narrow_cast<size_t>(index.count().value));
 
-    const auto inputs = std::min
-    ({
+    const auto inputs = std::min(
         possible_narrow_cast<size_t>(store_.spends.count().value),
-        possible_narrow_cast<size_t>(store_.spends_rows.count().value),
-        possible_narrow_cast<size_t>(store_.spends_siblings.count().value),
-        possible_narrow_cast<size_t>(store_.spends_rivals.count().value)
-    });
+        possible_narrow_cast<size_t>(links.count().value));
 
     if (!guards.pool && is_nonzero(rows))
         guards.pool = store_.pool.get_memory();
 
-    if (!guards.cells && is_nonzero(rows))
-        guards.cells = store_.pool_cells.get_memory();
+    if (!guards.pool_index && is_nonzero(rows))
+        guards.pool_index = index.get_memory();
 
-    if (!guards.children && is_nonzero(rows))
-        guards.children = store_.pool_children.get_memory();
+    if (!guards.spends_index && is_nonzero(inputs))
+        guards.spends_index = links.get_memory();
 
-    if (!guards.rows && is_nonzero(inputs))
-        guards.rows = store_.spends_rows.get_memory();
-
-    if (!guards.siblings && is_nonzero(inputs))
-        guards.siblings = store_.spends_siblings.get_memory();
-
-    if (!guards.rivals && is_nonzero(inputs))
-        guards.rivals = store_.spends_rivals.get_memory();
-
-    if (is_nonzero(rows) &&
-        (!guards.pool || !guards.cells || !guards.children))
+    if (is_nonzero(rows) && (!guards.pool || !guards.pool_index))
         return false;
 
-    if (is_nonzero(inputs) &&
-        (!guards.rows || !guards.siblings || !guards.rivals))
+    if (is_nonzero(inputs) && !guards.spends_index)
         return false;
 
-    // A null accessor (empty table) has no data.
-    const auto data = [](const memory& guard) NOEXCEPT
+    // An unguarded (empty) table has no data.
+    link_t* cells{};
+    link_t* children{};
+    if (guards.pool_index)
     {
-        link_t* cells{};
-        if (guard)
-            cells = pointer_cast<link_t>(guard.data());
+        cells = pointer_cast<link_t>(index.cells.get_raw());
+        children = pointer_cast<link_t>(index.children.get_raw());
+    }
 
-        return cells;
-    };
+    link_t* spent{};
+    link_t* siblings{};
+    link_t* rivals{};
+    if (guards.spends_index)
+    {
+        spent = pointer_cast<link_t>(links.rows.get_raw());
+        siblings = pointer_cast<link_t>(links.siblings.get_raw());
+        rivals = pointer_cast<link_t>(links.rivals.get_raw());
+    }
 
     const auto raw_edges = store_.pool.edges.get_raw();
     const auto raw_totals = store_.pool.totals.get_raw();
@@ -268,13 +290,13 @@ bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
     const auto totals = pointer_cast<const totals_t>(raw_totals);
     out =
     {
-        { data(guards.cells), rows },
-        { data(guards.children), rows },
+        { cells, rows },
+        { children, rows },
         { edges, rows },
         { totals, rows },
-        { data(guards.rows), inputs },
-        { data(guards.siblings), inputs },
-        { data(guards.rivals), inputs },
+        { spent, inputs },
+        { siblings, inputs },
+        { rivals, inputs },
         { pointer_cast<const uint32_t>(raw_flags), rows },
         { pointer_cast<const uint32_t>(raw_heights), rows },
         { pointer_cast<const uint32_t>(raw_medians), rows }

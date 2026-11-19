@@ -114,17 +114,49 @@ struct spends
     };
 };
 
-/// spends_rows is the pool row spent by each pooled input (none if its
-/// parent is not pooled).
-using spends_rows = value_head<schema::spends_rows>;
+/// Pool row spent by each pooled input (none if its parent is not pooled).
+struct spends_rows
+{
+    static constexpr auto width = schema::spends_index::cell;
+    static constexpr auto suffix = schema::caches::spends_rows;
+};
 
-/// spends_siblings is the next input spending the same row as each pooled
-/// input (none at the end of the list).
-using spends_siblings = value_head<schema::spends_siblings>;
+/// Next input spending the same row as each pooled input (none at the end of
+/// the list).
+struct spends_siblings
+{
+    static constexpr auto width = schema::spends_index::cell;
+    static constexpr auto suffix = schema::caches::spends_siblings;
+};
 
-/// spends_rivals is the next input spending the same point as each pooled
-/// input (a ring, none if sole).
-using spends_rivals = value_head<schema::spends_rivals>;
+/// Next input spending the same point as each pooled input (a ring, none if
+/// sole).
+struct spends_rivals
+{
+    static constexpr auto width = schema::spends_index::cell;
+    static constexpr auto suffix = schema::caches::spends_rivals;
+};
+
+/// spends_index is a head-only array of value columns aligned with spends,
+/// one word per input and column, updated in place.
+struct spends_index
+  : public head_maps<schema::spends_index, spends_rows, spends_siblings,
+        spends_rivals>
+{
+    using base = head_maps<schema::spends_index, spends_rows, spends_siblings,
+        spends_rivals>;
+    using base::headmaps;
+    using replace = head_value<schema::spends_index>;
+
+    head_column<base, 0> rows{ *this };
+    head_column<base, 1> siblings{ *this };
+    head_column<base, 2> rivals{ *this };
+};
+
+/// Aggregate (files).
+template <template <size_t...> class Storage>
+using spends_index_storage = mmaps<Storage, spends_rows, spends_siblings,
+    spends_rivals>;
 
 } // namespace table
 } // namespace database

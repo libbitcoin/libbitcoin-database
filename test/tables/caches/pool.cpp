@@ -170,35 +170,37 @@ BC_AUTO_TEST_CASE(pool__put__context_columns__expected)
     BC_REQUIRE_EQUAL(out.value, 0x00667788u);
 }
 
-// value heads
+// pool_index
 // ----------------------------------------------------------------------------
 
-BC_AUTO_TEST_CASE(pool_cells__set__two__expected)
+using index_storages = test::chunk_storages<schema::pool_index::cell, schema::pool_index::cell>;
+static const index_storages::paths index_paths{ "cells", "children" };
+
+BC_AUTO_TEST_CASE(pool_index__cells__set_two__expected)
 {
-    data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
-    table::pool_cells instance{ head_store };
-    const auto expected = base16_chunk("00000000" "ffffff3f" "00000040");
+    index_storages head_store{ index_paths };
+    table::pool_index instance{ head_store };
     BC_REQUIRE(instance.create());
-    BC_REQUIRE(instance.set(1u, table::pool_cells::replace{ {}, 0x3fffffff }));
-    BC_REQUIRE(instance.set(2u, table::pool_cells::replace{ {}, 0x40000000 }));
+    BC_REQUIRE(instance.cells.set(1u, table::pool_index::replace{ {}, 0x3fffffff }));
+    BC_REQUIRE(instance.cells.set(2u, table::pool_index::replace{ {}, 0x40000000 }));
     BC_REQUIRE_EQUAL(instance.count(), 3u);
-    BC_REQUIRE_EQUAL(instance.at(0u), 0u);
-    BC_REQUIRE_EQUAL(instance.at(1u), 0x3fffffffu);
-    BC_REQUIRE_EQUAL(instance.at(2u), 0x40000000u);
-    BC_REQUIRE_EQUAL(head_file, expected);
+    BC_REQUIRE_EQUAL(instance.cells.at(0u), 0u);
+    BC_REQUIRE_EQUAL(instance.cells.at(1u), 0x3fffffffu);
+    BC_REQUIRE_EQUAL(instance.cells.at(2u), 0x40000000u);
+    BC_REQUIRE_EQUAL(head_store.buffers_.at(0), base16_chunk("00000000" "ffffff3f" "00000040"));
+    BC_REQUIRE_EQUAL(head_store.buffers_.at(1), base16_chunk("00000000" "00000000" "00000000"));
 }
 
-BC_AUTO_TEST_CASE(pool_children__set__replace__expected)
+BC_AUTO_TEST_CASE(pool_index__children__set_replace__expected)
 {
-    data_chunk head_file{};
-    test::chunk_storage head_store{ head_file };
-    table::pool_children instance{ head_store };
+    index_storages head_store{ index_paths };
+    table::pool_index instance{ head_store };
     BC_REQUIRE(instance.create());
-    BC_REQUIRE(instance.set(0u, table::pool_children::replace{ {}, 0xffffffff }));
-    BC_REQUIRE(instance.set(0u, table::pool_children::replace{ {}, 0x00000007 }));
+    BC_REQUIRE(instance.children.set(0u, table::pool_index::replace{ {}, 0xffffffff }));
+    BC_REQUIRE(instance.children.set(0u, table::pool_index::replace{ {}, 0x00000007 }));
     BC_REQUIRE_EQUAL(instance.count(), 1u);
-    BC_REQUIRE_EQUAL(instance.at(0u), 7u);
+    BC_REQUIRE_EQUAL(instance.children.at(0u), 7u);
+    BC_REQUIRE_EQUAL(instance.cells.at(0u), 0u);
 }
 
 BC_AUTO_TEST_SUITE_END()

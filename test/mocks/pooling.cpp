@@ -74,7 +74,7 @@ uint32_t pool_cell(query_t& query, store_t& store,
     const transaction& tx) NOEXCEPT
 {
     const auto row = store.pool.first(query.to_tx(tx.hash(false)));
-    return store.pool_cells.at(row.value);
+    return store.pool_index.cells.at(row.value);
 }
 
 bool pool_candidate(transaction_cptrs& out, query_t& query,

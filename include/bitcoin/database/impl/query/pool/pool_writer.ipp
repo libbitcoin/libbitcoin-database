@@ -140,7 +140,8 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
 
     const auto row = possible_narrow_cast<link_t>(fk.value);
     const auto start = possible_narrow_cast<link_t>(first.value);
-    if (!set_pool_links(row, start, parents, mates) ||
+    if (!set_pool_rows(row, add1(row)) ||
+        !set_pool_links(start, parents, mates) ||
         !set_pool_adoption(row, tx))
         return false;
 

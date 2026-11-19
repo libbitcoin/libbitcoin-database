@@ -111,12 +111,12 @@ namespace caches
     constexpr auto pool_flags = "flags"_t;
     constexpr auto pool_heights = "heights"_t;
     constexpr auto pool_medians = "medians"_t;
-    constexpr auto pool_cells = "cache_pool_cells";
-    constexpr auto pool_children = "cache_pool_children";
+    constexpr auto pool_cells = "cells"_t;
+    constexpr auto pool_children = "children"_t;
     constexpr auto spends = "cache_spends";
-    constexpr auto spends_rows = "cache_spends_rows";
-    constexpr auto spends_siblings = "cache_spends_siblings";
-    constexpr auto spends_rivals = "cache_spends_rivals";
+    constexpr auto spends_rows = "rows"_t;
+    constexpr auto spends_siblings = "siblings"_t;
+    constexpr auto spends_rivals = "rivals"_t;
 }
 
 namespace optionals

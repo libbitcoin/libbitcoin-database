@@ -80,7 +80,7 @@ public:
 
     /// Aggregate construction (columns > 1): one file per column, shared guards.
     mmap(const paths& filenames, const storage_settings& settings={},
-        bool random=true, bool staged=false) NOEXCEPT
+        bool random=true, bool staged=false, bool shared=false) NOEXCEPT
         requires (columns > one);
 
     /// Destruct for debug assertion only.
