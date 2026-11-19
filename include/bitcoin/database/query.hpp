@@ -757,11 +757,7 @@ public:
     /// Spender of prevout in a pooled and confirmable tx, terminal if none.
     ins_link find_confirmable_spender(const point& prevout) const NOEXCEPT;
 
-    /// Confirmable tx links, from cursor toward end, at most limit.
-    code get_confirmable_txs(pool_link& cursor, tx_links& out,
-        const pool_link& end, size_t limit) const NOEXCEPT;
-
-    /// Confirmable tx links.
+    /// Confirmable tx links, in pool order (requires the pool index).
     code get_confirmable_txs(tx_links& out) const NOEXCEPT;
 
     /// Confirmable txs spent by, and spending, the tx (direct only).
@@ -778,8 +774,8 @@ public:
     bool get_descendant_totals(fee_totals& out,
         const tx_link& link) const NOEXCEPT;
 
-    /// Fee rate tuples of the confirmable txs.
-    bool get_confirmable_fees(fee_rates& out) const NOEXCEPT;
+    /// Confirmable fee rate tuples, in pool order (requires the pool index).
+    code get_confirmable_fees(fee_rates& out) const NOEXCEPT;
 
     /// Setters.
     bool set_pooled(const tx_link& link, const transaction& tx,

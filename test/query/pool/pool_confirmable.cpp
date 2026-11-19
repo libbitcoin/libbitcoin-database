@@ -30,6 +30,7 @@ using test::to_spend;
 using test::genesis_coinbase;
 using test::archive_pool;
 using test::archive_confirm;
+using test::pool_populated;
 
 // is_confirmable_spent
 
@@ -171,7 +172,7 @@ BC_AUTO_TEST_CASE(query_pool__is_confirmable_tx__conflicted_and_child__false)
 
 // get_confirmable_txs
 
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__empty__end)
+BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__empty__empty)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
@@ -180,14 +181,12 @@ BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__empty__end)
     BC_REQUIRE(!store.create(test::events_handler));
     BC_REQUIRE(query.initialize(test::genesis));
 
-    tx_links out{};
-    pool_link cursor{};
-    BC_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 0 }, max_size_t), error::success);
+    tx_links out{ 42 };
+    BC_REQUIRE_EQUAL(query.get_confirmable_txs(out), error::success);
     BC_REQUIRE(out.empty());
-    BC_REQUIRE_EQUAL(cursor, 0u);
 }
 
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__disabled__end)
+BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__disabled__empty)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
@@ -197,157 +196,12 @@ BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__disabled__end)
     BC_REQUIRE(!store.create(test::events_handler));
     BC_REQUIRE(query.initialize(test::genesis));
 
-    tx_links out{};
-    pool_link cursor{};
-    BC_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
-    BC_REQUIRE(out.empty());
-    BC_REQUIRE_EQUAL(cursor, 2u);
-}
-
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__cursor_beyond_end__invalid_cursor)
-{
-    settings settings{ test::database_settings() };
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BC_REQUIRE(!store.create(test::events_handler));
-    BC_REQUIRE(query.initialize(test::genesis));
-
-    tx_links out{};
-    pool_link cursor{ 3 };
-    BC_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, max_size_t), error::invalid_cursor);
-}
-
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__confirmed__skipped)
-{
-    settings settings{ test::database_settings() };
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BC_REQUIRE(!store.create(test::events_handler));
-    BC_REQUIRE(query.initialize(test::genesis));
-    BC_REQUIRE(query.set(test::block1, test::context, {}, false, false));
-
-    const auto& in = *test::tx_spend_one_hash.inputs_ptr()->front();
-    in.prevout = system::to_shared<output>(0x30, script{});
-    in.metadata.parent_tx = 42;
-    BC_REQUIRE(query.set_pooled(0, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
-    BC_REQUIRE(query.set_pooled(1, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
-
-    tx_links out{};
-    pool_link cursor{};
-    BC_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
-    BC_REQUIRE_EQUAL(out.size(), one);
-    BC_REQUIRE_EQUAL(out.front(), 1u);
-    BC_REQUIRE_EQUAL(cursor, 2u);
-}
-
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__all__confirmed_skipped)
-{
-    settings settings{ test::database_settings() };
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BC_REQUIRE(!store.create(test::events_handler));
-    BC_REQUIRE(query.initialize(test::genesis));
-    BC_REQUIRE(query.set(test::block1, test::context, {}, false, false));
-
-    const auto& in = *test::tx_spend_one_hash.inputs_ptr()->front();
-    in.prevout = system::to_shared<output>(0x30, script{});
-    in.metadata.parent_tx = 42;
-    BC_REQUIRE(query.set_pooled(0, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
-    BC_REQUIRE(query.set_pooled(1, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
-
-    tx_links out{};
+    tx_links out{ 42 };
     BC_REQUIRE_EQUAL(query.get_confirmable_txs(out), error::success);
-    BC_REQUIRE_EQUAL(out.size(), one);
-    BC_REQUIRE_EQUAL(out.front(), 1u);
-}
-
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__duplicate_record__first_only)
-{
-    settings settings{ test::database_settings() };
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BC_REQUIRE(!store.create(test::events_handler));
-    BC_REQUIRE(query.initialize(test::genesis));
-    BC_REQUIRE(query.set(test::block1, test::context, {}, false, false));
-
-    const auto& in = *test::tx_spend_one_hash.inputs_ptr()->front();
-    in.prevout = system::to_shared<output>(0x30, script{});
-    in.metadata.parent_tx = 42;
-    BC_REQUIRE(query.set_pooled(1, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
-    BC_REQUIRE(query.set_pooled(1, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
-
-    tx_links out{};
-    pool_link cursor{};
-    BC_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
-    BC_REQUIRE_EQUAL(out.size(), one);
-    BC_REQUIRE_EQUAL(out.front(), 1u);
-    BC_REQUIRE_EQUAL(cursor, 2u);
-}
-
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__limit__resumed)
-{
-    settings settings{ test::database_settings() };
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BC_REQUIRE(!store.create(test::events_handler));
-    BC_REQUIRE(query.initialize(test::genesis));
-    BC_REQUIRE(query.set(test::block1, test::context, {}, false, false));
-    BC_REQUIRE(query.set(test::block2, test::context, {}, false, false));
-
-    const auto& in = *test::tx_spend_one_hash.inputs_ptr()->front();
-    in.prevout = system::to_shared<output>(0x30, script{});
-    in.metadata.parent_tx = 42;
-    BC_REQUIRE(query.set_pooled(1, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
-    BC_REQUIRE(query.set_pooled(2, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
-
-    tx_links out{};
-    pool_link cursor{};
-    BC_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, one), error::success);
-    BC_REQUIRE_EQUAL(out.size(), one);
-    BC_REQUIRE_EQUAL(out.front(), 1u);
-    BC_REQUIRE_EQUAL(cursor, 1u);
-
-    BC_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, one), error::success);
-    BC_REQUIRE_EQUAL(out.size(), one);
-    BC_REQUIRE_EQUAL(out.front(), 2u);
-    BC_REQUIRE_EQUAL(cursor, 2u);
-
-    BC_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, one), error::success);
     BC_REQUIRE(out.empty());
-    BC_REQUIRE_EQUAL(cursor, 2u);
 }
 
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__end__bounded)
-{
-    settings settings{ test::database_settings() };
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BC_REQUIRE(!store.create(test::events_handler));
-    BC_REQUIRE(query.initialize(test::genesis));
-    BC_REQUIRE(query.set(test::block1, test::context, {}, false, false));
-    BC_REQUIRE(query.set(test::block2, test::context, {}, false, false));
-
-    const auto& in = *test::tx_spend_one_hash.inputs_ptr()->front();
-    in.prevout = system::to_shared<output>(0x30, script{});
-    in.metadata.parent_tx = 42;
-    BC_REQUIRE(query.set_pooled(1, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
-    BC_REQUIRE(query.set_pooled(2, test::tx_spend_one_hash, context{ bip113, 8, 9 }, 0));
-
-    tx_links out{};
-    pool_link cursor{};
-    BC_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 1 }, max_size_t), error::success);
-    BC_REQUIRE_EQUAL(out.size(), one);
-    BC_REQUIRE_EQUAL(out.front(), 1u);
-    BC_REQUIRE_EQUAL(cursor, 1u);
-}
-
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__conflicted_and_child__skipped)
+BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__parent_and_child__pool_order)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
@@ -357,74 +211,26 @@ BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__conflicted_and_child__skipped
     BC_REQUIRE(query.initialize(test::genesis));
 
     store.set_pooling();
-    const auto conflicted = to_spend(genesis_coinbase(), 2u);
-    const auto child = to_spend(conflicted.hash(false), 1u);
-    BC_REQUIRE(archive_pool(query, conflicted));
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    BC_REQUIRE(archive_pool(query, parent));
     BC_REQUIRE(archive_pool(query, child));
-    BC_REQUIRE(!archive_confirm(query, to_spend(genesis_coinbase(), 1u)).is_terminal());
 
     tx_links out{};
-    pool_link cursor{};
-    BC_REQUIRE_EQUAL(query.get_confirmable_txs(cursor, out, pool_link{ 2 }, max_size_t), error::success);
-    BC_REQUIRE(out.empty());
+    BC_REQUIRE_EQUAL(query.get_confirmable_txs(out), error::success);
+    BC_REQUIRE_EQUAL(out.size(), 2u);
+    BC_REQUIRE_EQUAL(out.front(), query.to_tx(parent.hash(false)).value);
+    BC_REQUIRE_EQUAL(out.back(), query.to_tx(child.hash(false)).value);
 }
 
-// get_confirmable_fees
-
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_fees__empty__true_empty)
+BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__conflicted_and_child__empty)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
     test::chunk_store store{ settings };
     test::query_accessor query{ store };
-    BC_CHECK(!store.create(test::events_handler));
-    BC_CHECK(query.initialize(test::genesis));
-
-    fee_rates rates{};
-    BC_CHECK(query.get_confirmable_fees(rates));
-    BC_CHECK(rates.empty());
-}
-
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_fees__unconfirmed_and_confirmed__unconfirmed_only)
-{
-    settings settings{ test::database_settings() };
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BC_CHECK(!store.create(test::events_handler));
-    BC_CHECK(query.initialize(test::genesis));
-    BC_CHECK(query.set(test::block1b, context{ 0, 1, 0 }, {}, false, false));
-    BC_CHECK(query.set(test::block_valid_spend_internal_2b, context{ 0, 2, 0 }, {}, false, false));
-
-    // Block 1 is confirmed (tx 1 is strong), block 2 is not (txs 2, 3, 4).
-    BC_CHECK(query.push_confirmed(1, false));
-    BC_CHECK(query.set_strong(1));
-    BC_CHECK(query.set_strong(2));
-    BC_CHECK(query.is_confirmed_tx(1));
-    BC_CHECK(!query.is_confirmed_tx(3));
-    BC_CHECK(!query.is_confirmed_tx(4));
-
-    BC_CHECK(test::put_pooled(store, tx_link{ 1 }, 10, 1));
-    BC_CHECK(test::put_pooled(store, tx_link{ 3 }, 20, 2));
-    BC_CHECK(test::put_pooled(store, tx_link{ 4 }, 30, 3));
-
-    fee_rates rates{};
-    BC_CHECK(query.get_confirmable_fees(rates));
-    BC_REQUIRE_EQUAL(rates.size(), 2u);
-    BC_CHECK_EQUAL(rates.at(0).fee, 20u);
-    BC_CHECK_EQUAL(rates.at(0).pooled_height, 2u);
-    BC_CHECK_EQUAL(rates.at(1).fee, 30u);
-    BC_CHECK_EQUAL(rates.at(1).pooled_height, 3u);
-}
-
-BC_AUTO_TEST_CASE(query_pool__get_confirmable_fees__conflicted_and_child__empty)
-{
-    settings settings{ test::database_settings() };
-    settings.path = TEST_DIRECTORY;
-    test::chunk_store store{ settings };
-    test::query_accessor query{ store };
-    BC_CHECK(!store.create(test::events_handler));
-    BC_CHECK(query.initialize(test::genesis));
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
 
     store.set_pooling();
     const auto conflicted = to_spend(genesis_coinbase(), 2u);
@@ -433,9 +239,119 @@ BC_AUTO_TEST_CASE(query_pool__get_confirmable_fees__conflicted_and_child__empty)
     BC_REQUIRE(archive_pool(query, child));
     BC_REQUIRE(!archive_confirm(query, to_spend(genesis_coinbase(), 3u)).is_terminal());
 
-    fee_rates rates{};
-    BC_REQUIRE(query.get_confirmable_fees(rates));
-    BC_REQUIRE(rates.empty());
+    tx_links out{ 42 };
+    BC_REQUIRE_EQUAL(query.get_confirmable_txs(out), error::success);
+    BC_REQUIRE(out.empty());
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__confirmed_parent__child_only)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    BC_REQUIRE(archive_pool(query, parent));
+    BC_REQUIRE(archive_pool(query, child));
+    BC_REQUIRE(!archive_confirm(query, parent).is_terminal());
+
+    tx_links out{};
+    BC_REQUIRE_EQUAL(query.get_confirmable_txs(out), error::success);
+    BC_REQUIRE_EQUAL(out.size(), 1u);
+    BC_REQUIRE_EQUAL(out.front(), query.to_tx(child.hash(false)).value);
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_confirmable_txs__insufficient_context__excluded)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto other = to_spend(genesis_coinbase(), 4'999'997'000);
+    const auto later = to_spend(genesis_coinbase(), 4'999'999'000);
+    BC_REQUIRE(pool_populated(query, other, 7));
+    BC_REQUIRE(pool_populated(query, later, 9));
+
+    size_t count{};
+    BC_REQUIRE(query.set_pool_context(count, context{ bip113, 8, 9 }));
+    BC_REQUIRE_EQUAL(count, 1u);
+
+    tx_links out{};
+    BC_REQUIRE_EQUAL(query.get_confirmable_txs(out), error::success);
+    BC_REQUIRE_EQUAL(out.size(), 1u);
+    BC_REQUIRE_EQUAL(out.front(), query.to_tx(other.hash(false)).value);
+}
+
+// get_confirmable_fees
+
+BC_AUTO_TEST_CASE(query_pool__get_confirmable_fees__empty__empty)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    fee_rates out{ fee_rate{} };
+    BC_REQUIRE_EQUAL(query.get_confirmable_fees(out), error::success);
+    BC_REQUIRE(out.empty());
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_confirmable_fees__parent_and_child__totals)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto child = to_spend(parent.hash(false), 4'999'990'000);
+    BC_REQUIRE(pool_populated(query, parent, 8));
+    BC_REQUIRE(pool_populated(query, child, 9));
+
+    fee_rates out{};
+    BC_REQUIRE_EQUAL(query.get_confirmable_fees(out), error::success);
+    BC_REQUIRE_EQUAL(out.size(), 2u);
+    BC_REQUIRE_EQUAL(out.at(0).fee, 1'000u);
+    BC_REQUIRE_EQUAL(out.at(0).bytes, parent.virtual_size());
+    BC_REQUIRE_EQUAL(out.at(0).pooled_height, 8u);
+    BC_REQUIRE_EQUAL(out.at(1).fee, 9'000u);
+    BC_REQUIRE_EQUAL(out.at(1).bytes, child.virtual_size());
+    BC_REQUIRE_EQUAL(out.at(1).pooled_height, 9u);
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_confirmable_fees__conflicted_and_child__empty)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto conflicted = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(conflicted.hash(false), 1u);
+    BC_REQUIRE(archive_pool(query, conflicted));
+    BC_REQUIRE(archive_pool(query, child));
+    BC_REQUIRE(!archive_confirm(query, to_spend(genesis_coinbase(), 3u)).is_terminal());
+
+    fee_rates out{ fee_rate{} };
+    BC_REQUIRE_EQUAL(query.get_confirmable_fees(out), error::success);
+    BC_REQUIRE(out.empty());
 }
 
 // to_confirmable_parents
