@@ -74,6 +74,7 @@ enum error_t : uint8_t
     /// locks
     transactor_lock,
     process_lock,
+    fault_lock,
     flush_lock,
     flush_unlock,
     process_unlock,

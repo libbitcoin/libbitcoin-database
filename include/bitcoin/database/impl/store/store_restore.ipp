@@ -37,6 +37,13 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         return error::process_lock;
     }
 
+    if (fault_lock_.is_locked())
+    {
+        /* bool */ process_lock_.try_unlock();
+        transactor_mutex_.unlock();
+        return error::fault_lock;
+    }
+
     // Requires that the store is already flush locked (corrupted).
     if (!flush_lock_.is_locked())
     {

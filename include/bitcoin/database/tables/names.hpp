@@ -127,6 +127,7 @@ namespace optionals
 
 namespace locks
 {
+    constexpr auto fault = "fault";
     constexpr auto flush = "flush";
     constexpr auto process = "process";
 }

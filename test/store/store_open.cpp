@@ -49,6 +49,42 @@ BC_AUTO_TEST_CASE(store__copen__process_locked__success)
 }
 #endif
 
+BC_AUTO_TEST_CASE(store__open__fault_locked__fault_lock)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(test::create(instance.fault_lock_file()));
+    BC_REQUIRE_EQUAL(instance.open(test::events), error::fault_lock);
+    BC_REQUIRE(!test::exists(instance.flush_lock_file()));
+}
+
+BC_AUTO_TEST_CASE(store__open__fault_and_flush_locked__fault_lock)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(test::create(instance.fault_lock_file()));
+    BC_REQUIRE(test::create(instance.flush_lock_file()));
+    BC_REQUIRE_EQUAL(instance.open(test::events), error::fault_lock);
+}
+
+BC_AUTO_TEST_CASE(store__open__fault_lock_set_and_closed__fault_lock)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.is_fault_locked());
+    BC_REQUIRE(instance.set_fault_lock());
+    BC_REQUIRE(instance.set_fault_lock());
+    BC_REQUIRE(instance.is_fault_locked());
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(!test::exists(instance.flush_lock_file()));
+    BC_REQUIRE_EQUAL(instance.open(test::events), error::fault_lock);
+}
+
 BC_AUTO_TEST_CASE(store__open__flush_locked__flush_lock)
 {
     settings configuration{ test::database_settings() };

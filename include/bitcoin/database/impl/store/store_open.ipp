@@ -40,6 +40,13 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
         return error::process_lock;
     }
 
+    if (fault_lock_.is_locked())
+    {
+        /* bool */ process_lock_.try_unlock();
+        transactor_mutex_.unlock();
+        return error::fault_lock;
+    }
+
     if (!flush_lock_.try_lock())
     {
         /* bool */ process_lock_.try_unlock();

@@ -27,6 +27,14 @@ namespace test {
 // nop event handler.
 const auto events = [](auto, auto){};
 
+// fault lock file path from directory.
+inline std::filesystem::path fault_lock_file(std::filesystem::path path)
+{
+    path /= schema::locks::fault;
+    path += schema::ext::lock;
+    return path;
+}
+
 // flush lock file path from directory.
 inline std::filesystem::path flush_lock_file(std::filesystem::path path)
 {
@@ -339,6 +347,11 @@ public:
     }
 
     // Locks.
+
+    inline const path& fault_lock_file() const NOEXCEPT
+    {
+        return fault_lock_.file();
+    }
 
     inline const path& flush_lock_file() const NOEXCEPT
     {

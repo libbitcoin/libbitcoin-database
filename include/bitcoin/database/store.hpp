@@ -127,6 +127,10 @@ public:
     bool set_activation(size_t index, uint32_t flags,
         const header_link& link) NOEXCEPT;
 
+    /// A fault locked store does not open or restore.
+    bool is_fault_locked() const NOEXCEPT;
+    bool set_fault_lock() NOEXCEPT;
+
     /// Get first fault code or error::success.
     code get_fault() const NOEXCEPT;
 
@@ -324,6 +328,7 @@ protected:
     /// -----------------------------------------------------------------------
 
     // These are protected by mutex.
+    flush_lock fault_lock_;
     flush_lock flush_lock_;
     interprocess_lock process_lock_;
     std::shared_timed_mutex transactor_mutex_{};
