@@ -854,18 +854,19 @@ public:
     /// Template.
     /// -----------------------------------------------------------------------
 
-    /// The pooled txs of a block template within the budget, parents first.
+    /// The pooled txs of a block template within the budget, parents first,
+    /// leaves chosen at the cutoff rate.
     code get_pool_template(tx_links& out, pool_projection& projection,
-        const pool_totals& budget, size_t depth, uint32_t bytes_per_sigop,
-        size_t maximum_outcomes) const NOEXCEPT;
+        const pool_totals& budget, size_t depth, uint64_t cutoff,
+        uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
 
     /// Estimate.
     /// -----------------------------------------------------------------------
 
     /// The projection extended to the count of blocks, or to exhaustion.
     code get_pool_projection(pool_projection& projection, size_t count,
-        const pool_totals& budget, size_t depth, uint32_t bytes_per_sigop,
-        size_t maximum_outcomes) const NOEXCEPT;
+        const pool_totals& budget, size_t depth, uint64_t cutoff,
+        uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
 
     /// Rate and size of the rows pooled at each height below top, top first.
     code get_pool_arrivals(pool_arrivals& out, size_t top, size_t count,
@@ -1238,12 +1239,10 @@ protected:
     bool get_pool_columns(system::pool::algorithm::columns_t& out,
         pool_guards& guards) const NOEXCEPT;
 
-    /// A new projection, its leaves chosen at the cutoff rate of its first
-    /// block where a component has a choice and the block is full.
+    /// A new projection, its leaves chosen at the cutoff rate.
     void set_pool_resolution(pool_projection& projection,
-        const system::pool::algorithm::columns_t& columns,
-        const pool_totals& budget, size_t depth, uint32_t bytes_per_sigop,
-        size_t maximum_outcomes) const NOEXCEPT;
+        const system::pool::algorithm::columns_t& columns, uint64_t cutoff,
+        uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
 
     /// The index of each pooled row in the range (cell and children head).
     bool set_pool_rows(system::pool::algorithm::link_t begin,
