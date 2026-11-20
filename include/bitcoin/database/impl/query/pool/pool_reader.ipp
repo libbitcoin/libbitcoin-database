@@ -94,8 +94,7 @@ code CLASS::get_pooled(pooled_tx& out, const tx_link& link,
 }
 
 // protected
-// The first record of a tx is its last committed, so the tx of any earlier or
-// uncommitted record (its key does not resolve to it) is terminal.
+// The tx of an uncommitted record (its key does not resolve to it) is terminal.
 TEMPLATE
 tx_link CLASS::to_pool_tx(const pool_link& link) const NOEXCEPT
 {

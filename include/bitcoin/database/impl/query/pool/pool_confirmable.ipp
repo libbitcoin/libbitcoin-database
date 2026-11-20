@@ -118,7 +118,6 @@ bool CLASS::get_descendant_totals(fee_totals& out,
     return get_confirmable_totals(out, link, false);
 }
 
-// A tx pooled more than once is taken at its first row.
 TEMPLATE
 code CLASS::get_confirmable_txs(tx_links& out) const NOEXCEPT
 {
@@ -149,7 +148,6 @@ code CLASS::get_confirmable_txs(tx_links& out) const NOEXCEPT
     return error::success;
 }
 
-// A tx pooled more than once is taken at its first row.
 TEMPLATE
 code CLASS::get_confirmable_fees(fee_rates& out) const NOEXCEPT
 {

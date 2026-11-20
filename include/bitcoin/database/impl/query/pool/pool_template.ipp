@@ -24,8 +24,6 @@
 namespace libbitcoin {
 namespace database {
 
-// A tx pooled more than once is taken at its first row, which precedes the
-// children of each of its rows.
 TEMPLATE
 code CLASS::get_pool_template(tx_links& out, pool_projection& projection,
     const pool_totals& budget, size_t depth, uint32_t bytes_per_sigop,
@@ -48,7 +46,6 @@ code CLASS::get_pool_template(tx_links& out, pool_projection& projection,
     algorithm::project(rows, projection, columns, budget, depth,
         bytes_per_sigop);
 
-    std::unordered_set<tx_link::integer> taken{};
     out.reserve(rows.size());
     for (const auto row: rows)
     {
@@ -56,8 +53,7 @@ code CLASS::get_pool_template(tx_links& out, pool_projection& projection,
         if (tx.is_terminal())
             return error::integrity;
 
-        if (taken.insert(tx.value).second)
-            out.push_back(tx);
+        out.push_back(tx);
     }
 
     return error::success;
