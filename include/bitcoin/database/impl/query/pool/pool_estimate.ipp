@@ -40,11 +40,8 @@ code CLASS::get_pool_projection(pool_projection& projection, size_t count,
         return error::integrity;
 
     if (projection.marks.size() != columns.cells.size())
-    {
-        projection = {};
-        projection.marks.resize(columns.cells.size());
-        algorithm::resolve(projection.marks, columns, maximum_outcomes);
-    }
+        set_pool_resolution(projection, columns, budget, depth,
+            bytes_per_sigop, maximum_outcomes);
 
     pool_links rows{};
     while (!projection.exhausted && projection.blocks.size() < count)

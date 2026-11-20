@@ -1237,6 +1237,13 @@ protected:
     bool get_pool_columns(system::pool::algorithm::columns_t& out,
         pool_guards& guards) const NOEXCEPT;
 
+    /// A new projection, its leaves chosen at the cutoff rate of its first
+    /// block where a component has a choice and the block is full.
+    void set_pool_resolution(pool_projection& projection,
+        const system::pool::algorithm::columns_t& columns,
+        const pool_totals& budget, size_t depth, uint32_t bytes_per_sigop,
+        size_t maximum_outcomes) const NOEXCEPT;
+
     /// The index of each pooled row in the range (cell and children head).
     bool set_pool_rows(system::pool::algorithm::link_t begin,
         system::pool::algorithm::link_t end) NOEXCEPT;
