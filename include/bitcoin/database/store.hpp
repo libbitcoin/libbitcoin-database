@@ -64,6 +64,11 @@ public:
     /// Open and load the set of tables, compact the pool, set locks.
     code open(const event_handler& handler) NOEXCEPT;
 
+    /// Migrate to the compiled schema, returning the stored schema (closed).
+    code migrate(system::config::version& original,
+        const database::envelope& configured,
+        const event_handler& handler) NOEXCEPT;
+
     /// Prune prunable tables (from loaded, leaves loaded).
     code prune(const event_handler& handler) NOEXCEPT;
 
@@ -156,14 +161,28 @@ protected:
     /// Method helpers.
     code create_load(const event_handler& handler) NOEXCEPT;
     code open_load(const event_handler& handler) NOEXCEPT;
+    code unload_close(const event_handler& handler) NOEXCEPT;
+
+    /// Envelope helpers.
     bool get_schema(system::config::version& schema) const NOEXCEPT;
     code load_schema() NOEXCEPT;
     code load_envelope() NOEXCEPT;
-    code migrate_envelope(table::envelope::record& record) NOEXCEPT;
     void store_envelope(code& ec) NOEXCEPT;
-    code unload_close(const event_handler& handler) NOEXCEPT;
+    code put_envelope(const database::envelope& stored) NOEXCEPT;
+
+    /// Snapshot helpers.
     code backup(const event_handler& handler, bool prune=false) NOEXCEPT;
     code dump(const path& folder, const event_handler& handler) NOEXCEPT;
+    code purge_snapshots() NOEXCEPT;
+
+    /// Migration helpers (envelope loaded).
+    bool read_migrated(database::envelope& out, system::data_chunk data,
+        const database::envelope& configured) NOEXCEPT;
+    code migrate_4_0_30_to_4_0_31(database::envelope& stored,
+        const database::envelope& configured,
+        const event_handler& handler) NOEXCEPT;
+    code migrate_4_0_31_to_4_0_32(database::envelope& stored,
+        const database::envelope& configured) NOEXCEPT;
 
     /// A retained pool record, by its row and spends.
     struct retention

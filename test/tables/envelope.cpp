@@ -380,12 +380,12 @@ BC_AUTO_TEST_CASE(envelope__apply__provided_filters__buckets_unchanged)
     BC_REQUIRE_EQUAL(configuration.filter_tx.buckets, 128u);
 }
 
-BC_AUTO_TEST_CASE(envelope__from_data__migratable__false)
+BC_AUTO_TEST_CASE(envelope__from_data__4_0_31__false)
 {
     auto data = test::envelope_4_0_31;
     envelope out{};
     BC_REQUIRE(!from_chunk(out, data));
-    BC_REQUIRE(out.schema == envelope::migratable);
+    BC_REQUIRE(out.schema == system::config::version(4, 0, 31, 0));
 }
 
 BC_AUTO_TEST_CASE(envelope__get_schema__short__default)
@@ -415,6 +415,30 @@ BC_AUTO_TEST_CASE(envelope__migrate_step__4_0_31__stepwise_expected)
     BC_REQUIRE(out.require_witness);
     BC_REQUIRE(out.provide_filters);
     BC_REQUIRE(!out.limited_blocks);
+    BC_REQUIRE_EQUAL(out.silent_start_height, 42u);
+}
+
+BC_AUTO_TEST_CASE(envelope__migrate_4_0_30_to_4_0_31__schema_only)
+{
+    const auto expected = test::envelope_4_0_31;
+    auto data = expected;
+    data.at(8) = 30;
+    BC_REQUIRE(envelope::migrate_4_0_30_to_4_0_31(data));
+    BC_REQUIRE(data == expected);
+}
+
+BC_AUTO_TEST_CASE(envelope__migrate__4_0_30__compiled)
+{
+    envelope configured{};
+    configured.require_witness = true;
+    auto data = test::envelope_4_0_31;
+    data.at(8) = 30;
+    BC_REQUIRE(envelope::migrate(data, configured));
+    BC_REQUIRE(envelope::get_schema(data) == envelope::compiled);
+
+    envelope out{};
+    BC_REQUIRE(from_chunk(out, data));
+    BC_REQUIRE(out.require_witness);
     BC_REQUIRE_EQUAL(out.silent_start_height, 42u);
 }
 

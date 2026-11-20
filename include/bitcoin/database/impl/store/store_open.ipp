@@ -136,30 +136,6 @@ code CLASS::open(const event_handler& handler) NOEXCEPT
     return ec;
 }
 
-// The head is expanded before the envelope is rewritten, so a failed expansion
-// (disk full) leaves the stored envelope unchanged.
-TEMPLATE
-code CLASS::migrate_envelope(table::envelope::record& record) NOEXCEPT
-{
-    using namespace system;
-    table::envelope::raw raw{};
-    if (!envelope.get(zero, raw) ||
-        !database::envelope::migrate(raw.data, envelope_))
-        return error::verify_table;
-
-    using integer = schema::envelope::link::integer;
-    const auto size = envelope.head_size();
-    const auto count = raw.data.size();
-    if ((count > size) && envelope.allocate(
-        possible_narrow_cast<integer>(count - size)).is_terminal())
-        return error::disk_full;
-
-    if (!envelope.put(zero, raw) || !envelope.get(zero, record))
-        return error::verify_table;
-
-    return error::success;
-}
-
 // The envelope is fixed width, so it is rewritten at its allocated link.
 TEMPLATE
 void CLASS::store_envelope(code& ec) NOEXCEPT
@@ -178,6 +154,304 @@ void CLASS::store_envelope(code& ec) NOEXCEPT
 
     if (!envelope.put(zero, record))
         ec = error::create_table;
+}
+
+// The head is expanded before the envelope is rewritten, so a failed expansion
+// (disk full) leaves the stored envelope unchanged.
+TEMPLATE
+code CLASS::put_envelope(const database::envelope& stored) NOEXCEPT
+{
+    using integer = schema::envelope::link::integer;
+    const table::envelope::record record{ stored };
+    const auto size = envelope.head_size();
+    const auto count = record.count();
+    if ((count > size) && envelope.allocate(
+        system::possible_narrow_cast<integer>(count - size)).is_terminal())
+        return error::disk_full;
+
+    return envelope.put(zero, record) ? error::success : error::verify_table;
+}
+
+// Migration
+// ----------------------------------------------------------------------------
+
+// public
+// The stored envelope is read in, migrated by each step from its schema, and
+// written out. A failure once the store is changed leaves the fault and flush
+// locks.
+TEMPLATE
+code CLASS::migrate(system::config::version& original,
+    const database::envelope& configured,
+    const event_handler& handler) NOEXCEPT
+{
+    if (!file::is_directory(configuration_.path))
+        return error::missing_directory;
+
+    if (!transactor_mutex_.try_lock())
+        return error::transactor_lock;
+
+    if (!process_lock_.try_lock())
+    {
+        transactor_mutex_.unlock();
+        return error::process_lock;
+    }
+
+    if (fault_lock_.is_locked())
+    {
+        /* bool */ process_lock_.try_unlock();
+        transactor_mutex_.unlock();
+        return error::fault_lock;
+    }
+
+    if (!flush_lock_.try_lock())
+    {
+        /* bool */ process_lock_.try_unlock();
+        transactor_mutex_.unlock();
+        return error::flush_lock;
+    }
+
+    handler(event_t::open_file, table_t::envelope_head);
+    auto ec = envelope_head_.open();
+    if (!ec)
+    {
+        handler(event_t::load_file, table_t::envelope_head);
+        ec = envelope_head_.load();
+    }
+
+    table::envelope::raw raw{};
+    if (!ec && (is_zero(envelope.head_size()) || !envelope.get(zero, raw)))
+        ec = error::verify_table;
+
+    if (!ec)
+    {
+        original = database::envelope::get_schema(raw.data);
+        if (!database::envelope::is_readable(original))
+            ec = error::schema_version;
+    }
+
+    auto faulted = false;
+    if (!ec && original != database::envelope::compiled)
+    {
+        faulted = fault_lock_.try_lock();
+        ec = faulted ? purge_snapshots() : error::fault_lock;
+
+        database::envelope stored{};
+        if (!ec && !read_migrated(stored, raw.data, configured))
+            ec = error::verify_table;
+
+        auto schema = original;
+        while (!ec && schema != database::envelope::compiled)
+        {
+            if (schema == system::config::version{ 4, 0, 30, 0 })
+            {
+                ec = migrate_4_0_30_to_4_0_31(stored, configured, handler);
+                schema = { 4, 0, 31, 0 };
+            }
+            else if (schema == system::config::version{ 4, 0, 31, 0 })
+            {
+                ec = migrate_4_0_31_to_4_0_32(stored, configured);
+                schema = { 4, 0, 32, 0 };
+            }
+            else
+            {
+                ec = error::schema_version;
+            }
+        }
+
+        if (!ec)
+            ec = put_envelope(stored);
+    }
+
+    // unload and close errors override ec.
+    handler(event_t::unload_file, table_t::envelope_head);
+    if (const auto unloaded = envelope_head_.unload()) ec = unloaded;
+    handler(event_t::close_file, table_t::envelope_head);
+    if (const auto closed = envelope_head_.close()) ec = closed;
+
+    // unlock errors override ec.
+    if (!faulted || !ec)
+    {
+        if (faulted && !fault_lock_.try_unlock()) ec = error::fault_unlock;
+        if (!flush_lock_.try_unlock()) ec = error::flush_unlock;
+    }
+
+    if (!process_lock_.try_unlock()) ec = error::process_unlock;
+    transactor_mutex_.unlock();
+    return ec;
+}
+
+// A serialized readable envelope, read in at the compiled schema.
+TEMPLATE
+bool CLASS::read_migrated(database::envelope& out, system::data_chunk data,
+    const database::envelope& configured) NOEXCEPT
+{
+    using namespace system;
+    if (!database::envelope::migrate(data, configured))
+        return false;
+
+    const auto size = possible_narrow_sign_cast<ptrdiff_t>(data.size());
+    iostream stream{ data.data(), size };
+    reader source{ stream };
+    return out.from_data(source);
+}
+
+TEMPLATE
+code CLASS::purge_snapshots() NOEXCEPT
+{
+    for (const auto name: { schema::dir::primary, schema::dir::secondary,
+        schema::dir::temporary })
+    {
+        const auto folder = configuration_.path / name;
+        if (!file::is_directory(folder))
+            continue;
+
+        if (const auto ec = file::clear_directory_ex(folder)) return ec;
+        if (const auto ec = file::remove_ex(folder)) return ec;
+    }
+
+    return error::success;
+}
+
+// The pool tables are discarded and created empty at configured sizing.
+TEMPLATE
+code CLASS::migrate_4_0_30_to_4_0_31(database::envelope& stored,
+    const database::envelope& configured,
+    const event_handler& handler) NOEXCEPT
+{
+    using namespace system;
+    const auto pool_buckets = configured.pool_buckets;
+    const auto wtxid_buckets = configured.wtxid_buckets;
+    const auto pool_k = table::pool::optimal_k(
+        configuration_.pool.expected_(), pool_buckets);
+    const auto wtxid_k = table::wtxid::optimal_k(
+        configuration_.wtxid.expected_(), wtxid_buckets);
+
+    if (!pool.set_buckets(pool_buckets) || !pool.set_filter_k(pool_k) ||
+        !wtxid.set_buckets(wtxid_buckets) || !wtxid.set_filter_k(wtxid_k))
+        return error::verify_table;
+
+    const auto create = [&handler](code& ec, const auto& file,
+        table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::create_file, table);
+            ec = file.create();
+        }
+    };
+
+    const auto open = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::open_file, table);
+            ec = file.open();
+        }
+    };
+
+    const auto load = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::load_file, table);
+            ec = file.load();
+        }
+    };
+
+    const auto populate = [&handler](code& ec, auto& logical,
+        table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::create_table, table);
+            if (!logical.create())
+                ec = error::create_table;
+        }
+    };
+
+    const auto unload = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
+    {
+        handler(event_t::unload_file, table);
+        if (const auto unloaded = file.unload(); !ec) ec = unloaded;
+    };
+
+    const auto close = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
+    {
+        handler(event_t::close_file, table);
+        if (const auto closed = file.close(); !ec) ec = closed;
+    };
+
+    const auto obsolete = body(configuration_.path,
+        std::string{ schema::caches::pool } + "_context");
+
+    auto ec = file::remove_ex(obsolete);
+    create(ec, pool_head_, table_t::pool_head);
+    create(ec, pool_body_, table_t::pool_body);
+    create(ec, spends_head_, table_t::spends_head);
+    create(ec, spends_body_, table_t::spends_body);
+    create(ec, pool_index_head_, table_t::pool_index_head);
+    create(ec, spends_index_head_, table_t::spends_index_head);
+    create(ec, wtxid_head_, table_t::wtxid_head);
+    create(ec, wtxid_body_, table_t::wtxid_body);
+
+    open(ec, pool_head_, table_t::pool_head);
+    open(ec, pool_body_, table_t::pool_body);
+    open(ec, spends_head_, table_t::spends_head);
+    open(ec, spends_body_, table_t::spends_body);
+    open(ec, pool_index_head_, table_t::pool_index_head);
+    open(ec, spends_index_head_, table_t::spends_index_head);
+    open(ec, wtxid_head_, table_t::wtxid_head);
+    open(ec, wtxid_body_, table_t::wtxid_body);
+
+    load(ec, pool_head_, table_t::pool_head);
+    load(ec, pool_body_, table_t::pool_body);
+    load(ec, spends_head_, table_t::spends_head);
+    load(ec, spends_body_, table_t::spends_body);
+    load(ec, pool_index_head_, table_t::pool_index_head);
+    load(ec, spends_index_head_, table_t::spends_index_head);
+    load(ec, wtxid_head_, table_t::wtxid_head);
+    load(ec, wtxid_body_, table_t::wtxid_body);
+
+    populate(ec, pool, table_t::pool_table);
+    populate(ec, spends, table_t::spends_table);
+    populate(ec, pool_index, table_t::pool_index_table);
+    populate(ec, spends_index, table_t::spends_index_table);
+    populate(ec, wtxid, table_t::wtxid_table);
+
+    unload(ec, pool_head_, table_t::pool_head);
+    unload(ec, pool_body_, table_t::pool_body);
+    unload(ec, spends_head_, table_t::spends_head);
+    unload(ec, spends_body_, table_t::spends_body);
+    unload(ec, pool_index_head_, table_t::pool_index_head);
+    unload(ec, spends_index_head_, table_t::spends_index_head);
+    unload(ec, wtxid_head_, table_t::wtxid_head);
+    unload(ec, wtxid_body_, table_t::wtxid_body);
+
+    close(ec, pool_head_, table_t::pool_head);
+    close(ec, pool_body_, table_t::pool_body);
+    close(ec, spends_head_, table_t::spends_head);
+    close(ec, spends_body_, table_t::spends_body);
+    close(ec, pool_index_head_, table_t::pool_index_head);
+    close(ec, spends_index_head_, table_t::spends_index_head);
+    close(ec, wtxid_head_, table_t::wtxid_head);
+    close(ec, wtxid_body_, table_t::wtxid_body);
+
+    if (ec)
+        return ec;
+
+    stored.pool_buckets = pool_buckets;
+    stored.wtxid_buckets = wtxid_buckets;
+    stored.pool_k = possible_narrow_cast<uint8_t>(pool_k);
+    stored.wtxid_k = possible_narrow_cast<uint8_t>(wtxid_k);
+    return error::success;
+}
+
+TEMPLATE
+code CLASS::migrate_4_0_31_to_4_0_32(database::envelope& stored,
+    const database::envelope& configured) NOEXCEPT
+{
+    stored.require_witness = configured.require_witness;
+    return error::success;
 }
 
 // public
@@ -202,16 +476,8 @@ code CLASS::read_envelope(database::envelope& stored) NOEXCEPT
         const auto schema = record.envelope.schema;
         table::envelope::raw raw{};
         if (!valid && database::envelope::is_readable(schema) &&
-            envelope.get(zero, raw) &&
-            database::envelope::migrate(raw.data, stored))
-        {
-            using namespace system;
-            const auto size = possible_narrow_sign_cast<ptrdiff_t>(
-                raw.data.size());
-            iostream stream{ raw.data.data(), size };
-            reader source{ stream };
-            valid = record.envelope.from_data(source);
-        }
+            envelope.get(zero, raw))
+            valid = read_migrated(record.envelope, raw.data, stored);
 
         // The stored schema is retained, as the store is not yet migrated.
         stored = record.envelope;
@@ -241,7 +507,7 @@ code CLASS::load_schema() NOEXCEPT
     if (!get_schema(schema))
         return error::verify_table;
 
-    return database::envelope::is_readable(schema) ? error::success :
+    return schema == database::envelope::compiled ? error::success :
         error::schema_version;
 }
 
@@ -262,23 +528,12 @@ bool CLASS::get_schema(system::config::version& schema) const NOEXCEPT
 TEMPLATE
 code CLASS::load_envelope() NOEXCEPT
 {
-    // The stored creation envelope governs, configuration fills only values
-    // that a migrated schema does not store.
+    // The stored creation envelope governs.
     table::envelope::record record{};
     if (!is_zero(envelope.head_size()))
     {
         if (!envelope.get(zero, record))
-        {
-            const auto schema = record.envelope.schema;
-            if (!database::envelope::is_readable(schema))
-                return error::schema_version;
-
-            if (schema == database::envelope::compiled)
-                return error::verify_table;
-
-            if (const auto ec = migrate_envelope(record))
-                return ec;
-        }
+            return error::verify_table;
 
         envelope_ = record.envelope;
     }

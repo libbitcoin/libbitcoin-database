@@ -77,6 +77,7 @@ enum error_t : uint8_t
     fault_lock,
     flush_lock,
     flush_unlock,
+    fault_unlock,
     process_unlock,
 
     /// filesystem

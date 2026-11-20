@@ -145,20 +145,114 @@ BC_AUTO_TEST_CASE(store__open__schema_mismatch__schema_version)
     BC_REQUIRE_EQUAL(instance.open(test::events), error::schema_version);
 }
 
-BC_AUTO_TEST_CASE(store__open__4_0_31__migrated)
+BC_AUTO_TEST_CASE(store__open__4_0_31__schema_version)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
-    configuration.envelope.require_witness = true;
     test::map_store instance{ configuration };
     BC_REQUIRE(!instance.create(test::events));
     BC_REQUIRE(!instance.close(test::events));
 
     const auto& image = test::envelope_4_0_31;
     BC_REQUIRE(test::create(instance.envelope_head_file(), image));
+    BC_REQUIRE_EQUAL(instance.open(test::events), error::schema_version);
+    BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), image.size());
+}
+
+// migrate
+// ----------------------------------------------------------------------------
+
+BC_AUTO_TEST_CASE(store__migrate__uncreated__failure)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    system::config::version original{};
+    BC_REQUIRE(instance.migrate(original, {}, test::events));
+}
+
+BC_AUTO_TEST_CASE(store__migrate__compiled__unchanged)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::clear(configuration.path / schema::dir::primary));
+
+    system::config::version original{};
+    BC_REQUIRE(!instance.migrate(original, {}, test::events));
+    BC_REQUIRE(original == envelope::compiled);
+    BC_REQUIRE(test::folder(configuration.path / schema::dir::primary));
+    BC_REQUIRE(!test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(!test::exists(instance.flush_lock_file()));
     BC_REQUIRE(!instance.open(test::events));
     BC_REQUIRE(!instance.close(test::events));
+}
+
+BC_AUTO_TEST_CASE(store__migrate__4_0_30__compiled)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+
+    auto image = test::envelope_4_0_31;
+    image.at(8) = 30;
+    BC_REQUIRE(test::create(instance.envelope_head_file(), image));
+
+    const auto pool_head = test::size(instance.pool_head_file());
+    const auto wtxid_head = test::size(instance.wtxid_head_file());
+    const auto obsolete = configuration.path / "cache_pool_context.data";
+    BC_REQUIRE(test::create(instance.pool_head_file(), std::string{ "stale" }));
+    BC_REQUIRE(test::create(instance.wtxid_head_file(), std::string{ "stale" }));
+    BC_REQUIRE(test::create(obsolete, std::string{ "stale" }));
+
+    database::envelope configured{};
+    configured.require_witness = true;
+    configured.pool_buckets = 256;
+    configured.wtxid_buckets = 512;
+    system::config::version original{};
+    BC_REQUIRE(!instance.migrate(original, configured, test::events));
+    BC_REQUIRE(original == system::config::version(4, 0, 30, 0));
+    BC_REQUIRE(!test::exists(obsolete));
+    BC_REQUIRE_GT(test::size(instance.pool_head_file()), pool_head);
+    BC_REQUIRE_GT(test::size(instance.wtxid_head_file()), wtxid_head);
     BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), add1(image.size()));
+    BC_REQUIRE(!test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+
+    database::envelope stored{};
+    BC_REQUIRE(!instance.read_envelope(stored));
+    BC_REQUIRE(stored.schema == envelope::compiled);
+    BC_REQUIRE(stored.require_witness);
+    BC_REQUIRE_EQUAL(stored.pool_buckets, 256u);
+    BC_REQUIRE_EQUAL(stored.wtxid_buckets, 512u);
+}
+
+BC_AUTO_TEST_CASE(store__migrate__4_0_31__compiled)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+
+    const auto& image = test::envelope_4_0_31;
+    BC_REQUIRE(test::create(instance.envelope_head_file(), image));
+
+    database::envelope configured{};
+    configured.require_witness = true;
+    system::config::version original{};
+    BC_REQUIRE(!instance.migrate(original, configured, test::events));
+    BC_REQUIRE(original == system::config::version(4, 0, 31, 0));
+    BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), add1(image.size()));
+    BC_REQUIRE(!test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(!test::exists(instance.flush_lock_file()));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE(!instance.close(test::events));
 
     database::envelope stored{};
     BC_REQUIRE(!instance.read_envelope(stored));
@@ -167,6 +261,82 @@ BC_AUTO_TEST_CASE(store__open__4_0_31__migrated)
     BC_REQUIRE(stored.require_witness);
     BC_REQUIRE(stored.provide_filters);
     BC_REQUIRE_EQUAL(stored.silent_start_height, 42u);
+}
+
+BC_AUTO_TEST_CASE(store__migrate__4_0_31__snapshots_purged)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(instance.envelope_head_file(), test::envelope_4_0_31));
+    BC_REQUIRE(test::clear(configuration.path / schema::dir::primary));
+    BC_REQUIRE(test::clear(configuration.path / schema::dir::secondary));
+    BC_REQUIRE(test::create(configuration.path / schema::dir::primary / "file"));
+
+    system::config::version original{};
+    BC_REQUIRE(!instance.migrate(original, {}, test::events));
+    BC_REQUIRE(!test::folder(configuration.path / schema::dir::primary));
+    BC_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
+}
+
+BC_AUTO_TEST_CASE(store__migrate__4_0_31_truncated__fault_locked)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+
+    const auto& image = test::envelope_4_0_31;
+    const system::data_chunk truncated(image.begin(), std::next(image.begin(), 16));
+    BC_REQUIRE(test::create(instance.envelope_head_file(), truncated));
+
+    system::config::version original{};
+    BC_REQUIRE_EQUAL(instance.migrate(original, {}, test::events), error::verify_table);
+    BC_REQUIRE(original == system::config::version(4, 0, 31, 0));
+    BC_REQUIRE(test::exists(instance.fault_lock_file()));
+    BC_REQUIRE_EQUAL(instance.open(test::events), error::fault_lock);
+}
+
+BC_AUTO_TEST_CASE(store__migrate__premigratable__schema_version)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+
+    auto image = test::envelope_4_0_31;
+    const auto prior = sub1(envelope::migratable.segments().at(2));
+    const auto bytes = system::to_little_endian(prior);
+    std::copy(bytes.begin(), bytes.end(), std::next(image.begin(), 8));
+    BC_REQUIRE(test::create(instance.envelope_head_file(), image));
+
+    system::config::version original{};
+    BC_REQUIRE_EQUAL(instance.migrate(original, {}, test::events), error::schema_version);
+    BC_REQUIRE(original == system::config::version(4, 0, prior, 0));
+    BC_REQUIRE(!test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(!test::exists(instance.flush_lock_file()));
+    BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), image.size());
+}
+
+BC_AUTO_TEST_CASE(store__migrate__future__schema_version)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(instance.envelope_head_file(), std::string(16, '\x01')));
+
+    system::config::version original{};
+    const system::config::version expected{ 0x01010101, 0x01010101, 0x01010101, 0x01010101 };
+    BC_REQUIRE_EQUAL(instance.migrate(original, {}, test::events), error::schema_version);
+    BC_REQUIRE(original == expected);
+    BC_REQUIRE(!test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(!test::exists(instance.flush_lock_file()));
 }
 
 // read_envelope
@@ -209,7 +379,7 @@ BC_AUTO_TEST_CASE(store__read_envelope__4_0_31__migrated_unchanged)
     database::envelope stored{};
     stored.require_witness = true;
     BC_REQUIRE(!instance.read_envelope(stored));
-    BC_REQUIRE(stored.schema == envelope::migratable);
+    BC_REQUIRE(stored.schema == system::config::version(4, 0, 31, 0));
     BC_REQUIRE(stored.network == system::chain::selection::mainnet);
     BC_REQUIRE(stored.require_witness);
     BC_REQUIRE_EQUAL(stored.silent_start_height, 42u);
@@ -217,7 +387,7 @@ BC_AUTO_TEST_CASE(store__read_envelope__4_0_31__migrated_unchanged)
 
     database::envelope reread{};
     BC_REQUIRE(!instance.read_envelope(reread));
-    BC_REQUIRE(reread.schema == envelope::migratable);
+    BC_REQUIRE(reread.schema == system::config::version(4, 0, 31, 0));
 }
 
 BC_AUTO_TEST_CASE(store__read_envelope__schema_mismatch__schema_version)
