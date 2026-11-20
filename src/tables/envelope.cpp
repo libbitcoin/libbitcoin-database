@@ -530,9 +530,13 @@ size_t envelope::activation_offset(size_t index) const NOEXCEPT
 
 size_t envelope::serialized_size() const NOEXCEPT
 {
-    constexpr auto fixed = (4 * sizeof(uint32_t)) +
-        (7 * sizeof(uint32_t)) + (13 * sizeof(uint8_t)) + forks_count +
-        sizeof(uint64_t) + (18 * sizeof(uint32_t)) +
+    constexpr auto fixed =
+        ( 4 * sizeof(uint32_t)) +
+        ( 7 * sizeof(uint32_t)) +
+        (13 * sizeof(uint8_t)) + 
+        forks_count +
+        ( 1 * sizeof(uint64_t)) +
+        (18 * sizeof(uint32_t)) +
         (activation_count * activation_size);
 
     const auto checkpoint_size = [](const chain::checkpoint& in) NOEXCEPT
