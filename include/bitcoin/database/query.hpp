@@ -740,6 +740,7 @@ public:
         const context& evaluated) const NOEXCEPT;
 
     bool is_pooled(const tx_link& link) const NOEXCEPT;
+    pool_link to_pool_row(const tx_link& link) const NOEXCEPT;
     code get_pooled(pooled_tx& out, const tx_link& link,
         const context& ctx) const NOEXCEPT;
     bool get_pooled_time(uint32_t& out, const tx_link& link) const NOEXCEPT;
