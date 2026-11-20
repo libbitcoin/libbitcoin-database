@@ -211,12 +211,14 @@ BC_AUTO_TEST_CASE(store__migrate__4_0_30__compiled)
 
     database::envelope configured{};
     configured.require_witness = true;
+    configured.pool_buckets = 256;
+    configured.wtxid_buckets = 512;
     system::config::version original{};
     BC_REQUIRE(!instance.migrate(original, configured, test::events));
     BC_REQUIRE(original == system::config::version(4, 0, 30, 0));
     BC_REQUIRE(!test::exists(obsolete));
-    BC_REQUIRE_EQUAL(test::size(instance.pool_head_file()), pool_head);
-    BC_REQUIRE_EQUAL(test::size(instance.wtxid_head_file()), wtxid_head);
+    BC_REQUIRE_GT(test::size(instance.pool_head_file()), pool_head);
+    BC_REQUIRE_GT(test::size(instance.wtxid_head_file()), wtxid_head);
     BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), add1(image.size()));
     BC_REQUIRE(!test::exists(instance.fault_lock_file()));
     BC_REQUIRE(!instance.open(test::events));
@@ -226,6 +228,8 @@ BC_AUTO_TEST_CASE(store__migrate__4_0_30__compiled)
     BC_REQUIRE(!instance.read_envelope(stored));
     BC_REQUIRE(stored.schema == envelope::compiled);
     BC_REQUIRE(stored.require_witness);
+    BC_REQUIRE_EQUAL(stored.pool_buckets, 256u);
+    BC_REQUIRE_EQUAL(stored.wtxid_buckets, 512u);
 }
 
 BC_AUTO_TEST_CASE(store__migrate__4_0_31__compiled)
