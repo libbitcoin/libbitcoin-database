@@ -25,6 +25,68 @@ namespace libbitcoin {
 namespace database {
 
 TEMPLATE
+code CLASS::get_pool_revalidation(tx_links& out,
+    const context& ctx) const NOEXCEPT
+{
+    using namespace system;
+    using algorithm = system::pool::algorithm;
+    using link_t = algorithm::link_t;
+    out.clear();
+    if (!store_.pool.enabled())
+        return error::success;
+
+    pool_guards guards{};
+    algorithm::columns_t columns{};
+    if (!get_pool_columns(columns, guards))
+        return error::integrity;
+
+    const auto rows = possible_narrow_cast<link_t>(columns.cells.size());
+    for (link_t row{}; row < rows; ++row)
+    {
+        const auto cell = algorithm::from_column(columns.cells[row]);
+        if (!algorithm::is_absent(cell) ||
+            is_zero(bit_and(cell, algorithm::insufficient)))
+            continue;
+
+        const auto flags = algorithm::from_column(columns.flags[row]);
+        if (bit_and(flags, ctx.flags) == ctx.flags ||
+            algorithm::from_column(columns.heights[row]) > ctx.height ||
+            algorithm::from_column(columns.medians[row]) > ctx.mtp)
+            continue;
+
+        const auto tx = to_pool_tx(pool_link{ row });
+        if (!tx.is_terminal())
+            out.push_back(tx);
+    }
+
+    return error::success;
+}
+
+TEMPLATE
+bool CLASS::set_pooled_context(const tx_link& link,
+    const context& ctx) NOEXCEPT
+{
+    using scalar = table::pool_scalar;
+    if (!store_.pool.enabled())
+        return true;
+
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    auto& vtx = store_.pool;
+    const auto fk = vtx.first(link);
+    if (fk.is_terminal())
+        return false;
+
+    auto guard = vtx.get_memory();
+    return guard &&
+        vtx.flags.put(fk, scalar{ {}, ctx.flags }) &&
+        vtx.heights.put(fk, scalar{ {}, ctx.height }) &&
+        vtx.medians.put(fk, scalar{ {}, ctx.mtp });
+    // ========================================================================
+}
+
+TEMPLATE
 bool CLASS::set_pool_context(size_t& out, const context& ctx) NOEXCEPT
 {
     using algorithm = system::pool::algorithm;

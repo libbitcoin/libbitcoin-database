@@ -777,6 +777,11 @@ public:
     /// Confirmable fee rate tuples, in pool order (requires the pool index).
     code get_confirmable_fees(fee_rates& out) const NOEXCEPT;
 
+    /// Pooled txs out only for flags of the context they were not validated
+    /// under, in pool order (requires the pool index).
+    code get_pool_revalidation(tx_links& out,
+        const context& ctx) const NOEXCEPT;
+
     /// Setters.
     bool set_pooled(const tx_link& link, const transaction& tx,
         const context& ctx, uint32_t time) NOEXCEPT;
@@ -791,6 +796,9 @@ public:
 
     /// Apply the pool context to the index, out the rows it does not satisfy.
     bool set_pool_context(size_t& out, const context& ctx) NOEXCEPT;
+
+    /// Set the context of the pooled tx, as validated under it.
+    bool set_pooled_context(const tx_link& link, const context& ctx) NOEXCEPT;
 
     /// Coverage.
     /// -----------------------------------------------------------------------

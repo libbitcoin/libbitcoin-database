@@ -178,4 +178,124 @@ BC_AUTO_TEST_CASE(query_pool__set_pool_context__same_flags_without_bip113__insuf
     BC_REQUIRE_EQUAL(pool_cell(query, store, tx), absent_insufficient);
 }
 
+BC_AUTO_TEST_CASE(query_pool__set_pool_context__fewer_flags__all_present)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto tx = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto stored = query.set(tx);
+    const auto pooled = query.set_pooled(query.to_tx(tx.hash(false)), tx, context{ bip113 | flags::bip16_rule, 8, 9 }, 0);
+    size_t count{ 42 };
+    const auto swept = query.set_pool_context(count, context{ bip113, 8, 9 });
+
+    BC_REQUIRE(stored);
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(swept);
+    BC_REQUIRE(is_zero(count));
+    BC_REQUIRE(system::pool::algorithm::is_present(pool_cell(query, store, tx)));
+}
+
+// get_pool_revalidation
+
+BC_AUTO_TEST_CASE(query_pool__get_pool_revalidation__more_flags__insufficient_listed)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const context more{ bip113 | flags::bip16_rule, 8, 9 };
+    const auto tx = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto pooled = pool_populated(query, tx);
+    size_t count{};
+    const auto swept = query.set_pool_context(count, more);
+    tx_links links{};
+    const auto ec = query.get_pool_revalidation(links, more);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(swept);
+    BC_REQUIRE_EQUAL(ec, error::success);
+    BC_REQUIRE_EQUAL(links.size(), one);
+    BC_REQUIRE_EQUAL(links.front(), query.to_tx(tx.hash(false)));
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_pool_revalidation__lower_height__not_listed)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const context lower{ bip113 | flags::bip16_rule, 7, 9 };
+    const auto tx = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto pooled = pool_populated(query, tx);
+    size_t count{};
+    const auto swept = query.set_pool_context(count, lower);
+    tx_links links{};
+    const auto ec = query.get_pool_revalidation(links, lower);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(swept);
+    BC_REQUIRE_EQUAL(count, 1u);
+    BC_REQUIRE_EQUAL(ec, error::success);
+    BC_REQUIRE(links.empty());
+}
+
+// set_pooled_context
+
+BC_AUTO_TEST_CASE(query_pool__set_pooled_context__revalidated__present_after_sweep)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const context more{ bip113 | flags::bip16_rule, 8, 9 };
+    const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto child = to_spend(parent.hash(false), 4'999'998'000);
+    const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
+    size_t excluded{};
+    size_t restored{ 42 };
+    const auto swept = query.set_pool_context(excluded, more);
+    const auto set = query.set_pooled_context(query.to_tx(parent.hash(false)), more) && query.set_pooled_context(query.to_tx(child.hash(false)), more);
+    const auto resumed = query.set_pool_context(restored, more);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(swept);
+    BC_REQUIRE(set);
+    BC_REQUIRE(resumed);
+    BC_REQUIRE_EQUAL(excluded, 2u);
+    BC_REQUIRE(is_zero(restored));
+    BC_REQUIRE(system::pool::algorithm::is_present(pool_cell(query, store, parent)));
+    BC_REQUIRE(system::pool::algorithm::is_present(pool_cell(query, store, child)));
+}
+
+BC_AUTO_TEST_CASE(query_pool__set_pooled_context__not_pooled__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    BC_REQUIRE(!query.set_pooled_context(42, context{ bip113, 8, 9 }));
+}
+
 BC_AUTO_TEST_SUITE_END()
