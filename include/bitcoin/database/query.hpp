@@ -1252,9 +1252,15 @@ protected:
     bool set_pool_links(system::pool::algorithm::link_t start,
         const pool_links& parents, const pool_links& mates) NOEXCEPT;
 
-    /// The pooled spenders of the tx take its row as their parent row.
-    bool set_pool_adoption(system::pool::algorithm::link_t row,
-        const transaction& tx) NOEXCEPT;
+    /// Pool the tx at a new row, its spenders not yet considered.
+    bool set_pool_row(const tx_link& link, const transaction& tx,
+        const context& ctx, uint32_t time) NOEXCEPT;
+
+    /// Purge the pooled spenders of the tx and theirs, ascending by row.
+    bool set_pool_purged(tx_links& out, const tx_link& link) NOEXCEPT;
+
+    /// Pool again each purged tx, in order, under its stored context.
+    bool set_pool_repooled(const tx_links& purged) NOEXCEPT;
 
     /// The input of a pooled spender of the point below the bound, and if it is
     /// confirmed spent.
