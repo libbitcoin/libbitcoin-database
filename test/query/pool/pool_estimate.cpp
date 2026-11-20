@@ -47,7 +47,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_projection__empty__exhausted)
 
     store.set_pooling();
     pool_projection projection{};
-    const auto ec = query.get_pool_projection(projection, 2, block_limit, 25, 20, 1'024);
+    const auto ec = query.get_pool_projection(projection, 2, block_limit, 25, 0, 20, 1'024);
 
     BC_REQUIRE_EQUAL(ec, error::success);
     BC_REQUIRE(projection.blocks.empty());
@@ -69,7 +69,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_projection__chain_over_budget__block_each
     const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
     const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
     pool_projection projection{};
-    const auto ec = query.get_pool_projection(projection, 2, { 0, size, 80'000 }, 25, 20, 1'024);
+    const auto ec = query.get_pool_projection(projection, 2, { 0, size, 80'000 }, 25, 0, 20, 1'024);
 
     BC_REQUIRE(pooled);
     BC_REQUIRE_EQUAL(ec, error::success);
@@ -98,7 +98,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_projection__one_block_of_two__not_exhaust
     const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
     const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
     pool_projection projection{};
-    const auto ec = query.get_pool_projection(projection, 1, { 0, size, 80'000 }, 25, 20, 1'024);
+    const auto ec = query.get_pool_projection(projection, 1, { 0, size, 80'000 }, 25, 0, 20, 1'024);
 
     BC_REQUIRE(pooled);
     BC_REQUIRE_EQUAL(ec, error::success);
@@ -123,8 +123,8 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_projection__after_template__continued)
     tx_links out{};
     pool_projection projection{};
     const pool_totals budget{ 0, size, 80'000 };
-    const auto template_ec = query.get_pool_template(out, projection, budget, 25, 20, 1'024);
-    const auto ec = query.get_pool_projection(projection, 2, budget, 25, 20, 1'024);
+    const auto template_ec = query.get_pool_template(out, projection, budget, 25, 0, 20, 1'024);
+    const auto ec = query.get_pool_projection(projection, 2, budget, 25, 0, 20, 1'024);
 
     BC_REQUIRE(pooled);
     BC_REQUIRE_EQUAL(template_ec, error::success);
@@ -151,7 +151,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_projection__marks_of_other_rows__restarte
     pool_projection projection{};
     projection.marks.resize(42);
     projection.blocks.resize(3);
-    const auto ec = query.get_pool_projection(projection, 1, { 0, size, 80'000 }, 25, 20, 1'024);
+    const auto ec = query.get_pool_projection(projection, 1, { 0, size, 80'000 }, 25, 0, 20, 1'024);
 
     BC_REQUIRE(pooled);
     BC_REQUIRE_EQUAL(ec, error::success);

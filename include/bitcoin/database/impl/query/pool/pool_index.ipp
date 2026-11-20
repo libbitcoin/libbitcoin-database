@@ -80,6 +80,13 @@ bool CLASS::set_pool_index() NOEXCEPT
 
         if (!set_pool_links(edge.spends_fk, parents, mates))
             return false;
+
+        // A row its key does not resolve to has been pooled again later.
+        using row_cell = table::pool_index::replace;
+        constexpr auto purged = bit_or(algorithm::absent, algorithm::purged);
+        if ((store_.pool.first(tx) != row) &&
+            !store_.pool_index.cells.set(row, row_cell{ {}, purged }))
+            return false;
     }
 
     pool_guards guards{};
@@ -170,55 +177,6 @@ bool CLASS::set_pool_links(system::pool::algorithm::link_t start,
                 input_cell{ {}, sibling }) ||
             !links.rivals.set(links_guard, input, input_cell{ {}, rival }))
             return false;
-    }
-
-    return true;
-}
-
-// protected
-// Pooled spenders of the tx (the children of a reorganized parent) take it
-// as their parent row and join its children list.
-TEMPLATE
-bool CLASS::set_pool_adoption(system::pool::algorithm::link_t row,
-    const transaction& tx) NOEXCEPT
-{
-    using namespace system;
-    using link_t = system::pool::algorithm::link_t;
-    using row_cell = table::pool_index::replace;
-    using input_cell = table::spends_index::replace;
-    constexpr auto none = system::pool::algorithm::none;
-    auto& children = store_.pool_index.children;
-    auto& rows = store_.spends_index.rows;
-    auto& siblings = store_.spends_index.siblings;
-
-    const auto outputs = tx.outputs_ptr()->size();
-    const auto txid = tx.get_hash(false);
-    for (uint32_t index{}; index < outputs; ++index)
-    {
-        for (const auto& in: to_spenders(point{ txid, index }))
-        {
-            const auto child = to_input_tx(in);
-            const auto child_row = store_.pool.first(child);
-            if (child_row.is_terminal())
-                continue;
-
-            table::pool_edge edge{};
-            if (!store_.pool.edges.get(child_row, edge))
-                return false;
-
-            const auto position = in - to_point(child, zero).value;
-            const auto offset = possible_narrow_cast<link_t>(position);
-            const auto input = edge.spends_fk + offset;
-
-            if (rows.at(input) != none)
-                continue;
-
-            const auto sibling = children.at(row);
-            if (!rows.set(input, input_cell{ {}, row }) ||
-                !siblings.set(input, input_cell{ {}, sibling }) ||
-                !children.set(row, row_cell{ {}, input }))
-                return false;
-        }
     }
 
     return true;

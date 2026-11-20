@@ -27,8 +27,8 @@ namespace database {
 // Marks of the rows continue the projection, and any others restart it.
 TEMPLATE
 code CLASS::get_pool_projection(pool_projection& projection, size_t count,
-    const pool_totals& budget, size_t depth, uint32_t bytes_per_sigop,
-    size_t maximum_outcomes) const NOEXCEPT
+    const pool_totals& budget, size_t depth, uint64_t cutoff,
+    uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT
 {
     using algorithm = system::pool::algorithm;
     if (!store_.pool.enabled())
@@ -40,11 +40,8 @@ code CLASS::get_pool_projection(pool_projection& projection, size_t count,
         return error::integrity;
 
     if (projection.marks.size() != columns.cells.size())
-    {
-        projection = {};
-        projection.marks.resize(columns.cells.size());
-        algorithm::resolve(projection.marks, columns, maximum_outcomes);
-    }
+        set_pool_resolution(projection, columns, cutoff, bytes_per_sigop,
+            maximum_outcomes);
 
     pool_links rows{};
     while (!projection.exhausted && projection.blocks.size() < count)

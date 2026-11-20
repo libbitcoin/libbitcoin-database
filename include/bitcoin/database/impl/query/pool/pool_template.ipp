@@ -26,8 +26,8 @@ namespace database {
 
 TEMPLATE
 code CLASS::get_pool_template(tx_links& out, pool_projection& projection,
-    const pool_totals& budget, size_t depth, uint32_t bytes_per_sigop,
-    size_t maximum_outcomes) const NOEXCEPT
+    const pool_totals& budget, size_t depth, uint64_t cutoff,
+    uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT
 {
     using algorithm = system::pool::algorithm;
     out.clear();
@@ -41,8 +41,8 @@ code CLASS::get_pool_template(tx_links& out, pool_projection& projection,
         return error::integrity;
 
     pool_links rows{};
-    projection.marks.resize(columns.cells.size());
-    algorithm::resolve(projection.marks, columns, maximum_outcomes);
+    set_pool_resolution(projection, columns, cutoff, bytes_per_sigop,
+        maximum_outcomes);
     algorithm::project(rows, projection, columns, budget, depth,
         bytes_per_sigop);
 
@@ -57,6 +57,19 @@ code CLASS::get_pool_template(tx_links& out, pool_projection& projection,
     }
 
     return error::success;
+}
+
+// protected
+TEMPLATE
+void CLASS::set_pool_resolution(pool_projection& projection,
+    const system::pool::algorithm::columns_t& columns, uint64_t cutoff,
+    uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT
+{
+    using algorithm = system::pool::algorithm;
+    projection = {};
+    projection.marks.resize(columns.cells.size());
+    algorithm::resolve(projection.marks, columns, maximum_outcomes, cutoff,
+        bytes_per_sigop);
 }
 
 } // namespace database

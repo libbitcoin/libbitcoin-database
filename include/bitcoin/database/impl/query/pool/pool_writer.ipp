@@ -31,6 +31,8 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
     return set_pooled(link, tx, context::from(ctx), time);
 }
 
+// A pooled spender of the tx (pooled while the tx was confirmed) holds a lower
+// row, so it and its pooled descendants are purged and pooled after the tx.
 TEMPLATE
 bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
     const context& ctx, uint32_t time) NOEXCEPT
@@ -38,6 +40,16 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
     if (!store_.pool.enabled())
         return true;
 
+    tx_links purged{};
+    return set_pool_row(link, tx, ctx, time) &&
+        set_pool_purged(purged, link) && set_pool_repooled(purged);
+}
+
+// protected
+TEMPLATE
+bool CLASS::set_pool_row(const tx_link& link, const transaction& tx,
+    const context& ctx, uint32_t time) NOEXCEPT
+{
     using namespace system;
     using algorithm = system::pool::algorithm;
     using link_t = algorithm::link_t;
@@ -141,8 +153,7 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
     const auto row = possible_narrow_cast<link_t>(fk.value);
     const auto start = possible_narrow_cast<link_t>(first.value);
     if (!set_pool_rows(row, add1(row)) ||
-        !set_pool_links(start, parents, mates) ||
-        !set_pool_adoption(row, tx))
+        !set_pool_links(start, parents, mates))
         return false;
 
     pool_guards guards{};
@@ -157,6 +168,97 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
 
     return true;
     // ========================================================================
+}
+
+// protected
+TEMPLATE
+bool CLASS::set_pool_purged(tx_links& out, const tx_link& link) NOEXCEPT
+{
+    using namespace system;
+    using algorithm = system::pool::algorithm;
+    using row_cell = table::pool_index::replace;
+    using integer = pool_link::integer;
+    auto& cells = store_.pool_index.cells;
+    std::vector<std::pair<integer, tx_link>> found{};
+    tx_links pending{ link.value };
+    out.clear();
+
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    while (!pending.empty())
+    {
+        const tx_link parent{ pending.back() };
+        pending.pop_back();
+        const auto outputs = to_outputs(parent).size();
+        for (uint32_t index{}; index < outputs; ++index)
+        {
+            for (const auto& in: to_spenders(parent, index))
+            {
+                const auto child = to_input_tx(in);
+                const auto row = store_.pool.first(child);
+                if (row.is_terminal())
+                    continue;
+
+                const auto cell = cells.at(row.value);
+                const auto purged = algorithm::is_absent(cell) &&
+                    is_nonzero(bit_and(cell, algorithm::purged));
+                if (purged || algorithm::is_boundary(cell))
+                    continue;
+
+                const auto next = algorithm::raised(cell, algorithm::purged);
+                if (!cells.set(row.value, row_cell{ {}, next }))
+                    return false;
+
+                found.emplace_back(row.value, child);
+                pending.push_back(child.value);
+            }
+        }
+    }
+
+    if (found.empty())
+        return true;
+
+    std::ranges::sort(found, {}, &std::pair<integer, tx_link>::first);
+    for (const auto& item: found)
+        out.push_back(item.second.value);
+
+    pool_guards guards{};
+    algorithm::columns_t columns{};
+    if (!get_pool_columns(columns, guards))
+        return false;
+
+    system::pool::label(columns);
+    return true;
+    // ========================================================================
+}
+
+// protected
+TEMPLATE
+bool CLASS::set_pool_repooled(const tx_links& purged) NOEXCEPT
+{
+    for (const auto value: purged)
+    {
+        const tx_link link{ value };
+        table::pool::record record{};
+        table::pool_scalar flags{}, height{}, median{};
+        const auto row = store_.pool.first(link);
+        if (!store_.pool.get(row, record) ||
+            !store_.pool.flags.get(row, flags) ||
+            !store_.pool.heights.get(row, height) ||
+            !store_.pool.medians.get(row, median))
+            return false;
+
+        const auto tx = get_transaction(link, true);
+        if (!tx || !populate_with_metadata(*tx, true, true))
+            return false;
+
+        const context ctx{ flags.value, height.value, median.value };
+        if (!set_pool_row(link, *tx, ctx, record.time))
+            return false;
+    }
+
+    return true;
 }
 
 } // namespace database

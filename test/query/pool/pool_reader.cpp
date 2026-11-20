@@ -149,6 +149,40 @@ BC_AUTO_TEST_CASE(query_pool__get_pooled_time__not_pooled__false)
     BC_REQUIRE(!query.get_pooled_time(time, 0));
 }
 
+// to_pool_row
+
+BC_AUTO_TEST_CASE(query_pool__to_pool_row__not_pooled__terminal)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    BC_REQUIRE(query.to_pool_row(1).is_terminal());
+}
+
+BC_AUTO_TEST_CASE(query_pool__to_pool_row__pooled__rows_in_order)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto child = to_spend(parent.hash(false), 4'999'998'000);
+    const auto pooled = test::pool_populated(query, parent) && test::pool_populated(query, child);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE_EQUAL(query.to_pool_row(query.to_tx(parent.hash(false))).value, 0u);
+    BC_REQUIRE_EQUAL(query.to_pool_row(query.to_tx(child.hash(false))).value, 1u);
+}
+
 // get_pooled_totals
 
 BC_AUTO_TEST_CASE(query_pool__get_pooled_totals__not_pooled__false)

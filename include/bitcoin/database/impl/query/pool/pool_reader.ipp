@@ -31,6 +31,12 @@ bool CLASS::is_pooled(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+pool_link CLASS::to_pool_row(const tx_link& link) const NOEXCEPT
+{
+    return store_.pool.enabled() ? store_.pool.first(link) : pool_link{};
+}
+
+TEMPLATE
 bool CLASS::get_pooled_time(uint32_t& out, const tx_link& link) const NOEXCEPT
 {
     if (!store_.pool.enabled())

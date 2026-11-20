@@ -740,6 +740,7 @@ public:
         const context& evaluated) const NOEXCEPT;
 
     bool is_pooled(const tx_link& link) const NOEXCEPT;
+    pool_link to_pool_row(const tx_link& link) const NOEXCEPT;
     code get_pooled(pooled_tx& out, const tx_link& link,
         const context& ctx) const NOEXCEPT;
     bool get_pooled_time(uint32_t& out, const tx_link& link) const NOEXCEPT;
@@ -777,6 +778,11 @@ public:
     /// Confirmable fee rate tuples, in pool order (requires the pool index).
     code get_confirmable_fees(fee_rates& out) const NOEXCEPT;
 
+    /// Pooled txs out only for flags of the context they were not validated
+    /// under, in pool order (requires the pool index).
+    code get_pool_revalidation(tx_links& out,
+        const context& ctx) const NOEXCEPT;
+
     /// Setters.
     bool set_pooled(const tx_link& link, const transaction& tx,
         const context& ctx, uint32_t time) NOEXCEPT;
@@ -791,6 +797,9 @@ public:
 
     /// Apply the pool context to the index, out the rows it does not satisfy.
     bool set_pool_context(size_t& out, const context& ctx) NOEXCEPT;
+
+    /// Set the context of the pooled tx, as validated under it.
+    bool set_pooled_context(const tx_link& link, const context& ctx) NOEXCEPT;
 
     /// Coverage.
     /// -----------------------------------------------------------------------
@@ -845,18 +854,19 @@ public:
     /// Template.
     /// -----------------------------------------------------------------------
 
-    /// The pooled txs of a block template within the budget, parents first.
+    /// The pooled txs of a block template within the budget, parents first,
+    /// leaves chosen at the cutoff rate.
     code get_pool_template(tx_links& out, pool_projection& projection,
-        const pool_totals& budget, size_t depth, uint32_t bytes_per_sigop,
-        size_t maximum_outcomes) const NOEXCEPT;
+        const pool_totals& budget, size_t depth, uint64_t cutoff,
+        uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
 
     /// Estimate.
     /// -----------------------------------------------------------------------
 
     /// The projection extended to the count of blocks, or to exhaustion.
     code get_pool_projection(pool_projection& projection, size_t count,
-        const pool_totals& budget, size_t depth, uint32_t bytes_per_sigop,
-        size_t maximum_outcomes) const NOEXCEPT;
+        const pool_totals& budget, size_t depth, uint64_t cutoff,
+        uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
 
     /// Rate and size of the rows pooled at each height below top, top first.
     code get_pool_arrivals(pool_arrivals& out, size_t top, size_t count,
@@ -1229,6 +1239,11 @@ protected:
     bool get_pool_columns(system::pool::algorithm::columns_t& out,
         pool_guards& guards) const NOEXCEPT;
 
+    /// A new projection, its leaves chosen at the cutoff rate.
+    void set_pool_resolution(pool_projection& projection,
+        const system::pool::algorithm::columns_t& columns, uint64_t cutoff,
+        uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
+
     /// The index of each pooled row in the range (cell and children head).
     bool set_pool_rows(system::pool::algorithm::link_t begin,
         system::pool::algorithm::link_t end) NOEXCEPT;
@@ -1237,9 +1252,15 @@ protected:
     bool set_pool_links(system::pool::algorithm::link_t start,
         const pool_links& parents, const pool_links& mates) NOEXCEPT;
 
-    /// The pooled spenders of the tx take its row as their parent row.
-    bool set_pool_adoption(system::pool::algorithm::link_t row,
-        const transaction& tx) NOEXCEPT;
+    /// Pool the tx at a new row, its spenders not yet considered.
+    bool set_pool_row(const tx_link& link, const transaction& tx,
+        const context& ctx, uint32_t time) NOEXCEPT;
+
+    /// Purge the pooled spenders of the tx and theirs, ascending by row.
+    bool set_pool_purged(tx_links& out, const tx_link& link) NOEXCEPT;
+
+    /// Pool again each purged tx, in order, under its stored context.
+    bool set_pool_repooled(const tx_links& purged) NOEXCEPT;
 
     /// The input of a pooled spender of the point below the bound, and if it is
     /// confirmed spent.

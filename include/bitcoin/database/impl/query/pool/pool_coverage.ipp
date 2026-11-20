@@ -207,21 +207,16 @@ code CLASS::get_pool_coverage(bool& out, const pool_graph& graph,
     };
 
     algorithm::initialize(g, graph.candidates);
-    uint64_t added{};
-    uint64_t bytes{};
+    auto each = true;
     std::vector<algorithm::component_t> components{};
     for (const auto candidate: measured)
     {
         const std::span<const link_t> self{ &candidate, one };
-        const auto offset = candidate - rows;
-        const auto totals = algorithm::from_column(graph.totals.at(offset));
-        const auto size = algorithm::chargeable(totals, bytes_per_sigop);
         const auto seen = [&](const auto& component) NOEXCEPT
         {
             return is_nonzero(algorithm::members(component, self));
         };
 
-        bytes = ceilinged_add(bytes, size);
         if (std::ranges::any_of(components, seen))
             continue;
 
@@ -243,16 +238,19 @@ code CLASS::get_pool_coverage(bool& out, const pool_graph& graph,
         for (size_t index{}; index < outcomes; ++index)
             masks[index] = algorithm::outcome(component, index);
 
-        uint64_t best{};
-        uint64_t best_without{};
-        const auto members = algorithm::members(component, measured);
-        algorithm::evaluate(best, best_without, masks, members, component, g);
-
-        added = ceilinged_add(added, floored_subtract(best, best_without));
+        const auto best = algorithm::evaluate(masks, component, g);
+        const auto bytes = algorithm::chargeable(component, g, bytes_per_sigop);
+        each = each && algorithm::covered(best, bytes, rate);
         components.push_back(component);
     }
 
-    out = algorithm::covered(added, zero, bytes, rate);
+    // A pooled parent's surplus pays for its child (parent pays for child),
+    // in a family within a block, beyond which each component pays its own.
+    uint64_t fee{}, bytes{};
+    out = algorithm::family(fee, bytes, g, measured, limit.size,
+        bytes_per_sigop, maximum_outcomes) ?
+        algorithm::covered(fee, bytes, rate) : each;
+
     return error::success;
 }
 

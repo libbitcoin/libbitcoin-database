@@ -45,7 +45,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_template__empty__empty)
     store.set_pooling();
     tx_links out{ 42 };
     pool_projection projection{};
-    const auto ec = query.get_pool_template(out, projection, block_limit, 25, 20, 1'024);
+    const auto ec = query.get_pool_template(out, projection, block_limit, 25, 0, 20, 1'024);
 
     BC_REQUIRE_EQUAL(ec, error::success);
     BC_REQUIRE(out.empty());
@@ -71,7 +71,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_template__chain_outbids_rival__chain_asce
     const auto pooled_rival = pool_populated(query, rival);
     tx_links out{};
     pool_projection projection{};
-    const auto ec = query.get_pool_template(out, projection, block_limit, 25, 20, 1'024);
+    const auto ec = query.get_pool_template(out, projection, block_limit, 25, 0, 20, 1'024);
 
     BC_REQUIRE(pooled_parent);
     BC_REQUIRE(pooled_child);
@@ -102,7 +102,37 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_template__rival_outbids_chain__rival_only
     const auto pooled_rival = pool_populated(query, rival);
     tx_links out{};
     pool_projection projection{};
-    const auto ec = query.get_pool_template(out, projection, block_limit, 25, 20, 1'024);
+    const auto ec = query.get_pool_template(out, projection, block_limit, 25, 0, 20, 1'024);
+
+    BC_REQUIRE(pooled_parent);
+    BC_REQUIRE(pooled_child);
+    BC_REQUIRE(pooled_rival);
+    BC_REQUIRE_EQUAL(ec, error::success);
+    BC_REQUIRE_EQUAL(out.size(), 1u);
+    BC_REQUIRE_EQUAL(out[0], query.to_tx(rival.hash(false)));
+}
+
+// The chain outbids its rival on fee, but the space it takes costs the cutoff
+// rate, at which the rival is worth more.
+BC_AUTO_TEST_CASE(query_pool__get_pool_template__chain_outbids_rival_at_cutoff__rival_only)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto child = to_spend(parent.hash(false), 4'999'998'000);
+    const auto rival = to_spend(genesis_coinbase(), 4'999'998'500);
+    const auto pooled_parent = pool_populated(query, parent);
+    const auto pooled_child = pool_populated(query, child);
+    const auto pooled_rival = pool_populated(query, rival);
+    tx_links out{};
+    pool_projection projection{};
+    const auto ec = query.get_pool_template(out, projection, block_limit, 25, 10'000, 20, 1'024);
 
     BC_REQUIRE(pooled_parent);
     BC_REQUIRE(pooled_child);
@@ -128,7 +158,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_template__chain_over_budget__leading_tx)
     const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
     tx_links out{};
     pool_projection projection{};
-    const auto ec = query.get_pool_template(out, projection, { 0, size, 80'000 }, 25, 20, 1'024);
+    const auto ec = query.get_pool_template(out, projection, { 0, size, 80'000 }, 25, 0, 20, 1'024);
 
     BC_REQUIRE(pooled);
     BC_REQUIRE_EQUAL(ec, error::success);
@@ -152,7 +182,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_template__chain_over_budget__first_block_
     const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
     tx_links out{};
     pool_projection projection{};
-    const auto ec = query.get_pool_template(out, projection, { 0, size, 80'000 }, 25, 20, 1'024);
+    const auto ec = query.get_pool_template(out, projection, { 0, size, 80'000 }, 25, 0, 20, 1'024);
 
     BC_REQUIRE(pooled);
     BC_REQUIRE_EQUAL(ec, error::success);
