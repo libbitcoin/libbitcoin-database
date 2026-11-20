@@ -95,7 +95,7 @@ std::string read_line(const std::filesystem::path& file_path,
 /// Database settings with explicit values, independent of the defaults.
 database::settings database_settings() NOEXCEPT;
 
-/// The oldest migratable envelope (4.0.31), of a store created with
+/// A 4.0.31 envelope, of a store created with
 /// database_settings(): mainnet, unlimited, silent start 42, filters provided.
 extern const system::data_chunk envelope_4_0_31;
 

@@ -71,6 +71,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { fault_lock, "fault lock failure" },
     { flush_lock, "flush lock failure" },
     { flush_unlock, "flush unlock failure" },
+    { fault_unlock, "fault unlock failure" },
     { process_unlock, "process unlock failure" },
 
     // filesystem

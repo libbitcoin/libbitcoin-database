@@ -351,6 +351,15 @@ BC_AUTO_TEST_CASE(error_t__code__flush_unlock__true_expected_message)
     BC_REQUIRE_EQUAL(ec.message(), "flush unlock failure");
 }
 
+BC_AUTO_TEST_CASE(error_t__code__fault_unlock__true_expected_message)
+{
+    constexpr auto value = error::fault_unlock;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "fault unlock failure");
+}
+
 BC_AUTO_TEST_CASE(error_t__code__process_unlock__true_expected_message)
 {
     constexpr auto value = error::process_unlock;

@@ -74,8 +74,15 @@ static void set_schema(data_chunk& data,
         sink.write_little_endian<uint32_t>(segment);
 }
 
-// 4.0.31 -> 4.0.32: require_witness precedes silent_start_height.
-static bool migrate_4_0_31(data_chunk& data,
+// The envelope layout is unchanged.
+bool envelope::migrate_4_0_30_to_4_0_31(data_chunk& data) NOEXCEPT
+{
+    set_schema(data, { 4, 0, 31, 0 });
+    return true;
+}
+
+// require_witness precedes silent_start_height.
+bool envelope::migrate_4_0_31_to_4_0_32(data_chunk& data,
     const envelope& configured) NOEXCEPT
 {
     constexpr size_t silent = sizeof(uint32_t);
@@ -98,8 +105,11 @@ bool envelope::migrate_step(data_chunk& data,
     if (!is_readable(schema) || schema == compiled)
         return false;
 
+    if (schema == config::version{ 4, 0, 30, 0 })
+        return migrate_4_0_30_to_4_0_31(data);
+
     if (schema == config::version{ 4, 0, 31, 0 })
-        return migrate_4_0_31(data, configured);
+        return migrate_4_0_31_to_4_0_32(data, configured);
 
     return false;
 }
