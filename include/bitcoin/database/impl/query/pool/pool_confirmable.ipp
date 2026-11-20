@@ -57,47 +57,6 @@ ins_link CLASS::find_confirmable_spender(const point& prevout) const NOEXCEPT
     return {};
 }
 
-// A terminal cursor starts at the first record, and the cursor is set to end
-// once the records are exhausted.
-TEMPLATE
-code CLASS::get_confirmable_txs(pool_link& cursor, tx_links& out,
-    const pool_link& end, size_t limit) const NOEXCEPT
-{
-    out.clear();
-    auto fk = cursor.is_terminal() ? pool_link::integer{} : cursor.value;
-    if (fk > end)
-        return error::invalid_cursor;
-
-    if (!store_.pool.enabled())
-    {
-        cursor = end;
-        return error::success;
-    }
-
-    confirmables memo{};
-    const auto stop = std::min(end.value, store_.pool.count().value);
-    for (; fk < stop && out.size() < limit; ++fk)
-    {
-        const auto link = to_pool_tx(fk);
-        if (!link.is_terminal() && is_confirmable_tx(memo, link))
-            out.push_back(link);
-    }
-
-    cursor = fk == stop ? end : pool_link{ fk };
-    return error::success;
-}
-
-TEMPLATE
-code CLASS::get_confirmable_txs(tx_links& out) const NOEXCEPT
-{
-    out.clear();
-    if (!store_.pool.enabled())
-        return error::success;
-
-    pool_link cursor{};
-    return get_confirmable_txs(cursor, out, store_.pool.count(), max_size_t);
-}
-
 // An unconfirmed parent of a confirmable tx is itself confirmable.
 TEMPLATE
 tx_links CLASS::to_confirmable_parents(const tx_link& link) const NOEXCEPT
@@ -160,20 +119,64 @@ bool CLASS::get_descendant_totals(fee_totals& out,
 }
 
 TEMPLATE
-bool CLASS::get_confirmable_fees(fee_rates& out) const NOEXCEPT
+code CLASS::get_confirmable_txs(tx_links& out) const NOEXCEPT
 {
+    using namespace system;
+    using algorithm = system::pool::algorithm;
+    using link_t = algorithm::link_t;
     out.clear();
-    tx_links links{};
-    if (get_confirmable_txs(links))
-        return false;
+    if (!store_.pool.enabled())
+        return error::success;
 
-    out.resize(links.size());
-    auto rate = out.begin();
-    for (const auto& link: links)
-        if (!get_tx_fees(*rate++, link))
-            return false;
+    pool_guards guards{};
+    algorithm::columns_t columns{};
+    if (!get_pool_columns(columns, guards))
+        return error::integrity;
 
-    return true;
+    const auto rows = possible_narrow_cast<link_t>(columns.cells.size());
+    for (link_t row{}; row < rows; ++row)
+    {
+        const auto cell = algorithm::from_column(columns.cells[row]);
+        if (!algorithm::is_present(cell))
+            continue;
+
+        const auto tx = to_pool_tx(pool_link{ row });
+        if (!tx.is_terminal())
+            out.push_back(tx);
+    }
+
+    return error::success;
+}
+
+TEMPLATE
+code CLASS::get_confirmable_fees(fee_rates& out) const NOEXCEPT
+{
+    using namespace system;
+    using algorithm = system::pool::algorithm;
+    using link_t = algorithm::link_t;
+    out.clear();
+    if (!store_.pool.enabled())
+        return error::success;
+
+    pool_guards guards{};
+    algorithm::columns_t columns{};
+    if (!get_pool_columns(columns, guards))
+        return error::integrity;
+
+    const auto rows = possible_narrow_cast<link_t>(columns.cells.size());
+    for (link_t row{}; row < rows; ++row)
+    {
+        const auto cell = algorithm::from_column(columns.cells[row]);
+        if (!algorithm::is_present(cell) ||
+            to_pool_tx(pool_link{ row }).is_terminal())
+            continue;
+
+        const auto totals = algorithm::from_column(columns.totals[row]);
+        const size_t height = algorithm::from_column(columns.heights[row]);
+        out.push_back({ totals.size, totals.fee, height });
+    }
+
+    return error::success;
 }
 
 // A walk that finds no confirmed spend proves each tx visited confirmable.

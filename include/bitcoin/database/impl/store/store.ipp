@@ -263,18 +263,6 @@ void CLASS::set_dirty() NOEXCEPT
 }
 
 TEMPLATE
-header_link CLASS::get_pool_settled() const NOEXCEPT
-{
-    return pool_settled_.load(std::memory_order_relaxed);
-}
-
-TEMPLATE
-void CLASS::set_pool_settled(const header_link& link) NOEXCEPT
-{
-    pool_settled_.store(link.value, std::memory_order_relaxed);
-}
-
-TEMPLATE
 size_t CLASS::get_scan_frontier() const NOEXCEPT
 {
     return scan_frontier_.load(std::memory_order_relaxed);
