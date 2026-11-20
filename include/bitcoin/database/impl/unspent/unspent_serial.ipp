@@ -116,6 +116,7 @@ code CLASS::partition(unspent_elements& out, sizes& offsets,
     sizes index(chunks);
     std::iota(index.begin(), index.end(), zero);
     const auto parallel = poolstl::execution::par_if(turbo_);
+    std_vector<code> faults(chunks);
     std::atomic_bool fail{};
 
     std::for_each(parallel, index.cbegin(), index.cend(),
@@ -126,15 +127,23 @@ code CLASS::partition(unspent_elements& out, sizes& offsets,
 
             const auto begin = chunk * span;
             const auto end = std::min(set.words(), begin + span);
-            if (walk(set, begin, end,
+            if (const auto ec = walk(set, begin, end,
                 [&](size_t slot, outs_link::integer) NOEXCEPT
                 {
                     ++counts.at(chunk * buckets + slot);
-                })) fail = true;
+                }))
+            {
+                faults.at(chunk) = ec;
+                fail = true;
+            }
         });
 
-    if (fail)
-        return cancel_ ? error::query_canceled : error::integrity;
+    if (fail && cancel_)
+        return error::query_canceled;
+
+    for (const auto& fault: faults)
+        if (fault)
+            return fault;
 
     starts(counts, offsets, chunks);
     out.resize(offsets.back());
@@ -147,15 +156,23 @@ code CLASS::partition(unspent_elements& out, sizes& offsets,
 
             const auto begin = chunk * span;
             const auto end = std::min(set.words(), begin + span);
-            if (walk(set, begin, end,
+            if (const auto ec = walk(set, begin, end,
                 [&](size_t slot, outs_link::integer element) NOEXCEPT
                 {
                     out.at(counts.at(chunk * buckets + slot)++) = element;
-                })) fail = true;
+                }))
+            {
+                faults.at(chunk) = ec;
+                fail = true;
+            }
         });
 
-    if (fail)
-        return cancel_ ? error::query_canceled : error::integrity;
+    if (fail && cancel_)
+        return error::query_canceled;
+
+    for (const auto& fault: faults)
+        if (fault)
+            return fault;
 
     return error::success;
 }
@@ -259,6 +276,7 @@ code CLASS::fill(unspent_coins& out, output_links& puts,
     const auto span = ceilinged_divide(size, chunks);
     sizes index(ceilinged_divide(size, span));
     std::iota(index.begin(), index.end(), zero);
+    std_vector<code> faults(index.size());
     std::atomic_bool fail{};
 
     std::for_each(parallel, index.cbegin(), index.cend(),
@@ -270,13 +288,20 @@ code CLASS::fill(unspent_coins& out, output_links& puts,
             auto previous = tx_link::terminal;
             const auto first = chunk * span;
             const auto last = std::min(size, first + span);
-            if (reader_.fill(out, puts, first, previous, elements,
-                begin + first, begin + last))
+            if (const auto ec = reader_.fill(out, puts, first, previous,
+                elements, begin + first, begin + last))
+            {
+                faults.at(chunk) = ec;
                 fail = true;
+            }
         });
 
-    if (fail)
-        return cancel_ ? error::query_canceled : error::integrity;
+    if (fail && cancel_)
+        return error::query_canceled;
+
+    for (const auto& fault: faults)
+        if (fault)
+            return fault;
 
     return error::success;
 }

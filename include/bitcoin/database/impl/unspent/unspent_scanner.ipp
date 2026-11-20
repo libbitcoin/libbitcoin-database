@@ -48,6 +48,7 @@ code CLASS::scan(difference_set& set, unspent_totals& out,
     const auto cuts = sub1(bounds.size());
     std_vector<uint64_t> unspendables(cuts, zero);
     std_vector<uint64_t> overwrittens(cuts, zero);
+    std_vector<code> faults(cuts);
     std::atomic_bool fail{};
 
     // Static chunking is contiguous, so spans are interleaved across threads.
@@ -65,13 +66,20 @@ code CLASS::scan(difference_set& set, unspent_totals& out,
             if (fail)
                 return;
 
-            if (span(set, unspendables.at(at), overwrittens.at(at), branch,
-                bounds.at(at), bounds.at(add1(at))))
+            if (const auto ec = span(set, unspendables.at(at),
+                overwrittens.at(at), branch, bounds.at(at), bounds.at(add1(at))))
+            {
+                faults.at(at) = ec;
                 fail = true;
+            }
         });
 
-    if (fail)
-        return cancel_ ? error::query_canceled : error::integrity;
+    if (fail && cancel_)
+        return error::query_canceled;
+
+    for (const auto& fault: faults)
+        if (fault)
+            return fault;
 
     for (size_t at{}; at < cuts; ++at)
     {
