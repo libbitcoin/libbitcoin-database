@@ -247,9 +247,10 @@ code CLASS::get_pool_coverage(bool& out, const pool_graph& graph,
     // A pooled parent's surplus pays for its child (parent pays for child),
     // in a family within a block, beyond which each component pays its own.
     uint64_t fee{}, bytes{};
-    out = algorithm::family(fee, bytes, g, measured, limit.size,
-        bytes_per_sigop, maximum_outcomes) ?
-        algorithm::covered(fee, bytes, rate) : each;
+    const auto bounded = algorithm::family(fee, bytes, g, measured,
+        limit.size, bytes_per_sigop, maximum_outcomes);
+
+    out = bounded ? algorithm::covered(fee, bytes, rate) : each;
 
     return error::success;
 }
