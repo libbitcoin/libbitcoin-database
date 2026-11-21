@@ -232,12 +232,15 @@ code CLASS::migrate(system::config::version& original,
     auto faulted = false;
     if (!ec && original != database::envelope::compiled)
     {
-        faulted = fault_lock_.try_lock();
-        ec = faulted ? purge_snapshots() : error::fault_lock;
-
         database::envelope stored{};
-        if (!ec && !read_migrated(stored, raw.data, configured))
+        if (!read_migrated(stored, raw.data, configured))
             ec = error::verify_table;
+
+        if (!ec)
+        {
+            faulted = fault_lock_.try_lock();
+            ec = faulted ? purge_snapshots() : error::fault_lock;
+        }
 
         auto schema = original;
         while (!ec && schema != database::envelope::compiled)

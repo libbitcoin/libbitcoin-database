@@ -281,7 +281,7 @@ BC_AUTO_TEST_CASE(store__migrate__4_0_31__snapshots_purged)
     BC_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
 }
 
-BC_AUTO_TEST_CASE(store__migrate__4_0_31_truncated__fault_locked)
+BC_AUTO_TEST_CASE(store__migrate__4_0_31_truncated__verify_table_unlocked)
 {
     settings configuration{ test::database_settings() };
     configuration.path = TEST_DIRECTORY;
@@ -296,8 +296,27 @@ BC_AUTO_TEST_CASE(store__migrate__4_0_31_truncated__fault_locked)
     system::config::version original{};
     BC_REQUIRE_EQUAL(instance.migrate(original, {}, test::events), error::verify_table);
     BC_REQUIRE(original == system::config::version(4, 0, 31, 0));
-    BC_REQUIRE(test::exists(instance.fault_lock_file()));
-    BC_REQUIRE_EQUAL(instance.open(test::events), error::fault_lock);
+    BC_REQUIRE(!test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(!test::exists(instance.flush_lock_file()));
+}
+
+BC_AUTO_TEST_CASE(store__migrate__4_0_31_truncated__snapshots_retained)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+
+    const auto& image = test::envelope_4_0_31;
+    const system::data_chunk truncated(image.begin(), std::next(image.begin(), 16));
+    BC_REQUIRE(test::create(instance.envelope_head_file(), truncated));
+    BC_REQUIRE(test::clear(configuration.path / schema::dir::primary));
+    BC_REQUIRE(test::create(configuration.path / schema::dir::primary / "file"));
+
+    system::config::version original{};
+    BC_REQUIRE_EQUAL(instance.migrate(original, {}, test::events), error::verify_table);
+    BC_REQUIRE(test::exists(configuration.path / schema::dir::primary / "file"));
 }
 
 BC_AUTO_TEST_CASE(store__migrate__premigratable__schema_version)
