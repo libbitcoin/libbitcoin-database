@@ -35,7 +35,7 @@ BC_AUTO_TEST_CASE(query_address__get_unconfirmed_unspent_outpoints__turbo_genesi
 
     outpoints out{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_unconfirmed_unspent_outpoints(cancel, out, test::genesis_address0, true));
+    BC_REQUIRE(!query.get_unconfirmed_unspent_outpoints(cancel, out, test::genesis_address0, max_size_t, true));
     BC_REQUIRE(out.empty());
 }
 
@@ -53,7 +53,7 @@ BC_AUTO_TEST_CASE(query_address__get_unconfirmed_unspent_outpoints__turbo_block1
     // block2b (unconfirmed) contains 1 address output, so 3 total address outputs.
     outpoints out{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_unconfirmed_unspent_outpoints(cancel, out, test::block1a_address0, true));
+    BC_REQUIRE(!query.get_unconfirmed_unspent_outpoints(cancel, out, test::block1a_address0, max_size_t, true));
     BC_REQUIRE_EQUAL(out.size(), 3u);
     BC_REQUIRE_EQUAL(out.at(0).value(), 0x08u);
     BC_REQUIRE_EQUAL(out.at(0).point().hash(), test::tx4.hash(false));
@@ -74,7 +74,7 @@ BC_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outpoints__turbo_genesis_
 
     outpoints out{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_confirmed_unspent_outpoints(cancel, out, test::genesis_address0, true));
+    BC_REQUIRE(!query.get_confirmed_unspent_outpoints(cancel, out, test::genesis_address0, max_size_t, true));
     BC_REQUIRE_EQUAL(out.size(), 1u);
     BC_REQUIRE(*out.cbegin() == query.get_outpoint(query.to_output(0, 0)));
 }
@@ -90,7 +90,7 @@ BC_AUTO_TEST_CASE(query_address__get_confirmed_unspent_outpoints__genesis__expec
 
     outpoints out{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_confirmed_unspent_outpoints(cancel, out, test::genesis_address0));
+    BC_REQUIRE(!query.get_confirmed_unspent_outpoints(cancel, out, test::genesis_address0, max_size_t));
     BC_REQUIRE_EQUAL(out.size(), 1u);
     BC_REQUIRE(*out.cbegin() == query.get_outpoint(query.to_output(0, 0)));
 }
@@ -108,7 +108,7 @@ BC_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__turbo_above__exc
 
     outpoints out{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_minimum_unspent_outpoints(cancel, out, test::genesis_address0, 5000000001, true));
+    BC_REQUIRE(!query.get_minimum_unspent_outpoints(cancel, out, test::genesis_address0, 5000000001, max_size_t, true));
     BC_REQUIRE(out.empty());
 }
 
@@ -123,7 +123,7 @@ BC_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__above__excluded)
 
     outpoints out{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_minimum_unspent_outpoints(cancel, out, test::genesis_address0, 5000000001));
+    BC_REQUIRE(!query.get_minimum_unspent_outpoints(cancel, out, test::genesis_address0, 5000000001, max_size_t));
     BC_REQUIRE(out.empty());
 }
 
@@ -138,7 +138,7 @@ BC_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__at__included)
 
     outpoints out{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_minimum_unspent_outpoints(cancel, out, test::genesis_address0, 5000000000));
+    BC_REQUIRE(!query.get_minimum_unspent_outpoints(cancel, out, test::genesis_address0, 5000000000, max_size_t));
     BC_REQUIRE_EQUAL(out.size(), 1u);
     BC_REQUIRE(*out.cbegin() == query.get_outpoint(query.to_output(0, 0)));
 }
@@ -154,11 +154,11 @@ BC_AUTO_TEST_CASE(query_address__get_minimum_unspent_outpoints__below__included)
 
     outpoints out{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_minimum_unspent_outpoints(cancel, out, test::genesis_address0, 0));
+    BC_REQUIRE(!query.get_minimum_unspent_outpoints(cancel, out, test::genesis_address0, 0, max_size_t));
     BC_REQUIRE_EQUAL(out.size(), 1u);
     BC_REQUIRE(*out.cbegin() == query.get_outpoint(query.to_output(0, 0)));
 
-    BC_REQUIRE(!query.get_minimum_unspent_outpoints(cancel, out, test::genesis_address0, 4999999999));
+    BC_REQUIRE(!query.get_minimum_unspent_outpoints(cancel, out, test::genesis_address0, 4999999999, max_size_t));
     BC_REQUIRE_EQUAL(out.size(), 1u);
     BC_REQUIRE(*out.cbegin() == query.get_outpoint(query.to_output(0, 0)));
 }
@@ -176,7 +176,7 @@ BC_AUTO_TEST_CASE(query_address__get_address_outpoints1__turbo_genesis__expected
 
     outpoints out{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_address_outpoints(cancel, out, test::genesis_address0, true));
+    BC_REQUIRE(!query.get_address_outpoints(cancel, out, test::genesis_address0, max_size_t, true));
     BC_REQUIRE_EQUAL(out.size(), 1u);
     BC_REQUIRE(*out.cbegin() == query.get_outpoint(query.to_output(0, 0)));
 }
@@ -192,7 +192,7 @@ BC_AUTO_TEST_CASE(query_address__get_address_outpoints1__genesis__expected)
 
     outpoints out{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_address_outpoints(cancel, out, test::genesis_address0));
+    BC_REQUIRE(!query.get_address_outpoints(cancel, out, test::genesis_address0, max_size_t));
     BC_REQUIRE_EQUAL(out.size(), 1u);
     BC_REQUIRE(*out.cbegin() == query.get_outpoint(query.to_output(0, 0)));
 }
@@ -208,7 +208,22 @@ BC_AUTO_TEST_CASE(query_address__get_address_outpoints1__cancel__query_canceled_
 
     outpoints out{};
     std::atomic_bool cancel{ true };
-    BC_REQUIRE_EQUAL(query.get_address_outpoints(cancel, out, test::genesis_address0), error::query_canceled);
+    BC_REQUIRE_EQUAL(query.get_address_outpoints(cancel, out, test::genesis_address0, max_size_t), error::query_canceled);
+    BC_REQUIRE(out.empty());
+}
+
+BC_AUTO_TEST_CASE(query_address__get_address_outpoints1__zero_limit__depth_limited)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    outpoints out{};
+    const std::atomic_bool cancel{};
+    BC_REQUIRE_EQUAL(query.get_address_outpoints(cancel, out, test::genesis_address0, 0), error::depth_limited);
     BC_REQUIRE(out.empty());
 }
 

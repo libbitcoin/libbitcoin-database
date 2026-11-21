@@ -58,8 +58,10 @@ BC_AUTO_TEST_CASE(query_navigate__to_touched_txs1__always__expected)
     BC_REQUIRE(!store.create(test::events_handler));
     BC_REQUIRE(setup_three_block_unconfirmed_address_store(query));
 
+    outs_link cursor{};
     output_links links{};
-    BC_REQUIRE(!query.to_address_outputs(links, address1));
+    const std::atomic_bool cancel{};
+    BC_REQUIRE(!query.to_address_outputs(cancel, cursor, links, address1, max_size_t));
 
     tx_links out{};
     BC_REQUIRE(!query.to_touched_txs(out, links));
@@ -85,9 +87,10 @@ BC_AUTO_TEST_CASE(query_navigate__to_touched_txs2__always__expected)
     BC_REQUIRE(!store.create(test::events_handler));
     BC_REQUIRE(setup_three_block_unconfirmed_address_store(query));
 
+    outs_link cursor{};
     output_links links{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.to_address_outputs(cancel, links, address0));
+    BC_REQUIRE(!query.to_address_outputs(cancel, cursor, links, address0, max_size_t));
 
     tx_links out{};
     BC_REQUIRE(!query.to_touched_txs(cancel, out, links));
@@ -150,9 +153,9 @@ BC_AUTO_TEST_CASE(query_navigate__to_touched_txs3__parents__expected)
     BC_REQUIRE_EQUAL(out.at(9), 6u);
 }
 
-// to_address_outputs1
+// to_address_outputs
 
-BC_AUTO_TEST_CASE(query_navigate__to_address_outputs1__always__expected)
+BC_AUTO_TEST_CASE(query_navigate__to_address_outputs__address1__expected)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
@@ -161,17 +164,17 @@ BC_AUTO_TEST_CASE(query_navigate__to_address_outputs1__always__expected)
     BC_REQUIRE(!store.create(test::events_handler));
     BC_REQUIRE(setup_three_block_unconfirmed_address_store(query));
 
+    outs_link cursor{};
     output_links out{};
-    BC_REQUIRE(!query.to_address_outputs(out, address1));
+    const std::atomic_bool cancel{};
+    BC_REQUIRE(!query.to_address_outputs(cancel, cursor, out, address1, max_size_t));
 
     // There is 1 instance of the `script{ { { opcode::roll } } }` output.
     BC_REQUIRE_EQUAL(out.size(), 1u);
     BC_REQUIRE_EQUAL(out.front(), 88u);
 }
 
-// to_address_outputs2
-
-BC_AUTO_TEST_CASE(query_navigate__to_address_outputs2__always__expected)
+BC_AUTO_TEST_CASE(query_navigate__to_address_outputs__address0__expected)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
@@ -180,9 +183,10 @@ BC_AUTO_TEST_CASE(query_navigate__to_address_outputs2__always__expected)
     BC_REQUIRE(!store.create(test::events_handler));
     BC_REQUIRE(setup_three_block_unconfirmed_address_store(query));
 
+    outs_link cursor{};
     output_links out{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.to_address_outputs(cancel, out, address0));
+    BC_REQUIRE(!query.to_address_outputs(cancel, cursor, out, address0, max_size_t));
 
     // There are 6 instances of the `script{ { { opcode::pick } } }` output.
     BC_REQUIRE_EQUAL(out.size(), 6u);
