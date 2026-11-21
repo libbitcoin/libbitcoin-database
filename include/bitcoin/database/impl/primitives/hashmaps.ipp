@@ -281,7 +281,7 @@ TEMPLATE
 template <size_t Column>
 inline memory CLASS::get_memory() const NOEXCEPT
 {
-    return body_.template get<Column>();
+    return body_.template get_capacity<Column>();
 }
 
 TEMPLATE

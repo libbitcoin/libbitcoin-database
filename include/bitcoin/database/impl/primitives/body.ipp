@@ -67,6 +67,13 @@ inline memory::iterator CLASS::get_raw(const Link& link) const NOEXCEPT
 }
 
 TEMPLATE
+template <size_t Column>
+inline memory CLASS::get_capacity() const NOEXCEPT
+{
+    return files_.get_capacity_at(Column);
+}
+
+TEMPLATE
 template <size_t Columns, if_equal<Columns, one>>
 inline memory CLASS::get_capacity(const Link& link) const NOEXCEPT
 {

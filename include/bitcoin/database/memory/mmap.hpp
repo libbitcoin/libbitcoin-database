@@ -185,6 +185,10 @@ public:
     /// Remap-protected r/w access to start/offset (or null), within capacity.
     memory get_capacity(size_t offset=zero) const NOEXCEPT override;
 
+    /// Same as get_capacity() but within specified column (or null).
+    memory get_capacity_at(size_t column,
+        size_t offset=zero) const NOEXCEPT override;
+
     /// Unprotected r/w access to start/offset (or null), within logical.
     memory::iterator get_raw(size_t offset=zero) const NOEXCEPT override;
 

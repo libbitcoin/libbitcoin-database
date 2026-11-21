@@ -65,14 +65,24 @@ memory CLASS::get_filled(size_t offset, size_t size) NOEXCEPT
 TEMPLATE
 memory CLASS::get_capacity(size_t offset) const NOEXCEPT
 {
-    const auto allocated = to_width<zero>(capacity());
+    return get_capacity_at(zero, offset);
+}
 
+TEMPLATE
+memory CLASS::get_capacity_at(size_t column, size_t offset) const NOEXCEPT
+{
+    if (column >= columns)
+        return {};
+
+    // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
     memory out{ remap_mutex_ };
 
+    // loaded_ and capacity_ updates are precluded by above lock.
     if (!loaded_.load())
         return {};
 
-    auto data = memory_map_.front();
+    const auto allocated = capacity_.load() * widths.at(column);
+    auto data = memory_map_.at(column);
     out.assign(std::next(data, offset), std::next(data, allocated));
     return out;
 }
