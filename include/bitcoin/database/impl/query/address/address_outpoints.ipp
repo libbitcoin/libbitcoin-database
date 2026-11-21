@@ -33,11 +33,13 @@ namespace database {
 // Only unconfirmed outputs that are not spent (by an unconfirmed tx).
 TEMPLATE
 code CLASS::get_unconfirmed_unspent_outpoints(const stopper& cancel,
-    outpoints& out, const hash_digest& key, bool turbo) const NOEXCEPT
+    outpoints& out, const hash_digest& key, size_t limit,
+    bool turbo) const NOEXCEPT
 {
     out.clear();
+    outs_link cursor{};
     output_links links{};
-    if (const code ec = to_address_outputs(cancel, links, key))
+    if (const code ec = to_address_outputs(cancel, cursor, links, key, limit))
         return ec;
 
     return parallel_outpoint_transform(cancel, turbo, out, links,
@@ -59,11 +61,13 @@ code CLASS::get_unconfirmed_unspent_outpoints(const stopper& cancel,
 // server/native
 TEMPLATE
 code CLASS::get_confirmed_unspent_outpoints(const stopper& cancel,
-    outpoints& out, const hash_digest& key, bool turbo) const NOEXCEPT
+    outpoints& out, const hash_digest& key, size_t limit,
+    bool turbo) const NOEXCEPT
 {
     out.clear();
+    outs_link cursor{};
     output_links links{};
-    if (const code ec = to_address_outputs(cancel, links, key))
+    if (const code ec = to_address_outputs(cancel, cursor, links, key, limit))
         return ec;
 
     return parallel_outpoint_transform(cancel, turbo, out, links,
@@ -84,12 +88,13 @@ code CLASS::get_confirmed_unspent_outpoints(const stopper& cancel,
 // unused
 TEMPLATE
 code CLASS::get_minimum_unspent_outpoints(const stopper& cancel,
-    outpoints& out, const hash_digest& key, uint64_t minimum,
+    outpoints& out, const hash_digest& key, uint64_t minimum, size_t limit,
     bool turbo) const NOEXCEPT
 {
     out.clear();
+    outs_link cursor{};
     output_links links{};
-    if (const code ec = to_address_outputs(cancel, links, key))
+    if (const code ec = to_address_outputs(cancel, cursor, links, key, limit))
         return ec;
 
     return parallel_outpoint_transform(cancel, turbo, out, links,
@@ -121,11 +126,12 @@ code CLASS::get_minimum_unspent_outpoints(const stopper& cancel,
 // server/native
 TEMPLATE
 code CLASS::get_address_outpoints(const stopper& cancel, outpoints& out,
-    const hash_digest& key, bool turbo) const NOEXCEPT
+    const hash_digest& key, size_t limit, bool turbo) const NOEXCEPT
 {
     out.clear();
+    outs_link cursor{};
     output_links links{};
-    if (const code ec = to_address_outputs(cancel, links, key))
+    if (const code ec = to_address_outputs(cancel, cursor, links, key, limit))
         return ec;
 
     return parallel_outpoint_transform(cancel, turbo, out, links,

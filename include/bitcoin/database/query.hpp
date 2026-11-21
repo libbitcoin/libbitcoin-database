@@ -443,11 +443,6 @@ public:
         const output_links& outputs, const tx_links& parents,
         bool turbo) const NOEXCEPT;
 
-    code to_address_outputs(output_links& out,
-        const hash_digest& key) const NOEXCEPT;
-    code to_address_outputs(const stopper& cancel, output_links& out,
-        const hash_digest& key) const NOEXCEPT;
-
     code to_address_outputs(const stopper& cancel, outs_link& cursor,
         output_links& out, const hash_digest& key,
         size_t limit) const NOEXCEPT;
@@ -1083,14 +1078,15 @@ public:
 
     /// Native queries (outpoints, deduped, arbitrary sort).
     code get_unconfirmed_unspent_outpoints(const stopper& cancel,
-        outpoints& out, const hash_digest& key,
+        outpoints& out, const hash_digest& key, size_t limit,
         bool turbo=false) const NOEXCEPT;
     code get_confirmed_unspent_outpoints(const stopper& cancel, outpoints& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+        const hash_digest& key, size_t limit, bool turbo=false) const NOEXCEPT;
     code get_minimum_unspent_outpoints(const stopper& cancel, outpoints& out,
-        const hash_digest& key, uint64_t value, bool turbo=false) const NOEXCEPT;
+        const hash_digest& key, uint64_t value, size_t limit,
+        bool turbo=false) const NOEXCEPT;
     code get_address_outpoints(const stopper& cancel, outpoints& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+        const hash_digest& key, size_t limit, bool turbo=false) const NOEXCEPT;
 
     /// Electrum queries (histories, deduped, electrum sort).
     code get_unconfirmed_history(const stopper& cancel, histories& out,
@@ -1105,24 +1101,25 @@ public:
 
     /// Electrum queries (unspent_outputs, deduped, electrum sort).
     code get_unconfirmed_unspent(const stopper& cancel, unspent_outputs& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+        const hash_digest& key, size_t limit, bool turbo=false) const NOEXCEPT;
     code get_confirmed_unspent(const stopper& cancel, unspent_outputs& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+        const hash_digest& key, size_t limit, bool turbo=false) const NOEXCEPT;
     code get_unspent(const stopper& cancel, unspent_outputs& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+        const hash_digest& key, size_t limit, bool turbo=false) const NOEXCEPT;
 
     /// Balance queries (universal, unconfirmed conflict resolution arbitrary).
     code get_unconfirmed_balance(const stopper& cancel, uint64_t& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+        const hash_digest& key, size_t limit, bool turbo=false) const NOEXCEPT;
     code get_confirmed_balance(const stopper& cancel, uint64_t& out,
-        const hash_digest& key, bool turbo=false) const NOEXCEPT;
+        const hash_digest& key, size_t limit, bool turbo=false) const NOEXCEPT;
     code get_balance(const stopper& cancel, uint64_t& confirmed,
-        uint64_t& unconfirmed, const hash_digest& key,
+        uint64_t& unconfirmed, const hash_digest& key, size_t limit,
         bool turbo=false) const NOEXCEPT;
 
     /// Confirmed and unconfirmed totals (an unconfirmed spend is unconfirmed).
     code get_address_totals(const stopper& cancel, address_totals& confirmed,
-        address_totals& unconfirmed, const hash_digest& key) const NOEXCEPT;
+        address_totals& unconfirmed, const hash_digest& key,
+        size_t limit) const NOEXCEPT;
 
     /// History queries.
     history get_tx_history(const tx_link& link, size_t start=zero,

@@ -871,6 +871,49 @@ BC_AUTO_TEST_CASE(mmap__get_capacity__size__expected)
     BC_REQUIRE(!instance.get_fault());
 }
 
+BC_AUTO_TEST_CASE(mmap__get_capacity_at__invalid_column__null)
+{
+    const std::string file = TEST_PATH;
+    BC_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 });
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.allocate(100), zero);
+    BC_REQUIRE(!instance.get_capacity_at(one));
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+}
+
+BC_AUTO_TEST_CASE(mmap__get_capacity_at__allocated_while_held__reachable)
+{
+    const std::string file = TEST_PATH;
+    BC_REQUIRE(test::create(file));
+
+    map instance(file, { 1, 50 });
+    BC_REQUIRE(!instance.open());
+    BC_REQUIRE(!instance.load());
+    BC_REQUIRE_EQUAL(instance.allocate(100), zero);
+    BC_REQUIRE(instance.capacity() > 104u);
+
+    // Logical extent is fixed when obtained.
+    auto memory = instance.get();
+    BC_REQUIRE_EQUAL(instance.allocate(2), 100u);
+    BC_REQUIRE(is_null(memory.offset(101)));
+    memory.reset();
+
+    // Capacity extent reaches rows allocated while held.
+    memory = instance.get_capacity_at(zero);
+    BC_REQUIRE_EQUAL(instance.allocate(2), 102u);
+    BC_REQUIRE(!is_null(memory.offset(103)));
+    memory.reset();
+
+    BC_REQUIRE(!instance.unload());
+    BC_REQUIRE(!instance.close());
+    BC_REQUIRE(!instance.get_fault());
+}
+
 BC_AUTO_TEST_CASE(mmap__get_raw__always__nonblocking)
 {
     const std::string file = TEST_PATH;

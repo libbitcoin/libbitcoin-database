@@ -125,6 +125,10 @@ public:
     /// Pointer is constrained to starting write within full capacity.
     virtual memory get_capacity(size_t offset=zero) const NOEXCEPT = 0;
 
+    /// Same as get_capacity() but within specified column (or null).
+    virtual memory get_capacity_at(size_t column,
+        size_t offset=zero) const NOEXCEPT = 0;
+
     /// Get unprotected r/w access to start/offset of memory map (or null).
     /// Pointer is constrained to starting write within full capacity.
     virtual memory::iterator get_raw(size_t offset=zero) const NOEXCEPT = 0;

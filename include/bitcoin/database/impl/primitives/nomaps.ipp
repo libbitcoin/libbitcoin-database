@@ -145,7 +145,7 @@ TEMPLATE
 template <size_t Column>
 memory CLASS::get_memory() const NOEXCEPT
 {
-    return body_.template get<Column>();
+    return body_.template get_capacity<Column>();
 }
 
 TEMPLATE

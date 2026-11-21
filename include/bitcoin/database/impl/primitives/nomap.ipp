@@ -135,7 +135,7 @@ Link CLASS::allocate(const Link& size) NOEXCEPT
 TEMPLATE
 memory CLASS::get_memory() const NOEXCEPT
 {
-    return body_.get();
+    return body_.get_capacity();
 }
 
 // error condition

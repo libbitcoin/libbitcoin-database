@@ -214,7 +214,7 @@ bool CLASS::populate_signals(chain_state::data& data,
         return signal.high != unrequested;
     };
 
-    if (std::none_of(map.signals.begin(), map.signals.end(), requested))
+    if (std::none_of(map.signals.cbegin(), map.signals.cend(), requested))
         return true;
 
     // Branch links above the candidate chain, by descending height.

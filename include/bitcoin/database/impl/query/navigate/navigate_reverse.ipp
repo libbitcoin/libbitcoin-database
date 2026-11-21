@@ -147,22 +147,6 @@ code CLASS::to_touched_txs(const stopper& cancel, tx_links& out,
 }
 
 TEMPLATE
-code CLASS::to_address_outputs(output_links& out,
-    const hash_digest& key) const NOEXCEPT
-{
-    const stopper cancel{};
-    return to_address_outputs(cancel, out, key);
-}
-
-TEMPLATE
-code CLASS::to_address_outputs(const stopper& cancel, output_links& out,
-    const hash_digest& key) const NOEXCEPT
-{
-    outs_link cursor{};
-    return to_address_outputs(cancel, cursor, out, key, max_size_t);
-}
-
-TEMPLATE
 code CLASS::to_address_outputs(const stopper& cancel, outs_link& cursor,
     output_links& out, const hash_digest& key, size_t limit) const NOEXCEPT
 {

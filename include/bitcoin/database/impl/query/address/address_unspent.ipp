@@ -34,10 +34,11 @@ namespace database {
 // Only unconfirmed outputs that are not spent (by an unconfirmed tx).
 TEMPLATE
 code CLASS::get_unconfirmed_unspent(const stopper& cancel, unspent_outputs& out,
-    const hash_digest& key, bool turbo) const NOEXCEPT
+    const hash_digest& key, size_t limit, bool turbo) const NOEXCEPT
 {
+    outs_link cursor{};
     output_links outs{};
-    if (const auto ec = to_address_outputs(cancel, outs, key))
+    if (const auto ec = to_address_outputs(cancel, cursor, outs, key, limit))
         return ec;
 
     out.clear();
@@ -61,10 +62,11 @@ code CLASS::get_unconfirmed_unspent(const stopper& cancel, unspent_outputs& out,
 // Only confirmed outputs that are not spent by a confirmed tx.
 TEMPLATE
 code CLASS::get_confirmed_unspent(const stopper& cancel, unspent_outputs& out,
-    const hash_digest& key, bool turbo) const NOEXCEPT
+    const hash_digest& key, size_t limit, bool turbo) const NOEXCEPT
 {
+    outs_link cursor{};
     output_links outs{};
-    if (const auto ec = to_address_outputs(cancel, outs, key))
+    if (const auto ec = to_address_outputs(cancel, cursor, outs, key, limit))
         return ec;
 
     out.clear();
@@ -86,10 +88,11 @@ code CLASS::get_confirmed_unspent(const stopper& cancel, unspent_outputs& out,
 // All outputs that are not spent by any tx (confirmed or unconfirmed).
 TEMPLATE
 code CLASS::get_unspent(const stopper& cancel, unspent_outputs& out,
-    const hash_digest& key, bool turbo) const NOEXCEPT
+    const hash_digest& key, size_t limit, bool turbo) const NOEXCEPT
 {
+    outs_link cursor{};
     output_links outs{};
-    if (const auto ec = to_address_outputs(cancel, outs, key))
+    if (const auto ec = to_address_outputs(cancel, cursor, outs, key, limit))
         return ec;
 
     out.clear();

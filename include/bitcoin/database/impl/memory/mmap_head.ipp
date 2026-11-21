@@ -565,8 +565,8 @@ void CLASS::declare_released_() NOEXCEPT
 // synchronization is a per-page bit protocol: prepare() declares intent then
 // loads released; release stores released then loads intent (both
 // sequentially consistent), so a run converts only when no write can land on
-// it unrestored. A wrong release costs one restore. Conversion and restore
-// serialize on restore_mutex_.
+// it unrestored. A wrong release costs one restore. Conversion excludes
+// restore on restore_mutex_.
 TEMPLATE
 bool CLASS::release_pages_() NOEXCEPT
 {
@@ -659,7 +659,7 @@ TEMPLATE
 void CLASS::restore_(size_t offset, size_t size) NOEXCEPT
 {
     using namespace system;
-    std::unique_lock restore_lock(restore_mutex_);
+    std::shared_lock restore_lock(restore_mutex_);
 
     // Segments clamp to full pages below logical (as does release candidacy):
     // the reservation above commitment is inaccessible (installation reads).
@@ -679,6 +679,9 @@ void CLASS::restore_(size_t offset, size_t size) NOEXCEPT
 
         const auto begin = page / page_bound;
         const auto end = sub1(stop) / page_bound;
+        std::unique_lock stripe_lock(
+            restore_stripe_[(page / span) % restore_stripes]);
+
         auto any = false;
         for (auto word = begin; (word <= end) && !any; ++word)
             any = !is_zero(bit_and(released_[word].load(), mask(word)));

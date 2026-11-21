@@ -46,15 +46,15 @@ BC_AUTO_TEST_CASE(query_address__get_balance__turbo_block1a_address0_confirmed_b
 
     uint64_t unconfirmed{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::block1a_address0, true));
+    BC_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::block1a_address0, max_size_t, true));
     BC_REQUIRE_EQUAL(unconfirmed, 0u);
 
     uint64_t confirmed{};
-    BC_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address0, true));
+    BC_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address0, max_size_t, true));
     BC_REQUIRE_EQUAL(confirmed, 389u);
 
     confirmed = unconfirmed = 42;
-    BC_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, true));
+    BC_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, max_size_t, true));
     BC_REQUIRE_EQUAL(confirmed, 389u);
     BC_REQUIRE_EQUAL(unconfirmed, 0u);
 }
@@ -72,15 +72,15 @@ BC_AUTO_TEST_CASE(query_address__get_balance__turbo_block1a_address0_unconfirmed
 
     uint64_t unconfirmed{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::block1a_address0, true));
+    BC_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::block1a_address0, max_size_t, true));
     BC_REQUIRE_EQUAL(unconfirmed, 0u);
 
     uint64_t confirmed{};
-    BC_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address0, true));
+    BC_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address0, max_size_t, true));
     BC_REQUIRE_EQUAL(confirmed, 0u);
 
     confirmed = unconfirmed = 42;
-    BC_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, true));
+    BC_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, max_size_t, true));
     BC_REQUIRE_EQUAL(confirmed, 0u);
     BC_REQUIRE_EQUAL(unconfirmed, 0u);
 }
@@ -99,15 +99,15 @@ BC_AUTO_TEST_CASE(query_address__get_balance__block1a_address1_confirmed_blocks_
 
     uint64_t unconfirmed{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::block1a_address1));
+    BC_REQUIRE(!query.get_unconfirmed_balance(cancel, unconfirmed, test::block1a_address1, max_size_t));
     BC_REQUIRE_EQUAL(unconfirmed, 0u);
 
     uint64_t confirmed{};
-    BC_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address1));
+    BC_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address1, max_size_t));
     BC_REQUIRE_EQUAL(confirmed, 0u);
 
     confirmed = unconfirmed = 42;
-    BC_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address1));
+    BC_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address1, max_size_t));
     BC_REQUIRE_EQUAL(confirmed, 0u);
     BC_REQUIRE_EQUAL(unconfirmed, 0u);
 }
@@ -136,12 +136,12 @@ BC_AUTO_TEST_CASE(query_address__get_balance__duplicate_instances__counted_once)
     uint64_t confirmed{};
     uint64_t unconfirmed{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE_EQUAL(query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, true), error::success);
+    BC_REQUIRE_EQUAL(query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, max_size_t, true), error::success);
     BC_REQUIRE_EQUAL(confirmed, 0x08u);
     BC_REQUIRE_EQUAL(unconfirmed, 0u);
 
     uint64_t balance{};
-    BC_REQUIRE_EQUAL(query.get_confirmed_balance(cancel, balance, test::block1a_address0, true), error::success);
+    BC_REQUIRE_EQUAL(query.get_confirmed_balance(cancel, balance, test::block1a_address0, max_size_t, true), error::success);
     BC_REQUIRE_EQUAL(balance, 0x08u);
 }
 
@@ -159,7 +159,7 @@ BC_AUTO_TEST_CASE(query_address__get_address_totals__confirmed_blocks__expected)
     address_totals confirmed{};
     address_totals unconfirmed{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0));
+    BC_REQUIRE(!query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0, max_size_t));
     BC_REQUIRE_EQUAL(confirmed.funded_count, 4u);
     BC_REQUIRE_EQUAL(confirmed.funded_value, 0x18u + 0x81u + 0x81u + 0x83u);
     BC_REQUIRE_EQUAL(confirmed.spent_count, 1u);
@@ -182,7 +182,7 @@ BC_AUTO_TEST_CASE(query_address__get_address_totals__unconfirmed_blocks__expecte
     address_totals confirmed{};
     address_totals unconfirmed{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0));
+    BC_REQUIRE(!query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0, max_size_t));
     BC_REQUIRE_EQUAL(confirmed.funded_count, 0u);
     BC_REQUIRE_EQUAL(confirmed.spent_count, 0u);
     BC_REQUIRE_EQUAL(unconfirmed.funded_count, 6u);
@@ -212,7 +212,7 @@ BC_AUTO_TEST_CASE(query_address__get_address_totals__duplicate_instances__counte
     address_totals confirmed{};
     address_totals unconfirmed{};
     const std::atomic_bool cancel{};
-    BC_REQUIRE(!query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0));
+    BC_REQUIRE(!query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0, max_size_t));
     BC_REQUIRE_EQUAL(confirmed.funded_count, 2u);
     BC_REQUIRE_EQUAL(confirmed.funded_value, 0x18u + 0x08u);
     BC_REQUIRE_EQUAL(confirmed.spent_count, 1u);
@@ -233,7 +233,7 @@ BC_AUTO_TEST_CASE(query_address__get_address_totals__canceled__query_canceled)
     address_totals confirmed{};
     address_totals unconfirmed{};
     const std::atomic_bool cancel{ true };
-    BC_REQUIRE_EQUAL(query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0), error::query_canceled);
+    BC_REQUIRE_EQUAL(query.get_address_totals(cancel, confirmed, unconfirmed, test::block1a_address0, max_size_t), error::query_canceled);
 }
 
 BC_AUTO_TEST_SUITE_END()

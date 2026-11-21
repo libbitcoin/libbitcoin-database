@@ -52,6 +52,10 @@ public:
     template <size_t Column = zero>
     inline memory::iterator get_raw(const Link& link) const NOEXCEPT;
 
+    /// Return memory object for column full map within capacity.
+    template <size_t Column = zero>
+    inline memory get_capacity() const NOEXCEPT;
+
     /// Return memory object (limited to AoS) within capacity.
     template <size_t Columns = sizeof...(Sizes), if_equal<Columns, one> = true>
     inline memory get_capacity(const Link& link) const NOEXCEPT;

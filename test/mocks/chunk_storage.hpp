@@ -338,9 +338,15 @@ public:
 
     memory get_capacity(size_t offset=zero) const NOEXCEPT override
     {
-        auto& buffer = at(zero);
+        return get_capacity_at(zero, offset);
+    }
+
+    memory get_capacity_at(size_t column,
+        size_t offset=zero) const NOEXCEPT override
+    {
+        auto& buffer = at(column);
         accessor out{ map_mutex_ };
-        out.assign(get_raw(offset), std::next(buffer.data(), buffer.size()));
+        out.assign(get_raw_at(column, offset), std::next(buffer.data(), buffer.size()));
         return out;
     }
 

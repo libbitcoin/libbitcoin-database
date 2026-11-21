@@ -273,7 +273,7 @@ inline void CLASS::abandon(const Link& link, const Link& count) NOEXCEPT
 TEMPLATE
 inline memory CLASS::get_memory() const NOEXCEPT
 {
-    return body_.get();
+    return body_.get_capacity();
 }
 
 TEMPLATE
