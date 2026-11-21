@@ -59,6 +59,7 @@ code CLASS::for_each(const difference_set& set, const Span& span) const NOEXCEPT
         for (auto at = lane; at < cuts; at += width)
             index.push_back(at);
 
+    std_vector<code> faults(cuts);
     std::atomic_bool fail{};
     const auto parallel = poolstl::execution::par_if(turbo_);
 
@@ -68,12 +69,20 @@ code CLASS::for_each(const difference_set& set, const Span& span) const NOEXCEPT
             if (fail)
                 return;
 
-            if (span(chunk, bounds.at(chunk), bounds.at(add1(chunk))))
+            if (const auto ec = span(chunk, bounds.at(chunk),
+                bounds.at(add1(chunk))))
+            {
+                faults.at(chunk) = ec;
                 fail = true;
+            }
         });
 
-    if (fail)
-        return cancel_ ? error::query_canceled : error::integrity;
+    if (fail && cancel_)
+        return error::query_canceled;
+
+    for (const auto& fault: faults)
+        if (fault)
+            return fault;
 
     return error::success;
 }

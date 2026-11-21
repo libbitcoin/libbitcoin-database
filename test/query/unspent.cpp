@@ -252,6 +252,52 @@ BC_AUTO_TEST_CASE(query_unspent__get_unspent_matches__no_keys__no_matches)
     BC_REQUIRE(coins.empty());
 }
 
+BC_AUTO_TEST_CASE(query_unspent__get_unspent_muhash__unstrong_block__branch_inactive)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(1));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(2));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.set_unstrong(2));
+
+    const stopper cancel{};
+    hash_digest digest{};
+    unspent_totals totals{};
+    const header_links branch{ header_link{ 2 }, header_link{ 1 } };
+    BC_REQUIRE_EQUAL(query.get_unspent_muhash(cancel, totals, digest, branch), error::branch_inactive);
+}
+
+BC_AUTO_TEST_CASE(query_unspent__get_unspent_serialized__unstrong_block__branch_inactive)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(1));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.set(test::block2, context{ 0, 2, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(2));
+    BC_REQUIRE(query.push_confirmed(2, false));
+    BC_REQUIRE(query.set_unstrong(2));
+
+    const stopper cancel{};
+    hash_digest digest{};
+    unspent_totals totals{};
+    const header_links branch{ header_link{ 2 }, header_link{ 1 } };
+    BC_REQUIRE_EQUAL(query.get_unspent_serialized(cancel, totals, digest, branch), error::branch_inactive);
+}
+
 BC_AUTO_TEST_CASE(query_unspent__get_unspent_totals__cancelled__query_canceled)
 {
     settings settings{ test::database_settings() };
