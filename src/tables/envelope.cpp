@@ -543,7 +543,7 @@ size_t envelope::serialized_size() const NOEXCEPT
     constexpr auto fixed =
         ( 4 * sizeof(uint32_t)) +
         ( 7 * sizeof(uint32_t)) +
-        (13 * sizeof(uint8_t)) + 
+        (13 * sizeof(uint8_t)) +
         forks_count +
         ( 1 * sizeof(uint64_t)) +
         (18 * sizeof(uint32_t)) +
