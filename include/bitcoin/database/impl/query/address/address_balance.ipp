@@ -69,12 +69,25 @@ code CLASS::get_confirmed_balance(const stopper& cancel, uint64_t& out,
 // server/electrum
 TEMPLATE
 code CLASS::get_balance(const stopper& cancel, uint64_t& confirmed,
-    uint64_t& unconfirmed, const hash_digest& key, bool turbo) const NOEXCEPT
+    int64_t& unconfirmed, const hash_digest& key, bool turbo) const NOEXCEPT
 {
-    // See notes on get_unconfirmed_balance().
-    const auto ec = get_confirmed_balance(cancel, confirmed, key, turbo);
     unconfirmed = zero;
-    return ec;
+    if (const auto ec = get_confirmed_balance(cancel, confirmed, key, turbo))
+        return ec;
+
+    // Unconfirmed is the difference of unconfirmed funds and of spends by
+    // unconfirmed txs (negative when confirmed outputs are spent). Each output
+    // counts once, so conflicting spends of an output are one spend.
+    address_totals chain{};
+    address_totals pool{};
+    if (const auto ec = get_address_totals(cancel, chain, pool, key))
+    {
+        confirmed = zero;
+        return ec;
+    }
+
+    unconfirmed = system::delta(pool.funded_value, pool.spent_value);
+    return error::success;
 }
 
 // server/esplora

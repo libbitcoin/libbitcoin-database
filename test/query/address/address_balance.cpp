@@ -53,10 +53,13 @@ BC_AUTO_TEST_CASE(query_address__get_balance__turbo_block1a_address0_confirmed_b
     BC_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address0, true));
     BC_REQUIRE_EQUAL(confirmed, 389u);
 
-    confirmed = unconfirmed = 42;
-    BC_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, true));
+    // Unconfirmed funds (0x08 + 0x85 + 0xb1 + 0xb1 + 0xb2) less spends by
+    // unconfirmed txs (0xb1 + 0xb1).
+    int64_t difference{ 42 };
+    confirmed = 42;
+    BC_REQUIRE(!query.get_balance(cancel, confirmed, difference, test::block1a_address0, true));
     BC_REQUIRE_EQUAL(confirmed, 389u);
-    BC_REQUIRE_EQUAL(unconfirmed, 0u);
+    BC_REQUIRE_EQUAL(difference, 0x08 + 0x85 + 0xb2);
 }
 
 BC_AUTO_TEST_CASE(query_address__get_balance__turbo_block1a_address0_unconfirmed_blocks__expected)
@@ -79,10 +82,13 @@ BC_AUTO_TEST_CASE(query_address__get_balance__turbo_block1a_address0_unconfirmed
     BC_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address0, true));
     BC_REQUIRE_EQUAL(confirmed, 0u);
 
-    confirmed = unconfirmed = 42;
-    BC_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, true));
+    // Unconfirmed funds (0x18 + 0x81 + 0x81 + 0x83 + 0x08 + 0x85) less spends
+    // by unconfirmed txs (0x18).
+    int64_t difference{ 42 };
+    confirmed = 42;
+    BC_REQUIRE(!query.get_balance(cancel, confirmed, difference, test::block1a_address0, true));
     BC_REQUIRE_EQUAL(confirmed, 0u);
-    BC_REQUIRE_EQUAL(unconfirmed, 0u);
+    BC_REQUIRE_EQUAL(difference, 0x81 + 0x81 + 0x83 + 0x08 + 0x85);
 }
 
 BC_AUTO_TEST_CASE(query_address__get_balance__block1a_address1_confirmed_blocks__expected)
@@ -106,10 +112,11 @@ BC_AUTO_TEST_CASE(query_address__get_balance__block1a_address1_confirmed_blocks_
     BC_REQUIRE(!query.get_confirmed_balance(cancel, confirmed, test::block1a_address1));
     BC_REQUIRE_EQUAL(confirmed, 0u);
 
-    confirmed = unconfirmed = 42;
-    BC_REQUIRE(!query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address1));
+    int64_t difference{ 42 };
+    confirmed = 42;
+    BC_REQUIRE(!query.get_balance(cancel, confirmed, difference, test::block1a_address1));
     BC_REQUIRE_EQUAL(confirmed, 0u);
-    BC_REQUIRE_EQUAL(unconfirmed, 0u);
+    BC_REQUIRE_EQUAL(difference, 0);
 }
 
 // duplicate instances (one tx archived twice, only one instance associated)
@@ -134,15 +141,57 @@ BC_AUTO_TEST_CASE(query_address__get_balance__duplicate_instances__counted_once)
 
     // block1a output 0 is spent by tx4, whose 0x08 output to the address is unspent.
     uint64_t confirmed{};
-    uint64_t unconfirmed{};
+    int64_t unconfirmed{};
     const std::atomic_bool cancel{};
     BC_REQUIRE_EQUAL(query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, true), error::success);
     BC_REQUIRE_EQUAL(confirmed, 0x08u);
-    BC_REQUIRE_EQUAL(unconfirmed, 0u);
+    BC_REQUIRE_EQUAL(unconfirmed, 0);
 
     uint64_t balance{};
     BC_REQUIRE_EQUAL(query.get_confirmed_balance(cancel, balance, test::block1a_address0, true), error::success);
     BC_REQUIRE_EQUAL(balance, 0x08u);
+}
+
+// unconfirmed spend of a confirmed output
+
+BC_AUTO_TEST_CASE(query_address__get_balance__unconfirmed_spend__negative_difference)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set_strong(1));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.set(test::tx4));
+
+    // block1a output 0 (0x18) is confirmed unspent and spent by unconfirmed
+    // tx4, whose unconfirmed 0x08 output is to the address.
+    uint64_t confirmed{};
+    int64_t unconfirmed{};
+    const std::atomic_bool cancel{};
+    BC_REQUIRE_EQUAL(query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0, true), error::success);
+    BC_REQUIRE_EQUAL(confirmed, 0x18u);
+    BC_REQUIRE_EQUAL(unconfirmed, 0x08 - 0x18);
+}
+
+BC_AUTO_TEST_CASE(query_address__get_balance__canceled__query_canceled)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(test::setup_three_block_confirmed_address_store(query));
+
+    uint64_t confirmed{};
+    int64_t unconfirmed{};
+    const std::atomic_bool cancel{ true };
+    BC_REQUIRE_EQUAL(query.get_balance(cancel, confirmed, unconfirmed, test::block1a_address0), error::query_canceled);
+    BC_REQUIRE_EQUAL(confirmed, 0u);
+    BC_REQUIRE_EQUAL(unconfirmed, 0);
 }
 
 // get_address_totals
