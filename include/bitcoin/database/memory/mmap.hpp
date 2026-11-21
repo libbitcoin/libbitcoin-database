@@ -553,8 +553,11 @@ private:
     static constexpr size_t writer_shards = 16;
     std::array<writer_shard, writer_shards> writers_{};
 
-    // Serializes page release against restore (prepare slow path).
-    mutable std::mutex restore_mutex_{};
+    // Excludes page release from restore (prepare slow path), shared by
+    // restores, which serialize per segment on its stripe.
+    static constexpr size_t restore_stripes = 64;
+    mutable std::shared_mutex restore_mutex_{};
+    mutable std::array<std::mutex, restore_stripes> restore_stripe_{};
 
     // Serializes transfer passes (worker tick against flush), as concurrent
     // passes split the claimed dirty set, allowing a flush to complete while
