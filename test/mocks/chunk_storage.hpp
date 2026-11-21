@@ -346,7 +346,8 @@ public:
     {
         auto& buffer = at(column);
         accessor out{ map_mutex_ };
-        out.assign(get_raw_at(column, offset), std::next(buffer.data(), buffer.size()));
+        const auto end = std::next(buffer.data(), buffer.size());
+        out.assign(get_raw_at(column, offset), end);
         return out;
     }
 
