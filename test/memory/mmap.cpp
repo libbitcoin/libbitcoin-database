@@ -900,13 +900,13 @@ BC_AUTO_TEST_CASE(mmap__get_capacity_at__allocated_while_held__reachable)
     // Logical extent is fixed when obtained.
     auto memory = instance.get();
     BC_REQUIRE_EQUAL(instance.allocate(2), 100u);
-    BC_REQUIRE(system::is_null(memory.offset(101)));
+    BC_REQUIRE(is_null(memory.offset(101)));
     memory.reset();
 
     // Capacity extent reaches rows allocated while held.
     memory = instance.get_capacity_at(zero);
     BC_REQUIRE_EQUAL(instance.allocate(2), 102u);
-    BC_REQUIRE(!system::is_null(memory.offset(103)));
+    BC_REQUIRE(!is_null(memory.offset(103)));
     memory.reset();
 
     BC_REQUIRE(!instance.unload());
