@@ -301,8 +301,12 @@ bool CLASS::read_migrated(database::envelope& out, system::data_chunk data,
 TEMPLATE
 code CLASS::purge_snapshots() NOEXCEPT
 {
-    for (const auto name: { schema::dir::primary, schema::dir::secondary,
-        schema::dir::temporary })
+    constexpr std::array folders
+    {
+        schema::dir::primary, schema::dir::secondary, schema::dir::temporary
+    };
+
+    for (const auto name: folders)
     {
         const auto folder = configuration_.path / name;
         if (!file::is_directory(folder))
