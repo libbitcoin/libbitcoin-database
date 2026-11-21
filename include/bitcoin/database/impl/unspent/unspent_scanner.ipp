@@ -164,11 +164,17 @@ code CLASS::block(difference_set& set, uint64_t& unspendable,
     if (!query_.is_bip30_exception(bip30_exception, link))
         return error::integrity;
 
-    if (bip30_exception)
-        return this->overwritten(overwritten, link);
-
     if (const auto ec = read_transactions(buffer.txs, link))
         return ec;
+
+    // Only the coinbase is duplicated, the block's other txs are not (91880).
+    if (bip30_exception)
+    {
+        if (const auto ec = this->overwritten(overwritten, link))
+            return ec;
+
+        buffer.txs.erase(buffer.txs.begin());
+    }
 
     if (const auto ec = toggle_creates(set, buffer.exclusions, buffer.txs))
         return ec;
@@ -182,21 +188,18 @@ code CLASS::block(difference_set& set, uint64_t& unspendable,
     return toggle_spends(set, buffer.spends);
 }
 
-// The bip30 exception blocks are coinbase only, their duplicated outputs
-// overwrite (destroy) those of the original blocks.
+// The duplicated coinbase outputs of the bip30 exception blocks overwrite
+// (destroy) those of the original blocks.
 TEMPLATE
 code CLASS::overwritten(uint64_t& out, const header_link& link) const NOEXCEPT
 {
     table::output::get_spendable value{};
-    for (const auto& tx: query_.to_transactions(link))
+    for (const auto& put: query_.to_outputs(query_.to_coinbase(link)))
     {
-        for (const auto& put: query_.to_outputs(tx))
-        {
-            if (!store_.output.get(put, value))
-                return error::integrity;
+        if (!store_.output.get(put, value))
+            return error::integrity;
 
-            out += value.value;
-        }
+        out += value.value;
     }
 
     return error::success;
