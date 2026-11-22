@@ -68,6 +68,16 @@ struct txs
         return system::set_right(merged, offset, false);
     }
 
+    static constexpr bool is_pruned(bytes::integer merged) NOEXCEPT
+    {
+        return system::get_right(merged, offset);
+    }
+
+    static constexpr bytes::integer to_heavy(bytes::integer merged) NOEXCEPT
+    {
+        return system::set_right(merged, offset, false);
+    }
+
     // Intervals are optional based on store configuration.
     struct slab
       : public schema::txs
@@ -88,8 +98,10 @@ struct txs
         {
             // tx sizes
             const auto merged = source.read_little_endian<bytes::integer, bytes::size>();
-            heavy = source.read_little_endian<bytes::integer, bytes::size>();
+            const auto merged_heavy = source.read_little_endian<bytes::integer, bytes::size>();
             light = to_light(merged);
+            pruned = is_pruned(merged_heavy);
+            heavy = to_heavy(merged_heavy);
 
             // tx fks
             tx_fks.resize(source.read_little_endian<ct::integer, ct::size>());
@@ -114,7 +126,7 @@ struct txs
             // tx sizes
             const auto merged = merge(interval.has_value(), light);
             sink.write_little_endian<bytes::integer, bytes::size>(merged);
-            sink.write_little_endian<bytes::integer, bytes::size>(heavy);
+            sink.write_little_endian<bytes::integer, bytes::size>(merge(pruned, heavy));
 
             // tx fks
             const auto number = possible_narrow_cast<ct::integer>(tx_fks.size());
@@ -137,6 +149,7 @@ struct txs
         bytes::integer heavy{};
         keys tx_fks{};
         hash interval{};
+        bool pruned{};
     };
 
     struct get_interval
@@ -297,12 +310,31 @@ struct txs
         {
             // tx sizes
             light = to_light(source.read_little_endian<bytes::integer, bytes::size>());
-            heavy = source.read_little_endian<bytes::integer, bytes::size>();
+            heavy = to_heavy(source.read_little_endian<bytes::integer, bytes::size>());
             return source;
         }
 
         bytes::integer light{};
         bytes::integer heavy{};
+    };
+
+    struct get_pruned
+      : public schema::txs
+    {
+        inline link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(bytes::size);
+            pruned = is_pruned(source.read_little_endian<bytes::integer, bytes::size>());
+            return source;
+        }
+
+        bool pruned{};
     };
 
     struct get_txs

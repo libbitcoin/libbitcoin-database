@@ -284,8 +284,25 @@ Key CLASS::get_key(const Link& link) NOEXCEPT
     if (!ptr || is_lesser(ptr.size(), index_size))
         return {};
 
-    return unsafe_array_cast<uint8_t, key_size>(std::next(ptr.begin(),
-        Link::size));
+    const auto& key = unsafe_array_cast<uint8_t, key_size>(std::next(
+        ptr.begin(), Link::size));
+
+    // A point key is its hash and its index truncated to three bytes.
+    if constexpr (is_same_type<Key, chain::point>)
+    {
+        const auto index = bit_or<uint32_t>(bit_or<uint32_t>(
+            key.at(hash_size + 0),
+            shift_left<uint32_t>(key.at(hash_size + 1), byte_bits)),
+            shift_left<uint32_t>(key.at(hash_size + 2), 2 * byte_bits));
+
+        constexpr uint32_t truncated_null = 0x00ffffff;
+        return { array_cast<uint8_t, hash_size>(key),
+            index == truncated_null ? chain::point::null_index : index };
+    }
+    else
+    {
+        return key;
+    }
 }
 
 TEMPLATE

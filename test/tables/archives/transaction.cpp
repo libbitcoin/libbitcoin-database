@@ -96,6 +96,43 @@ BC_AUTO_TEST_CASE(transaction__put__get__expected)
     BC_REQUIRE(element == expected);
 }
 
+BC_AUTO_TEST_CASE(transaction__put__pruned__heavy_high_bit)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    test::chunk_storage body_store{};
+    table::transaction instance{ head_store, body_store, 20 };
+    BC_REQUIRE(instance.create());
+    auto pruned = expected;
+    pruned.pruned = true;
+    BC_REQUIRE(!instance.put_link(key, pruned).is_terminal());
+    BC_REQUIRE_EQUAL(body_store.buffer().at(schema::transaction::sk + 4u + 3u + 2u), 0xb4u);
+
+    table::transaction::record element{};
+    BC_REQUIRE(instance.get(0, element));
+    BC_REQUIRE(element == pruned);
+
+    table::transaction::get_pruned flag{};
+    BC_REQUIRE(instance.get(0, flag));
+    BC_REQUIRE(flag.pruned);
+
+    table::transaction::get_sizes sizes{};
+    BC_REQUIRE(instance.get(0, sizes));
+    BC_REQUIRE_EQUAL(sizes.heavy, 0x00341202_u32);
+}
+
+BC_AUTO_TEST_CASE(transaction__put__unpruned__get_pruned_false)
+{
+    test::chunk_storage head_store{ test::terminal_fill };
+    test::chunk_storage body_store{};
+    table::transaction instance{ head_store, body_store, 20 };
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(!instance.put_link(key, expected).is_terminal());
+
+    table::transaction::get_pruned flag{};
+    BC_REQUIRE(instance.get(0, flag));
+    BC_REQUIRE(!flag.pruned);
+}
+
 BC_AUTO_TEST_CASE(transaction__put__get_key__expected)
 {
     test::chunk_storage head_store{ test::terminal_fill };

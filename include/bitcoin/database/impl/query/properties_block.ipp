@@ -40,6 +40,13 @@ inline bool CLASS::is_block(const hash_digest& key) const NOEXCEPT
 }
 
 TEMPLATE
+inline bool CLASS::is_pruned(const header_link& link) const NOEXCEPT
+{
+    table::txs::get_pruned txs{};
+    return store_.txs.at(to_txs(link), txs) && txs.pruned;
+}
+
+TEMPLATE
 inline bool CLASS::is_block_segregated(const header_link& link) const NOEXCEPT
 {
     size_t light{}, heavy{};

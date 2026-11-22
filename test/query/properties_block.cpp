@@ -209,6 +209,59 @@ BC_AUTO_TEST_CASE(query_properties_block__get_wtxids__genesis__coinbase_witness_
     BC_REQUIRE(query.get_wtxids(1).empty());
 }
 
+// is_pruned
+
+BC_AUTO_TEST_CASE(query_properties_block__is_pruned__pruned__true)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1, false, false, true));
+    BC_CHECK(query.is_pruned(header_link{ 1 }));
+}
+
+BC_AUTO_TEST_CASE(query_properties_block__is_pruned__unpruned__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1, false, false, false));
+    BC_CHECK(!query.is_pruned(header_link{ 1 }));
+}
+
+BC_AUTO_TEST_CASE(query_properties_block__is_pruned__genesis__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1, false, false, true));
+    BC_CHECK(!query.is_pruned(header_link{ 0 }));
+}
+
+BC_AUTO_TEST_CASE(query_properties_block__is_pruned__unassociated__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
+    BC_CHECK(!query.is_pruned(header_link{ 1 }));
+}
+
 // is_block_segregated
 
 BC_AUTO_TEST_CASE(query_properties_block__is_block_segregated__always__expected)

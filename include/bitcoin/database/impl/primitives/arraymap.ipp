@@ -188,6 +188,20 @@ inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
 
 TEMPLATE
 ELEMENT_CONSTRAINT
+bool CLASS::set(const Link& link, const Element& element) NOEXCEPT
+{
+    const auto ptr = body_.get(link);
+    if (!ptr)
+        return false;
+
+    using namespace system;
+    iostream stream{ ptr };
+    finalizer sink{ stream };
+    return element.to_data(sink);
+}
+
+TEMPLATE
+ELEMENT_CONSTRAINT
 bool CLASS::put(size_t key, const Element& element) NOEXCEPT
 {
     // Avoid setting the terminal sentinel into a bucket position.

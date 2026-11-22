@@ -98,6 +98,13 @@ bool envelope::migrate_4_0_31_to_4_0_32(data_chunk& data,
     return true;
 }
 
+// The envelope layout is unchanged.
+bool envelope::migrate_4_0_32_to_4_0_33(data_chunk& data) NOEXCEPT
+{
+    set_schema(data, { 4, 0, 33, 0 });
+    return true;
+}
+
 bool envelope::migrate_step(data_chunk& data,
     const envelope& configured) NOEXCEPT
 {
@@ -110,6 +117,9 @@ bool envelope::migrate_step(data_chunk& data,
 
     if (schema == config::version{ 4, 0, 31, 0 })
         return migrate_4_0_31_to_4_0_32(data, configured);
+
+    if (schema == config::version{ 4, 0, 32, 0 })
+        return migrate_4_0_32_to_4_0_33(data);
 
     return false;
 }

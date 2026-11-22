@@ -97,6 +97,88 @@ BC_AUTO_TEST_CASE(query_properties_tx__is_coinbase__non_coinbase__false)
     BC_CHECK(!query.is_coinbase(42));
 }
 
+// is_pruned
+
+BC_AUTO_TEST_CASE(query_properties_tx__is_pruned__pruned__true)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1, false, false, true));
+    BC_CHECK(query.is_pruned(tx_link{ 1 }));
+}
+
+BC_AUTO_TEST_CASE(query_properties_tx__is_pruned__unpruned__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1, false, false, false));
+    BC_CHECK(!query.is_pruned(tx_link{ 1 }));
+}
+
+BC_AUTO_TEST_CASE(query_properties_tx__is_pruned__genesis__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1, false, false, true));
+    BC_CHECK(!query.is_pruned(tx_link{ 0 }));
+}
+
+BC_AUTO_TEST_CASE(query_properties_tx__is_pruned__terminal__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1, false, false, true));
+    BC_CHECK(!query.is_pruned(tx_link{ 42 }));
+}
+
+// is_pruned_input
+
+BC_AUTO_TEST_CASE(query_properties_tx__is_pruned_input__pruned__true)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1, false, false, true));
+    BC_CHECK(query.is_pruned_input(1));
+}
+
+BC_AUTO_TEST_CASE(query_properties_tx__is_pruned_input__unpruned__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1, false, false, false));
+    BC_CHECK(!query.is_pruned_input(1));
+}
+
 // is_tx_segregated
 
 BC_AUTO_TEST_CASE(query_properties_tx__is_tx_segregated__always__expected)
