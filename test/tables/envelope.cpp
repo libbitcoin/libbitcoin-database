@@ -487,10 +487,11 @@ BC_AUTO_TEST_CASE(envelope__migrate_4_0_33_to_4_0_34__terminal_before_activation
     image.at(8) = 33;
     image.back() = 0x42;
     auto data = image;
+    const data_chunk terminal{ 0xff, 0xff, 0x7f };
     BC_REQUIRE(envelope::migrate_4_0_33_to_4_0_34(data));
     BC_REQUIRE(envelope::get_schema(data) == system::config::version(4, 0, 34, 0));
     BC_REQUIRE_EQUAL(data.size(), image.size() + 3u);
-    BC_REQUIRE(data_chunk(std::prev(data.end(), 227), std::prev(data.end(), 224)) == data_chunk{ 0xff, 0xff, 0x7f });
+    BC_REQUIRE(data_chunk(std::prev(data.end(), 227), std::prev(data.end(), 224)) == terminal);
     BC_REQUIRE(data_chunk(std::prev(data.end(), 224), data.end()) == data_chunk(std::prev(image.end(), 224), image.end()));
     BC_REQUIRE(data_chunk(std::next(data.begin(), 16), std::prev(data.end(), 227)) == data_chunk(std::next(image.begin(), 16), std::prev(image.end(), 224)));
 }
