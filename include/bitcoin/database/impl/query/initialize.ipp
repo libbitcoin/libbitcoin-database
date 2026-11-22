@@ -183,7 +183,7 @@ bool CLASS::get_unassociated(association& out,
             context.ctx.flags,
             context.timestamp,
             context.ctx.mtp,
-            system::possible_wide_cast<size_t>(context.ctx.height)
+            context.ctx.height
         }
     };
 

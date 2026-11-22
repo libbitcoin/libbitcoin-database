@@ -21,9 +21,26 @@
 
 BC_AUTO_TEST_SUITE(duplicate_tests)
 
-BC_AUTO_TEST_CASE(duplicate_test)
+BC_AUTO_TEST_CASE(duplicate__get_key__point__expected)
 {
-    BC_REQUIRE(true);
+    const system::chain::point point{ system::one_hash, 0x00123456 };
+    test::chunk_storage head_store{ test::terminal_fill };
+    test::chunk_storage body_store{};
+    table::duplicate instance{ head_store, body_store, 20 };
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.put(point, table::duplicate::record{}));
+    BC_REQUIRE(instance.get_key(0) == point);
+}
+
+BC_AUTO_TEST_CASE(duplicate__get_key__null_point__null_index)
+{
+    const system::chain::point point{ system::one_hash, system::chain::point::null_index };
+    test::chunk_storage head_store{ test::terminal_fill };
+    test::chunk_storage body_store{};
+    table::duplicate instance{ head_store, body_store, 20 };
+    BC_REQUIRE(instance.create());
+    BC_REQUIRE(instance.put(point, table::duplicate::record{}));
+    BC_REQUIRE(instance.get_key(0) == point);
 }
 
 BC_AUTO_TEST_SUITE_END()

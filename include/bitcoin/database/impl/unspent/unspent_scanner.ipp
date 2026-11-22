@@ -173,8 +173,8 @@ code CLASS::block(difference_set& set, uint64_t& unspendable,
         if (buffer.txs.empty())
             return error::integrity;
 
-        if (const auto ec = this->overwritten(overwritten,
-            buffer.txs.front()))
+        const auto& coinbase = buffer.txs.front();
+        if (const auto ec = this->overwritten(overwritten, coinbase))
             return ec;
 
         buffer.txs.erase(buffer.txs.begin());

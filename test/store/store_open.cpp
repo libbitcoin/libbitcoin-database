@@ -305,8 +305,6 @@ BC_AUTO_TEST_CASE(store__migrate__4_0_31_uncommitted__skipped)
     BC_REQUIRE(set_unflagged_pruned_block(instance));
     const auto link = set_uncommitted_row(instance);
     BC_REQUIRE(!link.is_terminal());
-    BC_REQUIRE(is_zero(instance.tx.get_next(link).value));
-    BC_REQUIRE(!is_zero(instance.tx.get_next(0).value));
     BC_REQUIRE(!instance.close(test::events));
     BC_REQUIRE(test::create(instance.envelope_head_file(), test::envelope_4_0_31));
 

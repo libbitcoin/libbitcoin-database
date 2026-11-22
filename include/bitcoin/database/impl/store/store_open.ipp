@@ -466,8 +466,10 @@ code CLASS::migrate_4_0_31_to_4_0_32(database::envelope& stored,
     return error::success;
 }
 
-// Each tx stored pruned (emptied input scripts and witnesses), and each block
-// with a pruned coinbase, is flagged in its heavy size in place.
+// Each pruned block, with each of its txs, is flagged in its heavy size in
+// place, found by the sizes of its coinbase. A tx of no block (archived before
+// a failed association, as on disk full) is found once its block is archived
+// again, as the points it spends are then duplicated.
 TEMPLATE
 code CLASS::migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT
 {
@@ -514,6 +516,8 @@ code CLASS::migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT
     open(ec, tx_body_, table_t::tx_body);
     open(ec, txs_head_, table_t::txs_head);
     open(ec, txs_body_, table_t::txs_body);
+    open(ec, duplicate_head_, table_t::duplicate_head);
+    open(ec, duplicate_body_, table_t::duplicate_body);
 
     load(ec, input_head_, table_t::input_head);
     load(ec, input_body_, table_t::input_body);
@@ -527,31 +531,29 @@ code CLASS::migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT
     load(ec, tx_body_, table_t::tx_body);
     load(ec, txs_head_, table_t::txs_head);
     load(ec, txs_body_, table_t::txs_body);
+    load(ec, duplicate_head_, table_t::duplicate_head);
+    load(ec, duplicate_body_, table_t::duplicate_body);
 
-    if (!ec)
+    // Rows are rewritten in place, so the bodies are mapped rewritable (a
+    // staged body is append-only, its settled rows read-only).
+    const auto restage = [&handler](code& ec, auto& file,
+        table_t table) NOEXCEPT
     {
-        handler(event_t::create_table, table_t::tx_table);
-        const auto count = tx.count().value;
-        for (tx_link::integer value{}; !ec && value < count; ++value)
+        if (!ec)
         {
-            const tx_link link{ value };
-            const auto key = tx.get_key(link);
-            if (!is_committed(link, key))
-                continue;
-
-            auto pruned = false;
-            table::transaction::record record{};
-            if (!tx.get(link, record))
-                ec = error::integrity;
-            else if (!(ec = get_pruned(pruned, record)) && pruned)
-            {
-                record.pruned = true;
-                if (!tx.set(link, key, record))
-                    ec = error::integrity;
-            }
+            handler(event_t::unload_file, table);
+            ec = file.restage(false);
+            handler(event_t::load_file, table);
         }
-    }
+    };
 
+    restage(ec, tx_body_, table_t::tx_body);
+    restage(ec, txs_body_, table_t::txs_body);
+
+    // Each header bucket is an associated block or terminal. A block is
+    // pruned as a unit, so its coinbase (first tx) decides all of its txs.
+    const auto count = tx.count().value;
+    std::vector<bool> associated(count);
     if (!ec)
     {
         handler(event_t::create_table, table_t::txs_table);
@@ -562,17 +564,80 @@ code CLASS::migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT
             if (link.is_terminal())
                 continue;
 
+            auto pruned = false;
             table::txs::slab slab{};
-            table::transaction::get_pruned coinbase{};
+            table::transaction::record coinbase{};
             if (!txs.get(link, slab) || slab.tx_fks.empty() ||
                 !tx.get(slab.tx_fks.front(), coinbase))
             {
                 ec = error::integrity;
+                continue;
             }
-            else if (coinbase.pruned && !slab.pruned)
+
+            for (const auto fk: slab.tx_fks)
+                if (fk < count)
+                    associated[fk] = true;
+
+            if ((ec = get_pruned(pruned, coinbase)) || !pruned)
+                continue;
+
+            for (const auto fk: slab.tx_fks)
             {
-                slab.pruned = true;
-                if (!txs.set(link, slab))
+                table::transaction::record record{};
+                if (!tx.get(fk, record))
+                {
+                    ec = error::integrity;
+                    break;
+                }
+
+                record.pruned = true;
+                if (!tx.set(fk, tx.get_key(fk), record))
+                {
+                    ec = error::integrity;
+                    break;
+                }
+            }
+
+            slab.pruned = true;
+            if (!ec && !txs.set(link, slab))
+                ec = error::integrity;
+        }
+    }
+
+    if (!ec)
+    {
+        handler(event_t::create_table, table_t::duplicate_table);
+        using point_link = table::duplicate::link;
+        const auto duplicates = duplicate.count().value;
+        for (point_link::integer value{}; !ec && value < duplicates; ++value)
+        {
+            const auto point = duplicate.get_key(point_link{ value });
+            for (auto it = ins.it(point); !ec && it; ++it)
+            {
+                table::ins_sequence::get_parent spender{};
+                if (!ins.sequence.get(*it, spender))
+                {
+                    ec = error::integrity;
+                    break;
+                }
+
+                const auto fk = spender.parent_fk;
+                if (fk >= count || associated[fk])
+                    continue;
+
+                auto pruned = false;
+                table::transaction::record record{};
+                if (!tx.get(fk, record))
+                {
+                    ec = error::integrity;
+                    break;
+                }
+
+                if ((ec = get_pruned(pruned, record)) || !pruned)
+                    continue;
+
+                record.pruned = true;
+                if (!tx.set(fk, tx.get_key(fk), record))
                     ec = error::integrity;
             }
         }
@@ -590,6 +655,8 @@ code CLASS::migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT
     unload(ec, tx_body_, table_t::tx_body);
     unload(ec, txs_head_, table_t::txs_head);
     unload(ec, txs_body_, table_t::txs_body);
+    unload(ec, duplicate_head_, table_t::duplicate_head);
+    unload(ec, duplicate_body_, table_t::duplicate_body);
 
     close(ec, input_head_, table_t::input_head);
     close(ec, input_body_, table_t::input_body);
@@ -603,28 +670,13 @@ code CLASS::migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT
     close(ec, tx_body_, table_t::tx_body);
     close(ec, txs_head_, table_t::txs_head);
     close(ec, txs_body_, table_t::txs_body);
+    close(ec, duplicate_head_, table_t::duplicate_head);
+    close(ec, duplicate_body_, table_t::duplicate_body);
     return ec;
 }
 
-// Values are set before the row is committed to its key's conflict list, so
-// only a committed row is read. An uncommitted row retains the zero fill as
-// its next link, which is also the link of tx0, so only that case is walked.
-TEMPLATE
-bool CLASS::is_committed(const tx_link& link,
-    const hash_digest& key) const NOEXCEPT
-{
-    if (!is_zero(tx.get_next(link).value))
-        return true;
-
-    for (auto it = tx.it(key); it; ++it)
-        if (*it == link)
-            return true;
-
-    return false;
-}
-
-// A pruned tx stores every input script and witness empty, so its stored
-// nominal size is short of its archived nominal size.
+// A pruned tx stores every input script and witness empty (only the first
+// input link is valid), so its stored nominal size is short of its archived.
 TEMPLATE
 code CLASS::get_pruned(bool& pruned,
     const table::transaction::record& record) const NOEXCEPT
@@ -634,17 +686,14 @@ code CLASS::get_pruned(bool& pruned,
         sizeof(uint32_t);
 
     pruned = false;
-    table::input::slab in{};
+    table::input::get_empty in{};
     table::ins_sequence::get_input point{};
-    const auto end = record.point_fk + record.ins_count;
-    for (auto fk = record.point_fk; fk < end; ++fk)
-    {
-        if (!ins.sequence.get(fk, point) || !input.get(point.input_fk, in))
-            return error::integrity;
+    if (!ins.sequence.get(record.point_fk, point) ||
+        !input.get(point.input_fk, in))
+        return error::integrity;
 
-        if (!in.script.ops().empty() || !in.witness.stack().empty())
-            return error::success;
-    }
+    if (!in.empty)
+        return error::success;
 
     table::outs::record puts{};
     puts.out_fks.resize(record.outs_count);

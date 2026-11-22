@@ -133,6 +133,25 @@ struct input
         system::chain::witness::cptr witness{};
     };
 
+    /// Reads only the script size and, when zero, the witness count.
+    struct get_empty
+      : public schema::input
+    {
+        inline link count() const NOEXCEPT
+        {
+            BC_ASSERT(false);
+            return {};
+        }
+
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            empty = is_zero(source.read_size()) && is_zero(source.read_size());
+            return source;
+        }
+
+        bool empty{};
+    };
+
     struct put_ref
       : public schema::input
     {
