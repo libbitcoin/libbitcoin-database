@@ -62,7 +62,8 @@ private:
     code block(difference_set& set, uint64_t& unspendable,
         uint64_t& overwritten, buffers& buffer,
         const header_link& link) const NOEXCEPT;
-    code overwritten(uint64_t& out, const header_link& link) const NOEXCEPT;
+    code overwritten(uint64_t& out,
+        const table::transaction::get_puts& coinbase) const NOEXCEPT;
     code read_transactions(gets& out, const header_link& link) const NOEXCEPT;
     code toggle_creates(difference_set& set, output_links& exclusions,
         const gets& txs) const NOEXCEPT;
