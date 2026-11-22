@@ -281,6 +281,43 @@ BC_AUTO_TEST_CASE(query_pool__set_pooled__reorganized_parent__descendants_repool
     BC_REQUIRE(out == expected);
 }
 
+BC_AUTO_TEST_CASE(query_pool__set_pooled__reorganized_parent__descendant_by_two_paths_repooled_after_both)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    // Rows: 0 child, 1 grandchild, 2 joined (spends parent and grandchild).
+    store.set_pooling();
+    const transaction parent{ 1u, inputs{ input{ point{ genesis_coinbase(), 0 }, script{}, max_uint32 } }, outputs{ output{ 2'499'999'000, script{} }, output{ 2'499'999'000, script{} } }, 0u };
+    const auto child = to_spend(parent.hash(false), 2'499'998'000);
+    const auto grandchild = to_spend(child.hash(false), 2'499'997'000);
+    const transaction joined{ 1u, inputs{ input{ point{ parent.hash(false), 1 }, script{}, max_uint32 }, input{ point{ grandchild.hash(false), 0 }, script{}, max_uint32 } }, outputs{ output{ 4'999'995'000, script{} } }, 0u };
+    const auto confirmed = !archive_confirm(query, parent).is_terminal();
+    const auto pooled = pool_populated(query, child) && pool_populated(query, grandchild) && pool_populated(query, joined);
+    const auto popped = query.pop_confirmed();
+    const auto link = query.to_tx(parent.hash(false));
+    size_t count{};
+    const auto repooled = query.set_pooled(count, link, parent, context{ bip113, 8, 9 }, 0);
+
+    BC_REQUIRE(confirmed);
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(popped);
+    BC_REQUIRE(repooled);
+    BC_REQUIRE_EQUAL(count, 3u);
+    BC_REQUIRE_EQUAL(query.to_pool_row(link).value, 3u);
+    BC_REQUIRE_EQUAL(query.to_pool_row(query.to_tx(child.hash(false))).value, 4u);
+    BC_REQUIRE_EQUAL(query.to_pool_row(query.to_tx(grandchild.hash(false))).value, 5u);
+    BC_REQUIRE_EQUAL(query.to_pool_row(query.to_tx(joined.hash(false))).value, 6u);
+    BC_REQUIRE_EQUAL(store.spends_index.rows.at(5u), 3u);
+    BC_REQUIRE_EQUAL(store.spends_index.rows.at(6u), 4u);
+    BC_REQUIRE_EQUAL(store.spends_index.rows.at(7u), 3u);
+    BC_REQUIRE_EQUAL(store.spends_index.rows.at(8u), 5u);
+}
+
 BC_AUTO_TEST_CASE(query_pool__set_pool_index__repooled_child__purged_row_kept_purged)
 {
     settings settings{ test::database_settings() };
