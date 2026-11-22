@@ -63,6 +63,38 @@ code CLASS::get_pool_revalidation(tx_links& out,
 }
 
 TEMPLATE
+code CLASS::get_pool_unvalidated(tx_links& out) const NOEXCEPT
+{
+    using namespace system;
+    using algorithm = system::pool::algorithm;
+    using link_t = algorithm::link_t;
+    out.clear();
+    if (!store_.pool.enabled())
+        return error::success;
+
+    pool_guards guards{};
+    algorithm::columns_t columns{};
+    if (!get_pool_columns(columns, guards))
+        return error::integrity;
+
+    const auto rows = possible_narrow_cast<link_t>(columns.cells.size());
+    for (link_t row{}; row < rows; ++row)
+    {
+        const auto cell = algorithm::from_column(columns.cells[row]);
+        if (!algorithm::is_absent(cell) ||
+            is_zero(bit_and(cell, algorithm::insufficient)) ||
+            is_nonzero(algorithm::from_column(columns.flags[row])))
+            continue;
+
+        const auto tx = to_pool_tx(pool_link{ row });
+        if (!tx.is_terminal())
+            out.push_back(tx);
+    }
+
+    return error::success;
+}
+
+TEMPLATE
 bool CLASS::set_pooled_context(const tx_link& link,
     const context& ctx) NOEXCEPT
 {
@@ -84,6 +116,39 @@ bool CLASS::set_pooled_context(const tx_link& link,
         vtx.heights.put(fk, scalar{ {}, ctx.height }) &&
         vtx.medians.put(fk, scalar{ {}, ctx.mtp });
     // ========================================================================
+}
+
+// A tx spending an output of the block (coinbase included) may depend on its
+// confirmation, so it is not sufficient under any context until revalidated.
+TEMPLATE
+bool CLASS::set_pool_unvalidated(size_t& out,
+    const header_link& link) NOEXCEPT
+{
+    out = zero;
+    if (!store_.pool.enabled())
+        return true;
+
+    for (const auto fk: to_transactions(link))
+    {
+        const tx_link tx{ fk };
+        const auto outputs = to_outputs(tx).size();
+        for (uint32_t index{}; index < outputs; ++index)
+        {
+            for (const auto& in: to_spenders(tx, index))
+            {
+                const auto spender = to_input_tx(in);
+                if (!is_pooled(spender))
+                    continue;
+
+                if (!set_pooled_context(spender, {}))
+                    return false;
+
+                ++out;
+            }
+        }
+    }
+
+    return true;
 }
 
 TEMPLATE
