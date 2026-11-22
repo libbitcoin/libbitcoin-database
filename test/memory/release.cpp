@@ -41,8 +41,8 @@ BC_AUTO_TEST_CASE(memory_release__release_candidates__all__none)
 }
 
 // release_below
-// The boundary word masking defect class: candidacy must retain LOW bits
-// (pages below the count), never the high complement.
+// Boundary word masking defect class: candidacy must retain LOW bits (pages
+// below count), never high complement.
 
 BC_AUTO_TEST_CASE(memory_release__release_below__word_above_count__zero)
 {

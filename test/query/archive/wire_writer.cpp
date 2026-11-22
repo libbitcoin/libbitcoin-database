@@ -22,8 +22,8 @@
 
 BC_FIXTURE_TEST_SUITE(query_wire_writer_writer_tests, test::directory_setup_fixture)
 
-// The view (wire) block writer must produce a store byte-identical to the
-// chain block writer (see analogous chain_writer expectations).
+// View (wire) block writer must produce store byte-identical to chain block
+// writer (see analogous chain_writer expectations).
 BC_AUTO_TEST_CASE(query_wire_writer__set_block_view__genesis__expected)
 {
     constexpr auto milestone = true;

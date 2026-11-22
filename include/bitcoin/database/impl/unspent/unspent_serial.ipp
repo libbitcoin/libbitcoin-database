@@ -38,8 +38,8 @@ CLASS::unspent_serial(const Store& store, const stopper& cancel,
 {
 }
 
-// One folder thread for the run, each bucket handed off through 'ordered'
-// (ready) and returned (done), so a fold overlaps the fill of the next bucket.
+// One folder thread for run, each bucket handed off through 'ordered' (ready)
+// and returned (done), so fold overlaps fill of next bucket.
 TEMPLATE
 code CLASS::hash(unspent_totals& out, hash_digest& digest,
     const difference_set& set) const NOEXCEPT

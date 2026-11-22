@@ -24,10 +24,10 @@
 namespace libbitcoin {
 namespace database {
 
-// The pool index is rebuilt from the compacted pool. Retained rows are
-// confirmable, so none has a stored cause of absence. Inputs follow row order,
-// so a row joins only the rings of the rows rebuilt before it. A parent may
-// follow its child, so all rows are set before any input is linked.
+// Pool index rebuilt from compacted pool. Retained rows are confirmable, so
+// none has a stored cause of absence. Inputs follow row order, so row joins
+// only rings of rows rebuilt before it. Parent may follow its child, so all
+// rows are set before any input is linked.
 TEMPLATE
 bool CLASS::set_pool_index() NOEXCEPT
 {
@@ -100,7 +100,7 @@ bool CLASS::set_pool_index() NOEXCEPT
 }
 
 // protected
-// The cell and children head of each row in the range.
+// Cell and children head of each row in range.
 TEMPLATE
 bool CLASS::set_pool_rows(system::pool::algorithm::link_t begin,
     system::pool::algorithm::link_t end) NOEXCEPT
@@ -123,9 +123,9 @@ bool CLASS::set_pool_rows(system::pool::algorithm::link_t begin,
 }
 
 // protected
-// Each input's parent row, sibling (joining the list of inputs spending its
-// parent) and rival (joining the ring of inputs spending its point at a pooled
-// spender of it).
+// Each input's parent row,
+// sibling (joining list of inputs spending its parent) and
+// rival (joining ring of inputs spending its point at a pooled spender of it).
 TEMPLATE
 bool CLASS::set_pool_links(system::pool::algorithm::link_t start,
     const pool_links& parents, const pool_links& mates) NOEXCEPT
@@ -183,8 +183,7 @@ bool CLASS::set_pool_links(system::pool::algorithm::link_t start,
 }
 
 // protected
-// The index heads hold no count cell, so each column is a plain array of
-// cells.
+// Index heads hold no count cell, so each column is a plain array of cells.
 TEMPLATE
 bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
     pool_guards& guards) const NOEXCEPT
@@ -264,7 +263,7 @@ bool CLASS::get_pool_columns(system::pool::algorithm::columns_t& out,
 }
 
 // protected
-// A point archived with one spender is not in the duplicate table.
+// Point archived with one spender is not in duplicate table.
 TEMPLATE
 bool CLASS::get_pooled_spender(system::pool::algorithm::link_t& out,
     bool& conflicted, const point& point, const tx_link& self,
@@ -313,7 +312,7 @@ bool CLASS::get_pooled_spender(system::pool::algorithm::link_t& out,
 }
 
 // protected
-// The first tx is the coinbase, which spends nothing.
+// First tx is coinbase, which spends nothing.
 TEMPLATE
 bool CLASS::get_pool_conflicts(tx_links& out,
     const tx_links& txs) const NOEXCEPT
@@ -358,11 +357,11 @@ bool CLASS::is_pool_conflicted(bool& out, const tx_link& link,
     return true;
 }
 
-// The conflicts of the block's txs are the archived spenders of its points as
-// of the transition, as a tx may be pooled after the block's prevouts are
-// cached. They include the block's own txs, as each spends a conflicted point.
-// A conflict is cleared at a reorganization only if no other confirmed tx
-// spends a point of the row.
+// Conflicts of block's txs are archived spenders of its points
+// as of transition, as a tx may be pooled after block's prevouts
+// are cached. They include block's own txs, as each spends a
+// conflicted point. Conflict is cleared at reorganization only
+// if no other confirmed tx spends a point of row.
 TEMPLATE
 bool CLASS::set_pool_block(const header_link& link, bool confirmed) NOEXCEPT
 {

@@ -240,8 +240,8 @@ BC_AUTO_TEST_CASE(query_consensus__populate_with_metadata__pool_spender__expecte
     BC_CHECK(query.initialize(test::genesis));
     BC_CHECK(query.set(test::block1a, context{ 0, 1, 0 }, {}, false, false));
 
-    // tx5 spends the first output of the first tx of block1a, as do tx4 and
-    // the first transaction of block2a.
+    // tx5 spends first output of first tx of block1a,
+    // as do tx4 and first transaction of block2a.
     const auto& unspent = clean_(test::tx5);
     BC_CHECK(query.populate_with_metadata(unspent, true, true));
     BC_CHECK_EQUAL(unspent.inputs_ptr()->at(0)->metadata.spender_height, max_uint32);

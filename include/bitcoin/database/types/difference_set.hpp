@@ -25,9 +25,9 @@
 namespace libbitcoin {
 namespace database {
 
-/// Multiset symmetric difference over a dense element domain. Each
-/// presentation of an element toggles its membership, so even multiplicities
-/// cancel and the residue is the set. One bit per element, in domain order.
+/// Multiset symmetric difference over dense element domain. Each presentation
+/// of element toggles its membership, so even multiplicities cancel and residue
+/// is the set. One bit per element, in domain order.
 /// Toggle is thread safe, enumeration (word) is not concurrent with toggle.
 class difference_set
 {

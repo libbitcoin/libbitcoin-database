@@ -325,10 +325,10 @@ bool setup_three_block_unconfirmed_address_store(query_t& query) NOEXCEPT
         query.set(block3a, database::context{ 0, 3, 0 }, {}, false, false);
 }
 
-// Setting block metadata on a shared instance creates test side effects.
-// Chain objects such as blocks cannot be copied for side-effect-free metadata
-// tests, since block copy takes shared pointer references. So create new test
-// blocks for each metadata test.
+// Setting block metadata on shared instance creates test side effects. Chain
+// objects such as blocks cannot be copied for side-effect-free metadata tests,
+// since block copy takes shared pointer references. So create new test blocks
+// for each metadata test.
 const block bogus_block
 {
     header

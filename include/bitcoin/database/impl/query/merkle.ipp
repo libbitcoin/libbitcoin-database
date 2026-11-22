@@ -204,12 +204,12 @@ hash_digest CLASS::partial_subroot(hashes&& tree, size_t span) NOEXCEPT
     if (is_zero(depth))
         return tree.front();
 
-    // merkle_root() treats a single hash as top/complete, but for a partial
-    // depth subtree, an odd leaf (including a single) requires duplication.
+    // merkle_root() treats single hash as top/complete, but for partial depth
+    // subtree, odd leaf (including single) requires duplication.
     if (is_odd(tree.size()))
         tree.push_back(tree.back());
 
-    // Log2 of the evened breadth gives the elevation by merkle_root.
+    // Log2 of evened breadth gives elevation by merkle_root.
     // Partial cannot exceed depth, since tree.size() <= span (a power of 2).
     auto partial = ceilinged_log2(tree.size());
     if (is_subtract_overflow(depth, partial))

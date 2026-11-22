@@ -24,10 +24,10 @@
 namespace libbitcoin {
 namespace database {
 
-/// Expected read pattern of mapped storage, guiding kernel page advice. This
-/// is independent of the write pattern (structural): bodies are appended
-/// sequentially but read randomly by validation, so advising the kernel from
-/// the write pattern invites eviction of the read set under memory pressure.
+/// Expected read pattern of mapped storage, guiding kernel page advice.
+/// Independent of write pattern (structural): bodies appended sequentially but
+/// read randomly by validation, so advising kernel from write pattern invites
+/// eviction of read set under memory pressure.
 enum class advice : uint8_t
 {
     /// Let the operating system decide (mixed or unpredictable access).
@@ -40,8 +40,8 @@ enum class advice : uint8_t
     sequential,
 
     /// Random access (suppresses read ahead) without preload, for maps too
-    /// large to reside: scattered reads otherwise fault a full read-ahead
-    /// window each, and that manufactured cache displaces the head set.
+    /// large to reside: scattered reads otherwise fault full read-ahead window
+    /// each, and that manufactured cache displaces head set.
     scattered
 };
 

@@ -35,7 +35,7 @@ struct ofstream_wrap
 };
 
 /// Simple two file rotating stream with configurable size and file names.
-/// Files are rotated after full and writes are contiguous across them.
+/// Files rotated after full, writes contiguous across them.
 class BCD_API rotator_sink
   : public system::device<ofstream_wrap>
 {

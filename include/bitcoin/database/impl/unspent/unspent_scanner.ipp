@@ -192,8 +192,8 @@ code CLASS::block(difference_set& set, uint64_t& unspendable,
     return toggle_spends(set, buffer.spends);
 }
 
-// The duplicated coinbase outputs of the bip30 exception blocks overwrite
-// (destroy) those of the original blocks.
+// Duplicated coinbase outputs of bip30 exception blocks overwrite (destroy)
+// those of original blocks.
 TEMPLATE
 code CLASS::overwritten(uint64_t& out,
     const table::transaction::get_puts& coinbase) const NOEXCEPT

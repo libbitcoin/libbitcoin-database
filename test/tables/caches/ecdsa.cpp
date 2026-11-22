@@ -66,7 +66,7 @@ BC_AUTO_TEST_CASE(ecdsa__create_verify_close__aggregate__expected)
     BC_REQUIRE(instance.close());
 }
 
-// Round-trip a single (1-of-1) signature through the aggregate, mirroring the
+// Round-trip single (1-of-1) signature through aggregate, mirroring
 // set_signature write sequence: allocate one terminal correlate row, expand
 // subordinates, then commit real values. Correlate is header_fk-first:
 // header_fk(3) | pair(1) | group(2). Single encodes pair=0 (0|0 -> 1-of-1).
@@ -207,8 +207,8 @@ BC_AUTO_TEST_CASE(ecdsa_digest__put_ref__single__expected)
     BC_REQUIRE_EQUAL(body_store.buffer(), expected);
 }
 
-// m-of-n digest repeats the common signature hash ecdsa_count(m,n) times.
-// 1-of-3 -> 3 rows of the same digest.
+// m-of-n digest repeats common signature hash ecdsa_count(m,n) times.
+// 1-of-3 -> 3 rows of same digest.
 BC_AUTO_TEST_CASE(ecdsa_digest__put_refs__repeated__expected)
 {
     using putter = table::ecdsa_digest::put_refs;

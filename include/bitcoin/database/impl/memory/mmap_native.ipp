@@ -72,8 +72,8 @@ bool CLASS::map_() NOEXCEPT
     else
     {
         // Cannot map empty file, want minimum capacity, expand as required.
-        // The classic mapping is file-backed, so commitment is provisioning.
-        // disk_full: space is set but no code is set with false return.
+        // Classic mapping is file-backed, so commitment is provisioning.
+        // disk_full: space set but no code set with false return.
         const auto size = to_provision();
         if (!resize_<Column>(size))
             return false;
@@ -168,8 +168,8 @@ bool CLASS::release_(size_t size) NOEXCEPT
             set_first_code(error::munmap_failure);
 
         // loaded_ is caller-owned: unmap_ publishes unloaded, remap_ remains
-        // loaded across replacement (lock-free allocate guards must not
-        // observe a transient unload).
+        // loaded across replacement
+        // (lock-free allocate guards must not observe transient unload).
         memory_map_[Column] = {};
         return success;
     }
@@ -198,9 +198,8 @@ bool CLASS::finalize_() NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
-// Remove the pages of rows [from, to) from the working set. The mapping is
-// unaffected (a later read faults the page back). Advisory: failure alters
-// nothing and is not a fault.
+// Remove pages of rows [from, to) from working set. Mapping unaffected (later
+// read faults page back). Advisory: failure alters nothing and is not a fault.
 TEMPLATE
 template <size_t Column>
 bool CLASS::evict_(size_t from, size_t to) NOEXCEPT
@@ -246,9 +245,9 @@ void CLASS::scan_run_() NOEXCEPT
 
     while (tick_())
     {
-        // Steering is only useful against a trim, and a trim only happens
-        // under contention, so at plenty the tick is a counter test. This
-        // also bounds the idle cost to the wait itself.
+        // Steering is only useful against a trim, and trim only happens under
+        // contention, so at plenty tick is a counter test. Also bounds idle
+        // cost to wait itself.
         if (system_available() >= (system_memory() / sweep_factor))
             continue;
 
@@ -257,8 +256,8 @@ void CLASS::scan_run_() NOEXCEPT
             continue;
 
         // Revisit every head page each touch_seconds regardless of instance
-        // size. A read sets the access bit without dirtying the page;
-        // volatile prevents elision.
+        // size. A read sets access bit without
+        // dirtying page; volatile prevents elision.
         const auto pages = to_width<zero>(logical_.load()) / page;
         const volatile auto* map = memory_map_[zero];
         auto budget = ceilinged_divide(pages, touch_seconds);
@@ -269,7 +268,8 @@ void CLASS::scan_run_() NOEXCEPT
                 touched = zero;
 
             const auto at = touched * page;
-            const auto count = std::min({ touch_span, pages - touched, budget });
+            const auto remaining = pages - touched;
+            const auto count = std::min({ touch_span, remaining, budget });
 
             for (size_t index{}; index < count; ++index)
                 (void)map[at + index * page];

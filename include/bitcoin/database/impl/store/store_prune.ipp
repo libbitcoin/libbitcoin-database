@@ -31,8 +31,8 @@ namespace database {
 TEMPLATE
 code CLASS::prune(const event_handler& handler) NOEXCEPT
 {
-    // Transactor lock generally only covers writes, but in this case prevout
-    // reads must also be guarded since the body shrinks and head is cleared.
+    // Transactor lock generally only covers writes, but here prevout reads must
+    // also be guarded, as body shrinks and head is cleared.
     while (!transactor_mutex_.try_lock_for(std::chrono::seconds(1)))
     {
         handler(event_t::wait_lock, table_t::store);
@@ -56,8 +56,8 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
             ec = error::prune_table;
 
         // Snapshot with nullified head and zero body count.
-        // The 'prune' parameter signals to not reset body count.
-        // Success deletes the pre-prune snapshot (trim strands nothing).
+        // 'prune' parameter signals not to reset body count.
+        // Success deletes pre-prune snapshot (trim strands nothing).
         if (!ec)
             ec = snapshot(handler, true);
 
@@ -125,10 +125,10 @@ code CLASS::prune(const event_handler& handler) NOEXCEPT
 }
 
 // protected
-// Each kept record moves down to the row of its rank, as do its spends, over
-// records that are dropped. A staged body is not rewritable, so the pool and
-// spends bodies are mapped shared for the move. Requires that nothing is
-// reading the pool, and a failure leaves the pool undefined.
+// Each kept record moves down to row of its rank, as do its
+// spends, over dropped records. Staged body is not rewritable,
+// so pool and spends bodies are mapped shared for move. Requires
+// nothing reading pool, and failure leaves pool undefined.
 TEMPLATE
 code CLASS::compact(const event_handler& handler) NOEXCEPT
 {
@@ -208,7 +208,7 @@ code CLASS::compact(const event_handler& handler) NOEXCEPT
 }
 
 // protected
-// The retained records in row order (a record is the first of its key).
+// Retained records in row order (record is first of its key).
 TEMPLATE
 bool CLASS::retain_pool(retentions& out) NOEXCEPT
 {
@@ -237,9 +237,7 @@ bool CLASS::retain_pool(retentions& out) NOEXCEPT
 }
 
 // protected
-// A tx is retained if it is confirmable and every unconfirmed ancestor is
-// pooled. Ancestors are found by key, so link order is not assumed, and an
-// ancestor already retained (kept is in row order) ends its walk.
+// Tx retained if confirmable and every unconfirmed ancestor is pooled.
 TEMPLATE
 bool CLASS::is_retained(bool& out, const tx_link& link,
     const retentions& kept) NOEXCEPT
@@ -292,8 +290,8 @@ bool CLASS::is_retained(bool& out, const tx_link& link,
 }
 
 // protected
-// Runs are disjoint, so in the order of their records each moves down over
-// dropped records only.
+// Runs disjoint, so in order of their records
+// each moves down over dropped records only.
 TEMPLATE
 bool CLASS::move_spends(retentions& keep) NOEXCEPT
 {
@@ -323,8 +321,8 @@ bool CLASS::move_spends(retentions& keep) NOEXCEPT
 }
 
 // protected
-// Records are kept in row order, so each moves down over dropped records
-// only, and is committed to the cleared head at its new row.
+// Records kept in row order, so each moves down over dropped records only, and
+// is committed to cleared head at its new row.
 TEMPLATE
 bool CLASS::move_pool(const retentions& keep) NOEXCEPT
 {
@@ -372,8 +370,8 @@ bool CLASS::move_pool(const retentions& keep) NOEXCEPT
 }
 
 // protected
-// A wtxid record is that of its pool row, so the index is rebuilt from the
-// witness hash of each row.
+// Wtxid record is that of its pool row,
+// so index is rebuilt from witness hash of each row.
 TEMPLATE
 bool CLASS::index_pool() NOEXCEPT
 {

@@ -30,10 +30,10 @@ namespace libbitcoin {
 namespace database {
 
 /// SoA aggregate head-only array: value columns indexed by position (no body,
-/// no count cell). The storage logical row count is the count, common across
+/// no count cell). Storage logical row count is the count, common across
 /// columns, with allocation unified across all columns (one lock). One storage
-/// backs all columns, so the accessor guards every column against remap.
-/// A value is an opaque integral of its column's cell size.
+/// backs all columns, so accessor guards every column against remap.
+/// Value is opaque integral of its column's cell size.
 template <class Link, size_t... Cells>
 class headmaps
 {
@@ -111,8 +111,8 @@ public:
         -> value<Column>;
 
     /// Set element at index, extending count as necessary (filled empty).
-    /// The element reads the current cell and writes its replacement, and is
-    /// rerun from a copy for each failed exchange.
+    /// Element reads current cell and writes its replacement, and is rerun from
+    /// a copy for each failed exchange.
     template <size_t Column, typename Element>
     bool set(size_t index, const Element& element) NOEXCEPT;
 

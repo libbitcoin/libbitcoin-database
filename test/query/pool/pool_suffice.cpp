@@ -33,8 +33,10 @@ using test::pool_cell;
 
 // Absent cells, by cause.
 constexpr auto absent = system::pool::algorithm::absent;
-constexpr auto absent_insufficient = system::bit_or(absent, system::pool::algorithm::insufficient);
-constexpr auto absent_ancestor = system::bit_or(absent, system::pool::algorithm::ancestor);
+constexpr auto absent_insufficient = system::bit_or(absent,
+    system::pool::algorithm::insufficient);
+constexpr auto absent_ancestor = system::bit_or(absent,
+    system::pool::algorithm::ancestor);
 
 // set_pool_context
 

@@ -67,8 +67,8 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
     if (file::is_directory(primary))
     {
         // Clear invalid /heads and clone /primary (retained) to /heads.
-        // The snapshot is never vacated, so no fault leaves /heads as the
-        // only copy (which the recreation below would otherwise clear).
+        // Snapshot never vacated, so no fault leaves /heads as only copy (which
+        // recreation below would otherwise clear).
         ec = file::clear_directory_ex(heads);
         if (!ec) ec = file::remove_ex(heads);
         if (!ec) ec = file::copy_directory_ex(primary, heads);
@@ -150,12 +150,12 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
 
         // ecdsa, schnorr, silent, prevalid, and presilent are dropped.
         //---------------------------------------------------------------------
-        // Signatures could be retained and verified, but this just becomes
-        // redundant work unless prevalid is retained. That would require flush
-        // of batched_ at snapshot (requires handle message and send complete).
-        // Would also require an external transactor or terminal prefills in
-        // threshold batched rows to prevent recovering unpopulated rows. The
-        // extra complexity isn't probably worth saving the batch for a snap.
+        // Signatures could be retained and verified, but this becomes redundant
+        // work unless prevalid is retained. That would require flush of
+        // batched_ at snapshot (requires handle message and send complete).
+        // Would also require external transactor or terminal prefills in
+        // threshold batched rows to prevent recovering unpopulated rows. Extra
+        // complexity probably not worth saving batch for snap.
         //---------------------------------------------------------------------
         dropped(ec, ecdsa0, table_t::ecdsa0_table);
         dropped(ec, ecdsa1, table_t::ecdsa1_table);

@@ -120,7 +120,8 @@ BC_AUTO_TEST_CASE(spends__put_refs_get_refs__second_run__expected)
 // spends_index
 // ----------------------------------------------------------------------------
 
-using index_storages = test::chunk_storages<schema::spends_index::cell, schema::spends_index::cell, schema::spends_index::cell>;
+using index_storages = test::chunk_storages<schema::spends_index::cell,
+    schema::spends_index::cell, schema::spends_index::cell>;
 static const index_storages::paths index_paths{ "rows", "siblings", "rivals" };
 
 BC_AUTO_TEST_CASE(spends_index__rows__set_two__expected)

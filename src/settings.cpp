@@ -239,8 +239,11 @@ settings::settings(chain::selection context) NOEXCEPT
 void settings::initialize(const system::settings& bitcoin, bool limited_blocks,
     bool provide_filters, bool require_witness, uint32_t silent_start) NOEXCEPT
 {
-    envelope = { bitcoin, *this, limited_blocks, provide_filters,
-        require_witness, silent_start };
+    envelope =
+    {
+        bitcoin, *this, limited_blocks, provide_filters, require_witness,
+        silent_start
+    };
 }
 
 } // namespace database

@@ -32,10 +32,10 @@
 namespace libbitcoin {
 namespace database {
 
-/// The store and query interface are the primary products of database.
-/// Store provides implmentation support for the public query interface.
-/// Query privides query interface implmentation over the store.
-/// Event handlers are invoked synchronously, providing progress.
+/// Store and query interface are primary products of database.
+/// Store provides implementation support for public query interface.
+/// Query provides query interface implementation over store.
+/// Event handlers invoked synchronously, providing progress.
 template <template <size_t...> class Storage>
 class store
 {
@@ -408,12 +408,12 @@ private:
         return out;
     }
 
-    // Bodies are append-only, so stage writes in anonymous memory where the
-    // staging backend is built (heads update in place and remain resident).
+    // Bodies are append-only, so stage writes in anonymous memory where staging
+    // backend is built (heads update in place and remain resident).
     static constexpr bool staged = true;
 
-    // A head appended in link order goes cold behind its frontier, so it
-    // maps its file (droppable pages) rather than holding its content in RAM.
+    // Head appended in link order goes cold behind its frontier, so it maps its
+    // file (droppable pages) rather than holding its content in RAM.
     static constexpr bool shared = true;
 
     static inline path head(const path& folder, const std::string& name) NOEXCEPT

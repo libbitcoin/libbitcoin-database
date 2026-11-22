@@ -77,8 +77,8 @@ code CLASS::get_compact_links(tx_links& out,
     return error::success;
 }
 
-// Scan the id columns, resolving tx links only after the guards release.
-// The columns are little-endian words, hashed in place across vector lanes.
+// Scan id columns, resolving tx links only after guards release. Columns are
+// little-endian words, hashed in place across vector lanes.
 TEMPLATE
 bool CLASS::get_compact_matches(compact_matches& out,
     const std::unordered_map<short_id, size_t>& positions,

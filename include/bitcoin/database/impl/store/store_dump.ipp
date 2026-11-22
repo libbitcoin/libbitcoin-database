@@ -26,7 +26,7 @@ namespace database {
 
 // public
 // Dump memory maps of /heads to new files in /temporary.
-// Heads are copied from RAM, not flushed to disk and copied as files.
+// Heads copied from RAM, not flushed to disk and copied as files.
 TEMPLATE
 code CLASS::dump(const path& folder,
     const event_handler& handler) NOEXCEPT

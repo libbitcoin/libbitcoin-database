@@ -79,8 +79,8 @@ code CLASS::get_pool_continuation(pool_projection& projection, size_t count,
     return error::success;
 }
 
-// A row arrives at the height of its context, and counts while it can confirm
-// or has confirmed. Rows of the top height are of the open interval.
+// Row arrives at height of its context, and counts while it can confirm or has
+// confirmed. Rows of top height are of open interval.
 TEMPLATE
 code CLASS::get_pool_arrivals(pool_arrivals& out, size_t top, size_t count,
     uint32_t bytes_per_sigop) const NOEXCEPT

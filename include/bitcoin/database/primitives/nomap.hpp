@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace database {
 
 /// Caution: reader/writer hold body remap lock until disposed.
-/// These handles should be used for serialization and immediately disposed.
+/// Handles should be used for serialization and immediately disposed.
 template <class Link, size_t Size, auto Suffix = ""_t>
 class nomap
 {

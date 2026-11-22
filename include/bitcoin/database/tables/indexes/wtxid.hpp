@@ -27,16 +27,16 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// wtxid is a record hashmap indexing the pool by witness hash. A record holds
-/// only its search chain link, and its link is that of the pool record whose
-/// id columns hold the key (a search verifies the candidate pool record).
+/// wtxid is record hashmap indexing pool by witness hash. Record holds only its
+/// search chain link, and its link is that of pool record whose id columns hold
+/// key (search verifies candidate pool record).
 struct wtxid
   : public hash_map<schema::wtxid>
 {
     using hash_map<schema::wtxid>::hashmap;
 
-    /// Allocate through the pool record link and commit that record under the
-    /// witness hash. Records skipped by a failed write are completed unlinked.
+    /// Allocate through pool record link and commit that record under witness
+    /// hash. Records skipped by failed write are completed unlinked.
     inline bool put(const link& record,
         const system::hash_digest& hash) NOEXCEPT
     {

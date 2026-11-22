@@ -63,8 +63,8 @@ inline tx_link CLASS::to_tx(const hash_digest& key) const NOEXCEPT
     return store_.tx.first(key);
 }
 
-// A pooled tx by witness hash, otherwise an unsegregated tx (txid == wtxid).
-// Candidates are verified against the pool following iterator disposal.
+// Pooled tx by witness hash, otherwise unsegregated tx (txid == wtxid).
+// Candidates verified against pool following iterator disposal.
 TEMPLATE
 inline tx_link CLASS::to_witness_tx(const hash_digest& key) const NOEXCEPT
 {

@@ -156,8 +156,8 @@ void CLASS::store_envelope(code& ec) NOEXCEPT
         ec = error::create_table;
 }
 
-// The head is expanded before the envelope is rewritten, so a failed expansion
-// (disk full) leaves the stored envelope unchanged.
+// Head expanded before envelope rewritten, so failed expansion (disk full)
+// leaves stored envelope unchanged.
 TEMPLATE
 code CLASS::put_envelope(const database::envelope& stored) NOEXCEPT
 {
@@ -176,9 +176,8 @@ code CLASS::put_envelope(const database::envelope& stored) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // public
-// The stored envelope is read in, migrated by each step from its schema, and
-// written out. A failure once the store is changed leaves the fault and flush
-// locks.
+// Stored envelope read in, migrated by each step from its schema, and written
+// out. Failure once store is changed leaves fault and flush locks.
 TEMPLATE
 code CLASS::migrate(system::config::version& original,
     const database::envelope& configured,
@@ -466,10 +465,10 @@ code CLASS::migrate_4_0_31_to_4_0_32(database::envelope& stored,
     return error::success;
 }
 
-// Each pruned block, with each of its txs, is flagged in its heavy size in
-// place, found by the sizes of its coinbase. A tx of no block (archived before
-// a failed association, as on disk full) is found once its block is archived
-// again, as the points it spends are then duplicated.
+// Each pruned block, with each of its txs, flagged in its heavy size in place,
+// found by sizes of its coinbase. Tx of no block (archived before failed
+// association, as on disk full) found once its block archived again, as points
+// it spends are then duplicated.
 TEMPLATE
 code CLASS::migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT
 {
@@ -534,8 +533,8 @@ code CLASS::migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT
     load(ec, duplicate_head_, table_t::duplicate_head);
     load(ec, duplicate_body_, table_t::duplicate_body);
 
-    // Rows are rewritten in place, so the bodies are mapped rewritable (a
-    // staged body is append-only, its settled rows read-only).
+    // Rows rewritten in place, so bodies mapped rewritable (staged body is
+    // append-only, its settled rows read-only).
     const auto restage = [&handler](code& ec, auto& file,
         table_t table) NOEXCEPT
     {
@@ -550,8 +549,8 @@ code CLASS::migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT
     restage(ec, tx_body_, table_t::tx_body);
     restage(ec, txs_body_, table_t::txs_body);
 
-    // Each header bucket is an associated block or terminal. A block is
-    // pruned as a unit, so its coinbase (first tx) decides all of its txs.
+    // Each header bucket is associated block or terminal. Block pruned as unit,
+    // so its coinbase (first tx) decides all of its txs.
     const auto count = tx.count().value;
     std::vector<bool> associated(count);
     if (!ec)
@@ -675,8 +674,8 @@ code CLASS::migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT
     return ec;
 }
 
-// A pruned tx stores every input script and witness empty (only the first
-// input link is valid), so its stored nominal size is short of its archived.
+// Pruned tx stores every input script and witness empty (only first input link
+// valid), so its stored nominal size is short of its archived.
 TEMPLATE
 code CLASS::get_pruned(bool& pruned,
     const table::transaction::record& record) const NOEXCEPT
@@ -718,9 +717,9 @@ code CLASS::get_pruned(bool& pruned,
 }
 
 // public
-// The schema is deserialized before it is validated, so the record holds it
-// when envelope deserialization fails. The stored argument provides the
-// configured values for a migrated envelope.
+// Schema deserialized before validated, so record holds
+// it when envelope deserialization fails. Stored argument
+// provides configured values for migrated envelope.
 TEMPLATE
 code CLASS::read_envelope(database::envelope& stored) NOEXCEPT
 {
@@ -774,8 +773,8 @@ code CLASS::load_schema() NOEXCEPT
         error::schema_version;
 }
 
-// The schema is deserialized before it is validated, so the record holds it
-// when envelope deserialization fails.
+// Schema deserialized before validated,
+// so record holds it when envelope deserialization fails.
 TEMPLATE
 bool CLASS::get_schema(system::config::version& schema) const NOEXCEPT
 {

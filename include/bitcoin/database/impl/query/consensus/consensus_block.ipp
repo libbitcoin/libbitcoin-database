@@ -113,10 +113,10 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
 // Called by validator for a current block, prior to block production.
 // ----------------------------------------------------------------------------
-// Each non-coinbase tx is validated under its pooled context, which is
-// sufficient for the block (absolute locktime is monotonic under bip113). What
-// remains is the coinbase, the block checks over all txs, and the prevouts
-// record, from which block_confirmable performs the chain checks.
+// Each non-coinbase tx is validated under its pooled context, sufficient for
+// block (absolute locktime is monotonic under bip113). What remains is
+// coinbase, block checks over all txs, and prevouts record, from which
+// block_confirmable performs chain checks.
 
 TEMPLATE
 code CLASS::validate_pooled(const header_link& link, const chain_context& ctx,
@@ -217,8 +217,8 @@ code CLASS::check_pooled_block(pooled_block& block) const NOEXCEPT
             if (!store_.ins.sequence.get(fk, input))
                 return error::integrity;
 
-            // An internal spend (by hash) is terminal, as confirmation of the
-            // pooled parent would otherwise be required.
+            // Internal spend (by hash) is terminal, as confirmation of pooled
+            // parent would otherwise be required.
             auto merged = prevout::tx::terminal;
             if (const auto it = block.positions.find(point.hash());
                 it == block.positions.end())
@@ -325,8 +325,8 @@ system::error::transaction_error_t CLASS::spendable(const memory& strong,
 {
     const auto bip68 = ctx.is_enabled(system::chain::flags::bip68_rule);
 
-    // A spend internal to the block has zero age and a non-coinbase parent
-    // (the merged coinbase bit of a terminal point is not meaningful).
+    // Spend internal to block has zero age and non-coinbase parent (merged
+    // coinbase bit of terminal point is not meaningful).
     if (point.tx.is_terminal())
     {
         if (bip68 &&
@@ -367,14 +367,13 @@ system::error::transaction_error_t CLASS::spendable(const memory& strong,
 }
 
 // ****************************************************************************
-// CONSENSUS: To reproduce the behavior of a UTXO accumulator when reorganizing
-// a BIP30 exception block, the first instance of the reorganized coinbase tx
-// must be set unstrong, despite its block being strong. This creates the odd
-// situation where there is a confirmed block with unconfirmed txs. Otherwise
-// the txs are spendable, but in the satoshi client their outputs no longer
-// exist (de-accumulated). There is discussion about fixing this issue in the
-// satoshi client, which would likely result in our behavior without this
-// special handling. This is moot given the existence of checkpoints, so
+// CONSENSUS: To reproduce behavior of a UTXO accumulator when reorganizing a
+// BIP30 exception block, first instance of reorganized coinbase tx must be set
+// unstrong, despite its block being strong. This creates the odd situation of a
+// confirmed block with unconfirmed txs. Otherwise txs are spendable, but in
+// satoshi client their outputs no longer exist (de-accumulated). There is
+// discussion about fixing this in satoshi client, which would likely result in
+// our behavior without this special handling. Moot given checkpoints, so
 // presently not consensus.
 // ****************************************************************************
 

@@ -173,7 +173,8 @@ BC_AUTO_TEST_CASE(pool__put__context_columns__expected)
 // pool_index
 // ----------------------------------------------------------------------------
 
-using index_storages = test::chunk_storages<schema::pool_index::cell, schema::pool_index::cell>;
+using index_storages = test::chunk_storages<schema::pool_index::cell,
+    schema::pool_index::cell>;
 static const index_storages::paths index_paths{ "cells", "children" };
 
 BC_AUTO_TEST_CASE(pool_index__cells__set_two__expected)

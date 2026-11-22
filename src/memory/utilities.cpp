@@ -74,8 +74,8 @@ uint64_t system_memory() NOEXCEPT
 
 uint64_t physical_memory() NOEXCEPT
 {
-    // Total physical excludes only hardware reservations, which rounding up
-    // to a whole gibibyte absorbs.
+    // Total physical excludes only hardware reservations,
+    // which rounding up to whole gibibyte absorbs.
     constexpr auto gibibyte = power2<uint64_t>(30u);
     const auto memory = system_memory();
     return ceilinged_multiply(ceilinged_divide(memory, gibibyte), gibibyte);
@@ -195,7 +195,7 @@ uint64_t physical_memory() NOEXCEPT
 {
 #if defined(HAVE_LINUX)
     // Zone present pages exclude only firmware carveouts and address holes,
-    // which rounding up to a whole gibibyte absorbs.
+    // which rounding up to whole gibibyte absorbs.
     constexpr auto gibibyte = power2<uint64_t>(30u);
     if (const auto file = std::fopen("/proc/zoneinfo", "r"))
     {
@@ -268,8 +268,8 @@ uint64_t system_available() NOEXCEPT
         return ceilinged_multiply<uint64_t>(pages, page_size());
     }
 #elif defined(HAVE_LINUX)
-    // MemAvailable is the kernel estimate of memory available to allocation
-    // without swapping (includes reclaimable file cache).
+    // MemAvailable is kernel estimate of memory available to allocation without
+    // swapping (includes reclaimable file cache).
     if (const auto file = std::fopen("/proc/meminfo", "r"))
     {
         char line[128];
@@ -330,10 +330,10 @@ size_t system_pressure() NOEXCEPT
         return possible_narrow_sign_cast<size_t>(level);
     }
 #elif defined(HAVE_LINUX)
-    // PSI (requires CONFIG_PSI): fraction of recent wall time that tasks
-    // stalled on memory reclaim. A tenth of time stalled is treated as genuine
-    // pressure, partial (some) as warning and total (full) as critical,
-    // mapping to the macos memorystatus level semantics.
+    // PSI (requires CONFIG_PSI): fraction of recent wall time tasks
+    // stalled on memory reclaim. Tenth of time stalled treated as
+    // genuine pressure, partial (some) as warning and total (full)
+    // as critical, mapping to macos memorystatus level semantics.
     if (const auto file = std::fopen("/proc/pressure/memory", "r"))
     {
         char line[128];
@@ -422,7 +422,8 @@ void prefetch(const std::span<const data_slab>& regions) NOEXCEPT
             continue;
 
         const auto start = page_start(region.begin(), page);
-        const auto bytes = sign_cast<size_t>(std::distance(start, region.end()));
+        const auto extent = std::distance(start, region.end());
+        const auto bytes = sign_cast<size_t>(extent);
 #if defined(HAVE_LINUX)
         // Linux reads at most the device readahead window per advice.
         constexpr auto window = power2<size_t>(17u);
@@ -495,8 +496,10 @@ bool solid_state(const std::filesystem::path& path) NOEXCEPT
 
     DWORD size{};
     DEVICE_SEEK_PENALTY_DESCRIPTOR penalty{};
-    STORAGE_PROPERTY_QUERY query{ StorageDeviceSeekPenaltyProperty,
-        PropertyStandardQuery, {} };
+    STORAGE_PROPERTY_QUERY query
+    {
+        StorageDeviceSeekPenaltyProperty, PropertyStandardQuery, {}
+    };
 
     const auto result = ::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY,
         &query, sizeof(query), &penalty, sizeof(penalty), &size, nullptr);
@@ -529,8 +532,10 @@ bool internal_storage(const std::filesystem::path& path) NOEXCEPT
 
     DWORD size{};
     std_array<uint8_t, 512> buffer{};
-    STORAGE_PROPERTY_QUERY query{ StorageDeviceProperty, PropertyStandardQuery,
-        {} };
+    STORAGE_PROPERTY_QUERY query
+    {
+        StorageDeviceProperty, PropertyStandardQuery, {}
+    };
 
     const auto result = ::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY,
         &query, sizeof(query), buffer.data(), possible_narrow_cast<DWORD>(

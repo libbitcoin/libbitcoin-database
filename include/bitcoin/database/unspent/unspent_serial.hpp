@@ -28,8 +28,8 @@
 namespace libbitcoin {
 namespace database {
 
-/// The serialized commitment of a set, a stream in canonical (txid, index)
-/// order, folded by bucket of leading txid byte (canonical across buckets).
+/// Serialized commitment of set, stream in canonical (txid, index) order,
+/// folded by bucket of leading txid byte (canonical across buckets).
 template <typename Store>
 class unspent_serial
 {

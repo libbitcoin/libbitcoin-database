@@ -24,14 +24,14 @@
 namespace libbitcoin {
 namespace database {
 
-// Input population is not expected to be called publicly, tx population (chain
-// true) is expected to be called (tx pool validation), and block population is
-// called for full block validation/confirmation (chain false).
+// Input population not expected to be called publicly, tx population (chain
+// true) expected to be called (tx pool validation), and block population called
+// for full block validation/confirmation (chain false).
 
 // populate_with_metadata
 // ----------------------------------------------------------------------------
-// These are used when performing confirmation, either directly (chain true) or
-// caching metadata (chain false) in validation stage for later confirmation.
+// Used when performing confirmation, either directly (chain true) or caching
+// metadata (chain false) in validation stage for later confirmation.
 
 TEMPLATE
 bool CLASS::populate_with_metadata(const block& block,
@@ -78,9 +78,8 @@ bool CLASS::populate_with_metadata(const input& input, bool chain,
     // Null point would return nullptr and be interpreted as missing.
     BC_ASSERT(!input.point().is_null());
 
-    // If read via the store for store confirmation, then...
-    // input.metadata.point_link is set earlier in get_input().
-    // So this assertion no longer holds.
+    // If read via store for store confirmation, input.metadata.point_link is
+    // set earlier in get_input(), so this assertion does not hold.
     ////BC_ASSERT(input.metadata.point_link == max_uint32);
 
     if (input.prevout)
@@ -96,11 +95,11 @@ bool CLASS::populate_with_metadata(const input& input, bool chain,
     // Node only (cheap so always include).
     input.metadata.parent_tx = tx;
 
-    // This is used by node for unconfirmed tx validation (expensive).
-    // There are three consensus-relevant heights. These are the height of the
-    // presumed next block (pool), the height of the block containing previous
-    // output's transaction, and the height of a block containing a previous
-    // spender of the previous output. median-time-past is of the prevout.
+    // Used by node for unconfirmed tx validation (expensive).
+    // Three consensus-relevant heights: height of presumed next block (pool),
+    // height of block containing previous output's transaction, and height of
+    // block containing a previous spender of previous output. median-time-past
+    // is of the prevout.
     if (chain)
     {
         auto& metadata = input.metadata;
@@ -119,8 +118,8 @@ bool CLASS::populate_with_metadata(const input& input, bool chain,
             metadata.median_time_past = max_uint32;
         }
 
-        // The genesis coinbase is unspendable, so no confirmed spender is at
-        // zero, which therefore distinguishes an unconfirmed spender.
+        // Genesis coinbase is unspendable, so no confirmed spender is at zero,
+        // which therefore distinguishes unconfirmed spender.
         if (pool && !is_spent(input.point()))
         {
             // Any spender (including duplicate tx) not found.
@@ -145,9 +144,9 @@ bool CLASS::populate_with_metadata(const input& input, bool chain,
 
 // populate_pooled
 // ----------------------------------------------------------------------------
-// This is used in validation of a block containing a tx validated in the pool,
-// caching the pool's metadata for later confirmation. A block-internal spend
-// is populated by the block, so its metadata remains that of internal spend.
+// Used in validation of block containing a tx validated in pool, caching pool's
+// metadata for later confirmation. Block-internal spend is populated by block,
+// so its metadata remains that of internal spend.
 
 TEMPLATE
 code CLASS::populate_pooled(pooled_tx& out, const transaction& tx,
@@ -174,10 +173,9 @@ code CLASS::populate_pooled(pooled_tx& out, const transaction& tx,
 
 // populate_without_metadata
 // ----------------------------------------------------------------------------
-// These are used when not performing confirmation. This also implies that
-// validation is not being performed, so is used for populating prevouts for
-// the purpose of computing client filters in the validation stage. So these
-// are not used for in consensus but are kept here for close similarity.
+// Used when not performing confirmation. Also implies validation is not being
+// performed, so used for populating prevouts to compute client filters in
+// validation stage. Not used in consensus but kept here for close similarity.
 
 TEMPLATE
 bool CLASS::populate_without_metadata(const block& block) const NOEXCEPT

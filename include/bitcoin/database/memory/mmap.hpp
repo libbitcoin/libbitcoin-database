@@ -36,9 +36,9 @@
 namespace libbitcoin {
 namespace database {
 
-/// Thread safe access to a memory-mapped file, or to a set of column files
-/// sharing one allocation/remap guard set (SoA aggregate).
-/// A slab has a row width of 1, so "count" implies "bytes" for slabs below.
+/// Thread safe access to memory-mapped file, or to set of column files sharing
+/// one allocation/remap guard set (SoA aggregate).
+/// Slab has row width of 1, so "count" implies "bytes" for slabs below.
 template <size_t... Widths>
 class mmap
   : public storage
@@ -53,7 +53,7 @@ public:
     using sizes = std::array<size_t, columns>;
 
     /// Per-column record widths; transpose row<->byte by these (constexpr).
-    /// A zero width column is unbacked: its file is never grown or mapped.
+    /// Zero width column is unbacked: its file is never grown or mapped.
     static constexpr sizes widths{ Widths... };
 
     /// Bytes per logical row across the aggregate (sum of column widths).
@@ -64,14 +64,14 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Staged instances (append-only bodies) stage writes in anonymous memory
-    /// and convert flushed rows to a read-only file mapping, hard-faulting any
+    /// and convert flushed rows to read-only file mapping, hard-faulting any
     /// write into settled space. Unstaged instances (heads) hold all logical
-    /// content in anonymous memory for the life of the load. Both write the
-    /// file only by explicit transfer, so no dirty file-backed page ever
-    /// exists (no effect where the staging backend is not built).
+    /// content in anonymous memory for life of load. Both write file only by
+    /// explicit transfer, so no dirty file-backed page ever exists (no effect
+    /// where staging backend is not built).
 
-    /// Storage tuning is passed by settings (future tunables land there
-    /// without signature change); random and staged are structural.
+    /// Storage tuning passed by settings (future tunables land there without
+    /// signature change); random and staged are structural.
 
     /// Scalar construction (columns == 1).
     mmap(const path& filename, const storage_settings& settings={},
@@ -169,8 +169,8 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     size_t allocate(size_t count) NOEXCEPT override;
 
-    /// Allocate filled rows/bytes; managed heads write the fill to the file
-    /// and map it released (no memory residency of the fill).
+    /// Allocate filled rows/bytes; managed heads write fill to file and map it
+    /// released (no memory residency of fill).
     size_t allocate_filled(size_t count) NOEXCEPT override;
 
     /// Report element write completion of count rows/bytes at offset.
@@ -262,19 +262,18 @@ private:
     static constexpr size_t urgent_factor = 4;
     static constexpr size_t idle_seconds = 60;
 
-    // Settled-extent demotion ceiling (installed memory). Demotion trades
-    // body cache for head residency, which pays only while the head set
-    // contests memory. Above this ceiling nothing contests: demotion just
-    // converts warm cache into re-read faults (measured ~2x milestone and
-    // validation wall on a high-memory host), so ample hosts retain
-    // settled extents at normal priority.
+    // Settled-extent demotion ceiling (installed memory). Demotion trades body
+    // cache for head residency, which pays only while head set contests memory.
+    // Above this ceiling nothing contests: demotion converts warm cache into
+    // re-read faults (measured ~2x milestone and validation wall on high-memory
+    // host), so ample hosts retain settled extents at normal priority.
     static constexpr size_t demote_memory = system::power2(35u);
 
-    // Body eviction leads kernel reclaim: sweeping at the reclaim watermark
-    // concedes the choice of victim, and the kernel takes anonymous heads
-    // alongside the cold body cache (it balances the lists, it does not
-    // know that head residency is the store's priority). A higher floor
-    // keeps free memory above the watermark, so the sweep is the reclaim.
+    // Body eviction leads kernel reclaim: sweeping at reclaim watermark
+    // concedes choice of victim, and kernel takes anonymous heads alongside
+    // cold body cache (it balances lists, it does not know head residency is
+    // store's priority). Higher floor keeps free memory above watermark, so
+    // sweep is the reclaim.
     static constexpr size_t sweep_factor = 8;
 
     // Managed heads (touch, release, share).
@@ -283,18 +282,18 @@ private:
     static constexpr size_t release_quiet = 128;
 
     // Release conversion granularity: chunked runs bound address space
-    // fragmentation (each conversion splits a mapping) to the measured flat
-    // zone of host memory management (heads / chunk fragments worst case).
+    // fragmentation (each conversion splits mapping) to measured flat zone of
+    // host memory management (heads / chunk fragments worst case).
     static constexpr size_t release_chunk = system::power2(20u);
 
-    // Writes per tick sustained for unshare_seconds reinstall a shared head
-    // (a block at the top is a burst of one tick, a catch-up is sustained).
+    // Writes per tick sustained for unshare_seconds reinstall shared head
+    // (block at top is burst of one tick, catch-up is sustained).
     static constexpr size_t unshare_writes = 1000;
     static constexpr size_t unshare_seconds = 10;
 #if defined(HAVE_APPLE)
-    // Anonymous overflow feeds the darwin compressor (10.8GB measured at
-    // 16GB), which mincore hides from the touch guard; release converts
-    // quiet heads to droppable file pages, removing them from its reach.
+    // Anonymous overflow feeds darwin compressor (10.8GB measured at 16GB),
+    // which mincore hides from touch guard; release converts quiet heads to
+    // droppable file pages, removing them from its reach.
     static constexpr bool head_release = true;
 #else
     static constexpr bool head_release = false;
@@ -356,11 +355,11 @@ private:
     template <size_t Column>
     bool finalize_() NOEXCEPT;
 
-    // Head working-set steering for the native (file-backed) mapping. The
-    // cache manager trims without knowing that head residency is the store's
-    // priority, and every head miss is a serial fault on the probe path, so
-    // the scan asserts residency (a read sets the access bit). Body placement
-    // is left to the cache manager, within the body memory bounds.
+    // Head working-set steering for native (file-backed) mapping.
+    // Cache manager trims without knowing head residency is store's
+    // priority, and every head miss is serial fault on probe path,
+    // so scan asserts residency (read sets access bit). Body
+    // placement left to cache manager, within body memory bounds.
     void scan_run_() NOEXCEPT;
     void reclaim_run_() NOEXCEPT;
 #endif
@@ -416,8 +415,8 @@ private:
     void remark_(size_t offset, size_t size) NOEXCEPT;
     void head_run_() NOEXCEPT;
 
-    // head page release, synchronized with writers by the prepare/release
-    // bit protocol (see release_pages_).
+    // head page release, synchronized with writers
+    // by prepare/release bit protocol (see release_pages_).
     bool release_pages_() NOEXCEPT;
     void restore_(size_t offset, size_t size) NOEXCEPT;
     void declare_released_() NOEXCEPT;
@@ -475,24 +474,20 @@ private:
     mutable std::mutex worker_mutex_{};
 
 #if defined(MANAGE_STAGING)
-    // Page-dirty bitmap for unstaged (rewrite-in-place head) instances.
-    // Marks follow content writes; transfer clears before reading, so a
-    // racing mark is never lost (a torn disk page is unreachable state, as
-    // live heads are trusted only following a clean close).
+    // Page-dirty bitmap for unstaged (rewrite-in-place head) instances. Marks
+    // follow content writes; transfer clears before reading, so racing mark is
+    // never lost (torn disk page is unreachable state, as live heads are
+    // trusted only following clean close).
     using dirty_bitmaps = std::atomic<uint64_t>[];
 
     static constexpr size_t extents = 4096;
 
-    // Extent state packs a recycling generation with the outstanding count,
-    // so a lock-free claim (cas decrement) cannot land across a recycle: the
-    // generation changes before a slot is reused, failing the cas. This
-    // replaces the post-decrement start-recheck repair, which misfired when
-    // the decrement itself zeroed the extent and the slot recycled before
-    // the recheck (the repair then permanently inflated the successor,
-    // freezing the frontier). The count is atomic because the lock-free
-    // range search reads it against a concurrent recycle. The generation
-    // wraps at 16 bits; a stale claimer would need 65536 same-slot recycles
-    // (each a full ring lap) within one preempted claim to alias.
+    // Extent state packs recycling generation with outstanding count, so
+    // lock-free claim (cas decrement) cannot land across recycle: generation
+    // changes before slot is reused, failing cas. Count is atomic because
+    // lock-free range search reads it against concurrent recycle. Generation
+    // wraps at 16 bits; stale claimer would need 65536 same-slot recycles (each
+    // a full ring lap) within one preempted claim to alias.
     static constexpr size_t generation_shift = 48;
     static constexpr uint64_t generation_mask =
         sub1(system::power2<uint64_t>(16u));
@@ -546,9 +541,9 @@ private:
     // Set across a settle transition (head writers back off, uncounted).
     std::atomic_bool transition_{};
 
-    // Writers between prepare and mark (unaged, unlike intent bits), so a
-    // release pass cannot settle under a preempted in-flight write. Sharded
-    // by thread on separate lines: the write path touches one, drains sum.
+    // Writers between prepare and mark (unaged, unlike intent bits), so release
+    // pass cannot settle under preempted in-flight write. Sharded by thread on
+    // separate lines: write path touches one, drains sum.
     struct alignas(64) writer_shard { std::atomic<size_t> count{}; };
     static constexpr size_t writer_shards = 16;
     std::array<writer_shard, writer_shards> writers_{};
@@ -560,8 +555,8 @@ private:
     mutable std::array<std::mutex, restore_stripes> restore_stripe_{};
 
     // Serializes transfer passes (worker tick against flush), as concurrent
-    // passes split the claimed dirty set, allowing a flush to complete while
-    // claimed pages remain unwritten (a stale snapshot copy).
+    // passes split claimed dirty set, allowing flush to complete while claimed
+    // pages remain unwritten (stale snapshot copy).
     mutable std::mutex transfer_mutex_{};
 
     // This is protected by extent_mutex_.

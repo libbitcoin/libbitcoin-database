@@ -25,7 +25,9 @@ BC_FIXTURE_TEST_SUITE(query_envelope_state_tests, test::directory_setup_fixture)
 // get_activation
 // ----------------------------------------------------------------------------
 
-constexpr uint32_t activated = system::chain::flags::bip68_rule | system::chain::flags::bip141_rule;
+constexpr uint32_t activated =
+    system::chain::flags::bip68_rule |
+    system::chain::flags::bip141_rule;
 
 BC_AUTO_TEST_CASE(query_envelope_state__get_activation__unset__false)
 {

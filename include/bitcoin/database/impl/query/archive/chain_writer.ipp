@@ -159,7 +159,7 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
         return error::tx_output_put;
 
     // Allocate ins/point rows and contiguously store input links.
-    // Point elements are set into the same rows following tx set, below.
+    // Point elements set into same rows following tx set, below.
     auto ins_fk = store_.ins.allocate(inputs);
     if (ins_fk.is_terminal())
         return error::tx_ins_put;
@@ -173,13 +173,12 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
     insert.reset();
 
     // Allocate outs/address rows and contiguously store output links.
-    // Address spine elements are committed into the same rows, below.
+    // Address spine elements committed into same rows, below.
     auto outs_fk = store_.outs.allocate(outputs);
     if (outs_fk.is_terminal())
         return error::tx_outs_put;
 
-    // Outs put is unguarded, the accessor guards its rows against remap
-    // (the puts column accessor, as the spine is unbacked when disabled).
+    // Outs put is unguarded, the accessor guards its rows against remap.
     auto outsert = store_.outs.template get_memory<one>();
     if (!outsert || !store_.outs.puts.put(outs_fk,
         table::outs::put_ref{ {}, out_fk, tx }))
@@ -214,12 +213,12 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
     }
     else
     {
-        // If dirty we must guard against duplicates. Dirty is caused by disk,
-        // full, disorganized or reorganized block, and tx pooling. It is set
-        // to true at runtime by any of these and in case of header table with
-        // multiple rows at startup. disorg/reorg indicated by candidate pop.
-        // Must be set after tx.set and before tx.commit, since searchable and
-        // produces association to tx.link, and is also an integral part of tx.
+        // If dirty, must guard against duplicates. Dirty is caused by disk,
+        // full, disorganized or reorganized block, and tx pooling. Set true at
+        // runtime by any of these and in case of header table with multiple
+        // rows at startup. disorg/reorg indicated by candidate pop. Must be set
+        // after tx.set and before tx.commit, since searchable and produces
+        // association to tx.link, and also integral part of tx.
         if (store_.is_dirty() || !bypass)
         {
             // Collect duplicates to store in duplicate table.
@@ -238,7 +237,6 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
 
             ptr.reset();
 
-            // tx_duplicate_put implies link domain overflow (2^24).
             for (const auto& twin: twins)
                 if (!store_.duplicate.exists(twin))
                     if (!store_.duplicate.put(twin, table::duplicate::record{}))
@@ -268,8 +266,8 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
 
     // Commit tx to search (hashmap).
     // tx.get_hash() assumes cached or is not thread safe.
-    return store_.tx.commit(tx_fk, tx.get_hash(false)) ?
-        error::success : error::tx_tx_commit;
+    const auto committed = store_.tx.commit(tx_fk, tx.get_hash(false));
+    return committed ? error::success : error::tx_tx_commit;
 }
 
 // set header
@@ -396,9 +394,9 @@ code CLASS::set_code(header_link& out_fk, const block& block,
 
 // set txs from block
 // ----------------------------------------------------------------------------
-// This sets only the txs of a block with header/context already archived.
-// Block MUST be kept in scope until all transactions are written. ~block()
-// releases all memory for parts of itself, due to the custom allocator.
+// Sets only txs of block with header/context already archived. Block MUST be
+// kept in scope until all transactions are written. ~block() releases all
+// memory for parts of itself, due to custom allocator.
 
 TEMPLATE
 code CLASS::set_code(const block& block, bool strong, bool bypass,

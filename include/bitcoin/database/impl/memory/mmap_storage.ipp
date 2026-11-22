@@ -118,9 +118,9 @@ code CLASS::close() NOEXCEPT
 
 // map, flush, unmap.
 // ----------------------------------------------------------------------------
-// Each accessor holds a shared lock on remap_mutex_ (read/write access to map).
-// Exclusive lock on remap_mutex_ ensures there are open accessor objects,
-// which allows for safely remapping the memory map.
+// Each accessor holds shared lock on remap_mutex_ (read/write access to map).
+// Exclusive lock on remap_mutex_ ensures there are open accessor objects, which
+// allows safely remapping memory map.
 
 TEMPLATE
 code CLASS::load() NOEXCEPT
@@ -165,9 +165,9 @@ code CLASS::reload() NOEXCEPT
         }
 
 #if defined(MANAGE_STAGING)
-        // The store reload transactor implies quiescent writers, so remaining
-        // extents are orphans of abandoned writes, stalling the frontier (in
-        // any table, not just those that faulted). Discard to unjam settling.
+        // Store reload transactor implies quiescent writers, so remaining
+        // extents are orphans of abandoned writes, stalling frontier (in any
+        // table, not just those that faulted). Discard to unjam settling.
         discard_();
 #endif
 
@@ -213,9 +213,9 @@ code CLASS::flush() NOEXCEPT
         if (!loaded_.load())
             return error::flush_unloaded;
 
-        // The suspend-writes contract implies remaining extents are complete
-        // or abandoned (as reload), so the ring is discarded to reconcile the
-        // frontier, which settling to the flushed top would otherwise pass.
+        // Suspend-writes contract implies remaining extents are complete or
+        // abandoned (as reload), so ring is discarded to reconcile frontier,
+        // which settling to flushed top would otherwise pass.
         discard_();
 
         if (!settle_all_(rows, sequence{}))
@@ -378,7 +378,7 @@ bool CLASS::truncate(size_t count) NOEXCEPT
     auto fresh = count;
 
 #if defined(MANAGE_STAGING)
-    // Truncation below the settle boundary reverts settled rows to anonymous
+    // Truncation below settle boundary reverts settled rows to anonymous
     // memory, as append-only bodies may re-append after reorganization.
     if (staged_ && loaded_.load() && (count < settled_.load()))
     {
@@ -392,8 +392,7 @@ bool CLASS::truncate(size_t count) NOEXCEPT
     trim_(count);
 #endif
 
-    // Released rows are filled (or zeroed), so an allocation reads the fill
-    // until written.
+    // Released rows filled (or zeroed), so allocation reads fill until written.
     if (zeroed_ && loaded_.load())
     {
         if (fill_.has_value())
@@ -455,11 +454,11 @@ bool CLASS::reserve(size_t count) NOEXCEPT
     return true;
 }
 
-// The slow path waits until all access pointers are destructed. Will deadlock
-// if any access pointer is waiting on allocation. Lock safety requires that
-// access pointers are short-lived and do not block on allocation. Relies on
-// the suspend-writes contract of shrinking transitions (truncate/unload/
-// shrink/close), as the fast path does not serialize against them.
+// Slow path waits until all access pointers are destructed. Will deadlock if
+// any access pointer is waiting on allocation. Lock safety requires access
+// pointers be short-lived and not block on allocation. Relies on suspend-writes
+// contract of shrinking transitions (truncate/unload/shrink/close), as fast
+// path does not serialize against them.
 TEMPLATE
 size_t CLASS::allocate(size_t count) NOEXCEPT
 {
@@ -470,8 +469,8 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
     throttle_();
 
     // Staged claims serialize with extent recording (record_ locks on every
-    // claim regardless, so this adds no contention): a claim never exists
-    // outside the ring, so the frontier can never pass an unwritten extent.
+    // claim regardless, so this adds no contention): claim never exists outside
+    // ring, so frontier can never pass an unwritten extent.
     if (staged_)
     {
         while (true)
@@ -501,7 +500,7 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
     }
 #endif // MANAGE_STAGING
 
-    // Fast path: claim rows within published capacity (no locks). A failed
+    // Fast path: claim rows within published capacity (no locks). Failed
     // exchange implies another claim succeeded, so every retry is progress.
     auto start = logical_.load();
     while (true)
@@ -517,7 +516,7 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
     }
 
     // Slow path: serialize capacity growth (at most one grower). Fast paths
-    // continue claiming under the old capacity; the growth target covers them.
+    // continue claiming under old capacity; growth target covers them.
     std::unique_lock field_lock(field_mutex_);
 
     start = logical_.load();
@@ -544,9 +543,9 @@ size_t CLASS::allocate(size_t count) NOEXCEPT
     }
 }
 
-// Filled allocation (head creation). A managed head writes the fill to its
-// file and maps it released, so the fill is never memory-resident; otherwise
-// capacity is filled as it is committed.
+// Filled allocation (head creation). Managed head writes fill to its file and
+// maps it released, so fill is never memory-resident; otherwise capacity is
+// filled as it is committed.
 TEMPLATE
 size_t CLASS::allocate_filled(size_t count) NOEXCEPT
 {

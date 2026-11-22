@@ -360,10 +360,10 @@ BC_AUTO_TEST_CASE(mmap__allocate__no_minimum_expansion__expected_capacity)
 
 // Growth admission (headroom).
 // ----------------------------------------------------------------------------
-// An unsatisfiable headroom refuses every growth ask, which is the recoverable
-// resource condition (space set, store intact) and never a store fault. Staged
-// load commits (stage_), so an unsatisfiable headroom refuses the load itself
-// and these cases cannot isolate growth there.
+// Unsatisfiable headroom refuses every growth ask, which is recoverable
+// resource condition (space set, store intact) and never store fault. Staged
+// load commits (stage_), so unsatisfiable headroom refuses load itself and
+// these cases cannot isolate growth there.
 
 #if !defined(MANAGE_STAGING)
 
@@ -988,9 +988,9 @@ BC_AUTO_TEST_CASE(mmap__write__read__expected)
     BC_REQUIRE(!instance.get_fault());
 }
 
-// The staged parameter engages the anonymous staging backend where built
-// (posix); elsewhere it is ignored. Content assertions are identical either
-// way, so these cases validate staging on posix and the classic map on win32.
+// Staged parameter engages anonymous staging backend where built (posix);
+// elsewhere it is ignored. Content assertions identical either way, so these
+// cases validate staging on posix and classic map on win32.
 
 constexpr auto stage_pattern = [](size_t index) NOEXCEPT
 {
@@ -1900,8 +1900,8 @@ BC_AUTO_TEST_CASE(mmap__allocate__aggregate_remap__expected_geometry)
     BC_REQUIRE_EQUAL(instance.size(), rows);
     BC_REQUIRE_EQUAL(instance.capacity(), rows);
 
-    // Loaded geometry: resize_ extends each file to capacity x width. This is
-    // the remap denomination check (unload's trim would mask an oversize).
+    // Loaded geometry: resize_ extends each file to capacity x width. Remap
+    // denomination check (unload's trim would mask an oversize).
     BC_REQUIRE_EQUAL(std::filesystem::file_size(files.front()), rows * 1u);
     BC_REQUIRE_EQUAL(std::filesystem::file_size(files.back()), rows * 3u);
 
@@ -2080,9 +2080,9 @@ static std::vector<uint64_t> read_cells(const map& instance,
     return values;
 }
 
-// Sustained volume is repetition by definition, so the writer drive iterates.
-// Stamps rising generations across the cells until stopped, returning the
-// last generation stamped into each.
+// Sustained volume is repetition by definition, so writer drive iterates.
+// Stamps rising generations across cells until stopped, returning last
+// generation stamped into each.
 static std::vector<uint64_t> drive(map& instance, size_t cells,
     const std::atomic_bool& stop, bool held=false) NOEXCEPT
 {

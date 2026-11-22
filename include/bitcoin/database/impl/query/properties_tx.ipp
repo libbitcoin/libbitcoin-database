@@ -60,8 +60,8 @@ inline bool CLASS::is_tx_segregated(const tx_link& link) const NOEXCEPT
     return get_tx_sizes(light, heavy, link) && heavy != light;
 }
 
-// The pool id columns hold the witness hash of a pooled tx, otherwise (such as
-// for any coinbase) the witness hash is computed from the stored tx.
+// Pool id columns hold witness hash of pooled tx, otherwise (such as for any
+// coinbase) witness hash is computed from stored tx.
 TEMPLATE
 hash_digest CLASS::get_wtxid(const tx_link& link) const NOEXCEPT
 {

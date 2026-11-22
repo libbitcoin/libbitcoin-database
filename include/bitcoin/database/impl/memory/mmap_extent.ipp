@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
 
 // Write-completion accounting (staged instances). Extents chase completions,
-// closing the gaps, settling the completed prefix.
+// closing gaps, settling completed prefix.
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -38,18 +38,18 @@ void CLASS::complete(size_t STAGING_ONLY(offset),
     if (!staged_ || is_zero(count))
         return;
 
-    // The covering extent is immobile while this completion is pending and
-    // cannot refuse a consistent claim, so a failed pass raced a recycle
-    // (torn navigation or stale snapshot): rescan against a fresh window.
+    // Covering extent is immobile while this completion is pending and cannot
+    // refuse a consistent claim, so failed pass raced a recycle (torn
+    // navigation or stale snapshot): rescan against fresh window.
     for (;;)
     {
-        // Acquire-ordered window snapshot (published entries are immobile;
-        // the packed word precludes observing a torn head/size pair).
+        // Acquire-ordered window snapshot (published entries immobile; packed
+        // word precludes observing torn head/size pair).
         const auto window = window_.load(std::memory_order_acquire);
         const auto [head, size] = system::unpack_word<uint64_t>(window);
 
-        // Lock-free binary search of the sorted window (relaxed navigation
-        // is heuristic only; claim_ verifies cover under the generation).
+        // Lock-free binary search of sorted window (relaxed navigation is
+        // heuristic only; claim_ verifies cover under generation).
         auto high = size;
         for (size_t low{}; low < high;)
         {
@@ -77,8 +77,8 @@ void CLASS::complete(size_t STAGING_ONLY(offset),
         }
 
         // Contention can record extents out of start order (allocation claim
-        // and recording are not one atomic step), transiently breaking search
-        // order. Contiguity guarantees a unique cover: scan linearly.
+        // and recording not one atomic step), transiently breaking search
+        // order. Contiguity guarantees unique cover: scan linearly.
         for (size_t index{}; index < size; ++index)
             if (claim_(ring_[(head + index) % extents], offset, count))
                 return;
@@ -103,17 +103,16 @@ size_t CLASS::frontier() const NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
-// Claim completion of count rows against the extent, by cas decrement of the
-// packed state under a cover check ordered by that state's own acquire: the
-// publishing release sequences start/count before state, so both read after
-// it belong to the observed generation (a live outstanding precludes a
-// recycle in progress, as slots re-record only after retirement). A range
-// match read before the acquire can be torn across a recycle and debit the
-// slot's successor extent, pinning the true cover's frontier forever. False
-// implies the slot does not (or no longer does) cover the offset, or is
-// drained (recycle in flight): the caller rescans. The true covering extent
-// cannot refuse: its generation is stable and its outstanding covers every
-// pending completion while any remains.
+// Claim completion of count rows against extent, by cas decrement of packed
+// state under cover check ordered by that state's own acquire: publishing
+// release sequences start/count before state, so both read after it belong to
+// observed generation (live outstanding precludes recycle in progress, as slots
+// re-record only after retirement). Range match read before acquire can be torn
+// across recycle and debit slot's successor extent, pinning true cover's
+// frontier forever. False implies slot does not (or no longer does) cover
+// offset, or is drained (recycle in flight): caller rescans. True covering
+// extent cannot refuse: its generation is stable and its outstanding covers
+// every pending completion while any remains.
 TEMPLATE
 bool CLASS::claim_(extent& record, size_t offset, size_t count) NOEXCEPT
 {
@@ -126,8 +125,8 @@ bool CLASS::claim_(extent& record, size_t offset, size_t count) NOEXCEPT
         const auto outstanding = bit_and<uint64_t>(state, outstanding_mask);
         const auto start = record.start.load(relaxed);
 
-        // An outstanding below the claim is a recycle in flight or a drained
-        // slot (never the covering extent), refused rather than wrapped.
+        // Outstanding below claim is recycle in flight or drained slot (never
+        // covering extent), refused rather than wrapped.
         if ((outstanding < count) || (offset < start) ||
             (offset >= (start + record.count.load(relaxed))))
             return false;
@@ -136,8 +135,8 @@ bool CLASS::claim_(extent& record, size_t offset, size_t count) NOEXCEPT
             pack_extent_(generation, outstanding - count),
             std::memory_order_acq_rel, std::memory_order_acquire))
         {
-            // Extent completion is allocation-coarse, so maintenance is
-            // cheap here and the element write fast path takes no lock.
+            // Extent completion is allocation-coarse, so maintenance is cheap
+            // here and element write fast path takes no lock.
             if (outstanding == count)
             {
                 std::unique_lock extent_lock(extent_mutex_, std::try_to_lock);
@@ -153,9 +152,8 @@ bool CLASS::claim_(extent& record, size_t offset, size_t count) NOEXCEPT
     }
 }
 
-// Claim and record an extent under one lock: a claim never exists outside
-// the ring and the ring is start-ordered, so the frontier can never pass an
-// unwritten extent (claim-then-record raced the frontier past the claim).
+// Claim and record extent under one lock: claim never exists outside ring and
+// ring is start-ordered, so frontier can never pass an unwritten extent.
 // Returns eof (unclaimed) on insufficient capacity, fault, or disk full.
 TEMPLATE
 size_t CLASS::record_(size_t count) NOEXCEPT
@@ -170,10 +168,10 @@ size_t CLASS::record_(size_t count) NOEXCEPT
     using namespace system;
     auto [head, size] = unpack_word<uint64_t>(window_.load(relaxed));
 
-    // A full ring waits on its oldest incomplete extent (head-of-line).
+    // Full ring waits on its oldest incomplete extent (head-of-line).
     // Completions are lock-free, so waiting needs only this thread's own
-    // maintenance; fault or disk full releases the wait unclaimed (the write
-    // then fails fast).
+    // maintenance; fault or disk full releases wait unclaimed
+    // (write then fails fast).
     while (size == extents)
     {
         if (fault_.load() || !is_zero(space_.load()))
@@ -196,9 +194,9 @@ size_t CLASS::record_(size_t count) NOEXCEPT
     record.start.store(start, relaxed);
     record.count.store(count, relaxed);
 
-    // Publish the state (pairs with the acquire in claim_): a claim against
-    // the stale generation now fails its cas, and one against this
-    // generation observes the new start and count through the release.
+    // Publish state (pairs with acquire in claim_): claim against stale
+    // generation now fails its cas, and one against this generation observes
+    // new start and count through release.
     record.state.store(pack_extent_(generation, count * columns),
         std::memory_order_release);
 
@@ -232,7 +230,7 @@ void CLASS::maintain_() NOEXCEPT
 }
 
 // Discard all extents, requires quiescent writers (locked). Any extent then
-// outstanding is an abandoned write (unreferenced), safe to settle as is.
+// outstanding is abandoned write (unreferenced), safe to settle as is.
 TEMPLATE
 void CLASS::discard_() NOEXCEPT
 {
@@ -246,8 +244,8 @@ void CLASS::discard_() NOEXCEPT
     check_invariants_();
 }
 
-// Discard extents above the truncation and clamp any overlap, requires
-// quiescent writers (locked).
+// Discard extents above truncation and clamp any overlap,
+// requires quiescent writers (locked).
 TEMPLATE
 void CLASS::trim_(size_t count) NOEXCEPT
 {
@@ -273,8 +271,8 @@ void CLASS::trim_(size_t count) NOEXCEPT
             const auto trimmed = count - start;
             tail.count.store(trimmed, relaxed);
 
-            // Clamp outstanding within the state, generation unchanged
-            // (the extent is trimmed, not recycled; writers quiescent).
+            // Clamp outstanding within state, generation unchanged (extent
+            // trimmed, not recycled; writers quiescent).
             const auto limit = trimmed * columns;
             const auto state = tail.state.load(relaxed);
             if (bit_and<uint64_t>(state, outstanding_mask) > limit)

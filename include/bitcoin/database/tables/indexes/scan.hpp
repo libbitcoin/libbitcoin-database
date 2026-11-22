@@ -191,8 +191,8 @@ struct scan_prefix
 
         inline bool to_data(flipper& sink) const NOEXCEPT
         {
-            // The prefix must be read from ec_xonly[0..7] as LE.
-            // Disk sequence will be [0..7] (with no byteswap on LE hardware).
+            // Prefix must be read from ec_xonly[0..7] as LE.
+            // Disk sequence is [0..7] (no byteswap on LE hardware).
             for (const auto& prefix: prefixes)
                 sink.write_little_endian<integral>(prefix);
 

@@ -49,11 +49,10 @@ code CLASS::get_pool_coverage(bool& out,
         maximum_outcomes);
 }
 
-// Candidates are rows and inputs numbered from the table counts. A parent
-// among the candidates is found by hash, a pooled parent by link, and any
-// other parent is none. An input joins the ring of a pooled spender of its
-// point by a bridge from that input, or a ring of candidate spenders if there
-// is none.
+// Candidates are rows and inputs numbered from table counts. Parent among
+// candidates is found by hash, pooled parent by link, and any other parent is
+// none. Input joins ring of a pooled spender of its point by a bridge from that
+// input, or a ring of candidate spenders if there is none.
 TEMPLATE
 code CLASS::get_pool_candidate(pool_graph& out, const transaction& tx,
     const context& ctx) const NOEXCEPT
@@ -144,8 +143,8 @@ code CLASS::get_pool_candidate(pool_graph& out, const transaction& tx,
         else
         {
             auto& ring = out.rivals.at(at->second - inputs);
-            out.rivals.back() = (algorithm::from_column(ring) == none) ?
-                algorithm::to_column(at->second) : ring;
+            const auto vacant = (algorithm::from_column(ring) == none);
+            out.rivals.back() = vacant ? algorithm::to_column(at->second) : ring;
 
             ring = algorithm::to_column(input);
         }
@@ -244,8 +243,8 @@ code CLASS::get_pool_coverage(bool& out, const pool_graph& graph,
         components.push_back(component);
     }
 
-    // A pooled parent's surplus pays for its child (parent pays for child),
-    // in a family within a block, beyond which each component pays its own.
+    // Pooled parent's surplus pays for its child (parent pays for child), in a
+    // family within a block, beyond which each component pays its own.
     uint64_t fee{}, bytes{};
     const auto bounded = algorithm::family(fee, bytes, g, measured,
         limit.size, bytes_per_sigop, maximum_outcomes);

@@ -27,12 +27,12 @@ namespace database {
 
 // Reader directly from store to wire-encoded buffer (store to network).
 // ----------------------------------------------------------------------------
-// Due to the stoopid segwit serialization of witness after output there is are
-// duplicated navigations to store_.ins and store_.input by the witness reader.
-// This normalized approach is also the most efficient.
+// Due to segwit serialization of witness after output there are duplicated
+// navigations to store_.ins and store_.input by witness reader. This normalized
+// approach is also most efficient.
 
-// The stored tx is presumed to have the txid of the tx, so only the witness
-// may differ. Stored witnesses are wire encoded, so are compared in place.
+// Stored tx presumed to have txid of tx, so only witness may differ. Stored
+// witnesses are wire encoded, so compared in place.
 TEMPLATE
 bool CLASS::is_witness_match(const tx_link& link,
     const transaction& tx) const NOEXCEPT
@@ -75,8 +75,10 @@ bool CLASS::is_witness_match(const tx_link& link,
         return true;
 
     const auto witnesses = tx.witnesses();
-    table::input::match_witness match{ {}, witnesses.data(),
-        witnesses.size() };
+    table::input::match_witness match
+    {
+        {}, witnesses.data(), witnesses.size()
+    };
 
     // Point links are contiguous (computed).
     const auto ins_begin = record.point_fk;
@@ -414,9 +416,9 @@ void CLASS::page_wire_block(const wire_accessors& ptrs,
         cold_reads_.release();
 }
 
-// These convenience wrappers are made practical by size caching for block and
-// tx for both nominal and witness wire encodings (and fixed size headers).
-// Intermediate objects (input, output, witness) have a size prefix.
+// Convenience wrappers made practical by size caching for block and tx for both
+// nominal and witness wire encodings (and fixed size headers). Intermediate
+// objects (input, output, witness) have a size prefix.
 
 TEMPLATE
 data_chunk CLASS::get_wire_header(const header_link& link) const NOEXCEPT
@@ -487,8 +489,8 @@ bool CLASS::get_wire_block(const system::data_slab& out,
     if (txs.empty())
         return false;
 
-    // Tx sizes, converted in place to offsets. Tasks read through the held
-    // accessors, as a task taking a held lock could wait behind a remap.
+    // Tx sizes, converted in place to offsets. Tasks read through held
+    // accessors, as task taking a held lock could wait behind a remap.
     const auto ptrs = get_wire_accessors();
     page_wire_block(ptrs, txs);
 
@@ -513,8 +515,8 @@ bool CLASS::get_wire_block(const system::data_slab& out,
     if (is_zero(scale) || (scale * bytes != out.size()))
         return false;
 
-    // Txs are written in ranges, one task each, as each task costs a wakeup,
-    // and a block of two ranges or fewer is written without tasks.
+    // Txs written in ranges, one task each, as each task costs a wakeup, and
+    // block of two ranges or fewer is written without tasks.
     constexpr size_t range_txs = 256;
     const auto ranges = ceilinged_divide(txs.size(), range_txs);
     if (ranges <= two)

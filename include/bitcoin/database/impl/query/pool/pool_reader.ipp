@@ -100,7 +100,7 @@ code CLASS::get_pooled(pooled_tx& out, const tx_link& link,
 }
 
 // protected
-// The tx of an uncommitted record (its key does not resolve to it) is terminal.
+// Tx of uncommitted record (its key does not resolve to it) is terminal.
 TEMPLATE
 tx_link CLASS::to_pool_tx(const pool_link& link) const NOEXCEPT
 {

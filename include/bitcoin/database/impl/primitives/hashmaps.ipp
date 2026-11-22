@@ -269,8 +269,8 @@ inline Link CLASS::allocate(const Link& size) NOEXCEPT
 {
     const auto link = body_.allocate(size);
 
-    // A disabled spine is never committed, so its share of the allocation
-    // completes here (write completion is accounted for each column).
+    // Disabled spine is never committed, so its share of allocation completes
+    // here (write completion accounted for each column).
     if (!link.is_terminal() && !enabled())
         body_.complete(link, size);
 
@@ -705,7 +705,10 @@ bool CLASS::read(const memory& ptr, const Link& link, Element& element) NOEXCEPT
     reader source{ stream };
     source.skip_bytes(index_size);
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());) }
+    if constexpr (!is_slab)
+    {
+        BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());)
+    }
     return element.from_data(source);
 }
 
@@ -747,7 +750,10 @@ bool CLASS::write(Link& previous, const memory& ptr, const Link& link,
     keys::write(sink, key);
 
     // Commit element to body.
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
+    if constexpr (!is_slab)
+    {
+        BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());)
+    }
     auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
     if (!element.to_data(sink))
         return false;

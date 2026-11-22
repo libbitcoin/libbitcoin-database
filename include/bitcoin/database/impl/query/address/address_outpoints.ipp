@@ -45,8 +45,6 @@ code CLASS::get_unconfirmed_unspent_outpoints(const stopper& cancel,
     return parallel_outpoint_transform(cancel, turbo, out, links,
         [this](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
-            // Confirmed and spent must be filtered out. An unconfirmed output
-            // can only be spent by an unconfirmed tx, so is_spent() suffices.
             if (cancel || fail || is_confirmed_output(link) || is_spent(link))
                 return outpoint{};
 

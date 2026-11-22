@@ -26,9 +26,9 @@ namespace database {
 
 // set transaction_view
 // ----------------------------------------------------------------------------
-// This is the only multitable write query (except initialize/genesis).
-// The caller holds the transactor and all table accessors, with all table rows
-// preallocated by the block writer. No allocation may occur under accessors.
+// Only multitable write query (except initialize/genesis). Caller holds
+// transactor and all table accessors, with all table rows preallocated by block
+// writer. No allocation may occur under accessors.
 
 TEMPLATE
 code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
@@ -39,7 +39,7 @@ code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
     using ix = linkage<schema::index>;
 
     // View parser treats empty as invalid, so there is no empty state.
-    // As a result this condition should never be hit (deserialization fails).
+    // Condition should never be hit (deserialization fails).
     if (!tx.is_valid())
         return error::tx_empty;
 
@@ -58,14 +58,14 @@ code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
         return error::tx_output_put;
 
     // Contiguously store input links (preallocated, rows shared with points).
-    // Point elements are set into the same rows following tx set, below.
-    // The caller's ins accessor guards raw sequence writes against remap.
+    // Point elements set into same rows following tx set, below.
+    // Caller's ins accessor guards raw sequence writes against remap.
     if (!store_.ins.sequence.put(fks.ins_fk,
         table::ins_sequence::put_view{ {}, fks.in_fk, fks.tx_fk, tx }))
         return error::tx_ins_put;
 
-    // Contiguously store output links (preallocated, rows shared with the
-    // address spine). The caller's outs accessor guards against remap.
+    // Contiguously store output links (preallocated, rows shared with address
+    // spine). Caller's outs accessor guards against remap.
     if (!store_.outs.puts.put(fks.outs_fk,
         table::outs::put_view{ {}, fks.out_fk, tx }))
         return error::tx_outs_put;
@@ -172,8 +172,8 @@ code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
     }
 
     // Commit tx to search (hashmap).
-    return store_.tx.commit(ptrs.tx, fks.tx_fk, tx.hash(false)) ?
-        error::success : error::tx_tx_commit;
+    const auto committed = store_.tx.commit(ptrs.tx, fks.tx_fk, tx.hash(false));
+    return committed ? error::success : error::tx_tx_commit;
 }
 
 TEMPLATE
@@ -200,9 +200,9 @@ tx_link CLASS::to_pooled(const transaction_view& tx) const NOEXCEPT
 
 // set txs from block
 // ----------------------------------------------------------------------------
-// This sets only the txs of a block with header/context already archived.
-// Block MUST be kept in scope until all transactions are written. ~block()
-// releases all memory for parts of itself, due to the custom allocator.
+// Sets only txs of block with header/context already archived. Block MUST be
+// kept in scope until all transactions are written. ~block() releases all
+// memory for parts of itself, due to custom allocator.
 
 TEMPLATE
 code CLASS::set_code(const block_view& block, bool strong, bool bypass,
@@ -307,7 +307,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     if (fks.outs_fk.is_terminal())
         return error::tx_outs_put;
 
-    // Guard all tables against remap for the duration of the block write.
+    // Guard all tables against remap for duration of block write.
     // No table may be allocated while any of these accessors are held.
     accessors ptrs{};
     ptrs.tx = store_.tx.get_memory();
@@ -335,6 +335,8 @@ code CLASS::set_code(const block_view& block, const header_link& key,
             if ((ec = set_code(twins, ptrs, fks, tx, bypass, prune)))
                 return ec;
 
+            const auto in_bytes = tx.input_table_size(prune);
+
             // Output rows are parent fk prefixed (see table::output::put_view).
             const auto out_bytes = tx.outputs() * tx_link::size +
                 tx.output_table_size();
@@ -342,7 +344,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
             *it = fks.tx_fk++;
             fks.ins_fk  += possible_narrow_cast<ins_t>(tx.inputs());
             fks.outs_fk += possible_narrow_cast<outs_t>(tx.outputs());
-            fks.in_fk   += possible_narrow_cast<in_t>(tx.input_table_size(prune));
+            fks.in_fk   += possible_narrow_cast<in_t>(in_bytes);
             fks.out_fk  += possible_narrow_cast<out_t>(out_bytes);
         }
 

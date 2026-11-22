@@ -47,8 +47,8 @@ code CLASS::reload(const event_handler& handler) NOEXCEPT
             }
 
             // Reload all storages, as staged instances must discard extents
-            // orphaned by abandoned writes (which may span into tables that
-            // did not themselves fault). Returns any storage fault as failure.
+            // orphaned by abandoned writes (which may span into tables that did
+            // not themselves fault). Returns any storage fault as failure.
             ec = file.reload();
         }
     };

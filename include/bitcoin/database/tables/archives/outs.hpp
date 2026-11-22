@@ -251,8 +251,8 @@ struct outs_puts
     };
 };
 
-/// The outs association: address spine (searched by output script hash) with
-/// the aligned output fk column, shared row count and allocation.
+/// Outs association: address spine (searched by output script hash) with
+/// aligned output fk column, shared row count and allocation.
 struct outs
   : public hash_maps<schema::address, outs_puts>
 {

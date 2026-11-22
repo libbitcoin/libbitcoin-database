@@ -50,12 +50,11 @@ bool CLASS::close() NOEXCEPT
 TEMPLATE
 bool CLASS::clear() NOEXCEPT
 {
-    // Head is nullified and its body reference is zeroized. Body memory
-    // recovery requires truncate/unload/load, which should be preceded by a
-    // snapshot as all existing snapshots will be invalidated by the truncate.
-    // An intervening snapshot will capture the zero count body reference (and
-    // null head links) and will therefore be recoverable whether or not the
-    // truncation succeeds.
+    // Head is nullified and its body reference zeroized. Body memory recovery
+    // requires truncate/unload/load, which should be preceded by snapshot as
+    // all existing snapshots are invalidated by truncate. Intervening snapshot
+    // captures zero count body reference (and null head links) and is therefore
+    // recoverable whether or not truncation succeeds.
     return head_.clear();
 }
 
@@ -182,7 +181,10 @@ inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
     iostream stream{ ptr };
     reader source{ stream };
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());) }
+    if constexpr (!is_slab)
+    {
+        BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());)
+    }
     return element.from_data(source);
 }
 
@@ -232,7 +234,10 @@ bool CLASS::write(const Link& link, size_t key,
     iostream stream{ ptr };
     finalizer sink{ stream };
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
+    if constexpr (!is_slab)
+    {
+        BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());)
+    }
     return element.to_data(sink) && head_.push(link, head_.index(key));
 }
 

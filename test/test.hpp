@@ -95,8 +95,8 @@ std::string read_line(const std::filesystem::path& file_path,
 /// Database settings with explicit values, independent of the defaults.
 database::settings database_settings() NOEXCEPT;
 
-/// A 4.0.31 envelope, of a store created with
-/// database_settings(): mainnet, unlimited, silent start 42, filters provided.
+/// 4.0.31 envelope of store created with database_settings(): mainnet,
+/// unlimited, silent start 42, filters provided.
 extern const system::data_chunk envelope_4_0_31;
 
 struct directory_setup_fixture

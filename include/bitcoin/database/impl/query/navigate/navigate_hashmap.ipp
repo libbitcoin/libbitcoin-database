@@ -31,7 +31,8 @@ TEMPLATE
 header_link CLASS::top_header(size_t bucket) const NOEXCEPT
 {
     using namespace system;
-    return store_.header.top(possible_narrow_cast<header_link::integer>(bucket));
+    const auto index = possible_narrow_cast<header_link::integer>(bucket);
+    return store_.header.top(index);
 }
 
 TEMPLATE

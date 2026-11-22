@@ -102,7 +102,7 @@ INLINE uint64_t hash(const Key& key) NOEXCEPT
     }
     else if constexpr (is_std_array<Key>)
     {
-        // Produces an almost perfect 100% Poisson distribution for sha256.
+        // Produces almost perfect 100% Poisson distribution for sha256.
         // Assumes sufficient uniqueness in low order bytes (ok for all).
         // sequentially-valued keys should have no more buckets than values.
         constexpr auto bytes = std::min(size<Key>(), sizeof(uint64_t));
@@ -123,20 +123,20 @@ INLINE uint64_t thumb(const Key& key) NOEXCEPT
     }
     else if constexpr (is_same_type<Key, system::chain::point>)
     {
-        // spread point.index across point.hash extraction, as otherwise the
-        // unlikely bucket collisions of points of the same hash will not be
-        // differentiated by filters. This has a very small impact on false
-        // positives (-5,789 out of ~2.6B) but w/o material computational cost.
+        // spread point.index across point.hash extraction, as otherwise
+        // unlikely bucket collisions of points of same hash are not
+        // differentiated by filters. Very small impact on false positives
+        // (-5,789 out of ~2.6B) but w/o material computational cost.
         return fnv1a_combine(thumb(key.hash()), key.index());
         ////return thumb(key.hash());
     }
     else if constexpr (is_std_array<Key>)
     {
         // Assumes sufficient uniqueness in second-low order bytes (ok for all).
-        // The thumb(key) starts at the next byte following hash(key).
-        // If key is to short then thumb aligns to the end of the key.
-        // This is intended to minimize overlap to the extent possible, while
-        // also avoiding the high order bits in the case of block hashes.
+        // thumb(key) starts at next byte following hash(key).
+        // If key is too short then thumb aligns to end of key.
+        // Intended to minimize overlap to extent possible, while also avoiding
+        // high order bits in case of block hashes.
         constexpr auto bytes = std::min(size<Key>(), sizeof(uint64_t));
         constexpr auto offset = std::min(size<Key>() - bytes, bytes);
 

@@ -32,12 +32,12 @@ namespace libbitcoin {
 namespace database {
 
 /// SoA aggregate hash table: one keyed spine with satellite record columns.
-/// Column zero is the keyed spine (link/key/value rows searchable from the
-/// hash head). Trailing Widths are satellite records sharing the spine's row
-/// count, with allocation unified across all columns (one lock). One storage
-/// backs all columns, so any column accessor guards the body against remap.
+/// Column zero is keyed spine (link/key/value rows searchable from hash head).
+/// Trailing Widths are satellite records sharing spine's row count, with
+/// allocation unified across all columns (one lock). One storage backs all
+/// columns, so any column accessor guards body against remap.
 /// Caution: iterator/reader/finalizer hold body remap lock until disposed.
-/// These handles should be used for serialization and immediately disposed.
+/// Handles should be used for serialization and immediately disposed.
 template <class Link, class Key, size_t RowSize, size_t CellSize,
     size_t... Widths>
 class hashmaps

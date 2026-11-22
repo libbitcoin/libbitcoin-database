@@ -27,9 +27,9 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// prevout is a slab arraymap index of previous outputs indexed by block link.
-/// The coinbase flag is merged into the tx field, reducing it's domain.
-/// Masking is from the right in order to accomodate integral tx domain.
+/// prevout is slab arraymap index of previous outputs indexed by block link.
+/// Coinbase flag merged into tx field, reducing its domain.
+/// Masking is from right to accomodate integral tx domain.
 struct prevout
   : public array_map<schema::prevout>
 {
@@ -54,7 +54,7 @@ struct prevout
         const system::chain::prevout& metadata) NOEXCEPT
     {
         // input.metadata.point_link is always set in get_input(), so this
-        // assertion no longer holds.
+        // assertion does not hold.
         ////BC_ASSERT((metadata.parent_tx == max_uint32) ==
         ////    (metadata.point_link == max_uint32));
 

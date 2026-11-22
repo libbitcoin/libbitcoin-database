@@ -29,8 +29,8 @@ namespace database {
 template <typename Store>
 class query;
 
-/// Toggles the creates and spends of a branch into a set, the residue of
-/// which is the unspent set (as outs table links).
+/// Toggles creates and spends of branch into set, residue of which is unspent
+/// set (as outs table links).
 template <typename Store>
 class unspent_scanner
 {

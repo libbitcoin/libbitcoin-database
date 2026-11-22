@@ -153,8 +153,8 @@ Link CLASS::allocate(const Link& count) NOEXCEPT
     // visible records (relative), return absolute record link of first.
     const auto start = files_.allocate(link_to_elements(count));
 
-    // Guards addition overflow in cast_link (start must be valid). The eof
-    // sentinel is in file denomination, so must be detected before conversion.
+    // Guards addition overflow in cast_link (start must be valid). Eof sentinel
+    // is in file denomination, so must be detected before conversion.
     if (start == storage::eof)
         return Link::terminal;
 
@@ -270,9 +270,9 @@ constexpr size_t CLASS::link_to_elements(const Link& link) NOEXCEPT
 {
     using namespace system;
 
-    // Single column: file elements are bytes (width one). Records convert
-    // by stride (slab passes through, slab links are already byte offsets).
-    // Aggregate: file rows are the shared record count (no conversion).
+    // Single column: file elements are bytes (width one). Records convert by
+    // stride (slab passes through, slab links already byte offsets). Aggregate:
+    // file rows are shared record count (no conversion).
     if constexpr (is_one(columns))
         return link_to_position<zero>(link);
     else
@@ -298,9 +298,9 @@ constexpr CLASS::integer CLASS::cast_link(size_t link) NOEXCEPT
     constexpr auto ceiling = limit<size_t>(terminal);
 
     // link limit is sub1(terminal), where terminal is 2^((8*Link::bytes)-1).
-    // It is ok for the payload to exceed link limit (link is identity only).
-    // A link above the limit is a table sizing violation and is deliberately
-    // not mapped to terminal, as that would present it as not found/not put.
+    // Payload may exceed link limit (link is identity only). Link above limit
+    // is table sizing violation and deliberately not mapped to terminal, as
+    // that would present it as not found/not put.
     return link == ceiling ? terminal : possible_narrow_cast<integer>(link);
 }
 

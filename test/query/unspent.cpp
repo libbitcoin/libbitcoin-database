@@ -73,7 +73,8 @@ static system::data_chunk output_element(const system::chain::transaction& tx,
     const auto& output = *tx.outputs_ptr()->at(index);
     const auto script = output.script().to_data(false);
     const auto txid = tx.hash(false);
-    const auto coded = system::possible_narrow_cast<uint32_t>((height << 1) | 1u);
+    const auto flagged = (height << 1) | 1u;
+    const auto coded = system::possible_narrow_cast<uint32_t>(flagged);
     const auto code = system::to_little_endian(coded);
     const auto value = system::to_little_endian(output.value());
     const auto length = system::possible_narrow_cast<uint8_t>(script.size());

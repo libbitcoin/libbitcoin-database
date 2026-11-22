@@ -22,8 +22,8 @@
 #include <cmath>
 #include <bitcoin/database/define.hpp>
 
-// Heads are not subject to resize/remap and therefore do not require memory
-// smart pointer with shared remap lock. Using get_raw() saves that allocation.
+// Heads not subject to resize/remap, so do not require memory smart pointer
+// with shared remap lock. get_raw() saves that allocation.
 
 namespace libbitcoin {
 namespace database {
@@ -64,8 +64,8 @@ bool CLASS::create() NOEXCEPT
     if (is_nonzero(file_.size()))
         return false;
 
-    // The fill is file content: a managed head writes it to the file and
-    // maps it released, so creation contributes no memory residency.
+    // Fill is file content: managed head writes it to file and maps it
+    // released, so creation contributes no memory residency.
     if (file_.allocate_filled(size()) == storage::eof)
         return false;
 
@@ -203,8 +203,8 @@ double CLASS::bloom_false_positive(size_t k, size_t n) NOEXCEPT
     return std::pow(1.0 - value, to_floating(k));
 }
 
-// Poisson mass is negligible past ten deviations of the mean. The minimum
-// floors the bound for small means where deviations are near zero.
+// Poisson mass negligible past ten deviations of mean. Minimum floors bound for
+// small means where deviations are near zero.
 TEMPLATE
 size_t CLASS::poisson_span(double load_factor) NOEXCEPT
 {
@@ -255,9 +255,9 @@ bool CLASS::get_body_count(Link& count) const NOEXCEPT
     if (!ptr)
         return false;
 
-    // Body count is written as the first value in link size, but since
-    // offsetting is a multiple of sell size, a full cell is consumed for it.
-    // In case of disabled there are no cells, so file is link size.
+    // Body count written as first value in link size, but since offsetting is a
+    // multiple of cell size, a full cell is consumed for it. If disabled there
+    // are no cells, so file is link size.
     count = link_array(ptr.data());
     return true;
 }
@@ -269,9 +269,9 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     if (!ptr)
         return false;
 
-    // Body count is written as the first value in link size, but since
-    // offsetting is a multiple of sell size, a full cell is consumed for it.
-    // In case of disabled there are no cells, so file is link size.
+    // Body count written as first value in link size, but since offsetting is a
+    // multiple of cell size, a full cell is consumed for it. If disabled there
+    // are no cells, so file is link size.
     file_.prepare(zero, Link::size);
     link_array(ptr.data()) = count;
     file_.mark(zero, Link::size);
@@ -300,8 +300,8 @@ inline Link CLASS::top(const Key& key) const NOEXCEPT
     if (screened(value, keys::thumb(key)))
         return to_link(value);
 
-    // Conflict (body) search is bypassed by filter when key is not screened.
-    // If terminal here it is assured that table does not contain the key.
+    // Conflict (body) search bypassed by filter when key not screened. If
+    // terminal here, table assuredly does not contain key.
     return {};
 }
 
@@ -379,10 +379,10 @@ inline bool CLASS::set_cell(bool& collision, bytes& next, const Link& current,
         cell update{};
         do
         {
-            // Compiler could order this after top.store, which would expose key
-            // to search before next entry is linked. Thread fence imposes order.
-            // A release fence ensures that all prior writes (like next) are
-            // completed before any subsequent atomic store.
+            // Compiler could order this after top.store, exposing key
+            // to search before next entry is linked. Thread fence
+            // imposes order. Release fence ensures all prior writes
+            // (like next) complete before any subsequent atomic store.
             const auto value = native_from_little_end(head);
             next = Link{ to_link(value) };
             update = native_to_little_end(next_cell(collision, value, current,

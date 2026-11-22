@@ -585,7 +585,7 @@ public:
     bool populate_with_metadata(const transaction& tx, bool chain=false,
         bool pool=false) const NOEXCEPT;
 
-    /// Success implies tx pooled under sufficient context, input.metadata is
+    /// Success implies tx pooled under sufficient context, input.metadata
     /// populated for each input not populated by its block (internal spend).
     code populate_pooled(pooled_tx& out, const transaction& tx,
         const tx_link& link, const context& ctx) const NOEXCEPT;
@@ -889,7 +889,7 @@ public:
     bool set_silent(const header_link& link, const block_view& block) NOEXCEPT;
 
     /// Commit block's silent payment batch rows and presilent link, with rows
-    /// number committed (block with no rows is set scanned).
+    /// number committed (block with no rows set scanned).
     bool set_silents(size_t& rows, const header_link& link,
         const block& block, bool bank) NOEXCEPT;
     bool set_silents(size_t& rows, const header_link& link,
@@ -906,6 +906,7 @@ public:
         const header_link& link, const block_view& block) const NOEXCEPT;
 
     /// Compute a bank's silent payment batch, then set its scan records.
+    /// Sets used_gpu true if computed on gpu.
     code compute_silents(const stopper& cancel, bool& used_gpu,
         bool bank) NOEXCEPT;
 
@@ -920,22 +921,22 @@ public:
     /// Invoke callback for each matched tx, false implies cancel.
     bool scan_silent(const stopper& cancel,
         const system::scan::batch::receiver& keys,
-        const silent_handler& callback) NOEXCEPT;
+        const silent_handler& callback) const NOEXCEPT;
     bool scan_silent(const stopper& cancel,
         const system::scan::batch::receiver& keys, size_t first,
-        size_t last, const silent_handler& callback) NOEXCEPT;
+        size_t last, const silent_handler& callback) const NOEXCEPT;
 
-    /// Invoke callback for each matched tx of rows [first, last) that is
-    /// confirmed at heights [start, stop] or linked at or above the pool
-    /// latch, false implies cancel.
+    /// Invoke callback for each matched tx of rows [first, last),
+    /// confirmed at heights [start, stop] or linked at or above pool latch.
+    /// False implies cancel.
     bool scan_silent(const stopper& cancel,
         const system::scan::batch::receiver& keys, size_t first,
         size_t last, size_t start, size_t stop,
-        const silent_handler& callback) NOEXCEPT;
+        const silent_handler& callback) const NOEXCEPT;
 
     /// Matches (height, tx hash, tweak) of rows [first, last) confirmed at
     /// heights (or mtps if time) [start, stop], ordered by height, then
-    /// unconfirmed (zero height), false implies cancel. A short height cut
+    /// unconfirmed (zero height), false implies cancel. Short height cut
     /// scanned from its floor scans only rows of its confirmed blocks.
     bool get_silent_matches(silent_matches& out, const stopper& cancel,
         const system::scan::batch::receiver& keys, size_t first,
@@ -965,6 +966,7 @@ public:
     scan_link get_scan_floor(size_t height) const NOEXCEPT;
 
     /// Verify all signatures in table, false implies cancel.
+    /// Sets used_gpu true if verified on gpu.
     bool verify_ecdsa_signatures(const stopper& cancel, bool& used_gpu,
         header_links& links, bool bank) NOEXCEPT;
     bool verify_schnorr_signatures(const stopper& cancel, bool& used_gpu,
@@ -996,7 +998,7 @@ public:
 
     /// Confirmation.
     /// -----------------------------------------------------------------------
-    /// These are not used in consensus confirmation.
+    /// Not used in consensus confirmation.
 
     /// These compare strong with height index.
     bool is_candidate_header(const header_link& link) const NOEXCEPT;
@@ -1018,7 +1020,7 @@ public:
 
     /// Consensus.
     /// -----------------------------------------------------------------------
-    /// These are used in consensus confirmation.
+    /// Used in consensus confirmation.
 
     code block_confirmable(const header_link& link) const NOEXCEPT;
 
@@ -1035,7 +1037,7 @@ public:
     bool get_strong_fork(bool& strong, const uint256_t& fork_work,
         size_t fork_point, bool tie=false) const NOEXCEPT;
 
-    /// Wire-encoded prevouts of each spend of  block (in block order), with
+    /// Wire-encoded prevouts of each spend of block (in block order), with
     /// spends and conflicts for set_prevouts. False if any missing.
     bool get_block_prevouts(data_chunk& prevouts, prevout_spends& spends,
         tx_links& conflicts, const header_link& link) const NOEXCEPT;
@@ -1420,8 +1422,8 @@ protected:
     void seek_scan_start(size_t& row, size_t& last,
         tx_link::integer floor) const NOEXCEPT;
 
-    /// Set silent payment records of a block's selected txs and its scanned
-    /// state, or of a tx.
+    /// Set silent payment records of block's selected txs and its scanned
+    /// state, or of tx.
     template <typename Block>
     bool set_silent_(const header_link& link, const Block& block,
         size_t count) NOEXCEPT;
@@ -1456,7 +1458,7 @@ protected:
 
     /// Pooling.
     /// -----------------------------------------------------------------------
-    /// Archived link of a pooled duplicate of tx, or terminal.
+    /// Archived link of pooled duplicate of tx, or terminal.
     tx_link to_pooled(const transaction& tx) const NOEXCEPT;
     tx_link to_pooled(const transaction_view& tx) const NOEXCEPT;
     bool is_size_match(table::transaction::record& out, const tx_link& link,

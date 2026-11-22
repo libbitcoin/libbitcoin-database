@@ -57,10 +57,10 @@ int mmap_unreserve(void* address, size_t size) NOEXCEPT
 #if defined(HAVE_APPLE)
 
 // Darwin admits every anonymous ask (exhaustion arrives at first touch), so
-// admission is computed: free ram plus swap growth room (darwin swap is
-// files created on demand in the vm volume). A failed measurement term
-// contributes zero (conservative), and the bound moves at disk speed, so
-// the headroom absorbs the measure-to-touch race.
+// admission is computed: free ram plus swap growth room (darwin
+// swap is files created on demand in vm volume). Failed
+// measurement term contributes zero (conservative), and bound
+// moves at disk speed, so headroom absorbs measure-to-touch race.
 static bool mmap_admit(size_t size) NOEXCEPT
 {
     vm_statistics64_data_t stats{};
@@ -90,10 +90,9 @@ static bool mmap_admit(size_t size) NOEXCEPT
 
 #endif // HAVE_APPLE
 
-// The commitment is granted only if it leaves the headroom free: the probe
-// charges the headroom alongside the request (atomic with its admission)
-// and releases it upon the grant. Darwin refuses no charge, so its
-// admission is computed rather than delegated.
+// Commitment granted only if it leaves headroom free: probe charges headroom
+// alongside request (atomic with its admission) and releases it upon grant.
+// Darwin refuses no charge, so its admission is computed rather than delegated.
 int mmap_commit(void* address, size_t size, size_t headroom) NOEXCEPT
 {
     if (is_zero(headroom))
@@ -121,18 +120,19 @@ int mmap_commit(void* address, size_t size, size_t headroom) NOEXCEPT
 
 int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 {
-    return ::mmap(address, size, PROT_READ, MAP_SHARED | MAP_FIXED, fd,
-        possible_narrow_sign_cast<off_t>(offset)) == MAP_FAILED ? -1 : 0;
+    const auto mapped = ::mmap(address, size, PROT_READ, MAP_SHARED | MAP_FIXED,
+        fd, possible_narrow_sign_cast<off_t>(offset));
+
+    return mapped == MAP_FAILED ? -1 : 0;
 }
 
-// The lazy writer duplicates the head in page cache: every transferred page
-// is written to the file, and the cached copy of that write is redundant
-// while the anonymous page remains authoritative (the head is resident, not
-// read back). Undiscarded, that duplicate doubles the head footprint and
-// exhausts memory, which the kernel resolves by swapping the live copy.
-// Mapped pages (released runs, where the file is the live copy) hold a
-// reference and are not discarded. Dirty pages are not discarded either, so
-// a page discards on the pass following its writeback.
+// Lazy writer duplicates head in page cache: every transferred page is written
+// to file, and cached copy of that write is redundant while anonymous page
+// remains authoritative (head is resident, not read back). Undiscarded, that
+// duplicate doubles head footprint and exhausts memory, which kernel resolves
+// by swapping live copy. Mapped pages (released runs, where file is live copy)
+// hold a reference and are not discarded. Dirty pages are not discarded either,
+// so page discards on pass following its writeback.
 #if defined(POSIX_FADV_DONTNEED)
 int file_discard(int fd) NOEXCEPT
 {
@@ -145,11 +145,11 @@ int file_discard(int) NOEXCEPT
 }
 #endif
 
-// Deactivation expresses the residency priority the kernel cannot infer:
-// settled bodies stay cached for imminent re-read (validation follows
-// archival) but reclaim first under pressure, before active pages and
-// anonymous heads (which otherwise swap to preserve the body cache). A
-// read reactivates, so genuinely hot pages promote themselves back.
+// Deactivation expresses residency priority kernel cannot infer: settled bodies
+// stay cached for imminent re-read (validation follows archival) but reclaim
+// first under pressure, before active pages and anonymous heads (which
+// otherwise swap to preserve body cache). Read reactivates, so genuinely hot
+// pages promote themselves back.
 #if defined(MADV_COLD)
 int mmap_cold(void* address, size_t size) NOEXCEPT
 {
@@ -162,10 +162,10 @@ int mmap_cold(void*, size_t) NOEXCEPT
 }
 #endif
 
-// Diagnostic attribution: names each anonymous vma in the range so smaps and
-// per-process accounting decompose by table (heads vs staged bodies vs
-// foreign allocations). Refusal (pre-5.17 kernel, name policy) is not an
-// error: attribution is best-effort and alters no behavior.
+// Diagnostic attribution: names each anonymous vma in range so smaps and
+// per-process accounting decompose by table (heads vs staged bodies vs foreign
+// allocations). Refusal (pre-5.17 kernel, name policy) is not an error:
+// attribution is best-effort and alters no behavior.
 #if defined(PR_SET_VMA) && defined(PR_SET_VMA_ANON_NAME)
 int mmap_name(void* address, size_t size, const char* name) NOEXCEPT
 {
@@ -197,15 +197,16 @@ int mmap_resident(const void* address, size_t size,
 int mmap_share(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 {
     mmap_unwire(address, size);
-    return ::mmap(address, size, PROT_READ | PROT_WRITE, MAP_SHARED |
-        MAP_FIXED, fd, possible_narrow_sign_cast<off_t>(offset)) == MAP_FAILED ?
-        -1 : 0;
+    const auto mapped = ::mmap(address, size, PROT_READ | PROT_WRITE,
+        MAP_SHARED | MAP_FIXED, fd, possible_narrow_sign_cast<off_t>(offset));
+
+    return mapped == MAP_FAILED ? -1 : 0;
 }
 
 // Darwin compresses cold anonymous pages, which mincore reports resident, so
-// the touch guard cannot defend a head there; wiring can (the user wire
-// limit leaves the kernel its share, and refusal leaves the pages unpinned).
-// Linux defends by the touch pass (unprivileged mlock is capped at 8MB).
+// touch guard cannot defend head there; wiring can (user wire limit leaves
+// kernel its share, and refusal leaves pages unpinned). Linux defends by touch
+// pass (unprivileged mlock is capped at 8MB).
 #if defined(HAVE_APPLE)
 int mmap_wire(void* address, size_t size) NOEXCEPT
 {
@@ -230,9 +231,9 @@ int mmap_unwire(void*, size_t) NOEXCEPT
 
 int mmap_unsettle(void* address, size_t size) NOEXCEPT
 {
-    // No reserve: an unsettled span can span hundreds of gigabytes (truncate
-    // reverting settled rows for re-append), which heuristic overcommit
-    // refuses as a single anonymous commitment; pages charge on touch.
+    // No reserve: unsettled span can span hundreds of gigabytes (truncate
+    // reverting settled rows for re-append), which heuristic overcommit refuses
+    // as single anonymous commitment; pages charge on touch.
 #if defined(MAP_NORESERVE)
     constexpr auto flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED |
         MAP_NORESERVE;
@@ -246,23 +247,22 @@ int mmap_unsettle(void* address, size_t size) NOEXCEPT
 
 int mmap_evict(void* address, size_t size) NOEXCEPT
 {
-    // The apple sdk defines MADV_PAGEOUT but xnu refuses it (ENOTSUP), so
-    // the gate must be platform-true, not macro-present: darwin retains
-    // invalidation (MS_INVALIDATE drops clean ubc pages on mac).
+    // Apple sdk defines MADV_PAGEOUT but xnu refuses it (ENOTSUP), so gate must
+    // be platform-true, not macro-present: darwin retains invalidation
+    // (MS_INVALIDATE drops clean ubc pages on mac).
 #if defined(MADV_PAGEOUT) && !defined(HAVE_APPLE)
     // MS_INVALIDATE does not drop clean page cache on linux (it invalidates
-    // other mappings of the file), leaving the eviction sweep inert: body
-    // cache pressure stands and the kernel preserves it by swapping the
-    // anonymous heads. Pageout reclaims the mapped range (dirty pages write
-    // back, clean pages drop, later reads fault back from the file). No
-    // sync first: pageout never discards dirty content (unlike bare
-    // invalidation), and a synchronous flush here serializes the settle
-    // write path behind a device flush barrier on every sweep (durability
-    // remains the clean close).
+    // other mappings of file), leaving eviction sweep inert: body cache
+    // pressure stands and kernel preserves it by swapping anonymous heads.
+    // Pageout reclaims mapped range (dirty pages write back, clean pages drop,
+    // later reads fault back from file). No sync first: pageout never discards
+    // dirty content (unlike bare invalidation), and synchronous flush here
+    // serializes settle write path behind device flush barrier on every sweep
+    // (durability remains the clean close).
     return ::madvise(address, size, MADV_PAGEOUT);
 #else
-    // Sync first: a settle write may not yet be written back, and bare
-    // invalidation of a dirty page discards it (clean pages sync free).
+    // Sync first: settle write may not yet be written back, and bare
+    // invalidation of dirty page discards it (clean pages sync free).
     return ::msync(address, size, MS_SYNC | MS_INVALIDATE);
 #endif
 }
@@ -293,9 +293,8 @@ static int mmap_object(size_t size) NOEXCEPT
     return fd;
 }
 
-// There is no mremap, so the staging copy is a memory object, which a fixed
-// mapping installs atomically over the target range (readers see old or new
-// bytes, never zeros).
+// No mremap, so staging copy is memory object, which fixed mapping installs
+// atomically over target range (readers see old or new bytes, never zeros).
 int mmap_restore(void* address, size_t size) NOEXCEPT
 {
     const auto fd = mmap_object(size);
@@ -326,8 +325,8 @@ int mmap_restore(void* address, size_t size) NOEXCEPT
 
 #else
 
-// Atomically install the source anonymous mapping over the target range,
-// consuming the source (readers see old or new bytes, never zeros).
+// Atomically install source anonymous mapping over target range, consuming
+// source (readers see old or new bytes, never zeros).
 static int mmap_install(void* address, void* source, size_t size) NOEXCEPT
 {
 #if defined(HAVE_APPLE)

@@ -28,8 +28,8 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// envelope is a head-only slab of one element (no body), holding the store
-/// envelope. The element is rewritten in place as settings change.
+/// envelope is head-only slab of one element (no body), holding store envelope.
+/// Element rewritten in place as settings change.
 struct envelope
   : public head_map<schema::envelope>
 {

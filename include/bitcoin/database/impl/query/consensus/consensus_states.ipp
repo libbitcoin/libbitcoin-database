@@ -64,8 +64,8 @@ TEMPLATE
 inline bool CLASS::is_sufficient(const context& current,
     const context& evaluated) const NOEXCEPT
 {
-    // Past evaluation at a lesser height and mtp is sufficient, provided that
-    // absolute locktime is evaluated against mtp (not block timestamp).
+    // Past evaluation at lesser height and mtp is sufficient, provided absolute
+    // locktime is evaluated against mtp (not block timestamp).
     return system::pool::algorithm::is_sufficient(
         { evaluated.flags, evaluated.height, evaluated.mtp },
         { current.flags, current.height, current.mtp },

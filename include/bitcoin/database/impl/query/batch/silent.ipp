@@ -29,7 +29,7 @@ namespace database {
 TEMPLATE
 bool CLASS::scan_silent(const stopper& cancel,
     const system::scan::batch::receiver& keys,
-    const silent_handler& callback) NOEXCEPT
+    const silent_handler& callback) const NOEXCEPT
 {
     return scan_silent(cancel, keys, zero, store_.scan.count(), callback);
 }
@@ -38,7 +38,7 @@ bool CLASS::scan_silent(const stopper& cancel,
 TEMPLATE
 bool CLASS::scan_silent(const stopper& cancel,
     const system::scan::batch::receiver& keys, size_t first, size_t last,
-    const silent_handler& callback) NOEXCEPT
+    const silent_handler& callback) const NOEXCEPT
 {
     const auto guard = store_.scan.guard();
     const auto prefix_ptr = store_.scan_prefix.get_memory();
@@ -75,14 +75,14 @@ bool CLASS::scan_silent(const stopper& cancel,
     return !cancel;
 }
 
-// Rows are in validation order, so the rows of confirmed blocks in the cut are
-// selected by tx link from the range, along with all unconfirmed rows, and only
-// the selected rows are scanned. A block's txs are a few runs of consecutive
-// links, so membership is a search of runs.
+// Rows are in validation order, so rows of confirmed blocks in cut are selected
+// by tx link from range, along with all unconfirmed rows, and only selected
+// rows are scanned. Block's txs are a few runs of consecutive links, so
+// membership is a search of runs.
 TEMPLATE
 bool CLASS::scan_silent(const stopper& cancel,
     const system::scan::batch::receiver& keys, size_t first, size_t last,
-    size_t start, size_t stop, const silent_handler& callback) NOEXCEPT
+    size_t start, size_t stop, const silent_handler& callback) const NOEXCEPT
 {
     using namespace system;
     using link_t = tx_link::integer;
@@ -207,8 +207,8 @@ bool CLASS::scan_silent(const stopper& cancel,
 }
 
 // Confirmation is strong association, otherwise height is zero (unconfirmed).
-// A tx archived only on a stale branch reports as unconfirmed, and one also
-// archived there before the store began pooling may report twice (benign).
+// Tx archived only on stale branch reports as unconfirmed, and one also
+// archived there before store began pooling may report twice (benign).
 TEMPLATE
 bool CLASS::get_silent_matches(silent_matches& out, const stopper& cancel,
     const system::scan::batch::receiver& keys, size_t first, size_t last,
@@ -303,11 +303,11 @@ bool CLASS::set_scan_start(const header_link& link,
     // ========================================================================
 }
 
-// A block's rows link above its coinbase, so the first row linked above the
-// lowest coinbase at or above a height starts the rows of blocks at or above
-// it. Rows of blocks archived after a mapped ancestor link above its coinbase
-// and so follow its start, otherwise the seek is from the first row. Headers
-// are written top down, so genesis is mapped only by a complete map.
+// Block's rows link above its coinbase, so first row linked above lowest
+// coinbase at or above a height starts rows of blocks at or above it. Rows of
+// blocks archived after a mapped ancestor link above its coinbase and so follow
+// its start, otherwise seek is from first row. Headers written top down, so
+// genesis is mapped only by complete map.
 TEMPLATE
 bool CLASS::set_scan_starts(const stopper& cancel, const header_link& top,
     size_t bound, bool remap) NOEXCEPT
@@ -370,10 +370,7 @@ scan_link CLASS::get_scan_floor(size_t height) const NOEXCEPT
 
 // setters
 // ----------------------------------------------------------------------------
-// Caller (node) controls which txs are indexed (e.g. by confirmed height).
-// The coinbase is the first tx archived for a block, so txs linked below it
-// were archived before it, as pooled (and indexed) or by another block (and
-// indexed only if that block was), so a tx below it is indexed if not pooled.
+// Tx linked below coinbase was archived before it, so is indexed unless pooled.
 
 TEMPLATE
 bool CLASS::set_silent(const header_link& link, const block& block) NOEXCEPT
@@ -449,7 +446,8 @@ bool CLASS::set_presilent(const header_link& link, bool bank) NOEXCEPT
     const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.presilent_bank(bank).put(table::presilent::record{ {}, link });
+    const table::presilent::record element{ {}, link };
+    return store_.presilent_bank(bank).put(element);
     // ========================================================================
 }
 
@@ -555,12 +553,11 @@ bool CLASS::get_prevouts_(data_chunk& prevouts, std::vector<bool>& selected,
     return !!sink;
 }
 
-// The bank is quiescent (drain claimed, no writers), so it is read across the
-// scan write, which is sourced directly from its columns. Scan rows are
-// allocated for every bank tx and prefix, so the prefixes and outputs are
-// written in parallel while points compute on gpu (or after they compute on
-// cpu), and each tx is then published by its correlate
-// (an invalid tx with no outputs).
+// Bank is quiescent (drain claimed, no writers), so read across scan write,
+// which is sourced directly from its columns. Scan rows allocated for every
+// bank tx and prefix, so prefixes and outputs are written in parallel while
+// points compute on gpu (or after they compute on cpu), and each tx is then
+// published by its correlate (an invalid tx with no outputs).
 TEMPLATE
 code CLASS::compute_silents(const stopper& cancel, bool& used_gpu,
     bool bank) NOEXCEPT
@@ -612,8 +609,8 @@ code CLASS::compute_silents(const stopper& cancel, bool& used_gpu,
     using prefix_int = prefix_link::integer;
     using outputs_record = table::scan_outputs::record;
 
-    // Bank prefixes are contiguous, so scan prefix rows are at the same
-    // offsets from the allocation, and each tx writes only its own.
+    // Bank prefixes are contiguous, so scan prefix rows are at same offsets
+    // from allocation, and each tx writes only its own.
     std::atomic_bool failed{};
     std_vector<size_t> indexes(txs);
     std::iota(indexes.begin(), indexes.end(), zero);
@@ -641,7 +638,6 @@ code CLASS::compute_silents(const stopper& cancel, bool& used_gpu,
         std::for_each(policy, indexes.cbegin(), indexes.cend(), put);
     };
 
-    // Write is concurrent with gpu, after cpu.
     data_chunk valid(txs);
     const silent::batch in{ { sums, txs }, { hashes, txs } };
     if (!silent::batch::compute(cancel, used_gpu, points, valid, in, write))
@@ -726,8 +722,8 @@ bool CLASS::set_silent_(const tx_link& link, const Transaction& tx) NOEXCEPT
     // ========================================================================
 }
 
-// Caller holds the transactor. Prefixes are allocated before txs, as they are
-// reached only through txs, and the correlate publishes each tx last.
+// Caller holds transactor. Prefixes allocated before txs, as they are reached
+// only through txs, and correlate publishes each tx last.
 TEMPLATE
 bool CLASS::put_scan_(const system::wallet::silent_payment::rows& rows,
     const std::span<const tx_link::integer>& links) NOEXCEPT
@@ -824,8 +820,8 @@ bool CLASS::set_silents_(size_t& count, const header_link& link,
     if (!store_.presilent_bank(bank).put(table::presilent::record{ {}, link }))
         return false;
 
-    // Allocate the block's outputs, then its txs across all columns. Outputs
-    // are reached only through txs, so failure strands no unwritten tx.
+    // Allocate block's outputs, then its txs across all columns. Outputs
+    // reached only through txs, so failure strands no unwritten tx.
     const auto pk = bank_prefix.allocate(
         possible_narrow_cast<prefix_link::integer>(count));
     if (pk.is_terminal())

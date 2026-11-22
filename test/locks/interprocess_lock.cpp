@@ -44,8 +44,8 @@ BC_AUTO_TEST_CASE(interprocess_lock__lock__file_exists__true)
     BC_REQUIRE(instance.try_lock());
 }
 
-// The lock is process-exclusive in linux/macOS, globally in win32.
-// This is okay here, but a proper test requires an external process.
+// Lock is process-exclusive in linux/macOS, globally in win32.
+// Okay here, but proper test requires external process.
 BC_AUTO_TEST_CASE(interprocess_lock__lock__externally_locked__false)
 {
     BC_REQUIRE(!test::exists(TEST_PATH));

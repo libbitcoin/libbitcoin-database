@@ -63,8 +63,8 @@ config::version envelope::get_schema(const data_chunk& data) NOEXCEPT
 
 // Migration steps
 // ----------------------------------------------------------------------------
-// Each step is written against the fixed layout of its own schema, and is
-// retained until that schema is no longer migratable.
+// Each step written against fixed layout of its own schema, retained until that
+// schema is no longer migratable.
 
 static void set_schema(data_chunk& data,
     const config::version& schema) NOEXCEPT

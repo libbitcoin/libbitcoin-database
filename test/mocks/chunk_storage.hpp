@@ -42,8 +42,8 @@ public:
     }
 };
 
-/// A thread safe storage implementation built on data_chunk(s); the vector-
-/// backed substitute for mmap<Widths...>. One data_chunk per column.
+/// Thread safe storage implementation built on data_chunk(s); vector-backed
+/// substitute for mmap<Widths...>. One data_chunk per column.
 template <size_t... Widths>
 class chunk_storages
   : public database::storage
@@ -387,8 +387,8 @@ private:
         return rows * widths.at(column);
     }
 
-    // Column backing selector: N owned column chunks, with an optional
-    // external alias overriding column 0 (single-column reference ctor).
+    // Column backing selector: N owned column chunks, with optional external
+    // alias overriding column 0 (single-column reference ctor).
     system::data_chunk& at(size_t column) const NOEXCEPT
     {
         return (is_zero(column) && !is_null(alias_)) ? *alias_ :
