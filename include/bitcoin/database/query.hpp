@@ -802,7 +802,8 @@ public:
     bool set_pool_context(size_t& out, const context& ctx) NOEXCEPT;
 
     /// Set the context of the pooled tx, as validated under it.
-    bool set_pooled_context(const tx_link& link, const context& ctx) NOEXCEPT;
+    bool set_pooled_context(const tx_link& link, const context& ctx,
+        size_t sigops) NOEXCEPT;
 
     /// Set each pooled spender of the block's txs not validated, out count.
     bool set_pool_unvalidated(size_t& out, const header_link& link) NOEXCEPT;

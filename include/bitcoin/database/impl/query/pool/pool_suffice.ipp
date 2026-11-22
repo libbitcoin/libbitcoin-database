@@ -97,9 +97,10 @@ code CLASS::get_pool_unvalidated(tx_links& out) const NOEXCEPT
     return error::success;
 }
 
+// The sigops of a tx are counted under the flags of its context.
 TEMPLATE
-bool CLASS::set_pooled_context(const tx_link& link,
-    const context& ctx) NOEXCEPT
+bool CLASS::set_pooled_context(const tx_link& link, const context& ctx,
+    size_t sigops) NOEXCEPT
 {
     using scalar = table::pool_scalar;
     if (!store_.pool.enabled())
@@ -113,8 +114,13 @@ bool CLASS::set_pooled_context(const tx_link& link,
     if (fk.is_terminal())
         return false;
 
+    table::pool_total total{};
     auto guard = vtx.get_memory();
-    return guard &&
+    if (!guard || !vtx.totals.get(fk, total))
+        return false;
+
+    total.sigops = system::possible_narrow_cast<uint32_t>(sigops);
+    return vtx.totals.put(fk, total) &&
         vtx.flags.put(fk, scalar{ {}, ctx.flags }) &&
         vtx.heights.put(fk, scalar{ {}, ctx.height }) &&
         vtx.medians.put(fk, scalar{ {}, ctx.mtp });
