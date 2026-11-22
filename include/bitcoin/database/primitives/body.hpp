@@ -112,10 +112,10 @@ private:
     template <size_t Column>
     static constexpr size_t stride() NOEXCEPT;
 
-    /// Convert between record links and the file's native denomination
-    /// (elements). Single column file elements are BYTES (width one), so
-    /// records convert by stride (slabs pass through, links are byte offsets).
-    /// Aggregate file elements are ROWS, which equal records (pass through).
+    /// Convert between record links and file's native denomination (elements).
+    /// Single column file elements are BYTES (width one), so records convert by
+    /// stride (slabs pass through, links are byte offsets). Aggregate file
+    /// elements are ROWS, which equal records (pass through).
     static constexpr size_t link_to_elements(const Link& link) NOEXCEPT;
     static constexpr Link elements_to_link(size_t elements) NOEXCEPT;
 

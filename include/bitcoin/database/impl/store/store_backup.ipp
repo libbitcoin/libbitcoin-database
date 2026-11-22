@@ -117,9 +117,9 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
     // Rename /temporary to /primary (atomic).
     if ((ec = file::rename_ex(temporary, primary))) return ec;
 
-    // Delete the rotated /secondary, superseded by the new /primary. Best
-    // effort, as the snapshot is committed (a remnant is deleted by the next
-    // backup or restore, and is unreachable while /primary exists).
+    // Delete rotated /secondary, superseded by new /primary. Best effort, as
+    // snapshot is committed (remnant deleted by next backup or restore, and
+    // unreachable while /primary exists).
     if (file::is_directory(secondary))
     {
         /* bool */ file::clear_directory(secondary);

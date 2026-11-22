@@ -218,9 +218,9 @@ struct pool_medians
     using no_map<schema::pool_medians>::nomap;
 };
 
-/// pool is a record hashmap of pooled tx arrival time keyed by tx link, with
-/// the short id hash (txid or wtxid) as four word columns, the totals and
-/// edges of the tx as two more, and its validation context as three more.
+/// pool is record hashmap of pooled tx arrival time keyed by tx link, with
+/// short id hash (txid or wtxid) as four word columns, totals and edges of tx
+/// as two more, and its validation context as three more.
 struct pool
   : public hash_maps<schema::pool, pool_id0, pool_id1, pool_id2, pool_id3,
         pool_totals, pool_edges, pool_flags, pool_heights, pool_medians>
@@ -303,16 +303,16 @@ struct pool_cells
     static constexpr auto suffix = schema::caches::pool_cells;
 };
 
-/// First input spending each pool row (none if childless), heading the list
-/// of its spending inputs.
+/// First input spending each pool row (none if childless),
+/// heading list of its spending inputs.
 struct pool_children
 {
     static constexpr auto width = schema::pool_index::cell;
     static constexpr auto suffix = schema::caches::pool_children;
 };
 
-/// pool_index is a head-only array of value columns aligned with the pool,
-/// one word per row and column, updated in place.
+/// pool_index is head-only array of value columns aligned with pool, one word
+/// per row and column, updated in place.
 struct pool_index
   : public head_maps<schema::pool_index, pool_cells, pool_children>
 {

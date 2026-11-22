@@ -28,8 +28,8 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// spends is an array of parent tx fk records, merged with coinbase (as
-/// prevout), contiguous by spending tx and in input order.
+/// spends is array of parent tx fk records, merged with coinbase (as prevout),
+/// contiguous by spending tx and in input order.
 struct spends
   : public no_map<schema::spends>
 {
@@ -121,24 +121,22 @@ struct spends_rows
     static constexpr auto suffix = schema::caches::spends_rows;
 };
 
-/// Next input spending the same row as each pooled input (none at the end of
-/// the list).
+/// Next input spending same row as each pooled input (none at end of list).
 struct spends_siblings
 {
     static constexpr auto width = schema::spends_index::cell;
     static constexpr auto suffix = schema::caches::spends_siblings;
 };
 
-/// Next input spending the same point as each pooled input (a ring, none if
-/// sole).
+/// Next input spending same point as each pooled input (ring, none if sole).
 struct spends_rivals
 {
     static constexpr auto width = schema::spends_index::cell;
     static constexpr auto suffix = schema::caches::spends_rivals;
 };
 
-/// spends_index is a head-only array of value columns aligned with spends,
-/// one word per input and column, updated in place.
+/// spends_index is head-only array of value columns aligned with spends, one
+/// word per input and column, updated in place.
 struct spends_index
   : public head_maps<schema::spends_index, spends_rows, spends_siblings,
         spends_rivals>

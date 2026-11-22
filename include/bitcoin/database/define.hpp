@@ -21,8 +21,8 @@
 
 #include <bitcoin/database/error.hpp>
 
-// map is able to support 32 bit, but because the database
-// requires a larger file this is neither validated nor supported.
+// map supports 32 bit, but as database requires larger file
+// this is neither validated nor supported.
 ////static_assert(sizeof(void*) == sizeof(uint64_t), "Not a 64 bit system!");
 
 namespace libbitcoin {

@@ -112,8 +112,8 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_template__rival_outbids_chain__rival_only
     BC_REQUIRE_EQUAL(out[0], query.to_tx(rival.hash(false)));
 }
 
-// The chain outbids its rival on fee, but the space it takes costs the cutoff
-// rate, at which the rival is worth more.
+// Chain outbids its rival on fee, but space it takes costs cutoff rate, at
+// which rival is worth more.
 BC_AUTO_TEST_CASE(query_pool__get_pool_template__chain_outbids_rival_at_cutoff__rival_only)
 {
     settings settings{ test::database_settings() };

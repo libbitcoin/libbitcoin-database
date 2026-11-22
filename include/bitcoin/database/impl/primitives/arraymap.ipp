@@ -50,12 +50,11 @@ bool CLASS::close() NOEXCEPT
 TEMPLATE
 bool CLASS::clear() NOEXCEPT
 {
-    // Head is nullified and its body reference is zeroized. Body memory
-    // recovery requires truncate/unload/load, which should be preceded by a
-    // snapshot as all existing snapshots will be invalidated by the truncate.
-    // An intervening snapshot will capture the zero count body reference (and
-    // null head links) and will therefore be recoverable whether or not the
-    // truncation succeeds.
+    // Head is nullified and its body reference zeroized. Body memory recovery
+    // requires truncate/unload/load, which should be preceded by snapshot as
+    // all existing snapshots are invalidated by truncate. Intervening snapshot
+    // captures zero count body reference (and null head links) and is therefore
+    // recoverable whether or not truncation succeeds.
     return head_.clear();
 }
 

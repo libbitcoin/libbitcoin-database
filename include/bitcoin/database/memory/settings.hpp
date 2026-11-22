@@ -25,7 +25,7 @@
 namespace libbitcoin {
 namespace database {
 
-/// Storage tuning consumed by memory map construction: the base of table
+/// Storage tuning consumed by memory map construction: base of table
 /// configuration, as network settings bases are derived by server services.
 /// Future staging tunables land here without constructor signature changes.
 struct storage_settings
@@ -36,41 +36,36 @@ struct storage_settings
     /// Body expansion rate (percentage).
     uint16_t rate{ 5 };
 
-    /// Headroom (bytes): growth is admitted only while it leaves this much
-    /// of the backing resource (memory commitment, disk space) unclaimed.
+    /// Headroom (bytes): growth admitted only while it leaves this much of
+    /// backing resource (memory commitment, disk space) unclaimed.
     uint64_t headroom{ system::power2(28u) };
 
-    /// Unused physical memory restored by body cache release while the store
-    /// is current (bytes, zero disables).
+    /// Unused physical memory restored by body cache release while store is
+    /// current (bytes, zero disables).
     uint64_t reserve{};
 
-    /// Resident process memory above which body cache is released while the
-    /// store is current (bytes, zero disables).
+    /// Resident process memory above which body cache is released while store
+    /// is current (bytes, zero disables).
     uint64_t ceiling{};
 
     /// Page advice for mapped reads (see advice). Bodies default to
-    /// scattered: they are far too large to reside, and validation reads
-    /// prevouts from arbitrary earlier blocks, so read-ahead manufactures
-    /// cache that is never used and displaces the resident head set. Heads
-    /// override to random (preloaded) at construction. Darwin was excluded
-    /// on the theory that its fault clustering serves scattered prevout
-    /// reads; measurement refutes it — mid-validation the device ran 35-63k
-    /// tps at 15.24 KB/t (~4 pages per fault, ~937 MB/s moved to deliver
-    /// ~250 MB/s wanted) while the cpu sat 66-73% idle and the download
-    /// window stayed full. Resuming the same store with this advice took
-    /// KB/t to 4.0 (one page per fault), bandwidth to ~250 MB/s, and the
-    /// validation rate from 648 to 720 blk/min at the same heights.
+    /// scattered: they are far too large to reside, and validation
+    /// reads prevouts from arbitrary earlier blocks, so read-ahead
+    /// manufactures cache that is never used and displaces resident
+    /// head set. Heads override to random (preloaded) at construction.
+    /// Darwin fault clustering does not serve scattered prevout reads
+    /// (measured ~4 pages per fault, one with this advice).
     advice access{ advice::scattered };
 
-    /// Rows released by truncate are zeroed, so a reallocation reads zero
-    /// until written. Heads override to retain at construction: a cell once
-    /// within the count holds its last store until the next, so a reader
-    /// that took that count reads a valid (possibly just-popped) link.
+    /// Rows released by truncate are zeroed, so reallocation reads zero until
+    /// written. Heads override to retain at construction: cell once within
+    /// count holds its last store until next, so reader that took that count
+    /// reads valid (possibly just-popped) link.
     bool zeroed{ true };
 
-    /// Byte written over capacity above the logical size, at load, on growth
-    /// and in place of zeroing on truncate. Unset for dense tables, whose rows
-    /// are written before they are read.
+    /// Byte written over capacity above logical size, at load,
+    /// on growth and in place of zeroing on truncate. Unset
+    /// for dense tables, whose rows are written before read.
     std::optional<uint8_t> fill{};
 
     /// Clamp fixed width to size_t.

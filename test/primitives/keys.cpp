@@ -79,10 +79,10 @@ BC_AUTO_TEST_CASE(keys__hash_thumb__similarity__expected)
     const auto xor1 = bit_xor(keys::hash(instance1), keys::thumb(instance1));
     const auto xor2 = bit_xor(keys::hash(instance2), keys::thumb(instance2));
 
-    // Independence hash and thumb derived from sha256 hashes (avoiding mined bits).
-    // With a 2/4 chance of any bit pair matching, the total number of expected
-    // matches in a given pair of random 64 bit values is (2/4)*64 = 32. These
-    // hit 32, 29, and 31 (out of 64), with an ideal rate of 50% (Poisson).
+    // Independence hash and thumb derived from sha256 hashes (avoiding mined
+    // bits). With 2/4 chance of any bit pair matching, total expected matches
+    // in given pair of random 64 bit values is (2/4)*64 = 32. These hit 32, 29,
+    // and 31 (out of 64), with ideal rate of 50% (Poisson).
 
     ////std::cout << std::endl;
     ////std::cout << std::bitset<bits<size_t>>(keys::hash(instance0)) << std::endl;

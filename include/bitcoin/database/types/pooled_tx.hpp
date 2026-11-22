@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace database {
 
 /// Validated tx fee and sigops, with each input's parent tx and coinbase.
-/// The caller sizes prevouts to the tx input count before reading.
+/// Caller sizes prevouts to tx input count before reading.
 struct pooled_tx
 {
     struct prevout

@@ -43,7 +43,7 @@ bool CLASS::is_strong_block(const header_link& link) const NOEXCEPT
 
 // find_strong
 // ----------------------------------------------------------------------------
-// Return the tx.link for same tx.hash with strong association to block.
+// Return tx.link for same tx.hash with strong association to block.
 
 TEMPLATE
 tx_link CLASS::find_strong_tx(const tx_link& link) const NOEXCEPT

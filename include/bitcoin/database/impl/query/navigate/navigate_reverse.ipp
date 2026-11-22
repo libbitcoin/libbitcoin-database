@@ -28,7 +28,7 @@ namespace database {
 
 // block->block[parent]
 // ----------------------------------------------------------------------------
-// Presumed to guaranee consistency as headers are not duplicated by the node.
+// Presumed to guarantee consistency as headers are not duplicated by node.
 
 TEMPLATE
 header_link CLASS::to_parent(const header_link& link) const NOEXCEPT
@@ -65,8 +65,8 @@ header_link CLASS::to_confirmed_child(const header_link& link) const NOEXCEPT
 
 // address->outputs[receivers]
 // ----------------------------------------------------------------------------
-// There can be multiple spenders of the same output (due to conflicts) and
-// multiple instances of an output under distinct links (due to tx dups).
+// Can be multiple spenders of same output (due to conflicts) and multiple
+// instances of output under distinct links (due to tx dups).
 
 TEMPLATE
 code CLASS::to_touched_txs(tx_links& out,
@@ -163,7 +163,7 @@ code CLASS::to_address_outputs(const stopper& cancel, outs_link& cursor,
     parents.clear();
 
     // Limit bounds candidates, verified following iterator disposal.
-    // The iterator guards the aggregate, so puts is read unguarded.
+    // Iterator guards aggregate, so puts is read unguarded.
     code deferred{ error::success };
     output_links candidates{};
     auto found = cursor.is_terminal();
@@ -253,8 +253,8 @@ tx_link CLASS::to_prevout_tx(const ins_link& link) const NOEXCEPT
 // output->inputs[spenders]
 // ----------------------------------------------------------------------------
 // get_spenders(point) is deduped, but to_spenders(output) is not, it returns
-// links to ALL spenders of the output including duplicates and double spends.
-// This allows result to be navigated via to_block() to find any strong spend.
+// links to ALL spenders of output including duplicates and double spends.
+// Allows result to be navigated via to_block() to find any strong spend.
 
 TEMPLATE
 ins_links CLASS::to_spenders(const output_link& link) const NOEXCEPT
@@ -319,10 +319,10 @@ tx_links CLASS::to_duplicates(const hash_digest& tx_hash) const NOEXCEPT
 // ----------------------------------------------------------------------------
 // protected (logically hazardous)
 
-// to_block() is ONLY the association from tx link to its associating block.
-// This will be terminal when link is not of the associated instance of the
-// "same" transaction. Tx links in the txs association are always consistent
-// with the strong association, as strong is set using txs links.
+// to_block() is ONLY association from tx link to its associating block.
+// Terminal when link is not of associated instance of "same" transaction. Tx
+// links in txs association are always consistent with strong association, as
+// strong is set using txs links.
 
 TEMPLATE
 header_link CLASS::to_block(const tx_link& link) const NOEXCEPT

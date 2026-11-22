@@ -269,8 +269,8 @@ inline Link CLASS::allocate(const Link& size) NOEXCEPT
 {
     const auto link = body_.allocate(size);
 
-    // A disabled spine is never committed, so its share of the allocation
-    // completes here (write completion is accounted for each column).
+    // Disabled spine is never committed, so its share of allocation completes
+    // here (write completion accounted for each column).
     if (!link.is_terminal() && !enabled())
         body_.complete(link, size);
 

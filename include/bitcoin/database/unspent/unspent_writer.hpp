@@ -33,8 +33,8 @@ struct unspent_writer
     static constexpr auto value_size = sizeof(uint64_t);
     static constexpr auto fixed_size = point_size + code_size + value_size;
 
-    /// Write the element head (txid, index, height code) of the coin to the
-    /// sink, the tail (value, script) is streamed by output::wire_script.
+    /// Write element head (txid, index, height code) of coin to sink, tail
+    /// (value, script) streamed by output::wire_script.
     static void write(system::writer& sink, const unspent_coin& coin) NOEXCEPT;
 
     /// The element size given the script size.

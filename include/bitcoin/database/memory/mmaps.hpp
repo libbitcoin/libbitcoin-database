@@ -27,8 +27,8 @@ namespace libbitcoin {
 namespace database {
 
 /// SoA aggregate body or head: one substitutable multi-column map (Storage)
-/// over N column files, one shared allocation guard. Storage is the map
-/// family. A shared (unstaged) aggregate maps its files, as a head.
+/// over N column files, one shared allocation guard. Storage is map family.
+/// Shared (unstaged) aggregate maps its files, as head.
 template <template <size_t...> class Storage, typename... Columns>
 class mmaps
   : public Storage<Columns::width...>

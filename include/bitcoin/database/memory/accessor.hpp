@@ -55,11 +55,11 @@ public:
         return !is_null(begin_);
     }
 
-    /// Set the buffer, where end is within allocated space.
-    /// Zero/negative size is allowed (automatically handled by bc streams).
-    /// End should be initialized to logical space though that may contract or
-    /// expand during accessor lifetime. The only guarantee offered by end is
-    /// that it remains within allocated space and is initially logical space.
+    /// Set buffer, where end is within allocated space.
+    /// Zero/negative size allowed (automatically handled by bc streams).
+    /// End should be initialized to logical space though it may contract or
+    /// expand during accessor lifetime. Only guarantee offered by end is that
+    /// it remains within allocated space and is initially logical space.
     inline void assign(uint8_t* begin, uint8_t* end) NOEXCEPT
     {
         begin_ = begin;

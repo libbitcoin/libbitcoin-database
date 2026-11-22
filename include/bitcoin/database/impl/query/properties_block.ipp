@@ -170,8 +170,8 @@ bool CLASS::get_context(system::chain::context& ctx,
     if (!store_.header.get(link, header))
         return false;
 
-    // Context for header.check and header.accept are filled from chain_state.
-    // So these are not populated here as they are not expected to be used.
+    // Context for header.check and header.accept filled from chain_state, so
+    // not populated here as not expected to be used.
     ctx =
     {
         // [block.check, .accept, .connect]
@@ -283,8 +283,8 @@ hashes CLASS::get_wtxids(const header_link& link) const NOEXCEPT
     return hashes;
 }
 
-// The coinbase commits to the witness root, otherwise the block is
-// unsegregated and its witness root is the header merkle root.
+// Coinbase commits to witness root, otherwise block is unsegregated and its
+// witness root is header merkle root.
 TEMPLATE
 bool CLASS::is_witness_committed(const hash_digest& witness_root,
     const header_link& link) const NOEXCEPT

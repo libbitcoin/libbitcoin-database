@@ -539,8 +539,8 @@ static bool pool(query<store<database::mmap>>& query_, const spend_t& tx) NOEXCE
     return stored && query_.set_pooled(link, tx, validated_context, 0);
 }
 
-// Confirm a block of a coinbase and the tx above genesis (a pooled tx is
-// associated by its pooled link, as the store is pooling).
+// Confirm block of coinbase and tx above genesis (pooled tx is associated by
+// its pooled link, as store is pooling).
 static bool confirm(query<store<database::mmap>>& query_, const spend_t& tx) NOEXCEPT
 {
     const system::chain::point null{ system::null_hash, system::chain::point::null_index };
@@ -555,7 +555,7 @@ static bool confirm(query<store<database::mmap>>& query_, const spend_t& tx) NOE
     return candidate && query_.push_confirmed(link, true);
 }
 
-// Each of the first count inputs returns to itself along its ring of rivals,
+// Each of first count inputs returns to itself along its ring of rivals,
 // after visiting every other of them.
 static bool is_ring(const store<database::mmap>& instance, size_t count) NOEXCEPT
 {

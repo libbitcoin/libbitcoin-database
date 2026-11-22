@@ -24,11 +24,10 @@
 namespace libbitcoin {
 namespace database {
 
-/// Head-release page-run helpers (pure, unit tested). Pages are tracked as
-/// bits in 64-bit words (low order bit is the lowest page of the word). A
-/// release candidate page is clean (not dirty), cold (not recently written)
-/// and not already released. Candidacy is limited to full pages below the
-/// logical page count.
+/// Head-release page-run helpers (pure, unit tested). Pages tracked as bits in
+/// 64-bit words (low order bit is lowest page of word). Release candidate page
+/// is clean (not dirty), cold (not recently written) and not already released.
+/// Candidacy limited to full pages below logical page count.
 /// ---------------------------------------------------------------------------
 
 /// Candidate bits given page-state words.
@@ -39,8 +38,8 @@ constexpr uint64_t release_candidates(uint64_t dirty, uint64_t hot,
     return bit_not(bit_or(dirty, bit_or(hot, released)));
 }
 
-/// Retain candidacy below the page count, for the word starting at page
-/// 'first' (a full word of candidacy above the count clears to zero).
+/// Retain candidacy below page count, for word starting at page 'first' (full
+/// word of candidacy above count clears to zero).
 constexpr uint64_t release_below(uint64_t candidates, size_t pages,
     size_t first) NOEXCEPT
 {
@@ -56,8 +55,8 @@ constexpr uint64_t release_below(uint64_t candidates, size_t pages,
     return bit_and(candidates, unmask_right<uint64_t>(pages - first));
 }
 
-/// Bits for pages [lo, hi) clamped to the word of 64 pages starting at page
-/// 'first', empty if the ranges do not intersect.
+/// Bits for pages [lo, hi) clamped to word of 64 pages starting at page
+/// 'first', empty if ranges do not intersect.
 constexpr uint64_t page_mask(size_t lo, size_t hi, size_t first) NOEXCEPT
 {
     using namespace system;
@@ -74,8 +73,8 @@ constexpr uint64_t page_mask(size_t lo, size_t hi, size_t first) NOEXCEPT
     return bit_and(high, mask_right<uint64_t>(begin - first));
 }
 
-/// The maximal run of set bits at or above 'page' within 'pages', as the
-/// right-open page range [first, second), empty (equal) if none.
+/// Maximal run of set bits at or above 'page' within 'pages', as right-open
+/// page range [first, second), empty (equal) if none.
 inline std::pair<size_t, size_t> next_run(const uint64_t* words, size_t pages,
     size_t page) NOEXCEPT
 {
@@ -94,8 +93,8 @@ inline std::pair<size_t, size_t> next_run(const uint64_t* words, size_t pages,
     return { page, end };
 }
 
-/// The maximal run of set bits containing 'page' within 'pages', as the
-/// right-open page range [first, second), empty (equal) if page is not set.
+/// Maximal run of set bits containing 'page' within 'pages', as right-open page
+/// range [first, second), empty (equal) if page is not set.
 inline std::pair<size_t, size_t> bit_run(const uint64_t* words, size_t pages,
     size_t page) NOEXCEPT
 {

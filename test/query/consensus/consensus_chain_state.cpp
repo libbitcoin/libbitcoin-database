@@ -104,7 +104,7 @@ BC_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__block1__expected)
 
 // bip9 signaling
 // ----------------------------------------------------------------------------
-// Two block periods with a threshold of one, signaled at height 2: started at
+// Two block periods with threshold of one, signaled at height 2: started at
 // boundary 2, locked in at boundary 4 and active at boundary 6.
 
 static system::settings signal_settings()

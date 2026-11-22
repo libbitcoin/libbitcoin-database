@@ -285,8 +285,8 @@ struct ins_sequence
     };
 };
 
-/// The ins association: point spine (search key) with the aligned sequence
-/// satellite column (one row per input), shared row count and allocation.
+/// Ins association: point spine (search key) with aligned sequence satellite
+/// column (one row per input), shared row count and allocation.
 struct ins
   : public hash_maps<schema::ins, ins_sequence>
 {

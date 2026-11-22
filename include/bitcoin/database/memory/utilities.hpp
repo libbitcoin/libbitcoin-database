@@ -35,34 +35,34 @@ BCD_API uint64_t system_memory() NOEXCEPT;
 /// The bytes of installed physical memory, zero if failed.
 BCD_API uint64_t physical_memory() NOEXCEPT;
 
-/// The bytes of unused physical memory, zero if failed. Scarcity precedes
-/// pressure: clean file cache is reclaimable, so the pressure level does not
-/// raise while free memory exhausts.
+/// Bytes of unused physical memory, zero if failed. Scarcity
+/// precedes pressure: clean file cache is reclaimable, so
+/// pressure level does not raise while free memory exhausts.
 BCD_API uint64_t system_free() NOEXCEPT;
 
-/// The bytes of memory available to allocation without swapping, zero if
-/// failed. Unlike free this includes reclaimable file cache, so it is the
-/// appropriate scarcity signal (free approximates zero on a busy system).
+/// Bytes of memory available to allocation without swapping, zero if failed.
+/// Unlike free this includes reclaimable file cache, so it is appropriate
+/// scarcity signal (free approximates zero on busy system).
 BCD_API uint64_t system_available() NOEXCEPT;
 
-/// The bytes of physical memory resident in the process, zero if failed or
-/// the platform provides no source.
+/// Bytes of physical memory resident in process,
+/// zero if failed or platform provides no source.
 BCD_API uint64_t process_resident() NOEXCEPT;
 
-/// The system memory pressure level (1 normal, 2 warning, 4 critical), zero
-/// if failed or the platform provides no source.
+/// System memory pressure level (1 normal, 2 warning, 4 critical), zero if
+/// failed or platform provides no source.
 BCD_API size_t system_pressure() NOEXCEPT;
 
-/// The bytes held by system memory compression (a pressure precursor), zero
-/// if failed or the platform provides no source.
+/// Bytes held by system memory compression (pressure precursor), zero if failed
+/// or platform provides no source.
 BCD_API uint64_t system_compressed() NOEXCEPT;
 
-/// True if the first and last pages of the region are in the working set, or
-/// the platform provides no source.
+/// True if first and last pages of region are in working set,
+/// or platform provides no source.
 BCD_API bool resident(const system::data_slab& region) NOEXCEPT;
 
-/// Read the regions into memory as one request (advisory), no effect if the
-/// platform provides no source.
+/// Read regions into memory as one request (advisory),
+/// no effect if platform provides no source.
 BCD_API void prefetch(
     const std::span<const system::data_slab>& regions) NOEXCEPT;
 

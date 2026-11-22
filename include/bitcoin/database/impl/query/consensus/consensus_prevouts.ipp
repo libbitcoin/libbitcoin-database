@@ -26,8 +26,8 @@ namespace libbitcoin {
 namespace database {
     
 // Prevouts caching.
-// Prevouts are cached during validation and read during confirmation.
-// The table is purged once per process execution when node is coalesced.
+// Prevouts cached during validation and read during confirmation.
+// Table purged once per process execution when node is coalesced.
 // ----------------------------------------------------------------------------
 
 TEMPLATE

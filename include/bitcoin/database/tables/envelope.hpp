@@ -28,8 +28,8 @@ namespace database {
 
 struct settings;
 
-/// Store creation settings, written at create and read at load. The stored
-/// values govern the store, configuration is consumed only at creation.
+/// Store creation settings, written at create and read at load. Stored values
+/// govern store, configuration consumed only at creation.
 struct BCD_API envelope
 {
     /// Flags activated together, and the header that activated them.
@@ -63,8 +63,8 @@ struct BCD_API envelope
     /// Migrate a serialized 4.0.32 envelope to 4.0.33.
     static bool migrate_4_0_32_to_4_0_33(system::data_chunk& data) NOEXCEPT;
 
-    /// Migrate a serialized migratable envelope to the next schema, taking
-    /// values the prior schema does not store from configured.
+    /// Migrate serialized migratable envelope to next schema, taking values
+    /// prior schema does not store from configured.
     static bool migrate_step(system::data_chunk& data,
         const envelope& configured) NOEXCEPT;
 
@@ -84,10 +84,10 @@ struct BCD_API envelope
 
     void set(const settings& database) NOEXCEPT;
 
-    /// Assign the stored values to configuration, returning the names of those
-    /// that differed. A differing top checkpoint cannot be assigned to
-    /// configuration and is only returned. Filters are not assigned, but
-    /// their tables are unbucketed when not provided.
+    /// Assign stored values to configuration, returning names of those that
+    /// differed. Differing top checkpoint cannot be assigned to configuration
+    /// and is only returned. Filters are not assigned, but their tables are
+    /// unbucketed when not provided.
     system::string_list apply(system::settings& bitcoin, settings& database,
         bool& limited, bool& witness, uint32_t& silent) const NOEXCEPT;
 

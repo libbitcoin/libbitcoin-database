@@ -798,7 +798,7 @@ BC_AUTO_TEST_CASE(nomap__record_drop__then_restore__stays_empty)
     record_table instance{ head_store, body_store };
 
     // Drop writes zero count to head; restore reads head (zero) and truncates
-    // body to match, so a post-drop restore keeps the table empty.
+    // body to match, so post-drop restore keeps table empty.
     BC_REQUIRE(instance.drop());
     BC_REQUIRE(instance.restore());
     BC_REQUIRE_EQUAL(instance.count(), 0u);

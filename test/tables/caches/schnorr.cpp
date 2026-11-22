@@ -71,10 +71,10 @@ BC_AUTO_TEST_CASE(schnorr__create_verify_close__aggregate__expected)
     BC_REQUIRE(instance.close());
 }
 
-// Round-trip signatures through the aggregate, mirroring the keyed
-// set_signature sequence: allocate rows, then commit values per row.
-// Correlate is header_fk only. Two rows pin column alignment (position i
-// in every column belongs to row i), on which batch evaluation depends.
+// Round-trip signatures through aggregate, mirroring keyed set_signature
+// sequence: allocate rows, then commit values per row. Correlate is header_fk
+// only. Two rows pin column alignment (position i in every column belongs to
+// row i), on which batch evaluation depends.
 BC_AUTO_TEST_CASE(schnorr__set_signature__allocated_rows__expected)
 {
     using correlate = table::schnorr_correlate::put_ref;

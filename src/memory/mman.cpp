@@ -127,8 +127,8 @@ void* mmap(void* /*addr*/, size_t len, int prot, int flags, int fd,
     // "to fully close a file mapping object, an application must unmap all
     // mapped views of the file mapping object by calling UnmapViewOfFile and
     // close the file mapping object handle by calling CloseHandle. These
-    // functions can be called in any order." - so we close the handle here and
-    // retain only the map.
+    // functions can be called in any order." - so
+    // handle is closed here and only map retained.
     const auto map = MapViewOfFile(mapping, access, file_hi, file_lo, len);
     if (map == NULL || CloseHandle(mapping) == FALSE)
     {
@@ -202,20 +202,20 @@ int msync(void* addr, size_t len, int) noexcept
     return 0;
 }
 
-// Raise the process working set floor: the trimmer otherwise re-evicts
-// faulted pages faster than the workload amortizes them (measured 71k
-// faults per validated block at 16GB, 7.7x the linux rate for identical
-// work). The floor is advisory (soft limits), failure is not an error.
+// Raise process working set floor: trimmer otherwise re-evicts faulted pages
+// faster than workload amortizes them (measured 71k faults per validated block
+// at 16GB, 7.7x linux rate for identical work). Floor is advisory (soft
+// limits), failure is not an error.
 int working_floor(size_t minimum, size_t maximum) noexcept
 {
     return SetProcessWorkingSetSize(GetCurrentProcess(), minimum,
         maximum) == FALSE ? -1 : 0;
 }
 
-// Remove the pages from the process working set: unlocking pages that are
-// not locked does so, reporting that they were not locked. Mapped file pages
-// remain cached by the system (dirty pages are written), so a later read is
-// a fault without a disk read until the system reclaims the page.
+// Remove pages from process working set: unlocking pages that are not locked
+// does so, reporting that they were not locked. Mapped file pages remain cached
+// by system (dirty pages are written), so later read is fault without disk read
+// until system reclaims page.
 int working_evict(void* addr, size_t len) noexcept
 {
     if ((len == 0) || (VirtualUnlock(addr, len) != FALSE) ||
@@ -308,9 +308,9 @@ int ftruncate(int fd, oft__ size) noexcept
 
     // "UnmapViewOfFile must be called first to unmap all views and call
     // CloseHandle to close file mapping object before can call SetEndOfFile."
-    // We have earlier called CloseHandle to close file mapping object (in mmap)
-    // but have not called UnmapViewOfFile before calling this from remap_() and
-    // it is apparently working.
+    // CloseHandle closes file mapping object earlier (in
+    // mmap), but UnmapViewOfFile is not called before calling
+    // this from remap_(), and it is apparently working.
 
     // This sets the physical size of the file, making this an fallocate.
     if (SetEndOfFile(handle) == FALSE)
@@ -347,16 +347,16 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
             (status.st_blocks * 512);
     };
 
-    // Disk full recovery requires that a success fully reserves disk space,
+    // Disk full recovery requires that success fully reserves disk space,
     // as writes must then never fail within reserved space. APFS spuriously
-    // fails F_PREALLOCATE (e.g. when logical EOF lies within blocks that a
+    // fails F_PREALLOCATE (e.g. when logical EOF lies within blocks that
     // prior call preallocated), so neither its success nor failure is
-    // trusted: each pass is verified against physical allocation and the
-    // shortfall retried (F_PEOFPOSMODE allocates from the physical end, so
-    // progress is monotonic). Only a pass without progress is genuine
-    // exhaustion, reported as ENOSPC (the recoverable condition). The whole
-    // file check implies no holes because files grown only through this
-    // function are never sparse (extension lands in verified allocation).
+    // trusted: each pass is verified against physical allocation and
+    // shortfall retried (F_PEOFPOSMODE allocates from physical end, so
+    // progress is monotonic). Only pass without progress is genuine
+    // exhaustion, reported as ENOSPC (recoverable condition). Whole file
+    // check implies no holes because files grown only through this function
+    // are never sparse (extension lands in verified allocation).
     for (auto current = allocated(); current < target;)
     {
         if (current == fail)
@@ -364,8 +364,8 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
 
         fstore_t store
         {
-            // Prefer contiguous allocation, from physical EOF (offset
-            // ignored in PEOF mode), of the verified shortfall.
+            // Prefer contiguous allocation, from physical EOF (offset ignored
+            // in PEOF mode), of verified shortfall.
             .fst_flags = F_ALLOCATECONTIG,
             .fst_posmode = F_PEOFPOSMODE,
             .fst_offset = 0,
@@ -394,8 +394,8 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
         current = next;
     }
 
-    // Extend file to new size (required for mmap). This is not required on
-    // Linux because fallocate(2) automatically extends file's logical size.
+    // Extend file to new size (required for mmap). Not required on Linux
+    // because fallocate(2) automatically extends file's logical size.
     return ::ftruncate(fd, target);
 }
 
@@ -420,8 +420,8 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
     }
 #endif
 
-    // Preallocation is not supported by the platform or file system, so only
-    // the logical size is extended (as with WITHOUT_FALLOCATE).
+    // Preallocation not supported by platform or file system, so only logical
+    // size is extended (as with WITHOUT_FALLOCATE).
     return ::ftruncate(fd, offset + len);
 }
 

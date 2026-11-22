@@ -25,8 +25,8 @@
 namespace libbitcoin {
 namespace database {
 
-/// SoA aggregate array map: an array head of body links and one unified
-/// bodys body. Head buckets are indexed by key.
+/// SoA aggregate array map: array head of body links and one unified bodys
+/// body. Head buckets indexed by key.
 template <typename Link, bool Align, typename... Columns>
 class arraymaps
 {

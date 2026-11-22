@@ -35,8 +35,8 @@ static void* const invalid = INVALID_HANDLE_VALUE;
 static constexpr int invalid = -1;
 #endif
 
-// Open the existing file and take an exclusive lock on its whole extent.
-// Sharing allows the owner to delete the file before closing it.
+// Open existing file and take exclusive lock on its whole extent.
+// Sharing allows owner to delete file before closing it.
 static auto open_locked(const std::filesystem::path& file) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -103,7 +103,7 @@ interprocess_lock::~interprocess_lock() NOEXCEPT
 }
 
 // Lock is not idempotent, returns false if already locked (or error).
-// This succeeds if no other process has exclusive or sharable ownership.
+// Succeeds if no other process has exclusive or sharable ownership.
 bool interprocess_lock::try_lock() NOEXCEPT
 {
     // A valid handle guarantees file existence and ownership.
@@ -120,16 +120,16 @@ bool interprocess_lock::try_lock() NOEXCEPT
 }
 
 // Unlock is idempotent, returns true if unlocked on return (or success).
-// This may leave the lock file behind, which is not a problem.
+// May leave lock file behind, which is not a problem.
 bool interprocess_lock::try_unlock() NOEXCEPT
 {
-    // An invalid handle guarantees lack of ownership, but file may exist.
-    // Do not delete the file unless we own it.
+    // Invalid handle guarantees lack of ownership, but file may exist.
+    // Do not delete file unless owned.
     if (handle_ == invalid)
         return true;
 
-    // Delete before close, to preclude delete of a file that is not owned,
-    // resulting from a race condition. The file is queued for deletion.
+    // Delete before close, to preclude delete of file not owned, resulting from
+    // race condition. File queued for deletion.
     const auto result = destroy();
 
     // Release exclusive access to the file.

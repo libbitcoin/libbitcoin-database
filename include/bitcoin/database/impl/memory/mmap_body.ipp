@@ -74,10 +74,9 @@ bool CLASS::settle_write_(size_t from, size_t to,
 // ----------------------------------------------------------------------------
 // private
 
-// Convert flushed rows [from, to) to a read-only shared file mapping, page
-// floored so the settle boundary page remains anonymous with its settled
-// bytes retained. Releases the covered anonymous pages. Failure results in
-// unmapped.
+// Convert flushed rows [from, to) to read-only shared file mapping, page
+// floored so settle boundary page remains anonymous with its settled bytes
+// retained. Releases covered anonymous pages. Failure results in unmapped.
 TEMPLATE
 template <size_t Column>
 bool CLASS::settle_(size_t from, size_t to) NOEXCEPT
@@ -104,11 +103,11 @@ bool CLASS::settle_(size_t from, size_t to) NOEXCEPT
         return false;
     }
 
-    // Demote the settled extent to reclaim-first order: cached for imminent
-    // re-read (validation follows archival) but reclaimed under pressure
-    // before active pages and anonymous heads (head residency priority).
-    // Ample hosts skip demotion: with nothing contesting memory it only
-    // converts warm cache into re-read faults (see demote_memory).
+    // Demote settled extent to reclaim-first order: cached for imminent re-read
+    // (validation follows archival) but reclaimed under pressure before active
+    // pages and anonymous heads (head residency priority). Ample hosts skip
+    // demotion: with nothing contesting memory it only converts warm cache into
+    // re-read faults (see demote_memory).
     static const auto ample = system_memory() > demote_memory;
     if (!ample && (mmap_cold(address, end - begin) == fail))
     {
@@ -120,9 +119,9 @@ bool CLASS::settle_(size_t from, size_t to) NOEXCEPT
     return true;
 }
 
-// Revert settled pages at/above rows to committed anonymous memory and
-// restore the retained bytes below rows from the file (truncation below the
-// settle boundary). Failure results in unmapped.
+// Revert settled pages at/above rows to committed anonymous memory and restore
+// retained bytes below rows from file (truncation below settle boundary).
+// Failure results in unmapped.
 TEMPLATE
 template <size_t Column>
 bool CLASS::unsettle_(size_t rows) NOEXCEPT
@@ -150,13 +149,13 @@ bool CLASS::unsettle_(size_t rows) NOEXCEPT
     return true;
 }
 
-// Release cached pages of settled rows [from, to), page floored within the
+// Release cached pages of settled rows [from, to), page floored within
 // converted read-only mapping (its pages cannot be dirtied, and any pending
-// settle write-back is synced by the release). Cost follows residency, so
-// re-eviction is idempotent and free. The mapping is unaffected (a later
-// read faults the page back from the file). Failure faults the store
-// (advisory-class failures have no benign modes) but leaves it mapped, as
-// the shared-lock caller cannot tear down under live accessors.
+// settle write-back is synced by release). Cost follows residency, so
+// re-eviction is idempotent and free. Mapping unaffected (later read
+// faults page back from file). Failure faults store (advisory-class
+// failures have no benign modes) but leaves it mapped, as shared-lock
+// caller cannot tear down under live accessors.
 TEMPLATE
 template <size_t Column>
 bool CLASS::evict_(size_t from, size_t to) NOEXCEPT
@@ -179,11 +178,11 @@ bool CLASS::evict_(size_t from, size_t to) NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
-// Delay the caller while staging exceeds its memory bound (write throttle).
-// Signaled as the worker drains; a fault or worker stop releases the caller
-// into the normal allocation path (which fails on fault/unload). The relieved
-// state is lock-free for the common (unparked) case; notifiers synchronize on
-// throttle_mutex_ so a parked caller cannot miss its signal.
+// Delay caller while staging exceeds its memory bound (write throttle).
+// Signaled as worker drains; fault or worker stop releases caller into normal
+// allocation path (which fails on fault/unload). Relieved state lock-free for
+// common (unparked) case; notifiers synchronize on throttle_mutex_ so parked
+// caller cannot miss its signal.
 TEMPLATE
 void CLASS::throttle_() NOEXCEPT
 {
@@ -203,8 +202,8 @@ void CLASS::throttle_() NOEXCEPT
     throttle_cv_.wait(throttle_lock, relieved);
 }
 
-// Wake throttled callers, synchronized so a parking caller cannot miss the
-// signal between its relieved check and its wait.
+// Wake throttled callers, synchronized so parking caller cannot miss signal
+// between its relieved check and its wait.
 TEMPLATE
 void CLASS::signal_() NOEXCEPT
 {
@@ -217,15 +216,15 @@ void CLASS::signal_() NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
-// Pressure-paced draining (the windows model): drain intensity follows memory
-// conditions, settled pages remain cached, writers delay only at the staging
-// memory bound (write throttle), sustained stillness drains the residual (the
-// lazy writer) so a quiescent map converges to fully settled.
+// Pressure-paced draining (windows model): drain intensity follows memory
+// conditions, settled pages remain cached, writers delay only at staging memory
+// bound (write throttle), sustained stillness drains residual (lazy writer) so
+// quiescent map converges to fully settled.
 TEMPLATE
 void CLASS::body_run_() NOEXCEPT
 {
     // Tiers derive from physical memory, pressure and compression occupancy
-    // (a pressure precursor: the kernel compresses without raising level).
+    // (pressure precursor: kernel compresses without raising level).
     const auto memory  = system_memory();
     const auto urgent  = memory / urgent_factor;
     const auto active  = memory / active_factor;
@@ -254,10 +253,10 @@ void CLASS::body_run_() NOEXCEPT
         still = (top == mark) ? std::min(add1(still), idle_seconds) : zero;
         mark = top;
 
-        // Scarcity is read directly: clean cache is reclaimable, so the
-        // kernel pressure level does not raise while free memory exhausts.
-        // Once current, reads are not write-ordered, so linux reclaims
-        // (darwin exhausts its free target without the sweep).
+        // Scarcity read directly: clean cache is reclaimable, so kernel
+        // pressure level does not raise while free memory exhausts. Once
+        // current, reads are not write-ordered, so linux reclaims (darwin
+        // exhausts its free target without sweep).
 #if defined(HAVE_LINUX)
         if (!current_.load() && (system_free() < scarce))
 #else
@@ -294,9 +293,9 @@ void CLASS::body_run_() NOEXCEPT
     }
 }
 
-// Settle up to chunk completed rows: write under the shared remap lock
-// (completed extents are immutable, writers proceed), convert under a brief
-// exclusive. Durability remains a snapshot property (no sync here).
+// Settle up to chunk completed rows: write under shared remap lock (completed
+// extents immutable, writers proceed), convert under brief exclusive.
+// Durability remains a snapshot property (no sync here).
 TEMPLATE
 bool CLASS::settle_next_(size_t chunk) NOEXCEPT
 {
@@ -335,13 +334,13 @@ bool CLASS::settle_next_(size_t chunk) NOEXCEPT
     return settle_all_(target, sequence{});
 }
 
-// Evict up to chunk settled rows under memory scarcity: a wrapping sweep
-// from the oldest offset (offset is write age in an append-only body, and
-// re-read probability decays with it). Scarcity-driven release keeps the
-// machine out of the exhausted-cache regime, where the kernel periodic
-// sync walk (cost follows resident pages, not dirty) otherwise degrades
-// fault service. A wrong eviction costs one cold read, so the sweep needs
-// no precision. Runs under the shared remap lock (readers proceed).
+// Evict up to chunk settled rows under memory scarcity: wrapping sweep
+// from oldest offset (offset is write age in append-only body, and
+// re-read probability decays with it). Scarcity-driven release keeps
+// machine out of exhausted-cache regime, where kernel periodic sync
+// walk (cost follows resident pages, not dirty) otherwise degrades
+// fault service. Wrong eviction costs one cold read, so sweep needs no
+// precision. Runs under shared remap lock (readers proceed).
 TEMPLATE
 bool CLASS::evict_next_(size_t chunk, size_t& cursor) NOEXCEPT
 {
@@ -353,12 +352,11 @@ bool CLASS::evict_next_(size_t chunk, size_t& cursor) NOEXCEPT
     // A truncated boundary self-heals here (the cursor clamps to a lap).
     const auto end = settled_.load();
 
-    // Confine the lap to the recently settled tail: cache holds what was
-    // just written (and what validation just read), while the body below
-    // is long evicted, so a full-body lap sweeps unresident rows for most
-    // of its length and the tail refills faster than the cursor returns.
-    // A lap can hold no more than physical memory, as nothing else is
-    // resident to evict.
+    // Confine lap to recently settled tail: cache holds what was just written
+    // (and what validation just read), while body below is long evicted, so
+    // full-body lap sweeps unresident rows for most of its length and tail
+    // refills faster than cursor returns. Lap can hold no more than physical
+    // memory, as nothing else is resident to evict.
     using namespace system;
     const auto span = greater(chunk, limit<size_t>(system_memory() / stride));
     const auto floor = (end > span) ? (end - span) : zero;

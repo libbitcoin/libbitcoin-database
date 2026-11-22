@@ -35,10 +35,10 @@ code CLASS::get_unconfirmed_balance(const stopper& , uint64_t& out,
     const hash_digest& , size_t , bool ) const NOEXCEPT
 {
     // While duplicates are easily filtered out, conflict resolution is murky.
-    // An output may have multiple directly or indirectly conflicting spends,
-    // and other spends and receives may not be visible. An unconfirmed balance
-    // is therefore inherehtly ambiguous. Given the lack of tx pooling,
-    // presently we just return zero unconfirmed.
+    // Output may have multiple directly or indirectly conflicting
+    // spends, and other spends and receives may not be visible.
+    // Unconfirmed balance is therefore inherently ambiguous.
+    // Given lack of tx pooling, returns zero unconfirmed.
     out = zero;
     return error::success;
 }

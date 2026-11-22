@@ -26,8 +26,8 @@
 namespace libbitcoin {
 namespace database {
 
-/// This class is not thread safe, and does not throw.
-/// The lock is process-exclusive in linux/macOS, globally in win32.
+/// Not thread safe, does not throw.
+/// Lock is process-exclusive in linux/macOS, globally in win32.
 class BCD_API interprocess_lock
   : public file_lock
 {
@@ -38,12 +38,12 @@ public:
     /// Destruction calls try_unlock.
     ~interprocess_lock() NOEXCEPT override;
 
-    /// Creates the file and acquires exclusive access.
-    /// Returns false if failed to acquire lock or lock already held.
+    /// Creates file and acquires exclusive access.
+    /// False if failed to acquire lock or lock already held.
     bool try_lock() NOEXCEPT;
 
-    /// Releases access (if locked) and deletes the file.
-    /// Returns true if lock not held or succesfully unlocked and deleted.
+    /// Releases access (if locked) and deletes file.
+    /// True if lock not held or successfully unlocked and deleted.
     bool try_unlock() NOEXCEPT;
 
 private:

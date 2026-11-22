@@ -65,8 +65,8 @@ code CLASS::get_confirmed_history(const stopper& cancel, height_link& cursor,
     if (const auto ec = get_address_txs(cancel, txs, key, limit, turbo))
         return ec;
 
-    // Cursor is still advanced in the case of (integrity) failure.
-    // End is required because of the possiblity of intervening organization.
+    // Cursor still advanced in case of (integrity) failure.
+    // End required because of possibility of intervening organization.
     const auto start = cursor.is_terminal() ? zero : cursor.value;
     const auto end = get_top_confirmed();
     cursor = system::possible_narrow_cast<height_link::integer>(add1(end));
@@ -93,8 +93,8 @@ code CLASS::get_history(const stopper& cancel, height_link& cursor,
     if (const auto ec = get_address_txs(cancel, txs, key, limit, turbo))
         return ec;
 
-    // Cursor is still advanced in the case of (integrity) failure.
-    // End is required because of the possiblity of intervening organization.
+    // Cursor still advanced in case of (integrity) failure.
+    // End required because of possibility of intervening organization.
     const auto start = cursor.is_terminal() ? zero : cursor.value;
     const auto end = get_top_confirmed();
     cursor = system::possible_narrow_cast<height_link::integer>(add1(end));

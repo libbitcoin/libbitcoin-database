@@ -190,8 +190,8 @@ CLASS::store(const settings& config) NOEXCEPT
 {
     envelope_.set(config);
 
-    // Filter k derives from configured expected/buckets, envelope records it
-    // at create and overrides it at open (stored values govern the store).
+    // Filter k derives from configured expected/buckets, envelope records it at
+    // create, overrides it at open (stored values govern store).
     using namespace system;
     envelope_.header_k = possible_narrow_cast<uint8_t>(header.filter_k());
     envelope_.ins_k = possible_narrow_cast<uint8_t>(ins.filter_k());

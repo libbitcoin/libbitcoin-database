@@ -25,7 +25,7 @@ namespace libbitcoin {
 namespace database {
 
 /// Link serialization is non-endian.
-/// TODO: phase out the Size argument in favor of just Bits.
+/// TODO: phase out Size argument in favor of Bits.
 template <size_t Size, size_t Bits = to_bits(Size),
     if_not_greater<Bits, to_bits(Size)> If = true>
 struct linkage

@@ -28,13 +28,13 @@
 namespace libbitcoin {
 namespace database {
 
-/// A head-only array of values indexed by position (no body, no count cell).
-/// The storage logical size is the count, providing count atomicity and
-/// bucket publication as with bodies. Content restores with the heads.
-/// A value is a link (masked to terminal) or an opaque integral, of no more
-/// bytes than the cell or the link.
-/// A cell size of max_size_t is a slab, in which the link is a byte offset
-/// and elements are serialized as with bodies (cell accessors do not apply).
+/// Head-only array of values indexed by position (no body, no count cell).
+/// Storage logical size is the count, providing count atomicity and bucket
+/// publication as with bodies. Content restores with heads.
+/// Value is a link (masked to terminal) or opaque integral, of no more bytes
+/// than cell or link.
+/// Cell size of max_size_t is a slab, in which link is byte offset and elements
+/// serialized as with bodies (cell accessors do not apply).
 template <class Link, size_t Cell = Link::size, class Value = Link,
     if_not_greater<value_size<Value>(), std::min(Cell, Link::size)> = true>
 class headmap
@@ -112,8 +112,8 @@ public:
     bool get(size_t index, Element& element) const NOEXCEPT;
 
     /// Set element at index, extending count as necessary (filled empty).
-    /// The element reads the current cell and writes its replacement, and is
-    /// rerun from a copy for each failed exchange.
+    /// Element reads current cell and writes its replacement, and is rerun from
+    /// a copy for each failed exchange.
     template <typename Element, if_equal<Element::size, Cell> = true,
         if_not_equal<Element::size, max_size_t> = true>
     bool set(size_t index, const Element& element) NOEXCEPT;

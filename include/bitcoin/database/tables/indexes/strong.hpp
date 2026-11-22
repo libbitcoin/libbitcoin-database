@@ -27,8 +27,8 @@ namespace libbitcoin {
 namespace database {
 namespace table {
 
-/// strong is a head-only array of signed header fks indexed by tx.fk.
-/// A zero value (the fill) is a negative association to header zero.
+/// strong is head-only array of signed header fks indexed by tx.fk.
+/// Zero value (the fill) is negative association to header zero.
 struct strong
   : public value_map<schema::strong>
 {

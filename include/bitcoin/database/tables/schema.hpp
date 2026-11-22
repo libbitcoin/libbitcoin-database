@@ -507,8 +507,8 @@ TABLE_COLUMN(caches, pool_heights, sizeof(uint32_t));
 TABLE_COLUMN(caches, pool_medians, sizeof(uint32_t));
 static_assert(pool_flags::size == schema::flags);
 
-// headmaps (values), indexed by pool link: state and label of the row, and
-// first input spending the row.
+// headmaps (values), indexed by pool link:
+// state and label of row, and first input spending row.
 struct pool_index
 {
     static constexpr size_t pk = schema::pool_;
@@ -560,9 +560,8 @@ struct spends
     bool operator==(const spends&) const NOEXCEPT = default;
 };
 
-// headmaps (values), indexed by spends link: the pool row spent by the
-// input, the next input spending the same row, and the next input spending
-// the same point.
+// headmaps (values), indexed by spends link: pool row spent by input, next
+// input spending same row, and next input spending same point.
 struct spends_index
 {
     static constexpr size_t pk = schema::spends_;

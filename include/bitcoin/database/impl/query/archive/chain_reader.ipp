@@ -273,7 +273,7 @@ typename CLASS::input::cptr CLASS::get_input(const ins_link& link,
     );
 
     // Node only (cheap so always include).
-    // Internally-populated points will have default link of max_uint32.
+    // Internally-populated points have default link of max_uint32.
     ptr->metadata.point_link = link;
     return ptr;
 }

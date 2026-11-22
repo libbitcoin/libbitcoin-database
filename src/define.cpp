@@ -40,5 +40,5 @@
 // query          : /unspent settings
 // store          : settings
 
-// When a symbol is unexplainably undefined, its defining include is probably
-// creating the circularity.
+// When symbol is unexplainably undefined,
+// its defining include probably creates the circularity.

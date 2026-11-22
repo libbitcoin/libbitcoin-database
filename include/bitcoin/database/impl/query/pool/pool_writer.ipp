@@ -39,8 +39,8 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
     return set_pooled(repooled, link, tx, ctx, time);
 }
 
-// A pooled spender of the tx (pooled while the tx was confirmed) holds a lower
-// row, so it and its pooled descendants are purged and pooled after the tx.
+// Pooled spender of tx (pooled while tx was confirmed) holds lower row, so it
+// and its pooled descendants are purged and pooled after tx.
 TEMPLATE
 bool CLASS::set_pooled(size_t& repooled, const tx_link& link,
     const transaction& tx, const context& ctx, uint32_t time) NOEXCEPT
@@ -174,8 +174,8 @@ bool CLASS::set_pool_row(const tx_link& link, const transaction& tx,
     if (!get_pool_columns(columns, guards))
         return false;
 
-    // A conflict with a confirmed spender is absent for it, and a component
-    // over the member limit is labeled by the columns.
+    // Conflict with confirmed spender is absent for it, and component over
+    // member limit is labeled by columns.
     if (!algorithm::admit(columns, row, conflicted))
         system::pool::label(columns);
 

@@ -287,8 +287,8 @@ code CLASS::read_heights(std_vector<size_t>& out,
     return error::success;
 }
 
-// bitcoind retains duplicated coinbases at the overwriting heights (bip30
-// exceptions), the store at the originals.
+// bitcoind retains duplicated coinbases at overwriting heights (bip30
+// exceptions), store at originals.
 TEMPLATE
 code CLASS::confirm(unspent_coins& out, size_t offset,
     const header_links& blocks, const std_vector<size_t>& heights) const NOEXCEPT

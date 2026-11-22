@@ -238,8 +238,8 @@ BC_AUTO_TEST_CASE(query_navigate__to_address_outputs3__limit__depth_limited)
     const std::atomic_bool cancel{};
     BC_REQUIRE_EQUAL(query.to_address_outputs(cancel, end, out, address0, 4), error::depth_limited);
 
-    // The limit is applied before deduplication.
-    // There are 6 instances of the `script{ { { opcode::pick } } }` output, limited to 4.
+    // Limit applied before deduplication.
+    // 6 instances of `script{ { { opcode::pick } } }` output, limited to 4.
     BC_REQUIRE_EQUAL(out.size(), 4u);
     BC_REQUIRE_EQUAL(out.at(0), 123u);
     BC_REQUIRE_EQUAL(out.at(1), 116u);

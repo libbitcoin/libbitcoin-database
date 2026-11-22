@@ -123,8 +123,8 @@ template <size_t... Index>
 bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>,
     bool final) NOEXCEPT
 {
-    // Probed before touching any column file: a refused wave then retains no
-    // surplus provisioning (a partial wave cannot be trimmed, as msc cannot
+    // Probed before touching any column file: refused wave then retains no
+    // surplus provisioning (partial wave cannot be trimmed, as msc cannot
     // shrink a mapped file).
     if (!probe_(capacity))
     {
@@ -141,19 +141,19 @@ bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>,
 
     if (!(remap_<Index>(capacity, final) && ...))
     {
-        // A non-final refusal leaves the maps and capacity intact for the
-        // caller's reduced retry (columns already grown by the refused
-        // attempt harmlessly retain surplus commitment or provisioning).
+        // Non-final refusal leaves maps and capacity intact for caller's
+        // reduced retry (columns already grown by refused attempt harmlessly
+        // retain surplus commitment or provisioning).
         if (final)
             capacity_.store(zero);
 
         return false;
     }
 
-    // Growth beyond the provisioned file extends it (resize_ is a no-op
-    // within), so the extent tracks the high water of provisioning.
-    // Migration copies only to logical, so fill from logical (writers are
-    // excluded by the remap lock, claims publish only below logical).
+    // Growth beyond provisioned file extends it (resize_ is a no-op within), so
+    // extent tracks high water of provisioning.
+    // Migration copies only to logical, so fill from logical (writers excluded
+    // by remap lock, claims publish only below logical).
     backfill_all_(logical_.load(), capacity, sequence{});
     file_.store(std::max(file_.load(), capacity));
     capacity_.store(capacity);
@@ -161,16 +161,15 @@ bool CLASS::remap_all_(size_t capacity, std::index_sequence<Index...>,
     return true;
 }
 
-// Iterated growth (callers hold the remap lock). Growth asks are amortized
-// (rate surplus over the necessity), and each is admitted only while it
-// leaves the configured headroom of the backing resource unclaimed (probed
-// with the ask, released on grant), so exhaustion never consumes the
-// system's final bytes. A large amortization step can be refused while the
-// necessity fits, so iterate: halve the refused surplus toward the
-// necessity. Refusal of the necessity is exhaustion, not store damage:
-// published as disk full (space set, store intact, writes fail fast until
-// cleared), it clears by settle drainage or operator relief, where teardown
-// would convert a shortage into a restore.
+// Iterated growth (callers hold remap lock). Growth asks are amortized (rate
+// surplus over necessity), and each admitted only while it leaves configured
+// headroom of backing resource unclaimed (probed with ask, released on grant),
+// so exhaustion never consumes system's final bytes. Large amortization step
+// can be refused while necessity fits, so iterate: halve refused surplus toward
+// necessity. Refusal of necessity is exhaustion, not store damage: published as
+// disk full (space set, store intact, writes fail fast until cleared), it
+// clears by settle drainage or operator relief, where teardown would convert a
+// shortage into a restore.
 TEMPLATE
 bool CLASS::grow_(size_t end) NOEXCEPT
 {
@@ -206,8 +205,8 @@ void CLASS::zero_all_(size_t from, size_t to, size_t fresh,
     (zero_<Index>(from, to, fresh), ...);
 }
 
-// Zero column bytes of rows [from, to), less the page floored [from, fresh)
-// already zero (the settle boundary page is anonymous and retains its bytes).
+// Zero column bytes of rows [from, to), less page floored [from, fresh) already
+// zero (settle boundary page is anonymous and retains its bytes).
 TEMPLATE
 template <size_t Column>
 void CLASS::zero_(size_t from, size_t to, size_t STAGING_ONLY(fresh)) NOEXCEPT
@@ -258,10 +257,10 @@ void CLASS::backfill_(size_t from, size_t to) NOEXCEPT
     }
 }
 
-// The wave probe reserves the whole extension plus headroom on the store
-// volume (column widths sum to the stride) leaves the headroom unclaimed.
-// An unmeasurable volume admits the wave: growth failure is the store's own
-// disk full detection, and a query failure is not an exhaustion signal.
+// Wave probe reserves whole extension plus headroom on store volume (column
+// widths sum to stride) leaves headroom unclaimed. Unmeasurable volume admits
+// wave: growth failure is store's own disk full detection, and query failure is
+// not an exhaustion signal.
 TEMPLATE
 bool CLASS::probe_(size_t capacity) NOEXCEPT
 {
@@ -290,8 +289,8 @@ bool CLASS::resize_(size_t size, bool final) NOEXCEPT
     }
     else
     {
-        // The file is provisioned ahead of commitment, so growth within the
-        // provisioned extent requires no disk operation (space is reserved).
+        // File provisioned ahead of commitment, so growth within provisioned
+        // extent requires no disk operation (space reserved).
         const auto extent = file_.load();
         if (size <= extent)
             return true;
@@ -300,7 +299,7 @@ bool CLASS::resize_(size_t size, bool final) NOEXCEPT
         const auto target = to_width<Column>(size);
         const auto capacity = to_width<Column>(extent);
 
-        // Disk full detection, any other failure is an abort. The wave probe
+        // Disk full detection, any other failure is an abort. Wave probe
         // (remap_all_) precedes, so refusal here is a raced foreign consumer.
 #if !defined(WITHOUT_FALLOCATE)
         if (::fallocate(opened_[Column], 0, capacity, target - capacity) == fail)
@@ -308,9 +307,9 @@ bool CLASS::resize_(size_t size, bool final) NOEXCEPT
         if (::ftruncate(opened_[Column], target) == fail)
 #endif
         {
-            // Disk full is the only restartable store failure (leave mapped).
-            // A non-final refusal is not published: the caller retries reduced.
-            // The published requirement includes the headroom (a retry probes).
+            // Disk full is only restartable store failure (leave mapped).
+            // Non-final refusal not published: caller retries reduced.
+            // Published requirement includes headroom (a retry probes).
             if (errno == ENOSPC)
             {
                 if (final)
@@ -347,7 +346,7 @@ void CLASS::worker_start_() NOEXCEPT
     limit_ = system_memory() / throttle_factor;
 #else
     // Managed heads steer residency and bounded bodies release cache; other
-    // bodies and a shared head are the cache manager's to place.
+    // bodies and shared head are cache manager's to place.
     if (head_shared_ || (staged_ && is_zero(reserve_) && is_zero(ceiling_)))
         return;
 #endif
@@ -421,9 +420,9 @@ bool CLASS::exceeded_() const NOEXCEPT
         (!is_zero(ceiling_) && (process_resident() > ceiling_));
 }
 
-// Release the cache of the body by chunk until no memory bound is exceeded:
-// a wrapping sweep of at most one lap, by chunk under the shared remap lock
-// (readers proceed, a remap waits one chunk). A wrong release costs one read.
+// Release cache of body by chunk until no memory bound is exceeded: wrapping
+// sweep of at most one lap, by chunk under shared remap lock (readers proceed,
+// remap waits one chunk). Wrong release costs one read.
 TEMPLATE
 void CLASS::reclaim_(size_t& cursor) NOEXCEPT
 {

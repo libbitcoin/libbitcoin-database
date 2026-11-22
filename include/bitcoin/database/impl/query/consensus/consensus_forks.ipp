@@ -150,8 +150,8 @@ header_states CLASS::get_validated_fork(size_t& fork_point) const NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
-// Without both interlocks, or caller controlling one side with the other
-// locked, this is unsafe, since the compare of heights requires atomicity.
+// Without both interlocks, or caller controlling one side with other locked,
+// this is unsafe, since compare of heights requires atomicity.
 TEMPLATE
 size_t CLASS::get_fork_() const NOEXCEPT
 {

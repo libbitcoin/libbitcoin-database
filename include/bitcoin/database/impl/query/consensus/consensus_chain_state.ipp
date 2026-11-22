@@ -159,8 +159,8 @@ bool CLASS::populate_signal(chain_state::data::signal& signal,
     };
 
     // Periods below a boundary with median time past below start are defined.
-    // A period is counted only if its opening boundary is at/above start and
-    // the boundary below that is below timeout, as otherwise it is not started.
+    // Period counted only if its opening boundary is at/above start and
+    // boundary below that is below timeout, as otherwise it is not started.
     auto boundary = map.high;
     uint32_t current{};
     if (!median(current, boundary))

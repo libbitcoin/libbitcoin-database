@@ -59,9 +59,9 @@ bool CLASS::clear() NOEXCEPT
         return false;
 
     // Retains head size, since head is array not map, and resets body logical
-    // count to zero, which is picked up in arraymap::reset(). Body file size
-    // remains unchanged and subject to initialization size at each startup. So
-    // there is no reduction until restart, which can include config change.
+    // count to zero, picked up in arraymap::reset(). Body file size remains
+    // unchanged and subject to initialization size at each startup, so no
+    // reduction until restart, which can include config change.
     file_.prepare(zero, size());
     std::fill_n(ptr.data(), size(), system::bit_all<uint8_t>);
     file_.mark(zero, size());
@@ -107,9 +107,9 @@ bool CLASS::get_body_count(Link& count) const NOEXCEPT
     if (!ptr || Link::size > size())
         return false;
 
-    // Body count is written as the first value in link size, but since
-    // offsetting is a multiple of cell size, a full cell is consumed for it.
-    // In case of nomap or disabled there are no cells, so file is link size.
+    // Body count written as first value in link size, but since offsetting is a
+    // multiple of cell size, a full cell is consumed for it. For nomap or
+    // disabled there are no cells, so file is link size.
     count = to_array<Link::size>(ptr.data());
     return true;
 }
@@ -121,9 +121,9 @@ bool CLASS::set_body_count(const Link& count) NOEXCEPT
     if (!ptr || Link::size > size())
         return false;
 
-    // Body count is written as the first value in link size, but since
-    // offsetting is a multiple of cell size, a full cell is consumed for it.
-    // In case of nomap or disabled there are no cells, so file is link size.
+    // Body count written as first value in link size, but since offsetting is a
+    // multiple of cell size, a full cell is consumed for it. For nomap or
+    // disabled there are no cells, so file is link size.
     file_.prepare(zero, Link::size);
     to_array<Link::size>(ptr.data()) = count;
     file_.mark(zero, Link::size);

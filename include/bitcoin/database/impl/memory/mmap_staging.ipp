@@ -48,9 +48,9 @@ bool CLASS::flush_(size_t rows) NOEXCEPT
     return success;
 }
 
-// Persist rows below to: settled rows are already on disk (staged appends
-// the remainder), a shared head synchronizes its mapping (writes through),
-// an anonymous head transfers its dirty pages.
+// Persist rows below to: settled rows already on disk (staged appends
+// remainder), shared head synchronizes its mapping (writes through), anonymous
+// head transfers its dirty pages.
 TEMPLATE
 template <size_t Column>
 bool CLASS::persist_(size_t to) NOEXCEPT
@@ -135,9 +135,9 @@ bool CLASS::remap_(size_t size, bool final) NOEXCEPT
     if (is_zero(size))
         size = minimum_;
 
-    // The file is preallocated to capacity, preserving disk full detection at
+    // File preallocated to capacity, preserving disk full detection at
     // allocation, and growth commits reserved anonymous pages in place, so no
-    // mapping is released and the map base is stable within the reservation.
+    // mapping is released and map base is stable within reservation.
     if (!resize_<Column>(size, final))
         return false;
 
@@ -150,18 +150,18 @@ TEMPLATE
 template <size_t Column>
 bool CLASS::stage_() NOEXCEPT
 {
-    // Provision the file in full (disk reserved, so allocation within cannot
-    // fail for space), but commit only what is in use; committing provisioned
-    // rows would charge that memory before anything is written.
-    // disk_full: space is set but no code is set with false return.
+    // Provision file in full (disk reserved, so allocation within cannot fail
+    // for space), but commit only what is in use; committing provisioned rows
+    // would charge that memory before anything is written.
+    // disk_full: space set but no code set with false return.
     const auto provision = to_provision();
     if (!resize_<Column>(provision))
         return false;
 
-    // Managed heads load released: the file holds the content and pages
-    // restore to anonymous per segment on first write, so load contributes
-    // no residency (an eager head population is the store's largest
-    // memory transient, the full head set at open).
+    // Managed heads load released: file holds content and pages
+    // restore to anonymous per segment on first write, so load
+    // contributes no residency (eager head population is
+    // store's largest memory transient, full head set at open).
     if (managed_)
     {
         if (!lazy_install_())
@@ -175,7 +175,7 @@ bool CLASS::stage_() NOEXCEPT
     }
 
     // Reserve address space with generous multiple of capacity (costless), so
-    // that commitment growth never migrates the mapping (base is stable).
+    // commitment growth never migrates mapping (base is stable).
     const auto reserved = page_ceiling(to_width<Column>(
         to_reservation(provision)));
     const auto base = mmap_reserve(reserved);
@@ -193,8 +193,8 @@ bool CLASS::stage_() NOEXCEPT
     const auto size = to_commitment();
     const auto target = to_width<Column>(size);
 
-    // A shared head maps its file in place of commitment (content is the
-    // mapping, so there is nothing to populate).
+    // Shared head maps its file in place of commitment
+    // (content is mapping, so nothing to populate).
     if (head_shared_)
     {
         if (mmap_share(memory_map_[Column], target, opened_[Column],
@@ -227,15 +227,14 @@ bool CLASS::stage_() NOEXCEPT
         return false;
     }
 
-    // Populate anonymous memory from the file (unstaged content in full,
-    // staged only the settle boundary page remainder).
+    // Populate anonymous memory from file (unstaged content in full, staged
+    // only settle boundary page remainder).
     const auto logical = to_width<Column>(logical_.load());
 
-    // The read streams its own page cache discard: a whole-column read
-    // caches the column (the head resident twice), and that transient
-    // stacked over the growing anonymous set forces reclaim during staging
-    // (measured: the eldest staged columns swap before the store is open).
-    // Chunking caps the duplicate at settle_chunk.
+    // Read streams its own page cache discard: whole-column read caches column
+    // (head resident twice), and that transient stacked over growing anonymous
+    // set forces reclaim during staging (measured: eldest staged columns swap
+    // before store is open). Chunking caps duplicate at settle_chunk.
     for (auto at = settled; at < logical; )
     {
         const auto chunk = std::min(logical - at, settle_chunk);
@@ -254,8 +253,8 @@ bool CLASS::stage_() NOEXCEPT
     if (!settle_<Column>(zero, settled_.load()))
         return false;
 
-    // Attribute the anonymous span (above the settled file mapping) for
-    // diagnostics: smaps then decomposes anonymous memory by table.
+    // Attribute anonymous span (above settled file mapping) for diagnostics:
+    // smaps then decomposes anonymous memory by table.
     mmap_name(std::next(memory_map_[Column], settled),
         reserved_[Column] - settled,
         filenames_[Column].filename().string().c_str());
@@ -264,14 +263,14 @@ bool CLASS::stage_() NOEXCEPT
     return true;
 }
 
-// Commit failure results in unmapped when final (the default); a non-final
+// Commit failure results in unmapped when final (the default); non-final
 // refusal (in-reservation commit, replacement reservation, or replacement
-// commit) returns false with the standing mapping untouched, so the caller
-// may iterate a reduced request (admission is evaluated per request, so a
-// refused amortization step does not imply exhaustion).
-// Growth within the reservation commits pages in place (stable map base); an
-// exhausted reservation is replaced and its unsettled content copied, under
-// the exclusive remap lock held by the caller.
+// commit) returns false with standing mapping untouched, so caller may iterate
+// reduced request (admission evaluated per request, so refused amortization
+// step does not imply exhaustion).
+// Growth within reservation commits pages in place (stable map base); exhausted
+// reservation is replaced and its unsettled content copied, under exclusive
+// remap lock held by caller.
 TEMPLATE
 template <size_t Column>
 bool CLASS::commit_(size_t size, bool final) NOEXCEPT
@@ -280,8 +279,8 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
 
     if (target <= reserved_[Column])
     {
-        // A shared head extends its file mapping over the growth (the file is
-        // provisioned to capacity, so the extension is already allocated).
+        // Shared head extends its file mapping over growth (file provisioned to
+        // capacity, so extension is already allocated).
         if (head_shared_ || (!staged_ && shared_.load()))
         {
             const auto grown = page_floor(to_width<Column>(capacity_.load()));
@@ -297,8 +296,8 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
             return true;
         }
 
-        // Never commit below the settle boundary page floor (the settled
-        // prefix is a read-only file mapping); recommit is idempotent.
+        // Never commit below settle boundary page floor (settled prefix is
+        // read-only file mapping); recommit is idempotent.
         const auto settled = page_floor(to_width<Column>(settled_.load()));
         const auto current = page_floor(to_width<Column>(capacity_.load()));
         const auto from = std::max(settled, current);
@@ -339,8 +338,8 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
     const auto base = pointer_cast<uint8_t>(replace);
     const auto settled = page_floor(to_width<Column>(settled_.load()));
 
-    // A shared head remaps its file onto the replacement (the file is the
-    // content, so migration copies nothing).
+    // Shared head remaps its file onto replacement
+    // (file is content, so migration copies nothing).
     if (head_shared_ || (!staged_ && shared_.load()))
     {
         if (mmap_share(replace, target, opened_[Column], zero) == fail)
@@ -365,11 +364,11 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
         return true;
     }
 
-    // The replacement commit spans the unsettled prefix, transiently charged
-    // over the standing reservation, so its refusal is the largest single
-    // admission of the design: non-final refusal leaves the standing mapping
-    // untouched for the caller's reduced retry (a reduced ask fits within
-    // the standing reservation), and settle drainage shrinks the span, so a
+    // Replacement commit spans unsettled prefix, transiently charged
+    // over standing reservation, so its refusal is largest single
+    // admission of design: non-final refusal leaves standing mapping
+    // untouched for caller's reduced retry (reduced ask fits within
+    // standing reservation), and settle drainage shrinks span, so
     // necessity refusal pauses recoverable rather than tearing down.
     if (mmap_commit(std::next(base, settled), target - settled,
         commit_headroom_) == fail)
@@ -409,8 +408,8 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
     }
 #endif
 
-    // Regrow dirty tracking with the reservation (marks are excluded by the
-    // remap lock, as unstaged mutations hold protected accessors).
+    // Regrow dirty tracking with reservation (marks excluded by remap lock, as
+    // unstaged mutations hold protected accessors).
     if (managed_)
     {
         const auto pages = ceilinged_divide(reserved, page_);
@@ -423,8 +422,8 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
         dirty_ = std::move(grown);
         words_ = words;
 
-        // The replacement reservation is fully anonymous (content was
-        // copied above), so released and intent page state resets.
+        // Replacement reservation is fully anonymous (content copied above), so
+        // released and intent page state resets.
         intent_ = std::make_unique<dirty_bitmaps>(words);
         released_ = std::make_unique<dirty_bitmaps>(words);
         sweep_ = std::make_unique<uint64_t[]>(words);
@@ -468,13 +467,13 @@ void CLASS::teardown_(const error::error_t& ec) NOEXCEPT
 TEMPLATE
 bool CLASS::advise_(uint8_t* map, size_t size) const NOEXCEPT
 {
-    // Advice is elective (normal is the kernel default) and configured from
-    // the read pattern (see database::advice); random_ is structural.
+    // Advice is elective (normal is kernel default) and configured from read
+    // pattern (see database::advice); random_ is structural.
     if (access_ == advice::normal)
         return true;
 
-    // Order follows the advice enumeration (scattered is random without the
-    // preload, which this path does not apply in any case).
+    // Order follows advice enumeration (scattered is random without preload,
+    // which this path does not apply in any case).
     static constexpr std::array<int, 4> advices
     {
         MADV_NORMAL, MADV_RANDOM, MADV_SEQUENTIAL, MADV_RANDOM
@@ -493,7 +492,7 @@ bool CLASS::advise_(uint8_t* map, size_t size) const NOEXCEPT
 #endif // WITHOUT_MADVISE
 
 // Reservation is address space only (costless), so multiply for headroom;
-// exhaustion is handled by reservation replacement.
+// exhaustion handled by reservation replacement.
 TEMPLATE
 size_t CLASS::to_reservation(size_t rows) const NOEXCEPT
 {

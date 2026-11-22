@@ -74,8 +74,8 @@ uint64_t system_memory() NOEXCEPT
 
 uint64_t physical_memory() NOEXCEPT
 {
-    // Total physical excludes only hardware reservations, which rounding up
-    // to a whole gibibyte absorbs.
+    // Total physical excludes only hardware reservations,
+    // which rounding up to whole gibibyte absorbs.
     constexpr auto gibibyte = power2<uint64_t>(30u);
     const auto memory = system_memory();
     return ceilinged_multiply(ceilinged_divide(memory, gibibyte), gibibyte);
@@ -195,7 +195,7 @@ uint64_t physical_memory() NOEXCEPT
 {
 #if defined(HAVE_LINUX)
     // Zone present pages exclude only firmware carveouts and address holes,
-    // which rounding up to a whole gibibyte absorbs.
+    // which rounding up to whole gibibyte absorbs.
     constexpr auto gibibyte = power2<uint64_t>(30u);
     if (const auto file = std::fopen("/proc/zoneinfo", "r"))
     {
@@ -268,8 +268,8 @@ uint64_t system_available() NOEXCEPT
         return ceilinged_multiply<uint64_t>(pages, page_size());
     }
 #elif defined(HAVE_LINUX)
-    // MemAvailable is the kernel estimate of memory available to allocation
-    // without swapping (includes reclaimable file cache).
+    // MemAvailable is kernel estimate of memory available to allocation without
+    // swapping (includes reclaimable file cache).
     if (const auto file = std::fopen("/proc/meminfo", "r"))
     {
         char line[128];
@@ -330,10 +330,10 @@ size_t system_pressure() NOEXCEPT
         return possible_narrow_sign_cast<size_t>(level);
     }
 #elif defined(HAVE_LINUX)
-    // PSI (requires CONFIG_PSI): fraction of recent wall time that tasks
-    // stalled on memory reclaim. A tenth of time stalled is treated as genuine
-    // pressure, partial (some) as warning and total (full) as critical,
-    // mapping to the macos memorystatus level semantics.
+    // PSI (requires CONFIG_PSI): fraction of recent wall time tasks
+    // stalled on memory reclaim. Tenth of time stalled treated as
+    // genuine pressure, partial (some) as warning and total (full)
+    // as critical, mapping to macos memorystatus level semantics.
     if (const auto file = std::fopen("/proc/pressure/memory", "r"))
     {
         char line[128];

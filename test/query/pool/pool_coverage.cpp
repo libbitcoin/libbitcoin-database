@@ -87,8 +87,8 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_coverage__stored__not_counted)
     BC_REQUIRE(covered);
 }
 
-// The pooled fee of 1,000 covers both rivals, as the chargeable size includes
-// the conflict.
+// Pooled fee of 1,000 covers both rivals, as chargeable size includes
+// conflict.
 BC_AUTO_TEST_CASE(query_pool__get_pool_coverage__lower_fee_conflict__covered_by_surplus)
 {
     settings settings{ test::database_settings() };
@@ -190,7 +190,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_coverage__conflicted_child__best_outcome_
     store.set_pooling();
 
     // Fees: parent 1,000, child 2,000, candidate (conflicts the child) 2,500.
-    // The best outcome (parent and candidate, 3,500) covers all three.
+    // Best outcome (parent and candidate, 3,500) covers all three.
     const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
     const auto child = to_spend(parent.hash(false), 4'999'997'000);
     const auto tx = to_spend(parent.hash(false), 4'999'996'500);

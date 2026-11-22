@@ -20,16 +20,15 @@
 
 BC_AUTO_TEST_SUITE(memory_utilities_tests)
 
-// It is presumed impossible for the page size to be zero, in which case this
-// test should never fail on any platform, though an API failure returns zero.
+// Presumed impossible for page size to be zero, so this test should never fail
+// on any platform, though API failure returns zero.
 BC_AUTO_TEST_CASE(memory_utilities__page_size__always__non_zero)
 {
     BC_REQUIRE(is_nonzero(page_size()));
 }
 
-// It is not possible for the actual memory to be zero and an overflow will
-// return max_uint64, so this test should never fail on any platform, though
-// an API failure returns zero.
+// Actual memory cannot be zero and overflow returns max_uint64, so this test
+// should never fail on any platform, though API failure returns zero.
 BC_AUTO_TEST_CASE(memory_utilities__system_memory__always__nonzero)
 {
     BC_REQUIRE(is_nonzero(system_memory()));

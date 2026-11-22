@@ -46,7 +46,7 @@ namespace database {
 /// ONE GUARD AND READ ITS COLUMNS RAW, AS A SECOND COLUMN ACCESSOR IS A READ
 /// AGAINST THE SAME TABLE.
 
-/// This class is not thread safe.
+/// Not thread safe.
 /// Size non-max implies record body (ordinal record links).
 template <class Link, class Key, size_t Size = max_size_t>
 class iterator
@@ -99,9 +99,9 @@ private:
     using body = database::body<Link, Key, Size>;
     static constexpr auto key_size = keys::size<Key>();
 
-    // This is not thread safe, but it's object is not modified here and the
-    // memory that it refers to is not addressable until written, and writes
-    // are guarded by allocator, which is protected by mutex.
+    // Not thread safe, but its object is not modified here and memory it refers
+    // to is not addressable until written, and writes are guarded by allocator,
+    // which is protected by mutex.
     memory memory_;
 
     // This is thread safe.

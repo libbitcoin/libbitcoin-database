@@ -55,8 +55,8 @@ BC_AUTO_TEST_CASE(query_consensus__block_confirmable__null_points__success)
 
     // ALL COINBASE TXS
     // block1/2/3 at links 1/2/3 confirming at heights 1/2/3.
-    // blocks have only coinbase txs, all txs should be set strong before calling
-    // confirmable, but these are bip30 default configuration.
+    // blocks have only coinbase txs, all txs should be set strong before
+    // calling confirmable, but these are bip30 default configuration.
     BC_REQUIRE_EQUAL(query.block_confirmable(1), error::success);
     BC_REQUIRE_EQUAL(query.block_confirmable(2), error::success);
     BC_REQUIRE_EQUAL(query.block_confirmable(3), error::success);

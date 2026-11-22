@@ -127,9 +127,9 @@ bool CLASS::set_pooled_context(const tx_link& link, const context& ctx,
     // ========================================================================
 }
 
-// A tx spending an output of the block (coinbase included) may depend on its
-// confirmation, so it is not sufficient under any context until revalidated.
-// Its flags are kept, as its sigops are counted under them.
+// Tx spending an output of block (coinbase included) may depend on its
+// confirmation, so not sufficient under any context until revalidated. Its
+// flags are kept, as its sigops are counted under them.
 TEMPLATE
 bool CLASS::set_pool_unvalidated(size_t& out,
     const header_link& link) NOEXCEPT

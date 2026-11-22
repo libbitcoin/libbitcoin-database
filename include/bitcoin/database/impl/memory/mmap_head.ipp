@@ -29,8 +29,8 @@
 namespace libbitcoin {
 namespace database {
 
-// Write declaration and marking (managed head instances). Marks drive the
-// dirty transfer, declarations restore released pages ahead of the write.
+// Write declaration and marking (managed head instances). Marks drive dirty
+// transfer, declarations restore released pages ahead of write.
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -41,15 +41,15 @@ void CLASS::prepare(size_t STAGING_ONLY(offset),
     if (is_zero(size) || !managed_)
         return;
 
-    // Count the writer before loading released below (sequentially
-    // consistent), pairing with the release protocol: release either observes
-    // the count (and aborts) or this writer observes released (and restores).
-    // Intent bits age (hot sampling), so they cannot protect a write held
-    // in flight across passes; the count persists until mark.
-    // A settle transition pairs the same way, but the writer waits UNCOUNTED
-    // (it retires its count and does not retake one until the transition
-    // clears), so the count drains monotonically and the transition is
-    // guaranteed to observe zero rather than merely likely to.
+    // Count writer before loading released below (sequentially consistent),
+    // pairing with release protocol: release either observes count (and aborts)
+    // or this writer observes released (and restores).
+    // Intent bits age (hot sampling), so cannot protect a write held in flight
+    // across passes; count persists until mark.
+    // Settle transition pairs same way, but writer waits UNCOUNTED (it retires
+    // its count and does not retake one until transition clears), so count
+    // drains monotonically and transition is guaranteed to observe zero rather
+    // than merely likely to.
     auto& writers = writer_slot_();
     for (;;)
     {
@@ -70,8 +70,8 @@ void CLASS::prepare(size_t STAGING_ONLY(offset),
     if (!engaged_.load(relaxed) && !lazy_.load(relaxed))
         return;
 
-    // Declare intent before the write (sequentially consistent, pairing with
-    // the release protocol), then restore any released page in the range.
+    // Declare intent before write (sequentially consistent, pairing with
+    // release protocol), then restore any released page in range.
     auto restore = false;
     auto page = offset / page_;
     const auto end = (offset + sub1(size)) / page_;
@@ -98,19 +98,18 @@ void CLASS::mark(size_t STAGING_ONLY(offset),
         return;
 
     // Marks follow content writes; transfer clears before reading, so pages
-    // remarked during a transfer are simply rewritten by the next pass. A
-    // settled head writes through its mapping, so its marks count only (the
-    // worker reads the rate); no transition intervenes (the writer is
-    // counted), so the path matches prepare.
+    // remarked during transfer are rewritten by next pass. Settled head writes
+    // through its mapping, so its marks count only (worker reads the rate); no
+    // transition intervenes (writer is counted), so path matches prepare.
     if (shared_.load())
         marks_.fetch_add(one, relaxed);
     else
         remark_(offset, size);
 
-    // Uncount the writer after its marks (sequentially consistent), so a
-    // release pass loading a drained count observes the dirty bits. Only
-    // prepare() counts, so only mark() may uncount (transfer failure restores
-    // marks by remark_, as an unpaired uncount here corrupts the count).
+    // Uncount writer after its marks (sequentially consistent), so release pass
+    // loading drained count observes dirty bits. Only prepare() counts, so only
+    // mark() may uncount (transfer failure restores marks by remark_, as
+    // unpaired uncount here corrupts count).
     writer_slot_().fetch_sub(one);
 #endif
 }
@@ -127,10 +126,10 @@ void CLASS::current(bool state) NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
-// Head-creation fill: the fill is file content, written sequentially to the
-// file (page cache, no mapping involvement) and installed released, so
-// creation contributes no memory residency (an in-memory backfill of the
-// head set is the store's largest allocation transient).
+// Head-creation fill: fill is file content, written sequentially
+// to file (page cache, no mapping involvement) and installed
+// released, so creation contributes no memory residency (in-memory
+// backfill of head set is store's largest allocation transient).
 TEMPLATE
 size_t CLASS::allocate_filled_(size_t count) NOEXCEPT
 {
@@ -177,10 +176,10 @@ size_t CLASS::allocate_filled_(size_t count) NOEXCEPT
     return start;
 }
 
-// Install the managed head lazily over its current logical span: a released
-// (read-only file) full-page prefix restored to anonymous per segment on
-// first write, an anonymous populated tail, and clean page tracking sized to
-// a replacement reservation. Caller holds exclusive remap (or is loading).
+// Install managed head lazily over its current logical span: released
+// (read-only file) full-page prefix restored to anonymous per segment on first
+// write, anonymous populated tail, and clean page tracking sized to replacement
+// reservation. Caller holds exclusive remap (or is loading).
 TEMPLATE
 bool CLASS::lazy_install_() NOEXCEPT
 {
@@ -255,8 +254,8 @@ bool CLASS::lazy_install_() NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
-// Dirty marking without the writer uncount (no paired prepare), for internal
-// mark restoration (mark() pairs with prepare() and uncounts its writer).
+// Dirty marking without writer uncount (no paired prepare), for internal mark
+// restoration (mark() pairs with prepare() and uncounts its writer).
 TEMPLATE
 void CLASS::remark_(size_t offset, size_t size) NOEXCEPT
 {
@@ -271,10 +270,10 @@ void CLASS::remark_(size_t offset, size_t size) NOEXCEPT
     marks_.fetch_add(one, relaxed);
 }
 
-// Transfer dirty pages within [0, bytes), clearing marks before content
-// reads so that concurrently remarked pages transfer on the next pass.
-// Marks beyond bytes are retained (backfill above logical transfers when
-// logical grows over it). Adjacent dirty pages coalesce into single writes.
+// Transfer dirty pages within [0, bytes), clearing marks before content reads
+// so concurrently remarked pages transfer on next pass. Marks beyond bytes
+// retained (backfill above logical transfers when logical grows over it).
+// Adjacent dirty pages coalesce into single writes.
 TEMPLATE
 template <size_t Column>
 bool CLASS::transfer_(size_t bytes) NOEXCEPT
@@ -329,9 +328,9 @@ bool CLASS::transfer_(size_t bytes) NOEXCEPT
 
             if (!write())
             {
-                // Restore claimed marks (the failed range, the page that
-                // ended it, and this word's unwritten remainder) so failure
-                // is retryable, not lossy.
+                // Restore claimed marks (failed range, page that
+                // ended it, and this word's unwritten remainder)
+                // so failure is retryable, not lossy.
                 remark_(from, to - from);
                 remark_(start, end - start);
                 dirty_[word].fetch_or(bits, relaxed);
@@ -356,16 +355,15 @@ bool CLASS::transfer_(size_t bytes) NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
-// Idle transfer for unstaged (rewrite-in-place head) instances: sustained
-// mark stillness drains dirty pages (the lazy writer) so a quiescent map
-// converges to persisted and snapshot/close transfer approximately nothing.
-// Requires no write exclusion: marks follow writes and transfer clears
-// before reading, so racing writes remark and transfer on the next pass
-// (torn disk pages are unreachable, as live heads are only trusted
-// following a clean close).
+// Idle transfer for unstaged (rewrite-in-place head) instances: sustained mark
+// stillness drains dirty pages (lazy writer) so quiescent map converges to
+// persisted and snapshot/close transfer approximately nothing. Requires no
+// write exclusion: marks follow writes and transfer clears before reading, so
+// racing writes remark and transfer on next pass (torn disk pages unreachable,
+// as live heads are only trusted following clean close).
 //
-// Memory scarcity additionally pages the head to its own file (the windows
-// model): transfer, then release cold clean pages to read-only file mappings
+// Memory scarcity additionally pages head to its own file (windows model):
+// transfer, then release cold clean pages to read-only file mappings
 // (reclaimable cache), restored to anonymous by prepare() before any write.
 // Release waits one pass after engagement so all writers declare intent.
 TEMPLATE
@@ -401,27 +399,25 @@ void CLASS::head_run_() NOEXCEPT
             continue;
         }
 
-        // A drained head settles to its file mapping while the store is
-        // current (settled pages are droppable, anonymous pages are not).
+        // Drained head settles to its file mapping while store is current
+        // (settled pages droppable, anonymous pages not).
         if (current_.load() && (transferred == top) && share_(transferred))
             continue;
 
-        // Touch pass: assert working-set residency at a bounded rate.
-        // Hash-uniform probing is per-page sparse in every phase, so the
-        // kernel ages head pages cold and swaps them under cache pressure,
-        // though the set is the process working set (and head misses are
-        // unshieldable serial faults on the probe path). A read sets the
-        // page-table accessed bit without dirtying the page; volatile
-        // prevents elision. The unprivileged equivalent of mlock, and soft:
-        // under true extremity the kernel can still take the pages. The
-        // per-tick budget revisits every page each touch_seconds regardless
-        // of instance size (a whole-instance lap gave the largest head a
-        // proportionally longer revisit, which lost the aging race first).
-        // Residency-guarded so the touch never faults: a swapped page that
-        // nothing probes rests in swap, one the workload needs returns by
-        // its own fault and is defended thereafter.
-        // Residency is only contested under scarcity, so at plenty the tick
-        // costs a counter test (the aging race has no other runner).
+        // Touch pass: assert working-set residency at bounded rate.
+        // Hash-uniform probing is per-page sparse in every phase, so kernel
+        // ages head pages cold and swaps them under cache pressure, though the
+        // set is process working set (and head misses are unshieldable serial
+        // faults on probe path). A read sets page-table accessed bit without
+        // dirtying page; volatile prevents elision. Unprivileged equivalent of
+        // mlock, and soft: under true extremity kernel can still take pages.
+        // Per-tick budget revisits every page each touch_seconds regardless of
+        // instance size.
+        // Residency-guarded so touch never faults: swapped page that nothing
+        // probes rests in swap, one workload needs returns by its own fault and
+        // is defended thereafter.
+        // Residency only contested under scarcity, so at plenty tick costs a
+        // counter test (aging race has no other runner).
         if (system_available() < (system_memory() / sweep_factor))
         {
             using namespace system;
@@ -432,8 +428,7 @@ void CLASS::head_run_() NOEXCEPT
                 auto budget = ceilinged_divide(pages, touch_seconds);
 #if !defined(HAVE_APPLE)
                 // Probe buffer and map alias, declared with the touch they
-                // serve (excluded on darwin below), as they are otherwise
-                // unused there.
+                // serve (excluded on darwin below), as otherwise unused there.
                 unsigned char resident[touch_span];
                 const volatile auto* map = memory_map_[zero];
 #endif
@@ -447,8 +442,8 @@ void CLASS::head_run_() NOEXCEPT
 
 #if !defined(HAVE_APPLE)
                     // Darwin excluded: mincore hides compressed pages from
-                    // the guard, and unguarded touching measured as pure
-                    // decompression churn; release is the darwin mechanism.
+                    // guard, and unguarded touching measured as pure
+                    // decompression churn; release is darwin mechanism.
                     const auto at = touched * page_;
                     if (mmap_resident(std::next(memory_map_[zero], at),
                         count * page_, resident) == 0)
@@ -463,20 +458,20 @@ void CLASS::head_run_() NOEXCEPT
             }
         }
 
-        // Available includes reclaimable file cache, which a loaded store
-        // keeps large while the kernel swaps cold anonymous pages, so free
-        // exhaustion also signals scarcity (anon is being displaced).
-        // A sync writes every head hot (a converted run restores at the next
-        // burst), so release engages only while the store is current.
+        // Available includes reclaimable file cache, which loaded store keeps
+        // large while kernel swaps cold anonymous pages, so free exhaustion
+        // also signals scarcity (anon being displaced).
+        // Sync writes every head hot (converted run restores at next burst), so
+        // release engages only while store is current.
         const auto scarcity = head_release && managed_ && current_.load() &&
             ((system_available() < scarce) || (system_free() < scarce));
 
-        // Once engaged, a quiet instance converts independent of momentary
-        // scarcity: the signal clears as swap absorbs the hot set, but the
-        // swapped pages remain anonymous, so reads fault them back one at a
-        // time (a serial swap-in per probe). Conversion instead settles
-        // clean pages without read-back (the file holds their content),
-        // freeing swap and routing reads through the file mapping.
+        // Once engaged, quiet instance converts independent of momentary
+        // scarcity: signal clears as swap absorbs hot set, but swapped
+        // pages remain anonymous, so reads fault them back one at a time
+        // (serial swap-in per probe). Conversion instead settles clean
+        // pages without read-back (file holds their content), freeing
+        // swap and routing reads through file mapping.
         const auto engaged = engaged_.load();
         const auto quiet = writes < release_quiet;
         const auto draining = engaged && quiet;
@@ -484,17 +479,16 @@ void CLASS::head_run_() NOEXCEPT
             ((still < idle_seconds) || (transferred == top)))
             continue;
 
-        // A write-hot instance neither transfers nor releases under
-        // scarcity: transferred pages re-dirty immediately (write
-        // amplification without release payoff, as hash-scattered writes
-        // into released pages each cost a segment restore, and the sweep
-        // otherwise re-releases restored segments every pass). Its
-        // anonymous set is left to swap (dirty-exempt) until quiescence,
-        // typically the phase change.
+        // Write-hot instance neither transfers nor releases under scarcity:
+        // transferred pages re-dirty immediately (write amplification without
+        // release payoff, as hash-scattered writes into released pages each
+        // cost a segment restore, and sweep otherwise re-releases restored
+        // segments every pass). Its anonymous set is left to swap
+        // (dirty-exempt) until quiescence, typically phase change.
 #if !defined(HAVE_APPLE)
         // EXPERIMENT: darwin releases while write-hot (page-level intent and
-        // dirty filters remain) to price segment restores against the
-        // measured compressed-hot crawl.
+        // dirty filters remain) to price segment restores
+        // against measured compressed-hot crawl.
         if (scarcity && !quiet)
             continue;
 #endif
@@ -510,8 +504,8 @@ void CLASS::head_run_() NOEXCEPT
                     engaged_.store(true);
 
             // Scarcity passes pace writeback for release: settle maps page
-            // cache content, and durability remains a clean close property,
-            // so sync applies only to idle draining.
+            // cache content, and durability remains clean close property, so
+            // sync applies only to idle draining.
             if (!transfer_<zero>(to_width<zero>(logical_.load())) ||
                 (!scarcity && !sync_<zero>()))
             {
@@ -519,14 +513,14 @@ void CLASS::head_run_() NOEXCEPT
                 continue;
             }
 
-            // Discard the page cache copy of the transfer: the anonymous
-            // head is the live copy, so caching the file doubles it.
+            // Discard page cache copy of transfer: anonymous head is live copy,
+            // so caching file doubles it.
             file_discard(opened_[zero]);
 
-            // Quiet is assured here (hot scarcity skipped above, and idle
-            // draining implies sixty still seconds).
-            // Lazy head load engages restore on all platforms; the release
-            // sweep remains a darwin response (see head_release).
+            // Quiet assured here (hot scarcity skipped above, and idle draining
+            // implies sixty still seconds).
+            // Lazy head load engages restore on all platforms; release sweep
+            // remains darwin response (see head_release).
             if constexpr (head_release)
                 if (engaged && !release_pages_())
                     continue;
@@ -541,8 +535,8 @@ void CLASS::head_run_() NOEXCEPT
 // ----------------------------------------------------------------------------
 // private
 
-// Declare the full-page prefix below logical released and engage the restore
-// protocol (prepare restores a released segment before its write).
+// Declare full-page prefix below logical released and engage restore protocol
+// (prepare restores released segment before its write).
 TEMPLATE
 void CLASS::declare_released_() NOEXCEPT
 {
@@ -561,12 +555,12 @@ void CLASS::declare_released_() NOEXCEPT
 // Release cold clean head page runs to read-only file mappings (reclaimable),
 // full pages below logical only. Conversion is run-granular (release_chunk
 // minimum) as each conversion splits a mapping: page granularity fragments
-// the address space beyond what host memory management tolerates. Writer
-// synchronization is a per-page bit protocol: prepare() declares intent then
-// loads released; release stores released then loads intent (both
-// sequentially consistent), so a run converts only when no write can land on
-// it unrestored. A wrong release costs one restore. Conversion excludes
-// restore on restore_mutex_.
+// address space beyond what host memory management tolerates.
+// Writer synchronization is per-page bit protocol: prepare()
+// declares intent then loads released; release stores released then
+// loads intent (both sequentially consistent), so run converts only
+// when no write can land on it unrestored. Wrong release costs one
+// restore. Conversion excludes restore on restore_mutex_.
 TEMPLATE
 bool CLASS::release_pages_() NOEXCEPT
 {
@@ -578,9 +572,8 @@ bool CLASS::release_pages_() NOEXCEPT
 
     std::unique_lock restore_lock(restore_mutex_);
 
-    // Materialize candidacy (hot aging clears only the snapshot bits, so a
-    // concurrent declaration on a candidate page is retained for the live
-    // rechecks below).
+    // Materialize candidacy (hot aging clears only snapshot bits, so concurrent
+    // declaration on candidate page is retained for live rechecks below).
     for (size_t word{}; word < bound; ++word)
     {
         const auto hot = intent_[word].load();
@@ -590,13 +583,13 @@ bool CLASS::release_pages_() NOEXCEPT
             pages, word * page_bound);
     }
 
-    // Convert maximal candidate runs of at least chunk pages, clamped to
-    // chunk bounds. Restore is chunk-aligned and chunk-granular, so a
-    // partially released chunk places unreleased pages inside a restored
-    // span. The bit protocol guards released pages only: a writer to an
-    // unreleased page observes released clear, so it neither restores nor
-    // takes restore_mutex_, and its write is dropped by the copy-install
-    // window. Whole chunks make the restored span exactly the released set.
+    // Convert maximal candidate runs of at least chunk pages, clamped
+    // to chunk bounds. Restore is chunk-aligned and chunk-granular, so
+    // partially released chunk places unreleased pages inside restored
+    // span. Bit protocol guards released pages only: writer to
+    // unreleased page observes released clear, so neither restores nor
+    // takes restore_mutex_, and its write is dropped by copy-install
+    // window. Whole chunks make restored span exactly the released set.
     for (auto run = next_run(sweep_.get(), pages, zero); run.first < pages;
         run = next_run(sweep_.get(), pages, run.second))
     {
@@ -617,10 +610,10 @@ bool CLASS::release_pages_() NOEXCEPT
         for (auto word = begin; word <= end; ++word)
             released_[word].fetch_or(mask(word));
 
-        // An in-flight writer (counted, unaged) or raced intent or mark
-        // invalidates the conversion (whole run). The count loads first: a
-        // writer counted later observes released and restores, one drained
-        // earlier has published its marks (both sequentially consistent).
+        // In-flight writer (counted, unaged) or raced intent or mark
+        // invalidates conversion (whole run). Count loads first: writer counted
+        // later observes released and restores, one drained earlier has
+        // published its marks (both sequentially consistent).
         auto raced = is_nonzero(writers_count_());
         for (auto word = begin; (word <= end) && !raced; ++word)
             raced = !is_zero(bit_and(mask(word),
@@ -650,11 +643,11 @@ bool CLASS::release_pages_() NOEXCEPT
 }
 
 // Restore released pages overlapping [offset, offset+size) to writable
-// anonymous memory (content preserved by atomic installation), before a
-// declared write. Restoration is segmented at release_chunk alignment: the
-// containing segment restores whole (unifying any fragmentation within it)
-// but never more, as released runs consolidate without bound and restoring
-// a maximal run copies gigabytes per scattered write (a restore convoy).
+// anonymous memory (content preserved by atomic installation), before declared
+// write. Restoration segmented at release_chunk alignment: containing segment
+// restores whole (unifying any fragmentation within it) but never more, as
+// released runs consolidate without bound and restoring maximal run copies
+// gigabytes per scattered write (restore convoy).
 TEMPLATE
 void CLASS::restore_(size_t offset, size_t size) NOEXCEPT
 {
@@ -662,7 +655,7 @@ void CLASS::restore_(size_t offset, size_t size) NOEXCEPT
     std::shared_lock restore_lock(restore_mutex_);
 
     // Segments clamp to full pages below logical (as does release candidacy):
-    // the reservation above commitment is inaccessible (installation reads).
+    // reservation above commitment is inaccessible (installation reads).
     const auto pages = to_width<zero>(logical_.load()) / page_;
     const auto span = std::max(one, release_chunk / page_);
     const auto last = (offset + sub1(size)) / page_;
@@ -731,8 +724,8 @@ void CLASS::writers_reset_() NOEXCEPT
         shard.count.store(zero);
 }
 
-// Exclude head writers across a share transition: they write through raw
-// pointers under no lock, so only the writer count can exclude them.
+// Exclude head writers across share transition: they write through raw pointers
+// under no lock, so only writer count can exclude them.
 TEMPLATE
 void CLASS::quiesce_() NOEXCEPT
 {
@@ -741,19 +734,17 @@ void CLASS::quiesce_() NOEXCEPT
         std::this_thread::yield();
 }
 
-// Settle a quiescent managed head to a writable mapping of its file over the
-// committed span (as a shared head loads): pages drop under pressure and
-// writes dirty page cache for kernel writeback, so page tracking idles (it
-// remains allocated, as writers read it unlocked). Exclusive remap excludes
-// accessors and the transition excludes counted head writers (raw pointer
-// writes hold no lock), so a mark count still at the drained count proves
-// the file current (a write landing after the drain snapshot would otherwise
-// be lost to the remap).
-// The remap lock precedes the drain: a writer holding an accessor waits
-// uncounted at the transition, so a drain that preceded the lock would return
-// on its own and the lock would then wait on that writer forever. Every
-// counted writer either holds no lock or took its accessor before its count,
-// so under the lock the count drains.
+// Settle quiescent managed head to writable mapping of its file over committed
+// span (as shared head loads): pages drop under pressure and writes dirty page
+// cache for kernel writeback, so page tracking idles (remains allocated, as
+// writers read it unlocked). Exclusive remap excludes accessors and transition
+// excludes counted head writers (raw pointer writes hold no lock), so mark
+// count still at drained count proves file current (write landing after drain
+// snapshot would otherwise be lost to remap).
+// Remap lock precedes drain: writer holding accessor waits uncounted at
+// transition, so drain that preceded lock would return on its own and lock
+// would then wait on that writer forever. Every counted writer either holds no
+// lock or took its accessor before its count, so under lock count drains.
 TEMPLATE
 bool CLASS::share_(size_t transferred) NOEXCEPT
 {
@@ -763,8 +754,8 @@ bool CLASS::share_(size_t transferred) NOEXCEPT
     auto shared = false;
     if (loaded_.load() && !fault_.load() && (marks_.load() == transferred))
     {
-        // The drain transfers below logical; the committed fill above it is
-        // content (a raised logical exposes it unwritten).
+        // Drain transfers below logical; committed fill above it is content
+        // (raised logical exposes it unwritten).
         const auto logical = to_width<zero>(logical_.load());
         const auto span = to_width<zero>(capacity_.load());
         const auto persisted = (span <= logical) || pwrite_all(opened_[zero],
@@ -788,12 +779,12 @@ bool CLASS::share_(size_t transferred) NOEXCEPT
     return shared;
 }
 
-// Return a settled head to the anonymous model without a bulk remap: every
-// full page declares released (the shared mapping is droppable file content),
-// so tracked writers restore segments to anonymous before writing, and the
-// tail above the full-page floor restores here (as the load commits it), so
-// no dirty page is ever transferred from the file mapping (a self-copy, which
-// darwin serves as an uninterruptible wait). Cold pages remain mapped.
+// Return settled head to anonymous model without bulk remap: every full page
+// declares released (shared mapping is droppable file content), so tracked
+// writers restore segments to anonymous before writing, and tail above
+// full-page floor restores here (as load commits it), so no dirty page is ever
+// transferred from file mapping (a self-copy, which darwin serves as
+// uninterruptible wait). Cold pages remain mapped.
 TEMPLATE
 void CLASS::unshare_() NOEXCEPT
 {

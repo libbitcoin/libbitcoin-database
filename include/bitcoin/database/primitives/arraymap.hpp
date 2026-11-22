@@ -30,10 +30,10 @@ namespace libbitcoin {
 namespace database {
     
 /// Caution: iterator/reader/finalizer hold body remap lock until disposed.
-/// These handles should be used for serialization and immediately disposed.
-/// Readers and writers are always prepositioned at data, and are limited to
-/// the extent the record/slab size is known (limit can always be removed).
-/// Streams are always initialized from first element byte up to file limit.
+/// Handles should be used for serialization and immediately disposed.
+/// Readers and writers always prepositioned at data, limited to the extent
+/// record/slab size is known (limit can always be removed).
+/// Streams always initialized from first element byte up to file limit.
 template <class Link, size_t RowSize, bool Align>
 class arraymap
 {

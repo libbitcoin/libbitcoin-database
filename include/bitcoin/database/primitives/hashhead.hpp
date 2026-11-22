@@ -95,7 +95,7 @@ public:
     bool set_body_count(const Link& count) NOEXCEPT;
 
     /// Convert natural key to head bucket index (all keys are valid).
-    /// Terminal is a valid bucket index (just not a valid bucket value).
+    /// Terminal is valid bucket index (not valid bucket value).
     inline Link index(const Key& key) const NOEXCEPT;
 
     /// Unsafe if verify false.

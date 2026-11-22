@@ -68,8 +68,8 @@ inline path trim(const path& value) NOEXCEPT
     return to_path(trim_right_copy(from_path(value), trims));
 }
 
-// We don't use ec because it gets set (not found) when false, but no way to
-// differentiate from false with failure code (and never a code on success).
+// ec not used: it is set (not found) when false, with no way to differentiate
+// from false with failure code (and never a code on success).
 bool is_directory(const path& directory) NOEXCEPT
 {
     code ec{ errorno_t::no_error };
@@ -105,8 +105,8 @@ code create_directory_ex(const path& directory) NOEXCEPT
     return errorno_t::is_a_directory;
 }
 
-// We don't use ec because it gets set (not found) when false, but no way to
-// differentiate from false with failure code (and never a code on success).
+// ec not used: it is set (not found) when false, with no way to differentiate
+// from false with failure code (and never a code on success).
 bool is_file(const path& filename) NOEXCEPT
 {
     code ec{ errorno_t::no_error };
@@ -194,7 +194,7 @@ bool remove(const path& name) NOEXCEPT
 }
 
 // directory|file
-// Error code is not set if file did not exist.
+// Error code not set if file did not exist.
 code remove_ex(const path& name) NOEXCEPT
 {
     code ec{ errorno_t::no_error };
@@ -257,7 +257,7 @@ bool discharge_directory(const path& to) NOEXCEPT
 }
 
 // directory
-// Remove an archival clone from the page cache. Synchronize before advising.
+// Remove archival clone from page cache. Synchronize before advising.
 code discharge_directory_ex(const path& DONTNEED_ONLY(to)) NOEXCEPT
 {
     code ec{ errorno_t::no_error };
@@ -348,9 +348,9 @@ int open(const path& filename, bool,
     int file_descriptor{};
 
 #if defined(HAVE_WINDOWS)
-    // Advice is elective (unhinted is the cache manager default) and
-    // configured from the read pattern (see database::advice).
-    // Order follows the advice enumeration.
+    // Advice is elective (unhinted is cache manager default) and configured
+    // from read pattern (see database::advice).
+    // Order follows advice enumeration.
     static constexpr std::array<int, 4> hints
     {
         0, _O_RANDOM, _O_SEQUENTIAL, _O_RANDOM
@@ -365,8 +365,8 @@ int open(const path& filename, bool,
     // open sets errno on failure.
     file_descriptor = ::open(path.c_str(), O_RDWR, S_IRUSR | S_IWUSR);
 
-    // Advice is elective (normal is the kernel default) and configured from
-    // the read pattern (see database::advice); random is structural.
+    // Advice is elective (normal is kernel default) and configured from read
+    // pattern (see database::advice); random is structural.
     if ((file_descriptor != -1) && (access != advice::normal))
     {
         // Order follows the advice enumeration.
@@ -441,8 +441,8 @@ bool size(size_t& out, int file_descriptor) NOEXCEPT
     }
 
     // _fstat64, _fstat32 and fstat set errno on failure.
-    // This is required because off_t is defined as long, which is 32|64 bits
-    // in msvc and 64 bits in linux/osx, and stat contains off_t.
+    // Required because off_t is defined as long, which is 32|64 bits in msvc
+    // and 64 bits in linux/osx, and stat contains off_t.
 #if defined(HAVE_WINDOWS)
 #if defined(HAVE_X64)
     struct _stat64 sbuf{};

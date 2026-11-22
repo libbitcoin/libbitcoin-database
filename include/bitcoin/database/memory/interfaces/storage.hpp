@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace database {
 
 /// Mapped memory interface.
-/// A slab has a row width of 1, so "count" implies "bytes" for slabs below.
+/// Slab has row width of 1, so "count" implies "bytes" for slabs below.
 class storage
 {
 public:
@@ -108,8 +108,8 @@ public:
     /// Increase logical by specified rows/bytes, return row of first (or eof).
     virtual size_t allocate(size_t count) NOEXCEPT = 0;
 
-    /// Allocate filled rows/bytes, avoiding memory residency of the fill
-    /// where the backend supports it (head creation path).
+    /// Allocate filled rows/bytes, avoiding memory residency of fill where
+    /// backend supports it (head creation path).
     virtual size_t allocate_filled(size_t count) NOEXCEPT = 0;
 
     /// Report element write completion of count rows/bytes at offset.

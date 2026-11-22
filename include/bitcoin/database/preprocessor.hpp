@@ -21,11 +21,9 @@
 
 #include <bitcoin/system.hpp>
 
-// Now we use the generic helper definitions in libbitcoin to
-// define BCD_API and BCD_INTERNAL.
-// BCD_API is used for the public API symbols. It either DLL imports or
-// DLL exports (or does nothing for static build)
-// BCD_INTERNAL is used for non-api symbols.
+// Generic helper definitions in libbitcoin define BCD_API and BCD_INTERNAL.
+// BCD_API, public API symbols: DLL imports or exports (or nothing if static).
+// BCD_INTERNAL, non-api symbols.
 
 #if defined BCD_STATIC
     #define BCD_API

@@ -31,9 +31,9 @@ namespace database {
 // Constructors.
 // ----------------------------------------------------------------------------
 
-// A managed head is an unstaged scalar instance under the anonymous model:
-// page-tracked, transferred by its worker, released and shared by currency.
-// Unstaged aggregates transfer in full, and shared heads map their files.
+// Managed head, unstaged scalar instance under anonymous model: page-tracked,
+// transferred by its worker, released and shared by currency. Unstaged
+// aggregates transfer in full, shared heads map their files.
 TEMPLATE
 CLASS::mmap(const path& filename, const storage_settings& settings,
     bool random, bool staged, bool shared) NOEXCEPT
@@ -144,15 +144,14 @@ size_t CLASS::to_capacity(size_t required) const NOEXCEPT
     return std::max(minimum_, ceilinged_add(required, growth));
 }
 
-// Commitment growth target for the capacity slow paths. Unlike to_capacity
-// this never floors to the configured minimum: under lazy commitment that
-// floor would commit the full provisioning on first growth (the load failure
-// this design exists to prevent, moved from create to first touch). Growth is
-// chunked to bound slow path frequency, and clamped so that small tables do
-// not over-commit (the provisioned file requires no memory until committed).
-// The commit chunk is scaled to memory (bounded by commit_chunk), as the
-// committed but unused overhang is otherwise up to one full chunk for every
-// instance, an outsized share of a small system under memory pressure.
+// Commitment growth target for capacity slow paths. Unlike to_capacity, never
+// floors to configured minimum: under lazy commitment that floor would commit
+// full provisioning on first growth (load failure this design prevents, moved
+// from create to first touch). Growth chunked to bound slow path frequency, and
+// clamped so small tables do not over-commit (provisioned file requires no
+// memory until committed). Commit chunk scaled to memory (bounded by
+// commit_chunk), as committed but unused overhang is otherwise up to one full
+// chunk per instance, an outsized share of small system under memory pressure.
 TEMPLATE
 size_t CLASS::to_chunk() NOEXCEPT
 {
@@ -178,8 +177,8 @@ size_t CLASS::to_growth(size_t required) const NOEXCEPT
 #endif
 }
 
-// Disk provisioning: the configured minimum is a file reservation, ensuring
-// that allocation within it cannot fail for space (disk full is detected at
+// Disk provisioning: configured minimum is file reservation, ensuring
+// allocation within it cannot fail for space (disk full detected at
 // provisioning, where it remains recoverable).
 TEMPLATE
 size_t CLASS::to_provision() const NOEXCEPT
@@ -187,11 +186,11 @@ size_t CLASS::to_provision() const NOEXCEPT
     return std::max(logical_.load(), minimum_);
 }
 
-// Memory commitment follows use, not provisioning. Committing the configured
+// Memory commitment follows use, not provisioning. Committing configured
 // minimum would demand that much memory (Linux charges the commit) before any
 // row is written, failing load on any machine smaller than its store sizing.
-// Growth commits in chunks within the standing reservation (no remap), so the
-// cost is a syscall per chunk over the life of the store.
+// Growth commits in chunks within standing reservation (no remap), so cost is a
+// syscall per chunk over life of store.
 TEMPLATE
 size_t CLASS::to_commitment() const NOEXCEPT
 {
@@ -204,7 +203,7 @@ size_t CLASS::to_commitment() const NOEXCEPT
 #endif
 }
 
-// The counter chain is the spine of the design (debug assertion only):
+// Counter chain is spine of design (debug assertion only):
 //
 //     settled_ <= frontier_ <= logical_ <= capacity_ <= file_
 //
@@ -214,9 +213,9 @@ size_t CLASS::to_commitment() const NOEXCEPT
 // capacity: rows claimable (committed memory).
 // file: rows provisioned on disk (fallocate extent).
 //
-// Lower bounds are read first: the lock-free fast path can advance logical_
-// concurrently, so stale-low reads of lower bounds cannot falsify the chain,
-// while upper bounds only grow under locks held at every call site.
+// Lower bounds read first: lock-free fast path can advance logical_
+// concurrently, so stale-low reads of lower bounds cannot falsify chain, while
+// upper bounds only grow under locks held at every call site.
 TEMPLATE
 void CLASS::check_invariants_() const NOEXCEPT
 {

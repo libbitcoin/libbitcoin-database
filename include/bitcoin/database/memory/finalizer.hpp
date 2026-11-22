@@ -47,8 +47,8 @@ public:
         finalize_ = std::move(functor);
     }
 
-    // This is expected to have side effect on the stream buffer, specifically
-    // setting the "next" pointer into beginning of the address space.
+    // Expected to have side effect on stream buffer, specifically setting
+    // "next" pointer into beginning of address space.
     bool finalize() NOEXCEPT
     {
         if (!*this) return false;

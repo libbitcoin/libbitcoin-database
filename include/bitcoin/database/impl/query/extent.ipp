@@ -252,9 +252,9 @@ DEFINE_RECORDS(filter_bk)
 
 // Counters (archive slabs).
 // ----------------------------------------------------------------------------
-// Also txs, ins and outs, but these can be derived instead of counting.
-// txs elements is equivalent to header_records, ins elements is inputs, and
-// outs elements is outputs.
+// Also txs, ins and outs, but these can be derived instead
+// of counted. txs elements equivalent to header_records,
+// ins elements is inputs, outs elements is outputs.
 
 TEMPLATE
 size_t CLASS::input_count(const tx_link& link) const NOEXCEPT

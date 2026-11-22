@@ -27,7 +27,7 @@ namespace database {
 
 // Address unspent.
 // ----------------------------------------------------------------------------
-// A list of all unspent output transactions in canonical order.
+// List of all unspent output transactions in canonical order.
 // Unconfirmed unspent are included at end of list in consistent order.
 
 // ununsed
@@ -46,9 +46,9 @@ code CLASS::get_unconfirmed_unspent(const stopper& cancel, unspent_outputs& out,
     return parallel_unspent_transform(cancel, turbo, out, outs,
         [this](const output_link& link, auto& cancel, auto& fail) NOEXCEPT
         {
-            // Exclude if spent by any tx. Given that output must be confirmed
-            // this is only unconfirmeds, but checking both via is_spent() is
-            // much faster than calling is_unconfirmed_spent().
+            // Exclude if spent by any tx. Given output must be confirmed this
+            // is only unconfirmeds, but checking both via is_spent() is much
+            // faster than calling is_unconfirmed_spent().
             if (cancel || fail || is_spent(link))
                 return unspent_output{};
 
