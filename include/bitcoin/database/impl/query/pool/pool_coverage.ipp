@@ -143,8 +143,8 @@ code CLASS::get_pool_candidate(pool_graph& out, const transaction& tx,
         else
         {
             auto& ring = out.rivals.at(at->second - inputs);
-            out.rivals.back() = (algorithm::from_column(ring) == none) ?
-                algorithm::to_column(at->second) : ring;
+            const auto vacant = (algorithm::from_column(ring) == none);
+            out.rivals.back() = vacant ? algorithm::to_column(at->second) : ring;
 
             ring = algorithm::to_column(input);
         }

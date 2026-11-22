@@ -172,8 +172,8 @@ code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
     }
 
     // Commit tx to search (hashmap).
-    return store_.tx.commit(ptrs.tx, fks.tx_fk, tx.hash(false)) ?
-        error::success : error::tx_tx_commit;
+    const auto committed = store_.tx.commit(ptrs.tx, fks.tx_fk, tx.hash(false));
+    return committed ? error::success : error::tx_tx_commit;
 }
 
 TEMPLATE
@@ -335,6 +335,8 @@ code CLASS::set_code(const block_view& block, const header_link& key,
             if ((ec = set_code(twins, ptrs, fks, tx, bypass, prune)))
                 return ec;
 
+            const auto in_bytes = tx.input_table_size(prune);
+
             // Output rows are parent fk prefixed (see table::output::put_view).
             const auto out_bytes = tx.outputs() * tx_link::size +
                 tx.output_table_size();
@@ -342,7 +344,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
             *it = fks.tx_fk++;
             fks.ins_fk  += possible_narrow_cast<ins_t>(tx.inputs());
             fks.outs_fk += possible_narrow_cast<outs_t>(tx.outputs());
-            fks.in_fk   += possible_narrow_cast<in_t>(tx.input_table_size(prune));
+            fks.in_fk   += possible_narrow_cast<in_t>(in_bytes);
             fks.out_fk  += possible_narrow_cast<out_t>(out_bytes);
         }
 

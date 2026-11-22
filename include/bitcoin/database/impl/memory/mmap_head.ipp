@@ -545,8 +545,9 @@ void CLASS::declare_released_() NOEXCEPT
     for (size_t word{}; word < ceilinged_divide(flags, page_bound); ++word)
     {
         const auto first = word * page_bound;
-        released_[word].store((flags >= (first + page_bound)) ?
-            bit_all<uint64_t> : unmask_right<uint64_t>(flags - first));
+        const auto full = (flags >= (first + page_bound));
+        const auto partial = unmask_right<uint64_t>(flags - first);
+        released_[word].store(full ? bit_all<uint64_t> : partial);
     }
 
     lazy_.store(true);

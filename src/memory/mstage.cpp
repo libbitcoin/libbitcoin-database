@@ -120,8 +120,10 @@ int mmap_commit(void* address, size_t size, size_t headroom) NOEXCEPT
 
 int mmap_settle(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 {
-    return ::mmap(address, size, PROT_READ, MAP_SHARED | MAP_FIXED, fd,
-        possible_narrow_sign_cast<off_t>(offset)) == MAP_FAILED ? -1 : 0;
+    const auto mapped = ::mmap(address, size, PROT_READ, MAP_SHARED | MAP_FIXED,
+        fd, possible_narrow_sign_cast<off_t>(offset));
+
+    return mapped == MAP_FAILED ? -1 : 0;
 }
 
 // Lazy writer duplicates head in page cache: every transferred page is written
@@ -195,9 +197,10 @@ int mmap_resident(const void* address, size_t size,
 int mmap_share(void* address, size_t size, int fd, size_t offset) NOEXCEPT
 {
     mmap_unwire(address, size);
-    return ::mmap(address, size, PROT_READ | PROT_WRITE, MAP_SHARED |
-        MAP_FIXED, fd, possible_narrow_sign_cast<off_t>(offset)) == MAP_FAILED ?
-        -1 : 0;
+    const auto mapped = ::mmap(address, size, PROT_READ | PROT_WRITE,
+        MAP_SHARED | MAP_FIXED, fd, possible_narrow_sign_cast<off_t>(offset));
+
+    return mapped == MAP_FAILED ? -1 : 0;
 }
 
 // Darwin compresses cold anonymous pages, which mincore reports resident, so

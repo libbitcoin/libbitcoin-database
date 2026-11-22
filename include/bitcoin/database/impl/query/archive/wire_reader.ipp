@@ -75,8 +75,10 @@ bool CLASS::is_witness_match(const tx_link& link,
         return true;
 
     const auto witnesses = tx.witnesses();
-    table::input::match_witness match{ {}, witnesses.data(),
-        witnesses.size() };
+    table::input::match_witness match
+    {
+        {}, witnesses.data(), witnesses.size()
+    };
 
     // Point links are contiguous (computed).
     const auto ins_begin = record.point_fk;

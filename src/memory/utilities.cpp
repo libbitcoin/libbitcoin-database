@@ -422,7 +422,8 @@ void prefetch(const std::span<const data_slab>& regions) NOEXCEPT
             continue;
 
         const auto start = page_start(region.begin(), page);
-        const auto bytes = sign_cast<size_t>(std::distance(start, region.end()));
+        const auto extent = std::distance(start, region.end());
+        const auto bytes = sign_cast<size_t>(extent);
 #if defined(HAVE_LINUX)
         // Linux reads at most the device readahead window per advice.
         constexpr auto window = power2<size_t>(17u);

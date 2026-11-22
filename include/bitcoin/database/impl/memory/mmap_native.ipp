@@ -268,7 +268,8 @@ void CLASS::scan_run_() NOEXCEPT
                 touched = zero;
 
             const auto at = touched * page;
-            const auto count = std::min({ touch_span, pages - touched, budget });
+            const auto remaining = pages - touched;
+            const auto count = std::min({ touch_span, remaining, budget });
 
             for (size_t index{}; index < count; ++index)
                 (void)map[at + index * page];

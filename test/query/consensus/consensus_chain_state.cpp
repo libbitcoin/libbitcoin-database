@@ -117,9 +117,15 @@ static system::settings signal_settings()
     return settings;
 }
 
-static system::chain::header signal_header(const system::hash_digest& previous, uint32_t version, uint32_t offset)
+static system::chain::header signal_header(const system::hash_digest& previous,
+    uint32_t version, uint32_t offset)
 {
-    return { version, previous, system::hash_digest{}, add1(test::genesis.header().timestamp()) + offset, test::genesis.header().bits(), 0 };
+    const auto& genesis = test::genesis.header();
+    const auto timestamp = add1(genesis.timestamp()) + offset;
+    return
+    {
+        version, previous, system::hash_digest{}, timestamp, genesis.bits(), 0
+    };
 }
 
 BC_AUTO_TEST_CASE(query_consensus__get_candidate_chain_state__bip9_signal__active_at_third_boundary)

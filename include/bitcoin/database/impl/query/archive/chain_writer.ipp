@@ -237,7 +237,6 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
 
             ptr.reset();
 
-            // tx_duplicate_put implies link domain overflow (2^24).
             for (const auto& twin: twins)
                 if (!store_.duplicate.exists(twin))
                     if (!store_.duplicate.put(twin, table::duplicate::record{}))
@@ -267,8 +266,8 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
 
     // Commit tx to search (hashmap).
     // tx.get_hash() assumes cached or is not thread safe.
-    return store_.tx.commit(tx_fk, tx.get_hash(false)) ?
-        error::success : error::tx_tx_commit;
+    const auto committed = store_.tx.commit(tx_fk, tx.get_hash(false));
+    return committed ? error::success : error::tx_tx_commit;
 }
 
 // set header

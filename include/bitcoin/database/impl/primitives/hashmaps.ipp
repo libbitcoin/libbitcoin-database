@@ -705,7 +705,10 @@ bool CLASS::read(const memory& ptr, const Link& link, Element& element) NOEXCEPT
     reader source{ stream };
     source.skip_bytes(index_size);
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());) }
+    if constexpr (!is_slab)
+    {
+        BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());)
+    }
     return element.from_data(source);
 }
 
@@ -747,7 +750,10 @@ bool CLASS::write(Link& previous, const memory& ptr, const Link& link,
     keys::write(sink, key);
 
     // Commit element to body.
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
+    if constexpr (!is_slab)
+    {
+        BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());)
+    }
     auto& next = unsafe_array_cast<uint8_t, Link::size>(offset);
     if (!element.to_data(sink))
         return false;

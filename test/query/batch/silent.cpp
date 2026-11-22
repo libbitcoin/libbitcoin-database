@@ -257,14 +257,22 @@ BC_AUTO_TEST_CASE(query_batch_silent__set_silents__coinbase_only__no_rows)
 }
 
 // Archive the block's spend before its coinbase, as a pooled tx is archived.
-static header_link set_below_coinbase(test::query_accessor& query, const chain::block& block) NOEXCEPT
+static header_link set_below_coinbase(test::query_accessor& query,
+    const chain::block& block) NOEXCEPT
 {
     tx_link coinbase{};
     tx_link spend{};
     const auto& txs = *block.transactions_ptr();
-    const auto stored = query.set(block.header(), database::context{ 0, 1, 0 }, {}, false) && !query.set_code(spend, *txs.back()) && !query.set_code(coinbase, *txs.front());
+    const database::context context{ 0, 1, 0 };
+    const auto stored = query.set(block.header(), context, {}, false)
+        && !query.set_code(spend, *txs.back())
+        && !query.set_code(coinbase, *txs.front());
+
     const auto link = query.to_header(block.hash());
-    return stored && !query.set_code(link, { coinbase, spend }, false) ? link : header_link{};
+    const auto coded = stored
+        && !query.set_code(link, { coinbase, spend }, false);
+
+    return coded ? link : header_link{};
 }
 
 // Pool the block's spend, its parents linked to the genesis coinbase.
@@ -927,10 +935,13 @@ BC_AUTO_TEST_CASE(query_batch_silent__set_scan_start__gapped__mapped)
 // Blocks 1-3 archived in order (coinbase links 1-3), rows linked 1, 3, 2, 4.
 static bool setup_scan_starts(test::query_accessor& query) NOEXCEPT
 {
+    const database::context context1{ 0, 1, 0 };
+    const database::context context2{ 0, 2, 0 };
+    const database::context context3{ 0, 3, 0 };
     return query.initialize(test::genesis)
-        && query.set(test::block1, database::context{ 0, 1, 0 }, {}, false, false)
-        && query.set(test::block2, database::context{ 0, 2, 0 }, {}, false, false)
-        && query.set(test::block3, database::context{ 0, 3, 0 }, {}, false, false)
+        && query.set(test::block1, context1, {}, false, false)
+        && query.set(test::block2, context2, {}, false, false)
+        && query.set(test::block3, context3, {}, false, false)
         && query.push_confirmed(1, false)
         && query.push_confirmed(2, false)
         && query.push_confirmed(3, false)

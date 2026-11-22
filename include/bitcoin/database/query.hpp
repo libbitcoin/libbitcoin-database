@@ -921,10 +921,10 @@ public:
     /// Invoke callback for each matched tx, false implies cancel.
     bool scan_silent(const stopper& cancel,
         const system::scan::batch::receiver& keys,
-        const silent_handler& callback) NOEXCEPT;
+        const silent_handler& callback) const NOEXCEPT;
     bool scan_silent(const stopper& cancel,
         const system::scan::batch::receiver& keys, size_t first,
-        size_t last, const silent_handler& callback) NOEXCEPT;
+        size_t last, const silent_handler& callback) const NOEXCEPT;
 
     /// Invoke callback for each matched tx of rows [first, last),
     /// confirmed at heights [start, stop] or linked at or above pool latch.
@@ -932,7 +932,7 @@ public:
     bool scan_silent(const stopper& cancel,
         const system::scan::batch::receiver& keys, size_t first,
         size_t last, size_t start, size_t stop,
-        const silent_handler& callback) NOEXCEPT;
+        const silent_handler& callback) const NOEXCEPT;
 
     /// Matches (height, tx hash, tweak) of rows [first, last) confirmed at
     /// heights (or mtps if time) [start, stop], ordered by height, then

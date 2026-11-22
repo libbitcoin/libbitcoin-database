@@ -116,7 +116,8 @@ code CLASS::to_touched_txs(const stopper& cancel, tx_links& out,
                 return txs;
 
             txs.push_back(parent);
-            for (const auto& input: std::views::reverse(to_spenders(parent, output)))
+            const auto spenders = to_spenders(parent, output);
+            for (const auto& input: std::views::reverse(spenders))
             {
                 const auto tx = to_input_tx(input);
                 if (tx.is_terminal())

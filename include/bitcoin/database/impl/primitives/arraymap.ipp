@@ -181,7 +181,10 @@ inline bool CLASS::get(const Link& link, Element& element) const NOEXCEPT
     iostream stream{ ptr };
     reader source{ stream };
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());) }
+    if constexpr (!is_slab)
+    {
+        BC_DEBUG_ONLY(source.set_limit(RowSize * element.count());)
+    }
     return element.from_data(source);
 }
 
@@ -231,7 +234,10 @@ bool CLASS::write(const Link& link, size_t key,
     iostream stream{ ptr };
     finalizer sink{ stream };
 
-    if constexpr (!is_slab) { BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());) }
+    if constexpr (!is_slab)
+    {
+        BC_DEBUG_ONLY(sink.set_limit(RowSize * element.count());)
+    }
     return element.to_data(sink) && head_.push(link, head_.index(key));
 }
 

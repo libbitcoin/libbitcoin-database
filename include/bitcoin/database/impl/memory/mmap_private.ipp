@@ -302,7 +302,8 @@ bool CLASS::resize_(size_t size, bool final) NOEXCEPT
         // Disk full detection, any other failure is an abort. Wave probe
         // (remap_all_) precedes, so refusal here is a raced foreign consumer.
 #if !defined(WITHOUT_FALLOCATE)
-        if (::fallocate(opened_[Column], 0, capacity, target - capacity) == fail)
+        const auto growth = target - capacity;
+        if (::fallocate(opened_[Column], 0, capacity, growth) == fail)
 #else
         if (::ftruncate(opened_[Column], target) == fail)
 #endif

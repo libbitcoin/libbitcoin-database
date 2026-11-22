@@ -19,8 +19,9 @@
 #include <bitcoin/database/define.hpp>
 #include <bitcoin/database/memory/mman.hpp>
 
-// based on:
-// code.google.com/p/mman-win32
+using namespace libbitcoin;
+
+// based on: code.google.com/p/mman-win32
 
 #if defined(HAVE_WINDOWS)
 
@@ -51,15 +52,14 @@ static DWORD protect_page(int prot) noexcept
     if (prot == PROT_NONE)
         return 0;
 
-    if ((prot & PROT_EXEC) != 0)
+    const auto writable = is_nonzero(prot & PROT_WRITE);
+    if (is_nonzero(prot & PROT_EXEC))
     {
-        return ((prot & PROT_WRITE) != 0) ?
-            PAGE_EXECUTE_READWRITE : PAGE_EXECUTE_READ;
+        return writable ? PAGE_EXECUTE_READWRITE : PAGE_EXECUTE_READ;
     }
     else
     {
-        return ((prot & PROT_WRITE) != 0) ?
-            PAGE_READWRITE : PAGE_READONLY;
+        return writable ? PAGE_READWRITE : PAGE_READONLY;
     }
 }
 
@@ -70,13 +70,13 @@ static DWORD protect_file(int prot) noexcept
     if (prot == PROT_NONE)
         return desired_access;
 
-    if ((prot & PROT_READ) != 0)
+    if (is_nonzero(prot & PROT_READ))
         desired_access |= FILE_MAP_READ;
 
-    if ((prot & PROT_WRITE) != 0)
+    if (is_nonzero(prot & PROT_WRITE))
         desired_access |= FILE_MAP_WRITE;
 
-    if ((prot & PROT_EXEC) != 0)
+    if (is_nonzero(prot & PROT_EXEC))
         desired_access |= FILE_MAP_EXECUTE;
 
     return desired_access;
@@ -100,10 +100,10 @@ void* mmap(void* /*addr*/, size_t len, int prot, int flags, int fd,
     const auto file_hi = large ? (DWORD)((off64 >> 32) & MAXDWORD) : (DWORD)0;
 
     // Disallow fixed, executable, and or anonymous mapping.
-    if (len == 0 ||
+    if (is_zero(len) ||
         (prot == PROT_EXEC) ||
-        (flags & MAP_FIXED) != 0 ||
-        (flags & MAP_ANONYMOUS) != 0)
+        is_nonzero(flags & MAP_FIXED) ||
+        is_nonzero(flags & MAP_ANONYMOUS))
     {
         errno = EINVAL;
         return MAP_FAILED;
@@ -117,7 +117,8 @@ void* mmap(void* /*addr*/, size_t len, int prot, int flags, int fd,
         return MAP_FAILED;
     }
 
-    const auto mapping = CreateFileMappingW(handle, NULL, protect, max_hi, max_lo, NULL);
+    const auto mapping = CreateFileMappingW(handle, NULL, protect, max_hi,
+        max_lo, NULL);
     if (mapping == NULL)
     {
         errno = last_error(EPERM);
@@ -192,7 +193,7 @@ int mprotect(void* addr, size_t len, int prot) noexcept
 // call FlushViewOfFile and then call the FlushFileBuffers function [fsync].
 int msync(void* addr, size_t len, int) noexcept
 {
-    if ((len != 0) && FlushViewOfFile(addr, len) == FALSE)
+    if (is_nonzero(len) && FlushViewOfFile(addr, len) == FALSE)
     {
         errno = last_error(EPERM);
         return -1;
@@ -218,7 +219,7 @@ int working_floor(size_t minimum, size_t maximum) noexcept
 // until system reclaims page.
 int working_evict(void* addr, size_t len) noexcept
 {
-    if ((len == 0) || (VirtualUnlock(addr, len) != FALSE) ||
+    if (is_zero(len) || (VirtualUnlock(addr, len) != FALSE) ||
         (GetLastError() == ERROR_NOT_LOCKED))
     {
         errno = 0;
@@ -410,7 +411,7 @@ int fallocate(int fd, int, off_t offset, off_t len) NOEXCEPT
 {
 #if !defined(HAVE_OPENBSD)
     const auto result = ::posix_fallocate(fd, offset, len);
-    if (result == 0)
+    if (is_zero(result))
         return 0;
 
     if ((result != EINVAL) && (result != EOPNOTSUPP))

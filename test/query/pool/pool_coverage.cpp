@@ -87,8 +87,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_coverage__stored__not_counted)
     BC_REQUIRE(covered);
 }
 
-// Pooled fee of 1,000 covers both rivals, as chargeable size includes
-// conflict.
+// Pooled fee of 1,000 covers both rivals, as chargeable size includes conflict.
 BC_AUTO_TEST_CASE(query_pool__get_pool_coverage__lower_fee_conflict__covered_by_surplus)
 {
     settings settings{ test::database_settings() };

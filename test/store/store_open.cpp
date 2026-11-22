@@ -527,7 +527,8 @@ static spend_t spend(const system::hash_digest& hash, uint64_t value) NOEXCEPT
 
 static const system::hash_digest& genesis_coinbase() NOEXCEPT
 {
-    static const auto hash = test::genesis.transactions_ptr()->front()->hash(false);
+    const auto& coinbase = *test::genesis.transactions_ptr()->front();
+    static const auto hash = coinbase.hash(false);
     return hash;
 }
 
@@ -576,7 +577,8 @@ static code pooled(query<store<database::mmap>>& query_, const spend_t& tx) NOEX
 {
     pooled_tx out{};
     out.prevouts.resize(one);
-    return query_.get_pooled(out, query_.to_tx(tx.hash(false)), validated_context);
+    const auto link = query_.to_tx(tx.hash(false));
+    return query_.get_pooled(out, link, validated_context);
 }
 
 BC_AUTO_TEST_CASE(store__open__unconfirmed_pooled__retained)

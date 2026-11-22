@@ -205,7 +205,6 @@ bool CLASS::stage_() NOEXCEPT
         }
 
 #if !defined(WITHOUT_MADVISE)
-        // Heads read randomly, so the mapping advises as the file opens.
         if (!advise_(memory_map_[Column], target))
         {
             teardown_<Column>(error::madvise_failure);
@@ -302,8 +301,8 @@ bool CLASS::commit_(size_t size, bool final) NOEXCEPT
         const auto current = page_floor(to_width<Column>(capacity_.load()));
         const auto from = std::max(settled, current);
 
-        if ((target > from) && (mmap_commit(std::next(memory_map_[Column], from),
-            target - from, commit_headroom_) == fail))
+        if ((target > from) && (mmap_commit(std::next(memory_map_[Column],
+            from), target - from, commit_headroom_) == fail))
         {
             if (final)
                 teardown_<Column>(error::mmap_failure);

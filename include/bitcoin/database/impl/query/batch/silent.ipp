@@ -29,7 +29,7 @@ namespace database {
 TEMPLATE
 bool CLASS::scan_silent(const stopper& cancel,
     const system::scan::batch::receiver& keys,
-    const silent_handler& callback) NOEXCEPT
+    const silent_handler& callback) const NOEXCEPT
 {
     return scan_silent(cancel, keys, zero, store_.scan.count(), callback);
 }
@@ -38,7 +38,7 @@ bool CLASS::scan_silent(const stopper& cancel,
 TEMPLATE
 bool CLASS::scan_silent(const stopper& cancel,
     const system::scan::batch::receiver& keys, size_t first, size_t last,
-    const silent_handler& callback) NOEXCEPT
+    const silent_handler& callback) const NOEXCEPT
 {
     const auto guard = store_.scan.guard();
     const auto prefix_ptr = store_.scan_prefix.get_memory();
@@ -82,7 +82,7 @@ bool CLASS::scan_silent(const stopper& cancel,
 TEMPLATE
 bool CLASS::scan_silent(const stopper& cancel,
     const system::scan::batch::receiver& keys, size_t first, size_t last,
-    size_t start, size_t stop, const silent_handler& callback) NOEXCEPT
+    size_t start, size_t stop, const silent_handler& callback) const NOEXCEPT
 {
     using namespace system;
     using link_t = tx_link::integer;
@@ -446,7 +446,8 @@ bool CLASS::set_presilent(const header_link& link, bool bank) NOEXCEPT
     const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
-    return store_.presilent_bank(bank).put(table::presilent::record{ {}, link });
+    const table::presilent::record element{ {}, link };
+    return store_.presilent_bank(bank).put(element);
     // ========================================================================
 }
 

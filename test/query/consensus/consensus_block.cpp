@@ -345,10 +345,11 @@ static transaction make_coinbase(uint64_t value) NOEXCEPT
 static transaction make_spend(const hash_digest& hash, uint32_t index,
     uint64_t value) NOEXCEPT
 {
+    const input in{ point{ hash, index }, script{}, witness{}, max_uint32 };
     return
     {
         1,
-        inputs{ input{ point{ hash, index }, script{}, witness{}, max_uint32 } },
+        inputs{ in },
         outputs{ output{ value, script{} } },
         0
     };
@@ -565,7 +566,8 @@ constexpr auto signet_flags = pooled_flags | flags::signet_rule;
 constexpr auto txsize_flags = pooled_flags | flags::bip54_txsize_rule;
 constexpr auto coinbase_flags = pooled_flags | flags::bip54_coinbase_rule;
 
-static transaction make_coinbase(uint64_t value, uint32_t locktime, uint32_t sequence) NOEXCEPT
+static transaction make_coinbase(uint64_t value, uint32_t locktime,
+    uint32_t sequence) NOEXCEPT
 {
     const script nops{ { { opcode::nop }, { opcode::nop } } };
     return
