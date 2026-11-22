@@ -47,6 +47,9 @@ bool archive_pool(query_t& query, const system::chain::transaction& tx,
 database::header_link archive_confirm(query_t& query,
     const system::chain::transaction& tx) NOEXCEPT;
 
+/// Block 1 of a coinbase and the tx.
+system::chain::block to_block(const system::chain::transaction& tx) NOEXCEPT;
+
 /// Populate the tx prevouts, then archive and pool it.
 bool pool_populated(query_t& query, const system::chain::transaction& tx,
     uint32_t height=8) NOEXCEPT;

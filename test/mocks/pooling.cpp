@@ -45,15 +45,20 @@ bool archive_pool(query_t& query, const transaction& tx,
     return stored && query.set_pooled(link, tx, ctx, 0);
 }
 
-database::header_link archive_confirm(query_t& query,
-    const transaction& tx) NOEXCEPT
+block to_block(const transaction& tx) NOEXCEPT
 {
     const point null_point{ null_hash, point::null_index };
     const input null{ null_point, script{}, max_uint32 };
     const output reward{ 42u, script{} };
     const transaction coinbase{ 1u, inputs{ null }, outputs{ reward }, 0u };
     const header header{ 1u, genesis.hash(), null_hash, 1u, 2u, 3u };
-    const block block{ header, { coinbase, tx } };
+    return { header, { coinbase, tx } };
+}
+
+database::header_link archive_confirm(query_t& query,
+    const transaction& tx) NOEXCEPT
+{
+    const auto block = to_block(tx);
     const database::context ctx{ 0, 1, 0 };
     const auto stored = query.set(block, ctx, {}, false, true);
     const auto link = query.to_header(block.hash());
