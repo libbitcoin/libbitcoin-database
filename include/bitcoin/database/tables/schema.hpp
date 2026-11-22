@@ -77,7 +77,8 @@ namespace schema {
 /// 4.0.31.0 Pool flags, heights and medians columns (from the pool record).
 /// 4.0.32.0 Require witness in the envelope.
 /// 4.0.33.0 Pruned flags merged into the tx and txs heavy sizes.
-constexpr std::array<uint32_t, 4> version{ 4, 0, 33, 0 };
+/// 4.0.34.0 Pool top in the envelope.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 34, 0 };
 
 /// The oldest store schema migrated to version.
 constexpr std::array<uint32_t, 4> migratable{ 4, 0, 30, 0 };

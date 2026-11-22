@@ -167,7 +167,7 @@ bool CLASS::set_pool_unvalidated(size_t& out,
         }
     }
 
-    return true;
+    return store_.set_pool_top(to_parent(link));
     // ========================================================================
 }
 

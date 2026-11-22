@@ -349,4 +349,124 @@ BC_AUTO_TEST_CASE(query_pool__set_pool_index__repooled_child__purged_row_kept_pu
     BC_REQUIRE_EQUAL(pool_cell(query, store, child), system::pool::algorithm::unlabeled);
 }
 
+// pool top
+// ----------------------------------------------------------------------------
+
+BC_AUTO_TEST_CASE(query_pool__get_pool_top__initialized__terminal)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.get_pool_top().is_terminal());
+}
+
+BC_AUTO_TEST_CASE(query_pool__set_pool_top__link__stored)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set_pool_top(header_link{ 42 }));
+    BC_REQUIRE_EQUAL(query.get_pool_top().value, 42u);
+}
+
+BC_AUTO_TEST_CASE(query_pool__set_pool_block__confirmed_empty_pool__pool_top_block)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto link = archive_confirm(query, to_spend(genesis_coinbase(), 4'999'999'000));
+
+    BC_REQUIRE(!link.is_terminal());
+    BC_REQUIRE_EQUAL(query.pool_records(), zero);
+    BC_REQUIRE_EQUAL(query.get_pool_top().value, 1u);
+}
+
+BC_AUTO_TEST_CASE(query_pool__set_pool_block__confirmed__pool_top_block)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto pooled = pool_populated(query, to_spend(genesis_coinbase(), 4'999'998'500));
+    const auto link = archive_confirm(query, to_spend(genesis_coinbase(), 4'999'999'000));
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(!link.is_terminal());
+    BC_REQUIRE_EQUAL(query.get_pool_top().value, 1u);
+}
+
+BC_AUTO_TEST_CASE(query_pool__set_pool_block__reorganized__pool_top_unchanged)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto pooled = pool_populated(query, to_spend(genesis_coinbase(), 4'999'998'500));
+    const auto link = archive_confirm(query, to_spend(genesis_coinbase(), 4'999'999'000));
+    const auto popped = query.pop_confirmed();
+    const auto reverted = query.set_pool_block(link, false);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(!link.is_terminal());
+    BC_REQUIRE(popped);
+    BC_REQUIRE(reverted);
+    BC_REQUIRE_EQUAL(query.get_pool_top().value, 1u);
+}
+
+BC_AUTO_TEST_CASE(query_pool__set_pool_unvalidated__block__pool_top_parent)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto link = archive_confirm(query, to_spend(genesis_coinbase(), 4'999'999'000));
+    const auto popped = query.pop_confirmed();
+    size_t marked{};
+    const auto unvalidated = query.set_pool_unvalidated(marked, link);
+
+    BC_REQUIRE(!link.is_terminal());
+    BC_REQUIRE(popped);
+    BC_REQUIRE(unvalidated);
+    BC_REQUIRE_EQUAL(query.get_pool_top().value, 0u);
+}
+
+BC_AUTO_TEST_CASE(query_pool__set_pool_block__disabled__pool_top_terminal)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    settings.pool.buckets = 0;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    size_t marked{};
+    BC_REQUIRE(query.set_pool_block(query.to_header(test::genesis.hash()), true));
+    BC_REQUIRE(query.set_pool_unvalidated(marked, query.to_header(test::genesis.hash())));
+    BC_REQUIRE(query.get_pool_top().is_terminal());
+}
+
 BC_AUTO_TEST_SUITE_END()

@@ -259,6 +259,10 @@ code CLASS::migrate(system::config::version& original,
                 ec = migrate_4_0_32_to_4_0_33(handler);
                 schema = { 4, 0, 33, 0 };
             }
+            else if (schema == system::config::version{ 4, 0, 33, 0 })
+            {
+                schema = { 4, 0, 34, 0 };
+            }
             else
             {
                 ec = error::schema_version;
@@ -803,6 +807,7 @@ code CLASS::load_envelope() NOEXCEPT
     // The stored latch governs, it is one-way and survives the session.
     scan_frontier_.store(envelope_.scan_frontier, std::memory_order_relaxed);
     latch_tx_.store(envelope_.latch_tx, std::memory_order_relaxed);
+    pool_top_.store(envelope_.pool_top, std::memory_order_relaxed);
     for (size_t index{}; index < activation_count; ++index)
     {
         const auto& activation = envelope_.activations.at(index);

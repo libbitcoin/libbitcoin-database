@@ -105,6 +105,26 @@ struct envelope
         uint32_t latch_tx{};
     };
 
+    struct put_pool_top
+    {
+        static constexpr size_t size = max_size_t;
+
+        inline link count() const NOEXCEPT
+        {
+            return system::possible_narrow_cast<link::integer>(
+                database::envelope::pool_top_size);
+        }
+
+        inline bool to_data(flipper& sink) const NOEXCEPT
+        {
+            using header = schema::header::link;
+            sink.write_little_endian<header::integer, header::size>(header_fk);
+            return sink;
+        }
+
+        schema::header::link::integer header_fk{};
+    };
+
     struct put_activation
     {
         static constexpr size_t size = max_size_t;

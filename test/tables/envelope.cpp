@@ -22,7 +22,7 @@ BC_AUTO_TEST_SUITE(envelope_tests)
 
 using namespace system;
 
-constexpr auto default_size = 615_size;
+constexpr auto default_size = 618_size;
 
 static data_chunk to_chunk(const envelope& instance)
 {
@@ -52,7 +52,7 @@ BC_AUTO_TEST_CASE(envelope__serialized_size__default__expected)
 BC_AUTO_TEST_CASE(envelope__to_data__default__expected_version)
 {
     const envelope instance{};
-    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 33, 0));
+    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 34, 0));
     BC_REQUIRE_EQUAL(to_chunk(instance).front(), schema::version.front());
 }
 
@@ -100,6 +100,38 @@ BC_AUTO_TEST_CASE(envelope__pooling_offset__serialized__expected)
     BC_REQUIRE_EQUAL(data.at(offset), 0x01u);
     BC_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint32_t>(&data.at(add1(offset))), 0x01020304u);
     BC_REQUIRE_EQUAL(system::unsafe_from_little_endian<uint32_t>(&data.at(offset + 5u)), 0x05060708u);
+}
+
+BC_AUTO_TEST_CASE(envelope__construct__default__pool_top_terminal)
+{
+    const envelope instance{};
+    BC_REQUIRE_EQUAL(instance.pool_top, schema::header::link::terminal);
+}
+
+BC_AUTO_TEST_CASE(envelope__from_data__pool_top__round_trip)
+{
+    envelope instance{};
+    instance.pool_top = 709632;
+    auto data = to_chunk(instance);
+    BC_REQUIRE_EQUAL(data.size(), default_size);
+
+    envelope out{};
+    BC_REQUIRE(from_chunk(out, data));
+    BC_REQUIRE_EQUAL(out.pool_top, 709632u);
+    BC_REQUIRE(out == instance);
+}
+
+BC_AUTO_TEST_CASE(envelope__pool_top_offset__serialized__expected)
+{
+    envelope instance{};
+    instance.pool_top = 0x030201;
+    const auto data = to_chunk(instance);
+    const auto offset = instance.pool_top_offset();
+    BC_REQUIRE_EQUAL(data.at(offset), 0x01u);
+    BC_REQUIRE_EQUAL(data.at(offset + 1u), 0x02u);
+    BC_REQUIRE_EQUAL(data.at(offset + 2u), 0x03u);
+    BC_REQUIRE_EQUAL(instance.pooling_offset() + envelope::pooling_size, offset);
+    BC_REQUIRE_EQUAL(offset + envelope::pool_top_size, instance.activation_offset(0));
 }
 
 BC_AUTO_TEST_CASE(envelope__activation_offset__serialized__expected)
@@ -410,6 +442,11 @@ BC_AUTO_TEST_CASE(envelope__migrate_step__4_0_31__stepwise_expected)
     BC_REQUIRE(envelope::get_schema(data) == system::config::version(4, 0, 33, 0));
     BC_REQUIRE_EQUAL(data.size(), add1(test::envelope_4_0_31.size()));
 
+    // 4.0.33 -> 4.0.34
+    BC_REQUIRE(envelope::migrate_step(data, configured));
+    BC_REQUIRE(envelope::get_schema(data) == system::config::version(4, 0, 34, 0));
+    BC_REQUIRE_EQUAL(data.size(), test::envelope_4_0_31.size() + 4u);
+
     // compiled
     BC_REQUIRE(envelope::get_schema(data) == envelope::compiled);
     BC_REQUIRE(!envelope::migrate_step(data, configured));
@@ -421,6 +458,7 @@ BC_AUTO_TEST_CASE(envelope__migrate_step__4_0_31__stepwise_expected)
     BC_REQUIRE(out.provide_filters);
     BC_REQUIRE(!out.limited_blocks);
     BC_REQUIRE_EQUAL(out.silent_start_height, 42u);
+    BC_REQUIRE_EQUAL(out.pool_top, schema::header::link::terminal);
 }
 
 BC_AUTO_TEST_CASE(envelope__migrate_4_0_30_to_4_0_31__schema_only)
@@ -440,6 +478,27 @@ BC_AUTO_TEST_CASE(envelope__migrate_4_0_32_to_4_0_33__schema_only)
     expected.at(8) = 33;
     BC_REQUIRE(envelope::migrate_4_0_32_to_4_0_33(data));
     BC_REQUIRE(data == expected);
+}
+
+BC_AUTO_TEST_CASE(envelope__migrate_4_0_33_to_4_0_34__terminal_before_activations)
+{
+    // Activations are the last 224 bytes.
+    auto image = test::envelope_4_0_31;
+    image.at(8) = 33;
+    image.back() = 0x42;
+    auto data = image;
+    BC_REQUIRE(envelope::migrate_4_0_33_to_4_0_34(data));
+    BC_REQUIRE(envelope::get_schema(data) == system::config::version(4, 0, 34, 0));
+    BC_REQUIRE_EQUAL(data.size(), image.size() + 3u);
+    BC_REQUIRE(data_chunk(std::prev(data.end(), 227), std::prev(data.end(), 224)) == data_chunk{ 0xff, 0xff, 0x7f });
+    BC_REQUIRE(data_chunk(std::prev(data.end(), 224), data.end()) == data_chunk(std::prev(image.end(), 224), image.end()));
+    BC_REQUIRE(data_chunk(std::next(data.begin(), 16), std::prev(data.end(), 227)) == data_chunk(std::next(image.begin(), 16), std::prev(image.end(), 224)));
+}
+
+BC_AUTO_TEST_CASE(envelope__migrate_4_0_33_to_4_0_34__short__false)
+{
+    data_chunk data(223);
+    BC_REQUIRE(!envelope::migrate_4_0_33_to_4_0_34(data));
 }
 
 BC_AUTO_TEST_CASE(envelope__migrate__4_0_30__compiled)

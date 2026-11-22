@@ -131,6 +131,10 @@ public:
     size_t get_scan_frontier() const NOEXCEPT;
     size_t get_latch_tx() const NOEXCEPT;
 
+    /// Last block applied to pool, terminal if none.
+    header_link get_pool_top() const NOEXCEPT;
+    bool set_pool_top(const header_link& link) NOEXCEPT;
+
     /// Height at which forks of flag activated, if confirmed active.
     bool get_activation(size_t& out, uint32_t flag) const NOEXCEPT;
 
@@ -790,7 +794,7 @@ public:
     /// Rebuild pool index heads from pool (after compaction).
     bool set_pool_index() NOEXCEPT;
 
-    /// Apply confirmation (or reorganization) of block to index.
+    /// Apply confirmation (pool top) or reorganization of block to index.
     bool set_pool_block(const header_link& link, bool confirmed) NOEXCEPT;
 
     /// Apply pool context to index, out rows it does not satisfy.
@@ -800,7 +804,7 @@ public:
     bool set_pooled_context(const tx_link& link, const context& ctx,
         size_t sigops) NOEXCEPT;
 
-    /// Set each pooled spender of block's txs not validated, out count.
+    /// Set pooled spenders of block's txs not validated, parent pool top.
     bool set_pool_unvalidated(size_t& out, const header_link& link) NOEXCEPT;
 
     /// Coverage.
