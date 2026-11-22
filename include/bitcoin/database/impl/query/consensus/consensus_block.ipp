@@ -120,7 +120,8 @@ code CLASS::block_confirmable(const header_link& link) const NOEXCEPT
 
 TEMPLATE
 code CLASS::validate_pooled(const header_link& link, const chain_context& ctx,
-    size_t subsidy_interval, uint64_t initial_subsidy) NOEXCEPT
+    size_t subsidy_interval, uint64_t initial_subsidy,
+    const system::chain::script& challenge) NOEXCEPT
 {
     using prevout = table::prevout;
     if (!store_.pool.enabled())
@@ -130,8 +131,8 @@ code CLASS::validate_pooled(const header_link& link, const chain_context& ctx,
     pooled_block block{};
     if ((ec = get_pooled_block(block, link, context::from(ctx))) ||
         (ec = check_pooled_block(block)) ||
-        (ec = accept_pooled_block(block, ctx, subsidy_interval,
-            initial_subsidy)))
+        (ec = accept_pooled_block(block, link, ctx, subsidy_interval,
+            initial_subsidy, challenge)))
         return ec;
 
     // ========================================================================
@@ -236,17 +237,23 @@ code CLASS::check_pooled_block(pooled_block& block) const NOEXCEPT
     return error::success;
 }
 
-// Block check (context) and accept: weight, coinbase, hash limit, claim, sigops.
+// Block check (context) and accept: weight, coinbase, tx size, signet solution,
+// claim, sigops.
 TEMPLATE
 code CLASS::accept_pooled_block(const pooled_block& block,
-    const chain_context& ctx, size_t subsidy_interval,
-    uint64_t initial_subsidy) const NOEXCEPT
+    const header_link& link, const chain_context& ctx, size_t subsidy_interval,
+    uint64_t initial_subsidy,
+    const system::chain::script& challenge) const NOEXCEPT
 {
     using namespace system;
     const auto bip16 = ctx.is_enabled(chain::flags::bip16_rule);
     const auto bip34 = ctx.is_enabled(chain::flags::bip34_rule);
     const auto bip42 = ctx.is_enabled(chain::flags::bip42_rule);
     const auto bip141 = ctx.is_enabled(chain::flags::bip141_rule);
+    const auto bip54_txsize = ctx.is_enabled(chain::flags::bip54_txsize_rule);
+    const auto bip54_coinbase = ctx.is_enabled(
+        chain::flags::bip54_coinbase_rule);
+    const auto signet = ctx.is_enabled(chain::flags::signet_rule);
 
     const auto weight = ceilinged_add(
         ceilinged_multiply(chain::base_size_contribution, block.light),
@@ -269,6 +276,30 @@ code CLASS::accept_pooled_block(const pooled_block& block,
         !chain::script::is_coinbase_pattern(ins.front()->script().ops(),
             ctx.height))
         return system::error::coinbase_height_mismatch;
+
+    if (bip54_txsize && std::ranges::any_of(block.records,
+        [](const auto& record) NOEXCEPT
+        {
+            return record.light == chain::invalid_transaction_size;
+        }))
+        return system::error::invalid_transaction_size;
+
+    if (bip54_coinbase && coinbase->locktime() != sub1(ctx.height))
+        return system::error::coinbase_locktime_mismatch;
+
+    if (bip54_coinbase && !ins.empty() && ins.front()->is_final())
+        return system::error::coinbase_sequence_final;
+
+    if (signet)
+    {
+        const auto header = get_header(link);
+        if (!header)
+            return error::integrity;
+
+        if (!chain::signet::verify(*header, *coinbase, get_tx_keys(link),
+            challenge))
+            return system::error::invalid_signet_solution;
+    }
 
     const auto subsidy = chain::block::subsidy(ctx.height, subsidy_interval,
         initial_subsidy, bip42);
