@@ -160,6 +160,81 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_projection__marks_of_other_rows__restarte
     BC_REQUIRE_EQUAL(projection.blocks[0][0].rate, 1'000'000u / size);
 }
 
+// get_pool_continuation
+// ----------------------------------------------------------------------------
+
+BC_AUTO_TEST_CASE(query_pool__get_pool_continuation__more_blocks__continued)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto child = to_spend(parent.hash(false), 4'999'990'000);
+    const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
+    const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
+    pool_projection projection{};
+    const pool_totals budget{ 0, size, 80'000 };
+    const auto first = query.get_pool_projection(projection, 1, budget, 25, 0, 20, 1'024);
+    const auto ec = query.get_pool_continuation(projection, 2, budget, 25, 20);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE_EQUAL(first, error::success);
+    BC_REQUIRE_EQUAL(ec, error::success);
+    BC_REQUIRE_EQUAL(projection.blocks.size(), 2u);
+    BC_REQUIRE_EQUAL(projection.blocks[1][0].rate, 9'000'000u / size);
+    BC_REQUIRE(projection.exhausted);
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_pool_continuation__later_row__left_out)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto child = to_spend(parent.hash(false), 4'999'990'000);
+    const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
+    const auto pooled_parent = pool_populated(query, parent);
+    pool_projection projection{};
+    const pool_totals budget{ 0, size, 80'000 };
+    const auto first = query.get_pool_projection(projection, 1, budget, 25, 0, 20, 1'024);
+    const auto pooled_child = pool_populated(query, child);
+    const auto ec = query.get_pool_continuation(projection, 2, budget, 25, 20);
+
+    BC_REQUIRE(pooled_parent);
+    BC_REQUIRE_EQUAL(first, error::success);
+    BC_REQUIRE(pooled_child);
+    BC_REQUIRE_EQUAL(ec, error::success);
+    BC_REQUIRE_EQUAL(projection.marks.size(), 2u);
+    BC_REQUIRE(projection.marks[1] == system::pool::algorithm::mark::excluded);
+    BC_REQUIRE_EQUAL(projection.blocks.size(), 1u);
+    BC_REQUIRE(projection.exhausted);
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_pool_continuation__marks_over_rows__integrity)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    pool_projection projection{};
+    projection.marks.resize(42);
+    BC_REQUIRE_EQUAL(query.get_pool_continuation(projection, 1, block_limit, 25, 20), error::integrity);
+}
+
 // get_pool_arrivals
 // ----------------------------------------------------------------------------
 

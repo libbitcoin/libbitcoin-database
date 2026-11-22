@@ -395,7 +395,7 @@ BC_AUTO_TEST_CASE(query_consensus__validate_pooled__pooled__success_with_prevout
     BC_REQUIRE(pool_tx(query, child, 4'000'000'000, pooled_context));
 
     const auto link = query.to_header(block.hash());
-    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy), error::success);
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy, {}), error::success);
 
     table::prevout::slab_get cache{};
     cache.spends.resize(2);
@@ -424,7 +424,7 @@ BC_AUTO_TEST_CASE(query_consensus__validate_pooled__insufficient__unvalidated)
     BC_REQUIRE(pool_tx(query, parent, 5'000'000'000, database::context{ pooled_flags, 9, 9 }));
 
     const auto link = query.to_header(block.hash());
-    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy), error::unvalidated);
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy, {}), error::unvalidated);
 }
 
 BC_AUTO_TEST_CASE(query_consensus__validate_pooled__not_pooled__unvalidated)
@@ -440,7 +440,7 @@ BC_AUTO_TEST_CASE(query_consensus__validate_pooled__not_pooled__unvalidated)
     BC_REQUIRE(store_block(query, block));
 
     const auto link = query.to_header(block.hash());
-    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy), error::unvalidated);
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy, {}), error::unvalidated);
 }
 
 BC_AUTO_TEST_CASE(query_consensus__validate_pooled__overclaim__coinbase_value_limit)
@@ -461,7 +461,7 @@ BC_AUTO_TEST_CASE(query_consensus__validate_pooled__overclaim__coinbase_value_li
     BC_REQUIRE(pool_tx(query, parent, 5'000'000'000, pooled_context));
 
     const auto link = query.to_header(block.hash());
-    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy), system::error::coinbase_value_limit);
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy, {}), system::error::coinbase_value_limit);
 }
 
 BC_AUTO_TEST_CASE(query_consensus__validate_pooled__forward_reference__forward_reference)
@@ -483,7 +483,7 @@ BC_AUTO_TEST_CASE(query_consensus__validate_pooled__forward_reference__forward_r
     BC_REQUIRE(pool_tx(query, child, 4'000'000'000, pooled_context));
 
     const auto link = query.to_header(block.hash());
-    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy), system::error::forward_reference);
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy, {}), system::error::forward_reference);
 }
 
 BC_AUTO_TEST_CASE(query_consensus__validate_pooled__internal_double_spend__block_internal_double_spend)
@@ -506,7 +506,7 @@ BC_AUTO_TEST_CASE(query_consensus__validate_pooled__internal_double_spend__block
     BC_REQUIRE(pool_tx(query, spend2, 5'000'000'000, pooled_context));
 
     const auto link = query.to_header(block.hash());
-    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy), system::error::block_internal_double_spend);
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy, {}), system::error::block_internal_double_spend);
 }
 
 BC_AUTO_TEST_CASE(query_consensus__validate_pooled__internal_coinbase_spend__coinbase_maturity)
@@ -526,7 +526,7 @@ BC_AUTO_TEST_CASE(query_consensus__validate_pooled__internal_coinbase_spend__coi
     BC_REQUIRE(pool_tx(query, spend, 1, pooled_context));
 
     const auto link = query.to_header(block.hash());
-    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy), system::error::coinbase_maturity);
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy, {}), system::error::coinbase_maturity);
 }
 
 BC_AUTO_TEST_CASE(query_consensus__validate_pooled__mature__block_confirmable)
@@ -557,8 +557,129 @@ BC_AUTO_TEST_CASE(query_consensus__validate_pooled__mature__block_confirmable)
     BC_REQUIRE(pool_tx(query, child, 4'000'000'000, mature_context));
 
     const auto link = query.to_header(block.hash());
-    BC_REQUIRE_EQUAL(query.validate_pooled(link, mature_block, pooled_interval, pooled_subsidy), error::success);
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, mature_block, pooled_interval, pooled_subsidy, {}), error::success);
     BC_REQUIRE_EQUAL(query.block_confirmable(link), error::success);
+}
+
+constexpr auto signet_flags = pooled_flags | flags::signet_rule;
+constexpr auto txsize_flags = pooled_flags | flags::bip54_txsize_rule;
+constexpr auto coinbase_flags = pooled_flags | flags::bip54_coinbase_rule;
+
+static transaction make_coinbase(uint64_t value, uint32_t locktime, uint32_t sequence) NOEXCEPT
+{
+    const script nops{ { { opcode::nop }, { opcode::nop } } };
+    return
+    {
+        1,
+        inputs{ input{ point{}, nops, witness{}, sequence } },
+        outputs{ output{ value, script{} } },
+        locktime
+    };
+}
+
+BC_AUTO_TEST_CASE(query_consensus__validate_pooled__signet_unsolved__invalid_signet_solution)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    const auto parent = make_spend(genesis_hash(), 0, 4'000'000'000);
+    const auto block = make_block({ make_coinbase(1), parent });
+    BC_REQUIRE(store_block(query, block));
+
+    parent.inputs_ptr()->front()->metadata.parent_tx = 0;
+    BC_REQUIRE(pool_tx(query, parent, 5'000'000'000, { signet_flags, 8, 9 }));
+
+    const auto link = query.to_header(block.hash());
+    const script challenge{ { { opcode::push_positive_1 } } };
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, { signet_flags, 0, 9, 8, 0, 0, 0 }, pooled_interval, pooled_subsidy, challenge), system::error::invalid_signet_solution);
+}
+
+BC_AUTO_TEST_CASE(query_consensus__validate_pooled__bip54_two_leaf_tx__invalid_transaction_size)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    const script four{ { { opcode::nop }, { opcode::nop }, { opcode::nop }, { opcode::nop } } };
+    const transaction parent{ 1, inputs{ input{ point{ genesis_hash(), 0 }, script{}, witness{}, max_uint32 } }, outputs{ output{ 4'000'000'000, four } }, 0 };
+    BC_REQUIRE_EQUAL(parent.serialized_size(false), invalid_transaction_size);
+
+    const auto block = make_block({ make_coinbase(1), parent });
+    BC_REQUIRE(store_block(query, block));
+
+    parent.inputs_ptr()->front()->metadata.parent_tx = 0;
+    BC_REQUIRE(pool_tx(query, parent, 5'000'000'000, { txsize_flags, 8, 9 }));
+
+    const auto link = query.to_header(block.hash());
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, { txsize_flags, 0, 9, 8, 0, 0, 0 }, pooled_interval, pooled_subsidy, {}), system::error::invalid_transaction_size);
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, block_context, pooled_interval, pooled_subsidy, {}), error::success);
+}
+
+BC_AUTO_TEST_CASE(query_consensus__validate_pooled__bip54_coinbase_locktime__coinbase_locktime_mismatch)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    const auto parent = make_spend(genesis_hash(), 0, 4'000'000'000);
+    const auto block = make_block({ make_coinbase(1, 6, 0), parent });
+    BC_REQUIRE(store_block(query, block));
+
+    parent.inputs_ptr()->front()->metadata.parent_tx = 0;
+    BC_REQUIRE(pool_tx(query, parent, 5'000'000'000, { coinbase_flags, 8, 9 }));
+
+    const auto link = query.to_header(block.hash());
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, { coinbase_flags, 0, 9, 8, 0, 0, 0 }, pooled_interval, pooled_subsidy, {}), system::error::coinbase_locktime_mismatch);
+}
+
+BC_AUTO_TEST_CASE(query_consensus__validate_pooled__bip54_coinbase_sequence__coinbase_sequence_final)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    const auto parent = make_spend(genesis_hash(), 0, 4'000'000'000);
+    const auto block = make_block({ make_coinbase(1, 7, max_uint32), parent });
+    BC_REQUIRE(store_block(query, block));
+
+    parent.inputs_ptr()->front()->metadata.parent_tx = 0;
+    BC_REQUIRE(pool_tx(query, parent, 5'000'000'000, { coinbase_flags, 8, 9 }));
+
+    const auto link = query.to_header(block.hash());
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, { coinbase_flags, 0, 9, 8, 0, 0, 0 }, pooled_interval, pooled_subsidy, {}), system::error::coinbase_sequence_final);
+}
+
+BC_AUTO_TEST_CASE(query_consensus__validate_pooled__bip54_coinbase__success)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    const auto parent = make_spend(genesis_hash(), 0, 4'000'000'000);
+    const auto block = make_block({ make_coinbase(1, 7, 0), parent });
+    BC_REQUIRE(store_block(query, block));
+
+    parent.inputs_ptr()->front()->metadata.parent_tx = 0;
+    BC_REQUIRE(pool_tx(query, parent, 5'000'000'000, { coinbase_flags, 8, 9 }));
+
+    const auto link = query.to_header(block.hash());
+    BC_REQUIRE_EQUAL(query.validate_pooled(link, { coinbase_flags, 0, 9, 8, 0, 0, 0 }, pooled_interval, pooled_subsidy, {}), error::success);
 }
 
 BC_AUTO_TEST_CASE(query_consensus__validate_pooled__disabled__unvalidated)
@@ -570,7 +691,7 @@ BC_AUTO_TEST_CASE(query_consensus__validate_pooled__disabled__unvalidated)
     test::query_accessor query{ store };
     BC_REQUIRE(!store.create(test::events_handler));
     BC_REQUIRE(query.initialize(test::genesis));
-    BC_REQUIRE_EQUAL(query.validate_pooled(0, block_context, pooled_interval, pooled_subsidy), error::unvalidated);
+    BC_REQUIRE_EQUAL(query.validate_pooled(0, block_context, pooled_interval, pooled_subsidy, {}), error::unvalidated);
 }
 
 BC_AUTO_TEST_SUITE_END()

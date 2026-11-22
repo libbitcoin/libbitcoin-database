@@ -131,8 +131,7 @@ public:
     size_t get_scan_frontier() const NOEXCEPT;
     size_t get_latch_tx() const NOEXCEPT;
 
-    /// Height at which the forks of the flag activated, if active there in the
-    /// confirmed chain.
+    /// Height at which forks of flag activated, if confirmed active.
     bool get_activation(size_t& out, uint32_t flag) const NOEXCEPT;
 
     /// Candidate chain header at which the set of forks activated.
@@ -537,7 +536,7 @@ public:
     data_chunk get_wire_block(const header_link& link, bool witness,
         bool turbo=false) const NOEXCEPT;
 
-    /// Write to a target sized to the encoding, in parallel with turbo.
+    /// Write to a target sized to the encoding.
     template <typename Writer = system::write::bytes::fast>
     bool get_wire_block(const system::data_slab& out, const header_link& link,
         bool witness, bool turbo=false) const NOEXCEPT;
@@ -700,11 +699,10 @@ public:
     inline block_state get_block_state(
         const header_link& link) const NOEXCEPT;
 
-    /// Validate a block whose txs are pooled under a context sufficient for
-    /// the block, writing its prevouts. Unvalidated implies a tx is not
-    /// sufficiently pooled (block requires full validation).
+    /// Validate a block whose txs are pooled under a sufficient context.
     code validate_pooled(const header_link& link, const chain_context& ctx,
-        size_t subsidy_interval, uint64_t initial_subsidy) NOEXCEPT;
+        size_t subsidy_interval, uint64_t initial_subsidy,
+        const system::chain::script& challenge) NOEXCEPT;
 
     /// Pooled tx links by compact block short id (masked siphash of wtxid),
     /// terminal where not pooled or ambiguous.
@@ -733,19 +731,15 @@ public:
     /// Pool.
     /// -----------------------------------------------------------------------
 
-    /// A validation under the evaluated context holds under the current.
     inline bool is_sufficient(const context& current,
         const context& evaluated) const NOEXCEPT;
 
     bool is_pooled(const tx_link& link) const NOEXCEPT;
     pool_link to_pool_row(const tx_link& link) const NOEXCEPT;
+    bool get_pooled_time(uint32_t& out, const tx_link& link) const NOEXCEPT;
+    bool get_pooled_totals(pool_totals& out, const tx_link& link) const NOEXCEPT;
     code get_pooled(pooled_tx& out, const tx_link& link,
         const context& ctx) const NOEXCEPT;
-    bool get_pooled_time(uint32_t& out, const tx_link& link) const NOEXCEPT;
-
-    /// The fee, virtual size and sigops of the pooled tx.
-    bool get_pooled_totals(pool_totals& out,
-        const tx_link& link) const NOEXCEPT;
 
     /// Unconfirmed, and not conflicted by a confirmed tx (or via ancestry).
     bool is_confirmable_tx(const tx_link& link) const NOEXCEPT;
@@ -756,33 +750,31 @@ public:
     /// Spender of prevout in a pooled and confirmable tx, terminal if none.
     ins_link find_confirmable_spender(const point& prevout) const NOEXCEPT;
 
-    /// Confirmable tx links, in pool order (requires the pool index).
+    /// Confirmable tx links, in pool order (requires pool).
     code get_confirmable_txs(tx_links& out) const NOEXCEPT;
 
-    /// Confirmable txs spent by, and spending, the tx (direct only).
+    /// Confirmable txs spent by, and spending, tx (direct only).
     tx_links to_confirmable_parents(const tx_link& link) const NOEXCEPT;
     tx_links to_confirmable_children(const tx_link& link) const NOEXCEPT;
 
-    /// Confirmable ancestors, or descendants, of the tx (excluding the tx).
+    /// Confirmable ancestors, or descendants, of tx (excluding tx).
     tx_links to_confirmable_ancestors(const tx_link& link) const NOEXCEPT;
     tx_links to_confirmable_descendants(const tx_link& link) const NOEXCEPT;
 
-    /// Totals of the tx with its confirmable ancestors, or descendants.
+    /// Totals of tx with its confirmable ancestors, or descendants.
     bool get_ancestor_totals(fee_totals& out,
         const tx_link& link) const NOEXCEPT;
     bool get_descendant_totals(fee_totals& out,
         const tx_link& link) const NOEXCEPT;
 
-    /// Confirmable fee rate tuples, in pool order (requires the pool index).
+    /// Confirmable fee rate tuples, in pool order (requires pool).
     code get_confirmable_fees(fee_rates& out) const NOEXCEPT;
 
-    /// Pooled txs out only for flags of the context they were not validated
-    /// under, in pool order (requires the pool index).
+    /// Get txs not validated under context, in pool order (requires pool).
     code get_pool_revalidation(tx_links& out,
         const context& ctx) const NOEXCEPT;
 
-    /// Pooled txs out without a validation context, in pool order (requires
-    /// the pool index).
+    /// Pooled txs out as not validated, in pool order (requires pool).
     code get_pool_unvalidated(tx_links& out) const NOEXCEPT;
 
     /// Setters.
@@ -791,25 +783,30 @@ public:
     bool set_pooled(const tx_link& link, const transaction& tx,
         const chain_context& ctx, uint32_t time) NOEXCEPT;
 
-    /// Rebuild the pool index heads from the pool (after compaction).
+    /// Pool tx, out count of its pooled descendants pooled again after it.
+    bool set_pooled(size_t& repooled, const tx_link& link,
+        const transaction& tx, const context& ctx, uint32_t time) NOEXCEPT;
+
+    /// Rebuild pool index heads from pool (after compaction).
     bool set_pool_index() NOEXCEPT;
 
-    /// Apply the confirmation (or reorganization) of the block to the index.
+    /// Apply confirmation (or reorganization) of block to index.
     bool set_pool_block(const header_link& link, bool confirmed) NOEXCEPT;
 
-    /// Apply the pool context to the index, out the rows it does not satisfy.
+    /// Apply pool context to index, out rows it does not satisfy.
     bool set_pool_context(size_t& out, const context& ctx) NOEXCEPT;
 
-    /// Set the context of the pooled tx, as validated under it.
-    bool set_pooled_context(const tx_link& link, const context& ctx) NOEXCEPT;
+    /// Set context of pooled tx, as validated under it.
+    bool set_pooled_context(const tx_link& link, const context& ctx,
+        size_t sigops) NOEXCEPT;
 
-    /// Clear the context of each pooled spender of the block's txs, out count.
+    /// Set each pooled spender of block's txs not validated, out count.
     bool set_pool_unvalidated(size_t& out, const header_link& link) NOEXCEPT;
 
     /// Coverage.
     /// -----------------------------------------------------------------------
 
-    /// Accessors held across spans over the pool columns and index heads.
+    /// Accessors held across spans over pool columns and index heads.
     struct pool_guards
     {
         memory pool{};
@@ -817,7 +814,7 @@ public:
         memory spends_index{};
     };
 
-    /// The pool columns with txs appended as candidates (guards held).
+    /// Pool columns with txs appended as candidates.
     struct pool_graph
     {
         using algorithm = system::pool::algorithm;
@@ -839,19 +836,19 @@ public:
         bool conflicted{};
     };
 
-    /// True if the fee the package adds to the pool covers it at the rate.
+    /// True if fee the package adds to pool covers it at rate.
     code get_pool_coverage(bool& out,
         const system::chain::transaction_cptrs& txs,
         const std::vector<bool>& stored, const context& ctx, uint64_t rate,
         uint32_t bytes_per_sigop, const pool_totals& limit,
         size_t maximum_outcomes) const NOEXCEPT;
 
-    /// Append the tx to the graph as a candidate (parents precede children).
+    /// Append tx to graph as a candidate (parents berfore children).
     code get_pool_candidate(pool_graph& out, const transaction& tx,
         const context& ctx) const NOEXCEPT;
 
-    /// True if the fee the candidates from first add to the pool, given those
-    /// before it, covers them at the rate.
+    /// True if fee candidates from first add to pool, given those before it,
+    /// covers them at rate.
     code get_pool_coverage(bool& out, const pool_graph& graph, size_t first,
         uint64_t rate, uint32_t bytes_per_sigop, const pool_totals& limit,
         size_t maximum_outcomes) const NOEXCEPT;
@@ -859,8 +856,8 @@ public:
     /// Template.
     /// -----------------------------------------------------------------------
 
-    /// The pooled txs of a block template within the budget, parents first,
-    /// leaves chosen at the cutoff rate.
+    /// Pooled txs of a block template within budget, parents first, leaves
+    /// chosen at cutoff rate.
     code get_pool_template(tx_links& out, pool_projection& projection,
         const pool_totals& budget, size_t depth, uint64_t cutoff,
         uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
@@ -868,12 +865,17 @@ public:
     /// Estimate.
     /// -----------------------------------------------------------------------
 
-    /// The projection extended to the count of blocks, or to exhaustion.
+    /// Projection extended to count of blocks, or to exhaustion.
     code get_pool_projection(pool_projection& projection, size_t count,
         const pool_totals& budget, size_t depth, uint64_t cutoff,
         uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
 
-    /// Rate and size of the rows pooled at each height below top, top first.
+    /// Projection extended over rows it holds, later rows left out.
+    code get_pool_continuation(pool_projection& projection, size_t count,
+        const pool_totals& budget, size_t depth,
+        uint32_t bytes_per_sigop) const NOEXCEPT;
+
+    /// Rate and size of rows pooled at each height below top, top first.
     code get_pool_arrivals(pool_arrivals& out, size_t top, size_t count,
         uint32_t bytes_per_sigop) const NOEXCEPT;
 
@@ -886,20 +888,20 @@ public:
     bool set_silent(const header_link& link, const block& block) NOEXCEPT;
     bool set_silent(const header_link& link, const block_view& block) NOEXCEPT;
 
-    /// Commit a block's silent payment batch rows and presilent link, with
-    /// rows the number committed (a block with no rows is set scanned).
+    /// Commit block's silent payment batch rows and presilent link, with rows
+    /// number committed (block with no rows is set scanned).
     bool set_silents(size_t& rows, const header_link& link,
         const block& block, bool bank) NOEXCEPT;
     bool set_silents(size_t& rows, const header_link& link,
         const block_view& block, bool bank) NOEXCEPT;
 
-    /// The wire prevouts of the spends of the block's silent payment eligible
-    /// txs in block order, with the selection of those txs.
+    /// Wire prevouts of spends of block's silent payment eligible txs in block
+    /// order, with selection of those txs.
     bool get_silent_prevouts(data_chunk& prevouts, std::vector<bool>& selected,
         const header_link& link, const block_view& block) const NOEXCEPT;
 
-    /// The wire prevouts of the spends of all of the block's txs in block
-    /// order, with the selection of those txs (all but the coinbase).
+    /// Wire prevouts of spends of all of block's txs in block order, with
+    /// selection of those txs (all but coinbase).
     bool get_block_prevouts(data_chunk& prevouts, std::vector<bool>& selected,
         const header_link& link, const block_view& block) const NOEXCEPT;
 
@@ -934,32 +936,32 @@ public:
     /// Matches (height, tx hash, tweak) of rows [first, last) confirmed at
     /// heights (or mtps if time) [start, stop], ordered by height, then
     /// unconfirmed (zero height), false implies cancel. A short height cut
-    /// scanned from its floor scans only the rows of its confirmed blocks.
+    /// scanned from its floor scans only rows of its confirmed blocks.
     bool get_silent_matches(silent_matches& out, const stopper& cancel,
         const system::scan::batch::receiver& keys, size_t first,
         size_t last, size_t start, size_t stop, bool time) NOEXCEPT;
 
-    /// The scan fk from which a scan covers all blocks at or above start
+    /// Scan fk from which a scan covers all blocks at or above start
     /// (height, or mtp if time).
     size_t get_silent_floor(size_t start, bool time) const NOEXCEPT;
 
-    /// The first silent row at or above first that is not fully written.
+    /// First silent row at or above first that is not fully written.
     size_t get_silent_frontier(size_t first) const NOEXCEPT;
 
-    /// The scan fk that starts the header's scan range, terminal if unmapped.
+    /// Scan fk that starts header's scan range, terminal if unmapped.
     scan_link get_scan_start(const header_link& link) const NOEXCEPT;
 
-    /// Map the header to the scan fk that starts its scan range.
+    /// Map header to scan fk that starts its scan range.
     bool set_scan_start(const header_link& link,
         const scan_link& start) NOEXCEPT;
 
-    /// Map headers from top down to the first mapped ancestor, or to genesis
-    /// if remap, over rows below bound, false if canceled or unarchived.
+    /// Map headers from top down to first mapped ancestor, or to genesis if
+    ///remap, over rows below bound, false if canceled or unarchived.
     bool set_scan_starts(const stopper& cancel, const header_link& top,
         size_t bound, bool remap) NOEXCEPT;
 
-    /// The scan fk that starts the confirmed header at or below height (zero
-    /// if none mapped), a scan from it covers all blocks at or above height.
+    /// Scan fk that starts confirmed header at or below height (zero if none
+    /// mapped), a scan from it covers all blocks at or above height.
     scan_link get_scan_floor(size_t height) const NOEXCEPT;
 
     /// Verify all signatures in table, false implies cancel.
@@ -1033,8 +1035,8 @@ public:
     bool get_strong_fork(bool& strong, const uint256_t& fork_work,
         size_t fork_point, bool tie=false) const NOEXCEPT;
 
-    /// Wire-encoded prevouts of each spend of the block (in block order),
-    /// with the spends and conflicts for set_prevouts. False if any missing.
+    /// Wire-encoded prevouts of each spend of  block (in block order), with
+    /// spends and conflicts for set_prevouts. False if any missing.
     bool get_block_prevouts(data_chunk& prevouts, prevout_spends& spends,
         tx_links& conflicts, const header_link& link) const NOEXCEPT;
 
@@ -1171,11 +1173,11 @@ public:
     /// Unspent.
     /// -----------------------------------------------------------------------
 
-    /// Coin amounts moved by the block.
+    /// Coin amounts moved by block.
     code get_block_amounts(block_amounts& out,
         const header_link& link) const NOEXCEPT;
 
-    /// Unspent output totals over the branch (administrative scan).
+    /// Unspent output totals over branch (administrative scan).
     code get_unspent_totals(const stopper& cancel, unspent_totals& out,
         const header_links& branch, bool turbo=false) const NOEXCEPT;
 
@@ -1190,12 +1192,12 @@ public:
         hash_digest& digest, const header_links& branch,
         bool turbo=false) const NOEXCEPT;
 
-    /// Unspent coins with scripts hashing to the keys, and the set size.
+    /// Unspent coins with scripts hashing to keys, and set size.
     code get_unspent_matches(const stopper& cancel, unspent_coins& out,
         size_t& txouts, const std::unordered_set<hash_digest>& keys,
         const header_links& branch, bool turbo=false) const NOEXCEPT;
 
-    /// The block is a bip30 exception (duplicated coinbase, if configured).
+    /// Block is a bip30 exception (duplicated coinbase, if configured).
     bool is_bip30_exception(bool& out,
         const header_link& link) const NOEXCEPT;
 
@@ -1242,57 +1244,56 @@ protected:
         const tx_link& link) const NOEXCEPT;
     hash_digest get_pooled_wtxid(const table::pool::link& link) const NOEXCEPT;
 
-    /// The table columns and heads as spans (guards held).
+    /// Table columns and heads as spans (guards held).
     bool get_pool_columns(system::pool::algorithm::columns_t& out,
         pool_guards& guards) const NOEXCEPT;
 
-    /// A new projection, its leaves chosen at the cutoff rate.
+    /// A new projection, its leaves chosen at cutoff rate.
     void set_pool_resolution(pool_projection& projection,
         const system::pool::algorithm::columns_t& columns, uint64_t cutoff,
         uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
 
-    /// The index of each pooled row in the range (cell and children head).
+    /// Index of each pooled row in range (cell and children head).
     bool set_pool_rows(system::pool::algorithm::link_t begin,
         system::pool::algorithm::link_t end) NOEXCEPT;
 
-    /// The index of a pooled row's inputs (parent rows and ring mates).
+    /// Index of a pooled row's inputs (parent rows and ring mates).
     bool set_pool_links(system::pool::algorithm::link_t start,
         const pool_links& parents, const pool_links& mates) NOEXCEPT;
 
-    /// Pool the tx at a new row, its spenders not yet considered.
+    /// Pool tx at a new row, its spenders not yet considered.
     bool set_pool_row(const tx_link& link, const transaction& tx,
         const context& ctx, uint32_t time) NOEXCEPT;
 
-    /// Purge the pooled spenders of the tx and theirs, ascending by row.
+    /// Purge pooled spenders of tx and theirs, ascending by row.
     bool set_pool_purged(tx_links& out, const tx_link& link) NOEXCEPT;
 
     /// Pool again each purged tx, in order, under its stored context.
     bool set_pool_repooled(const tx_links& purged) NOEXCEPT;
 
-    /// The input of a pooled spender of the point below the bound, and if it is
-    /// confirmed spent.
+    /// Input of a pooled spender of point below bound, and if confirmed spent.
     bool get_pooled_spender(system::pool::algorithm::link_t& out,
         bool& conflicted, const point& point, const tx_link& self,
         bool archived,
         system::pool::algorithm::link_t bound=system::pool::algorithm::none)
         const NOEXCEPT;
 
-    /// The pooled spenders of the points spent by the txs (their conflicts).
+    /// Pooled spenders of points spent by txs (their conflicts).
     bool get_pool_conflicts(tx_links& out, const tx_links& txs) const NOEXCEPT;
 
-    /// A point of the pooled tx is spent by a confirmed tx.
+    /// A point of pooled tx is spent by a confirmed tx.
     bool is_pool_conflicted(bool& out, const tx_link& link,
         const pool_link& row) const NOEXCEPT;
 
-    /// Confirmability memoized across the txs of a scan.
+    /// Confirmability memoized across txs of a scan.
     bool is_confirmable_tx(confirmables& memo,
         const tx_link& link) const NOEXCEPT;
 
-    /// Confirmable ancestors or descendants of the tx (excluding the tx).
+    /// Confirmable ancestors or descendants of tx (excluding tx).
     tx_links to_confirmable_relatives(const tx_link& link,
         bool ancestors) const NOEXCEPT;
 
-    /// Totals of the tx with its confirmable ancestors or descendants.
+    /// Totals of tx with its confirmable ancestors or descendants.
     bool get_confirmable_totals(fee_totals& out, const tx_link& link,
         bool ancestors) const NOEXCEPT;
 
@@ -1323,8 +1324,9 @@ protected:
         const context& ctx) const NOEXCEPT;
     code check_pooled_block(pooled_block& block) const NOEXCEPT;
     code accept_pooled_block(const pooled_block& block,
-        const chain_context& ctx, size_t subsidy_interval,
-        uint64_t initial_subsidy) const NOEXCEPT;
+        const header_link& link, const chain_context& ctx,
+        size_t subsidy_interval, uint64_t initial_subsidy,
+        const system::chain::script& challenge) const NOEXCEPT;
 
     /// Called by get_compact_links.
     bool get_compact_matches(compact_matches& out,
@@ -1413,8 +1415,8 @@ protected:
         size_t heavy, hash_option&& interval, bool strong,
         bool pruned) NOEXCEPT;
 
-    /// Advance row to the first row linked above floor, an unpublished row
-    /// lowering last to itself (the row at or past which rows are unknown).
+    /// Advance row to first row linked above floor, an unpublished row
+    /// lowering last to itself (row at or past which rows are unknown).
     void seek_scan_start(size_t& row, size_t& last,
         tx_link::integer floor) const NOEXCEPT;
 
@@ -1426,37 +1428,35 @@ protected:
     template <typename Transaction>
     bool set_silent_(const tx_link& link, const Transaction& tx) NOEXCEPT;
 
-    /// Write scan records, the tx fk of each by its position in links, caller
-    /// must hold transactor.
+    /// Write scan records, caller must hold transactor.
     bool put_scan_(const system::wallet::silent_payment::rows& rows,
         const std::span<const tx_link::integer>& links) NOEXCEPT;
 
-    /// A block's tx is indexed unless linked below its coinbase and pooled.
+    /// Block's tx is indexed unless linked below its coinbase and pooled.
     bool is_silent_selected(const tx_link& link,
         const tx_link& coinbase) const NOEXCEPT;
 
-    /// The tx confirmed at height is outside heights (or mtps if time)
-    /// [start, stop].
+    /// Tx confirmed at height is outside heights/mtps [start, stop].
     bool is_silent_cut(const tx_link& link, size_t height, size_t start,
         size_t stop, bool time) const NOEXCEPT;
 
-    /// The wire prevouts of the spends of the block's selected txs, where
-    /// silent selects the silent payment eligible txs and otherwise all.
+    /// Wire prevouts of spends of block's selected txs, where silent selects
+    /// silent payment eligible txs, otherwise all.
     bool get_prevouts_(data_chunk& prevouts, std::vector<bool>& selected,
         const header_link& link, const block_view& block,
         bool silent) const NOEXCEPT;
 
-    /// Mark the blocks of a bank's presilent table scanned.
+    /// Mark blocks of bank's presilent table scanned.
     bool set_scanned_(bool bank) NOEXCEPT;
 
-    /// Commit the silent payment batch rows of a block's selected txs.
+    /// Commit silent payment batch rows of a block's selected txs.
     template <typename Block>
     bool set_silents_(size_t& count, const header_link& link,
         const Block& block, size_t txs, bool bank) NOEXCEPT;
 
     /// Pooling.
     /// -----------------------------------------------------------------------
-    /// The archived link of a pooled duplicate of the tx, or terminal.
+    /// Archived link of a pooled duplicate of tx, or terminal.
     tx_link to_pooled(const transaction& tx) const NOEXCEPT;
     tx_link to_pooled(const transaction_view& tx) const NOEXCEPT;
     bool is_size_match(table::transaction::record& out, const tx_link& link,
@@ -1475,7 +1475,7 @@ protected:
         memory tx;
     };
 
-    /// Per-tx allocated table links (bases advanced by the block writer).
+    /// Per-tx allocated table links (bases advanced by block writer).
     struct allocation
     {
         tx_link tx_fk;
@@ -1489,7 +1489,7 @@ protected:
         const allocation& fks,const transaction_view& tx, bool bypass,
         bool prune) NOEXCEPT;
 
-    /// Wire reading (all accessors held across the txs read).
+    /// Wire reading (all accessors held across txs read).
     /// -----------------------------------------------------------------------
 
     /// Per-table accessors, each holds a shared lock on its storage remap.
@@ -1540,7 +1540,7 @@ private:
     // Minimum elements per parallel task for single-read transforms.
     static constexpr size_t parallel_floor = 32;
 
-    // Fewest pool records hashed by one task of the compact short id scan.
+    // Fewest pool records hashed by one task of compact short id scan.
     static constexpr size_t short_id_minimum_records = system::power2(10u);
 
     // Chain objects.

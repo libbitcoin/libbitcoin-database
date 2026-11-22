@@ -358,12 +358,11 @@ bool CLASS::is_pool_conflicted(bool& out, const tx_link& link,
     return true;
 }
 
-// The conflicts of the block's txs are in its prevout cache, which the prune
-// leaves in place until the block is settled, and otherwise are taken from
-// the archive (a block that was not validated, or was pruned before a
-// reorganization). They include the block's own txs, as each spends a
-// conflicted point. A conflict is cleared at a reorganization only if no
-// other confirmed tx spends a point of the row.
+// The conflicts of the block's txs are the archived spenders of its points as
+// of the transition, as a tx may be pooled after the block's prevouts are
+// cached. They include the block's own txs, as each spends a conflicted point.
+// A conflict is cleared at a reorganization only if no other confirmed tx
+// spends a point of the row.
 TEMPLATE
 bool CLASS::set_pool_block(const header_link& link, bool confirmed) NOEXCEPT
 {
@@ -392,15 +391,14 @@ bool CLASS::set_pool_block(const header_link& link, bool confirmed) NOEXCEPT
             block.push_back(possible_narrow_cast<link_t>(row.value));
     }
 
-    table::prevout::slab_get cache{};
-    if (!store_.prevout.at(to_prevout(link), cache) &&
-        !get_pool_conflicts(cache.conflicts, txs.tx_fks))
+    tx_links spenders{};
+    if (!get_pool_conflicts(spenders, txs.tx_fks))
         return false;
 
     auto own = txs.tx_fks;
     std::ranges::sort(own);
     pool_links conflicts{};
-    for (const auto conflict: cache.conflicts)
+    for (const auto conflict: spenders)
     {
         if (std::ranges::binary_search(own, conflict))
             continue;

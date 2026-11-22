@@ -31,18 +31,31 @@ bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
     return set_pooled(link, tx, context::from(ctx), time);
 }
 
-// A pooled spender of the tx (pooled while the tx was confirmed) holds a lower
-// row, so it and its pooled descendants are purged and pooled after the tx.
 TEMPLATE
 bool CLASS::set_pooled(const tx_link& link, const transaction& tx,
     const context& ctx, uint32_t time) NOEXCEPT
 {
+    size_t repooled{};
+    return set_pooled(repooled, link, tx, ctx, time);
+}
+
+// A pooled spender of the tx (pooled while the tx was confirmed) holds a lower
+// row, so it and its pooled descendants are purged and pooled after the tx.
+TEMPLATE
+bool CLASS::set_pooled(size_t& repooled, const tx_link& link,
+    const transaction& tx, const context& ctx, uint32_t time) NOEXCEPT
+{
+    repooled = zero;
     if (!store_.pool.enabled())
         return true;
 
     tx_links purged{};
-    return set_pool_row(link, tx, ctx, time) &&
-        set_pool_purged(purged, link) && set_pool_repooled(purged);
+    if (!set_pool_row(link, tx, ctx, time) || !set_pool_purged(purged, link) ||
+        !set_pool_repooled(purged))
+        return false;
+
+    repooled = purged.size();
+    return true;
 }
 
 // protected
