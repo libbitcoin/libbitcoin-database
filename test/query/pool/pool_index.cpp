@@ -223,7 +223,8 @@ BC_AUTO_TEST_CASE(query_pool__set_pooled__reorganized_parent__child_repooled_aft
     const auto pooled = pool_populated(query, child);
     const auto popped = query.pop_confirmed();
     const auto link = query.to_tx(parent.hash(false));
-    const auto repooled = query.set_pooled(link, parent, context{ bip113, 8, 9 }, 0);
+    size_t count{};
+    const auto repooled = query.set_pooled(count, link, parent, context{ bip113, 8, 9 }, 0);
     const auto rivaled = pool_populated(query, to_spend(genesis_coinbase(), 4'999'998'500));
     constexpr auto purged = system::bit_or(system::pool::algorithm::absent, system::pool::algorithm::purged);
 
@@ -231,6 +232,7 @@ BC_AUTO_TEST_CASE(query_pool__set_pooled__reorganized_parent__child_repooled_aft
     BC_REQUIRE(pooled);
     BC_REQUIRE(popped);
     BC_REQUIRE(repooled);
+    BC_REQUIRE_EQUAL(count, 1u);
     BC_REQUIRE(rivaled);
     BC_REQUIRE_EQUAL(query.to_pool_row(query.to_tx(child.hash(false))).value, 2u);
     BC_REQUIRE_EQUAL(store.pool_index.cells.at(0u), purged);

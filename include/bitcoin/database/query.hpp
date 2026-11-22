@@ -783,6 +783,10 @@ public:
     bool set_pooled(const tx_link& link, const transaction& tx,
         const chain_context& ctx, uint32_t time) NOEXCEPT;
 
+    /// Pool tx, out count of its pooled descendants pooled again after it.
+    bool set_pooled(size_t& repooled, const tx_link& link,
+        const transaction& tx, const context& ctx, uint32_t time) NOEXCEPT;
+
     /// Rebuild pool index heads from pool (after compaction).
     bool set_pool_index() NOEXCEPT;
 
