@@ -51,6 +51,34 @@ code CLASS::get_pool_projection(pool_projection& projection, size_t count,
     return error::success;
 }
 
+// Rows pooled since the projection was resolved are not of its snapshot.
+TEMPLATE
+code CLASS::get_pool_continuation(pool_projection& projection, size_t count,
+    const pool_totals& budget, size_t depth,
+    uint32_t bytes_per_sigop) const NOEXCEPT
+{
+    using algorithm = system::pool::algorithm;
+    if (!store_.pool.enabled())
+        return error::success;
+
+    pool_guards guards{};
+    algorithm::columns_t columns{};
+    if (!get_pool_columns(columns, guards))
+        return error::integrity;
+
+    if (projection.marks.size() > columns.cells.size())
+        return error::integrity;
+
+    projection.marks.resize(columns.cells.size(), algorithm::mark::excluded);
+
+    pool_links rows{};
+    while (!projection.exhausted && projection.blocks.size() < count)
+        algorithm::project(rows, projection, columns, budget, depth,
+            bytes_per_sigop);
+
+    return error::success;
+}
+
 // A row arrives at the height of its context, and counts while it can confirm
 // or has confirmed. Rows of the top height are of the open interval.
 TEMPLATE

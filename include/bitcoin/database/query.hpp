@@ -873,6 +873,11 @@ public:
         const pool_totals& budget, size_t depth, uint64_t cutoff,
         uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
 
+    /// The projection extended over the rows it holds, later rows left out.
+    code get_pool_continuation(pool_projection& projection, size_t count,
+        const pool_totals& budget, size_t depth,
+        uint32_t bytes_per_sigop) const NOEXCEPT;
+
     /// Rate and size of the rows pooled at each height below top, top first.
     code get_pool_arrivals(pool_arrivals& out, size_t top, size_t count,
         uint32_t bytes_per_sigop) const NOEXCEPT;
