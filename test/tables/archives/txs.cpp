@@ -57,12 +57,14 @@ const table::txs::slab slab3
 {
     {}, // schema::txs [all const static members]
     0x09000b,
-    0xcc0000,
+    0x4c0000,
     {
         0x56341231_u32,
         0x56341232_u32,
         0x56341233_u32
-    }
+    },
+    {},
+    true
 };
 const data_chunk expected0 = build_chunk(
 {
@@ -115,7 +117,7 @@ const data_chunk expected3
     // slab3 (light) [0x09000b]
     0x0b, 0x00, 0x09,
 
-    // slab3 (heavy) [0xcc0000]
+    // slab3 (heavy) [0x4c0000, pruned]
     0x00, 0x00, 0xcc,
 
     // slab3 (count) [3]

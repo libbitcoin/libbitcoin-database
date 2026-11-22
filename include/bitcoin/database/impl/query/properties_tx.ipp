@@ -41,6 +41,19 @@ inline bool CLASS::is_coinbase(const tx_link& link) const NOEXCEPT
 }
 
 TEMPLATE
+inline bool CLASS::is_pruned(const tx_link& link) const NOEXCEPT
+{
+    table::transaction::get_pruned tx{};
+    return store_.tx.get(link, tx) && tx.pruned;
+}
+
+TEMPLATE
+inline bool CLASS::is_pruned_input(const ins_link& link) const NOEXCEPT
+{
+    return is_pruned(to_input_tx(link));
+}
+
+TEMPLATE
 inline bool CLASS::is_tx_segregated(const tx_link& link) const NOEXCEPT
 {
     size_t light{}, heavy{};

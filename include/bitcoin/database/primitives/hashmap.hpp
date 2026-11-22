@@ -140,6 +140,9 @@ public:
     /// Return the link at the top of the conflict list (for table scanning).
     inline Link top(const Link& list) const NOEXCEPT;
 
+    /// Return the conflict list link of the element (body fill if uncommitted).
+    inline Link get_next(const Link& link) const NOEXCEPT;
+
     /// True if an instance of object with key exists.
     inline bool exists(const memory& ptr, const Key& key) const NOEXCEPT;
     inline bool exists(const Key& key) const NOEXCEPT;

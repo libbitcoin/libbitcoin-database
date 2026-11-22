@@ -263,6 +263,92 @@ BC_AUTO_TEST_CASE(store__migrate__4_0_31__compiled)
     BC_REQUIRE_EQUAL(stored.silent_start_height, 42u);
 }
 
+// Archive a pruned block and clear its flags, as stored before 4.0.33.
+static bool set_unflagged_pruned_block(test::map_store& store) NOEXCEPT
+{
+    database::query<test::map_store> query{ store };
+    if (!query.initialize(test::genesis) ||
+        !query.set(test::block1.header(), test::context, {}, false) ||
+        !query.set(test::block1, false, false, true))
+        return false;
+
+    table::transaction::record record{};
+    if (!store.tx.get(1, record))
+        return false;
+
+    record.pruned = false;
+    if (!store.tx.set(1, store.tx.get_key(1), record))
+        return false;
+
+    table::txs::slab slab{};
+    const auto link = store.txs.at(1);
+    if (!store.txs.get(link, slab))
+        return false;
+
+    slab.pruned = false;
+    return store.txs.set(link, slab) && !query.is_pruned(tx_link{ 1 }) &&
+        !query.is_pruned(header_link{ 1 });
+}
+
+// Allocate a (zero) row without setting or committing it.
+static tx_link set_uncommitted_row(test::map_store& store) NOEXCEPT
+{
+    return store.tx.allocate(1);
+}
+
+BC_AUTO_TEST_CASE(store__migrate__4_0_31_uncommitted__skipped)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(set_unflagged_pruned_block(instance));
+    const auto link = set_uncommitted_row(instance);
+    BC_REQUIRE(!link.is_terminal());
+    BC_REQUIRE(is_zero(instance.tx.get_next(link).value));
+    BC_REQUIRE(!is_zero(instance.tx.get_next(0).value));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(instance.envelope_head_file(), test::envelope_4_0_31));
+
+    database::envelope configured{};
+    configured.require_witness = true;
+    system::config::version original{};
+    BC_REQUIRE(!instance.migrate(original, configured, test::events));
+    BC_REQUIRE(!test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(!instance.open(test::events));
+
+    table::transaction::record record{};
+    BC_REQUIRE(instance.tx.get(link, record));
+    BC_REQUIRE(record == table::transaction::record{});
+    BC_REQUIRE(database::query<test::map_store>{ instance }.is_pruned(tx_link{ 1 }));
+    BC_REQUIRE(!instance.close(test::events));
+}
+
+BC_AUTO_TEST_CASE(store__migrate__4_0_31_pruned__flagged)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(set_unflagged_pruned_block(instance));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(instance.envelope_head_file(), test::envelope_4_0_31));
+
+    database::envelope configured{};
+    configured.require_witness = true;
+    system::config::version original{};
+    BC_REQUIRE(!instance.migrate(original, configured, test::events));
+    BC_REQUIRE(!test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(!instance.open(test::events));
+
+    const database::query<test::map_store> query{ instance };
+    BC_REQUIRE(query.is_pruned(tx_link{ 1 }));
+    BC_REQUIRE(query.is_pruned(header_link{ 1 }));
+    BC_REQUIRE(!query.is_pruned(tx_link{ 0 }));
+    BC_REQUIRE(!query.is_pruned(header_link{ 0 }));
+    BC_REQUIRE(!instance.close(test::events));
+}
+
 BC_AUTO_TEST_CASE(store__migrate__4_0_31__snapshots_purged)
 {
     settings configuration{ test::database_settings() };

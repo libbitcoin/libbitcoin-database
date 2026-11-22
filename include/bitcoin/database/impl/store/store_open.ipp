@@ -255,6 +255,11 @@ code CLASS::migrate(system::config::version& original,
                 ec = migrate_4_0_31_to_4_0_32(stored, configured);
                 schema = { 4, 0, 32, 0 };
             }
+            else if (schema == system::config::version{ 4, 0, 32, 0 })
+            {
+                ec = migrate_4_0_32_to_4_0_33(handler);
+                schema = { 4, 0, 33, 0 };
+            }
             else
             {
                 ec = error::schema_version;
@@ -458,6 +463,208 @@ code CLASS::migrate_4_0_31_to_4_0_32(database::envelope& stored,
     const database::envelope& configured) NOEXCEPT
 {
     stored.require_witness = configured.require_witness;
+    return error::success;
+}
+
+// Each tx stored pruned (emptied input scripts and witnesses), and each block
+// with a pruned coinbase, is flagged in its heavy size in place.
+TEMPLATE
+code CLASS::migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT
+{
+    const auto open = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::open_file, table);
+            ec = file.open();
+        }
+    };
+
+    const auto load = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
+    {
+        if (!ec)
+        {
+            handler(event_t::load_file, table);
+            ec = file.load();
+        }
+    };
+
+    const auto unload = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
+    {
+        handler(event_t::unload_file, table);
+        if (const auto unloaded = file.unload(); !ec) ec = unloaded;
+    };
+
+    const auto close = [&handler](code& ec, auto& file, table_t table) NOEXCEPT
+    {
+        handler(event_t::close_file, table);
+        if (const auto closed = file.close(); !ec) ec = closed;
+    };
+
+    code ec{};
+    open(ec, input_head_, table_t::input_head);
+    open(ec, input_body_, table_t::input_body);
+    open(ec, output_head_, table_t::output_head);
+    open(ec, output_body_, table_t::output_body);
+    open(ec, ins_head_, table_t::ins_head);
+    open(ec, ins_body_, table_t::ins_body);
+    open(ec, outs_head_, table_t::outs_head);
+    open(ec, *outs_body_, table_t::outs_body);
+    open(ec, tx_head_, table_t::tx_head);
+    open(ec, tx_body_, table_t::tx_body);
+    open(ec, txs_head_, table_t::txs_head);
+    open(ec, txs_body_, table_t::txs_body);
+
+    load(ec, input_head_, table_t::input_head);
+    load(ec, input_body_, table_t::input_body);
+    load(ec, output_head_, table_t::output_head);
+    load(ec, output_body_, table_t::output_body);
+    load(ec, ins_head_, table_t::ins_head);
+    load(ec, ins_body_, table_t::ins_body);
+    load(ec, outs_head_, table_t::outs_head);
+    load(ec, *outs_body_, table_t::outs_body);
+    load(ec, tx_head_, table_t::tx_head);
+    load(ec, tx_body_, table_t::tx_body);
+    load(ec, txs_head_, table_t::txs_head);
+    load(ec, txs_body_, table_t::txs_body);
+
+    if (!ec)
+    {
+        handler(event_t::create_table, table_t::tx_table);
+        const auto count = tx.count().value;
+        for (tx_link::integer value{}; !ec && value < count; ++value)
+        {
+            const tx_link link{ value };
+            const auto key = tx.get_key(link);
+            if (!is_committed(link, key))
+                continue;
+
+            auto pruned = false;
+            table::transaction::record record{};
+            if (!tx.get(link, record))
+                ec = error::integrity;
+            else if (!(ec = get_pruned(pruned, record)) && pruned)
+            {
+                record.pruned = true;
+                if (!tx.set(link, key, record))
+                    ec = error::integrity;
+            }
+        }
+    }
+
+    if (!ec)
+    {
+        handler(event_t::create_table, table_t::txs_table);
+        const auto buckets = txs.buckets();
+        for (size_t key{}; !ec && key < buckets; ++key)
+        {
+            const auto link = txs.at(key);
+            if (link.is_terminal())
+                continue;
+
+            table::txs::slab slab{};
+            table::transaction::get_pruned coinbase{};
+            if (!txs.get(link, slab) || slab.tx_fks.empty() ||
+                !tx.get(slab.tx_fks.front(), coinbase))
+            {
+                ec = error::integrity;
+            }
+            else if (coinbase.pruned && !slab.pruned)
+            {
+                slab.pruned = true;
+                if (!txs.set(link, slab))
+                    ec = error::integrity;
+            }
+        }
+    }
+
+    unload(ec, input_head_, table_t::input_head);
+    unload(ec, input_body_, table_t::input_body);
+    unload(ec, output_head_, table_t::output_head);
+    unload(ec, output_body_, table_t::output_body);
+    unload(ec, ins_head_, table_t::ins_head);
+    unload(ec, ins_body_, table_t::ins_body);
+    unload(ec, outs_head_, table_t::outs_head);
+    unload(ec, *outs_body_, table_t::outs_body);
+    unload(ec, tx_head_, table_t::tx_head);
+    unload(ec, tx_body_, table_t::tx_body);
+    unload(ec, txs_head_, table_t::txs_head);
+    unload(ec, txs_body_, table_t::txs_body);
+
+    close(ec, input_head_, table_t::input_head);
+    close(ec, input_body_, table_t::input_body);
+    close(ec, output_head_, table_t::output_head);
+    close(ec, output_body_, table_t::output_body);
+    close(ec, ins_head_, table_t::ins_head);
+    close(ec, ins_body_, table_t::ins_body);
+    close(ec, outs_head_, table_t::outs_head);
+    close(ec, *outs_body_, table_t::outs_body);
+    close(ec, tx_head_, table_t::tx_head);
+    close(ec, tx_body_, table_t::tx_body);
+    close(ec, txs_head_, table_t::txs_head);
+    close(ec, txs_body_, table_t::txs_body);
+    return ec;
+}
+
+// Values are set before the row is committed to its key's conflict list, so
+// only a committed row is read. An uncommitted row retains the zero fill as
+// its next link, which is also the link of tx0, so only that case is walked.
+TEMPLATE
+bool CLASS::is_committed(const tx_link& link,
+    const hash_digest& key) const NOEXCEPT
+{
+    if (!is_zero(tx.get_next(link).value))
+        return true;
+
+    for (auto it = tx.it(key); it; ++it)
+        if (*it == link)
+            return true;
+
+    return false;
+}
+
+// A pruned tx stores every input script and witness empty, so its stored
+// nominal size is short of its archived nominal size.
+TEMPLATE
+code CLASS::get_pruned(bool& pruned,
+    const table::transaction::record& record) const NOEXCEPT
+{
+    using namespace system;
+    constexpr auto empty_input = chain::point::serialized_size() + one +
+        sizeof(uint32_t);
+
+    pruned = false;
+    table::input::slab in{};
+    table::ins_sequence::get_input point{};
+    const auto end = record.point_fk + record.ins_count;
+    for (auto fk = record.point_fk; fk < end; ++fk)
+    {
+        if (!ins.sequence.get(fk, point) || !input.get(point.input_fk, in))
+            return error::integrity;
+
+        if (!in.script.ops().empty() || !in.witness.stack().empty())
+            return error::success;
+    }
+
+    table::outs::record puts{};
+    puts.out_fks.resize(record.outs_count);
+    if (!outs.puts.get(record.outs_fk, puts))
+        return error::integrity;
+
+    size_t light = sizeof(uint32_t) + sizeof(uint32_t) +
+        variable_size(record.ins_count) + variable_size(record.outs_count) +
+        record.ins_count * empty_input;
+
+    table::output::slab out{};
+    for (const auto& fk: puts.out_fks)
+    {
+        if (!output.get(fk, out))
+            return error::integrity;
+
+        light += sizeof(uint64_t) + out.script.serialized_size(true);
+    }
+
+    pruned = light != record.light;
     return error::success;
 }
 

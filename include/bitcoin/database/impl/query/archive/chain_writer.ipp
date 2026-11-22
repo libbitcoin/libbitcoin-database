@@ -196,7 +196,8 @@ code CLASS::set_code(const tx_link& tx_fk, const transaction& tx,
         inputs,
         outputs,
         ins_fk,
-        outs_fk
+        outs_fk,
+        prune
     }))
     {
         return error::tx_tx_set;
@@ -473,7 +474,7 @@ code CLASS::set_code(const block& block, const header_link& key,
     }
 
     return set_txs(key, std::move(links), light, heavy, std::move(interval),
-        strong);
+        strong, prune);
     // ========================================================================
 }
 
@@ -509,15 +510,16 @@ code CLASS::set_code(const header_link& key, const tx_links& links,
 
     // ========================================================================
     const auto scope = get_transactor();
+    const auto pruned = is_pruned(tx_link{ links.front() });
     return set_txs(key, tx_links{ links }, light, heavy, std::move(interval),
-        strong);
+        strong, pruned);
     // ========================================================================
 }
 
 // protected
 TEMPLATE
 code CLASS::set_txs(const header_link& key, tx_links&& links, size_t light,
-    size_t heavy, hash_option&& interval, bool strong) NOEXCEPT
+    size_t heavy, hash_option&& interval, bool strong, bool pruned) NOEXCEPT
 {
     using namespace system;
     using bytes = linkage<schema::size>::integer;
@@ -535,7 +537,8 @@ code CLASS::set_txs(const header_link& key, tx_links&& links, size_t light,
         possible_narrow_cast<bytes>(light),
         possible_narrow_cast<bytes>(heavy),
         std::move(links),
-        std::move(interval)
+        std::move(interval),
+        pruned
     }))
         return error::txs_txs_put;
 

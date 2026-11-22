@@ -80,7 +80,8 @@ code CLASS::set_code(std::vector<point>& twins, const accessors& ptrs,
             inputs,
             outputs,
             fks.ins_fk,
-            fks.outs_fk
+            fks.outs_fk,
+            prune
         }))
     {
         return error::tx_tx_set;
@@ -363,7 +364,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
                 return error::tx_duplicate_put;
 
     return set_txs(key, std::move(links), light, heavy, std::move(interval),
-        strong);
+        strong, prune);
     // ========================================================================
 }
 

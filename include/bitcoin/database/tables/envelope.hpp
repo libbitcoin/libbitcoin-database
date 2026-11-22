@@ -60,6 +60,9 @@ struct BCD_API envelope
     static bool migrate_4_0_31_to_4_0_32(system::data_chunk& data,
         const envelope& configured) NOEXCEPT;
 
+    /// Migrate a serialized 4.0.32 envelope to 4.0.33.
+    static bool migrate_4_0_32_to_4_0_33(system::data_chunk& data) NOEXCEPT;
+
     /// Migrate a serialized migratable envelope to the next schema, taking
     /// values the prior schema does not store from configured.
     static bool migrate_step(system::data_chunk& data,

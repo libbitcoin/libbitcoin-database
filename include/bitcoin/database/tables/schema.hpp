@@ -75,7 +75,9 @@ namespace schema {
 /// 4.0.29.0 Fork activation groups in the envelope.
 /// 4.0.30.0 Pool totals and edges columns, pool index heads.
 /// 4.0.31.0 Pool flags, heights and medians columns (from the pool record).
-constexpr std::array<uint32_t, 4> version{ 4, 0, 32, 0 };
+/// 4.0.32.0 Require witness in the envelope.
+/// 4.0.33.0 Pruned flags merged into the tx and txs heavy sizes.
+constexpr std::array<uint32_t, 4> version{ 4, 0, 33, 0 };
 
 /// The oldest store schema migrated to version.
 constexpr std::array<uint32_t, 4> migratable{ 4, 0, 30, 0 };
@@ -157,6 +159,7 @@ struct transaction
         ////schema::bit +       // coinbase (merged into light)
         schema::size +          // light
         schema::size +          // heavy
+        ////schema::bit +       // pruned (merged into heavy)
         sizeof(uint32_t) +      // locktime
         sizeof(uint32_t) +      // version
         schema::index +         // inputs count
@@ -299,6 +302,7 @@ struct txs
         count_ +                // txs
         schema::transaction::pk;// coinbase tx
         ////schema::bit +       // is interval (merged into light)
+        ////schema::bit +       // pruned (merged into heavy)
         ////0 | schema::hash +  // interval hash (each 2048th block)
     static constexpr size_t minrow = minsize;
     static constexpr size_t size = max_size_t;

@@ -458,6 +458,9 @@ public:
     inline bool is_block(const hash_digest& key) const NOEXCEPT;
     inline bool is_tx(const hash_digest& key) const NOEXCEPT;
     inline bool is_coinbase(const tx_link& link) const NOEXCEPT;
+    inline bool is_pruned(const tx_link& link) const NOEXCEPT;
+    inline bool is_pruned(const header_link& link) const NOEXCEPT;
+    inline bool is_pruned_input(const ins_link& link) const NOEXCEPT;
     inline bool is_tx_segregated(const tx_link& link) const NOEXCEPT;
     inline bool is_block_segregated(const header_link& link) const NOEXCEPT;
     inline bool is_milestone(const header_link& link) const NOEXCEPT;
@@ -1400,7 +1403,8 @@ protected:
 
     /// Associate txs to header, caller must hold transactor.
     code set_txs(const header_link& key, tx_links&& links, size_t light,
-        size_t heavy, hash_option&& interval, bool strong) NOEXCEPT;
+        size_t heavy, hash_option&& interval, bool strong,
+        bool pruned) NOEXCEPT;
 
     /// Advance row to the first row linked above floor, an unpublished row
     /// lowering last to itself (the row at or past which rows are unknown).

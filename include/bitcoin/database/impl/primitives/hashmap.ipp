@@ -222,6 +222,21 @@ inline Link CLASS::top(const Link& link) const NOEXCEPT
 }
 
 TEMPLATE
+inline Link CLASS::get_next(const Link& link) const NOEXCEPT
+{
+    using namespace system;
+    const auto ptr = get_memory();
+    if (!ptr)
+        return {};
+
+    const auto offset = ptr.offset(body::link_to_position(link));
+    if (is_null(offset))
+        return {};
+
+    return unsafe_array_cast<uint8_t, Link::size>(offset);
+}
+
+TEMPLATE
 inline bool CLASS::exists(const memory& ptr, const Key& key) const NOEXCEPT
 {
     return !first(ptr, key).is_terminal();

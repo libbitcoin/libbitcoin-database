@@ -112,6 +112,10 @@ public:
     template <typename Element, if_equal<Element::size, RowSize> = true>
     bool put(size_t key, const Element& element) NOEXCEPT;
 
+    /// Overwrite element of unchanged size at existing link (no push).
+    template <typename Element, if_equal<Element::size, RowSize> = true>
+    bool set(const Link& link, const Element& element) NOEXCEPT;
+
 protected:
     /// Set allocated element at link and push to key, without completion.
     template <typename Element, if_equal<Element::size, RowSize> = true>

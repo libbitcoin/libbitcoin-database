@@ -83,15 +83,27 @@ struct transaction
         return system::set_right(merged, offset, false);
     }
 
+    static constexpr bool is_pruned(bytes::integer merged) NOEXCEPT
+    {
+        return system::get_right(merged, offset);
+    }
+
+    static constexpr bytes::integer to_heavy(bytes::integer merged) NOEXCEPT
+    {
+        return system::set_right(merged, offset, false);
+    }
+
     struct record
       : public schema::transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
             const auto merged = source.read_little_endian<bytes::integer, bytes::size>();
+            const auto merged_heavy = source.read_little_endian<bytes::integer, bytes::size>();
             coinbase   = is_coinbase(merged);
             light      = to_light(merged);
-            heavy      = source.read_little_endian<bytes::integer, bytes::size>();
+            pruned     = is_pruned(merged_heavy);
+            heavy      = to_heavy(merged_heavy);
             locktime   = source.read_little_endian<uint32_t>();
             version    = source.read_little_endian<uint32_t>();
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
@@ -105,7 +117,7 @@ struct transaction
         inline bool to_data(finalizer& sink) const NOEXCEPT
         {
             sink.write_little_endian<bytes::integer, bytes::size>(merge(coinbase, light));
-            sink.write_little_endian<bytes::integer, bytes::size>(heavy);
+            sink.write_little_endian<bytes::integer, bytes::size>(merge(pruned, heavy));
             sink.write_little_endian<uint32_t>(locktime);
             sink.write_little_endian<uint32_t>(version);
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
@@ -127,6 +139,7 @@ struct transaction
         ix::integer outs_count{};
         ins::integer point_fk{};
         outs::integer outs_fk{};
+        bool pruned{};
     };
 
     struct only
@@ -135,7 +148,7 @@ struct transaction
         inline bool from_data(reader& source) NOEXCEPT
         {
             light      = to_light(source.read_little_endian<bytes::integer, bytes::size>());
-            heavy      = source.read_little_endian<bytes::integer, bytes::size>();
+            heavy      = to_heavy(source.read_little_endian<bytes::integer, bytes::size>());
             locktime   = source.read_little_endian<uint32_t>();
             version    = source.read_little_endian<uint32_t>();
             ins_count  = source.read_little_endian<ix::integer, ix::size>();
@@ -168,7 +181,7 @@ struct transaction
             const auto light = possible_narrow_cast<bytes::integer>(light_);
             const auto heavy = possible_narrow_cast<bytes::integer>(heavy_);
             sink.write_little_endian<bytes::integer, bytes::size>(merge(coinbase, light));
-            sink.write_little_endian<bytes::integer, bytes::size>(heavy);
+            sink.write_little_endian<bytes::integer, bytes::size>(merge(pruned, heavy));
             sink.write_little_endian<uint32_t>(tx.locktime());
             sink.write_little_endian<uint32_t>(tx.version());
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
@@ -184,6 +197,7 @@ struct transaction
         ix::integer outs_count{};
         ins::integer point_fk{};
         outs::integer outs_fk{};
+        bool pruned{};
     };
 
     struct put_view
@@ -199,7 +213,7 @@ struct transaction
             const auto light = possible_narrow_cast<bytes::integer>(light_);
             const auto heavy = possible_narrow_cast<bytes::integer>(heavy_);
             sink.write_little_endian<bytes::integer, bytes::size>(merge(coinbase, light));
-            sink.write_little_endian<bytes::integer, bytes::size>(heavy);
+            sink.write_little_endian<bytes::integer, bytes::size>(merge(pruned, heavy));
             sink.write_little_endian<uint32_t>(tx.locktime());
             sink.write_little_endian<uint32_t>(tx.version());
             sink.write_little_endian<ix::integer, ix::size>(ins_count);
@@ -215,6 +229,7 @@ struct transaction
         ix::integer outs_count{};
         ins::integer point_fk{};
         outs::integer outs_fk{};
+        bool pruned{};
     };
 
     struct only_with_sk
@@ -375,13 +390,26 @@ struct transaction
         bool coinbase{};
     };
 
+    struct get_pruned
+      : public schema::transaction
+    {
+        inline bool from_data(reader& source) NOEXCEPT
+        {
+            source.skip_bytes(bytes::size);
+            pruned = is_pruned(source.read_little_endian<bytes::integer, bytes::size>());
+            return source;
+        }
+
+        bool pruned{};
+    };
+
     struct get_sizes
       : public schema::transaction
     {
         inline bool from_data(reader& source) NOEXCEPT
         {
             light = to_light(source.read_little_endian<bytes::integer, bytes::size>());
-            heavy = source.read_little_endian<bytes::integer, bytes::size>();
+            heavy = to_heavy(source.read_little_endian<bytes::integer, bytes::size>());
             return source;
         }
 
