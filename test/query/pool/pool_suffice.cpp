@@ -315,6 +315,37 @@ BC_AUTO_TEST_CASE(query_pool__set_pool_unvalidated__coinbase_spender__unvalidate
     BC_REQUIRE_EQUAL(links.front(), query.to_tx(parent.hash(false)));
 }
 
+BC_AUTO_TEST_CASE(query_pool__set_pool_unvalidated__coinbase_spender__flags_and_median_kept)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto tx = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto stored = query.set(tx);
+    const auto pooled = query.set_pooled(query.to_tx(tx.hash(false)), tx, context{ bip113, 8, 9 }, 0);
+    size_t marked{};
+    const auto unvalidated = query.set_pool_unvalidated(marked, query.to_header(test::genesis.hash()));
+    const auto row = store.pool.first(query.to_tx(tx.hash(false)));
+    table::pool_scalar flags{};
+    table::pool_scalar height{};
+    table::pool_scalar median{};
+    const auto read = store.pool.flags.get(row, flags) && store.pool.heights.get(row, height) && store.pool.medians.get(row, median);
+
+    BC_REQUIRE(stored);
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(unvalidated);
+    BC_REQUIRE_EQUAL(marked, 1u);
+    BC_REQUIRE(read);
+    BC_REQUIRE_EQUAL(flags.value, bip113);
+    BC_REQUIRE_EQUAL(height.value, max_uint32);
+    BC_REQUIRE_EQUAL(median.value, 9u);
+}
+
 BC_AUTO_TEST_CASE(query_pool__set_pool_unvalidated__revalidated__present_after_sweep)
 {
     settings settings{ test::database_settings() };

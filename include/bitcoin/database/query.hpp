@@ -781,8 +781,8 @@ public:
     code get_pool_revalidation(tx_links& out,
         const context& ctx) const NOEXCEPT;
 
-    /// Pooled txs out without a validation context, in pool order (requires
-    /// the pool index).
+    /// Pooled txs out as not validated, in pool order (requires the pool
+    /// index).
     code get_pool_unvalidated(tx_links& out) const NOEXCEPT;
 
     /// Setters.
@@ -803,7 +803,7 @@ public:
     /// Set the context of the pooled tx, as validated under it.
     bool set_pooled_context(const tx_link& link, const context& ctx) NOEXCEPT;
 
-    /// Clear the context of each pooled spender of the block's txs, out count.
+    /// Set each pooled spender of the block's txs not validated, out count.
     bool set_pool_unvalidated(size_t& out, const header_link& link) NOEXCEPT;
 
     /// Coverage.

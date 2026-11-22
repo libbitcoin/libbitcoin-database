@@ -24,6 +24,9 @@
 namespace libbitcoin {
 namespace database {
 
+// The context height of a row that is not validated, above every height.
+constexpr uint32_t unvalidated_height = max_uint32;
+
 TEMPLATE
 code CLASS::get_pool_revalidation(tx_links& out,
     const context& ctx) const NOEXCEPT
@@ -83,7 +86,7 @@ code CLASS::get_pool_unvalidated(tx_links& out) const NOEXCEPT
         const auto cell = algorithm::from_column(columns.cells[row]);
         if (!algorithm::is_absent(cell) ||
             is_zero(bit_and(cell, algorithm::insufficient)) ||
-            is_nonzero(algorithm::from_column(columns.flags[row])))
+            algorithm::from_column(columns.heights[row]) != unvalidated_height)
             continue;
 
         const auto tx = to_pool_tx(pool_link{ row });
@@ -120,14 +123,20 @@ bool CLASS::set_pooled_context(const tx_link& link,
 
 // A tx spending an output of the block (coinbase included) may depend on its
 // confirmation, so it is not sufficient under any context until revalidated.
+// Its flags are kept, as its sigops are counted under them.
 TEMPLATE
 bool CLASS::set_pool_unvalidated(size_t& out,
     const header_link& link) NOEXCEPT
 {
+    using scalar = table::pool_scalar;
     out = zero;
     if (!store_.pool.enabled())
         return true;
 
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    decltype(store_.pool.get_memory()) guard{};
     for (const auto fk: to_transactions(link))
     {
         const tx_link tx{ fk };
@@ -136,11 +145,15 @@ bool CLASS::set_pool_unvalidated(size_t& out,
         {
             for (const auto& in: to_spenders(tx, index))
             {
-                const auto spender = to_input_tx(in);
-                if (!is_pooled(spender))
+                const auto row = store_.pool.first(to_input_tx(in));
+                if (row.is_terminal())
                     continue;
 
-                if (!set_pooled_context(spender, {}))
+                if (!guard)
+                    guard = store_.pool.get_memory();
+
+                if (!guard || !store_.pool.heights.put(row,
+                    scalar{ {}, unvalidated_height }))
                     return false;
 
                 ++out;
@@ -149,6 +162,7 @@ bool CLASS::set_pool_unvalidated(size_t& out,
     }
 
     return true;
+    // ========================================================================
 }
 
 TEMPLATE
