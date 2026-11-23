@@ -229,13 +229,11 @@ code CLASS::get_pool_coverage(bool& out, const pool_graph& graph,
             !algorithm::ancestry(sum, g, component, limit))
             return error::pool_limit;
 
-        const auto outcomes = algorithm::outcomes(component);
-        if (outcomes > maximum_outcomes)
+        std::vector<mask_t> masks{};
+        algorithm::leaves(masks, component, g, maximum_outcomes, rate,
+            bytes_per_sigop);
+        if (masks.empty())
             return error::pool_limit;
-
-        std::vector<mask_t> masks(outcomes);
-        for (size_t index{}; index < outcomes; ++index)
-            masks[index] = algorithm::outcome(component, index);
 
         const auto best = algorithm::evaluate(masks, component, g);
         const auto bytes = algorithm::chargeable(component, g, bytes_per_sigop);
@@ -247,7 +245,7 @@ code CLASS::get_pool_coverage(bool& out, const pool_graph& graph,
     // family within a block, beyond which each component pays its own.
     uint64_t fee{}, bytes{};
     const auto bounded = algorithm::family(fee, bytes, g, measured,
-        limit.size, bytes_per_sigop, maximum_outcomes);
+        limit.size, rate, bytes_per_sigop, maximum_outcomes);
 
     out = bounded ? algorithm::covered(fee, bytes, rate) : each;
 

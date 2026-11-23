@@ -235,7 +235,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_coverage__confirmed_spender__not_covered)
     BC_REQUIRE(!covered);
 }
 
-BC_AUTO_TEST_CASE(query_pool__get_pool_coverage__outcomes_over_limit__pool_limit)
+BC_AUTO_TEST_CASE(query_pool__get_pool_coverage__outcomes_over_limit__covered)
 {
     settings settings{ test::database_settings() };
     settings.path = TEST_DIRECTORY;
@@ -251,6 +251,29 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_coverage__outcomes_over_limit__pool_limit
     bool covered{};
     const context ctx{ bip113, 8, 9 };
     const auto ec = query.get_pool_coverage(covered, txs, { false }, ctx, 0, 20, block_limit, 1);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(populated);
+    BC_REQUIRE_EQUAL(ec, error::success);
+    BC_REQUIRE(covered);
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_pool_coverage__no_outcomes__pool_limit)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto pooled = pool_populated(query, to_spend(genesis_coinbase(), 4'999'999'000));
+    transaction_cptrs txs{};
+    const auto populated = pool_candidate(txs, query, to_spend(genesis_coinbase(), 4'999'999'500));
+    bool covered{};
+    const context ctx{ bip113, 8, 9 };
+    const auto ec = query.get_pool_coverage(covered, txs, { false }, ctx, 0, 20, block_limit, 0);
 
     BC_REQUIRE(pooled);
     BC_REQUIRE(populated);
