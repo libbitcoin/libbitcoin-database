@@ -796,6 +796,11 @@ public:
     bool set_pooled(size_t& repooled, const tx_link& link,
         const transaction& tx, const context& ctx, uint32_t time) NOEXCEPT;
 
+    /// As above with sigops counted, descendants only if archived before.
+    bool set_pooled(size_t& repooled, const tx_link& link,
+        const transaction& tx, const context& ctx, uint32_t time,
+        size_t sigops, bool archived) NOEXCEPT;
+
     /// Rebuild pool index heads from pool (after compaction).
     bool set_pool_index() NOEXCEPT;
 
@@ -1278,7 +1283,7 @@ protected:
 
     /// Pool tx at a new row, its spenders not yet considered.
     bool set_pool_row(const tx_link& link, const transaction& tx,
-        const context& ctx, uint32_t time) NOEXCEPT;
+        const context& ctx, uint32_t time, size_t sigops) NOEXCEPT;
 
     /// Purge pooled spenders of tx and theirs, ascending by row.
     bool set_pool_purged(tx_links& out, const tx_link& link) NOEXCEPT;

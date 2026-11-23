@@ -45,13 +45,28 @@ TEMPLATE
 bool CLASS::set_pooled(size_t& repooled, const tx_link& link,
     const transaction& tx, const context& ctx, uint32_t time) NOEXCEPT
 {
+    using namespace system::chain;
+    const auto bip16 = ctx.is_enabled(flags::bip16_rule);
+    const auto bip141 = ctx.is_enabled(flags::bip141_rule);
+    const auto sigops = tx.signature_operations(bip16, bip141);
+    return set_pooled(repooled, link, tx, ctx, time, sigops, true);
+}
+
+TEMPLATE
+bool CLASS::set_pooled(size_t& repooled, const tx_link& link,
+    const transaction& tx, const context& ctx, uint32_t time, size_t sigops,
+    bool archived) NOEXCEPT
+{
     repooled = zero;
     if (!store_.pool.enabled())
         return true;
 
+    if (!set_pool_row(link, tx, ctx, time, sigops))
+        return false;
+
     tx_links purged{};
-    if (!set_pool_row(link, tx, ctx, time) || !set_pool_purged(purged, link) ||
-        !set_pool_repooled(purged))
+    if (archived && (!set_pool_purged(purged, link) ||
+        !set_pool_repooled(purged)))
         return false;
 
     repooled = purged.size();
@@ -61,7 +76,7 @@ bool CLASS::set_pooled(size_t& repooled, const tx_link& link,
 // protected
 TEMPLATE
 bool CLASS::set_pool_row(const tx_link& link, const transaction& tx,
-    const context& ctx, uint32_t time) NOEXCEPT
+    const context& ctx, uint32_t time, size_t sigops) NOEXCEPT
 {
     using namespace system;
     using algorithm = system::pool::algorithm;
@@ -103,9 +118,6 @@ bool CLASS::set_pool_row(const tx_link& link, const transaction& tx,
         conflicted |= conflict;
     }
 
-    const auto bip16 = ctx.is_enabled(chain::flags::bip16_rule);
-    const auto bip141 = ctx.is_enabled(chain::flags::bip141_rule);
-    const auto sigops = tx.signature_operations(bip16, bip141);
     using lane_t = schema::pool::witness_lane;
     const auto hash = tx.get_hash(true);
     const auto words = from_little_endians(array_cast<lane_t>(hash));
@@ -254,9 +266,11 @@ bool CLASS::set_pool_repooled(const tx_links& purged) NOEXCEPT
     {
         const tx_link link{ value };
         table::pool::record record{};
+        table::pool_total total{};
         table::pool_scalar flags{}, height{}, median{};
         const auto row = store_.pool.first(link);
         if (!store_.pool.get(row, record) ||
+            !store_.pool.totals.get(row, total) ||
             !store_.pool.flags.get(row, flags) ||
             !store_.pool.heights.get(row, height) ||
             !store_.pool.medians.get(row, median))
@@ -267,7 +281,7 @@ bool CLASS::set_pool_repooled(const tx_links& purged) NOEXCEPT
             return false;
 
         const context ctx{ flags.value, height.value, median.value };
-        if (!set_pool_row(link, *tx, ctx, record.time))
+        if (!set_pool_row(link, *tx, ctx, record.time, total.sigops))
             return false;
     }
 
