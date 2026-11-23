@@ -63,6 +63,9 @@ struct BCD_API envelope
     /// Migrate a serialized 4.0.32 envelope to 4.0.33.
     static bool migrate_4_0_32_to_4_0_33(system::data_chunk& data) NOEXCEPT;
 
+    /// Migrate a serialized 4.0.33 envelope to 4.0.34.
+    static bool migrate_4_0_33_to_4_0_34(system::data_chunk& data) NOEXCEPT;
+
     /// Migrate serialized migratable envelope to next schema, taking values
     /// prior schema does not store from configured.
     static bool migrate_step(system::data_chunk& data,
@@ -77,6 +80,7 @@ struct BCD_API envelope
         schema::header::pk;
     static constexpr size_t pooling_size = sizeof(uint8_t) +
         (2 * sizeof(uint32_t));
+    static constexpr size_t pool_top_size = schema::header::pk;
 
     envelope() NOEXCEPT;
     envelope(const system::settings& bitcoin, const settings& database,
@@ -96,6 +100,7 @@ struct BCD_API envelope
     size_t serialized_size() const NOEXCEPT;
 
     size_t pooling_offset() const NOEXCEPT;
+    size_t pool_top_offset() const NOEXCEPT;
     size_t activation_offset(size_t index) const NOEXCEPT;
     bool operator==(const envelope& other) const NOEXCEPT = default;
 
@@ -169,6 +174,7 @@ struct BCD_API envelope
     bool pooling{};
     uint32_t scan_frontier{};
     uint32_t latch_tx{};
+    schema::header::link::integer pool_top{ schema::header::link::terminal };
     std::array<activation, activation_count> activations{};
 };
 

@@ -49,6 +49,22 @@ size_t CLASS::get_latch_tx() const NOEXCEPT
 }
 
 TEMPLATE
+header_link CLASS::get_pool_top() const NOEXCEPT
+{
+    return store_.get_pool_top();
+}
+
+TEMPLATE
+bool CLASS::set_pool_top(const header_link& link) NOEXCEPT
+{
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    return store_.set_pool_top(link);
+    // ========================================================================
+}
+
+TEMPLATE
 bool CLASS::get_activation(size_t& out, uint32_t flag) const NOEXCEPT
 {
     using namespace system;

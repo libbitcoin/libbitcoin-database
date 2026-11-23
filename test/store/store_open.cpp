@@ -219,7 +219,7 @@ BC_AUTO_TEST_CASE(store__migrate__4_0_30__compiled)
     BC_REQUIRE(!test::exists(obsolete));
     BC_REQUIRE_GT(test::size(instance.pool_head_file()), pool_head);
     BC_REQUIRE_GT(test::size(instance.wtxid_head_file()), wtxid_head);
-    BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), add1(image.size()));
+    BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), image.size() + 4u);
     BC_REQUIRE(!test::exists(instance.fault_lock_file()));
     BC_REQUIRE(!instance.open(test::events));
     BC_REQUIRE(!instance.close(test::events));
@@ -248,7 +248,7 @@ BC_AUTO_TEST_CASE(store__migrate__4_0_31__compiled)
     system::config::version original{};
     BC_REQUIRE(!instance.migrate(original, configured, test::events));
     BC_REQUIRE(original == system::config::version(4, 0, 31, 0));
-    BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), add1(image.size()));
+    BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), image.size() + 4u);
     BC_REQUIRE(!test::exists(instance.fault_lock_file()));
     BC_REQUIRE(!test::exists(instance.flush_lock_file()));
     BC_REQUIRE(!instance.open(test::events));
@@ -261,6 +261,40 @@ BC_AUTO_TEST_CASE(store__migrate__4_0_31__compiled)
     BC_REQUIRE(stored.require_witness);
     BC_REQUIRE(stored.provide_filters);
     BC_REQUIRE_EQUAL(stored.silent_start_height, 42u);
+}
+
+BC_AUTO_TEST_CASE(store__migrate__4_0_33__pool_top_terminal_activation_kept)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+
+    // Last activation link is the last three bytes.
+    database::envelope configured{};
+    auto image = test::envelope_4_0_31;
+    BC_REQUIRE(envelope::migrate_step(image, configured));
+    BC_REQUIRE(envelope::migrate_step(image, configured));
+    image.at(image.size() - 3u) = 42;
+    image.at(image.size() - 2u) = 0;
+    image.at(image.size() - 1u) = 0;
+    BC_REQUIRE(test::create(instance.envelope_head_file(), image));
+
+    system::config::version original{};
+    BC_REQUIRE(!instance.migrate(original, configured, test::events));
+    BC_REQUIRE(original == system::config::version(4, 0, 33, 0));
+    BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), image.size() + 3u);
+    BC_REQUIRE(!test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE_EQUAL(instance.get_pool_top().value, schema::header::link::terminal);
+    BC_REQUIRE(!instance.close(test::events));
+
+    database::envelope stored{};
+    BC_REQUIRE(!instance.read_envelope(stored));
+    BC_REQUIRE(stored.schema == envelope::compiled);
+    BC_REQUIRE_EQUAL(stored.pool_top, schema::header::link::terminal);
+    BC_REQUIRE_EQUAL(stored.activations.back().link, 42u);
 }
 
 // Archive a pruned block and clear its flags, as stored before 4.0.33.
@@ -980,6 +1014,50 @@ BC_AUTO_TEST_CASE(store__open__compacted__pooled_after)
     BC_REQUIRE_EQUAL(out.prevouts.front().parent, query_.to_tx(retained.hash(false)));
     BC_REQUIRE_EQUAL(query_.spends_records(), two);
     BC_REQUIRE_EQUAL(query_.wtxid_records(), two);
+    BC_REQUIRE(!instance.close(test::events));
+}
+
+BC_AUTO_TEST_CASE(store__open__pool_top__retained)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    instance.set_pooling();
+
+    BC_REQUIRE(confirm(query_, spend(genesis_coinbase(), 1u)));
+    BC_REQUIRE(query_.set_pool_block(query_.to_confirmed(1), true));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE_EQUAL(query_.get_pool_top().value, 1u);
+    BC_REQUIRE(!instance.close(test::events));
+}
+
+BC_AUTO_TEST_CASE(store__restore__pool_top__terminal)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+    instance.set_pooling();
+
+    BC_REQUIRE(query_.set_pool_top(query_.to_confirmed(0)));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE(!query_.get_pool_top().is_terminal());
+    BC_REQUIRE(!instance.snapshot(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+
+    BC_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
+    BC_REQUIRE(!instance.restore(test::events));
+    BC_REQUIRE(query_.get_pool_top().is_terminal());
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE(query_.get_pool_top().is_terminal());
     BC_REQUIRE(!instance.close(test::events));
 }
 

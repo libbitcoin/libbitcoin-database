@@ -308,6 +308,25 @@ void CLASS::set_pooling() NOEXCEPT
 }
 
 TEMPLATE
+header_link CLASS::get_pool_top() const NOEXCEPT
+{
+    return pool_top_.load(std::memory_order_relaxed);
+}
+
+TEMPLATE
+bool CLASS::set_pool_top(const header_link& link) NOEXCEPT
+{
+    envelope_.pool_top = link.value;
+    pool_top_.store(link.value, std::memory_order_relaxed);
+
+    using integer = table::envelope::link::integer;
+    const auto position = envelope_.pool_top_offset();
+    const auto offset = system::possible_narrow_cast<integer>(position);
+    const table::envelope::put_pool_top record{ link.value };
+    return envelope.put(offset, record);
+}
+
+TEMPLATE
 database::envelope::activation CLASS::get_activation(
     size_t index) const NOEXCEPT
 {

@@ -306,6 +306,55 @@ BC_AUTO_TEST_CASE(store__set_activation__then_pooling__both_persisted)
     BC_REQUIRE(!instance.close(test::events));
 }
 
+// set_pool_top
+// ----------------------------------------------------------------------------
+
+BC_AUTO_TEST_CASE(store__get_pool_top__default__terminal)
+{
+    const settings configuration{ test::database_settings() };
+    test::map_store instance{ configuration };
+    BC_REQUIRE(instance.get_pool_top().is_terminal());
+}
+
+BC_AUTO_TEST_CASE(store__set_pool_top__link__expected)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+
+    BC_REQUIRE(instance.set_pool_top(42));
+    BC_REQUIRE_EQUAL(instance.get_pool_top().value, 42u);
+    BC_REQUIRE(!instance.close(test::events));
+}
+
+BC_AUTO_TEST_CASE(store__set_pool_top__between_pooling_and_activation__all_persisted)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    store<database::mmap> instance{ configuration };
+    query<store<database::mmap>> query_{ instance };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(query_.initialize(test::genesis));
+
+    BC_REQUIRE(instance.set_activation(0, 0x01, 42));
+    instance.set_pooling();
+    const auto latch = instance.get_latch_tx();
+    BC_REQUIRE(instance.set_pool_top(43));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(!instance.open(test::events));
+
+    const auto first = instance.get_activation(0);
+    BC_REQUIRE(instance.is_pooling());
+    BC_REQUIRE_EQUAL(instance.get_latch_tx(), latch);
+    BC_REQUIRE_EQUAL(instance.get_pool_top().value, 43u);
+    BC_REQUIRE_EQUAL(first.flags, 0x01u);
+    BC_REQUIRE_EQUAL(first.link, 42u);
+    BC_REQUIRE(!instance.close(test::events));
+}
+
 // set_current
 // ----------------------------------------------------------------------------
 

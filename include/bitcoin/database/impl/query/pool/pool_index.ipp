@@ -376,7 +376,7 @@ bool CLASS::set_pool_block(const header_link& link, bool confirmed) NOEXCEPT
 
     const auto count = store_.pool.count().value;
     if (is_zero(count))
-        return true;
+        return !confirmed || store_.set_pool_top(link);
 
     table::txs::get_txs txs{};
     if (!store_.txs.at(to_txs(link), txs) || txs.tx_fks.empty())
@@ -436,7 +436,7 @@ bool CLASS::set_pool_block(const header_link& link, bool confirmed) NOEXCEPT
     if (!complete)
         system::pool::label(columns);
 
-    return true;
+    return !confirmed || store_.set_pool_top(link);
     // ========================================================================
 }
 
