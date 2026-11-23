@@ -52,6 +52,16 @@ struct template_tx
 
 using template_txs = std::vector<template_tx>;
 
+/// Pool row of tx, with its totals.
+struct pooled_row
+{
+    table::pool::link::integer row{};
+    table::transaction::link::integer tx{};
+    system::pool::algorithm::totals_t totals{};
+};
+
+using pooled_rows = std::vector<pooled_row>;
+
 } // namespace database
 } // namespace libbitcoin
 

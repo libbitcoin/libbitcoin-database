@@ -762,6 +762,10 @@ public:
     tx_links to_confirmable_parents(const tx_link& link) const NOEXCEPT;
     tx_links to_confirmable_children(const tx_link& link) const NOEXCEPT;
 
+    /// Rows of pooled txs and of their unconfirmed pooled ancestors, by row.
+    code get_pooled_ancestry(pooled_rows& out,
+        const tx_links& links) const NOEXCEPT;
+
     /// Confirmable ancestors, or descendants, of tx (excluding tx).
     tx_links to_confirmable_ancestors(const tx_link& link) const NOEXCEPT;
     tx_links to_confirmable_descendants(const tx_link& link) const NOEXCEPT;

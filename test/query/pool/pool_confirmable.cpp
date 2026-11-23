@@ -420,6 +420,80 @@ BC_AUTO_TEST_CASE(query_pool__to_confirmable_children__conflicted_child__empty)
     BC_REQUIRE(query.to_confirmable_children(parent_link).empty());
 }
 
+// get_pooled_ancestry
+// ----------------------------------------------------------------------------
+
+BC_AUTO_TEST_CASE(query_pool__get_pooled_ancestry__pooled_chain__rows_by_row)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 3u);
+    const auto child = to_spend(parent.hash(false), 2u);
+    const auto grandchild = to_spend(child.hash(false), 1u);
+    BC_REQUIRE(archive_pool(query, parent));
+    BC_REQUIRE(archive_pool(query, child));
+    BC_REQUIRE(archive_pool(query, grandchild));
+
+    pooled_rows out{};
+    const auto parent_link = query.to_tx(parent.hash(false));
+    const auto child_link = query.to_tx(child.hash(false));
+    const auto grandchild_link = query.to_tx(grandchild.hash(false));
+    BC_REQUIRE_EQUAL(query.get_pooled_ancestry(out, { grandchild_link, child_link }), error::success);
+    BC_REQUIRE_EQUAL(out.size(), 3u);
+    BC_REQUIRE_EQUAL(out[0].tx, parent_link.value);
+    BC_REQUIRE_EQUAL(out[1].tx, child_link.value);
+    BC_REQUIRE_EQUAL(out[2].tx, grandchild_link.value);
+    BC_REQUIRE_EQUAL(out[0].row, query.to_pool_row(parent_link).value);
+
+    test::pool_totals totals{};
+    BC_REQUIRE(query.get_pooled_totals(totals, grandchild_link));
+    BC_REQUIRE_EQUAL(out[2].totals.fee, totals.fee);
+    BC_REQUIRE_EQUAL(out[2].totals.size, totals.size);
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_pooled_ancestry__confirmed_parent__child_only)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 2u);
+    const auto child = to_spend(parent.hash(false), 1u);
+    BC_REQUIRE(archive_pool(query, parent));
+    BC_REQUIRE(archive_pool(query, child));
+    BC_REQUIRE(!archive_confirm(query, parent).is_terminal());
+
+    pooled_rows out{};
+    const auto child_link = query.to_tx(child.hash(false));
+    BC_REQUIRE_EQUAL(query.get_pooled_ancestry(out, { child_link }), error::success);
+    BC_REQUIRE_EQUAL(out.size(), 1u);
+    BC_REQUIRE_EQUAL(out[0].tx, child_link.value);
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_pooled_ancestry__not_pooled__integrity)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    pooled_rows out{};
+    BC_REQUIRE_EQUAL(query.get_pooled_ancestry(out, { 0 }), error::integrity);
+}
+
 // to_confirmable_ancestors
 
 BC_AUTO_TEST_CASE(query_pool__to_confirmable_ancestors__pooled_chain__ancestors)
