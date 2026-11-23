@@ -140,9 +140,7 @@ code CLASS::get_confirmable_txs(tx_links& out) const NOEXCEPT
         if (!algorithm::is_present(cell))
             continue;
 
-        const auto tx = to_pool_tx(pool_link{ row });
-        if (!tx.is_terminal())
-            out.push_back(tx);
+        out.push_back(tx_link{ store_.pool.get_key(pool_link{ row }) });
     }
 
     return error::success;
@@ -167,8 +165,7 @@ code CLASS::get_confirmable_fees(fee_rates& out) const NOEXCEPT
     for (link_t row{}; row < rows; ++row)
     {
         const auto cell = algorithm::from_column(columns.cells[row]);
-        if (!algorithm::is_present(cell) ||
-            to_pool_tx(pool_link{ row }).is_terminal())
+        if (!algorithm::is_present(cell))
             continue;
 
         const auto totals = algorithm::from_column(columns.totals[row]);
