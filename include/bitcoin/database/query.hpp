@@ -866,6 +866,10 @@ public:
         const pool_totals& budget, size_t depth, uint64_t cutoff,
         uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
 
+    /// Ids, totals and parent positions of each pooled tx of template.
+    code get_template_txs(template_txs& out,
+        const tx_links& links) const NOEXCEPT;
+
     /// Estimate.
     /// -----------------------------------------------------------------------
 
