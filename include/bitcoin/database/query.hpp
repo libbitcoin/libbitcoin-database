@@ -559,6 +559,7 @@ public:
         bool witness) const NOEXCEPT;
 
     point get_point(const ins_link& link) const NOEXCEPT;
+    bool get_input_sequence(uint32_t& out, const ins_link& link) const NOEXCEPT;
     witness::cptr get_witness(const ins_link& link) const NOEXCEPT;
     script::cptr get_input_script(const ins_link& link) const NOEXCEPT;
     input::cptr get_input(const ins_link& link, bool witness) const NOEXCEPT;

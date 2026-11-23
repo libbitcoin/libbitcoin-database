@@ -370,9 +370,9 @@ BC_AUTO_TEST_CASE(query_chain_reader__get_transaction__pruned__nullptr)
     test::query_accessor query{ store };
     BC_CHECK(!store.create(test::events_handler));
     BC_CHECK(query.initialize(test::genesis));
-    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
-    BC_CHECK(query.set(test::block1, false, false, true));
-    BC_CHECK(!query.to_tx(test::block1.transactions_ptr()->front()->hash(false)).is_terminal());
+    BC_CHECK(query.set(test::block1a.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1a, false, false, true));
+    BC_CHECK(!query.to_tx(test::block1a.transactions_ptr()->front()->hash(false)).is_terminal());
     BC_CHECK(!query.get_transaction(1, true));
     BC_CHECK(!query.get_transaction(1, false));
     BC_CHECK(!query.get_transactions(1, false));
