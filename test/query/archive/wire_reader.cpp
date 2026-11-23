@@ -196,9 +196,9 @@ BC_AUTO_TEST_CASE(query_wire_reader__get_wire_tx__pruned__empty)
     test::query_t query{ store };
     BC_CHECK(!store.create(test::events_handler));
     BC_CHECK(query.initialize(test::genesis));
-    BC_CHECK(query.set(test::block1.header(), database::context{ 0, 1, 0 }, {}, false));
-    BC_CHECK(query.set(test::block1, false, false, true));
-    BC_CHECK(!query.to_tx(test::block1.transactions_ptr()->front()->hash(false)).is_terminal());
+    BC_CHECK(query.set(test::block1a.header(), database::context{ 0, 1, 0 }, {}, false));
+    BC_CHECK(query.set(test::block1a, false, false, true));
+    BC_CHECK(!query.to_tx(test::block1a.transactions_ptr()->front()->hash(false)).is_terminal());
     BC_CHECK(query.get_wire_tx(1, true).empty());
     BC_CHECK(query.get_wire_tx(1, false).empty());
     BC_CHECK(!store.close(test::events_handler));
@@ -235,8 +235,8 @@ BC_AUTO_TEST_CASE(query_wire_reader__get_wire_block__pruned__empty)
     test::query_t query{ store };
     BC_CHECK(!store.create(test::events_handler));
     BC_CHECK(query.initialize(test::genesis));
-    BC_CHECK(query.set(test::block1.header(), database::context{ 0, 1, 0 }, {}, false));
-    BC_CHECK(query.set(test::block1, false, false, true));
+    BC_CHECK(query.set(test::block1a.header(), database::context{ 0, 1, 0 }, {}, false));
+    BC_CHECK(query.set(test::block1a, false, false, true));
     BC_CHECK(query.get_wire_block(1, true).empty());
     BC_CHECK(query.get_wire_block(1, false).empty());
     BC_CHECK(query.get_wire_block(1, true, true).empty());

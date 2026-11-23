@@ -267,7 +267,7 @@ code CLASS::set_code(const block_view& block, const header_link& key,
 
         points += tx.inputs();
         outputs += tx.outputs();
-        input_bytes += tx.input_table_size(prune);
+        input_bytes += tx.input_table_size(prune && !tx.is_coinbase());
         output_bytes += tx.outputs() * tx_link::size + tx.output_table_size();
     }
 
@@ -332,10 +332,11 @@ code CLASS::set_code(const block_view& block, const header_link& key,
     {
         if (*it == tx_link::terminal)
         {
-            if ((ec = set_code(twins, ptrs, fks, tx, bypass, prune)))
+            const auto pruned = prune && !tx.is_coinbase();
+            if ((ec = set_code(twins, ptrs, fks, tx, bypass, pruned)))
                 return ec;
 
-            const auto in_bytes = tx.input_table_size(prune);
+            const auto in_bytes = tx.input_table_size(pruned);
 
             // Output rows are parent fk prefixed (see table::output::put_view).
             const auto out_bytes = tx.outputs() * tx_link::size +
@@ -365,8 +366,10 @@ code CLASS::set_code(const block_view& block, const header_link& key,
             if (!store_.duplicate.put(twin, table::duplicate::record{}))
                 return error::tx_duplicate_put;
 
+    const auto pruned = prune && std::any_of(views.begin(), views.end(),
+        [](const auto& tx) NOEXCEPT { return !tx.is_coinbase(); });
     return set_txs(key, std::move(links), light, heavy, std::move(interval),
-        strong, prune);
+        strong, pruned);
     // ========================================================================
 }
 

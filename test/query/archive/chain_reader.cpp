@@ -208,6 +208,41 @@ BC_AUTO_TEST_CASE(query_chain_reader__get_input__genesis__expected)
     BC_CHECK(input->script() == *query.get_input_script(point));
 }
 
+BC_AUTO_TEST_CASE(query_chain_reader__get_input_sequence__genesis__expected)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+
+    uint32_t sequence{};
+    const auto& tx = *test::genesis.transactions_ptr()->front();
+    BC_CHECK(query.get_input_sequence(sequence, query.to_point(query.to_tx(tx.hash(false)), 0u)));
+    BC_CHECK_EQUAL(sequence, tx.inputs_ptr()->front()->sequence());
+}
+
+BC_AUTO_TEST_CASE(query_chain_reader__get_input_sequence__pruned__expected)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1a.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1a, false, false, true));
+
+    uint32_t sequence{};
+    const auto& tx = *test::block1a.transactions_ptr()->front();
+    const auto link = query.to_tx(tx.hash(false));
+    BC_CHECK(query.is_pruned(link));
+    BC_CHECK(query.get_input_sequence(sequence, query.to_point(link, 0u)));
+    BC_CHECK_EQUAL(sequence, tx.inputs_ptr()->front()->sequence());
+    BC_CHECK(query.get_point(query.to_point(link, 0u)) == tx.inputs_ptr()->front()->point());
+}
+
 BC_AUTO_TEST_CASE(query_chain_reader__get_inputs__tx_not_found__nullptr)
 {
     settings settings{ test::database_settings() };

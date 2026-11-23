@@ -107,9 +107,45 @@ BC_AUTO_TEST_CASE(query_properties_tx__is_pruned__pruned__true)
     test::query_accessor query{ store };
     BC_CHECK(!store.create(test::events_handler));
     BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1a.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1a, false, false, true));
+    BC_CHECK(query.is_pruned(tx_link{ 1 }));
+}
+
+BC_AUTO_TEST_CASE(query_properties_tx__is_pruned__pruned_coinbase_only__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
     BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
     BC_CHECK(query.set(test::block1, false, false, true));
-    BC_CHECK(query.is_pruned(tx_link{ 1 }));
+    BC_CHECK(!query.is_pruned(tx_link{ 1 }));
+    BC_CHECK(query.get_transaction(1, true));
+}
+
+BC_AUTO_TEST_CASE(query_properties_tx__is_pruned__pruned_block_coinbase__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(query.initialize(test::genesis));
+    BC_CHECK(query.set(test::block1a.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1a, false, false, false));
+    BC_CHECK(query.set(test::block_coinbase_spend_1a.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block_coinbase_spend_1a, false, false, true));
+
+    const auto& txs = *test::block_coinbase_spend_1a.transactions_ptr();
+    const auto coinbase = query.to_tx(txs.front()->hash(false));
+    const auto spend = query.to_tx(txs.back()->hash(false));
+    BC_CHECK(!query.is_pruned(coinbase));
+    BC_CHECK(query.is_pruned(spend));
+    BC_CHECK(*query.get_transaction(coinbase, true) == *txs.front());
+    BC_CHECK(!query.get_transaction(spend, true));
 }
 
 BC_AUTO_TEST_CASE(query_properties_tx__is_pruned__unpruned__false)
@@ -161,8 +197,8 @@ BC_AUTO_TEST_CASE(query_properties_tx__is_pruned_input__pruned__true)
     test::query_accessor query{ store };
     BC_CHECK(!store.create(test::events_handler));
     BC_CHECK(query.initialize(test::genesis));
-    BC_CHECK(query.set(test::block1.header(), test::context, {}, false));
-    BC_CHECK(query.set(test::block1, false, false, true));
+    BC_CHECK(query.set(test::block1a.header(), test::context, {}, false));
+    BC_CHECK(query.set(test::block1a, false, false, true));
     BC_CHECK(query.is_pruned_input(1));
 }
 

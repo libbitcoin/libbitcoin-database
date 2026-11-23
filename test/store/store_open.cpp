@@ -302,8 +302,8 @@ static bool set_unflagged_pruned_block(test::map_store& store) NOEXCEPT
 {
     database::query<test::map_store> query{ store };
     if (!query.initialize(test::genesis) ||
-        !query.set(test::block1.header(), test::context, {}, false) ||
-        !query.set(test::block1, false, false, true))
+        !query.set(test::block1a.header(), test::context, {}, false) ||
+        !query.set(test::block1a, false, false, true))
         return false;
 
     table::transaction::record record{};
