@@ -56,6 +56,64 @@ size_t CLASS::get_fork() const NOEXCEPT
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// server/native
+TEMPLATE
+header_links CLASS::get_branch_tops() const NOEXCEPT
+{
+    using namespace system;
+    using link_t = header_link::integer;
+    const auto top = std::max(get_top_candidate(), get_top_confirmed());
+    const auto records = header_records();
+
+    // A height of more than one header is forked, as is any above the tops.
+    size_t height{};
+    std::vector<bool> seen(add1(top), false);
+    std::vector<bool> forked(add1(top), false);
+    for (size_t record{}; record < records; ++record)
+    {
+        if (!get_height(height, possible_narrow_cast<link_t>(record)) ||
+            height > top)
+            continue;
+
+        if (seen.at(height))
+            forked.at(height) = true;
+        else
+            seen.at(height) = true;
+    }
+
+    std::unordered_set<link_t> forks{};
+    for (size_t record{}; record < records; ++record)
+    {
+        const auto link = possible_narrow_cast<link_t>(record);
+        if (get_height(height, link) && (height > top || forked.at(height)))
+            forks.insert(link);
+    }
+
+    // A child follows its parent, so the last link of a branch is its top.
+    header_links tops{};
+    for (auto record = records; is_nonzero(record) && !forks.empty();)
+    {
+        const auto link = possible_narrow_cast<link_t>(--record);
+        if (!forks.contains(link))
+            continue;
+
+        tops.push_back(link);
+        for (auto next = link; is_nonzero(forks.erase(next));)
+            next = to_parent(next).value;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    std::shared_lock interlock1{ candidate_reorganization_mutex_ };
+    std::shared_lock interlock2{ confirmed_reorganization_mutex_ };
+    std::erase_if(tops, [&](const auto& link) NOEXCEPT
+    {
+        return is_candidate_header(link) || is_confirmed_block(link);
+    });
+    ///////////////////////////////////////////////////////////////////////////
+
+    return tops;
+}
+
 // node/organizer
 TEMPLATE
 header_links CLASS::get_candidate_fork(size_t& fork_point) const NOEXCEPT

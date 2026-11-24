@@ -373,4 +373,76 @@ BC_AUTO_TEST_CASE(query_confirmed__is_confirmed_all_prevouts__prevouts_confirmed
     BC_REQUIRE(query.is_confirmed_all_prevouts(2));
 }
 
+// get_branch_tops
+
+BC_AUTO_TEST_CASE(query_confirmed__get_branch_tops__genesis__empty)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.get_branch_tops().empty());
+}
+
+BC_AUTO_TEST_CASE(query_confirmed__get_branch_tops__candidates__empty)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1.header(), context{ 0, 1, 0 }, {}, false));
+    BC_REQUIRE(query.set(test::block2.header(), context{ 0, 2, 0 }, {}, false));
+    BC_REQUIRE(query.push_candidate(1));
+    BC_REQUIRE(query.push_candidate(2));
+    BC_REQUIRE(query.get_branch_tops().empty());
+}
+
+BC_AUTO_TEST_CASE(query_confirmed__get_branch_tops__weak_header__top)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1.header(), context{ 0, 1, 0 }, {}, false));
+    BC_REQUIRE(query.set(test::block1a.header(), context{ 0, 1, 0 }, {}, false));
+    BC_REQUIRE(query.push_candidate(1));
+    BC_REQUIRE_EQUAL(query.get_branch_tops(), header_links{ 2 });
+}
+
+BC_AUTO_TEST_CASE(query_confirmed__get_branch_tops__weak_branch__top_only)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1.header(), context{ 0, 1, 0 }, {}, false));
+    BC_REQUIRE(query.set(test::block1a.header(), context{ 0, 1, 0 }, {}, false));
+    BC_REQUIRE(query.set(test::block2a.header(), context{ 0, 2, 0 }, {}, false));
+    BC_REQUIRE(query.push_candidate(1));
+    BC_REQUIRE_EQUAL(query.get_branch_tops(), header_links{ 3 });
+}
+
+BC_AUTO_TEST_CASE(query_confirmed__get_branch_tops__confirmed_above_fork__empty)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+    BC_REQUIRE(query.set(test::block1, context{ 0, 1, 0 }, {}, false, false));
+    BC_REQUIRE(query.set(test::block1a.header(), context{ 0, 1, 0 }, {}, false));
+    BC_REQUIRE(query.push_confirmed(1, false));
+    BC_REQUIRE(query.push_candidate(2));
+    BC_REQUIRE(query.get_branch_tops().empty());
+}
+
 BC_AUTO_TEST_SUITE_END()
