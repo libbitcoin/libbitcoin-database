@@ -140,11 +140,66 @@ code CLASS::get_confirmable_txs(tx_links& out) const NOEXCEPT
         if (!algorithm::is_present(cell))
             continue;
 
-        const auto tx = to_pool_tx(pool_link{ row });
-        if (!tx.is_terminal())
-            out.push_back(tx);
+        out.push_back(tx_link{ store_.pool.get_key(pool_link{ row }) });
     }
 
+    return error::success;
+}
+
+TEMPLATE
+code CLASS::get_pooled_ancestry(pooled_rows& out,
+    const tx_links& links) const NOEXCEPT
+{
+    using namespace system;
+    using algorithm = system::pool::algorithm;
+    using link_t = algorithm::link_t;
+    out.clear();
+    if (!store_.pool.enabled())
+        return error::success;
+
+    pool_guards guards{};
+    algorithm::columns_t columns{};
+    if (!get_pool_columns(columns, guards))
+        return error::integrity;
+
+    std::vector<link_t> pending{};
+    pending.reserve(links.size());
+    for (const tx_link link: links)
+    {
+        const auto row = store_.pool.first(link);
+        if (row.is_terminal())
+            return error::integrity;
+
+        pending.push_back(possible_narrow_cast<link_t>(row.value));
+    }
+
+    std::unordered_set<link_t> seen{};
+    while (!pending.empty())
+    {
+        const auto row = pending.back();
+        pending.pop_back();
+        if (!seen.insert(row).second)
+            continue;
+
+        const auto edges = algorithm::from_column(columns.edges[row]);
+        const auto end = edges.first + edges.count;
+        for (auto input = edges.first; input < end; ++input)
+        {
+            const auto parent = algorithm::from_column(columns.rows[input]);
+            if (parent == algorithm::none)
+                continue;
+
+            const auto cell = algorithm::from_column(columns.cells[parent]);
+            if (!algorithm::is_boundary(cell))
+                pending.push_back(parent);
+        }
+
+        const tx_link tx{ store_.pool.get_key(pool_link{ row }) };
+        out.push_back({ row, tx.value,
+            algorithm::from_column(columns.totals[row]) });
+    }
+
+    std::ranges::sort(out, {}, &pooled_row::row);
     return error::success;
 }
 
@@ -167,8 +222,7 @@ code CLASS::get_confirmable_fees(fee_rates& out) const NOEXCEPT
     for (link_t row{}; row < rows; ++row)
     {
         const auto cell = algorithm::from_column(columns.cells[row]);
-        if (!algorithm::is_present(cell) ||
-            to_pool_tx(pool_link{ row }).is_terminal())
+        if (!algorithm::is_present(cell))
             continue;
 
         const auto totals = algorithm::from_column(columns.totals[row]);

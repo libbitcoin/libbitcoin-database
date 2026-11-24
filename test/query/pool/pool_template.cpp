@@ -191,4 +191,52 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_template__chain_over_budget__first_block_
     BC_REQUIRE(!projection.exhausted);
 }
 
+// get_template_txs
+// ----------------------------------------------------------------------------
+
+BC_AUTO_TEST_CASE(query_pool__get_template_txs__parent_and_child__child_depends_on_parent)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto child = to_spend(parent.hash(false), 4'999'998'000);
+    const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
+    const tx_links links{ query.to_tx(parent.hash(false)), query.to_tx(child.hash(false)) };
+    template_txs out{};
+    const auto ec = query.get_template_txs(out, links);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE_EQUAL(ec, error::success);
+    BC_REQUIRE_EQUAL(out.size(), 2u);
+    BC_REQUIRE(out[0].txid == parent.hash(false));
+    BC_REQUIRE(out[0].wtxid == parent.hash(true));
+    BC_REQUIRE_EQUAL(out[0].fee, 1'000u);
+    BC_REQUIRE(out[0].parents.empty());
+    BC_REQUIRE(out[1].txid == child.hash(false));
+    BC_REQUIRE(out[1].wtxid == child.hash(true));
+    BC_REQUIRE_EQUAL(out[1].fee, 1'000u);
+    BC_REQUIRE_EQUAL(out[1].parents.size(), 1u);
+    BC_REQUIRE_EQUAL(out[1].parents[0], 0u);
+}
+
+BC_AUTO_TEST_CASE(query_pool__get_template_txs__not_pooled__integrity)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    template_txs out{};
+    BC_REQUIRE_EQUAL(query.get_template_txs(out, { 0 }), error::integrity);
+}
+
 BC_AUTO_TEST_SUITE_END()

@@ -40,6 +40,28 @@ struct pooled_tx
     std::vector<prevout> prevouts{};
 };
 
+/// Pooled tx of template, ids and totals with positions of its parents.
+struct template_tx
+{
+    system::hash_digest txid{};
+    system::hash_digest wtxid{};
+    uint64_t fee{};
+    size_t sigops{};
+    std::vector<size_t> parents{};
+};
+
+using template_txs = std::vector<template_tx>;
+
+/// Pool row of tx, with its totals.
+struct pooled_row
+{
+    table::pool::link::integer row{};
+    table::transaction::link::integer tx{};
+    system::pool::algorithm::totals_t totals{};
+};
+
+using pooled_rows = std::vector<pooled_row>;
+
 } // namespace database
 } // namespace libbitcoin
 

@@ -559,6 +559,7 @@ public:
         bool witness) const NOEXCEPT;
 
     point get_point(const ins_link& link) const NOEXCEPT;
+    bool get_input_sequence(uint32_t& out, const ins_link& link) const NOEXCEPT;
     witness::cptr get_witness(const ins_link& link) const NOEXCEPT;
     script::cptr get_input_script(const ins_link& link) const NOEXCEPT;
     input::cptr get_input(const ins_link& link, bool witness) const NOEXCEPT;
@@ -761,6 +762,10 @@ public:
     tx_links to_confirmable_parents(const tx_link& link) const NOEXCEPT;
     tx_links to_confirmable_children(const tx_link& link) const NOEXCEPT;
 
+    /// Rows of pooled txs and of their unconfirmed pooled ancestors, by row.
+    code get_pooled_ancestry(pooled_rows& out,
+        const tx_links& links) const NOEXCEPT;
+
     /// Confirmable ancestors, or descendants, of tx (excluding tx).
     tx_links to_confirmable_ancestors(const tx_link& link) const NOEXCEPT;
     tx_links to_confirmable_descendants(const tx_link& link) const NOEXCEPT;
@@ -790,6 +795,11 @@ public:
     /// Pool tx, out count of its pooled descendants pooled again after it.
     bool set_pooled(size_t& repooled, const tx_link& link,
         const transaction& tx, const context& ctx, uint32_t time) NOEXCEPT;
+
+    /// As above with sigops counted, descendants only if archived before.
+    bool set_pooled(size_t& repooled, const tx_link& link,
+        const transaction& tx, const context& ctx, uint32_t time,
+        size_t sigops, bool archived) NOEXCEPT;
 
     /// Rebuild pool index heads from pool (after compaction).
     bool set_pool_index() NOEXCEPT;
@@ -865,6 +875,10 @@ public:
     code get_pool_template(tx_links& out, pool_projection& projection,
         const pool_totals& budget, size_t depth, uint64_t cutoff,
         uint32_t bytes_per_sigop, size_t maximum_outcomes) const NOEXCEPT;
+
+    /// Ids, totals and parent positions of each pooled tx of template.
+    code get_template_txs(template_txs& out,
+        const tx_links& links) const NOEXCEPT;
 
     /// Estimate.
     /// -----------------------------------------------------------------------
@@ -1269,7 +1283,7 @@ protected:
 
     /// Pool tx at a new row, its spenders not yet considered.
     bool set_pool_row(const tx_link& link, const transaction& tx,
-        const context& ctx, uint32_t time) NOEXCEPT;
+        const context& ctx, uint32_t time, size_t sigops) NOEXCEPT;
 
     /// Purge pooled spenders of tx and theirs, ascending by row.
     bool set_pool_purged(tx_links& out, const tx_link& link) NOEXCEPT;

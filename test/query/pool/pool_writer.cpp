@@ -69,6 +69,28 @@ BC_AUTO_TEST_CASE(query_pool__set_pooled__time__stored)
     BC_REQUIRE_EQUAL(record.time, 0x01020304u);
 }
 
+BC_AUTO_TEST_CASE(query_pool__set_pooled__given_sigops__stored)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    const auto& tx = test::tx_spend_one_hash;
+    const auto& in = *tx.inputs_ptr()->front();
+    in.metadata.parent_tx = 42;
+    in.metadata.coinbase = false;
+    size_t repooled{ 42 };
+    BC_REQUIRE(query.set_pooled(repooled, 1, tx, context{ bip113, 8, 9 }, 0, 7, false));
+    BC_REQUIRE_EQUAL(repooled, 0u);
+
+    test::pool_totals totals{};
+    BC_REQUIRE(query.get_pooled_totals(totals, 1));
+    BC_REQUIRE_EQUAL(totals.sigops, 7u);
+}
+
 BC_AUTO_TEST_CASE(query_pool__set_pooled__unlinked_parent__resolved)
 {
     settings settings{ test::database_settings() };

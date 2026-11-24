@@ -456,13 +456,15 @@ code CLASS::set_code(const block& block, const header_link& key,
     if (fk.is_terminal())
         return error::tx_tx_allocate;
 
+    // A coinbase is never pruned, so neither is a block of only its coinbase.
     code ec{};
     auto it = links.begin();
     for (const auto& tx: *block.transactions_ptr())
     {
         if (*it == tx_link::terminal)
         {
-            if ((ec = set_code(fk, *tx, bypass, prune)))
+            const auto pruned = prune && !tx->is_coinbase();
+            if ((ec = set_code(fk, *tx, bypass, pruned)))
                 return ec;
 
             *it = fk++;
@@ -471,8 +473,11 @@ code CLASS::set_code(const block& block, const header_link& key,
         ++it;
     }
 
+    const auto& all = *block.transactions_ptr();
+    const auto pruned = prune && std::any_of(all.begin(), all.end(),
+        [](const auto& tx) NOEXCEPT { return !tx->is_coinbase(); });
     return set_txs(key, std::move(links), light, heavy, std::move(interval),
-        strong, prune);
+        strong, pruned);
     // ========================================================================
 }
 

@@ -207,6 +207,21 @@ typename CLASS::point CLASS::get_point(
     return { point.hash, point.index };
 }
 
+// ins_link->sequence
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::get_input_sequence(uint32_t& out,
+    const ins_link& link) const NOEXCEPT
+{
+    table::ins_sequence::get_input ins{};
+    if (!store_.ins.sequence.get(link, ins))
+        return false;
+
+    out = ins.sequence;
+    return true;
+}
+
 // ins_link->witness
 // ----------------------------------------------------------------------------
 
