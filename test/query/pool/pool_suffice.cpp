@@ -380,6 +380,44 @@ BC_AUTO_TEST_CASE(query_pool__set_pool_unvalidated__revalidated__present_after_s
     BC_REQUIRE(system::pool::algorithm::is_present(pool_cell(query, store, tx)));
 }
 
+BC_AUTO_TEST_CASE(query_pool__set_pool_unvalidated__spender_and_child__written_at_frontier_in_order)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto child = to_spend(parent.hash(false), 4'999'998'000);
+    const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
+    const auto parent_link = query.to_tx(parent.hash(false));
+    const auto child_link = query.to_tx(child.hash(false));
+    size_t marked{};
+    const auto unvalidated = query.set_pool_unvalidated(marked, query.to_header(test::genesis.hash()));
+    const auto parent_row = store.pool.first(parent_link);
+    const auto child_row = store.pool.first(child_link);
+    const auto parent_cell = store.pool_index.cells.at(0u);
+    const auto child_cell = store.pool_index.cells.at(1u);
+    table::pool_scalar parent_height{};
+    table::pool_scalar child_height{};
+    const auto read = store.pool.heights.get(parent_row, parent_height) && store.pool.heights.get(child_row, child_height);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(unvalidated);
+    BC_REQUIRE_EQUAL(marked, 1u);
+    BC_REQUIRE_EQUAL(parent_row.value, 2u);
+    BC_REQUIRE_EQUAL(child_row.value, 3u);
+    BC_REQUIRE_EQUAL(store.pool.count().value, 4u);
+    BC_REQUIRE(is_nonzero(system::bit_and(parent_cell, system::pool::algorithm::purged)));
+    BC_REQUIRE(is_nonzero(system::bit_and(child_cell, system::pool::algorithm::purged)));
+    BC_REQUIRE(read);
+    BC_REQUIRE_EQUAL(parent_height.value, max_uint32);
+    BC_REQUIRE_EQUAL(child_height.value, 8u);
+}
+
 BC_AUTO_TEST_CASE(query_pool__set_pool_unvalidated__no_pooled_spender__true_none)
 {
     settings settings{ test::database_settings() };
@@ -454,6 +492,92 @@ BC_AUTO_TEST_CASE(query_pool__set_pooled_context__sigops__stored_with_fee_and_si
     BC_REQUIRE_EQUAL(after.fee, before.fee);
     BC_REQUIRE_EQUAL(after.size, before.size);
     BC_REQUIRE_EQUAL(after.sigops, 42u);
+}
+
+BC_AUTO_TEST_CASE(query_pool__set_pooled_context__pooled__written_at_frontier_and_prior_row_purged)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto tx = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto pooled = pool_populated(query, tx);
+    const auto link = query.to_tx(tx.hash(false));
+    const auto before = store.pool.first(link);
+    const auto set = query.set_pooled_context(link, context{ bip113 | flags::bip16_rule, 8, 9 }, 0);
+    const auto after = store.pool.first(link);
+    const auto cell = store.pool_index.cells.at(before.value);
+    table::pool_scalar flags{};
+    const auto read = store.pool.flags.get(after, flags);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(set);
+    BC_REQUIRE_EQUAL(before.value, 0u);
+    BC_REQUIRE_EQUAL(after.value, 1u);
+    BC_REQUIRE_EQUAL(store.pool.count().value, 2u);
+    BC_REQUIRE(system::pool::algorithm::is_absent(cell));
+    BC_REQUIRE(is_nonzero(system::bit_and(cell, system::pool::algorithm::purged)));
+    BC_REQUIRE(read);
+    BC_REQUIRE_EQUAL(flags.value, bip113 | flags::bip16_rule);
+}
+
+BC_AUTO_TEST_CASE(query_pool__set_pooled_contexts__parent_of_pooled_child__child_written_after_under_stored_context)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const context more{ bip113 | flags::bip16_rule, 8, 9 };
+    const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto child = to_spend(parent.hash(false), 4'999'998'000);
+    const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
+    const auto parent_link = query.to_tx(parent.hash(false));
+    const auto child_link = query.to_tx(child.hash(false));
+    const auto set = query.set_pooled_contexts({ parent_link.value }, { 7 }, more);
+    const auto parent_row = store.pool.first(parent_link);
+    const auto child_row = store.pool.first(child_link);
+    table::pool_scalar parent_flags{};
+    table::pool_scalar child_flags{};
+    table::pool_total parent_total{};
+    const auto read = store.pool.flags.get(parent_row, parent_flags) && store.pool.flags.get(child_row, child_flags) && store.pool.totals.get(parent_row, parent_total);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(set);
+    BC_REQUIRE_EQUAL(parent_row.value, 2u);
+    BC_REQUIRE_EQUAL(child_row.value, 3u);
+    BC_REQUIRE_EQUAL(store.pool.count().value, 4u);
+    BC_REQUIRE(is_nonzero(system::bit_and(store.pool_index.cells.at(0u), system::pool::algorithm::purged)));
+    BC_REQUIRE(is_nonzero(system::bit_and(store.pool_index.cells.at(1u), system::pool::algorithm::purged)));
+    BC_REQUIRE(read);
+    BC_REQUIRE_EQUAL(parent_flags.value, bip113 | flags::bip16_rule);
+    BC_REQUIRE_EQUAL(child_flags.value, bip113);
+    BC_REQUIRE_EQUAL(parent_total.sigops, 7u);
+}
+
+BC_AUTO_TEST_CASE(query_pool__set_pooled_contexts__sizes_differ__false)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    store.set_pooling();
+    const auto tx = to_spend(genesis_coinbase(), 4'999'999'000);
+    const auto pooled = pool_populated(query, tx);
+
+    BC_REQUIRE(pooled);
+    BC_REQUIRE(!query.set_pooled_contexts({ query.to_tx(tx.hash(false)).value }, {}, context{ bip113, 8, 9 }));
+    BC_REQUIRE_EQUAL(store.pool.count().value, 1u);
 }
 
 BC_AUTO_TEST_CASE(query_pool__set_pooled_context__not_pooled__false)
