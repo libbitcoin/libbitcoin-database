@@ -107,7 +107,7 @@ BC_AUTO_TEST_CASE(query_amounts__get_tx_fee__pooled_missing_prevouts__pooled_fee
     constexpr size_t expected_height = 7;
     size_t bytes{};
     BC_CHECK(query.get_tx_virtual_size(bytes, 3));
-    BC_CHECK(test::put_pooled(store, tx_link{ 3 }, expected_fee, expected_height, system::possible_narrow_cast<uint32_t>(bytes)));
+    BC_CHECK(test::put_pooled(store, tx_link{ 3 }, expected_fee, expected_height));
     BC_CHECK(!query.get_tx_value(out, 3));
     BC_CHECK(query.get_tx_fee(out, 3));
     BC_CHECK_EQUAL(out, expected_fee);

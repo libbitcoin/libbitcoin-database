@@ -286,10 +286,10 @@ public:
 using query_accessor = query<store<chunk_storages>>;
 
 inline bool put_pooled(chunk_store& store, const tx_link& tx, uint64_t fee,
-    size_t height, uint32_t bytes=0) NOEXCEPT
+    size_t height, uint32_t weight=0) NOEXCEPT
 {
     const auto link = store.pool.allocate(1);
-    const table::pool_total total{ {}, fee, bytes, 0 };
+    const table::pool_total total{ {}, fee, weight, 0 };
     const auto high = system::possible_narrow_cast<uint32_t>(height);
     auto guard = store.pool.get_memory();
     if (!guard || !store.pool.totals.put(link, total) ||

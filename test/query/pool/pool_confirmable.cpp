@@ -454,7 +454,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pooled_ancestry__pooled_chain__rows_by_row)
     test::pool_totals totals{};
     BC_REQUIRE(query.get_pooled_totals(totals, grandchild_link));
     BC_REQUIRE_EQUAL(out[2].totals.fee, totals.fee);
-    BC_REQUIRE_EQUAL(out[2].totals.size, totals.size);
+    BC_REQUIRE_EQUAL(out[2].totals.weight, totals.weight);
 }
 
 BC_AUTO_TEST_CASE(query_pool__get_pooled_ancestry__confirmed_parent__child_only)

@@ -898,7 +898,7 @@ public:
         const pool_totals& budget, size_t depth,
         uint32_t bytes_per_sigop) const NOEXCEPT;
 
-    /// Rate and size of rows pooled at each height below top, top first.
+    /// Rate and weight of rows pooled at each height below top, top first.
     code get_pool_arrivals(pool_arrivals& out, size_t top, size_t count,
         uint32_t bytes_per_sigop) const NOEXCEPT;
 
@@ -1265,7 +1265,7 @@ protected:
     bool get_pooled_fee(uint64_t& out, const tx_link& link) const NOEXCEPT;
     bool get_pooled_fee(uint64_t& fee, size_t& height,
         const tx_link& link) const NOEXCEPT;
-    bool get_pooled_fee(uint64_t& fee, size_t& size, size_t& height,
+    bool get_pooled_fee(uint64_t& fee, size_t& weight, size_t& height,
         const tx_link& link) const NOEXCEPT;
     hash_digest get_pooled_wtxid(const table::pool::link& link) const NOEXCEPT;
 

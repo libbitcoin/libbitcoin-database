@@ -297,6 +297,40 @@ BC_AUTO_TEST_CASE(store__migrate__4_0_33__pool_top_terminal_activation_kept)
     BC_REQUIRE_EQUAL(stored.activations.back().link, 42u);
 }
 
+BC_AUTO_TEST_CASE(store__migrate__4_0_34__pool_top_terminal)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+
+    // Pool top link precedes the 224 bytes of activations.
+    database::envelope configured{};
+    auto image = test::envelope_4_0_31;
+    BC_REQUIRE(envelope::migrate_step(image, configured));
+    BC_REQUIRE(envelope::migrate_step(image, configured));
+    BC_REQUIRE(envelope::migrate_step(image, configured));
+    image.at(image.size() - 227u) = 42;
+    image.at(image.size() - 226u) = 0;
+    image.at(image.size() - 225u) = 0;
+    BC_REQUIRE(test::create(instance.envelope_head_file(), image));
+
+    system::config::version original{};
+    BC_REQUIRE(!instance.migrate(original, configured, test::events));
+    BC_REQUIRE(original == system::config::version(4, 0, 34, 0));
+    BC_REQUIRE_EQUAL(test::size(instance.envelope_head_file()), image.size());
+    BC_REQUIRE(!test::exists(instance.fault_lock_file()));
+    BC_REQUIRE(!instance.open(test::events));
+    BC_REQUIRE_EQUAL(instance.get_pool_top().value, schema::header::link::terminal);
+    BC_REQUIRE(!instance.close(test::events));
+
+    database::envelope stored{};
+    BC_REQUIRE(!instance.read_envelope(stored));
+    BC_REQUIRE(stored.schema == envelope::compiled);
+    BC_REQUIRE_EQUAL(stored.pool_top, schema::header::link::terminal);
+}
+
 // Archive a pruned block and clear its flags, as stored before 4.0.33.
 static bool set_unflagged_pruned_block(test::map_store& store) NOEXCEPT
 {

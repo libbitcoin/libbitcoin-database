@@ -87,7 +87,7 @@ code CLASS::get_pool_candidate(pool_graph& out, const transaction& tx,
     out.totals.push_back(algorithm::to_column(algorithm::totals_t
     {
         tx.fee(),
-        possible_narrow_cast<uint32_t>(tx.virtual_size()),
+        possible_narrow_cast<uint32_t>(tx.weight()),
         possible_narrow_cast<uint32_t>(sigops)
     }));
 
@@ -236,18 +236,18 @@ code CLASS::get_pool_coverage(bool& out, const pool_graph& graph,
             return error::pool_limit;
 
         const auto best = algorithm::evaluate(masks, component, g);
-        const auto bytes = algorithm::chargeable(component, g, bytes_per_sigop);
-        each = each && algorithm::covered(best, bytes, rate);
+        const auto weight = algorithm::chargeable(component, g, bytes_per_sigop);
+        each = each && algorithm::covered(best, weight, rate);
         components.push_back(component);
     }
 
     // Pooled parent's surplus pays for its child (parent pays for child), in a
     // family within a block, beyond which each component pays its own.
-    uint64_t fee{}, bytes{};
-    const auto bounded = algorithm::family(fee, bytes, g, measured,
-        limit.size, rate, bytes_per_sigop, maximum_outcomes);
+    uint64_t fee{}, weight{};
+    const auto bounded = algorithm::family(fee, weight, g, measured,
+        limit.weight, rate, bytes_per_sigop, maximum_outcomes);
 
-    out = bounded ? algorithm::covered(fee, bytes, rate) : each;
+    out = bounded ? algorithm::covered(fee, weight, rate) : each;
 
     return error::success;
 }

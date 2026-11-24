@@ -147,7 +147,7 @@ bool CLASS::set_pool_row(const tx_link& link, const transaction& tx,
     {
         {},
         tx.fee(),
-        possible_narrow_cast<uint32_t>(tx.virtual_size()),
+        possible_narrow_cast<uint32_t>(tx.weight()),
         possible_narrow_cast<uint32_t>(sigops)
     };
     const table::pool_edge edge

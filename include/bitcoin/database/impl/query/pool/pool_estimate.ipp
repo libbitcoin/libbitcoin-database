@@ -109,8 +109,8 @@ code CLASS::get_pool_arrivals(pool_arrivals& out, size_t top, size_t count,
 
         const auto totals = algorithm::from_column(columns.totals[at]);
         const auto rate = algorithm::fee_rate(totals, bytes_per_sigop);
-        const auto size = algorithm::chargeable(totals, bytes_per_sigop);
-        out.at(sub1(top - height)).push_back({ rate, size });
+        const auto weight = algorithm::chargeable(totals, bytes_per_sigop);
+        out.at(sub1(top - height)).push_back({ rate, weight });
     }
 
     return error::success;

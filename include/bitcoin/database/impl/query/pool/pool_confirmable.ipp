@@ -227,7 +227,9 @@ code CLASS::get_confirmable_fees(fee_rates& out) const NOEXCEPT
 
         const auto totals = algorithm::from_column(columns.totals[row]);
         const size_t height = algorithm::from_column(columns.heights[row]);
-        out.push_back({ totals.size, totals.fee, height });
+        const auto bytes = ceilinged_divide<size_t>(totals.weight,
+            chain::light_weight_factor);
+        out.push_back({ bytes, totals.fee, height });
     }
 
     return error::success;
