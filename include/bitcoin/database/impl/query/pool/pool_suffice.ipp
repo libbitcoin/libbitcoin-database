@@ -97,33 +97,43 @@ code CLASS::get_pool_unvalidated(tx_links& out) const NOEXCEPT
     return error::success;
 }
 
-// The sigops of a tx are counted under the flags of its context.
 TEMPLATE
 bool CLASS::set_pooled_context(const tx_link& link, const context& ctx,
     size_t sigops) NOEXCEPT
 {
-    using scalar = table::pool_scalar;
+    return set_pooled_contexts({ link.value }, { sigops }, ctx);
+}
+
+// The sigops of a tx are counted under the flags of its context.
+TEMPLATE
+bool CLASS::set_pooled_contexts(const tx_links& links,
+    const std::vector<size_t>& sigops, const context& ctx) NOEXCEPT
+{
     if (!store_.pool.enabled())
         return true;
+
+    if (links.size() != sigops.size())
+        return false;
+
+    std::unordered_map<tx_link::integer, size_t> counts{};
+    counts.reserve(links.size());
+    for (size_t index{}; index < links.size(); ++index)
+        counts.emplace(links.at(index), sigops.at(index));
 
     // ========================================================================
     const auto scope = get_transactor();
 
-    auto& vtx = store_.pool;
-    const auto fk = vtx.first(link);
-    if (fk.is_terminal())
-        return false;
+    tx_links purged{};
+    return set_pool_purged(purged, links, true) && set_pool_repooled(purged,
+        [&](context& stored, size_t& count, const tx_link& link) NOEXCEPT
+        {
+            const auto it = counts.find(link.value);
+            if (it == counts.end())
+                return;
 
-    table::pool_total total{};
-    auto guard = vtx.get_memory();
-    if (!guard || !vtx.totals.get(fk, total))
-        return false;
-
-    total.sigops = system::possible_narrow_cast<uint32_t>(sigops);
-    return vtx.totals.put(fk, total) &&
-        vtx.flags.put(fk, scalar{ {}, ctx.flags }) &&
-        vtx.heights.put(fk, scalar{ {}, ctx.height }) &&
-        vtx.medians.put(fk, scalar{ {}, ctx.mtp });
+            stored = ctx;
+            count = it->second;
+        });
     // ========================================================================
 }
 
@@ -134,15 +144,12 @@ TEMPLATE
 bool CLASS::set_pool_unvalidated(size_t& out,
     const header_link& link) NOEXCEPT
 {
-    using scalar = table::pool_scalar;
     out = zero;
     if (!store_.pool.enabled())
         return true;
 
-    // ========================================================================
-    const auto scope = get_transactor();
-
-    decltype(store_.pool.get_memory()) guard{};
+    tx_links spenders{};
+    std::unordered_set<tx_link::integer> unique{};
     for (const auto fk: to_transactions(link))
     {
         const tx_link tx{ fk };
@@ -151,23 +158,26 @@ bool CLASS::set_pool_unvalidated(size_t& out,
         {
             for (const auto& in: to_spenders(tx, index))
             {
-                const auto row = store_.pool.first(to_input_tx(in));
-                if (row.is_terminal())
-                    continue;
-
-                if (!guard)
-                    guard = store_.pool.get_memory();
-
-                if (!guard || !store_.pool.heights.put(row,
-                    scalar{ {}, unvalidated_height }))
-                    return false;
-
-                ++out;
+                const auto spender = to_input_tx(in);
+                if (!store_.pool.first(spender).is_terminal() &&
+                    unique.insert(spender.value).second)
+                    spenders.push_back(spender.value);
             }
         }
     }
 
-    return store_.set_pool_top(to_parent(link));
+    out = spenders.size();
+
+    // ========================================================================
+    const auto scope = get_transactor();
+
+    tx_links purged{};
+    return set_pool_purged(purged, spenders, true) && set_pool_repooled(purged,
+        [&](context& stored, size_t&, const tx_link& spender) NOEXCEPT
+        {
+            if (unique.contains(spender.value))
+                stored.height = unvalidated_height;
+        }) && store_.set_pool_top(to_parent(link));
     // ========================================================================
 }
 

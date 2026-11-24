@@ -814,6 +814,10 @@ public:
     bool set_pooled_context(const tx_link& link, const context& ctx,
         size_t sigops) NOEXCEPT;
 
+    /// Set context of pooled txs with sigops of each, as validated under it.
+    bool set_pooled_contexts(const tx_links& links,
+        const std::vector<size_t>& sigops, const context& ctx) NOEXCEPT;
+
     /// Set pooled spenders of block's txs not validated, parent pool top.
     bool set_pool_unvalidated(size_t& out, const header_link& link) NOEXCEPT;
 
@@ -1285,11 +1289,19 @@ protected:
     bool set_pool_row(const tx_link& link, const transaction& tx,
         const context& ctx, uint32_t time, size_t sigops) NOEXCEPT;
 
-    /// Purge pooled spenders of tx and theirs, ascending by row.
-    bool set_pool_purged(tx_links& out, const tx_link& link) NOEXCEPT;
+    /// Purge pooled spenders of txs and theirs, and txs if inclusive, by row.
+    bool set_pool_purged(tx_links& out, const tx_links& links,
+        bool inclusive) NOEXCEPT;
 
-    /// Pool again each purged tx, in order, under its stored context.
-    bool set_pool_repooled(const tx_links& purged) NOEXCEPT;
+    /// Context, time and sigops stored for pooled tx.
+    bool get_pool_stored(context& ctx, uint32_t& time, size_t& sigops,
+        const tx_link& link) const NOEXCEPT;
+
+    /// Pool again each purged tx, in order, stored context and sigops amended.
+    using pool_amender = std::function<void(context&, size_t&,
+        const tx_link&)>;
+    bool set_pool_repooled(const tx_links& purged,
+        const pool_amender& amend) NOEXCEPT;
 
     /// Input of a pooled spender of point below bound, and if confirmed spent.
     bool get_pooled_spender(system::pool::algorithm::link_t& out,

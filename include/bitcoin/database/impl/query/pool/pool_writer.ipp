@@ -61,16 +61,20 @@ bool CLASS::set_pooled(size_t& repooled, const tx_link& link,
     if (!store_.pool.enabled())
         return true;
 
+    // ========================================================================
+    const auto scope = get_transactor();
+
     if (!set_pool_row(link, tx, ctx, time, sigops))
         return false;
 
     tx_links purged{};
-    if (archived && (!set_pool_purged(purged, link) ||
-        !set_pool_repooled(purged)))
+    if (archived && (!set_pool_purged(purged, { link.value }, false) ||
+        !set_pool_repooled(purged, {})))
         return false;
 
     repooled = purged.size();
     return true;
+    // ========================================================================
 }
 
 // protected
@@ -121,9 +125,6 @@ bool CLASS::set_pool_row(const tx_link& link, const transaction& tx,
     using lane_t = schema::pool::witness_lane;
     const auto hash = tx.get_hash(true);
     const auto words = from_little_endians(array_cast<lane_t>(hash));
-
-    // ========================================================================
-    const auto scope = get_transactor();
 
     // Clean single allocation failure (e.g. disk full).
     table::spends::link first{};
@@ -192,12 +193,13 @@ bool CLASS::set_pool_row(const tx_link& link, const transaction& tx,
         system::pool::label(columns);
 
     return true;
-    // ========================================================================
 }
 
 // protected
+// Row purged or confirmed is passed over, with its spenders.
 TEMPLATE
-bool CLASS::set_pool_purged(tx_links& out, const tx_link& link) NOEXCEPT
+bool CLASS::set_pool_purged(tx_links& out, const tx_links& links,
+    bool inclusive) NOEXCEPT
 {
     using namespace system;
     using algorithm = system::pool::algorithm;
@@ -205,11 +207,38 @@ bool CLASS::set_pool_purged(tx_links& out, const tx_link& link) NOEXCEPT
     using integer = pool_link::integer;
     auto& cells = store_.pool_index.cells;
     std::vector<std::pair<integer, tx_link>> found{};
-    tx_links pending{ link.value };
+    tx_links pending{};
     out.clear();
 
-    // ========================================================================
-    const auto scope = get_transactor();
+    const auto purge = [&](const tx_link& tx, const pool_link& row) NOEXCEPT
+    {
+        const auto cell = cells.at(row.value);
+        const auto purged = algorithm::is_absent(cell) &&
+            is_nonzero(bit_and(cell, algorithm::purged));
+        if (purged || algorithm::is_boundary(cell))
+            return true;
+
+        const auto next = algorithm::raised(cell, algorithm::purged);
+        if (!cells.set(row.value, row_cell{ {}, next }))
+            return false;
+
+        found.emplace_back(row.value, tx);
+        pending.push_back(tx.value);
+        return true;
+    };
+
+    for (const tx_link link: links)
+    {
+        if (!inclusive)
+        {
+            pending.push_back(link.value);
+            continue;
+        }
+
+        const auto row = store_.pool.first(link);
+        if (row.is_terminal() || !purge(link, row))
+            return false;
+    }
 
     while (!pending.empty())
     {
@@ -222,21 +251,8 @@ bool CLASS::set_pool_purged(tx_links& out, const tx_link& link) NOEXCEPT
             {
                 const auto child = to_input_tx(in);
                 const auto row = store_.pool.first(child);
-                if (row.is_terminal())
-                    continue;
-
-                const auto cell = cells.at(row.value);
-                const auto purged = algorithm::is_absent(cell) &&
-                    is_nonzero(bit_and(cell, algorithm::purged));
-                if (purged || algorithm::is_boundary(cell))
-                    continue;
-
-                const auto next = algorithm::raised(cell, algorithm::purged);
-                if (!cells.set(row.value, row_cell{ {}, next }))
+                if (!row.is_terminal() && !purge(child, row))
                     return false;
-
-                found.emplace_back(row.value, child);
-                pending.push_back(child.value);
             }
         }
     }
@@ -255,33 +271,51 @@ bool CLASS::set_pool_purged(tx_links& out, const tx_link& link) NOEXCEPT
 
     system::pool::label(columns);
     return true;
-    // ========================================================================
 }
 
 // protected
 TEMPLATE
-bool CLASS::set_pool_repooled(const tx_links& purged) NOEXCEPT
+bool CLASS::get_pool_stored(context& ctx, uint32_t& time, size_t& sigops,
+    const tx_link& link) const NOEXCEPT
 {
-    for (const auto value: purged)
+    table::pool::record record{};
+    table::pool_total total{};
+    table::pool_scalar flags{}, height{}, median{};
+    const auto row = store_.pool.first(link);
+    if (!store_.pool.get(row, record) ||
+        !store_.pool.totals.get(row, total) ||
+        !store_.pool.flags.get(row, flags) ||
+        !store_.pool.heights.get(row, height) ||
+        !store_.pool.medians.get(row, median))
+        return false;
+
+    ctx = { flags.value, height.value, median.value };
+    time = record.time;
+    sigops = total.sigops;
+    return true;
+}
+
+// protected
+TEMPLATE
+bool CLASS::set_pool_repooled(const tx_links& purged,
+    const pool_amender& amend) NOEXCEPT
+{
+    for (const tx_link link: purged)
     {
-        const tx_link link{ value };
-        table::pool::record record{};
-        table::pool_total total{};
-        table::pool_scalar flags{}, height{}, median{};
-        const auto row = store_.pool.first(link);
-        if (!store_.pool.get(row, record) ||
-            !store_.pool.totals.get(row, total) ||
-            !store_.pool.flags.get(row, flags) ||
-            !store_.pool.heights.get(row, height) ||
-            !store_.pool.medians.get(row, median))
+        context ctx{};
+        uint32_t time{};
+        size_t sigops{};
+        if (!get_pool_stored(ctx, time, sigops, link))
             return false;
 
         const auto tx = get_transaction(link, true);
         if (!tx || !populate_with_metadata(*tx, true, true))
             return false;
 
-        const context ctx{ flags.value, height.value, median.value };
-        if (!set_pool_row(link, *tx, ctx, record.time, total.sigops))
+        if (amend)
+            amend(ctx, sigops, link);
+
+        if (!set_pool_row(link, *tx, ctx, time, sigops))
             return false;
     }
 
