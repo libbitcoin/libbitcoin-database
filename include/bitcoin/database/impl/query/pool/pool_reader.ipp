@@ -123,7 +123,7 @@ bool CLASS::get_pooled_totals(pool_totals& out,
     if (!store_.pool.totals.get(fk, total))
         return false;
 
-    out = { total.fee, total.bytes, total.sigops };
+    out = { total.fee, total.weight, total.sigops };
     return true;
 }
 
@@ -138,12 +138,12 @@ TEMPLATE
 bool CLASS::get_pooled_fee(uint64_t& fee, size_t& height,
     const tx_link& link) const NOEXCEPT
 {
-    size_t size{};
-    return get_pooled_fee(fee, size, height, link);
+    size_t weight{};
+    return get_pooled_fee(fee, weight, height, link);
 }
 
 TEMPLATE
-bool CLASS::get_pooled_fee(uint64_t& fee, size_t& size, size_t& height,
+bool CLASS::get_pooled_fee(uint64_t& fee, size_t& weight, size_t& height,
     const tx_link& link) const NOEXCEPT
 {
     if (!store_.pool.enabled())
@@ -160,7 +160,7 @@ bool CLASS::get_pooled_fee(uint64_t& fee, size_t& size, size_t& height,
         return false;
 
     fee = total.fee;
-    size = total.bytes;
+    weight = total.weight;
     height = pooled.value;
     return true;
 }

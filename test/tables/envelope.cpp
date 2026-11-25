@@ -52,7 +52,7 @@ BC_AUTO_TEST_CASE(envelope__serialized_size__default__expected)
 BC_AUTO_TEST_CASE(envelope__to_data__default__expected_version)
 {
     const envelope instance{};
-    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 34, 0));
+    BC_REQUIRE_EQUAL(instance.schema, system::config::version(4, 0, 35, 0));
     BC_REQUIRE_EQUAL(to_chunk(instance).front(), schema::version.front());
 }
 
@@ -447,6 +447,11 @@ BC_AUTO_TEST_CASE(envelope__migrate_step__4_0_31__stepwise_expected)
     BC_REQUIRE(envelope::get_schema(data) == system::config::version(4, 0, 34, 0));
     BC_REQUIRE_EQUAL(data.size(), test::envelope_4_0_31.size() + 4u);
 
+    // 4.0.34 -> 4.0.35
+    BC_REQUIRE(envelope::migrate_step(data, configured));
+    BC_REQUIRE(envelope::get_schema(data) == system::config::version(4, 0, 35, 0));
+    BC_REQUIRE_EQUAL(data.size(), test::envelope_4_0_31.size() + 4u);
+
     // compiled
     BC_REQUIRE(envelope::get_schema(data) == envelope::compiled);
     BC_REQUIRE(!envelope::migrate_step(data, configured));
@@ -500,6 +505,16 @@ BC_AUTO_TEST_CASE(envelope__migrate_4_0_33_to_4_0_34__short__false)
 {
     data_chunk data(223);
     BC_REQUIRE(!envelope::migrate_4_0_33_to_4_0_34(data));
+}
+
+BC_AUTO_TEST_CASE(envelope__migrate_4_0_34_to_4_0_35__schema_only)
+{
+    auto data = test::envelope_4_0_31;
+    data.at(8) = 34;
+    auto expected = data;
+    expected.at(8) = 35;
+    BC_REQUIRE(envelope::migrate_4_0_34_to_4_0_35(data));
+    BC_REQUIRE(data == expected);
 }
 
 BC_AUTO_TEST_CASE(envelope__migrate__4_0_30__compiled)

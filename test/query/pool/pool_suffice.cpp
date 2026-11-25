@@ -490,7 +490,7 @@ BC_AUTO_TEST_CASE(query_pool__set_pooled_context__sigops__stored_with_fee_and_si
     BC_REQUIRE(set);
     BC_REQUIRE(second);
     BC_REQUIRE_EQUAL(after.fee, before.fee);
-    BC_REQUIRE_EQUAL(after.size, before.size);
+    BC_REQUIRE_EQUAL(after.weight, before.weight);
     BC_REQUIRE_EQUAL(after.sigops, 42u);
 }
 

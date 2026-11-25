@@ -29,7 +29,7 @@ using pool_totals = system::pool::algorithm::totals_t;
 using pool_projection = system::pool::algorithm::projection_t;
 using pool_arrivals = std::vector<system::pool::algorithm::takes_t>;
 constexpr auto bip113 = system::chain::flags::bip113_rule;
-constexpr pool_totals block_limit{ 0, 1'000'000, 80'000 };
+constexpr pool_totals block_limit{ 0, 4'000'000, 80'000 };
 constexpr pool_totals tight_limit{ 0, 10, 80'000 };
 
 /// A tx of one output spending the first output of the hash.

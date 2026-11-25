@@ -66,7 +66,7 @@ struct pool_word
     lane word{};
 };
 
-/// Fee, virtual size and sigops of the tx (totals column).
+/// Fee, weight and sigops of the tx (totals column).
 struct pool_total
   : public schema::pool_totals
 {
@@ -78,7 +78,7 @@ struct pool_total
     inline bool from_data(reader& source) NOEXCEPT
     {
         fee = source.read_little_endian<uint64_t>();
-        bytes = source.read_little_endian<uint32_t>();
+        weight = source.read_little_endian<uint32_t>();
         sigops = source.read_little_endian<uint32_t>();
         BC_ASSERT(!source || source.get_read_position() == minrow);
         return source;
@@ -87,7 +87,7 @@ struct pool_total
     inline bool to_data(flipper& sink) const NOEXCEPT
     {
         sink.write_little_endian<uint64_t>(fee);
-        sink.write_little_endian<uint32_t>(bytes);
+        sink.write_little_endian<uint32_t>(weight);
         sink.write_little_endian<uint32_t>(sigops);
         BC_ASSERT(!sink || sink.get_write_position() == minrow);
         return sink;
@@ -96,7 +96,7 @@ struct pool_total
     inline bool operator==(const pool_total&) const NOEXCEPT = default;
 
     uint64_t fee{};
-    uint32_t bytes{};
+    uint32_t weight{};
     uint32_t sigops{};
 };
 
@@ -186,7 +186,7 @@ struct pool_id3
     using no_map<schema::pool_id3>::nomap;
 };
 
-/// Scan columns (fee, size, sigops and edges), words aligned for lanes.
+/// Scan columns (fee, weight, sigops and edges), words aligned for lanes.
 struct pool_totals
   : public no_map<schema::pool_totals>
 {

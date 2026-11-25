@@ -216,7 +216,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pooled_totals__pooled__fee_size_and_sigops)
     BC_REQUIRE(pooled);
     BC_REQUIRE(found);
     BC_REQUIRE_EQUAL(out.fee, 1'000u);
-    BC_REQUIRE_EQUAL(out.size, tx.virtual_size());
+    BC_REQUIRE_EQUAL(out.weight, tx.weight());
 }
 
 BC_AUTO_TEST_SUITE_END()

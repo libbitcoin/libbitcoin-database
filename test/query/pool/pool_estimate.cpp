@@ -66,20 +66,20 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_projection__chain_over_budget__block_each
     store.set_pooling();
     const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
     const auto child = to_spend(parent.hash(false), 4'999'990'000);
-    const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
+    const auto weight = system::possible_narrow_cast<uint32_t>(parent.weight());
     const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
     pool_projection projection{};
-    const auto ec = query.get_pool_projection(projection, 2, { 0, size, 80'000 }, 25, 0, 20, 1'024);
+    const auto ec = query.get_pool_projection(projection, 2, { 0, weight, 80'000 }, 25, 0, 20, 1'024);
 
     BC_REQUIRE(pooled);
     BC_REQUIRE_EQUAL(ec, error::success);
     BC_REQUIRE_EQUAL(projection.blocks.size(), 2u);
     BC_REQUIRE_EQUAL(projection.blocks[0].size(), 1u);
-    BC_REQUIRE_EQUAL(projection.blocks[0][0].rate, 1'000'000u / size);
-    BC_REQUIRE_EQUAL(projection.blocks[0][0].size, size);
+    BC_REQUIRE_EQUAL(projection.blocks[0][0].rate, 4'000'000u / weight);
+    BC_REQUIRE_EQUAL(projection.blocks[0][0].weight, weight);
     BC_REQUIRE_EQUAL(projection.blocks[1].size(), 1u);
-    BC_REQUIRE_EQUAL(projection.blocks[1][0].rate, 9'000'000u / size);
-    BC_REQUIRE_EQUAL(projection.blocks[1][0].size, size);
+    BC_REQUIRE_EQUAL(projection.blocks[1][0].rate, 36'000'000u / weight);
+    BC_REQUIRE_EQUAL(projection.blocks[1][0].weight, weight);
     BC_REQUIRE(projection.exhausted);
 }
 
@@ -95,10 +95,10 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_projection__one_block_of_two__not_exhaust
     store.set_pooling();
     const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
     const auto child = to_spend(parent.hash(false), 4'999'990'000);
-    const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
+    const auto weight = system::possible_narrow_cast<uint32_t>(parent.weight());
     const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
     pool_projection projection{};
-    const auto ec = query.get_pool_projection(projection, 1, { 0, size, 80'000 }, 25, 0, 20, 1'024);
+    const auto ec = query.get_pool_projection(projection, 1, { 0, weight, 80'000 }, 25, 0, 20, 1'024);
 
     BC_REQUIRE(pooled);
     BC_REQUIRE_EQUAL(ec, error::success);
@@ -118,11 +118,11 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_projection__after_template__continued)
     store.set_pooling();
     const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
     const auto child = to_spend(parent.hash(false), 4'999'990'000);
-    const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
+    const auto weight = system::possible_narrow_cast<uint32_t>(parent.weight());
     const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
     tx_links out{};
     pool_projection projection{};
-    const pool_totals budget{ 0, size, 80'000 };
+    const pool_totals budget{ 0, weight, 80'000 };
     const auto template_ec = query.get_pool_template(out, projection, budget, 25, 0, 20, 1'024);
     const auto ec = query.get_pool_projection(projection, 2, budget, 25, 0, 20, 1'024);
 
@@ -130,7 +130,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_projection__after_template__continued)
     BC_REQUIRE_EQUAL(template_ec, error::success);
     BC_REQUIRE_EQUAL(ec, error::success);
     BC_REQUIRE_EQUAL(projection.blocks.size(), 2u);
-    BC_REQUIRE_EQUAL(projection.blocks[1][0].rate, 9'000'000u / size);
+    BC_REQUIRE_EQUAL(projection.blocks[1][0].rate, 36'000'000u / weight);
     BC_REQUIRE(projection.exhausted);
 }
 
@@ -146,18 +146,18 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_projection__marks_of_other_rows__restarte
     store.set_pooling();
     const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
     const auto child = to_spend(parent.hash(false), 4'999'990'000);
-    const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
+    const auto weight = system::possible_narrow_cast<uint32_t>(parent.weight());
     const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
     pool_projection projection{};
     projection.marks.resize(42);
     projection.blocks.resize(3);
-    const auto ec = query.get_pool_projection(projection, 1, { 0, size, 80'000 }, 25, 0, 20, 1'024);
+    const auto ec = query.get_pool_projection(projection, 1, { 0, weight, 80'000 }, 25, 0, 20, 1'024);
 
     BC_REQUIRE(pooled);
     BC_REQUIRE_EQUAL(ec, error::success);
     BC_REQUIRE_EQUAL(projection.marks.size(), 2u);
     BC_REQUIRE_EQUAL(projection.blocks.size(), 1u);
-    BC_REQUIRE_EQUAL(projection.blocks[0][0].rate, 1'000'000u / size);
+    BC_REQUIRE_EQUAL(projection.blocks[0][0].rate, 4'000'000u / weight);
 }
 
 // get_pool_continuation
@@ -175,10 +175,10 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_continuation__more_blocks__continued)
     store.set_pooling();
     const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
     const auto child = to_spend(parent.hash(false), 4'999'990'000);
-    const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
+    const auto weight = system::possible_narrow_cast<uint32_t>(parent.weight());
     const auto pooled = pool_populated(query, parent) && pool_populated(query, child);
     pool_projection projection{};
-    const pool_totals budget{ 0, size, 80'000 };
+    const pool_totals budget{ 0, weight, 80'000 };
     const auto first = query.get_pool_projection(projection, 1, budget, 25, 0, 20, 1'024);
     const auto ec = query.get_pool_continuation(projection, 2, budget, 25, 20);
 
@@ -186,7 +186,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_continuation__more_blocks__continued)
     BC_REQUIRE_EQUAL(first, error::success);
     BC_REQUIRE_EQUAL(ec, error::success);
     BC_REQUIRE_EQUAL(projection.blocks.size(), 2u);
-    BC_REQUIRE_EQUAL(projection.blocks[1][0].rate, 9'000'000u / size);
+    BC_REQUIRE_EQUAL(projection.blocks[1][0].rate, 36'000'000u / weight);
     BC_REQUIRE(projection.exhausted);
 }
 
@@ -202,10 +202,10 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_continuation__later_row__left_out)
     store.set_pooling();
     const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
     const auto child = to_spend(parent.hash(false), 4'999'990'000);
-    const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
+    const auto weight = system::possible_narrow_cast<uint32_t>(parent.weight());
     const auto pooled_parent = pool_populated(query, parent);
     pool_projection projection{};
-    const pool_totals budget{ 0, size, 80'000 };
+    const pool_totals budget{ 0, weight, 80'000 };
     const auto first = query.get_pool_projection(projection, 1, budget, 25, 0, 20, 1'024);
     const auto pooled_child = pool_populated(query, child);
     const auto ec = query.get_pool_continuation(projection, 2, budget, 25, 20);
@@ -270,7 +270,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_arrivals__two_heights__top_first)
     store.set_pooling();
     const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
     const auto child = to_spend(parent.hash(false), 4'999'990'000);
-    const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
+    const auto weight = system::possible_narrow_cast<uint32_t>(parent.weight());
     const auto pooled = pool_populated(query, parent, 8) && pool_populated(query, child, 9);
     pool_arrivals out{};
     const auto ec = query.get_pool_arrivals(out, 10, 3, 20);
@@ -279,11 +279,11 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_arrivals__two_heights__top_first)
     BC_REQUIRE_EQUAL(ec, error::success);
     BC_REQUIRE_EQUAL(out.size(), 3u);
     BC_REQUIRE_EQUAL(out[0].size(), 1u);
-    BC_REQUIRE_EQUAL(out[0][0].rate, 9'000'000u / size);
-    BC_REQUIRE_EQUAL(out[0][0].size, size);
+    BC_REQUIRE_EQUAL(out[0][0].rate, 36'000'000u / weight);
+    BC_REQUIRE_EQUAL(out[0][0].weight, weight);
     BC_REQUIRE_EQUAL(out[1].size(), 1u);
-    BC_REQUIRE_EQUAL(out[1][0].rate, 1'000'000u / size);
-    BC_REQUIRE_EQUAL(out[1][0].size, size);
+    BC_REQUIRE_EQUAL(out[1][0].rate, 4'000'000u / weight);
+    BC_REQUIRE_EQUAL(out[1][0].weight, weight);
     BC_REQUIRE(out[2].empty());
 }
 
@@ -299,7 +299,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_arrivals__top_height__excluded)
     store.set_pooling();
     const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
     const auto child = to_spend(parent.hash(false), 4'999'990'000);
-    const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
+    const auto weight = system::possible_narrow_cast<uint32_t>(parent.weight());
     const auto pooled = pool_populated(query, parent, 8) && pool_populated(query, child, 9);
     pool_arrivals out{};
     const auto ec = query.get_pool_arrivals(out, 9, 2, 20);
@@ -308,7 +308,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_arrivals__top_height__excluded)
     BC_REQUIRE_EQUAL(ec, error::success);
     BC_REQUIRE_EQUAL(out.size(), 2u);
     BC_REQUIRE_EQUAL(out[0].size(), 1u);
-    BC_REQUIRE_EQUAL(out[0][0].rate, 1'000'000u / size);
+    BC_REQUIRE_EQUAL(out[0][0].rate, 4'000'000u / weight);
     BC_REQUIRE(out[1].empty());
 }
 
@@ -324,7 +324,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_arrivals__below_count__excluded)
     store.set_pooling();
     const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
     const auto child = to_spend(parent.hash(false), 4'999'990'000);
-    const auto size = system::possible_narrow_cast<uint32_t>(parent.virtual_size());
+    const auto weight = system::possible_narrow_cast<uint32_t>(parent.weight());
     const auto pooled = pool_populated(query, parent, 8) && pool_populated(query, child, 9);
     pool_arrivals out{};
     const auto ec = query.get_pool_arrivals(out, 10, 1, 20);
@@ -333,7 +333,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_arrivals__below_count__excluded)
     BC_REQUIRE_EQUAL(ec, error::success);
     BC_REQUIRE_EQUAL(out.size(), 1u);
     BC_REQUIRE_EQUAL(out[0].size(), 1u);
-    BC_REQUIRE_EQUAL(out[0][0].rate, 9'000'000u / size);
+    BC_REQUIRE_EQUAL(out[0][0].rate, 36'000'000u / weight);
 }
 
 BC_AUTO_TEST_CASE(query_pool__get_pool_arrivals__confirmed_rival__confirmed_only)
@@ -348,7 +348,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_arrivals__confirmed_rival__confirmed_only
     store.set_pooling();
     const auto parent = to_spend(genesis_coinbase(), 4'999'999'000);
     const auto rival = to_spend(genesis_coinbase(), 4'999'998'500);
-    const auto size = system::possible_narrow_cast<uint32_t>(rival.virtual_size());
+    const auto weight = system::possible_narrow_cast<uint32_t>(rival.weight());
     const auto pooled = pool_populated(query, parent) && pool_populated(query, rival);
     const auto confirmed = !archive_confirm(query, rival).is_terminal();
     pool_arrivals out{};
@@ -358,7 +358,7 @@ BC_AUTO_TEST_CASE(query_pool__get_pool_arrivals__confirmed_rival__confirmed_only
     BC_REQUIRE(confirmed);
     BC_REQUIRE_EQUAL(ec, error::success);
     BC_REQUIRE_EQUAL(out[0].size(), 1u);
-    BC_REQUIRE_EQUAL(out[0][0].rate, 1'500'000u / size);
+    BC_REQUIRE_EQUAL(out[0][0].rate, 6'000'000u / weight);
 }
 
 BC_AUTO_TEST_CASE(query_pool__get_pool_arrivals__zero_count__empty)

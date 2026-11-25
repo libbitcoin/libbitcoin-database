@@ -263,6 +263,11 @@ code CLASS::migrate(system::config::version& original,
             {
                 schema = { 4, 0, 34, 0 };
             }
+            else if (schema == system::config::version{ 4, 0, 34, 0 })
+            {
+                ec = migrate_4_0_34_to_4_0_35(stored, configured, handler);
+                schema = { 4, 0, 35, 0 };
+            }
             else
             {
                 ec = error::schema_version;
@@ -327,9 +332,32 @@ code CLASS::purge_snapshots() NOEXCEPT
     return error::success;
 }
 
-// The pool tables are discarded and created empty at configured sizing.
 TEMPLATE
 code CLASS::migrate_4_0_30_to_4_0_31(database::envelope& stored,
+    const database::envelope& configured,
+    const event_handler& handler) NOEXCEPT
+{
+    const auto obsolete = body(configuration_.path,
+        std::string{ schema::caches::pool } + "_context");
+
+    if (const auto ec = file::remove_ex(obsolete))
+        return ec;
+
+    return recreate_pool(stored, configured, handler);
+}
+
+TEMPLATE
+code CLASS::migrate_4_0_34_to_4_0_35(database::envelope& stored,
+    const database::envelope& configured,
+    const event_handler& handler) NOEXCEPT
+{
+    return recreate_pool(stored, configured, handler);
+}
+
+// The pool tables are discarded and created empty at configured sizing, and
+// the dropped pool has no top.
+TEMPLATE
+code CLASS::recreate_pool(database::envelope& stored,
     const database::envelope& configured,
     const event_handler& handler) NOEXCEPT
 {
@@ -396,10 +424,7 @@ code CLASS::migrate_4_0_30_to_4_0_31(database::envelope& stored,
         if (const auto closed = file.close(); !ec) ec = closed;
     };
 
-    const auto obsolete = body(configuration_.path,
-        std::string{ schema::caches::pool } + "_context");
-
-    auto ec = file::remove_ex(obsolete);
+    code ec{};
     create(ec, pool_head_, table_t::pool_head);
     create(ec, pool_body_, table_t::pool_body);
     create(ec, spends_head_, table_t::spends_head);
@@ -458,6 +483,7 @@ code CLASS::migrate_4_0_30_to_4_0_31(database::envelope& stored,
     stored.wtxid_buckets = wtxid_buckets;
     stored.pool_k = possible_narrow_cast<uint8_t>(pool_k);
     stored.wtxid_k = possible_narrow_cast<uint8_t>(wtxid_k);
+    stored.pool_top = schema::header::link::terminal;
     return error::success;
 }
 

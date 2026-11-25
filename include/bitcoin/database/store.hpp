@@ -188,6 +188,12 @@ protected:
     code migrate_4_0_31_to_4_0_32(database::envelope& stored,
         const database::envelope& configured) NOEXCEPT;
     code migrate_4_0_32_to_4_0_33(const event_handler& handler) NOEXCEPT;
+    code migrate_4_0_34_to_4_0_35(database::envelope& stored,
+        const database::envelope& configured,
+        const event_handler& handler) NOEXCEPT;
+    code recreate_pool(database::envelope& stored,
+        const database::envelope& configured,
+        const event_handler& handler) NOEXCEPT;
     code get_pruned(bool& pruned,
         const table::transaction::record& record) const NOEXCEPT;
 
