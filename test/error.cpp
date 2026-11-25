@@ -708,6 +708,15 @@ BC_AUTO_TEST_CASE(error_t__code__txs_state_put__true_expected_message)
     BC_REQUIRE_EQUAL(ec.message(), "txs_state_put");
 }
 
+BC_AUTO_TEST_CASE(error_t__code__txs_size__true_expected_message)
+{
+    constexpr auto value = error::txs_size;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "txs_size");
+}
+
 // services
 
 BC_AUTO_TEST_CASE(error_t__code__not_found__true_expected_message)

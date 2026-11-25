@@ -127,6 +127,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { txs_confirm, "txs_confirm" },
     { txs_txs_put, "txs_txs_put" },
     { txs_state_put, "txs_state_put" },
+    { txs_size, "txs_size" },
 
     // prevouts cache
     { prevouts_put, "prevouts_put" },

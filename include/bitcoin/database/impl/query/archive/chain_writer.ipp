@@ -528,6 +528,10 @@ code CLASS::set_txs(const header_link& key, tx_links&& links, size_t light,
     using bytes = linkage<schema::size>::integer;
     constexpr auto positive = true;
 
+    // Heavy is never less than light.
+    if (!table::txs::is_storable(heavy))
+        return error::txs_size;
+
     // Transactor assures cannot be restored without txs, as required to unset.
     if (strong && !set_strong(key, links, positive))
         return error::txs_confirm;
