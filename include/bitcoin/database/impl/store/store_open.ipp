@@ -756,6 +756,20 @@ code CLASS::read_envelope(database::envelope& stored) NOEXCEPT
     if (!transactor_mutex_.try_lock())
         return error::transactor_lock;
 
+    if (fault_lock_.is_locked())
+    {
+        transactor_mutex_.unlock();
+        return error::fault_lock;
+    }
+
+    // Heads are not intact under flush lock, so schema is of the snapshot.
+    if (flush_lock_.is_locked())
+    {
+        const auto failed = read_snapshot(stored.schema);
+        transactor_mutex_.unlock();
+        return failed ? failed : error::flush_lock;
+    }
+
     auto ec = envelope_head_.open();
     if (!ec) ec = envelope_head_.load();
     if (!ec)
@@ -785,6 +799,41 @@ code CLASS::read_envelope(database::envelope& stored) NOEXCEPT
     if (const auto closed = envelope_head_.close()) ec = closed;
 
     transactor_mutex_.unlock();
+    return ec;
+}
+
+// Schema of the snapshot that restore recovers, compiled if none or empty.
+TEMPLATE
+code CLASS::read_snapshot(system::config::version& version) NOEXCEPT
+{
+    const auto primary = configuration_.path / schema::dir::primary;
+    const auto secondary = configuration_.path / schema::dir::secondary;
+    version = database::envelope::compiled;
+    if (!file::is_directory(primary) && !file::is_directory(secondary))
+        return error::success;
+
+    const auto& folder = file::is_directory(primary) ? primary : secondary;
+    Storage<one> envelope_head
+    {
+        head(folder, schema::caches::envelope), envelope_settings,
+        sequential, !staged, shared
+    };
+
+    table::envelope snapshot{ envelope_head };
+    auto ec = envelope_head.open();
+    if (!ec) ec = envelope_head.load();
+    if (!ec && !is_zero(snapshot.head_size()))
+    {
+        table::envelope::raw raw{};
+        if (snapshot.get(zero, raw))
+            version = database::envelope::get_schema(raw.data);
+        else
+            ec = error::verify_table;
+    }
+
+    // unload and close errors override ec.
+    if (const auto unloaded = envelope_head.unload()) ec = unloaded;
+    if (const auto closed = envelope_head.close()) ec = closed;
     return ec;
 }
 

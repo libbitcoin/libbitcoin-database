@@ -164,8 +164,8 @@ BC_AUTO_TEST_CASE(store__restore__secondary_closed__open_failure)
     BC_REQUIRE(test::create(test::flush_lock_file(configuration.path)));
     BC_REQUIRE(instance.restore_());
 
-    // No primary, so rename /secondary to /heads.
-    BC_REQUIRE(!test::folder(configuration.path / schema::dir::secondary));
+    // Snapshot without an envelope is refused before it is moved.
+    BC_REQUIRE(test::folder(configuration.path / schema::dir::secondary));
     BC_REQUIRE(test::folder(configuration.path / schema::dir::heads));
 }
 

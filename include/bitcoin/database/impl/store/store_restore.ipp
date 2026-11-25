@@ -52,7 +52,18 @@ code CLASS::restore(const event_handler& handler) NOEXCEPT
         return error::flush_lock;
     }
 
-    code ec{ error::success };
+    system::config::version version{};
+    auto ec = read_snapshot(version);
+    if (!ec && version != database::envelope::compiled)
+        ec = error::schema_version;
+
+    if (ec)
+    {
+        if (!process_lock_.try_unlock()) ec = error::process_unlock;
+        transactor_mutex_.unlock();
+        return ec;
+    }
+
     const auto heads = configuration_.path / schema::dir::heads;
     const auto primary = configuration_.path / schema::dir::primary;
     const auto secondary = configuration_.path / schema::dir::secondary;
