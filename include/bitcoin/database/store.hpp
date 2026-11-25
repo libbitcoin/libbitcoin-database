@@ -171,6 +171,7 @@ protected:
     bool get_schema(system::config::version& schema) const NOEXCEPT;
     code load_schema() NOEXCEPT;
     code load_envelope() NOEXCEPT;
+    code read_snapshot(system::config::version& version) NOEXCEPT;
     void store_envelope(code& ec) NOEXCEPT;
     code put_envelope(const database::envelope& stored) NOEXCEPT;
 

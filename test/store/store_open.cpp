@@ -522,6 +522,31 @@ BC_AUTO_TEST_CASE(store__read_envelope__uncreated__failure)
     BC_REQUIRE(instance.read_envelope(stored));
 }
 
+BC_AUTO_TEST_CASE(store__read_envelope__fault_locked__fault_lock)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    database::envelope stored{};
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(instance.fault_lock_file()));
+    BC_REQUIRE_EQUAL(instance.read_envelope(stored), error::fault_lock);
+}
+
+BC_AUTO_TEST_CASE(store__read_envelope__flush_locked_without_snapshot__flush_lock_compiled)
+{
+    settings configuration{ test::database_settings() };
+    configuration.path = TEST_DIRECTORY;
+    database::envelope stored{};
+    test::map_store instance{ configuration };
+    BC_REQUIRE(!instance.create(test::events));
+    BC_REQUIRE(!instance.close(test::events));
+    BC_REQUIRE(test::create(instance.flush_lock_file()));
+    BC_REQUIRE_EQUAL(instance.read_envelope(stored), error::flush_lock);
+    BC_REQUIRE(stored.schema == envelope::compiled);
+}
+
 BC_AUTO_TEST_CASE(store__read_envelope__created__stored)
 {
     settings configuration{ test::database_settings() };
