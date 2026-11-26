@@ -71,6 +71,10 @@ BCD_API code copy_ex(const path& from, const path& to) NOEXCEPT;
 BCD_API bool copy_directory(const path& from, const path& to) NOEXCEPT;
 BCD_API code copy_directory_ex(const path& from, const path& to) NOEXCEPT;
 
+/// Flush directory files to disk, false on access/sync error.
+BCD_API bool flush_directory(const path& directory) NOEXCEPT;
+BCD_API code flush_directory_ex(const path& directory) NOEXCEPT;
+
 /// Discharge directory files from page cache (posix, otherwise no-op),
 /// synchronizing pending writeback first. False on access/sync error.
 BCD_API bool discharge_directory(const path& to) NOEXCEPT;
@@ -83,6 +87,8 @@ BCD_API code open_ex(int& file_descriptor, const path& filename,
     bool random=true, advice access=advice::normal) NOEXCEPT;
 BCD_API bool close(int file_descriptor) NOEXCEPT;
 BCD_API code close_ex(int file_descriptor) NOEXCEPT;
+BCD_API bool flush(int file_descriptor) NOEXCEPT;
+BCD_API code flush_ex(int file_descriptor) NOEXCEPT;
 BCD_API bool size(size_t& out, int file_descriptor) NOEXCEPT;
 BCD_API code size_ex(size_t& out, int file_descriptor) NOEXCEPT;
 

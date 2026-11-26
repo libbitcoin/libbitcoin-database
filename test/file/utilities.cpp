@@ -275,6 +275,28 @@ BC_AUTO_TEST_CASE(file_utilities__copy_directory__target_missing__true_files_cop
     BC_REQUIRE(file::is_file(to_file));
 }
 
+// flush_directory
+
+BC_AUTO_TEST_CASE(file_utilities__flush_directory__missing__false)
+{
+    BC_REQUIRE(!file::flush_directory(TEST_PATH));
+}
+
+BC_AUTO_TEST_CASE(file_utilities__flush_directory__empty__true)
+{
+    BC_REQUIRE(file::create_directory(TEST_PATH));
+    BC_REQUIRE(file::flush_directory(TEST_PATH));
+}
+
+BC_AUTO_TEST_CASE(file_utilities__flush_directory__files__true)
+{
+    const std::string name = TEST_PATH + "/file";
+    const data_chunk source(42u);
+    BC_REQUIRE(file::create_directory(TEST_PATH));
+    BC_REQUIRE(file::create_file(name, source.data(), source.size()));
+    BC_REQUIRE(file::flush_directory(TEST_PATH));
+}
+
 // open
 
 BC_AUTO_TEST_CASE(file_utilities__open__missing__failure)
@@ -308,6 +330,38 @@ BC_AUTO_TEST_CASE(file_utilities__close_ex__opened__success)
     BC_REQUIRE(test::create(TEST_PATH));
     const auto descriptor = file::open(TEST_PATH);
     BC_REQUIRE_NE(descriptor, file::invalid);
+    BC_REQUIRE(file::close(descriptor));
+}
+
+// flush
+
+BC_AUTO_TEST_CASE(file_utilities__flush__invalid_handle__false)
+{
+    BC_REQUIRE(!file::flush(file::invalid));
+}
+
+BC_AUTO_TEST_CASE(file_utilities__flush__opened__true)
+{
+    BC_REQUIRE(test::create(TEST_PATH));
+    const auto descriptor = file::open(TEST_PATH);
+    BC_REQUIRE_NE(descriptor, file::invalid);
+    BC_REQUIRE(file::flush(descriptor));
+    BC_REQUIRE(file::close(descriptor));
+}
+
+// flush_ex
+
+BC_AUTO_TEST_CASE(file_utilities__flush_ex__invalid_handle__failure)
+{
+    BC_REQUIRE(file::flush_ex(file::invalid));
+}
+
+BC_AUTO_TEST_CASE(file_utilities__flush_ex__opened__success)
+{
+    BC_REQUIRE(test::create(TEST_PATH));
+    const auto descriptor = file::open(TEST_PATH);
+    BC_REQUIRE_NE(descriptor, file::invalid);
+    BC_REQUIRE(!file::flush_ex(descriptor));
     BC_REQUIRE(file::close(descriptor));
 }
 

@@ -251,6 +251,41 @@ code copy_directory_ex(const path& from, const path& to) NOEXCEPT
 }
 
 // directory
+bool flush_directory(const path& directory) NOEXCEPT
+{
+    return !flush_directory_ex(directory);
+}
+
+// directory
+code flush_directory_ex(const path& directory) NOEXCEPT
+{
+    code ec{ errorno_t::no_error };
+    directory_iterator it{ system::extended_path(directory), ec };
+
+    for (const directory_iterator end{}; !ec && (it != end);
+        it.increment(ec))
+    {
+        if (!it->is_regular_file(ec) || ec)
+            continue;
+
+        int descriptor{};
+        if ((ec = open_ex(descriptor, it->path())))
+            return ec;
+
+        if ((ec = flush_ex(descriptor)))
+        {
+            /* bool */ close(descriptor);
+            return ec;
+        }
+
+        if ((ec = close_ex(descriptor)))
+            return ec;
+    }
+
+    return ec;
+}
+
+// directory
 bool discharge_directory(const path& to) NOEXCEPT
 {
     return !discharge_directory_ex(to);
@@ -429,6 +464,32 @@ code close_ex(int file_descriptor) NOEXCEPT
 {
     system::error::clear_errno();
     close(file_descriptor);
+    return system::error::get_errno();
+}
+
+bool flush(int file_descriptor) NOEXCEPT
+{
+    if (file_descriptor == -1)
+    {
+        system::error::set_errno(errorno_t::invalid_argument);
+        return false;
+    }
+
+    // _commit, fcntl and fsync set errno on failure.
+#if defined(HAVE_WINDOWS)
+    return is_zero(::_commit(file_descriptor));
+#elif defined(F_FULLFSYNC)
+    // fsync does not flush drive cache on macOS.
+    return ::fcntl(file_descriptor, F_FULLFSYNC, 0) != -1;
+#else
+    return is_zero(::fsync(file_descriptor));
+#endif
+}
+
+code flush_ex(int file_descriptor) NOEXCEPT
+{
+    system::error::clear_errno();
+    flush(file_descriptor);
     return system::error::get_errno();
 }
 

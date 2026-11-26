@@ -103,8 +103,10 @@ code CLASS::backup(const event_handler& handler, bool prune) NOEXCEPT
         if ((ec = file::rename_ex(primary, secondary))) return ec;
     }
 
-    // Dump /heads memory maps to /temporary.
-    if ((ec = dump(temporary, handler)))
+    // Dump /heads memory maps to /temporary and flush to disk.
+    ec = dump(temporary, handler);
+    if (!ec) ec = file::flush_directory_ex(temporary);
+    if (ec)
     {
         // Failed dump, clear temporary and rename secondary to primary.
         if (file::clear_directory(temporary) && file::remove(temporary))
