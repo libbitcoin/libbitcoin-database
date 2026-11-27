@@ -225,6 +225,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\pooled_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\position.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\span.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\touch.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\type.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\unspent_coin.hpp" />

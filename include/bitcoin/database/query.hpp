@@ -1169,6 +1169,15 @@ public:
     histories get_spenders_history(const hash_digest& key,
         uint32_t index) const NOEXCEPT;
 
+    /// Confirmed txs at heights [start, end] that fund or spend key's outputs.
+    code get_confirmed_touches(const stopper& cancel, touches& out,
+        const hash_digest& key, size_t start=zero, size_t end=max_size_t,
+        size_t limit=max_size_t, bool turbo=false) const NOEXCEPT;
+
+    /// Confirmed txs at heights [start, end] that spend the prevout.
+    code get_confirmed_touches(touches& out, const point& prevout,
+        size_t start=zero, size_t end=max_size_t) const NOEXCEPT;
+
     /// Unspent queries.
     unspent_output get_tx_unspent(const output_link& link) const NOEXCEPT;
     unspent_output get_tx_confirmed_unspent(const output_link& link) const NOEXCEPT;
@@ -1565,6 +1574,8 @@ protected:
         const tx_link& link) const NOEXCEPT;
     code get_address_txs(const stopper& cancel, tx_links& out,
         const hash_digest& key, size_t limit, bool turbo) const NOEXCEPT;
+    bool push_confirmed_touch(touches& out, const tx_link& link, size_t start,
+        size_t end, bool funds) const NOEXCEPT;
 
 private:
     // This value should never be read, but may be useful in debugging.

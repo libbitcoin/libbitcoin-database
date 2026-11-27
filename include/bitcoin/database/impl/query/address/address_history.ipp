@@ -247,6 +247,98 @@ histories CLASS::get_spenders_history(const hash_digest& key,
     return get_spenders_history({ key , index });
 }
 
+// get_confirmed_touches
+// ----------------------------------------------------------------------------
+
+// server/btcd
+TEMPLATE
+code CLASS::get_confirmed_touches(const stopper& cancel, touches& out,
+    const hash_digest& key, size_t start, size_t end, size_t limit,
+    bool turbo) const NOEXCEPT
+{
+    out.clear();
+    output_links outs{};
+    tx_links parents{};
+    outs_link cursor{};
+    if (const auto ec = to_address_outputs(cancel, cursor, outs, parents, key,
+        limit))
+        return ec;
+
+    const auto policy = poolstl::execution::par_if(turbo, parallel_floor);
+    stopper fail{};
+
+    // Each output resolves to its parent tx followed by its spending txs.
+    std::vector<touches> touched(outs.size());
+    std::transform(policy, outs.cbegin(), outs.cend(), parents.cbegin(),
+        touched.begin(), [this, start, end, &cancel, &fail](
+            const output_link& output, const tx_link& parent) NOEXCEPT
+        {
+            touches txs{};
+            if (cancel || fail)
+                return txs;
+
+            if (!push_confirmed_touch(txs, parent, start, end, true))
+                fail = true;
+
+            for (const auto& input: to_spenders(parent, output))
+            {
+                const auto spender = to_input_tx(input);
+                if (!push_confirmed_touch(txs, spender, start, end, false))
+                    fail = true;
+            }
+
+            return txs;
+        });
+
+    if (fail)
+        return error::integrity;
+
+    if (cancel)
+        return error::query_canceled;
+
+    for (const auto& txs: touched)
+        out.insert(out.end(), txs.begin(), txs.end());
+
+    touch::sort_and_merge(out);
+    return error::success;
+}
+
+// server/btcd
+TEMPLATE
+code CLASS::get_confirmed_touches(touches& out, const point& prevout,
+    size_t start, size_t end) const NOEXCEPT
+{
+    out.clear();
+    for (const auto& input: to_spenders(prevout))
+        if (!push_confirmed_touch(out, to_input_tx(input), start, end, false))
+            return error::integrity;
+
+    touch::sort_and_merge(out);
+    return error::success;
+}
+
+// protected
+TEMPLATE
+bool CLASS::push_confirmed_touch(touches& out, const tx_link& link,
+    size_t start, size_t end, bool funds) const NOEXCEPT
+{
+    if (link.is_terminal())
+        return false;
+
+    tx_link strong{};
+    const auto block = find_strong(strong, link);
+    const auto at = get_confirmed_height(block);
+    if (at.is_terminal() || system::is_limited(at.value, start, end))
+        return true;
+
+    size_t position{};
+    if (!get_tx_position(position, strong, block))
+        return false;
+
+    out.emplace_back(at.value, position, strong, funds, !funds);
+    return true;
+}
+
 // utilities
 // ----------------------------------------------------------------------------
 

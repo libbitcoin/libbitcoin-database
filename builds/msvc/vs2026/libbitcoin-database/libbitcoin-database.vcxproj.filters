@@ -428,6 +428,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\span.hpp">
       <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\database\types\touch.hpp">
+      <Filter>include\bitcoin\database\types</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\database\types\type.hpp">
       <Filter>include\bitcoin\database\types</Filter>
     </ClInclude>

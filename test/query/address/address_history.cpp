@@ -647,4 +647,149 @@ BC_AUTO_TEST_CASE(query_address__get_history__duplicate_instances__deduplicated)
     BC_REQUIRE_EQUAL(confirmed.at(1).tx.hash(), test::tx4.hash(false));
 }
 
+// get_confirmed_touches
+
+BC_AUTO_TEST_CASE(query_address__get_confirmed_touches__block1a_address0__block_order_flagged)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_confirmed_address_store(query));
+
+    touches out{};
+    const std::atomic_bool cancel{};
+    BC_REQUIRE_EQUAL(query.get_confirmed_touches(cancel, out, test::block1a_address0), error::success);
+
+    // tx1 funds, tx2 spends tx1 and funds, tx3 funds, tx6 spends tx1 and funds.
+    BC_REQUIRE_EQUAL(out.size(), 4u);
+    BC_CHECK_EQUAL(out.at(0).height, 1u);
+    BC_CHECK_EQUAL(out.at(0).position, 0u);
+    BC_CHECK_EQUAL(query.get_tx_key(out.at(0).link), test::block1a.transactions_ptr()->at(0)->hash(false));
+    BC_CHECK(out.at(0).funds);
+    BC_CHECK(!out.at(0).spends);
+    BC_CHECK_EQUAL(out.at(1).height, 2u);
+    BC_CHECK_EQUAL(out.at(1).position, 0u);
+    BC_CHECK_EQUAL(query.get_tx_key(out.at(1).link), test::block2a.transactions_ptr()->at(0)->hash(false));
+    BC_CHECK(out.at(1).funds);
+    BC_CHECK(out.at(1).spends);
+    BC_CHECK_EQUAL(out.at(2).height, 2u);
+    BC_CHECK_EQUAL(out.at(2).position, 1u);
+    BC_CHECK_EQUAL(query.get_tx_key(out.at(2).link), test::block2a.transactions_ptr()->at(1)->hash(false));
+    BC_CHECK(out.at(2).funds);
+    BC_CHECK(!out.at(2).spends);
+    BC_CHECK_EQUAL(out.at(3).height, 3u);
+    BC_CHECK_EQUAL(out.at(3).position, 0u);
+    BC_CHECK_EQUAL(query.get_tx_key(out.at(3).link), test::block3a.transactions_ptr()->at(0)->hash(false));
+    BC_CHECK(out.at(3).funds);
+    BC_CHECK(out.at(3).spends);
+}
+
+BC_AUTO_TEST_CASE(query_address__get_confirmed_touches__turbo__same)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_confirmed_address_store(query));
+
+    touches out{};
+    touches turbo{};
+    const std::atomic_bool cancel{};
+    BC_REQUIRE_EQUAL(query.get_confirmed_touches(cancel, out, test::block1a_address0), error::success);
+    BC_REQUIRE_EQUAL(query.get_confirmed_touches(cancel, turbo, test::block1a_address0, zero, max_size_t, max_size_t, true), error::success);
+    BC_REQUIRE_EQUAL(turbo.size(), 4u);
+    BC_CHECK(turbo == out);
+}
+
+BC_AUTO_TEST_CASE(query_address__get_confirmed_touches__height_range__excludes_outside)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_confirmed_address_store(query));
+
+    touches out{};
+    const std::atomic_bool cancel{};
+    BC_REQUIRE_EQUAL(query.get_confirmed_touches(cancel, out, test::block1a_address0, 2, 2), error::success);
+    BC_REQUIRE_EQUAL(out.size(), 2u);
+    BC_CHECK_EQUAL(out.at(0).height, 2u);
+    BC_CHECK_EQUAL(out.at(0).position, 0u);
+    BC_CHECK_EQUAL(out.at(1).height, 2u);
+    BC_CHECK_EQUAL(out.at(1).position, 1u);
+}
+
+BC_AUTO_TEST_CASE(query_address__get_confirmed_touches__limited__depth_limited_empty)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_confirmed_address_store(query));
+
+    touches out{};
+    const std::atomic_bool cancel{};
+    BC_CHECK_EQUAL(query.get_confirmed_touches(cancel, out, test::block1a_address0, zero, max_size_t, 8), error::depth_limited);
+    BC_CHECK(out.empty());
+}
+
+BC_AUTO_TEST_CASE(query_address__get_confirmed_touches__canceled__query_canceled)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_confirmed_address_store(query));
+
+    touches out{};
+    const std::atomic_bool cancel{ true };
+    BC_CHECK_EQUAL(query.get_confirmed_touches(cancel, out, test::block1a_address0), error::query_canceled);
+    BC_CHECK(out.empty());
+}
+
+BC_AUTO_TEST_CASE(query_address__get_confirmed_touches__prevout__confirmed_spenders)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_confirmed_address_store(query));
+
+    // tx2 (block2a) and tx6 (block3a) spend tx1:0.
+    touches out{};
+    const system::chain::point prevout{ test::block1a.transactions_ptr()->at(0)->hash(false), 0 };
+    BC_REQUIRE_EQUAL(query.get_confirmed_touches(out, prevout), error::success);
+    BC_REQUIRE_EQUAL(out.size(), 2u);
+    BC_CHECK_EQUAL(out.at(0).height, 2u);
+    BC_CHECK_EQUAL(out.at(0).position, 0u);
+    BC_CHECK(!out.at(0).funds);
+    BC_CHECK(out.at(0).spends);
+    BC_CHECK_EQUAL(out.at(1).height, 3u);
+    BC_CHECK_EQUAL(out.at(1).position, 0u);
+    BC_CHECK(out.at(1).spends);
+}
+
+BC_AUTO_TEST_CASE(query_address__get_confirmed_touches__prevout_height_range__excludes_outside)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_CHECK(!store.create(test::events_handler));
+    BC_CHECK(test::setup_three_block_confirmed_address_store(query));
+
+    touches out{};
+    const system::chain::point prevout{ test::block1a.transactions_ptr()->at(0)->hash(false), 0 };
+    BC_REQUIRE_EQUAL(query.get_confirmed_touches(out, prevout, 3, 3), error::success);
+    BC_REQUIRE_EQUAL(out.size(), 1u);
+    BC_CHECK_EQUAL(out.at(0).height, 3u);
+}
+
 BC_AUTO_TEST_SUITE_END()
