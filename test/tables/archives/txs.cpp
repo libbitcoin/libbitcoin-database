@@ -172,4 +172,13 @@ BC_AUTO_TEST_CASE(txs__put__get__expected)
     BC_CHECK_EQUAL(body_store.buffer(), build_chunk({ expected0, expected1, expected2, expected3 }));
 }
 
+BC_AUTO_TEST_CASE(txs__is_storable__size_bound__expected)
+{
+    constexpr size_t limit = 8'388'608;
+    BC_REQUIRE(table::txs::is_storable(zero));
+    BC_REQUIRE(table::txs::is_storable(sub1(limit)));
+    BC_REQUIRE(!table::txs::is_storable(limit));
+    BC_REQUIRE(!table::txs::is_storable(two * limit));
+}
+
 BC_AUTO_TEST_SUITE_END()

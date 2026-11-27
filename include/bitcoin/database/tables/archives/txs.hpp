@@ -51,10 +51,16 @@ struct txs
         bytes::size +
         bytes::size;
 
+    /// Sizes are stored in the low order bits of schema::size bytes.
+    static constexpr bool is_storable(size_t size) NOEXCEPT
+    {
+        return size <= bytes::terminal;
+    }
+
     static constexpr bytes::integer merge(bool is_interval,
         bytes::integer light) NOEXCEPT
     {
-        BC_ASSERT_MSG(!system::get_right(light, offset), "overflow");
+        BC_ASSERT_MSG(is_storable(light), "overflow");
         return system::set_right(light, offset, is_interval);
     }
 

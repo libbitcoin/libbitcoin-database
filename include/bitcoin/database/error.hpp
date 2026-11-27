@@ -133,6 +133,7 @@ enum error_t : uint8_t
     txs_confirm,
     txs_txs_put,
     txs_state_put,
+    txs_size,
 
     /// prevouts cache
     prevouts_put,

@@ -1066,4 +1066,108 @@ BC_AUTO_TEST_CASE(query_chain_writer__set_links__empty_or_terminal__error)
     BC_REQUIRE_EQUAL(query.set_code(header_link{ 0 }, tx_links{}, false), error::txs_empty);
 }
 
+// Header, count and two txs of this size are the largest storable block.
+constexpr size_t half_size = 4'194'263;
+constexpr auto prefix_size = add1(system::chain::header::serialized_size());
+static_assert(prefix_size + two * half_size == table::txs::bytes::terminal);
+
+// A tx with an output script of one push, of the serialized size.
+static system::chain::transaction sized_transaction(size_t size) NOEXCEPT
+{
+    using namespace system::chain;
+    constexpr size_t overhead = 69;
+    const operations push{ { system::data_chunk(size - overhead), false } };
+    return
+    {
+        1u,
+        inputs{ { point{ system::one_hash, 0u }, script{}, witness{}, 0u } },
+        outputs{ { 42u, script{ push } } },
+        0u
+    };
+}
+
+// A tx with a witness of one element of the size.
+static system::chain::transaction witnessed_transaction(size_t size) NOEXCEPT
+{
+    using namespace system::chain;
+    const system::chunk_cptrs stack
+    {
+        system::to_shared(system::data_chunk(size))
+    };
+
+    return
+    {
+        1u,
+        inputs
+        {
+            { point{ system::one_hash, 0u }, script{}, witness{ stack }, 0u }
+        },
+        outputs{ { 42u, script{} } },
+        0u
+    };
+}
+
+BC_AUTO_TEST_CASE(query_chain_writer__set_links__largest_storable__associated)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    header_link key{};
+    BC_REQUIRE(!query.set_code(key, test::block1.header(), context{ 0, 1, 0 }, {}, false));
+
+    tx_link link{};
+    const auto tx = sized_transaction(half_size);
+    BC_REQUIRE_EQUAL(tx.serialized_size(false), half_size);
+    BC_REQUIRE(!query.set_code(link, tx));
+    BC_REQUIRE_EQUAL(query.set_code(key, tx_links{ link, link }, false), error::success);
+    BC_REQUIRE(query.is_associated(key));
+
+    size_t light{}, heavy{};
+    BC_REQUIRE(query.get_block_sizes(light, heavy, key));
+    BC_REQUIRE_EQUAL(light, table::txs::bytes::terminal);
+    BC_REQUIRE_EQUAL(heavy, table::txs::bytes::terminal);
+}
+
+BC_AUTO_TEST_CASE(query_chain_writer__set_links__unstorable_light__txs_size)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    header_link key{};
+    BC_REQUIRE(!query.set_code(key, test::block1.header(), context{ 0, 1, 0 }, {}, false));
+
+    tx_link link{};
+    BC_REQUIRE(!query.set_code(link, sized_transaction(add1(half_size))));
+    BC_REQUIRE_EQUAL(query.set_code(key, tx_links{ link, link }, false), error::txs_size);
+    BC_REQUIRE(!query.is_associated(key));
+}
+
+BC_AUTO_TEST_CASE(query_chain_writer__set_links__unstorable_heavy__txs_size)
+{
+    settings settings{ test::database_settings() };
+    settings.path = TEST_DIRECTORY;
+    test::chunk_store store{ settings };
+    test::query_accessor query{ store };
+    BC_REQUIRE(!store.create(test::events_handler));
+    BC_REQUIRE(query.initialize(test::genesis));
+
+    header_link key{};
+    BC_REQUIRE(!query.set_code(key, test::block1.header(), context{ 0, 1, 0 }, {}, false));
+
+    tx_link link{};
+    const auto tx = witnessed_transaction(half_size);
+    BC_REQUIRE(table::txs::is_storable(two * tx.serialized_size(false)));
+    BC_REQUIRE(!query.set_code(link, tx));
+    BC_REQUIRE_EQUAL(query.set_code(key, tx_links{ link, link }, false), error::txs_size);
+    BC_REQUIRE(!query.is_associated(key));
+}
+
 BC_AUTO_TEST_SUITE_END()
