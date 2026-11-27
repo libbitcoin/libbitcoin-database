@@ -391,6 +391,7 @@ include_bitcoin_database_types_HEADERS = \
     ${srcdir}/../../include/bitcoin/database/types/pooled_tx.hpp \
     ${srcdir}/../../include/bitcoin/database/types/position.hpp \
     ${srcdir}/../../include/bitcoin/database/types/span.hpp \
+    ${srcdir}/../../include/bitcoin/database/types/touch.hpp \
     ${srcdir}/../../include/bitcoin/database/types/type.hpp \
     ${srcdir}/../../include/bitcoin/database/types/types.hpp \
     ${srcdir}/../../include/bitcoin/database/types/unspent_coin.hpp \

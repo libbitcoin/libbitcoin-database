@@ -106,6 +106,7 @@
 #include <bitcoin/database/types/pooled_tx.hpp>
 #include <bitcoin/database/types/position.hpp>
 #include <bitcoin/database/types/span.hpp>
+#include <bitcoin/database/types/touch.hpp>
 #include <bitcoin/database/types/type.hpp>
 #include <bitcoin/database/types/types.hpp>
 #include <bitcoin/database/types/unspent_coin.hpp>
