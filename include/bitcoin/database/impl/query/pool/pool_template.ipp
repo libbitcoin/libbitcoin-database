@@ -40,6 +40,10 @@ code CLASS::get_pool_template(tx_links& out, pool_projection& projection,
     if (!get_pool_columns(columns, guards))
         return error::integrity;
 
+    pool_links owners{};
+    algorithm::owners(owners, columns);
+    columns.owners = owners;
+
     pool_links rows{};
     set_pool_resolution(projection, columns, cutoff, bytes_per_sigop,
         maximum_outcomes);

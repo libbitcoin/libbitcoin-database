@@ -39,6 +39,10 @@ code CLASS::get_pool_projection(pool_projection& projection, size_t count,
     if (!get_pool_columns(columns, guards))
         return error::integrity;
 
+    pool_links owners{};
+    algorithm::owners(owners, columns);
+    columns.owners = owners;
+
     if (projection.marks.size() != columns.cells.size())
         set_pool_resolution(projection, columns, cutoff, bytes_per_sigop,
             maximum_outcomes);
@@ -65,6 +69,10 @@ code CLASS::get_pool_continuation(pool_projection& projection, size_t count,
     algorithm::columns_t columns{};
     if (!get_pool_columns(columns, guards))
         return error::integrity;
+
+    pool_links owners{};
+    algorithm::owners(owners, columns);
+    columns.owners = owners;
 
     if (projection.marks.size() > columns.cells.size())
         return error::integrity;
